@@ -1,0 +1,62 @@
+[
+  {
+    "connected": false,
+    "reason": null,
+    "legal": true
+  },
+  {
+    "connected": false,
+    "reason": "credentials-missing",
+    "legal": true
+  },
+  {
+    "connected": false,
+    "reason": "auth-failed",
+    "legal": true
+  },
+  {
+    "connected": false,
+    "reason": "root-unreachable",
+    "legal": true
+  },
+  {
+    "connected": false,
+    "reason": "transient",
+    "legal": true
+  },
+  {
+    "connected": false,
+    "reason": "probe-failed",
+    "legal": true
+  },
+  {
+    "connected": true,
+    "reason": null,
+    "legal": true
+  },
+  {
+    "connected": true,
+    "reason": "credentials-missing",
+    "legal": false
+  },
+  {
+    "connected": true,
+    "reason": "auth-failed",
+    "legal": false
+  },
+  {
+    "connected": true,
+    "reason": "root-unreachable",
+    "legal": false
+  },
+  {
+    "connected": true,
+    "reason": "transient",
+    "legal": false
+  },
+  {
+    "connected": true,
+    "reason": "probe-failed",
+    "legal": false
+  }
+]

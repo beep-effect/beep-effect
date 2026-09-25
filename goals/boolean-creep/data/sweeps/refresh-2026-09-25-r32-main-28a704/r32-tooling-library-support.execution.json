@@ -1,0 +1,22 @@
+{
+  "lane": "r32-tooling-library-support",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T00:53:31.361770+00:00",
+  "finished": "2026-09-25T00:57:23.752842+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-library-support.jsonl`. Confirmed 0, disqualified 0. All five assigned roots were covered, and the validator accepted the empty file.\n\nEvery seeded cluster still exists with the same members and the same classification. Line drift only, so nothing was re-emitted: `makePgliteIntegrationGate` (1629/1633), `createProjectPool` (489), `OpenMode` (720, constructor 746), `OpenFileDescriptor` (269, allocate 1764), `makeTempDirectoryScoped` (2448; file sibling 2511), and `WatchSubscription` (230, writer 3067). No seed was withdrawn.\n\nUnresolved and not recorded: `JSDocTagDefinition.isDeprecated` beside optional `deprecatedNote`. The catalog only writes `false` and never sets the note, and no reader enforces a presence pairing.",
+  "transcriptSha256": "5f3127f8a6172fa5f336bfa48aa1192c43834c9da746265446bebc667ae1f4a0",
+  "runnerSha256": "aa44ba577e1b7204b1c85a0549dec38d8afaa068dc269d06b86150e89fc633b4",
+  "seedSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

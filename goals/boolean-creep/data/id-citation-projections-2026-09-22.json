@@ -1,0 +1,53 @@
+{
+  "scope": "Finite arithmetic from documented implication plus user stable-ID ruling; not runtime codec evidence.",
+  "rows": [
+    {
+      "inherited": false,
+      "indexPresent": false,
+      "idPresent": false,
+      "legal": true
+    },
+    {
+      "inherited": false,
+      "indexPresent": false,
+      "idPresent": true,
+      "legal": false
+    },
+    {
+      "inherited": false,
+      "indexPresent": true,
+      "idPresent": false,
+      "legal": false
+    },
+    {
+      "inherited": false,
+      "indexPresent": true,
+      "idPresent": true,
+      "legal": false
+    },
+    {
+      "inherited": true,
+      "indexPresent": false,
+      "idPresent": false,
+      "legal": true
+    },
+    {
+      "inherited": true,
+      "indexPresent": false,
+      "idPresent": true,
+      "legal": true
+    },
+    {
+      "inherited": true,
+      "indexPresent": true,
+      "idPresent": false,
+      "legal": true
+    },
+    {
+      "inherited": true,
+      "indexPresent": true,
+      "idPresent": true,
+      "legal": true
+    }
+  ]
+}

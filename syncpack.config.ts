@@ -119,10 +119,20 @@ const config = {
   },
   updateGroups: [
     {
-      // Held back from `deps:update`. Classic typescript stays ^6 for JS
-      // compiler API consumers such as typescript-eslint, while
-      // @typescript/native provides the TS7 compiler. Microsoft's
-      // @typescript/typescript6 bridge is blocked by oven-sh/bun#33834.
+      // Held back from `deps:update`. Classic typescript stays ^6 for the
+      // programmatic (JS) compiler API, while @typescript/native provides
+      // the TS7 compiler. TypeScript 7.0 ships no stable programmatic API
+      // (7.1 is the target), so its actual consumers cannot move:
+      // typescript-eslint (peer `<6.1.0`, TS7 tracked in
+      // typescript-eslint/typescript-eslint#10940, still open 2026-09-24),
+      // tstyche (classic API despite its open `>=5.4` peer), and commitlint's
+      // cosmiconfig-typescript-loader. ts-morph vendors its own TS 6 copy in
+      // @ts-morph/common and knip 6 parses with oxc, so neither needs this
+      // pin. The split ends when typescript-eslint releases against 7.1.
+      // Microsoft's @typescript/typescript6 bridge was blocked by
+      // oven-sh/bun#33834; that fix merged 2026-08-06 (bun 1.4.0 shipped
+      // after it), so the bridge is now an option but a separate decision.
+      // Full layout: docs/runbooks/typescript-toolchain.md.
       // fast-xml-validator 1.3+ / detailed-xml-validator 2.2+ pull
       // @nodable/flexible-xml-parser, which references Buffer at module
       // scope and breaks every browser bundle.

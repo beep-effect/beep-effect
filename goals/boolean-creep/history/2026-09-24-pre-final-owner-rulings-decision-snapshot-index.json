@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "boolean-creep-decision-snapshot-index/v1",
+  "purpose": "Resolve historical decision hashes in audit receipts to retained content; current DECISIONS.md may advance after owner rulings.",
+  "snapshots": [
+    {
+      "file": "history/2026-09-22-pre-classifier-ruling-DECISIONS.md",
+      "sha256": "e6851a394568acf774d51b2d840635b8f4fbee200dd346d26bc82dbef624ea8d",
+      "immutable": true
+    },
+    {
+      "file": "history/2026-09-22-pre-inherited-id-ruling-DECISIONS.md",
+      "sha256": "3a65df50371937b9ad000949030ef1b5be1ab6148f7c0fd1f2de246542620f44",
+      "immutable": true
+    },
+    {
+      "file": "history/2026-09-22-pre-packet-migration-ruling-DECISIONS.md",
+      "sha256": "b9ad90280aa8b82394d221b6941427100c47536c53cf15496d5b15c12914d4eb",
+      "immutable": true
+    },
+    {
+      "file": "DECISIONS.md",
+      "sha256": "e85016058ca6000aa1309eaa7a737566ba1ddef4141509df0b39c693ff4306d9",
+      "immutable": false
+    }
+  ]
+}

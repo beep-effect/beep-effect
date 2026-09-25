@@ -1,0 +1,65 @@
+{
+  "representable": 8,
+  "legal": 6,
+  "minimalRepresentable": 4,
+  "minimalLegal": 3,
+  "basis": "Independent presence retained; static table not runtime proof",
+  "rows": [
+    {
+      "present": false,
+      "staged": false,
+      "stagedDeletion": false,
+      "legal": true,
+      "phase": "unstaged"
+    },
+    {
+      "present": false,
+      "staged": false,
+      "stagedDeletion": true,
+      "legal": false,
+      "phase": null
+    },
+    {
+      "present": false,
+      "staged": true,
+      "stagedDeletion": false,
+      "legal": true,
+      "phase": "staged-change"
+    },
+    {
+      "present": false,
+      "staged": true,
+      "stagedDeletion": true,
+      "legal": true,
+      "phase": "staged-deletion"
+    },
+    {
+      "present": true,
+      "staged": false,
+      "stagedDeletion": false,
+      "legal": true,
+      "phase": "unstaged"
+    },
+    {
+      "present": true,
+      "staged": false,
+      "stagedDeletion": true,
+      "legal": false,
+      "phase": null
+    },
+    {
+      "present": true,
+      "staged": true,
+      "stagedDeletion": false,
+      "legal": true,
+      "phase": "staged-change"
+    },
+    {
+      "present": true,
+      "staged": true,
+      "stagedDeletion": true,
+      "legal": true,
+      "phase": "staged-deletion"
+    }
+  ]
+}

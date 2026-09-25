@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "date": "2026-09-22",
+  "sourceSha": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-knowledge-websocket-refresh.jsonl",
+    "sha256": "de0477d42e7c44de5d1f41e869565bce230d2378542f9ed4d1785bf28f69cf38"
+  },
+  "inventoryAfterSha256": "22189fe9ecc326fadf0bb1d0743b903e297894acfb8aadd853b4f4a9e8826917",
+  "inventoryRecords": 753,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 127,
+    "disqualified": 608
+  },
+  "newQualifiedIds": ["knowledge-ref-candidate"],
+  "refreshedQualifiedIds": ["xai-websocket-message-binary"],
+  "unresolvedRemovedFromProjection": ["knowledge-ref-classification-input"],
+  "unchangedRows": 751,
+  "artifacts": [
+    {
+      "file": "designs/knowledge-ref-candidate.md",
+      "sha256": "ec2afe409759560494ab4f7470021e04d3daabdf3796eec9b21a5d1bc9a5d992"
+    },
+    {
+      "file": "designs/xai-websocket-message-binary.md",
+      "sha256": "3b65999566416aee7105dacdb39f5b2a9cc5f1267a06e5c452dbf4df414fac9c"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-knowledge-ref-candidate.md",
+      "sha256": "9e5d23fc7c691155c728c90b91a8d75f6a53e787fa69e0a67fadf3b4ac0b9c80"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-xai-websocket-message-binary.md",
+      "sha256": "88f26e3816d674845b2a8e54974aa3d21f0ec1ad442b8e5f67691adc495685d9"
+    },
+    {
+      "file": "data/knowledge-classifier-hold-2026-09-22.md",
+      "sha256": "22b361878f412fa0650b52a457462cce6c90256c4f3c62113fafafcb096f1321"
+    },
+    {
+      "file": "data/knowledge-classifier-hold-audit-2026-09-22.md",
+      "sha256": "b66d74f4b1684761d6e853d788d46a863fe24ae36620a48f0c44ee5c46347df2"
+    },
+    {
+      "file": "data/knowledge-classifier-contract-probe-2026-09-22.md",
+      "sha256": "9fde9978aa1f300afe491d1919a635731f7b0a7fbd2ec503c8e49060b012b006"
+    },
+    {
+      "file": "data/knowledge-ref-candidate-cardinality-2026-09-22.json",
+      "sha256": "ae8c60bee060b7311c9ef11df346e0643c7aabd1422ece8790aa8e7a66f1cf3e"
+    }
+  ],
+  "savedSubset": {
+    "sourceReceipt": "data/driver-design-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "0051ae689676eb7538115abb9e065f98750092429007063a3f52ca88cbc2ba69",
+    "previousPendingCount": 42,
+    "completedIds": ["xai-websocket-message-binary"],
+    "pendingCount": 41,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "html-select-child-grammar",
+      "html-dl-child-grammar",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "html-datalist-child-grammar",
+      "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "html-img-sizes-disposition",
+      "html-link-imagesizes-disposition",
+      "contained-file-read-outcome",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "files-worker-score-thresholds",
+      "files-person-reference-disposition",
+      "m365-tool-error-retryability",
+      "vault-sync-push-failure-disposition",
+      "receipt-fallback-draft-occupancy",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "meaning": "Saved September14 subset only; Knowledge adjudications are outside this subset."
+  },
+  "currentSourcePendingCount": null,
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-html-refresh.jsonl"
+}

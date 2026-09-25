@@ -1,0 +1,397 @@
+{
+  "kind": "boolean-creep-r32-parent-integration/v1",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "inventoryBefore": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r32-reconciliation.jsonl",
+    "sha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a"
+  },
+  "inventoryAfter": {
+    "file": "goals/boolean-creep/data/inventory.jsonl",
+    "sha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c"
+  },
+  "records": 778,
+  "qualified": 142,
+  "disqualified": 636,
+  "withdrawnIds": [
+    "r2-foundation-float-fast-check-options",
+    "r2-foundation-double-fast-check-options",
+    "r2-drivers-arch-box-post-apply-verdict",
+    "r3-foundation-mermaid-accessible-name",
+    "r3-foundation-mermaid-style-safety",
+    "r24-foundation-ui-mermaid-svg-safety",
+    "r2-domains-ontology-graph-fold-flags",
+    "r25-tooling-library-policy-test-route-base-disable-flags",
+    "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+    "m365-tool-error-retryability",
+    "tool-name-collision-row-truncated-digest",
+    "xai-sse-done-payload",
+    "venice-sse-done-payload",
+    "xai-websocket-message-binary",
+    "dms-mirror-probe-connected",
+    "organization-tenant-placement-bits",
+    "contained-file-read-outcome",
+    "r26-cli-commands-l-q-osv-ignore-expiry"
+  ],
+  "rawDispositions": [
+    {
+      "id": "r32-apps-graph-node-draw-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-apps.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-apps-source-pane-visual-props",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-apps.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "cache-pilot-run-observations",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": true
+    },
+    {
+      "id": "cache-pilot-shadow-checks",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": true
+    },
+    {
+      "id": "cache-pilot-non-execution",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "designed",
+      "parentCorrected": true
+    },
+    {
+      "id": "cache-synthetic-non-execution-outputs",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "cache-pilot-log-input",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "cache-experiment-summary-cache",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "cache-pilot-native-task-cache",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-commands-a-c-heavy-admission",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-commands-a-c-ci-admission-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "docgen-examples-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "app-next-tsconfig-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "app-service-tsconfig-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "app-tauri-tsconfig-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "app-vite-tsconfig-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "tsconfig-stories-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "tsconfig-test-compiler-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-commands-d-k-graft-deep-refresh-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-d-k.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "effect-vitest-function-reachability",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "designed",
+      "parentCorrected": true
+    },
+    {
+      "id": "effect-vitest-reachable-helper-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "designed",
+      "parentCorrected": true
+    },
+    {
+      "id": "laws-package-finding-policy",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": true
+    },
+    {
+      "id": "effect-vitest-lint-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "models-catalog-availability",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "models-catalog-draft",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "models-command-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "upstream-thinking-support",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "grok-model-info-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "version-sync-options-check",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-r-z.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "version-sync-options-write",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-r-z.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "version-sync-options-dry-run",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-r-z.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-internal-root-contained-bytes-read",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-internal-root.jsonl",
+      "disposition": "not-admitted-out-of-recall-net",
+      "reason": "Complete owner has sole Boolean exists and Option bytes contents."
+    },
+    {
+      "id": "r29-yeet-sweep-worktree-probe-address",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "designed",
+      "parentCorrected": true
+    },
+    {
+      "id": "yeet-monitor-command-route",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r30-cli-yeet-portfolio-index-staged-deletion",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "designed",
+      "parentCorrected": true
+    },
+    {
+      "id": "r32-cli-yeet-settle-budget-phase",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": true
+    },
+    {
+      "id": "r32-cli-yeet-settle-input-observations",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-yeet-proof-job-finalization",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-yeet-watch-thread-node",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-yeet-review-thread-state-input",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-cli-yeet-review-thread-state-source",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-drivers-a-f-cosmos-vendor-graph-config",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-a-f.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-drivers-a-f-acp-assign-own-property-descriptor",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-a-f.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-foundation-capability-http-protocol-supports",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-capability.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-foundation-capability-ndjson-protocol-supports",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-capability.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "identity-property-descriptor-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "html-media-child-grammar",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r2-foundation-html-foreign-entry-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r3-foundation-attribute-requirement-gates",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r2-foundation-iri-ipv6-segment-facts",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r24-foundation-modeling-rest-recovery-budget-coherence",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "r32-tooling-policy-cache-task-configuration",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-policy.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    },
+    {
+      "id": "tooling-rest-experimental-config",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-policy.jsonl",
+      "disposition": "disqualified",
+      "parentCorrected": false
+    }
+  ],
+  "designedIds": [
+    "r3-drivers-arch-tool-name-collision-stage-flags",
+    "effect-vitest-function-reachability",
+    "effect-vitest-reachable-helper-flags",
+    "r30-cli-yeet-portfolio-index-staged-deletion",
+    "r29-yeet-sweep-worktree-probe-address",
+    "cache-pilot-non-execution"
+  ],
+  "lineUpdates": {
+    "shacl-validation-result-flags": 284,
+    "source-text-page-nav-flags": 131,
+    "with-codec-statics-install-on-owned-schema": 349,
+    "json-schema-node-keywords": 212,
+    "r26-apps-sidecar-ipc-ready-latch": 448,
+    "intake-vault-status": 1123,
+    "step-exec-run-captured-options": 954,
+    "r29-cli-internal-root-run-captured-streams-options": 1127,
+    "scheduler-admission-attempt-origin": 1784,
+    "scheduler-promotion-tick-origin": 1940,
+    "r3-tooling-pglite-integration-gate-flags": 1629,
+    "r28-tooling-library-support-tsmorph-project-options": 489,
+    "r3-tooling-attempt-journal-classified-lines": 344,
+    "r30-tooling-library-support-open-mode": 720,
+    "r30-tooling-library-support-temp-directory-scoped-remove-options": 2448
+  },
+  "reconciliationComplete": true,
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "implementationStarted": false,
+  "ownerAdmissionReceipt": {
+    "file": "goals/boolean-creep/data/r32-owner-admissions-2026-09-25.json",
+    "sha256": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1"
+  },
+  "parentReconciliationReceipt": {
+    "file": "goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json",
+    "sha256": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172"
+  },
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 126,
+    "disqualified": 636
+  }
+}

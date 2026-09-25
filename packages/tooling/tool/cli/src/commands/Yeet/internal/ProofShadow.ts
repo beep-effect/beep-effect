@@ -1,16 +1,19 @@
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot } from "@beep/repo-utils";
-import { Console, DateTime, Duration, Effect, pipe } from "effect";
+import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
+import { Console, DateTime, Duration, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
-import { constFalse } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { changedPackageNamesForPaths, collectWorkspaces } from "../../Quality/internal/PackageVerify.ts";
 import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { proofLedgerPathForCheckout } from "./ArtifactPaths.ts";
@@ -26,12 +29,17 @@ import {
   ProofOutcome,
   ProofProvenance,
   ProofReuseHit,
+  ProofReuseMiss,
 } from "./ProofFact.ts";
 import { ProofLedger } from "./ProofLedger.ts";
-import type { Crypto, FileSystem, Path } from "effect";
+import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
+import type { Crypto, Path } from "effect";
+import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetAttemptStarted } from "./AttemptJournal.ts";
 import type { ProofEpoch, ProofReuseDecision } from "./ProofFact.ts";
+import type { ProofChangedPackageTripwire } from "./ProofLedger.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofShadow");
 
@@ -67,6 +75,7 @@ export const UNDECLARED_INPUT_DIGEST = "undeclared";
 const ProofCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 const isHit = S.is(ProofReuseHit);
+const isMiss = S.is(ProofReuseMiss);
 const isPassed = ProofOutcome.is.passed;
 
 /**
@@ -264,6 +273,7 @@ export class ProofShadowAttemptSummary extends S.Class<ProofShadowAttemptSummary
     wouldReuse: ProofCount,
     disagreements: ProofCount,
     undeclared: ProofCount,
+    tripped: ProofCount.pipe(S.withConstructorDefault(Effect.succeed(0))),
   },
   $I.annote("ProofShadowAttemptSummary", {
     description: "Lanes shadowed for one attempt, how many the ledger would have reused, and how many disagreed.",
@@ -357,6 +367,415 @@ export const proofShadowAttemptFacts = (attempt: YeetAttemptStarted): ProofShado
     stage: O.getOrElse(attempt.stage, () => "pre-push" as const),
     envProfile: O.getOrElse(attempt.envProfile, () => "local" as const),
   });
+
+/**
+ * The workspace packages an attempt's change touches.
+ *
+ * **Example** (Two packages across three paths)
+ *
+ * ```ts
+ * import { ProofChangedPackagesKnown } from "@beep/repo-cli/test/Yeet"
+ *
+ * const changed = ProofChangedPackagesKnown.make({
+ *   kind: "known",
+ *   packages: ["@beep/x", "@beep/y"],
+ *   paths: 3,
+ * })
+ * console.log(changed.packages.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofChangedPackagesKnown extends S.Class<ProofChangedPackagesKnown>($I`ProofChangedPackagesKnown`)(
+  {
+    kind: S.tag("known"),
+    packages: S.Array(S.String),
+    paths: ProofCount,
+  },
+  $I.annote("ProofChangedPackagesKnown", {
+    description: "Workspace packages an attempt's changed paths touch, with how many paths were mapped.",
+  })
+) {}
+
+/**
+ * The attempt's changed packages could not be read.
+ *
+ * **Example** (A failed workspace read)
+ *
+ * ```ts
+ * import { ProofChangedPackagesUnavailable } from "@beep/repo-cli/test/Yeet"
+ *
+ * const changed = ProofChangedPackagesUnavailable.make({
+ *   kind: "unavailable",
+ *   reason: "the workspace list could not be read",
+ * })
+ * console.log(changed.kind) // "unavailable"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofChangedPackagesUnavailable extends S.Class<ProofChangedPackagesUnavailable>(
+  $I`ProofChangedPackagesUnavailable`
+)(
+  {
+    kind: S.tag("unavailable"),
+    reason: S.NonEmptyString,
+  },
+  $I.annote("ProofChangedPackagesUnavailable", {
+    description: "Why an attempt's changed package set could not be read.",
+  })
+) {}
+
+/**
+ * What the shadow pass knows about the packages an attempt's change touches.
+ *
+ * **Details**
+ *
+ * The two states decide the changed-package tripwire's answer for a lane whose
+ * package scope is non-empty (ruling 70): `known` fires only on a real
+ * intersection, and `unavailable` fires for every scoped lane, because a
+ * changed set that could not be read is not evidence that nothing changed. A
+ * lane with an empty scope — a root-task-only lane — is decided by its digest
+ * alone in both states.
+ *
+ * **Example** (Match on what is known)
+ *
+ * ```ts
+ * import { ProofChangedPackages, ProofChangedPackagesKnown } from "@beep/repo-cli/test/Yeet"
+ *
+ * const line = ProofChangedPackages.match(
+ *   ProofChangedPackagesKnown.make({ kind: "known", packages: ["@beep/x"], paths: 1 }),
+ *   {
+ *     known: (changed) => `${changed.packages.length} package(s)`,
+ *     unavailable: (changed) => changed.reason,
+ *   }
+ * )
+ * console.log(line) // "1 package(s)"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofChangedPackages = S.Union([ProofChangedPackagesKnown, ProofChangedPackagesUnavailable]).pipe(
+  $I.annoteSchema("ProofChangedPackages", {
+    description: "The workspace packages an attempt's change touches, or why they could not be read.",
+  }),
+  S.toTaggedUnion("kind")
+);
+
+/**
+ * {@inheritDoc ProofChangedPackages}
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProofChangedPackages = typeof ProofChangedPackages.Type;
+
+// `git status --porcelain=v1 -z` writes `XY <path>\0` per entry, and for a rename
+// or copy the original path follows as the next NUL-separated token.
+const PORCELAIN_RENAME_CODES = ["R", "C"];
+
+const porcelainEntryPath = (entry: string): string => Str.slice(3)(entry);
+
+const isPorcelainEntry = (entry: string): boolean =>
+  Str.length(entry) > 3 && Str.Equivalence(Str.slice(2, 3)(entry), " ");
+
+const isPorcelainRenameEntry = (entry: string): boolean =>
+  A.some(PORCELAIN_RENAME_CODES, (code) => pipe(Str.slice(0, 2)(entry), Str.includes(code)));
+
+type PorcelainScan = {
+  readonly paths: ReadonlyArray<string>;
+  readonly expectOriginalPath: boolean;
+};
+
+const scanPorcelainToken = (scan: PorcelainScan, token: string): PorcelainScan => {
+  if (scan.expectOriginalPath) {
+    return { paths: A.append(scan.paths, token), expectOriginalPath: false };
+  }
+  return isPorcelainEntry(token)
+    ? { paths: A.append(scan.paths, porcelainEntryPath(token)), expectOriginalPath: isPorcelainRenameEntry(token) }
+    : { paths: scan.paths, expectOriginalPath: false };
+};
+
+/**
+ * Every path `git status --porcelain=v1 -z --untracked-files=all` reports.
+ *
+ * **Details**
+ *
+ * Entries are NUL-separated rather than newline-separated, so a path carrying
+ * a space, a quote or a newline survives verbatim. A rename or copy entry is
+ * followed by its original path as the next token, and both sides are kept:
+ * the attempt verified the tree where the new path exists and the old one does
+ * not, and both may belong to packages the lanes covered. Ignored files never
+ * appear, because the read does not pass `--ignored`.
+ *
+ * **Example** (A modified file and a staged rename)
+ *
+ * ```ts
+ * import { porcelainChangedPaths } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(
+ *   porcelainChangedPaths(" M packages/x/src/a.ts\0R  packages/x/src/c.ts\0packages/x/src/b.ts\0")
+ * ) // [ 'packages/x/src/a.ts', 'packages/x/src/c.ts', 'packages/x/src/b.ts' ]
+ * ```
+ *
+ * @param output - The raw `git status --porcelain=v1 -z` capture.
+ * @returns The repo-relative paths the status reports, in entry order, both sides of a rename.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const porcelainChangedPaths = (output: string): ReadonlyArray<string> =>
+  A.reduce(
+    A.filter(Str.split(output, "\0"), Str.isNonEmpty),
+    { paths: A.empty<string>(), expectOriginalPath: false },
+    scanPorcelainToken
+  ).paths;
+
+const WORKTREE_STATUS_ARGS = ["status", "--porcelain=v1", "-z", "--untracked-files=all"];
+
+const readWorktreeChangedPaths = Effect.fn("Yeet.ProofShadow.readWorktreeChangedPaths")(function* (
+  context: RepoRunContext,
+  capture: typeof runRepoCommandCapture
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const output = yield* captureRepoCommandStrict({
+    repoRoot: context.repoRoot,
+    command: "git",
+    args: WORKTREE_STATUS_ARGS,
+    onSpawnFailure: `Failed to read the working-tree status of ${context.repoRoot}.`,
+    capture,
+  });
+  return porcelainChangedPaths(output);
+});
+
+const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(function* (
+  context: RepoRunContext,
+  capture: typeof runRepoCommandCapture
+): Effect.fn.Return<
+  ProofChangedPackages,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  // The workspace reader canonicalises every directory it returns, so the root
+  // the changed paths resolve against has to be canonical too: a checkout
+  // reached through a symlink would otherwise compare symlinked paths against
+  // canonical workspace directories, match nothing, and read as "no package
+  // changed" — a silent fail-open for every lane.
+  const repoRoot = yield* fs
+    .realPath(context.repoRoot)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to resolve the checkout path ${context.repoRoot}.`)));
+  // `FsUtils` is a layer the CLI builds at its entry point, but the verdict
+  // writer's requirement set is fixed by its callers; build it for this one
+  // workspace read and let the scope discard it, so nothing upstream widens.
+  const workspaces = yield* Effect.scoped(
+    Layer.build(FsUtilsLive).pipe(
+      Effect.flatMap((fsUtils) => collectWorkspaces(repoRoot).pipe(Effect.provide(fsUtils)))
+    )
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the workspace list.")));
+  // A catalog that read cleanly but names no workspace maps every path to
+  // nothing, which is indistinguishable from "nothing changed" and would leave
+  // the tripwire inert. This repository always has workspaces, so an empty one
+  // is an unreadable one.
+  if (A.isReadonlyArrayEmpty(workspaces)) {
+    return ProofChangedPackagesUnavailable.make({ kind: "unavailable", reason: "workspace list was empty" });
+  }
+  const committed = yield* readYeetChangedPathsStrict(context, capture);
+  const worktree = yield* readWorktreeChangedPaths(context, capture);
+  const paths = A.dedupe([...committed, ...worktree]);
+  return ProofChangedPackagesKnown.make({
+    kind: "known",
+    packages: changedPackageNamesForPaths(repoRoot, workspaces, paths),
+    paths: A.length(paths),
+  });
+});
+
+/**
+ * The packages one attempt's change touches, read once per attempt (ruling 69).
+ *
+ * **Details**
+ *
+ * The change is the branch's own diff against its base
+ * (`git diff --name-only <base>...HEAD`) unioned with the working tree the
+ * attempt verified — every staged, unstaged and untracked path, read from one
+ * `git status --porcelain=v1 -z --untracked-files=all` snapshot so a path the
+ * attempt ran against cannot fall out of the set between collection and
+ * mapping. Each path maps to the deepest workspace containing it; paths under
+ * no workspace contribute nothing, because root config is already the proof
+ * epoch (ruling 4) and documentation is not package source.
+ *
+ * It never fails: a failed or truncated git read, or a workspace list that
+ * could not be resolved, yields `unavailable` carrying the reason, and the
+ * tripwire then fails closed for every lane with a package scope. The verdict
+ * writer logs the outcome and proceeds either way.
+ *
+ * **Example** (Build the reader effect)
+ *
+ * ```ts
+ * import { changedPackagesForAttempt, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/tripwire",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(changedPackagesForAttempt(context))) // true
+ * ```
+ *
+ * @param context - Repo context naming the checkout and its base ref.
+ * @param capture - The command capture to run `git` through; the repo capture by default.
+ * @returns The changed package set, or why it could not be read.
+ * @category services
+ * @since 0.0.0
+ */
+export const changedPackagesForAttempt = Effect.fn("Yeet.changedPackagesForAttempt")(function* (
+  context: RepoRunContext,
+  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+): Effect.fn.Return<
+  ProofChangedPackages,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
+  return yield* readChangedPackages(context, capture).pipe(
+    Effect.catch((error) =>
+      Effect.succeed(ProofChangedPackagesUnavailable.make({ kind: "unavailable", reason: error.message }))
+    )
+  );
+});
+
+/**
+ * Render the one-line changed-package note the verdict path logs.
+ *
+ * **Example** (Render a known set)
+ *
+ * ```ts
+ * import { ProofChangedPackagesKnown, renderProofChangedPackages } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(
+ *   renderProofChangedPackages(
+ *     ProofChangedPackagesKnown.make({ kind: "known", packages: ["@beep/x"], paths: 2 })
+ *   )
+ * ) // "proof shadow changed packages: @beep/x (2 path(s))"
+ * ```
+ *
+ * @param changed - What the attempt knows about its changed packages.
+ * @returns The one-line note the verdict path logs.
+ * @category rendering
+ * @since 0.0.0
+ */
+export const renderProofChangedPackages = (changed: ProofChangedPackages): string =>
+  ProofChangedPackages.match(changed, {
+    known: (known) =>
+      `proof shadow changed packages: ${A.match(known.packages, {
+        onEmpty: () => "none",
+        onNonEmpty: (names) => A.join(names, ", "),
+      })} (${known.paths} path(s))`,
+    unavailable: (unavailable) =>
+      `proof shadow changed packages unavailable: ${unavailable.reason}; tripwire fails closed`,
+  });
+
+// Lane id to the union of the package scopes its reports carry: one attempt can
+// journal the same lane id more than once, and the union is the conservative read.
+const laneInputScopes = (
+  reports: ReadonlyArray<QualityTaskLaneRunReport>
+): HashMap.HashMap<string, HashSet.HashSet<string>> =>
+  A.reduce(
+    A.flatMap(reports, (report) => report.lanes),
+    HashMap.empty<string, HashSet.HashSet<string>>(),
+    (scopes, lane) =>
+      HashMap.modifyAt(scopes, lane.id, (existing) =>
+        O.some(HashSet.union(O.getOrElse(existing, HashSet.empty<string>), HashSet.fromIterable(lane.inputPackages)))
+      )
+  );
+
+/**
+ * Build the ledger's changed-package tripwire from one attempt's own reports
+ * and its changed package set (ruling 70).
+ *
+ * **Details**
+ *
+ * A lane's package scope is the union of the `inputPackages` its reports carry
+ * for that lane id. When the changed set is `known` the tripwire fires only on
+ * a non-empty intersection, so a repo-wide lane that verified `@beep/x` is
+ * refused when `@beep/x` changed and served when only `@beep/y` did. When the
+ * changed set is `unavailable` it fires for every lane with a non-empty scope,
+ * which is the conservative side of an unknown. A root-task-only lane has an
+ * empty scope and is decided by its digest alone in both cases, because that
+ * digest already spans every input Turbo declares for the root task. Undeclared
+ * lanes never reach the tripwire: the ledger refuses them as
+ * `undeclared-inputs` first.
+ *
+ * A failed lane also carries an empty scope, because `resolveLaneInputDigest`
+ * short-circuits on failure before it reads any Turbo digest. Nothing is lost:
+ * every production lane tuple declares no digest, so a failed lane's key is
+ * `undeclared` and the ledger refuses it as `undeclared-inputs` before the
+ * tripwire runs. A lane whose digest the executor declared has no Turbo ledger
+ * to derive a scope from on either outcome.
+ *
+ * **Example** (A scoped lane trips on its own package)
+ *
+ * ```ts
+ * import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality"
+ * import { changedPackageTripwireFor, ProofChangedPackagesKnown, ProofInputDigest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const reports = [
+ *   QualityTaskLaneRunReport.make({
+ *     schemaVersion: "quality-task-lane-run/v1",
+ *     lanes: [
+ *       QualityTaskLaneRun.make({
+ *         id: "quality:check",
+ *         label: "quality:check",
+ *         status: "passed",
+ *         inputDigest: O.some("d1"),
+ *         inputPackages: ["@beep/x"]
+ *       })
+ *     ]
+ *   })
+ * ]
+ * const key = ProofInputDigest.make({
+ *   laneId: "quality:check",
+ *   laneClass: "cli-runnable",
+ *   commandDigest: "c1",
+ *   envProfile: "local",
+ *   inputDigest: "d1",
+ *   inputSource: "turbo-task-hash",
+ *   epochDigest: "e1",
+ *   key: "k1"
+ * })
+ *
+ * const changed = ProofChangedPackagesKnown.make({ kind: "known", packages: ["@beep/x"], paths: 1 })
+ * console.log(changedPackageTripwireFor(reports, changed)(key)) // true
+ * ```
+ *
+ * @param reports - Durable inner-lane reports of the running attempt.
+ * @param changed - What the attempt knows about its changed packages.
+ * @returns The predicate the ledger consults before it reads any fact.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const changedPackageTripwireFor: {
+  (changed: ProofChangedPackages): (reports: ReadonlyArray<QualityTaskLaneRunReport>) => ProofChangedPackageTripwire;
+  (reports: ReadonlyArray<QualityTaskLaneRunReport>, changed: ProofChangedPackages): ProofChangedPackageTripwire;
+} = dual(2, (reports: ReadonlyArray<QualityTaskLaneRunReport>, changed: ProofChangedPackages) => {
+  const scopes = laneInputScopes(reports);
+  const scopeFor = (laneId: string): HashSet.HashSet<string> =>
+    O.getOrElse(HashMap.get(scopes, laneId), HashSet.empty<string>);
+  return ProofChangedPackages.match(changed, {
+    known: (known): ProofChangedPackageTripwire => {
+      const changedPackages = HashSet.fromIterable(known.packages);
+      return (key) => !HashSet.isEmpty(HashSet.intersection(scopeFor(key.laneId), changedPackages));
+    },
+    unavailable: (): ProofChangedPackageTripwire => (key) => !HashSet.isEmpty(scopeFor(key.laneId)),
+  });
+});
 
 /**
  * A lane that ran to a terminal outcome and can be shadowed.
@@ -486,6 +905,9 @@ const shadowRow = (
 
 const isDisagreement = (row: ProofLedgerShadowRow): boolean => isHit(row.decision) && !isPassed(row.observed);
 
+const isTripwireMiss = (row: ProofLedgerShadowRow): boolean =>
+  isMiss(row.decision) && ProofMissReason.is["changed-package-tripwire"](row.decision.reason);
+
 /**
  * Shadow one attempt's inner lanes against the checkout proof ledger (ruling 63).
  *
@@ -499,13 +921,19 @@ const isDisagreement = (row: ProofLedgerShadowRow): boolean => isHit(row.decisio
  * "reuses" the fact it is about to write, and every row of the attempt lands in
  * one append (shadow row then fact, per lane, in report order), so a fault
  * mid-attempt leaves no half-recorded lane. Nothing is skipped or
- * short-circuited: shadow mode only observes. The changed-package tripwire is
- * not wired here; C5 adds it with its must-fail fixture.
+ * short-circuited: shadow mode only observes.
+ *
+ * The lookup runs behind the changed-package tripwire (ruling 70), built from
+ * the attempt's own reports and its changed package set: a lane whose package
+ * scope intersects the change is refused as `changed-package-tripwire` before
+ * any fact is read, and every scoped lane is refused when the changed set is
+ * `unavailable`. The tripwire only ever turns a would-be hit into a miss, so
+ * it cannot make the shadow pass claim reuse it has not earned.
  *
  * **Example** (Build the shadow pass effect)
  *
  * ```ts
- * import { recordProofShadowForAttempt } from "@beep/repo-cli/test/Yeet"
+ * import { ProofChangedPackagesKnown, recordProofShadowForAttempt } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
  * const facts = {
@@ -517,12 +945,14 @@ const isDisagreement = (row: ProofLedgerShadowRow): boolean => isHit(row.decisio
  *   stage: "pre-push" as const,
  *   envProfile: "local" as const,
  * }
- * console.log(Effect.isEffect(recordProofShadowForAttempt("/repo", facts, []))) // true
+ * const changed = ProofChangedPackagesKnown.make({ kind: "known", packages: [], paths: 0 })
+ * console.log(Effect.isEffect(recordProofShadowForAttempt("/repo", facts, [], changed))) // true
  * ```
  *
  * @param repoRoot - Checkout whose ledger receives the rows.
  * @param facts - Attempt identity, branch, head, tier, stage and env profile.
  * @param reports - Durable inner-lane reports the wrappers wrote for this attempt.
+ * @param changed - What the attempt knows about the packages its change touches.
  * @returns Counts of what the pass recorded.
  * @category services
  * @since 0.0.0
@@ -530,7 +960,8 @@ const isDisagreement = (row: ProofLedgerShadowRow): boolean => isHit(row.decisio
 export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForAttempt")(function* (
   repoRoot: string,
   facts: ProofShadowAttemptFacts,
-  reports: ReadonlyArray<QualityTaskLaneRunReport>
+  reports: ReadonlyArray<QualityTaskLaneRunReport>,
+  changed: ProofChangedPackages
 ): Effect.fn.Return<ProofShadowAttemptSummary, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const candidates = shadowableLaneRuns(reports);
   if (A.isReadonlyArrayEmpty(candidates)) {
@@ -543,7 +974,7 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
     });
   }
   const epoch = yield* collectProofEpoch(repoRoot);
-  const ledger = yield* ProofLedger.make(repoRoot, constFalse);
+  const ledger = yield* ProofLedger.make(repoRoot, changedPackageTripwireFor(reports, changed));
   const now = yield* DateTime.now;
   const keys = yield* Effect.forEach(candidates, (candidate) => shadowInputDigest(candidate, facts, epoch));
   const decisions = yield* ledger.lookupAll(keys, now);
@@ -564,6 +995,7 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
     wouldReuse: A.length(A.filter(rows, ({ row }) => isHit(row.decision))),
     disagreements: A.length(A.filter(rows, ({ row }) => isDisagreement(row))),
     undeclared: A.length(A.filter(rows, ({ undeclared }) => undeclared)),
+    tripped: A.length(A.filter(rows, ({ row }) => isTripwireMiss(row))),
   });
 });
 
@@ -576,9 +1008,17 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
  * import { ProofShadowAttemptSummary, renderProofShadowAttemptSummary } from "@beep/repo-cli/test/Yeet"
  *
  * const line = renderProofShadowAttemptSummary(
- *   ProofShadowAttemptSummary.make({ attemptId: "a", recorded: 3, wouldReuse: 1, disagreements: 0, undeclared: 2 })
+ *   ProofShadowAttemptSummary.make({
+ *     attemptId: "a",
+ *     recorded: 3,
+ *     wouldReuse: 1,
+ *     disagreements: 0,
+ *     undeclared: 2,
+ *     tripped: 1,
+ *   })
  * )
- * console.log(line) // "proof shadow: 3 lane(s) recorded; would reuse 1; disagreements 0; undeclared inputs 2"
+ * // "proof shadow: 3 lane(s) recorded; would reuse 1; disagreements 0; undeclared inputs 2; tripwire 1"
+ * console.log(line)
  * ```
  *
  * @param summary - What one attempt's shadow pass recorded.
@@ -587,7 +1027,7 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
  * @since 0.0.0
  */
 export const renderProofShadowAttemptSummary = (summary: ProofShadowAttemptSummary): string =>
-  `proof shadow: ${summary.recorded} lane(s) recorded; would reuse ${summary.wouldReuse}; disagreements ${summary.disagreements}; undeclared inputs ${summary.undeclared}`;
+  `proof shadow: ${summary.recorded} lane(s) recorded; would reuse ${summary.wouldReuse}; disagreements ${summary.disagreements}; undeclared inputs ${summary.undeclared}; tripwire ${summary.tripped}`;
 
 const missCounts = (rows: ReadonlyArray<ProofLedgerShadowRow>): ReadonlyArray<ProofShadowMissCount> => {
   const counts = MutableHashMap.empty<ProofMissReason, number>();

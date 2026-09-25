@@ -1,0 +1,22 @@
+{
+  "lane": "r32-agents-workspace",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T00:48:09.996398+00:00",
+  "finished": "2026-09-25T00:52:33.396505+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-agents-workspace.jsonl`\n\nConfirmed 0, disqualified 0. The validator accepted the empty file (`inventory OK: 0 records`).\n\nAll nine assigned roots were covered (149 non-test, non-generated source files). The seven seed clusters still match the current source and the canonical inventory, so none were rewritten. No seed drift and no unresolved source question.",
+  "transcriptSha256": "31eadd7b29fab7a91f62fef9367386f53381e2ac850f4f75856712df21caad57",
+  "runnerSha256": "aa44ba577e1b7204b1c85a0549dec38d8afaa068dc269d06b86150e89fc633b4",
+  "seedSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

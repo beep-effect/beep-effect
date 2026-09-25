@@ -1,0 +1,22 @@
+{
+  "lane": "r33-drivers-s-z",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:41:02.845736+00:00",
+  "finished": "2026-09-25T01:44:24.064554+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 3,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-s-z.jsonl`.\n\nConfirmed 3, disqualified 0. All nine assigned roots were covered. The five seed clusters are unchanged D1 records (same owners and members), so they were not rewritten. No unresolved source question.",
+  "transcriptSha256": "754440e54f708aa2f53a2b4ec58cdb4f23b1fc28daa0ef1b11b654e6f37da209",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 3 records, 3 unique ids\n"
+}

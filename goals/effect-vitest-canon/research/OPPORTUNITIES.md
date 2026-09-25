@@ -1969,6 +1969,85 @@ Original processes and evidence are preserved.
   metrics reported in an earlier failed run. Do not lower or seed baseline floors.
 
 
+## Backlog-first continuation friction
+
+The full staged inventory validator stopped at a generated declaration under
+`packages/foundation/modeling/schema/dist/internal/test/Markdown.test-kit.d.ts`
+that was absent in the fresh worktree (`Not a regular contained source file`).
+No canonical correction or completeness claim was made from that attempt. Keep
+generated-artifact availability distinct from authored-test inventory coverage
+when reconciling the deferred census delta.
+
+The first package timing command assumed a package-local Vitest installation and
+failed with `MODULE_NOT_FOUND` before tests ran. Using the root-installed Node
+Vitest entrypoint from the package directory completed successfully. Resolve the
+workspace runner explicitly for subsequent timing pairs.
+
+
+## PN arbitrary pattern escaping
+
+While replacing literal-only PN name generators with grammar patterns, the first
+edit under-escaped the string form of a regular expression. Package verification
+stopped during module loading with `Invalid regular expression: nothing to repeat`.
+The corrected string escaping passes package audit and docgen, including new
+Unicode and escaped-unit sampling regressions. Keep the generator regression
+checks so parser compatibility and escaping errors fail before publication.
+
+
+## Foundation adoption of the instrumented runner
+
+P2 reached identity and found that test-utils depends on identity and schema,
+including imports inside the runner's error definitions. Direct adoption of
+`@beep/test-utils/Vitest` would create a package cycle. An upstream runner package
+with compatibility re-exports would have made the original D7 implementation
+adoptable by the foundation packages. Extract and prove that dependency boundary
+before adopting it here; keep the foundation/modeling wave separate.
+
+## 2026-09-22: presence-only helper guidance remains a judgment candidate
+
+Applying the existing Vocab EV006 recommendation as nested `assertTrue` kept
+the same Boolean predicate, but the compiler rejected it with
+`TS377050 missedPipeableOpportunity`. The detector also classified that helper
+call as a new EV006 occurrence and recommended itself. The pipeline form
+preserves the decoder, Option predicate and true polarity while satisfying the
+compiler. This is a reviewed presence-only assertion, not a payload comparison;
+syntax disappearance alone cannot establish a stronger assertion. The inventory
+recommendation should distinguish accepted Boolean-helper dispositions from
+structural-helper migrations to avoid circular remediation guidance.
+
+## Explicit roots for cross-worktree inventory checks
+
+While validating the PR #1191 scanner against the PR #1188 runner, invoking
+the scanner CLI from the runner working directory still selected the scanner
+checkout: QualityArtifactSupport derives its default root from import.meta.url.
+The scan was stopped without using it as integration evidence, then restarted
+through the typed inventory writer with rootDir explicitly supplied. A root
+flag and an emitted scan-root receipt would prevent ambiguous cross-worktree
+validation and the wasted scan. Private output paths preserved both PR trees.
+
+## Hosted coverage runner communication loss
+
+PR #1191 at edc5f1d251 passed the required hosted gates, but the optional Coverage
+Regression job failed with the GitHub annotation "The self-hosted runner lost
+communication with the server." Its logs endpoint returned 404 and no coverage
+regression was reported. Reran only the failed job in workflow run 35718534873;
+no source or baseline change was warranted. Runner health telemetry would help
+separate host resource or network loss from a test failure earlier.
+
+### Scanner post-push proof: inherited lane-timings coverage gap
+
+The full local proof for merged PR #1191 passed every lane except coverage.
+`Ci/LaneTimings.ts` measured L/S/B/F 98.06/97.55/96.46/95.02 against
+98.24/97.70/97.27/95.26 floors. The scanner diff touches neither this source
+nor its tests. The uncovered fallback at line 2250 was introduced by #1186
+(commit `6c412ed5a3`), which added ruleset-population rendering. Attribution
+is narrowed to inherited coverage debt; a focused test proof is still needed
+before claiming full causality. Do not lower the baseline. Keep any tooling
+remediation separate from the runner extraction under D13.
+
+The hosted coverage retry for #1191 again ended with the runner-lost-communication
+annotation and no downloadable job log. That infrastructure failure is separate
+from the locally measured coverage shortfall.
 ## Runner import detector prerequisite
 
 The existing instrumented-harness recognizer names only the test-utils entrypoint.

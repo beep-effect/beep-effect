@@ -1,4 +1,5 @@
 import {
+  assessCiLaneTimingWindowBounds,
   attemptOnePickupSeconds,
   buildCiLaneTimingWindowReport,
   CiLaneTimingGithubClient,
@@ -354,6 +355,20 @@ const testConsoleText = Effect.fn("TestCiLaneTimings.consoleText")(function* () 
   const errors = A.filter(yield* TestConsole.errorLines, isString);
   return A.join(A.appendAll(logs, errors), "\n");
 });
+
+// One `Console.log` per render, so the newest line is the whole output of the
+// command that just ran — what a preview assertion about "starts with" needs.
+const lastLaneTimingsLog = Effect.fn("TestCiLaneTimings.lastLog")(function* () {
+  const logs = A.filter(yield* TestConsole.logLines, isString);
+  return O.getOrElse(A.last(logs), () => "");
+});
+
+// The bounded census guard reads the clock, and virtual time starts at the
+// epoch, so every 2026 cutoff is in the future until the clock is pinned.
+const pinLaneTimingsClock = (iso: string) => TestClock.setTime(DateTime.toEpochMillis(DateTime.makeUnsafe(iso)));
+
+const INSIDE_CENSUS_WINDOW = "2026-09-24T22:09:00Z";
+const AFTER_CENSUS_WINDOW = "2026-09-30T00:00:00Z";
 
 describe("ci lane timings attempt filter", () => {
   it.effect("collects every page of all-attempt jobs", () =>
@@ -1365,6 +1380,7 @@ describe("ci lane timing admission window", () => {
   it.effect("dispatches every bounded CLI renderer with event and provenance filters", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
+      yield* pinLaneTimingsClock(AFTER_CENSUS_WINDOW);
       yield* runLaneTimingsCommand([
         "--window",
         "--event",
@@ -1405,6 +1421,10 @@ describe("ci lane timing admission window", () => {
       expect(output).toContain("population\tlane\trunId\trunAttempt");
       expect(output).toContain("## Successful attempt-one durations");
       expect(output).toContain("ci lane timing window");
+      // An exactly seven-day window that has already closed is a census, so no
+      // renderer may stamp it as a preview.
+      expect(output).not.toContain("PREVIEW");
+      expect(output).not.toContain("Preview, not an admission census");
       expect(A.some(commands, Str.includes("event=pull_request&branch=feature%2Fcensus"))).toBe(true);
       expect(A.some(commands, Str.includes("event=push&branch=main"))).toBe(true);
       expect(A.some(commands, Str.includes("event=push&branch=release%2Fcensus"))).toBe(true);
@@ -1412,5 +1432,151 @@ describe("ci lane timing admission window", () => {
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
       provideScopedLayer(laneTimingsCommandLayer)
     );
+  });
+
+  it.effect("refuses a census window whose cutoff has not arrived and reads no GitHub endpoint", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      yield* pinLaneTimingsClock(INSIDE_CENSUS_WINDOW);
+      const exit = yield* Effect.exit(
+        runLaneTimingsCommand([
+          "--window",
+          "--since",
+          "2026-09-23T00:00:00Z",
+          "--until",
+          "2026-09-30T00:00:00Z",
+          "--markdown",
+        ])
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
+      expect(rendered).toContain("--until 2026-09-30T00:00:00.000Z is in the future");
+      expect(rendered).toContain("Pass --preview to run a preview that is never an admission census.");
+      expect(commands).toStrictEqual([]);
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
+      provideScopedLayer(laneTimingsCommandLayer)
+    );
+  });
+
+  it.effect("refuses a closed census window one second short of seven days", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      yield* pinLaneTimingsClock(AFTER_CENSUS_WINDOW);
+      const exit = yield* Effect.exit(
+        runLaneTimingsCommand(["--window", "--since", "2026-09-04T00:00:01Z", "--until", "2026-09-11T00:00:00Z"])
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
+      expect(rendered).toContain("window spans 6d 23h 59m 59s, under seven days");
+      expect(rendered).not.toContain("is in the future");
+      expect(commands).toStrictEqual([]);
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
+      provideScopedLayer(laneTimingsCommandLayer)
+    );
+  });
+
+  it.effect("stamps every preview of a partial window as a preview", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      yield* pinLaneTimingsClock(INSIDE_CENSUS_WINDOW);
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--since",
+        "2026-09-23T00:00:00Z",
+        "--until",
+        "2026-09-30T00:00:00Z",
+        "--preview",
+      ]);
+      const summary = yield* lastLaneTimingsLog();
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--since",
+        "2026-09-23T00:00:00Z",
+        "--until",
+        "2026-09-30T00:00:00Z",
+        "--markdown",
+        "--preview",
+      ]);
+      const markdown = yield* lastLaneTimingsLog();
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--since",
+        "2026-09-23T00:00:00Z",
+        "--until",
+        "2026-09-30T00:00:00Z",
+        "--tsv",
+        "--preview",
+      ]);
+      const tsv = yield* lastLaneTimingsLog();
+      const clause = "Window 2026-09-23T00:00:00.000Z → 2026-09-30T00:00:00.000Z: cutoff is in the future.";
+      const banner = `> **Preview, not an admission census.** ${clause}`;
+
+      expect(Str.startsWith("ci lane timing window (PREVIEW, not an admission census)")(summary)).toBe(true);
+      expect(summary).toContain(banner);
+      expect(Str.startsWith(banner)(markdown)).toBe(true);
+      expect(markdown).toContain("## Successful attempt-one durations");
+      // Machine-readable rows are stamped too, as a `#` comment above the
+      // header row, so no preview output is paste-compatible with a census.
+      expect(
+        Str.startsWith(`# Preview, not an admission census. ${clause}\npopulation\tlane\trunId\trunAttempt`)(tsv)
+      ).toBe(true);
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
+      provideScopedLayer(laneTimingsCommandLayer)
+    );
+  });
+
+  it.effect("stamps a preview of an admissible window as breaching no bound", () => {
+    const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      yield* pinLaneTimingsClock(AFTER_CENSUS_WINDOW);
+      yield* runLaneTimingsCommand([
+        "--window",
+        "--since",
+        "2026-09-04T00:00:00Z",
+        "--until",
+        "2026-09-11T00:00:00Z",
+        "--preview",
+      ]);
+
+      const output = yield* testConsoleText();
+      expect(output).toContain(
+        "> **Preview, not an admission census.** Window 2026-09-04T00:00:00.000Z → 2026-09-11T00:00:00.000Z: no bound breached."
+      );
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)),
+      provideScopedLayer(laneTimingsCommandLayer)
+    );
+  });
+
+  it("assesses every census bound against the judging instant", () => {
+    const now = DateTime.makeUnsafe("2026-09-30T00:00:00Z");
+    const closedWeek = windowOptions({
+      since: DateTime.makeUnsafe("2026-09-23T00:00:00Z"),
+      until: now,
+    });
+    const openWeek = windowOptions({
+      since: DateTime.makeUnsafe("2026-09-23T00:00:00.001Z"),
+      until: DateTime.makeUnsafe("2026-09-30T00:00:00.001Z"),
+    });
+    const closedShortWeek = windowOptions({
+      since: DateTime.makeUnsafe("2026-09-23T00:00:00.001Z"),
+      until: now,
+    });
+    const openShortWeek = windowOptions({
+      since: DateTime.makeUnsafe("2026-09-24T00:00:00Z"),
+      until: DateTime.makeUnsafe("2026-09-30T00:00:00.001Z"),
+    });
+
+    // A cutoff exactly at `now` has arrived and a span of exactly seven days is
+    // a full week, so both boundaries admit.
+    expect(assessCiLaneTimingWindowBounds(closedWeek, now)).toStrictEqual([]);
+    expect(assessCiLaneTimingWindowBounds(openWeek, now)).toStrictEqual(["future-cutoff"]);
+    expect(assessCiLaneTimingWindowBounds(closedShortWeek, now)).toStrictEqual(["short-span"]);
+    expect(assessCiLaneTimingWindowBounds(openShortWeek, now)).toStrictEqual(["future-cutoff", "short-span"]);
   });
 });

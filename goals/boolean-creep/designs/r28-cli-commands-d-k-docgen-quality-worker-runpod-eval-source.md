@@ -1,9 +1,7 @@
-# Design: r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source
+# r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source
 
-Current P2 design; the bounded R28 correction confirms this actual post-validation owner. Independent P3 and merged packet ratification remain required.
-ID `r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source`.
-HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`; main
-`d1b4d769fbaffddd55717f3b1ba461897dd545c5`.
+P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`,2026-09-22.
+Tier1 internal8/3 remains designed; independent replacement P3 pending.
 
 Owned source object: `packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts:1035-1040`,
 enclosing `docgenQualityWorkerRunpodEvalCommand`. Raw descriptor anchor990 is
@@ -60,9 +58,11 @@ this owner; independent P3 review remains required before implementation.
 Use a shared, annotated `QualityWorkerEvalSelection` schema with cases
 `Input { path: S.String }`, `Package { selector: S.String }`, and `All {}`.
 An operation schema owns `{ selection, packetLimit: S.Number }`; neither an
-all Boolean nor absent sibling source payloads remain in it. Use S.TaggedUnion
-and schema-derived cases/match. The exact local Effect reference at
-`.repos/effect/packages/effect/src/Schema.ts:6200-6250` defines those utilities.
+all Boolean nor absent sibling source payloads remain in it. Use a private LiteralKit discriminator domain with named annotated case classes,
+an annotated union followed by S.toTaggedUnion, and schema-derived cases/match.
+Preserve helper statics rather than annotating them away. Local Effect Schema.ts
+and the repository schema skill remain authoritative; prove exact construction
+at implementation rather than relying on stale line numbers.
 Do not tighten empty strings, packet limits or paths at construction beyond
 this command's existing validation.
 
@@ -75,7 +75,9 @@ construction out of its current body so both entrypoints share actual work;
 no second analyzer or copied report-building body is permitted. The raw
 entrypoint continues its existing input-first and target-resolution behavior,
 including affected fallback and its current `scope: package` / generated:affected
-metadata mapping. The new entrypoint matches the three valid selections and
+metadata mapping. Though its JSDoc says mutually exclusive, preserve actual
+exported behavior; this owner is the validated CLI allocation, not a finding
+that all broader helper input combinations are illegal. The new entrypoint matches the three valid selections and
 uses the same filesystem decoding, target lookup and analysis primitives.
 
 Place the shared data schema in the existing Docgen schema role file and the
@@ -105,7 +107,10 @@ orphan check and selector errors also remain unchanged.
   The new selection does not replace this broader scope family.
 - `internal/QualityWorkerEval.ts` owns report decode, packet-limit conversion,
   analysis and JSON generation. `internal/QualityWorkerRunpodEval.ts` owns
-  the Runpod evaluator and serializer. Neither report schema changes.
+  the Runpod evaluator and serializer. Neither report schema changes. The helper qualityWorkerEvalSourcePacketLimit at1175
+  remains unchanged; it maps nonpositive limits to0 and positive limits to at least
+  DEFAULT_SOURCE_PACKET_LIMIT. That source report limit is separate from actual worker
+  packet execution, so passing0 must still suppress worker turns as documented.
 - `commands/Docgen/index.ts:14`, `src/test/Docgen.test-kit.ts:11,25-29`, the
   package's exported `commands/*` subpaths and `Docgen.command.ts:1213-1223`
   registrations preserve CLI/test reachability. Targets' documented import
@@ -153,9 +158,11 @@ orphan-config precedence; these broader helper cases do not expand the three
 valid CLI operation states. Use source aliases in package tests.
 
 `test/docgen.test.ts:3510-3569` exercises input worker eval and output metadata;
-Runpod cleanup/confirmation/timeout tests around3675-3758 retain their current
+Runpod cleanup tests preceding3859 and confirmation/timeout tests3859-3914 retain their current
 behavior. Run focused Docgen suites and full `@beep/repo-cli` package verification
-at implementation time. No product tests or provider requests ran in P2.
+at implementation time. No product tests, secret resolution, infrastructure operations, worker launches
+or provider requests ran in P2. Private enumeration covers source presence only;
+it is not runtime resolver or CLI proof.
 
 ## Risk
 
@@ -169,4 +176,7 @@ both candidate records just because they share a helper. The historical docgen q
 request remains D1 and cannot inherit this post-validation 8/3 proof. This
 current P2 design is not an independent P3 receipt or source implementation.
 
-Integration and original provisional hashes: `data/r28-cli-first-owners-integration.json`.
+Historical integration: `data/r28-cli-first-owners-integration.json`. Current
+private input snapshots and audit bind this refresh; no historical review credit
+transfers. Shared schema/resolver ownership was coordinated with the local-worker
+P2 agent; the first implementation creates them and the second reuses them.

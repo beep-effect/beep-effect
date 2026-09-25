@@ -1,18 +1,18 @@
 # Instance
 
 - id: `vault-sync-push-failure-disposition`
-- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
-- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:1050`
+- exact source SHA: `0be1f13d62fa00cb65e34ff69ec99043380f8d81`
+- source/main SHA (not a new corpus census): `0be1f13d62fa00cb65e34ff69ec99043380f8d81`
+- file:line: `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:1057`
 - symbol: `recordPushFailure.requeue`
 - members: `retryable`, `requeue`
-- evidence: E4 at `VaultSyncEngine.service.ts:1049-1059` — `requeue` is `error.retryable && attemptCount < config.maxAttempts`, so requeue implies retryable at the sole producer.
+- evidence: E4 at `VaultSyncEngine.service.ts:1056-1066` — `requeue` is `error.retryable && attemptCount < config.maxAttempts`, so requeue implies retryable at the sole producer.
 
 # Current shape
 
-`recordPushFailure` receives a `DmsMirrorUnavailable`, increments the persisted operation attempt count, and derives the transient `requeue` boolean at lines 1043-1050. It then maps that boolean to the existing persisted `SyncOperationStatus` literals `queued` or `failed` at lines 1051-1057. The second read at lines 1059-1068 marks the item `error` only for a terminal failure.
+`recordPushFailure` receives a `DmsMirrorUnavailable`, increments the persisted operation attempt count, and derives the transient `requeue` boolean at lines 1050-1057. It then maps that boolean to the existing persisted `SyncOperationStatus` literals `queued` or `failed` at lines 1058-1064. The second read at lines 1066-1075 marks the item `error` only for a terminal failure.
 
-`DmsMirrorUnavailable.retryable` remains an independent adapter policy field in `packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts:36-57`; its optional disconnect classification is unrelated. The mirror path supplies those errors at `VaultSyncEngine.service.ts:1104-1107`. A vanished local file is normalized to an explicitly non-retryable mirror error at lines 1108-1120 so the leased operation cannot wedge the queue.
+`DmsMirrorUnavailable.retryable` remains an independent adapter policy field in `packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts:36-57`; its optional disconnect classification is unrelated. The mirror path supplies those errors at `VaultSyncEngine.service.ts:1111-1114`. A vanished local file is normalized to an explicitly non-retryable mirror error at lines 1115-1127 so the leased operation cannot wedge the queue.
 
 The numeric budget is a real input rather than another bit in this cluster. `attemptCount` is persisted as a nonnegative integer at `packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts:64-91`. `maxAttempts` is positive, defaults to three, and supports an explicit value of one at `VaultSync.config.ts:47-61,98-110,126-157`. The comparison occurs after incrementing, so `maxAttempts = 1` exhausts the first failed attempt.
 
@@ -44,12 +44,12 @@ Write that status to the operation, then use `SyncOperationStatus.is.failed(stat
 - `packages/documents/domain/src/entities/SyncOperation/SyncOperation.values.ts:47-73` — reuse the existing `SyncOperationStatus` LiteralKit and exact `queued`/`failed` encoded values; retain `leased` and `succeeded` for their unrelated lifecycle writers.
 - `packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts:64-91` — no schema edit; preserve persisted `attemptCount`, `lastError`, and status columns and indexes.
 - `packages/documents/server/src/aggregates/Sync/VaultSync.config.ts:47-61,98-110,126-157` — no edit; preserve default three, positive-integer decoding, environment override, and explicit test-layer configuration including one attempt.
-- `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:1043-1069` — replace `requeue` and both boolean reads with one queued/failed status selection and failed-status guard. Preserve increment-before-comparison, operation update before item update, exact error reason in both rows, and the item-ref update.
-- `VaultSyncEngine.service.ts:1101-1123` — no sequencing edit; preserve leasing before the remote verb, successful push handling, mirror error handling, vanished-file normalization, and the returned progress signal.
-- `VaultSyncEngine.service.ts:1126-1150` — preserve FIFO pump behavior so a requeued operation may retry in the same pass while a terminal failure leaves no queued work.
-- `VaultSyncEngine.service.ts:1402-1448` — no edit; failed-operation revival is a later convergence policy that resets the attempt budget and status and is not part of the immediate failure decision.
+- `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:1050-1076` — replace `requeue` and both boolean reads with one queued/failed status selection and failed-status guard. Preserve increment-before-comparison, operation update before item update, exact error reason in both rows, and the item-ref update only after the returned updated item is available. Preserve complete operation/item spreads: identity, provenance, idempotency, generation, digest, paths, remote fields and every unrelated optional field. An operation-update failure prevents the item update; an item-update failure prevents the ref update. Do not add rollback or swallow repository failures.
+- `VaultSyncEngine.service.ts:1108-1130` — no sequencing edit; preserve leasing before the remote verb, successful push handling, mirror error handling, vanished-file normalization, and the returned progress signal.
+- `VaultSyncEngine.service.ts:1133-1161` — preserve FIFO pump behavior so a requeued operation may retry in the same pass while a terminal failure leaves no queued work.
+- `VaultSyncEngine.service.ts:1409-1455` — no edit; failed-operation revival is a later convergence policy that resets the attempt budget and status and is not part of the immediate failure decision.
 - `packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts:17-57` — no edit; retain `DmsMirrorUnavailable.retryable`, reason, provider, optional disconnect reason, encoded shape, and typed-error identity.
-- `packages/documents/server/test/VaultSyncEngine.test.ts:380-446` — retain retry-then-success, non-retryable terminal failure, and default-three exhaustion coverage; add the explicit max-one first-failure boundary.
+- `packages/documents/server/test/VaultSyncEngine.test.ts:384-452` — retain retry-then-success, non-retryable terminal failure, and default-three exhaustion coverage; add the explicit max-one first-failure boundary.
 - `packages/documents/server/test/VaultSyncReviewRegressions.test.ts:142-188` — retain vanished-file terminal failure and no-wedge coverage.
 - Sync operation repository and PGlite tests — no shape edit; retain queued/leased/succeeded/failed storage and query behavior.
 
@@ -57,18 +57,18 @@ Targeted source and barrel search found no other reader or writer of the local `
 
 # Guard-deletion accounting
 
-Delete `const requeue` at line 1050, the `requeue ? "queued" : "failed"` projection at line 1056, and the negated `if (!requeue)` guard at line 1059. One status derivation and the existing `SyncOperationStatus.is.failed` guard replace them. Keep the retryability field on `DmsMirrorUnavailable`, the incremented numeric attempt count, and the budget comparison because they are independent source facts needed to choose the outcome.
+Delete `const requeue` at line 1057, the `requeue ? "queued" : "failed"` projection at line 1063, and the negated `if (!requeue)` guard at line 1066. One status derivation and the existing `SyncOperationStatus.is.failed` guard replace them. Keep the retryability field on `DmsMirrorUnavailable`, the incremented numeric attempt count, and the budget comparison because they are independent source facts needed to choose the outcome.
 
 # Encoded-side impact
 
-None for the changed carrier. `requeue` is a private local and is never encoded or persisted. The operation continues to persist the exact existing strings `queued` and `failed`, exact incremented attempt count, and exact error reason; the item continues to persist `error` and the same reason only for terminal failure. The full operation-status schema, database columns, indexes, repository contracts, and all existing rows remain unchanged.
+None for the changed carrier. `requeue` is a private local and is never encoded or persisted. The operation continues to persist the exact existing strings `queued` and `failed`, exact incremented attempt count, and exact error reason; the item continues to persist `error` and the same reason only for terminal failure. The full operation-status schema, database columns, indexes, repository contracts, and all existing rows remain unchanged. `DmsMirrorUnavailable.disconnectReason` remains `OptionFromOptionalKey` with None default and omission encoding for None; provider, full nonempty reason, retryable and tagged error identity stay intact. `lastError` stays the existing nullable Option encoding. No secret lookup, adapter call or database migration is needed for this design.
 
 # Test impact
 
 Preserve the current assertions that a retryable first failure under the default-three budget retries in the same pass and succeeds with attempt count one; a non-retryable first failure writes failed, marks the item error, and copies the reason; and three retryable failures exhaust the default budget at count three. Add an explicit `VaultSyncConfig.layerConfig` case with `maxAttempts = 1` proving a retryable first failure goes directly to failed and marks the item error. Retain the vanished-file non-retryable case and assert no leased row remains.
 
-Where repository fixtures expose updates, assert operation update occurs before the terminal item update, queued failures do not mark the item error, and failure reasons remain exact. No browser QA is required for this server-only decision.
+Where repository fixtures expose updates, assert operation update occurs before the terminal item update, queued failures do not mark the item error, and failure reasons remain exact. No browser QA is required for this server-only decision. This P2 refresh inspected source and existing fixtures only; no sync, push, secret read, external call or package test was executed. The bounded arithmetic projection accompanying the audit is not runtime implementation proof. After independent review, run focused engine/regression tests and package verification for any edited package.
 
 # Risk and sequencing
 
-Tier 1 internal derived refactor. Although the selected status is persisted, the changed carrier is the transient `requeue` decision; the persisted status model and bytes do not change. The main risks are comparing before increment, changing `<` to `<=`, marking requeued items as error, or altering the same-pass retry schedule. No new schema, state, dependency, generated file, wire migration, or status cross-product is introduced.
+Tier 1 internal derived refactor. Although the selected status is persisted, the changed carrier is the transient `requeue` decision; the persisted status model and bytes do not change. Coordinate with the separately owned vault-status selection: it receives no deletion credit here, and status publication/connection arbitration remains outside this local decision. The main risks are comparing before increment, changing `<` to `<=`, marking requeued items as error, or altering the same-pass retry schedule. No new schema, state, dependency, generated file, wire migration, or status cross-product is introduced.

@@ -1,0 +1,146 @@
+[
+  {
+    "appKind": null,
+    "lab": false,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": null,
+    "lab": false,
+    "stories": true,
+    "legal": true
+  },
+  {
+    "appKind": null,
+    "lab": true,
+    "stories": false,
+    "legal": false
+  },
+  {
+    "appKind": null,
+    "lab": true,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "nextjs",
+    "lab": false,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "nextjs",
+    "lab": false,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "nextjs",
+    "lab": true,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "nextjs",
+    "lab": true,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "vite",
+    "lab": false,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "vite",
+    "lab": false,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "vite",
+    "lab": true,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "vite",
+    "lab": true,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "service",
+    "lab": false,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "service",
+    "lab": false,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "service",
+    "lab": true,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "service",
+    "lab": true,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "tauri",
+    "lab": false,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "tauri",
+    "lab": false,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "tauri",
+    "lab": true,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "tauri",
+    "lab": true,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "runtime-proof",
+    "lab": false,
+    "stories": false,
+    "legal": true
+  },
+  {
+    "appKind": "runtime-proof",
+    "lab": false,
+    "stories": true,
+    "legal": false
+  },
+  {
+    "appKind": "runtime-proof",
+    "lab": true,
+    "stories": false,
+    "legal": false
+  },
+  {
+    "appKind": "runtime-proof",
+    "lab": true,
+    "stories": true,
+    "legal": false
+  }
+]

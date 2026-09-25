@@ -1,0 +1,627 @@
+{
+  "representable": 1658880,
+  "legal": 31,
+  "scope": "source-derived finite grammar, not executed CLI",
+  "rows": [
+    {
+      "type": "library",
+      "family": null,
+      "kind": null,
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "drivers",
+      "kind": null,
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "ecosystem",
+      "kind": null,
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "type": "library",
+      "family": "foundation",
+      "kind": "primitive",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "foundation",
+      "kind": "modeling",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "foundation",
+      "kind": "capability",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "foundation",
+      "kind": "ui-system",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "tooling",
+      "kind": "library",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "tooling",
+      "kind": "tool",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "tooling",
+      "kind": "policy-pack",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "library",
+      "family": "tooling",
+      "kind": "test-kit",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": null,
+      "kind": null,
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "drivers",
+      "kind": null,
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "ecosystem",
+      "kind": null,
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "foundation",
+      "kind": "primitive",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "foundation",
+      "kind": "modeling",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "foundation",
+      "kind": "capability",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "foundation",
+      "kind": "ui-system",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "tooling",
+      "kind": "library",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "tooling",
+      "kind": "tool",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "tooling",
+      "kind": "policy-pack",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "tool",
+      "family": "tooling",
+      "kind": "test-kit",
+      "appKind": null,
+      "lab": false,
+      "flags": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "nextjs",
+      "lab": false,
+      "flags": [
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "nextjs",
+      "lab": true,
+      "flags": [
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "vite",
+      "lab": false,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "vite",
+      "lab": true,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "service",
+      "lab": false,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "service",
+      "lab": true,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "tauri",
+      "lab": false,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "tauri",
+      "lab": true,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "type": "app",
+      "family": null,
+      "kind": null,
+      "appKind": "runtime-proof",
+      "lab": false,
+      "flags": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  ]
+}

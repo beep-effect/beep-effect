@@ -1,0 +1,57 @@
+{
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "mainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "withdrawals": [
+    {
+      "id": "docgen-generation-outcome",
+      "owner": "DocgenGenerationResult",
+      "ownerLine": 392,
+      "ownFieldCount": 6,
+      "actualBooleanMembers": ["success"],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-quality-package-outcome",
+      "owner": "DocgenQualityPackageReport",
+      "ownerLine": 486,
+      "ownFieldCount": 10,
+      "actualBooleanMembers": ["timedOut"],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-subject-collection-outcome",
+      "owner": "PackageSubjectCandidateResult",
+      "ownerLine": 903,
+      "ownFieldCount": 4,
+      "actualBooleanMembers": ["timedOut"],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-runpod-cleanup-outcome",
+      "owner": "DocgenQualityWorkerRunpodEvalCleanup",
+      "ownerLine": 170,
+      "ownFieldCount": 5,
+      "actualBooleanMembers": ["keepPod"],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-worker-packet-review",
+      "owner": "PacketCandidate",
+      "ownerLine": 530,
+      "ownFieldCount": 9,
+      "actualBooleanMembers": ["isFail"],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    }
+  ],
+  "integration": "Parent after R33 terminal. Archive five designs and remove five qualified rows; no D1/D2 replacement. Preserve raw footer/history."
+}

@@ -1,74 +1,145 @@
-# R28 P2 design: files-worker-score-thresholds
+# P2 design: files-worker-score-thresholds
 
-Frozen HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Native P2 source/design proof is bound by `data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md` and the original bytes are archived by `data/r28-cli-retained-integration.json`. Independent replacement P3 design review remains pending; no prior review approval is transferred and no product implementation or test acceptance is claimed. Preserve the complete decoded API, public schema/method/test-kit exports, full payloads and encoded outputs described below. Raw request defaults, typed diagnostics and their ordering remain supported contracts; their D1 owners are not implementation targets of this returned-state migration.
+## Source binding and status
 
-# Instance
+Source HEAD `f5e1d4c64f37e0a8c42e217eee5f06841220c161`.
+Primary owner: `packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts:1384-1405`.
+Status remains **designed**, Tier 1, internal derived sibling state, E4.
+This refresh supersedes the active R28 design, whose immutable input is archived by
+its integration receipt. Independent replacement P3 review and implementation are
+pending. No test acceptance or application credit transfers from this audit.
 
-- id: `files-worker-score-thresholds`
-- exact source SHA: `93217d998f851e2e93d9864e2b5315552eaa58a7`
-- corpus source SHA: `d1b4d769fbaffddd55717f3b1ba461897dd545c5`
-- file:line: `packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts:1389`
-- symbol: `isWorkerDispositionCoherent`
-- members: `couldMeetMatchThreshold`, `mustMeetMatchThreshold`,
-  `couldMeetReviewThreshold`, `couldMissReviewThreshold`
-- evidence: E4 at `MatchPerson.ts:1389-1400` plus the required
-  reviewThreshold < matchThreshold check at lines 587-593.
+## Current shape
 
-# Current shape
+The four locals at lines 1389-1392, in this exact bit order, are:
 
-Four locals classify one maximum worker score against two tolerance bands.
-Review is always below match, so the two raw overlapping pair candidates miss
-cross-relations. Explicit thresholds may be closer than twice the 0.000001
-tolerance, allowing the bands to overlap.
+- A: `couldMeetMatchThreshold = s >= m - t`.
+- B: `mustMeetMatchThreshold = s > m + t`.
+- C: `couldMeetReviewThreshold = s >= r - t`.
+- D: `couldMissReviewThreshold = s <= r + t`.
 
-# Cardinality gap
+Here `t = 0.000001` (`MatchPerson.ts:70`). The supported options have
+`0 <= r < m <= 1`: `MatchPersonOptions` uses `FaceDetectionConfidence`, a finite
+inclusive [0,1] schema, and `validateThresholds` at lines 587-594 rejects `r >= m`.
+Worker face scores use finite inclusive [-1,1] `PersonMatchSimilarityScore`
+(`MatchPerson.schemas.ts:316-343,1333-1336`); `maximumValidatedFaceScore` at
+1363-1382 computes the maximum after aggregate/reference validation.
+NaN and infinities are not additional legal states. Do not add a seventh state
+for malformed raw values that the existing decoding boundary rejects.
 
-Four booleans represent 16 combinations and six are reachable across supported
-threshold configurations: below review, review band, between bands,
-overlapping review/match bands, match band, and above match. The overlapping
-state exists when match-review is at most twice tolerance.
+## Cardinality gap
 
-# Target schema
+Four independent booleans represent 16 states. Supported calls admit exactly six:
 
-Define one private `WorkerScoreThresholdBand` LiteralKit with those six states.
-Classify score once from ordered boundaries, including the close-threshold
-overlap, then match it for dispositions. Do not create two independent
-three-state literals or change tolerance inclusivity.
+| Literal | ABCD | Meaning under the computed boundaries |
+| --- | --- | --- |
+| below-review | 0001 | s < r-t |
+| review-band | 0011 | s >= r-t, s < m-t, s <= r+t |
+| between-bands | 0010 | s >= r-t, s < m-t, s > r+t |
+| overlapping-bands | 1011 | s >= m-t, s <= r+t |
+| match-band | 1010 | s >= m-t, s > r+t, s <= m+t |
+| above-match | 1110 | s > m+t |
 
-# Migration inventory
+For finite ordered thresholds, floating-point addition/subtraction by the same
+positive tolerance are monotone. Thus B implies A, A implies C, B excludes D,
+and absence of C implies D. These implications admit exactly the six listed
+vectors. The probe supplies an actual supported witness for each vector.
+Individual fixed threshold configurations need not reach all six; the count is
+across supported configurations, not six states per invocation.
 
-- `MatchPerson.ts:70,230` — retain exact tolerance and approximate score check.
-- `MatchPerson.ts:587-593` — preserve supported strict review<match ordering.
-- `MatchPerson.ts:1363-1405` — replace four locals with one classifier and
-  exhaustive match while retaining face-count, quality, and aligner rules.
-- `MatchPerson.ts:1461` caller keeps the same inconsistent-disposition error.
-- Threshold defaults/flags in `Files.command.ts:365-417,667-732` and worker
-  arguments in `MatchPerson.worker-service.ts:445-542` remain unchanged.
-- Add focused synthetic score/tolerance boundaries to Files command tests.
+**Correct the old overlap shortcut:** classify using the exact computed
+`r-t`, `r+t`, `m-t`, `m+t`. Do not substitute `m-r <= 2*t` for overlap; floating
+rounding can make that real-arithmetic equivalence false for JavaScript numbers.
+Boundary equality belongs to the lower-inclusive/upper-inclusive band according
+to the actual source comparisons, especially strict B and inclusive D.
 
-# Guard-deletion accounting
+## Target schema
 
-Delete all four boolean locals and their negations/combinations. One literal
-classification becomes the only threshold-state source. Keep independent face
-quality, partial aligner, and disposition checks.
+Add one private, annotated `WorkerScoreThresholdBand` LiteralKit with the six
+literal members above and a same-name derived Type. Reuse the existing
+`@beep/schema/LiteralKit` import and file identity. No new exported model,
+independent pair literals, raw product alias, or stored booleans are needed.
+If annotation strips needed kit helpers, retain an unannotated private base and
+restore supported statics using the repository's existing helper; do not assume
+annotation retains every custom method. Exhaustive `Match.value(...).pipe(...)`
+can consume the six-member Type directly.
 
-# Encoded-side impact
+Implement a single classifier, preserving this decision order (pseudocode only):
 
-None. This state is transient validation logic. Worker scores, thresholds,
-tolerance, report disposition, and errors remain unchanged.
+1. If `s < r-t`, below-review.
+2. Else if `s > m+t`, above-match.
+3. Else if `s < m-t`, choose review-band when `s <= r+t`, else between-bands.
+4. Else choose overlapping-bands when `s <= r+t`, else match-band.
 
-# Test impact
+Translate this decision tree to the repo's Effect Match helpers. It reads the
+numeric evidence once to yield one schema-derived literal. Do not re-create the
+four booleans as members or expose a second truth source.
 
-Test every inclusive/exclusive boundary, ordinary gap, gap exactly 2t, smaller
-overlap, and all six states against match/review/no-match dispositions. Retain
-aggregate-score and report validation tests.
+## Migration inventory
 
-# Risk
+Replace lines 1389-1392 and dependent uses at 1396-1400. Preserve these exact
+acceptance sets, composing their independent conditions without broadening them:
 
-Include this classifier in the ordered Tier 1E Files subsystem batch. The risk is erasing the supported overlap or
-moving strict versus inclusive comparisons; encode the existing inequalities
-verbatim.
+| Report disposition | Threshold states accepted | Independent condition |
+| --- | --- | --- |
+| solo-match | overlapping-bands, match-band, above-match | faceCount === 1 and no quality flags |
+| low-quality-match | overlapping-bands, match-band, above-match | faceCount === 1 and quality flags |
+| group-match | overlapping-bands, match-band, above-match | faceCount > 1 |
+| review | review-band, between-bands, overlapping-bands, match-band | partial aligner rejection also accepts any threshold state |
+| no-match | below-review, review-band, overlapping-bands | none |
+| no-face | none | false in this helper |
+| unreadable | none | false in this helper |
 
-R28 locator repair: the named Booleans are sibling local values inside `isWorkerDispositionCoherent`. The old dotted suffix was descriptive; no such nested object is declared. The existing complete finite law, lifecycle, numeric payloads and guard accounting remain unchanged.
+Retain `hasQualityFlags` and `hasPartialAlignerRejection` as independent evidence.
+Do not turn a partial aligner rejection into a new threshold band or suppress it
+for high/low scores. Keep the helper's boolean coherence result: it answers a
+predicate, not the targeted multi-flag product.
 
-Landing: use the ordered Tier 1E internal tooling subsystem batches, not singleton PRs per Tier 1 record. Include the six-state threshold classifier in the Files subsystem batch; keep its MatchPerson.ts edits serial with later Tier 2 reference-codec work and preserve the independent face-quality/aligner checks.
+`validateWorkerEntryDisposition` at 1456-1466 must preserve its typed error and
+message. `validateWorkerEntryEvidence` at 1468-1483 must retain face-shape,
+reason, aggregate/reference, best-score, then disposition ordering, including
+its early return for no comparable face. Threshold validation and the tolerance
+used for approximate scores at line 230 remain unchanged.
+
+`Files.command.ts:409-423,718-732` retains raw flags, defaults, decoding and
+threshold resolution. `MatchPerson.worker-service.ts:412-454,531-548` retains
+worker arguments and exact returned-parameter checks. Public option/report/
+worker schema exports, decoded API, payloads, report ordering and encoded
+outputs are unchanged by this private transient state migration.
+
+## Guard-deletion accounting
+
+Delete the four named local booleans and their downstream combined/negated
+uses. The six-way literal is the sole threshold state source. Preserve the
+independent face/quality/aligner predicates, numeric validation, and error
+boundary.
+
+## Encoded-side impact
+
+No codec rider or new wire encoding is needed. This design grants no
+blanket permission to alter exported schema constructors or release metadata.
+
+## Test impact
+
+The saved `probe.mjs` extracts current four predicate expressions and seven
+branch expressions. It compares the proposed decision tree and acceptance table
+against them for 78 ordered threshold pairs, 1,464 finite score samples, and
+122,976 disposition/face-count/quality/aligner combinations. All six bit vectors
+are witnessed. The recovered run reproduced `probe-result.json` byte-for-byte.
+
+This is bounded source characterization, not exhaustive IEEE-754 testing, a
+compiled implementation, or whole report pipeline validation. Implementation
+must add focused tests in the existing Files test suite for each computed
+boundary, neighboring representable values, ordinary gap, close overlap,
+rounding-sensitive near-2t gaps, all six states and all seven dispositions.
+Retain existing malformed worker, aggregate/best-score, quality, partial aligner
+and diagnostic-order coverage. Run the owning package verification after code
+changes. Keep MatchPerson edits serial with other Files owners in the ordered
+Tier 1E Files batch and later Tier 2 reference-codec work; no singleton landing
+or independent review is implied by this refreshed design.
+
+## Risk
+
+Preserve exact floating-point boundary computations, independent quality and
+aligner predicates, and existing error ordering. Do not claim exhaustive proof
+from the bounded probe.

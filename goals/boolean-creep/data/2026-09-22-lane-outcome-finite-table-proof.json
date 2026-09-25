@@ -1,0 +1,575 @@
+{
+  "scope": "Source-derived standalone model, not product execution; no arbitrary malformed bag coverage",
+  "cases": 9,
+  "checks": [
+    {
+      "case": "reuse",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "reused",
+      "old": [true, false, false],
+      "new": [true, false, false],
+      "oldEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ],
+      "newEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ]
+    },
+    {
+      "case": "reuse",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "reused",
+      "old": [true, true, false],
+      "new": [true, true, false],
+      "oldEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ],
+      "newEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ]
+    },
+    {
+      "case": "reuse",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "reused",
+      "old": [true, false, false],
+      "new": [true, false, false],
+      "oldEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ],
+      "newEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ]
+    },
+    {
+      "case": "reuse",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "reused",
+      "old": [true, true, false],
+      "new": [true, true, false],
+      "oldEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ],
+      "newEvents": [
+        "attribute-reuse",
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch"
+      ]
+    },
+    {
+      "case": "pass",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "pass",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "pass",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "pass",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "imprecise",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "imprecise",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "imprecise",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "imprecise",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "stop",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "stop-after-red",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "stop",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "stop-after-red",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "stop",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "stop-after-red",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "stop",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "stop-after-red",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "none-clean",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": ["append-failures", "stop-latch", "attempt-proof-if-session"]
+    },
+    {
+      "case": "none-clean",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": ["append-failures", "stop-latch", "attempt-proof-if-session"]
+    },
+    {
+      "case": "none-clean",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": ["append-failures", "stop-latch", "attempt-proof-if-session"]
+    },
+    {
+      "case": "none-clean",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": ["append-failures", "stop-latch", "attempt-proof-if-session"]
+    },
+    {
+      "case": "none-failed",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["append-failures", "stop-latch"],
+      "newEvents": ["append-failures", "stop-latch"]
+    },
+    {
+      "case": "none-failed",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["append-failures", "stop-latch"],
+      "newEvents": ["append-failures", "stop-latch"]
+    },
+    {
+      "case": "none-failed",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["append-failures", "stop-latch"],
+      "newEvents": ["append-failures", "stop-latch"]
+    },
+    {
+      "case": "none-failed",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["append-failures", "stop-latch"],
+      "newEvents": ["append-failures", "stop-latch"]
+    },
+    {
+      "case": "no-decision",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "no-decision",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "no-decision",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, false],
+      "new": [false, false, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "no-decision",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, false],
+      "new": [false, true, false],
+      "oldEvents": ["journal", "append-run", "append-failures", "stop-latch"],
+      "newEvents": ["journal", "append-run", "append-failures", "stop-latch"]
+    },
+    {
+      "case": "pass-no-duration",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "pass-no-duration",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "pass-no-duration",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "pass-no-duration",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "no-failure-stop",
+      "failFast": false,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "no-failure-stop",
+      "failFast": false,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "no-failure-stop",
+      "failFast": true,
+      "priorLatch": false,
+      "contribution": "ran",
+      "old": [false, false, true],
+      "new": [false, false, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    },
+    {
+      "case": "no-failure-stop",
+      "failFast": true,
+      "priorLatch": true,
+      "contribution": "ran",
+      "old": [false, true, true],
+      "new": [false, true, true],
+      "oldEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ],
+      "newEvents": [
+        "journal",
+        "append-run",
+        "append-failures",
+        "stop-latch",
+        "attempt-proof-if-session"
+      ]
+    }
+  ],
+  "passed": 36
+}

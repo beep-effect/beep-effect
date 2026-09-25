@@ -1,0 +1,245 @@
+{
+  "scope": "bounded arithmetic witnesses, full law follows implication and source grammar",
+  "rows": [
+    {
+      "retryable": false,
+      "priorCount": 0,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 0,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 0,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 0,
+      "maxAttempts": 4,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 1,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 1,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 1,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 1,
+      "maxAttempts": 4,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 2,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 2,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 2,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 2,
+      "maxAttempts": 4,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 3,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 3,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 3,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 3,
+      "maxAttempts": 4,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 4,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 4,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 4,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": false,
+      "priorCount": 4,
+      "maxAttempts": 4,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 0,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 0,
+      "maxAttempts": 2,
+      "requeue": true
+    },
+    {
+      "retryable": true,
+      "priorCount": 0,
+      "maxAttempts": 3,
+      "requeue": true
+    },
+    {
+      "retryable": true,
+      "priorCount": 0,
+      "maxAttempts": 4,
+      "requeue": true
+    },
+    {
+      "retryable": true,
+      "priorCount": 1,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 1,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 1,
+      "maxAttempts": 3,
+      "requeue": true
+    },
+    {
+      "retryable": true,
+      "priorCount": 1,
+      "maxAttempts": 4,
+      "requeue": true
+    },
+    {
+      "retryable": true,
+      "priorCount": 2,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 2,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 2,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 2,
+      "maxAttempts": 4,
+      "requeue": true
+    },
+    {
+      "retryable": true,
+      "priorCount": 3,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 3,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 3,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 3,
+      "maxAttempts": 4,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 4,
+      "maxAttempts": 1,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 4,
+      "maxAttempts": 2,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 4,
+      "maxAttempts": 3,
+      "requeue": false
+    },
+    {
+      "retryable": true,
+      "priorCount": 4,
+      "maxAttempts": 4,
+      "requeue": false
+    }
+  ]
+}

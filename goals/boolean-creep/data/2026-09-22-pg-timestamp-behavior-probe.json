@@ -1,0 +1,261 @@
+{
+  "pairs": [
+    {
+      "ident": "timestamp",
+      "withTimezone": false,
+      "mode": "date",
+      "accepted": true
+    },
+    {
+      "ident": "timestamp",
+      "withTimezone": false,
+      "mode": "string",
+      "accepted": true
+    },
+    {
+      "ident": "timestamp",
+      "withTimezone": true,
+      "mode": "date",
+      "accepted": false
+    },
+    {
+      "ident": "timestamp",
+      "withTimezone": true,
+      "mode": "string",
+      "accepted": false
+    },
+    {
+      "ident": "timestamptz",
+      "withTimezone": false,
+      "mode": "date",
+      "accepted": false
+    },
+    {
+      "ident": "timestamptz",
+      "withTimezone": false,
+      "mode": "string",
+      "accepted": false
+    },
+    {
+      "ident": "timestamptz",
+      "withTimezone": true,
+      "mode": "date",
+      "accepted": true
+    },
+    {
+      "ident": "timestamptz",
+      "withTimezone": true,
+      "mode": "string",
+      "accepted": true
+    }
+  ],
+  "defaults": [
+    {
+      "mode": "omitted",
+      "tz": "omitted",
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamptz",
+        "mode": "string",
+        "withTimezone": true,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "string timestamp",
+        "columnType": "PgTimestampString",
+        "withTimezone": true
+      }
+    },
+    {
+      "mode": "omitted",
+      "tz": false,
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamp",
+        "mode": "string",
+        "withTimezone": false,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "string timestamp",
+        "columnType": "PgTimestampString",
+        "withTimezone": false
+      }
+    },
+    {
+      "mode": "omitted",
+      "tz": true,
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamptz",
+        "mode": "string",
+        "withTimezone": true,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "string timestamp",
+        "columnType": "PgTimestampString",
+        "withTimezone": true
+      }
+    },
+    {
+      "mode": "date",
+      "tz": "omitted",
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamptz",
+        "mode": "date",
+        "withTimezone": true,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "object date",
+        "columnType": "PgTimestamp",
+        "withTimezone": true
+      }
+    },
+    {
+      "mode": "date",
+      "tz": false,
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamp",
+        "mode": "date",
+        "withTimezone": false,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "object date",
+        "columnType": "PgTimestamp",
+        "withTimezone": false
+      }
+    },
+    {
+      "mode": "date",
+      "tz": true,
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamptz",
+        "mode": "date",
+        "withTimezone": true,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "object date",
+        "columnType": "PgTimestamp",
+        "withTimezone": true
+      }
+    },
+    {
+      "mode": "string",
+      "tz": "omitted",
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamptz",
+        "mode": "string",
+        "withTimezone": true,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "string timestamp",
+        "columnType": "PgTimestampString",
+        "withTimezone": true
+      }
+    },
+    {
+      "mode": "string",
+      "tz": false,
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamp",
+        "mode": "string",
+        "withTimezone": false,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "string timestamp",
+        "columnType": "PgTimestampString",
+        "withTimezone": false
+      }
+    },
+    {
+      "mode": "string",
+      "tz": true,
+      "descriptor": {
+        "dialect": "pg",
+        "kind": "timestamp",
+        "ident": "timestamptz",
+        "mode": "string",
+        "withTimezone": true,
+        "_tag": "timestamp"
+      },
+      "builder": {
+        "name": "value",
+        "keyAsName": false,
+        "notNull": false,
+        "hasDefault": false,
+        "primaryKey": false,
+        "isUnique": false,
+        "dataType": "string timestamp",
+        "columnType": "PgTimestampString",
+        "withTimezone": true
+      }
+    }
+  ]
+}

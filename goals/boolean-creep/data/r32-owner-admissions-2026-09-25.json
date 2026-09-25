@@ -1,0 +1,38 @@
+{
+  "kind": "boolean-creep-r32-owner-admissions/v1",
+  "owners": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r3-drivers-arch-tool-name-collision-stage-flags/admission.json",
+      "sha256": "82cb2f283f97cbadec581842087f9b2d60a5bbf1d40d0d0698c009b1710bffd3"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/effect-vitest-function-reachability/admission.json",
+      "sha256": "6fb01cf85bc90add2fdc27a5c01bb7666252594ee26a16d182e973c7181153f9"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/effect-vitest-reachable-helper-flags/admission.json",
+      "sha256": "6d9fc2c90f104c481dbbd3d6ab6aab36d86a9924eceeae23770913e1918f6324"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r30-cli-yeet-portfolio-index-staged-deletion/admission.json",
+      "sha256": "77b8e473e436d52618ed88cb63adea49034af10186756d880716b1a0bb2beac9"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r29-yeet-sweep-worktree-probe-address/admission.json",
+      "sha256": "536d71cfa45881df491cca948740e774ee8a3325708181a688627204bf94de60"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-non-execution/admission.json",
+      "sha256": "2cfa7c49750292a285a312e8de4098b37b375699a99d04d4d7b559528605c3b5"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/laws-package-finding-policy/admission.json",
+      "sha256": "96fc3246740a96d531ce8b65274aed87d014e69b1e19cb882419a6bb7b87d0d1"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/admission.json",
+      "sha256": "d91ed54d0d671ec1712c67017df0e465b9c69f68184c294b2e3cd3e83f5c00bd"
+    }
+  ],
+  "independentP3Approval": false
+}

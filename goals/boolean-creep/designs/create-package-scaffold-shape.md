@@ -1,291 +1,190 @@
 # create-package-scaffold-shape
 
-Native P2 source/design refresh before R32, bound to merged source HEAD
-`a942d7dab3a962963912247d4699b7986bcb9c03` / main
-`e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`. This preserves status `designed`
-and cardinality 24/11. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
-Independent P3 review and implementation acceptance remain pending.
-
-Owner `ScaffoldShape` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:481`,
-with members `appKind`, `lab`, `withStoriesTsconfig`.
-Storage/exposure: stored/internal; target: literalkit.
-
-The prior public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
-[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
-[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) preserve the earlier baseline.
-The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/create-package-scaffold-shape.md) is preserved.
-Keep complete decoded exports, typed request diagnostics, public constructor and
-helper input domains, encoded keys/defaults/omission and full independent payloads
-as specified below. Paths beginning `src/` or `test/` are relative to
-`packages/tooling/tool/cli/` unless the design states otherwise.
-
-Unqualified product line references below refer to
-`packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts`.
+P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, 2026-09-22.
+Private resolved owner, Tier1 tooling batch; independent P3 and GATE2 pending.
+Source line references below name
+`packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts`
+unless otherwise stated.
 
 ## Current shape
 
-The private `ScaffoldShape` class stores `appKind` as an Option of the
-five AppKind literals, plus Boolean lab and stories controls at 481-483.
-One `.make` call at 1417 creates the resolved operation selector after
-the raw CLI validation. Private readers repeatedly reconstruct its mode
-from the Option, kind equality checks and Boolean branches.
+Private ScaffoldShape479-488 stores appKind: Option<AppKind>, lab:Boolean and
+withStoriesTsconfig:Boolean. AppKind has five values: nextjs, vite, service,
+tauri, runtime-proof. None is a sixth decoded appKind value, not null. The
+class has no own constructor defaults; the single writer1417 supplies all three
+values after raw CLI admission. CLI flags1112-1162 default app kind to empty
+string and lab/stories false; appKind1215-1217 translates empty to None.
 
-The app-kind flag defaults to an empty string and becomes explicit None
-or Some at 1215-1217. The lab/stories CLI flags default false. The class
-itself applies no Boolean or explicit None constructor defaults, and the
-actual writer supplies all three decoded values. OptionFromOptionalKey
-uses missing-key/None encoding; it does not make null a decoded app-kind
-value. The complete owner contains no other payload fields.
-
-Raw CLI flags and their exact typed diagnostics precede this allocation.
-The excluded anonymous handler parameter bag is not the target of this
-design; the actual resolved schema is. Preserve those diagnostics and
-defaults even while the new schema makes invalid resolved states impossible.
+Consumers are templateSpecsFor504, assetSpecsFor515, filesFor654,
+directoriesFor688 and generatePackageJson1987 onward, plus private selector
+helpers. Graft finds the declaration, sole allocation and all shape signatures;
+source inspection confirms private visibility. The raw handler facts and
+separately exported TemplateContext are not this owner.
 
 ## Cardinality gap
 
-Six decoded app-kind states × two lab values × two stories values =
-24 representable shapes. Eleven are supported:
+Six appKind states times two lab values times two stories values =24.
+Type/app-kind guards1190-1217, labFlagRefusal959-986 called1220-1224, and
+stories admission1322-1334 admit exactly11 modes:
 
-| Literal | appKind | lab | stories |
+| Mode | appKind | lab | stories |
 | --- | --- | --- | --- |
 | package | None | false | false |
 | package-with-stories | None | false | true |
-| nextjs | Some(nextjs) | false | false |
-| nextjs-lab | Some(nextjs) | true | false |
-| vite | Some(vite) | false | false |
-| vite-lab | Some(vite) | true | false |
-| service | Some(service) | false | false |
-| service-lab | Some(service) | true | false |
-| tauri | Some(tauri) | false | false |
-| tauri-lab | Some(tauri) | true | false |
-| runtime-proof | Some(runtime-proof) | false | false |
+| nextjs | nextjs | false | false |
+| nextjs-lab | nextjs | true | false |
+| vite | vite | false | false |
+| vite-lab | vite | true | false |
+| service | service | false | false |
+| service-lab | service | true | false |
+| tauri | tauri | false | false |
+| tauri-lab | tauri | true | false |
+| runtime-proof | runtime-proof | false | false |
 
-At 1220-1224, lab validation requires an app, excludes runtime-proof,
-and preserves the parent/description conditions. At 1322-1334 stories
-requires a foundation/ui-system library. The earlier type/app-kind gates
-at 1190-1217 imply stories can only have None appKind and lab false.
-The only constructor at 1417 is downstream of those gates.
-
-The old lab/stories pair is not independent; it is also not the complete
-cluster. Expand the existing id to all three real members and preserve
-all five Some literals. No required array/count/payload becomes a Boolean
-axis, and no second narrow pair record is needed.
+Lab requires a real app, prohibits runtime-proof, parent override and blank
+trimmed description. Stories requires library/foundation/ui-system; the earlier
+type/app-kind gates therefore force None and nonlab. All11 modes can satisfy
+remaining names/path/metadata validations. Those complete payload domains stay
+outside this mode projection. This is24/11, not a two-Boolean pair or a presence-
+only app-kind projection. No duplicate TemplateContext qualification credit.
 
 ## Target schema
 
-Replace the private class with one private annotated payload-free
-`ScaffoldShape` LiteralKit using the eleven literals in the table. Reuse
-the existing `LiteralKit` import at 21, `$I` identity composer at 60,
-and local annotation pattern already used by AppKind at 227-231.
-Do not wrap a payload-free mode in a new S.Class or hand-write a string union.
+Replace the three-field private class with an annotated eleven-value LiteralKit
+and inferred runtime type. Keep it payload-free; no redundant class or explicit
+string-union type. Reuse existing LiteralKit/AppKind helpers and identity
+composer. Use the repo's annotated LiteralKit helper pattern so literal helper
+statics remain available. Choose the one literal at1417 from already validated
+facts through exhaustive AppKind matching and Option matching; no new raw bag,
+Boolean getters or second correlated domain is introduced.
 
-At the current allocation point, choose the literal directly from the
-already validated facts. None appKind selects package or package-with-stories.
-Runtime-proof selects its one case. Each of the four real app kinds
-selects its normal or lab case. Use the existing AppKind helpers and
-exhaustive matching; do not create another raw three-field input schema or
-an object of Boolean getters. Preserve the existing order and wording of
-all guards before choosing the mode.
-
-Convert the shape readers to literal-based dispatch. The final selector is
-still one immutable local operation value; no new atom, service or stored
-cache is introduced. Keep `PackageType`, `AppKind`, family/kind metadata
-and the raw CLI values for their existing other readers, including the
-separately owned exported TemplateContext. Do not narrow those broader
-interfaces as a side effect of changing this private mode.
-
-Reuse all existing template/file/directory constants and all existing app
-manifest builders. The new mode selects the correct builder and supplies
-its existing single `lab` field as a known true/false value for that case.
-That builder input is a separate existing one-Boolean payload contract;
-do not rebuild the old three correlated fields as a compatibility object.
+Dispatch all private shape consumers on the literal. Reuse ordered template,
+file, directory and asset constants. Call the existing app manifest builders
+with case-specific true/false lab arguments: their one-Boolean input is a
+separate contract, not a reconstructed three-field shape. Package and stories
+cases keep separate type/family/kind metadata; runtime-proof retains package
+layout while choosing app scripts. Do not narrow raw CLI flags, exported
+TemplateContext or CreatePackageScripts to the private11-state domain.
 
 ## Migration inventory
 
-The current output baseline is main `e7b7d03e61`. The complete command source,
-all three owner declarations, validation gates, constructors, script helpers,
-and retired-name registry implementation are byte-identical to the prior d68
-source binding. The 284-to-e7b merge changes the authored included
-`templates/tsconfig.check.json.hbs:1-13`: it retains its five compiler switches
-and full `rootRelative` payload while removing the `module`/`moduleResolution`
-overrides. Do not restore those overrides while changing a selector or context.
+Replace declaration479-488 and sole writer1417. Migrate packageTemplateSpecsFor
+490, appTemplateSpecsFor495 and templateSpecsFor504; assetSpecsFor515 selects
+only the two Tauri modes. Migrate packageFilesFor642/appFilesFor645/filesFor654
+and packageDirectoriesFor685/directoriesFor688. Eliminate helpers whose sole
+purpose becomes reconstructing flags, without duplicating their arrays.
 
-Preserve rendering through TemplateRenderRequest at command 1508-1513 and the
-post-scaffold `syncTsconfigAtRoot` call at 1597-1601, after file generation,
-formatting and registration and before retirement clearing/lockfile work. The
-final overlay mirrors its owner project's references exactly; a missing owner
-reference key denotes an empty reference list. This generated output contract
-is distinct from the internal Boolean owner. New ordinary-package, service-app
-and lab assertions at `test/create-package.test.ts:735-747,1065-1077` and
-`test/create-package-lab.test.ts:453-463` prove that reference equality and both
-module-override absences must survive this refactor. Keep order, full path
-strings, optional-key behavior and unchanged command diagnostics. This upstream
-behavior earns no Boolean-guard deletion or implementation credit.
-The shared defaults at
-`src/internal/package-scripts/PackageScripts.schemas.ts:1250-1254,1271-1275`
-now give app and lab `beep:check` exactly `tsgo -p tsconfig.check.json`.
-Continue delegating to `scaffoldPackageScripts` at `:1351-1374`, including its
-full kind/optional-task contracts and sorted output; do not restore the former
-redundant `tsc -p tsconfig.json --noEmit` suffix. Preserve the separate stories
-check override and `tsc -p tsconfig.stories.json --noEmit` implementation at
-`CreatePackage.command.ts:1938-1943`, every arbitrary helper payload, and the
-CLI's narrower admission rules. Current script and manifest fixtures at
-`test/create-package.test.ts:245,267,320,1005,1060,1111` and the policy fixture at
-`test/package-scripts.policy.test.ts:127` assert this upstream output baseline.
-Their preservation earns no Boolean-guard deletion or implementation credit.
+Preserve this mode/output matrix through existing constants:
 
-The post-merge script writers are an explicit compatibility boundary.
-`appBaseScripts` at CreatePackage.command.ts:1772-1777 delegates to the canonical
-`scaffoldPackageScripts(lab ? "lab" : "app", [])`, then overlays the full caller
-`dev` and `beep:build` strings; only nonlabs receive coverage. The four real-app
-builders at 1835-1905 retain their start/Tauri/dependency overlays. Preserve
-this call to the existing package-scripts module instead of copying its table.
+- Package uses PACKAGE_TEMPLATE_SPECS, PACKAGE_FILES and PACKAGE_DIRECTORIES.
+  Stories appends STORIES_TEMPLATE_SPECS/STORIES_TSCONFIG_FILES/STORIES_DIRECTORIES
+  in their current order and selects the stories script override.
+- Next.js uses ordinary or lab-specific template/file constants; both use
+  NEXTJS_APP_DIRECTORIES. Lab adds LAB_EXTRA_FILES after the base file list.
+- Vite lab appends VITE_LAB_POSTCSS_TEMPLATE_SPEC and VITE_LAB_POSTCSS_FILE;
+  both modes use VITE_APP_DIRECTORIES. Lab extras remain last.
+- Service and Tauri use their existing app templates/files/directories for both
+  modes, plus lab extras for labs. Only Tauri modes carry TAURI_APP_ASSET_SPECS.
+- Runtime-proof uses package templates/files/directories and package manifests,
+  never a real-app manifest or lab asset/manifest. Its scripts kind is app.
 
-`packageScripts` at 1927-1946 accepts every nonlab `ScriptsPackageKind`, full
-`rootRelative` and `packagePath` strings, and either stories value. It requests
-exactly `["lint:fix", "test:integration", "docgen"]` from the canonical helper,
-then applies Babel, check-tests, policy and coverage overlays. Stories true
-additionally overrides `beep:check` and supplies `beep:check:stories`; false
-leaves the canonical kind-specific check intact. Direct exported helper calls
-have no ScaffoldShape admission gate. Preserve those signatures and all
-supported kind/stories combinations even where raw CLI validation is narrower.
-Do not delete the public helpers or their Boolean parameters as guard credit.
+Manifest generation1987 onward receives the same separate name, type,
+description, packagePath, metadata, portlessLabel and ecosystem peer payload.
+Replace shape destructuring1998 and Option builder probe2001-2005 with case
+selection of existing nextjs/vite/service/tauri builders1835-1905. Preserve
+base manifests, every dependency map, portless label/string and canonical
+encoder1922-1923 with trailing newline. Package fallback script-kind precedence
+2014-2025 stays ecosystem metadata, runtime-proof app, tool, library. Keep
+Ecosystem-specific manifest generation and all package export/files metadata.
+Do not classify runtime-proof as ordinary library merely because layout matches.
 
-The actual command branch at 2016-2040 selects scripts kind in this order:
-ecosystem metadata, remaining Some(appKind), tool, then library. A runtime-proof
-case falls through the dedicated app builders, uses the package-shaped manifest,
-and selects the canonical **app** script kind. Real apps/labs retain their
-dedicated builder path. Preserve this distinction, the ecosystem peer payload,
-full separate type/family/kind metadata, canonical encoder and trailing newline.
+Preserve current exported helper boundaries1957-1960:
+`CreatePackageScripts.app(dev, build, lab)` accepts arbitrary full dev/build
+strings and either lab value. It delegates1772-1777 to canonical
+scaffoldPackageScripts(lab ? lab : app, []) and only nonlabs get coverage.
+`CreatePackageScripts.package(kind, withStoriesTsconfig)` at1927-1939 accepts
+all nonlab ScriptsPackageKind values and either stories value. Direct callers
+have no raw CLI stories admission gate. Preserve that broader domain.
+**Current main removed rootRelative/packagePath helper arguments and the
+beep:policy overlay. Do not restore the older four-argument API.**
+The canonical helper1351-1374 in internal/package-scripts/PackageScripts.schemas.ts
+keeps task selection, referenced implementations and sorted records. Package
+helper requests lint:fix/test:integration/docgen, then Babel/check-tests/coverage
+and optional stories checks. Current canonical audits invoke lint:laws rather
+than beep:policy. App/lab check remains tsgo -p tsconfig.check.json; stories
+adds its separate tsc check. No copied script table.
 
-| Source | Required change or preserved boundary |
-| --- | --- |
-| 136-137,218-241 | Keep PackageType/AppKind source domains and decoders; reuse their helpers for classification. |
-| 479-488 | Replace the three-field private class with the eleven-value annotated LiteralKit and inferred type. |
-| 490-511 | Replace package stories checks and app-kind/lab template branching with mode dispatch over existing ordered template constants. Retire helpers that only re-expand the old flags once their callers migrate. |
-| 515-521 | Select existing Tauri assets for tauri and tauri-lab; every other mode yields the same empty asset list. |
-| 642-662 | Dispatch file lists by mode; preserve stories additions and append the lab manifest path after the same lab-specific base list. |
-| 685-701 | Dispatch directory lists by mode; normal/lab app variants share existing lists where appropriate. Runtime-proof keeps package directories. |
-| 959-986,1190-1414 | Preserve all raw CLI validation, error ordering, defaults, parent/name/retired-name/workspace checks and messages before allocation. These are not deleted by the private-mode refactor. |
-| 1417 | Construct one literal at the same point; no moved I/O or error gates. |
-| 1455-1467,1613-1618 | Preserve dry-run and final file-list ordering/text; both consume the migrated filesFor selector. |
-| 1479-1504 | Keep exported TemplateContext payload and its existing independently tracked campaign scope unchanged. |
-| 1508-1513 | Pass the migrated ordered template selector result and complete existing context to TemplateRenderRequest. |
-| 1539-1548 | Pass the new shape literal to generatePackageJson with the same full separate payload arguments. |
-| 1549-1586 | Preserve lab manifest creation, gitkeep files, directories, rendered files, assets, symlink, output paths and order in the file plan. Only existing shape selector calls change. |
-| 1755-1919,1927-1966,1993-2075 | Replace shape destructuring/Option app-manifest dispatch with mode selection of the existing app builders; keep lab values case-specific. Package and runtime-proof keep package manifest generation; stories only selects the existing stories script variant. Preserve canonical encoder and newline. |
+Keep validation1190-1414 and raw defaults/error ordering unchanged. Mode
+allocation does not move earlier or defer a refusal. Dry-run and final summaries
+1455-1467/1613-1618 continue using ordered filesFor. TemplateContext allocation
+1479-1504 remains separately owned, with all unrelated paths/strings/profiles.
+TemplateRenderRequest1508-1513 receives mode-selected templates and complete
+context. File plan1539-1586 preserves package.json then rendered files, gitkeep,
+lab manifest ordering, directories, assets and CLAUDE.md→AGENTS.md symlink.
+Keep execution, formatting, workspace/identity registration, syncTsconfigAtRoot
+1597-1601, retired-name clearing and lockfile refresh in current order.
 
-The complete direct reader set is templateSpecsFor, assetSpecsFor, filesFor,
-directoriesFor and generatePackageJson, plus their private helper functions.
-Only one actual constructor exists. Exact source and test searches found
-no other shape use; the graph's missing class edges were not treated as
-absence evidence. ScaffoldShape and its five selector/generator consumers remain private.
-The public `CreatePackageScripts` object at 1963-1966 additionally exposes
-`appBaseScripts` and `packageScripts` through CreatePackage/index.ts:14.
-The barrel therefore exports the command, resolver, TemplateContext and
-CreatePackageScripts. Public command runners continue accepting argv with
-existing flags; public script-helper callers keep their separate signatures.
+Tsconfig check template keeps current compiler switches/rootRelative and omits
+module/moduleResolution overrides. Root sync mirrors owner project references;
+missing references mean empty list. Do not revert upstream output while changing
+only the selector. Existing Command uses current Argument.String/Flag.String/
+Flag.Boolean RC APIs; no API downgrade. Tests now use effect/unstable/arbitrary.
 
 ## Guard-deletion accounting
 
-Delete the stored `appKind`, `lab` and `withStoriesTsconfig` fields from
-this private schema. Delete shape-field reconstruction in the template
-selector at 496-509, the file selector at 646-661, the directory selector
-at 690-698, and manifest destructuring at 2004. Replace the shape's Option
-presence/kind-plus-Boolean decision walls with exhaustive literal cases.
+Remove all three stored shape fields and repeated reconstruction in template,
+asset, file, directory and manifest consumers. Eliminate their Option-kind-
+Boolean decision walls in favor of exhaustive literal dispatch. Retire
+appManifestBuilderFor1908 only if its sole migrated caller disappears; preserve
+other AppKind consumers and raw CLI facts.
 
-At 515-521 replace the Option filter/map/fallback asset wall with the
-two known Tauri mode cases. In manifest selection at 2007-2014, replace
-the Option app-builder probe and branch with mode dispatch, preserving
-the same app builders and package fallback. Remove appManifestBuilderFor
-only if its single migrated caller is gone; retain AppKind helpers used
-elsewhere. The exported `CreatePackageScripts.package` stories parameter remains a
-supported public Boolean input. Internal resolved callers may supply known
-case constants, but must not remove or narrow the exported parameter or
-recreate the three-field shape bag. The public app helper likewise retains
-its separate scalar lab parameter.
-
-The raw lab/stories CLI guards remain necessary to produce their specified
-diagnostics and occur before the operation value exists. No such guard is
-claimed as deleted. The concrete removal is the parallel private fields
-and repeated runtime reconstruction across all actual shape readers.
+Raw diagnostic guards stay before allocation and receive no deletion credit.
+Exported app/package helper Booleans also stay; private modes supply known case
+values. Do not count TemplateContext fields or its separate writer as removed
+by this design. No codec wall is added for an unused private encoding.
 
 ## Encoded-side impact
 
-Generated-output equivalence is against current main `e7b7d03e61`, including its
-canonical lint task scripts and removed codegen placeholders. Do not restore
-pre-merge script tables. Keep tool-specific omission of the optional public
-integration task, lab omissions, runtime-proof app-kind script semantics and
-stories overrides. The public helper itself returns script records before the
-package manifest encoder; both that decoded record API and the final encoded
-package.json output must remain equivalent.
-
-The old schema has a potential optional-key encoding, but no actual
-decoder, encoder, persisted fixture, public schema export or external
-constructor consumes it. Do not add an unused compatibility codec.
-The private mode itself remains in-memory and is never serialized.
-
-Generated artifacts are observable and must remain equivalent: ordered
-templates, complete rendered content, file/directory paths, static Tauri
-assets, CLAUDE.md symlink target, lab manifests, portless labels/scripts,
-package manifests, source/export maps, metadata, dependencies and final
-newlines. Preserve the existing canonical package JSON and lab-manifest
-encoders. Preserve package-like runtime-proof output even though it was
-requested with `--type app`, and preserve distinct lab package scripts.
-
-Keep external command defaults and invalid-input diagnostics unchanged.
-No narrowing of raw argv is justified by the eleven-state resolved mode.
-The ordinary package case still carries its library/tool/family distinctions
-through the existing separate inputs; those are not discarded by the mode.
+ScaffoldShape is private in-memory selection with no decoder/encoder/persisted
+fixture/public constructor found. Its possible optional-key encoding is not a
+reason to add a compatibility codec. Observable generated outputs remain exact:
+ordered files/templates/directories/assets, rendered content, manifests and
+scripts, full path strings, dependencies, exports, lab metadata, identity/workspace
+registration, symlink target and final newlines. Preserve package-like
+runtime-proof and existing separate metadata payload. All CLI input diagnostics,
+defaults and side-effect order remain current-main behavior.
 
 ## Test impact
 
-Retain the new direct exported-helper fixtures at
-`create-package.test.ts:283-341`: library/ecosystem and tool output, stories,
-Next.js/Tauri/service apps and labs use complete equality assertions. Keep
-`create-package.test.ts:661-690` tool creation and its platform-node dependency,
-the exact app manifest comparisons at 852/915, and runtime-proof's app-kind
-script overrides at 1106-1115. Extend direct helper coverage, if a shared writer
-is touched, to all currently accepted nonlab kinds with both stories values
-and arbitrary full string arguments; these are wider than the private eleven
-ScaffoldShape cases and must not be filtered through that schema.
+Exercise all11 modes through existing command fixtures or private local type
+checks, without exporting selectors only for tests. Existing ordinary/stories,
+four normal apps, runtime-proof1082-1129 and four labs provide baseline fixtures.
+Retain full output checks and add focused exact ordered selector comparisons.
+Unknown literal modes fail schema validation. Preserve raw refusals: missing/
+invalid app kind, stories outside foundation/ui-system, lab non-app/runtime-proof,
+parent override, missing description, retired-name and directory refusals.
+Keep dry-run nonmutation, lockfile defaults and asset preservation scenarios.
 
-The existing CLI fixtures cover all eleven legal modes: ordinary package
-at `create-package.test.ts:692-756`; stories package and dry-run at
-1191-1256; Next.js, Tauri, Vite and service normal variants at 830-1081;
-runtime-proof at 1084-1132; four corresponding lab fixtures at
-`create-package-lab.test.ts:410-419,499-508,553-562,627-636` with their
-subsequent output assertions. Keep their complete manifest/file/config
-assertions and the existing lab no-ceremony, identity and root-workspace
-behavior.
+Direct exported helper tests create-package.test.ts282 onward exercise current
+2-argument package API. Preserve tool omission of optional public integration
+task and app/lab differences. If writers change, extend all accepted nonlab kinds
+across both stories values independently of CLI reachability, and app arbitrary
+full dev/build strings with both lab values. Current runtime-proof fixture checks
+app script overrides, docgen, package exports/src/index.ts and root identity paths.
+Preserve tsconfig reference equality and module override absences in package,
+service and lab fixtures. Use existing fixture temporary roots; no new workspace
+package is needed merely for P2 proof.
 
-Add focused selector coverage for the eleven mode rows, preserving exact
-ordered outputs and rejecting unknown mode literals. Retain raw CLI
-refusal fixtures for missing app kind, stories outside foundation/ui-system,
-lab on a non-app, lab runtime-proof, parent override and missing description.
-Keep dry-run nonmutation, retired-name authorization, lockfile defaults,
-existing-directory refusal and asset preservation scenarios.
-
-Exercise private selectors through the existing command fixture surface or
-local type checks; do not export the private mode/helpers solely for tests.
-
-Implementation requires relevant focused CreatePackage checks and full
-`@beep/repo-cli` package verification. This P2 audit runs no product commands
-or tests. The change is a CLI planning model with unchanged generated UI
-bytes, not a new gesture-bearing UI milestone.
+Implementation requires focused CreatePackage suites and full
+`bun run beep quality package-verify @beep/repo-cli`, then campaign/Yeet gates.
+This audit performs source/diff inspection and finite enumeration only; no product
+commands, runtime implementation or package proof claimed.
 
 ## Risk
 
-Implement in the ordered Tier 1E subsystem batch after independent P3
-review and packet ratification. Coordinate shared CreatePackage edits serially. The largest risks are changing ordered template/file output,
-losing lab-specific manifest behavior, treating runtime-proof as a real app,
-moving validation past allocation or removing required raw diagnostics.
-Reuse the existing constants/builders/encoders and preserve all external
-payloads and side-effect sequencing.
-
-The integration promotes the existing stable id from its false D1 note to
-the complete 24/11 cluster, with exact historical row bytes preserved.
-No narrow lab/stories duplicate is admitted. The separately exported
-TemplateContext has its own full-owner audit; its fields and migration are
-not absorbed by this design. Independent P3 approval remains pending.
+Main risks are restoring stale scripts/helper signatures, losing ordered lab
+extras, treating runtime-proof as a real app or library-script case, narrowing
+public helpers to CLI admission, and moving refusals across allocation/I/O.
+Reuse constants/builders/encoders and preserve complete separate payload.
+Coordinate shared CreatePackage changes serially with the TemplateContext owner;
+this P2 remains one private owner24/11, not independent P3 or implementation.

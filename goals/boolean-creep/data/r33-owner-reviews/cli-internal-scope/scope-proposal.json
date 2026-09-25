@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "boolean-creep-owner-net-audit/v1",
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "rawNonadmissions": [
+    "r33-cli-internal-root-contained-file-read",
+    "r33-cli-internal-root-contained-bytes-read"
+  ],
+  "withdrawCanonicalIds": [
+    "r25-cli-internal-root-gh-page-info",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip"
+  ],
+  "owners": [
+    {
+      "symbol": "ContainedFileRead",
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "declarationLine": 125,
+      "booleanFields": [
+        {
+          "name": "exists",
+          "line": 128
+        }
+      ],
+      "otherFields": {
+        "contents": "Option<String>"
+      },
+      "booleanCount": 1
+    },
+    {
+      "symbol": "ContainedBytesRead",
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "declarationLine": 150,
+      "booleanFields": [
+        {
+          "name": "exists",
+          "line": 151
+        }
+      ],
+      "otherFields": {
+        "contents": "Option<Uint8Array>"
+      },
+      "booleanCount": 1
+    },
+    {
+      "symbol": "GhPageInfo",
+      "file": "packages/tooling/tool/cli/src/internal/github/GhSchema.ts",
+      "declarationLine": 66,
+      "booleanFields": [
+        {
+          "name": "hasNextPage",
+          "line": 69
+        }
+      ],
+      "otherFields": {
+        "endCursor": "NullOr<String>"
+      },
+      "booleanCount": 1,
+      "oldInventoryAnchor": 61
+    },
+    {
+      "symbol": "DiscoveredCandidate",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "declarationLine": 62,
+      "booleanFields": [
+        {
+          "name": "classified",
+          "line": 67
+        }
+      ],
+      "otherFields": {
+        "root": "string",
+        "path": "string",
+        "reapClass": "six-string LiteralKit",
+        "idleSinceMillis": "number",
+        "shapeSkipReason": "Option<twelve-string LiteralKit>",
+        "parentRepo": "Option<string>"
+      },
+      "booleanCount": 1,
+      "oldInventoryAnchor": 66
+    }
+  ],
+  "requiredBooleanCount": 2,
+  "disposition": "all-four-outside-boolean-recall-net",
+  "r32FsGuardsSha256": "535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39",
+  "currentFsGuardsSha256": "535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39",
+  "newInventoryRows": [],
+  "scopeLimit": "Other Tmpfs owners untouched; no inference from this owner to observation helper eligibility."
+}

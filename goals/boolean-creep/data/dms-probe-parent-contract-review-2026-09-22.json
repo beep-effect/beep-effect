@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "boolean-creep-parent-contract-review/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "owner": "dms-mirror-probe-connected",
+  "reviewStage": "P2 parent integration, not independent P3",
+  "findings": [
+    {
+      "issue": "Disconnected reason was required from observed adapters although port documentation permits reason when known.",
+      "requiredCorrection": "Preserve disconnected reason None and Some; reject only connected with Some reason."
+    },
+    {
+      "issue": "Root was made connected-only without an explicit contract excluding retained roots on disconnected observations.",
+      "requiredCorrection": "Keep independent root Option on enclosing probe and remove root exclusivity deletion credit."
+    }
+  ],
+  "dependentOwner": "vault-sync-status-connected",
+  "dependentCorrection": "Project disconnected Option reason unchanged; do not wrap it in Some.",
+  "expectedQualifiedProjection": {
+    "representable": 12,
+    "legal": 7,
+    "members": ["connected", "disconnectReason"]
+  },
+  "independentRootPresenceProjection": {
+    "representable": 24,
+    "legal": 14
+  },
+  "implementationStarted": false,
+  "independentP3Approval": false
+}

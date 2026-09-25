@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "boolean-creep-bounded-path-impact/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "comparisonSha": "f5e1d4c64f37e0a8c42e217eee5f06841220c161",
+  "records": [
+    {
+      "id": "ci-lane-run-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneRunOptions",
+      "members": [
+        "affected",
+        "summarize",
+        "last",
+        "changesetStatus",
+        "validateEnvelopes"
+      ]
+    },
+    {
+      "id": "ci-local-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLocalOptions",
+      "members": ["affected", "fast"]
+    },
+    {
+      "id": "ci-local-step-plan",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLocalStepPlan",
+      "members": ["affected", "onMainBranch"]
+    },
+    {
+      "id": "quality-test-lane-selection",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "symbol": "TestLaneSelectionState",
+      "members": ["unit", "integration"]
+    },
+    {
+      "id": "r3-tooling-envconfig-unresolved-turbo-secrets",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "symbol": "turboEnvOverrides.unresolvedSecrets",
+      "members": ["unresolvedApi", "unresolvedToken", "unresolvedTeam"]
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneRunOptions",
+      "members": ["dryRun", "force"]
+    },
+    {
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "symbol": "CoverageTaskOptions",
+      "members": ["replaceAll", "scoped"]
+    },
+    {
+      "id": "coverage-baseline-write-mode",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "symbol": "CoverageTaskOptions",
+      "members": ["replaceAll", "writeBaseline"]
+    },
+    {
+      "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "runCiPartitionedLane",
+      "members": ["extendEnv", "trim"]
+    },
+    {
+      "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "symbol": "collectResolvedStepOutput.captureOptions",
+      "members": ["extendEnv", "trim"]
+    },
+    {
+      "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "symbol": "runStepCapturedForQuarantine.captureOptions",
+      "members": ["extendEnv", "tee"]
+    },
+    {
+      "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
+      "status": "disqualified",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "resolveStorybookLaneAffected",
+      "members": ["extendEnv", "trim"]
+    }
+  ],
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "f7165de85d59e25893341d71dbe617fae969c54bab9bcd28e1293e6b0366a674",
+      "hunks": [
+        "@@ -32,0 +33 @@ import { runCaptured, runToExit } from \"../../internal/process/StepExec.ts\";",
+        "@@ -1507,0 +1509,4 @@ const runLaneProcess = Effect.fn(\"CiLane.runLaneProcess\")(function* (",
+        "@@ -1513,0 +1519 @@ const runLaneProcess = Effect.fn(\"CiLane.runLaneProcess\")(function* (",
+        "@@ -1515,2 +1521,2 @@ const runLaneProcess = Effect.fn(\"CiLane.runLaneProcess\")(function* (",
+        "@@ -1518 +1524 @@ const runLaneProcess = Effect.fn(\"CiLane.runLaneProcess\")(function* ("
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "c64ec0e4b0113fe376cdc8a55cff5b0db6f45da6026c8eab6271197a77d92124",
+      "hunks": [
+        "@@ -69,0 +70 @@ import { JsonStringCodec } from \"../../internal/schema/JsonCodec.ts\";",
+        "@@ -1292,0 +1294,3 @@ const withTurboSecretSession = Effect.fn(\"QualityTasks.withTurboSecretSession\")(",
+        "@@ -1314,0 +1319 @@ const runStep = Effect.fn(\"QualityTasks.runStep\")(function* (step: QualityTaskSt",
+        "@@ -1317,2 +1322,2 @@ const runStep = Effect.fn(\"QualityTasks.runStep\")(function* (step: QualityTaskSt",
+        "@@ -1394,0 +1400 @@ const runStepCapturedForQuarantine = Effect.fn(\"QualityTasks.runStepCapturedForQ",
+        "@@ -1398,2 +1404,2 @@ const runStepCapturedForQuarantine = Effect.fn(\"QualityTasks.runStepCapturedForQ",
+        "@@ -2385,0 +2392,3 @@ const collectResolvedStepOutput = Effect.fn(\"QualityTasks.collectResolvedStepOut",
+        "@@ -2387,0 +2397 @@ const collectResolvedStepOutput = Effect.fn(\"QualityTasks.collectResolvedStepOut",
+        "@@ -2390,2 +2400,2 @@ const collectResolvedStepOutput = Effect.fn(\"QualityTasks.collectResolvedStepOut"
+      ]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sha256": "b7e332d72aecd246b212efd037d00c99966d9b5338a39bd682380f7ed93c4156",
+      "hunks": [
+        "@@ -286,0 +287,25 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>"
+      ]
+    }
+  ],
+  "finding": "Main changes launch routing in CiLane and Tasks and adds isPlannedTurboCommand in EnvConfig. This receipt binds affected records and exact hunks only; it does not revalidate their earlier D1/D2 domain judgments.",
+  "semanticReconciliationComplete": false,
+  "censusCredit": false,
+  "independentP3Approval": false
+}

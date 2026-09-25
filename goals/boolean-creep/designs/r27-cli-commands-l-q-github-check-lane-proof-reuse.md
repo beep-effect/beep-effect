@@ -1,227 +1,145 @@
 # r27-cli-commands-l-q-github-check-lane-proof-reuse
 
-## Reused-run payload correction, 2026-09-21
-
-A bounded source audit at `6db45e9d9182bc5d8f0fbae07b6fbe7727179559`
-found that the current reused-run constructor at `Tasks.ts:1983–2012` also
-supplies `commandText: O.some(commandText(lane.step.command, lane.step.args))`.
-Preserve that field when constructing the migrated result and when encoding its
-`QualityTaskLaneRun`. Keep the actual lane command and arguments. The report
-schema declares `commandText: OptionalLaneRunString` at
-`Quality.schemas.ts:1304`. Yeet reads this field as a repair-command fallback
-at `IssueParser.ts:370` and `Verdict.ts:743`.
-
-Add an assertion that active reuse retains the command text in the returned
-lane report and journal. Keep the existing absent timing and exit-code fields
-and `inputDigest: None`. This correction changes no qualification, target
-shape, or status. The rest of the design retains its historical source binding
-until its remaining consumers and policy references are audited. This is P2
-evidence, with no independent-review or implementation credit.
-
-**Current source-forward binding (P2 only)**
-
-Revalidated against HEAD `4509872869eb87071250c67717769260f850bcf5` and merged main
-`d68f1a11dd41579660a6c72f3d3e060d6b61352d`, after the R30 packet commit
-`578b25de24f325a7240ed5321d708531c6d55536`. Native continuation uses
-`gpt-6-astra` / `xhigh`; it preserves the original job provenance below.
-This is a bounded source rebind, not another design or a P3 approval.
-The canonical inventory at admission was 738 records /146 qualified, SHA256
-`ea376cff64c549eb542d8bc4dc10c5aec519246b0f20a6720a8f9ad5c64a98d1`.
-
-The full eight-section design below is retained byte for byte from the canonical
-packet at this HEAD. Its prior source header and numbered locators describe
-main `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`. Apply the following exact
-source-location mappings when reading it against d68; these mappings and the
-current preservation notes govern this rebind. Equal source slices, full source
-copies, consumer search, dependency bindings, and proposal hashes are frozen in
-the private `pre-r31-main-d68-quality-designs` handoff. No product test or
-independent review ran, and source implementation remains pending.
-
-| Retained locator file | Exact current mapping |
-| --- | --- |
-| `Tasks.ts` | Old1–2578 stays identical. Old2579–2671 maps +3; old2673–3532 maps +3. The unrelated old2672 lint inventory log is replaced at2675. |
-| `Quality.command.ts` | Old1–2074 stays identical; old2075–2081 maps +10; old2085–3938 maps +11. The only changed prior lines2082–2084 belong to local Effect plugin resolution, not these designs. |
-| `internal/GithubChecks.ts` | Old1–421 stays identical; old422–507 maps +11; old508–891 maps +20. Two additional lane entries cause the shifts. |
-| `test/quality-tasks.test.ts` | Old1–832 stays identical; old837–933 maps +11; old934–1024 maps +12; old1025–1029 maps +13; old1031–2926 maps +14; old2927–2964 maps +15; old2965–6197 maps +16. Changed earlier expectations are listed below. |
-
-Qualification and target remain 4/3, derived/internal LiteralKit, designed/Tier1.
-The actual pre-execution owner at Tasks1717–1722 and complete lane/wave bodies
-remain exact. Current marker fixture is test1616–1647; concurrent journal and
-next-chunk fixtures are2181–2271. The test collector alias moves3428→3431.
-The canonical R30 ownership clarification is retained: R27 owns pre-execution
-reusable/activeReuse; R30 owns the completed outcome's reused/stopAfterRed.
-No shared guard receives duplicate credit.
-
-Preserve additive `quality:storybook` at GithubChecks422–432 and
-`repo-sanity:config-typecheck` at519–527, and the corresponding WaveOrder seed
-rows. Build now receives `--affected --base origin/main --summarize` through
-the unchanged ciLaneStep133–134 and the changed CiLane flag dispatch2542–2578.
-The Storybook lane uses Turbo's dependency-aware affected dry-run probe at
-CiLane1720–1761 and skips its own work at1778–1781 when no target is selected;
-the older nearby GithubChecks comment about a path-profile git diff is stale.
-Do not copy that comment into a new policy or turn an ordinary successful
-wrapper execution into reused/not-run-early-stop. The declared lane ids, complete
-args, current tier metadata, ordered results, proof identity and precise-red
-policy all remain binding. Root lint's new tsconfig-overlay2581/log2675 are
-preserved with zero Boolean-creep implementation credit.
-
-**Retained design and original provenance**
-
-Native P2 refresh bound to HEAD `e7b1e907726421c7d2a2e1cdd140280df47f2353` and immutable main
-`bed30c6adf3beed7de8538209fbdc84d26a3b8ce`, compared with main
-`3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`. Prepared by Codex
-`gpt-6-astra` / `xhigh` under the user's current AGENTS instructions.
-Status remains `designed`; cardinality remains 4/3. Tier 1: ordered Tier1E subsystem batch, with serial shared-file edits.
-This document supplies no implementation or independent P3 approval.
-Short source paths are relative to `packages/tooling/tool/cli/src/commands/Quality/`;
-`src/` and `test/` paths are relative to the CLI package.
+P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, 2026-09-22.
+Status remains designed, Tier 1, derived/internal, 4 representable / 3 legal.
+This replaces historical locator overlays with current source anchors. It grants
+no implementation, independent review, or census credit. Paths below are relative
+to `packages/tooling/tool/cli/` unless stated otherwise.
 
 ## Current shape
 
-The actual sibling values now live in `runGithubCheckLane`, `Tasks.ts:1711–1758`.
-They moved from the old `runGithubCheckWave`; their source did not disappear.
-At1716 the lane prepares an `Option<LaneProofSession>`, at1717 it derives
-`reusable` through the existing exact-proof predicate, and at1718 derives
-`activeReuse = reusable && O.exists(session, prepared => prepared.mode === "active")`.
-The values are local Booleans, not callable predicates or anonymous input flags.
+`src/commands/Quality/Tasks.ts:1989–2037` owns `runGithubCheckLane`.
+After preparation at 1994, it derives `reusable` at 1995 and
+`activeReuse = reusable && O.exists(session, prepared => prepared.mode === "active")`
+at 1996. These are actual simultaneously scoped Boolean values, not function
+parameters or callable predicates. Readers at 1997–2000 choose hit logging and
+execution bypass. The optional session retains records, identities, mode and path.
+The pair is neither stored nor encoded.
 
-Readers at1719–1737 log a hit and return the existing reused outcome only for
-active reuse. Miss and shadow hit execute the command at1740–1757. The pair is
-not returned, encoded, or stored. The new outcome object at1702–1709 contains
-separate run-result fields; the R30 GithubCheckLaneOutcome design owns their
-migration, outside this pair's guard accounting.
+`GithubCheckLaneOutcome` at 1980–1987 is a distinct completed-work owner. Its
+`reused` and `stopAfterRed` migration belongs to the R30 companion design, not
+this pre-execution pair. The three-way disposition does not replace that outcome.
 
 ## Cardinality gap
 
-| reusable | activeReuse | Supported decision |
+| reusable | activeReuse | Legal meaning |
 | --- | --- | --- |
-| false | false | Miss: disabled/unavailable preparation, absent exact record, or excluded volatile lane. |
-| true | false | Shadow hit: exact record with a shadow session; execute the live command. |
-| true | true | Reused: exact record with an active session; bypass the live command. |
+| false | false | Miss: absent preparation, absent exact record, or excluded volatile lane. |
+| true | false | Shadow hit: exact record under shadow mode; execute the command. |
+| true | true | Active reuse: exact record under active mode; bypass the command. |
 
-Four representable pairs, three legal producer outcomes. False/true is excluded
-by the sole assignment at1718. `internal/LaneProofReuse.ts:22–28,202–255,279–287`
-provides the real off/shadow/active policy, shadow/active session subset, failure
-fallbacks and exact-proof lookup. An active policy can miss, so input mode is
-not the result domain.
-
-The real repository/marker fixture at `test/quality-tasks.test.ts:1602–1633`
-proves first active execution, second active reuse, shadow execution with an
-existing record, then invalidation after a virtual-tree change. The marker
-contains exactly the corresponding execution lines. This is source and fixture
-proof of all three states, not a schema-permissiveness argument.
+False/true contradicts the sole producer at 1996. Four Boolean pairs therefore
+represent three legal states. An active session may miss: policy mode is not the
+result domain. `internal/LaneProofReuse.ts:202–255,279–287` provides actual
+preparation/lookup; `test/quality-tasks.test.ts:1909–1939` contains a real Git
+repository and marker fixture for initial execution, active reuse, shadow execution,
+and changed-tree invalidation. This audit inspected the fixture; it did not run it.
 
 ## Target schema
 
-Reuse the existing `Quality.schemas.ts` role for the previously proposed
-`GithubCheckLaneProofDisposition = LiteralKit(["miss", "shadow-hit", "reused"])`,
-with `$I` annotation, same-name derived type and exported-symbol JSDoc. No new
-package, role file, service or stored schema is needed. Its placement adds the
-named schema export through the existing `index.ts:49` wildcard; account for
-that intentional decoded schema export, without adding a separate barrel alias.
-It does not change any existing public function signature or report codec.
+Define `GithubCheckLaneProofDisposition` in the existing `Quality.schemas.ts`
+role as `LiteralKit(["miss", "shadow-hit", "reused"])`, with identity annotation,
+same-name derived type, and exported-symbol JSDoc. Keep an unannotated base and
+reattach the required literal helpers with `withLiteralKitStatics(base)` after
+annotation. Use its Enum/is or match helpers instead of duplicating literals and
+predicates. Existing `commands/Quality/index.ts:56` wildcard intentionally exposes
+this schema; no new barrel alias, role file, service or package is needed.
 
-No existing literal domain has these semantics. `LaneProofMode` is input policy;
-`GithubCheckLaneRunStatus` is a later run outcome (a shadow hit can fail);
-Yeet's payload-bearing `ProofReuseDecision` belongs to another ledger. Reuse
-none of those as a misleading alias and add no duplicate taxonomy.
+Existing `LaneProofMode` expresses off/shadow/active input policy;
+`GithubCheckLaneRunStatus` expresses completed outcomes; Yeet's `ProofReuseDecision`
+is a different payload-bearing ledger protocol. None is a substitute for this
+three-case pre-execution decision.
 
-Immediately after the unchanged session preparation, derive one disposition
-from that Option and one exact-proof observation: absent session or no exact
-record gives miss; a hit on shadow gives shadow-hit; a hit on active gives
-reused. Use Option matching, the kit's derived helpers and shared thunks where
-they shorten equivalent code. Keep `hasReusableLaneProof` itself and the full
-session payload for persistence. Delete both local Boolean aliases. Do not
-introduce tagged object classes for these three payload-free cases or retain a
-compatibility object with the two flags.
+Immediately after session preparation, derive one disposition with Option matching
+and exactly one existing `hasReusableLaneProof` observation for a present session.
+None or a failed lookup yields miss; a successful lookup yields shadow-hit or
+reused according to the session mode. Retain the original session payload. Remove
+both Boolean aliases. A literal is sufficient: no payload-bearing tagged classes,
+compatibility Boolean bag, new codec, or unrelated outcome refactor is needed.
 
 ## Migration inventory
 
-| Owner / consumer | Atomic migration and preservation |
+| Current owner / consumer | Required preservation |
 | --- | --- |
-| `Quality.schemas.ts`, existing schema import in `Tasks.ts` | Define/import the one annotated kit and derived type; document its intentionally exported schema surface. Existing required `GithubCheckLaneSpec.tier` at1108–1118 and tier kit at896–909 stay exact. |
-| `Tasks.ts:1716–1737` | Replace the local pair and hit/reuse readers. Reused still returns the same `GithubCheckLaneOutcome`: original lane/session, `Some(QualityTaskLaneRun.make(...))`, status reused, inputDigest None, commandText Some(actual lane command), empty failures, reused true, stopAfterRed false. |
-| `Tasks.ts:1740–1758` | Miss/shadow keep the current log, per-lane collector with concurrency1 and `ignoreQualityTaskLaneRun`, optional first run, full failures, reused false and precise-red stop predicate. No journal write moves into this concurrent lane body. |
-| `Tasks.ts:1656–1666,1760–1779` | Preserve observer default versus ignored observer; keep successful-only proof persistence, optional duration fallback0, complete session payload, and caught warning. Outcome flags are outside this cluster; the R30 GithubCheckLaneOutcome design owns their migration. Preserve all optional fields. |
-| `Tasks.ts:1794–1833` | The only runtime caller executes chunks concurrently, then folds outcomes in declaration order. Preserve `Math.max(1, concurrency)` chunking, serial chunks, active ID accumulation, serial journal append, failure order, stop accumulation and serial proof persistence. Already-started chunk members finish; precise fail-fast reds stop the next chunk. Stopped chunks append skipped records without preparing sessions. |
-| `Tasks.ts:1835–1851,1888–1963` | Preserve skipped/reused/failed/passed precedence, inter-wave stopping, complete lane/run reports, first-red and skipped counts. |
-| `Tasks.ts:2059–2074,3428` | Preserve public runner concurrency default1 and the test collector signature `(label,waves,policy,mode?,concurrency=1)`. Do not exchange the optional mode and concurrency arguments. |
-| `Quality.command.ts:667–687,901–916` | Keep pre-push default1, evidence-ordered caller, cheap-gates concurrency4 and changeset lane tier rehoming. |
-| `internal/GithubChecks.ts:187–231,320–383,535–563,582–583,590–632` | Preserve stable command IDs/step labels, independent tier metadata, doctest lane, canonical quality:secrets/security/sast/nix IDs, shared command lanes, complete order/args and the fallow:health gate. Do not restore deleted duplicate tsgo lanes or old tier-prefixed IDs. |
-| `internal/LaneProofReuse.ts:22–28,202–255,257–287,294–339` | No model/API change. Retain all preparation fallbacks, seven identity fields, virtual-tree/base/head checks, refreshed-identity equality, merge ordering and atomic store write. Volatile exclusion now names quality:security and repo-sanity:bun-audit. |
-| `src/test/Quality.test-kit.ts:58,64–78`, `index.ts:49`, package exports49/63/66/68 | Retain existing Tasks/testing routes and package export map. No new test-only adapter is necessary. |
+| `Tasks.ts:1994–2018` | Replace only decision derivation and readers. Active reuse returns the same lane/session, Some lane run, empty failures and completed-outcome semantics. |
+| `Tasks.ts:2005–2012`, `Quality.schemas.ts:1247–1260,1293–1309` | Reused run keeps id, label, status reused, inputDigest None, commandText Some(actual command and args), and absent timing, exitCode and redSchedulingDecision defaults. |
+| `Tasks.ts:2019–2037` | Miss and shadow share the existing live execution path, per-lane collector concurrency 1 and ignored lane observer. Retain A.head optional run, all failures and precise-red decision. |
+| `Tasks.ts:2039–2059` | Completed-work persistence stays successful-only, excludes reused outcomes, preserves optional duration fallback 0 and optional session, and catches persistence errors as nonfatal warnings. R30 owns these outcome guards. |
+| `Tasks.ts:2073–2112` | Keep chunk size Math.max(1, concurrency), concurrent members, sequential chunks, declaration-order fold, serial journal append and serial persistence. Already-started members finish; precise reds stop only subsequent chunks. Skipped chunks do not prepare sessions. |
+| `Tasks.ts:2114–2130,2167–2243` | Keep skipped/reused/failed/passed precedence, inter-wave stopping, complete reports, firstRed and skipped counts. |
+| `Tasks.ts:2337–2344,3848` | Preserve public runner default concurrency 1 and test signature (label,waves,policy,mode?,concurrency=1). |
+| `Quality.command.ts:774–794` | Keep configured tier concurrency and evidence-ordered caller. Do not change lane IDs, declared order, tier metadata, command args or wrapper success semantics. |
+| `internal/LaneProofReuse.ts:22–28,202–255,257–339` | Preserve off fallback, mixed-cwd/empty/failing-Git fallbacks, exact lookup, volatile exclusions, refreshed identity equality, record merge and atomic rename. |
 
-Targeted Graft discovery followed by exhaustive package source/test text search
-found only this lane body for the pair, its wave caller, the public runner,
-Quality command callers and existing task-suite/test-facade exports. An absent
-Effect.fn graph edge is not treated as proof of absence.
+The exact identity remains laneId, commandHash, inputHash, mergedTreeSha,
+headSha, baseSha and envProfileHash. Same tree with changed history still invalidates
+history-sensitive proofs. Virtual-tree preparation uses a temporary Git index
+resolved through the checkout Git path, including linked worktrees. Proof records
+remain `yeet-lane-proofs/v2`. Failed commands and tree-mutating commands cannot
+create a reusable proof; later waves prepare against their then-current tree.
 
-The exact ambient proof identity at `LaneProofReuse.ts:124–139` remains:
-local-env lanes and commands whose spawn extends ambient environment hash the
-complete inherited environment; isolated spawns omit that contribution.
-Platform, architecture, Bun/Node versions and explicit lane environment remain.
-Do not persist raw environment values. Preserve its alignment with the existing
-spawn policy. New root-check/lint ownership, including package-scripts and
-policy-fingerprint at `Tasks.ts:2600–2601`, remains unchanged by this design.
+`LaneProofReuse.ts:124–139` hashes the complete inherited environment when
+useLocalEnv is true or the spawn extends ambient environment. Isolated spawns omit
+that contribution; explicit lane environment, platform, architecture and Bun/Node
+versions remain. `src/internal/cli/EnvConfig.ts:544–547` supplies the existing
+spawn predicate. Preserve it; never persist raw environment values. The excluded
+IDs remain quality:security and repo-sanity:bun-audit because advisory data is live.
 
 ## Guard-deletion accounting
 
-Delete two parallel local Boolean values at1717–1718 and the reconstructed
-implication. Replace the reusable gate/log ternary at1719–1720 with exhaustive
-miss/shadow-hit/reused handling; preserve exact hit logs. Replace the active
-branch at1722 with the derived reused case, preserving its returned payloads
-and behavior; the R30 companion owns the outcome representation. Miss/shadow still enter the shared execution path, without cloning it.
+Remove the two local Boolean aliases at 1995–1996. Replace the hit gate and log
+ternary at 1997–1998 with disposition dispatch; replace the active branch at 2000
+with the derived reused case. Share the miss/shadow execution path. No schema
+coherence filter or normalization guard exists here, so none can be credited.
 
-No coherence filter or normalizer currently exists, so none is credited as
-removed. The outcome's `reused` branch at1820 and persistence guard at1763
-are outside R27 deletion accounting. The R30 companion migrates their
-representation while preserving completed-work attribution and proof safety.
-Keep stop state, precise-red scheduling,
-optional-run checks, failure policy and all ledger safety checks. The dispatch
-must not bring back two equivalent sibling flags under different names.
+Do not double-count the separate outcome's reused branch at 2099 or its persistence
+guard at 2042. Do not delete failure policy, stop state, optional-run handling,
+proof identity checks, exclusion rules, or persistence guards. Do not recreate the
+two sibling flags under different names after introducing the literal.
 
 ## Encoded-side impact
 
-The new disposition stays transient. Preserve `yeet-lane-proofs/v2`,
-`github-check-run/v1` and `quality-task-lane-run/v1`, complete lane IDs,
-stage/wave/status, failure and journal order, inputDigest None, duration,
-timestamps, scheduling metadata and property/omission behavior. No disposition
-key or new literal is emitted into a report or ledger.
+The disposition remains transient and adds no report or ledger key. Preserve
+`github-check-run/v1`, `quality-task-lane-run/v1` and `yeet-lane-proofs/v2`.
+InputDigest None still encodes as null; OptionalLaneRun fields retain their omission
+semantics. Preserve actual commandText in both returned report and journal. Keep
+lane IDs, stage/wave/status, payload Options and journal order.
 
-Hit logs remain exactly `[lane-proof] shadow hit for exact lane proof: <lane-id>`
-and `[lane-proof] reusing exact lane proof: <lane-id>`. Miss emits neither.
-Concurrent lanes may finish/log at different times; do not impose new global
-log sequencing. The journal and ledger writes remain serial in wave order.
-An active reuse neither executes nor writes a newly successful proof; shadow
-hits preserve the actual command failure or success. Persist warnings remain
-nonfatal with their current text and timing.
+Logs remain exactly `[lane-proof] shadow hit for exact lane proof: <lane-id>` and
+`[lane-proof] reusing exact lane proof: <lane-id>`. A miss emits neither. Concurrent
+logs may interleave; do not impose global log ordering. Journals and ledger writes
+stay serial in declaration order. Active reuse does not execute or repersist a
+new success; shadow execution can fail and must report that real failure. Preserve
+persistence-warning text and timing. The additive schema export is intentional;
+apply actual release policy at implementation, without assuming a version bump.
 
 ## Test impact
 
-Retain `test/quality-tasks.test.ts:1602–1633` and add behavior-sensitive hit-log,
-command-bypass and reused-record assertions. Add a shadow-hit command failure
-using the existing real repository fixture, proving shadow does not bypass or
-manufacture a green result. Preserve defaults/mixed-cwd failure safeguards,
-ambient/local-env/isolated hashing, cross-wave refresh, volatile exclusion,
-mutating commands, linked worktrees and unsuccessful proofs at1635–2163.
+Retain the existing marker fixture at 1909–1939 and add exact hit-log, command
+bypass, returned commandText and journal commandText assertions. Add a shadow-hit
+failure using the real repository fixture so a hit never fabricates success.
+Retain preparation fallbacks (1942–2003), explicit/ambient/local/isolated environment
+identity tests (2006–2184), missing base (2187), cross-wave merge (2220), same-tree
+history rewrite (2248), later-wave tree refresh (2292), volatile exclusion (2335),
+mutation (2358), linked worktree (2387) and failed-proof rejection (2414).
 
-The new concurrent fixtures at2167–2257 are mandatory: later-completing first
-red still owns firstRed; lane report and NDJSON journal retain declaration order;
-later lanes really overlap; fail-fast skips only after the current chunk.
-Add a mixed miss/shadow/reused chunk assertion using those existing harnesses
-if needed to cover the changed seam, including serial proof writes. Preserve
-canonical lane IDs/tiers, cheap4/pre-push1 and doctest/topology assertions.
-Do not recreate removed duplicate tsgo gates in expected arrays. Existing
-security mitigation ordering remains outside this refactor.
+Preserve concurrent wave-order/first-red/journal tests at 2473–2527 and next-chunk
+fail-fast at 2529–2564. Cover mixed reused/live members while preserving serial
+proof writes. A single run has one proof-mode override; do not invent a fixture
+requiring shadow and active modes simultaneously within that same run. Test
+shadow/live and active-reuse/live mixtures separately. Preserve tier concurrency
+and lane topology assertions.
 
-Implementation must run focused Quality tests and the required
+Implementation must run focused Quality tests, full
 `bun run beep quality package-verify @beep/repo-cli`, then canonical Yeet checks
-for the ordered Tier1E batch. This P2 preparation runs no package tests.
+for its ordered Tier1E batch. This P2 audit ran no product/package tests and makes
+no green implementation claim.
 
 ## Risk
 
-The moved owner is still qualified. The risks are confusing policy with result,
-a shadow hit with an execution bypass, or moving serial journal/ledger work into
-the new concurrent helper. Preserve the complete new outcome and chunk protocol
-while replacing only the local decision. No new domain policy or implementation
-credit follows from upstream's extraction. Independent P3 remains pending.
+Confusing mode with disposition would reuse misses. Confusing shadow with active
+would bypass required commands. Moving journal or ledger writes into the concurrent
+lane body would lose ordering and atomic merge safety. Dropping commandText or
+collapsing an Option would alter repair/report behavior. Keep the pre-execution
+literal and completed outcome separate while their coordinated batch replaces
+both owners. Independent P3 and the campaign implementation gates remain pending.

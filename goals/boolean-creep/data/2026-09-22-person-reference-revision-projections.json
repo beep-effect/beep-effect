@@ -1,0 +1,229 @@
+{
+  "scope": "Finite projection arithmetic; independent count/path and earlier validation held legal. Not a runtime schema or implementation test.",
+  "rows": [
+    {
+      "accepted": false,
+      "reason": null,
+      "scorePresent": false,
+      "oldError": "missing-reason",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": null,
+      "scorePresent": true,
+      "oldError": "missing-reason",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": "unreadable-image",
+      "scorePresent": false,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": "unreadable-image",
+      "scorePresent": true,
+      "oldError": null,
+      "legal": false,
+      "newlyRejected": true
+    },
+    {
+      "accepted": false,
+      "reason": "aligner-confidence-failed",
+      "scorePresent": false,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": "aligner-confidence-failed",
+      "scorePresent": true,
+      "oldError": null,
+      "legal": false,
+      "newlyRejected": true
+    },
+    {
+      "accepted": false,
+      "reason": "no-face",
+      "scorePresent": false,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": "no-face",
+      "scorePresent": true,
+      "oldError": null,
+      "legal": false,
+      "newlyRejected": true
+    },
+    {
+      "accepted": false,
+      "reason": "multiple-faces",
+      "scorePresent": false,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": "multiple-faces",
+      "scorePresent": true,
+      "oldError": null,
+      "legal": false,
+      "newlyRejected": true
+    },
+    {
+      "accepted": false,
+      "reason": "missing-embedding",
+      "scorePresent": false,
+      "oldError": null,
+      "legal": false,
+      "newlyRejected": true
+    },
+    {
+      "accepted": false,
+      "reason": "missing-embedding",
+      "scorePresent": true,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": false,
+      "reason": "invalid-embedding",
+      "scorePresent": false,
+      "oldError": null,
+      "legal": false,
+      "newlyRejected": true
+    },
+    {
+      "accepted": false,
+      "reason": "invalid-embedding",
+      "scorePresent": true,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": null,
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": null,
+      "scorePresent": true,
+      "oldError": null,
+      "legal": true,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "unreadable-image",
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "unreadable-image",
+      "scorePresent": true,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "aligner-confidence-failed",
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "aligner-confidence-failed",
+      "scorePresent": true,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "no-face",
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "no-face",
+      "scorePresent": true,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "multiple-faces",
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "multiple-faces",
+      "scorePresent": true,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "missing-embedding",
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "missing-embedding",
+      "scorePresent": true,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "invalid-embedding",
+      "scorePresent": false,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    },
+    {
+      "accepted": true,
+      "reason": "invalid-embedding",
+      "scorePresent": true,
+      "oldError": "accepted-evidence",
+      "legal": false,
+      "newlyRejected": false
+    }
+  ]
+}

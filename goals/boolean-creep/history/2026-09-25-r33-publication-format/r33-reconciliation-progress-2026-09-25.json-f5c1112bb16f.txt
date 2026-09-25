@@ -1,0 +1,818 @@
+{
+  "round": "refresh-2026-09-25-r33-main-339da1",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "reviewedLanes": [
+    {
+      "lane": "r33-foundation-primitive",
+      "executionSha256": "745afa46b45c75ba0a9ca5c4a09142a72fea6e0f10aa8f7571e777b5e865f6d5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 30,
+      "disposition": "Complete terminal footer covers both assigned roots; zero seeds or records; one-Boolean and predicate-return exclusions agree with the campaign net.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-foundation-schema-a-m",
+      "executionSha256": "1adf28007f1269983ebd53c96a48fffd1ffdcf0c39b2fd56a0c233e0a36fb72a",
+      "reportSha256": "3fc9c3911f6420ff9b0cb7e9ef1d8626aada165ae4496d3fe6633933530ff865",
+      "assignedFiles": 188,
+      "disposition": "Full assigned coverage in terminal footer; no new qualification. Existing disqualifications retained. Reported three locator corrections checked against current source.",
+      "newQualified": 0,
+      "locatorUpdates": [
+        {
+          "id": "literalkit-attach-helper-descriptors",
+          "line": 620,
+          "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+          "sourceSha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+        },
+        {
+          "id": "literalkit-readonly-property",
+          "line": 820,
+          "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+          "sourceSha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+        },
+        {
+          "id": "r24-foundation-schema-a-m-file-type-checker-ebml-evidence",
+          "line": 164,
+          "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.behavior.ts",
+          "sourceSha256": "17eaf5cc4a2a66f9fbdef76a223c1424b24d3237fb618b54356ca7a08fc50053"
+        }
+      ]
+    },
+    {
+      "lane": "r33-foundation-schema-n-z",
+      "executionSha256": "33e3bd7ed61dd9fdda3d9f507dfb1c954f38d0f64918453cd22f924edf855219",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 82,
+      "disposition": "Full assigned coverage and seven seed owners unchanged; empty report justified by explicit terminal footer.",
+      "newQualified": 0,
+      "locatorUpdates": []
+    },
+    {
+      "lane": "r33-foundation-capability",
+      "executionSha256": "2f81d05016e6e87a16f4bb4584421c6186a2f395a7b2ba96e5e03fe4a95853fa",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 165,
+      "disposition": "All nine roots covered; no qualification change. Parent retains four existing class-declaration anchors (reported drift points to first fields instead). Two genuine locator changes verified; WireTool owner also moved to extracted wireToolFor helper.",
+      "newQualified": 0,
+      "locatorUpdates": [
+        {
+          "id": "r3-foundation-verified-span-source-failure-facts",
+          "line": 619,
+          "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+          "sourceSha256": "90491cfb18525783afb2b591db44855ec241851dd4d40da641ef0a0326d33e1b"
+        },
+        {
+          "id": "r31-foundation-capability-mcp-wire-tool-annotations",
+          "line": 458,
+          "symbol": "wireToolFor.annotations",
+          "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+          "sourceSha256": "e8b5c85dc5d4d3ff0ddadf20c93d74d749ec81e2d28d2359414f2b769eccc69c"
+        }
+      ]
+    },
+    {
+      "lane": "r33-drivers-g-m",
+      "executionSha256": "8766937923ed227beaaf7668851e8bf76fe1a3955490ae88015389ba21b6c7f5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 68,
+      "disposition": "Complete assigned coverage; collision implication unchanged and D2 mirrors retained. Parent verifies SpriteMaterial is object-literal537, not type-literal.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-foundation-ui",
+      "executionSha256": "bc14692d92be0c7959de702f3dfbbd603de06de1886f1c1e552d99e79dc834d2",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 218,
+      "disposition": "Complete five-root coverage. Scribe footer question resolved: handledError is set before external onError; callback may throw or observe state before settled changes. All four combinations remain representable reachable observations; no authorized exclusion of throwing callbacks. Retain D1, strengthen note.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-drivers-a-f",
+      "executionSha256": "de54bf46fd902cece3f252d5146b90c7eff8c41b9e0ea9c00d0b238d237076a8",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 99,
+      "disposition": "Parent complete-owner audit contradicts raw footer: FolderResolution and ActionBaseInput each own only one actual Boolean, outside recall net. Retain raw report and archive/withdraw after round terminal. ACP D2 locator changes verified.",
+      "privateAuditSha256": "dfa7a799353ba5eaa6dde381e27488a973a5bc80a9b72092daba65134fee8320",
+      "dispositionSha256": "9edf53a3500c949022493b2535213e42d56cb580c4d641610bdbfc49394af7ec",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-foundation-modeling-rest",
+      "executionSha256": "8627fb7f6b4a97571179938af0b078c6b798174c56dce7e0ca6ab9c1ceee4ddc",
+      "reportSha256": "60454abb5835deae4e8df027905007045a551147350ca8b271559f1aa14cd1d6",
+      "assignedFiles": 177,
+      "disposition": "Reject all15raw rows from explicitly excluded generated files. Primary transcript enumerated175of177 included files; separate supplemental audit covers2omitted ontology seed files with no Boolean owner. Raw primary evidence unchanged; final round coverage must explicitly cite supplement.",
+      "newQualified": 0,
+      "scopeAuditSha256": "55a8eeb395c753fe28a4a6b40a626286fa945e8994452de968fa5af4e1308a85",
+      "supplementalCoverageSha256": "68ad8b13aaef2d93a065c2f0dc3410d2aaf1fe12f4a79aa0596d3c7bbcf81dbf"
+    },
+    {
+      "lane": "r33-agents-workspace",
+      "executionSha256": "51a899f48700b06c2cfebf06843e3dda502c5064c12f81d94b4c46505f9fbb78",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 149,
+      "disposition": "Full nine-root terminal; parent audit withdraws4seed owners outside actual2Boolean recall net, contradicting partial footer retention. Preserve2qualified designs in archive afterterminal.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-drivers-s-z",
+      "executionSha256": "78d86db873f6a5d537e592017ae13c22028809dffa8272ebf07edba827bdc536",
+      "reportSha256": "6fba7087bb37af21ba498bc4326ab33a32bb2f7128de9d6427a403514d6cdee2",
+      "assignedFiles": 59,
+      "disposition": "Reject3raw proposals: VeniceAIServerSentEvent onlydone; XAiServerSentEvent onlydone; sharedXAiWebSocketEvent fields onlyisBinary. Re-emissions of R32withdrawn oneBoolean owners; E3 alone cannot bypassnet.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-law-practice-domain",
+      "executionSha256": "e73937b529a80d9f8b5d18ef90de5ad4ea503c0b3fc113721b5ba6231b92f54b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 214,
+      "disposition": "Full assigned root coverage; unchangedseeds and excluded loneBoolean ConstitutionalCitation retained. No newrecord or question.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-architecture-ecosystem-internal",
+      "executionSha256": "2e588c848c243d23634d067adfc9d0a69945ef9697c3b4e96b096becadf59365",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 114,
+      "disposition": "Complete9roots; unchangedD1owners. Meta interface begins267, footer273 ismemberanchor. Timestampalreadywithdrawn and remainsoutside recallnet.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-epistemic-ontology",
+      "executionSha256": "599720867f39d5c921d492e363ebc1fb40b0270e941519c1758426fef20f8d78",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 230,
+      "disposition": "Complete13roots; shared publicSHACLcontract preservesD1 independentconformance/truncation evenwhen localproducer narrower. Emptyreport justified by unchangedseed coverage.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-shared-documents",
+      "executionSha256": "acee4e8adf2559b526f28d873be84ddce4fe26f841e9c710fda46cd4051c1270",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 220,
+      "disposition": "Complete7roots; source-boundVaultSyncStatusaudit contradicts no-withdrawal footer: complete12fieldowner hasoneBoolean; withdrawqualifiedconnected andD1cursor. Keep classanchor65/field70 distinction. DmsMirroralreadyR32withdrawn, footerclaimcanonicalincorrect. Moveaxes736checkedindependent.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-law-practice-runtime",
+      "executionSha256": "89c806f3993eb1d1ddeb419cab6792fcebe5bfd10145200953f0cddb060676a7",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 91,
+      "disposition": "Complete3roots; verifiedPracticeKgDocumentToolRow andPracticeKgToolResult onlyoneBoolean each. Withdraw2D1rows outsideactualBoolean net; rawfooter agrees.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-apps",
+      "executionSha256": "3703d19856c5c9c9b3c0c5668b7464ef12efa449782caab9cfd17aeec7466f59",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 131,
+      "disposition": "Completeassignedroots; fullApps ownerauditverifies12withdrawals. SidecarqualifiedhasoneBooleanmember; other11D1D2 cross-owner/payload/counterobjectrowsoutside net. Preserve distincteligibleHeroClipPlayback.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-tool-docgen",
+      "executionSha256": "ce7d943bed1713c8e5684232ce6dd62ef3a527180ba1420f63d7f58f0ed83114",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 13,
+      "disposition": "Completeassignedroot; all17seedownersunchangedD1D2.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-tooling-policy",
+      "executionSha256": "c75033e61623499610b0d244cbb583db073756bca382ba2be8907095eb0f0658",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 41,
+      "disposition": "Complete2roots; unchangedseeds includeactualBoolean-admitting ExperimentalConfig unionfields.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-tooling-library-support",
+      "executionSha256": "b2767c651b402133dd77bbbfa86f884880d7d2566d47fb3a865391cc654761b6",
+      "reportSha256": "64d21d1bbb4cdc881637d7e06e283a809f6d12e64b87cccfef04dbd80d63b1e1",
+      "assignedFiles": 95,
+      "disposition": "Completeassignedroots; verifynewPgmakeClient options actualacquireForStream/prepareBooleanSDKfields, sslfalse-or-object notfullBooleanaxis; JSDocTagDefinitiononeBooleanexcluded.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-tooling-library-observability",
+      "executionSha256": "4664a88795b905e6354ca59c4a8a0586d839e28db2f1b9c4ba32f9776648e212",
+      "reportSha256": "f449f3bf92e71fe594fe35b03ed91553b365d018c92f81f95a4b165d1709d98a",
+      "assignedFiles": 52,
+      "disposition": "Complete3roots; 16newseparateDOMlistenerobjects verifiedcapture/passive andDOMSDKfieldtypes, existingWitnessListenerOptions typeisdistinctowner. Collectorserveanchor430verified. Otherfooteroutnetmentions remainunadmitted; priorR32OutcomeLabelfullowners retained.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-cli-commands-a-c",
+      "executionSha256": "8e382f4b05136ce7fca547979ac0a2b1d551c26b7c35c59be8e4d5861f3a39b2",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assignedFiles": 174,
+      "disposition": "Completeassignedroots/173files, unchangedeligibleowners; parentverified3completeowner2Boolean declarations and correcteddeclarationanchors insteadoffirstmembertargets.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-drivers-n-r",
+      "executionSha256": "62fde28915fd3f444b0d51f37c844f82b2456da66d14eff3f4d8b9a9d698fe86",
+      "reportSha256": "b635d8c6340a62868908aa13d20644414dca3d814f69edc667fb61bfb4dc390a",
+      "assignedFiles": 88,
+      "disposition": "Full roots and43seed accounting;15 out-of-net withdrawals and27 eligible controls. OBS historical cross-owner design corrected to actual local E3 owner8/4, preserving independent scene state.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-cli-internal-root",
+      "executionSha256": "38dfca5e3079501811e77478aec9bdc627ef32e88a567485ab101550ba124467",
+      "reportSha256": "97d9d2ba4520eec7992fda9f87e861a57ef571c375084512445430c9b853702a",
+      "assignedFiles": 87,
+      "disposition": "Fullassignedroots; FsGuards2oneBooleanrawreemissions rejectedunchangedR32hash. CompleteGhPageInfo andDiscoveredCandidate eachoneBool; withdrawD2 andqualifiedrespectively. OtherTmpfsownersnotchanged.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-cli-commands-l-q",
+      "executionSha256": "72e92189e6f6b974fdbae0ffb138cff07c9f29a9ec8fe4eb223ecf6546a0f77c",
+      "reportSha256": "a199f83635f043b8a08f027130bbf2a426ecca5dd9e4873ea199776b269fc04b",
+      "assignedFiles": 115,
+      "disposition": "Complete7roots/115files; 2newD2constructedXMLParser/Projectoptions verifiedlive; existingEffectImportRulesSummaryindependentstrictFailure retained. CoverageRegressionremoveoptions anchor1314pendingverify.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-cli-commands-d-k",
+      "executionSha256": "3623427e8a5d60c0e2a0ad8a6eb0399736ed0a3f072fe7722afd2f8722a9466c",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Complete footer reconciled with independent owner audits: five Docgen, three Files and three Goals qualifications withdrawn outside recall; preserve worker threshold and reclassify unsupported orientation precision to D1.",
+      "newQualified": 0
+    },
+    {
+      "lane": "r33-cli-yeet",
+      "executionSha256": "3db457dcf96aa8cc25d487efb6d0a5598f0019eeb0dda28e83be9f81bb798175",
+      "reportSha256": "f1ff1fbb5990f3b4fe06b84b63deccff0f4b6479f3c63593fb54f728d36c006d",
+      "disposition": "ClipScan new E4 qualification after complete private-owner P2 audit; Retire constructor duplicates existing constrained WorktreeRemovalRequest and raw D1 is rejected.",
+      "newQualified": 1
+    },
+    {
+      "lane": "r33-cli-commands-r-z",
+      "executionSha256": "4b99e7eb2610f4a49877a66f13fe7e97e9322624faf62ad1363480d00b2b57a4",
+      "reportSha256": "aad3df21363b4e04cb5d50b5a2e9d01c218ae3bb5b9e0e6c8b32e1dd533024a6",
+      "disposition": "Full footer reconciled; four new candidates outside scope, existing FleetCheckout single-Boolean census withdrawn; seven locator shifts checked against complete declarations.",
+      "newQualified": 0
+    }
+  ],
+  "complete": true,
+  "dryCredit": false,
+  "pendingOwnerAudits": [],
+  "pendingMetadataUpdates": [
+    {
+      "id": "graph-3d-sprite-material-flags",
+      "kind": "object-literal",
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "sourceSha256": "cba63c0ac98d951899b9b4ba335ea3324dbeb480de0b5b481386e1c75d0a8073"
+    },
+    {
+      "id": "r3-foundation-scribe-connect-latches",
+      "disqualifierNote": "Independent callback observations: initially both false; open settles without handledError; a subsequent rejection makes both true. settleReject sets handledError before external onError and before settled; the callback may throw, leaving handledError true and settled false. Thus all four pairs remain supported observations without imposing nonthrowing callbacks.",
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "sourceSha256": "e3c10c48d870fae958875c43139fc7e1bfa197f7d6aebeb45782b4809fc25629"
+    },
+    {
+      "id": "effect-drizzle-meta-column-flags",
+      "line": 267,
+      "file": "packages/ecosystem/effect-drizzle/src/core/Meta.ts",
+      "sourceSha256": "42a4413c1261106557e72d43e6a7f7d7adae58dbdd1d20f0aa80f333c685db19"
+    },
+    {
+      "id": "vault-sync-move-delta-axes",
+      "line": 736,
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
+      "sourceSha256": "abba2373867fa544580b30ed6e99b43b21fdbdb47d3c5e49199ebd80244b4249"
+    },
+    {
+      "id": "ci-local-options",
+      "line": 2340,
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sourceSha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820"
+    },
+    {
+      "id": "aimetrics-install-doctor-options",
+      "line": 998,
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sourceSha256": "f7807d0240ec0665e5e6dfbc05220a68f28035d440bc99639bd1fc976abbd640"
+    },
+    {
+      "id": "corpus-legacy-word-terminal",
+      "line": 3302,
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "sourceSha256": "9a0168e82fac4a588cfc9364e2ef4f3351729987962aa549cf1e6c91d1c7c388"
+    },
+    {
+      "id": "worktree-porcelain-accumulator",
+      "line": 604,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sourceSha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "id": "r25-cli-commands-r-z-porcelain-accumulator-detached-branch",
+      "line": 604,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sourceSha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "id": "tsconfig-workspace-descriptor-presence",
+      "line": 966,
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sourceSha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "id": "tsconfig-workspace-owner-presence",
+      "line": 966,
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sourceSha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "id": "tsconfig-sync-mode-flags",
+      "line": 449,
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sourceSha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "id": "worktree-residue-reason-flags",
+      "line": 423,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "sourceSha256": "0ecf2874735ffc7650712822ffa9034b662400d069858f20e067f65d06fee2d2"
+    },
+    {
+      "id": "worktree-doctor-entry-facts",
+      "line": 233,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sourceSha256": "1c395b9af66034c2db877a1d72fcc079e7a246f0b6c313d8e31c586a60e3c3e8"
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-doctor-entry-detached-branch",
+      "line": 233,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sourceSha256": "1c395b9af66034c2db877a1d72fcc079e7a246f0b6c313d8e31c586a60e3c3e8"
+    },
+    {
+      "id": "r30-cli-commands-l-q-coverage-regression-clean-remove-options",
+      "line": 1314,
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sourceSha256": "049ca3c529230d959ca40bfb967d0d334fe499a8f6dbc029739ec2c3808b9a64"
+    }
+  ],
+  "pendingWithdrawals": [
+    {
+      "id": "r3-drivers-arch-folder-resolution-blocked-provider",
+      "classification": "outside-recall-net",
+      "ownerLine": 67,
+      "actualBooleanMembers": [
+        "blocked"
+      ],
+      "nonBooleanMembers": [
+        "actionKey: Sha256Hex",
+        "providerId: Option<BoxProviderId>"
+      ],
+      "archiveExistingDesign": true
+    },
+    {
+      "id": "r25-drivers-a-f-box-action-base-destructive-provider",
+      "classification": "outside-recall-net",
+      "ownerLine": 73,
+      "actualBooleanMembers": [
+        "destructive"
+      ],
+      "nonBooleanMembers": [
+        "actionTag",
+        "afterDigest",
+        "beforeDigest",
+        "dependencies",
+        "etag",
+        "logicalKey",
+        "providerId",
+        "resourceKind",
+        "state"
+      ],
+      "archiveExistingDesign": false
+    },
+    {
+      "id": "runtime-activity-payload-kind",
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "agents-chat-turn-surface",
+      "priorStatus": "disqualified",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "r26-agents-workspace-runtime-evidence-span-presence",
+      "priorStatus": "disqualified",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "receipt-fallback-draft-occupancy",
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "practice-kg-document-tool-row-truncated",
+      "priorStatus": "disqualified",
+      "priorDisqualifier": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "actualBooleanBearingMembers": [
+        "truncated"
+      ],
+      "nonBooleanSelectedMember": "text: NullOr<String>"
+    },
+    {
+      "id": "practice-kg-tool-result-truncated",
+      "priorStatus": "disqualified",
+      "priorDisqualifier": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "actualBooleanBearingMembers": [
+        "truncated"
+      ],
+      "nonBooleanSelectedMember": "note: optionalKey<String>"
+    },
+    {
+      "id": "vault-sync-status-connected",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "r28-shared-documents-vault-sync-status-cursor-position",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r2-apps-ipc-spike-mount-gates",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r2-apps-dms-mirror-disconnected-bits",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-chat-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-ontology-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-intake-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-vault-sync-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-tauri-ipc-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-editor-proof-document-markdown-flags",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-apps-hero-video-state-playing-element",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-apps-streaming-turn-view-active",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "sidecar-transport-ipc-token",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r26-apps-sidecar-ipc-ready-latch",
+      "priorStatus": "designed",
+      "priorClassification": "qualified",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "nlp-mcp-file-info-exists",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "obs-record-state-changed-data",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "obs-record-state-changed-event",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "obs-request-status-result",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "onepassword-cli-account-signed-in",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "openclaw-channel-probe-wire",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "phoenix-prompt-read-exists",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-agent-meta-wire-aborted-stop-reason",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-agent-turn-aborted-stop-reason",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r25-drivers-n-r-jsonl-output-truncated-errors",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r25-drivers-n-r-openclaw-gateway-health-wire-ok-plugins",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r25-drivers-n-r-openclaw-secrets-reload-output-ok",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r26-drivers-n-r-openclaw-gateway-health-ok-plugins",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r26-drivers-n-r-openclaw-telegram-group-intent",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "drivers-n-r-scope"
+    },
+    {
+      "id": "r25-cli-internal-root-gh-page-info",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "cli-internal-scope"
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "cli-internal-scope"
+    },
+    {
+      "id": "docgen-generation-outcome",
+      "owner": "DocgenGenerationResult",
+      "ownerLine": 392,
+      "ownFieldCount": 6,
+      "actualBooleanMembers": [
+        "success"
+      ],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-quality-package-outcome",
+      "owner": "DocgenQualityPackageReport",
+      "ownerLine": 486,
+      "ownFieldCount": 10,
+      "actualBooleanMembers": [
+        "timedOut"
+      ],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-subject-collection-outcome",
+      "owner": "PackageSubjectCandidateResult",
+      "ownerLine": 903,
+      "ownFieldCount": 4,
+      "actualBooleanMembers": [
+        "timedOut"
+      ],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-runpod-cleanup-outcome",
+      "owner": "DocgenQualityWorkerRunpodEvalCleanup",
+      "ownerLine": 170,
+      "ownFieldCount": 5,
+      "actualBooleanMembers": [
+        "keepPod"
+      ],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "docgen-worker-packet-review",
+      "owner": "PacketCandidate",
+      "ownerLine": 530,
+      "ownFieldCount": 9,
+      "actualBooleanMembers": [
+        "isFail"
+      ],
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "r2-tooling-packet-transition-stream-trace",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "goals-owner-scope"
+    },
+    {
+      "id": "goals-transition-plan-disposition",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "goals-owner-scope"
+    },
+    {
+      "id": "goals-packet-migration-kind",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "goals-owner-scope"
+    },
+    {
+      "id": "files-face-detection-presence",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "files-owner-scope"
+    },
+    {
+      "id": "files-border-classification",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "files-owner-scope"
+    },
+    {
+      "id": "files-person-reference-disposition",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "ownerAudit": "files-owner-scope"
+    },
+    {
+      "id": "r25-cli-commands-r-z-fleet-checkout-detached-branch",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "ownerAudit": "r33-tail-scope"
+    }
+  ],
+  "pendingLocatorRowsPrivate": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/proposed-d2-rows.json",
+  "footersReadPendingReconciliation": [],
+  "workspaceAuditSha256": "c6d9aa92107b87657bfe63e8eaf49522423f0f2ade9168ebdea012914c2720af",
+  "workspaceDispositionSha256": "42c4ea90dc1f806b4eec2aefa100329963c4899ea1fd33296c1529940176cc11",
+  "pendingRowReplacements": [
+    {
+      "id": "obs-qa-scene-provisioning",
+      "privateRow": "~/.cache/beep/boolean-creep/refresh-2026-09-25/obs-qa-scene/proposed-row.jsonl",
+      "archiveExistingDesign": true,
+      "reason": "Complete local owner E3 8/4 replaces historical cross-owner16/4; superseded private D1 corrected."
+    }
+  ],
+  "additionalOwnerAuditHashes": {
+    "obs-qa-scene": "0f0ea7e8c6e44e5bd869de58b79f9f69e4b80fefaf8eda6683148ed15ca72690",
+    "vault-sync-status": "9a74e17a7fab2bd9e8637e2eca563a46802dce728fbf87c432a92a129c3bf328",
+    "practice-kg-tool-results": "24e97cdb57a218c587467c8ab81885561f584ba0315252a702ba5be34edce63b"
+  },
+  "appsAuditSha256": "4b3232a59846b8f29ffdb197f86c1b94fb171b2e835928541c65aeb5c09fc82b",
+  "pendingD2ReportImports": [
+    "r33-tooling-library-observability",
+    "r33-tooling-library-support",
+    "r33-cli-commands-l-q"
+  ],
+  "docgenScopeAuditSha256": "0f408a6ff64c5ecc7ce025c8999602a2b67c6892f595bb32b12fb4941f70d81b",
+  "obsPriorDispositionUnderReconsideration": "Earlier D1 proposal superseded: complete owner has two actual Boolean locals plus Option; E3 8/4 revision in progress with independent scene axis preserved.",
+  "goalsScopeAuditSha256": "53378e548b5ffeb4f781f45fcd021052b0d7243ea55f419a19f52fd72b71963b",
+  "newQualifiedProposals": [
+    {
+      "id": "r33-cli-yeet-clip-scan",
+      "auditSha256": "f43352a7a2d6781f68e56f1c5e90e586f1475c31ebd34b70c602378627f7a4e2",
+      "privateDirectory": "clip-scan",
+      "disposition": "verified-P2-proposal-pending-integration"
+    }
+  ],
+  "filesScopeAuditSha256": "09230fe8517b06c647d957bc7b3bf3a83c3a2ac8dad05fa2753afac5b2f583f6",
+  "orientationPrecisionDisposition": {
+    "id": "files-image-orientation-state",
+    "disposition": "reclassify-D1",
+    "archiveDesign": true,
+    "reason": "Complete five-Boolean owner meets recall. No proven E1-E4: identity1/false disproves presence equivalence and cited producer is no ordered Boolean implication. Complete exported constructor/manifest decoder and no other domain authority justify retaining independent observations; no new manifest grammar authorized."
+  },
+  "tailAuditSha256": "aecee3d9cb40bf734520debc210adb302403c350c213386ca66c8f6373256613",
+  "tailRawDispositions": [
+    {
+      "id": "r33-cli-commands-r-z-install-timers-options",
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.command.ts",
+      "symbol": "runResearchInstallTimers",
+      "disposition": "excluded-function-flag-parameter-object"
+    },
+    {
+      "id": "r33-cli-commands-r-z-entry-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "symbol": "EntryReading",
+      "disposition": "outside-boolean-net-one-directory"
+    },
+    {
+      "id": "r33-cli-commands-r-z-remove-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "symbol": "runWorktreeRemove",
+      "disposition": "excluded-function-flag-parameter-object"
+    },
+    {
+      "id": "r33-cli-commands-r-z-policy-derivation-probe",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "symbol": "PolicyDerivation",
+      "disposition": "outside-boolean-net-one-probeFailed"
+    },
+    {
+      "id": "r33-cli-yeet-retire-removal-request",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "symbol": "retireInvokingWorktree removal request",
+      "disposition": "duplicate-existing-owner-write-site-invalid-D1",
+      "existingOwnerId": "worktree-removal-mode"
+    }
+  ]
+}

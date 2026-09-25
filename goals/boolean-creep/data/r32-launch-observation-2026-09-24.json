@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "boolean-creep-r32-launch-observation/v1",
+  "round": "refresh-2026-09-25-r32-main-28a704",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "originMainSha": "28a7045c9b353544a37733bdb46ffb2a0b6ca7bc",
+  "corpusFileCount": 3181,
+  "laneCount": 27,
+  "maxConcurrentLanes": 4,
+  "qualifiedDesignCount": 149,
+  "createdInputReceipt": {
+    "file": "data/sweeps/refresh-2026-09-25-r32-main-28a704/launch-created-inputs.json",
+    "sha256": "74546a6e8b04698a3e6bb255ec45e04206b9546f025290ff7181938c84de9938"
+  },
+  "launcherSha256": "ec40a60db6615d3df2b693b588aa3c27a4c3f1769ed62c445ed4cc2823d749d8",
+  "controllerSha256": "9fff7bcbce76859d69d3df3635413183a02cbc612d4ed285487db2f87f7cb521",
+  "runtimeSmoke": {
+    "exitCode": 0,
+    "answer": "TRANSPORT_OK",
+    "terminal": "end_turn",
+    "model": "grok-4.6-build"
+  },
+  "observedActiveState": "active",
+  "observedSubState": "running",
+  "terminalLaneReceiptsAtObservation": 1,
+  "failedAttemptsRetained": 2,
+  "freshnessRetryPolicy": "At most3 attempts for exact idempotent ls-remote main read; successful SHA mismatch still fails; no other git retry.",
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationCredit": false
+}

@@ -1,0 +1,92 @@
+{
+  "source": "3ba9c6bc603e73732ba18e40a29781ac87156a41",
+  "basis": "Explicit owner ruling in DECISIONS.md 2026-09-24; mathematical enumeration, not runtime schema acceptance proof",
+  "representable": 12,
+  "legal": 5,
+  "rows": [
+    {
+      "available": false,
+      "checked": false,
+      "isDraft": "absent",
+      "accepted": true,
+      "phase": "skipped"
+    },
+    {
+      "available": false,
+      "checked": false,
+      "isDraft": false,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": false,
+      "checked": false,
+      "isDraft": true,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": false,
+      "checked": true,
+      "isDraft": "absent",
+      "accepted": true,
+      "phase": "checked-absent"
+    },
+    {
+      "available": false,
+      "checked": true,
+      "isDraft": false,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": false,
+      "checked": true,
+      "isDraft": true,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": true,
+      "checked": false,
+      "isDraft": "absent",
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": true,
+      "checked": false,
+      "isDraft": false,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": true,
+      "checked": false,
+      "isDraft": true,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "available": true,
+      "checked": true,
+      "isDraft": "absent",
+      "accepted": true,
+      "phase": "checked-present-draft-unknown"
+    },
+    {
+      "available": true,
+      "checked": true,
+      "isDraft": false,
+      "accepted": true,
+      "phase": "checked-present-not-draft"
+    },
+    {
+      "available": true,
+      "checked": true,
+      "isDraft": true,
+      "accepted": true,
+      "phase": "checked-present-draft"
+    }
+  ]
+}

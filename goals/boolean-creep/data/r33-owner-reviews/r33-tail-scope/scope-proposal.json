@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "boolean-creep-tail-scope-audit/v1",
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "rawDispositions": [
+    {
+      "id": "r33-cli-commands-r-z-install-timers-options",
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.command.ts",
+      "symbol": "runResearchInstallTimers",
+      "disposition": "excluded-function-flag-parameter-object"
+    },
+    {
+      "id": "r33-cli-commands-r-z-entry-reading",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "symbol": "EntryReading",
+      "disposition": "outside-boolean-net-one-directory"
+    },
+    {
+      "id": "r33-cli-commands-r-z-remove-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "symbol": "runWorktreeRemove",
+      "disposition": "excluded-function-flag-parameter-object"
+    },
+    {
+      "id": "r33-cli-commands-r-z-policy-derivation-probe",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "symbol": "PolicyDerivation",
+      "disposition": "outside-boolean-net-one-probeFailed"
+    },
+    {
+      "id": "r33-cli-yeet-retire-removal-request",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "symbol": "retireInvokingWorktree removal request",
+      "disposition": "duplicate-existing-owner-write-site-invalid-D1",
+      "existingOwnerId": "worktree-removal-mode"
+    }
+  ],
+  "proposedNewRows": [],
+  "proposedWithdrawals": [
+    "r25-cli-commands-r-z-fleet-checkout-detached-branch"
+  ],
+  "retainExistingOwner": ["worktree-removal-mode"],
+  "locatorCorrections": [
+    {
+      "symbol": "PorcelainAccumulator",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "declarationLine": 604,
+      "oldInventoryLine": 361
+    },
+    {
+      "symbol": "WorkspaceDescriptor",
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "declarationLine": 966,
+      "firstBooleanLine": 972,
+      "oldInventoryLine": 958
+    },
+    {
+      "symbol": "TsconfigSyncModeFlags",
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "declarationLine": 449,
+      "oldInventoryLine": 441
+    },
+    {
+      "symbol": "worktreeResidueReason",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "declarationLine": 418,
+      "objectProjectionLine": 423,
+      "oldInventoryLine": 297
+    },
+    {
+      "symbol": "isUnpinnedTag",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts",
+      "localBindingLine": 423,
+      "reportedOldLine": 428
+    },
+    {
+      "symbol": "WorktreeDoctorEntry",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "declarationLine": 233,
+      "firstBooleanLine": 237,
+      "oldInventoryLine": 226
+    },
+    {
+      "symbol": "FleetCheckout",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "declarationLine": 1235,
+      "onlyBooleanLine": 1240,
+      "oldInventoryLine": 997
+    }
+  ],
+  "dryCredit": false,
+  "independentP3Credit": false
+}

@@ -2320,3 +2320,23 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   position an operator will act on needs a durable cursor plus a replay on the next read, and the
   replay has to be reachable from the commands that are actually run after an interruption, not
   only from the long-lived loop that died.
+
+## 2026-09-24 — the proof ledger is per-worktree, so the shadow sample resets with every retired lane
+
+- Doing: landing C5's changed-package tripwire and checking how far shadow mode has got toward
+  ruling 7's bar (200 attempts across 10 branches, zero disagreements) before C4.2 can enforce.
+- Evidence: `bun run beep yeet proof-report` reads 0 rows in `beep-effect3` and `beep-effect21`,
+  the clones the lanes are cut from; the best reading found anywhere is 9 attempts on 1 branch in
+  a primary clone. The ledger path is `<repoRoot>/.beep/yeet/proof-ledger.ndjson` and every lane
+  runs in its own worktree, so each lane accumulates its own private sample and then
+  `bun run beep yeet sweep --retire` deletes it — the residue archive keeps git residue, not
+  `.beep/`. At one PR per lane the sample can never reach 10 distinct branches, let alone 200
+  attempts, no matter how long shadow mode runs.
+- Prevention: not in this PR. Proposed as ruling 71 in
+  `research/c5-must-fail-fixtures-grill.md` — resolve the ledger against
+  `git rev-parse --git-common-dir`'s parent so sibling lanes of one clone share one ledger, with
+  facts keeping `originKey` = the worktree that ran them, and settle the concurrent-append
+  question (O_APPEND atomicity versus a rename publish) before it lands. The general lesson: an
+  evidence store whose lifetime is shorter than the sample it is meant to accumulate is a store
+  that will read empty forever, and nothing in the report says so — `proof-report` printed
+  `attempts 0/200` as if the work simply had not happened yet.

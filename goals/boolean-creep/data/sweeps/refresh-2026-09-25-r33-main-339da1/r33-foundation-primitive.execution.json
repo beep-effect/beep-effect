@@ -1,0 +1,22 @@
+{
+  "lane": "r33-foundation-primitive",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:34:57.959363+00:00",
+  "finished": "2026-09-25T01:35:43.253365+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-primitive.jsonl`\n\nConfirmed 0, disqualified 0. Both assigned roots were covered (generated `packages/foundation/primitive/data/src/generated/*` excluded by codegen banners). No seed entries, so no seed drift. No unresolved owner: the lane has no co-carried boolean cluster. Out of net: the single `inittedMaps` latch, predicate return types, and the `false | MimeType` lookup sentinel. Validator: `inventory OK: 0 records`.",
+  "transcriptSha256": "899caef9b59ec8ba67e5f064c633f0882e46864ee074acc9ee94839edece9d18",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

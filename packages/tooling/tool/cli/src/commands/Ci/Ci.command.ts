@@ -344,7 +344,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]",
     "- bun run beep ci append-turbo-summary",
     "- bun run beep ci lane <id> [flags] (or --list)",
-    "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [filters]",
+    "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
   ])
 ).pipe(

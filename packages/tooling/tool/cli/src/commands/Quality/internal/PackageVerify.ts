@@ -236,17 +236,125 @@ const isPathInside = (parentDir: string, candidatePath: string): boolean => {
   return candidate === parent || Str.startsWith(`${parent}/`)(candidate);
 };
 
-const workspaceForFile = (
-  repoRoot: string,
-  workspaces: ReadonlyArray<PackageVerifyWorkspace>,
-  filePath: string
-): O.Option<PackageVerifyWorkspace> =>
-  pipe(
-    workspaces,
-    A.filter((workspace) => isPathInside(workspace.dir, absoluteChangedPath(repoRoot, filePath))),
-    A.sort(byWorkspacePathLengthDescending),
-    A.head
-  );
+/**
+ * The deepest workspace that contains a changed path.
+ *
+ * **Details**
+ *
+ * The path may be repo-relative or absolute and may use either separator; it
+ * is normalized against `repoRoot` before the containment test. Nesting is
+ * resolved by longest directory first, so a package inside another package's
+ * directory wins over its parent. A path under no workspace — root config,
+ * `goals/`, `docs/` — yields `None`.
+ *
+ * **Example** (A source file maps to its own package)
+ *
+ * ```ts
+ * import { PackageVerifyWorkspace, workspaceForFile } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const workspaces = [
+ *   PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} })
+ * ]
+ * console.log(O.map(workspaceForFile("/repo", workspaces, "packages/demo/src/index.ts"), (w) => w.name))
+ * ```
+ *
+ * @param repoRoot - Absolute repository root the relative paths resolve against.
+ * @param workspaces - Every workspace the repository declares.
+ * @param filePath - One changed path, repo-relative or absolute.
+ * @returns The deepest containing workspace, or `None` when the path is outside every one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceForFile: {
+  (
+    workspaces: ReadonlyArray<PackageVerifyWorkspace>,
+    filePath: string
+  ): (repoRoot: string) => O.Option<PackageVerifyWorkspace>;
+  (
+    repoRoot: string,
+    workspaces: ReadonlyArray<PackageVerifyWorkspace>,
+    filePath: string
+  ): O.Option<PackageVerifyWorkspace>;
+} = dual(
+  3,
+  (
+    repoRoot: string,
+    workspaces: ReadonlyArray<PackageVerifyWorkspace>,
+    filePath: string
+  ): O.Option<PackageVerifyWorkspace> =>
+    pipe(
+      workspaces,
+      A.filter((workspace) => isPathInside(workspace.dir, absoluteChangedPath(repoRoot, filePath))),
+      A.sort(byWorkspacePathLengthDescending),
+      A.head
+    )
+);
+
+/**
+ * The workspace package names a set of changed paths touches.
+ *
+ * **Details**
+ *
+ * Every path is mapped through {@link workspaceForFile} and the names are
+ * deduped and sorted, so the result is a stable set rather than an echo of the
+ * input order. Paths under no workspace contribute nothing: root config is
+ * already the proof epoch and documentation is not package source
+ * (time-to-certainty ruling 69). Both `quality package-verify`'s auto-detect
+ * and the Yeet verdict writer's changed-package tripwire read the same
+ * mapping, so a path can never name one package to one of them and another to
+ * the other.
+ *
+ * **Example** (Two changed files in one package)
+ *
+ * ```ts
+ * import { changedPackageNamesForPaths, PackageVerifyWorkspace } from "@beep/repo-cli/test/Quality"
+ *
+ * const workspaces = [
+ *   PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} })
+ * ]
+ * console.log(
+ *   changedPackageNamesForPaths("/repo", workspaces, [
+ *     "packages/demo/src/index.ts",
+ *     "packages/demo/test/index.test.ts",
+ *     "docs/README.md"
+ *   ])
+ * ) // [ '@beep/demo' ]
+ * ```
+ *
+ * @param repoRoot - Absolute repository root the relative paths resolve against.
+ * @param workspaces - Every workspace the repository declares.
+ * @param paths - The changed paths, repo-relative or absolute.
+ * @returns The sorted, deduped names of the workspaces those paths fall inside.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const changedPackageNamesForPaths: {
+  (
+    workspaces: ReadonlyArray<PackageVerifyWorkspace>,
+    paths: ReadonlyArray<string>
+  ): (repoRoot: string) => ReadonlyArray<string>;
+  (
+    repoRoot: string,
+    workspaces: ReadonlyArray<PackageVerifyWorkspace>,
+    paths: ReadonlyArray<string>
+  ): ReadonlyArray<string>;
+} = dual(
+  3,
+  (
+    repoRoot: string,
+    workspaces: ReadonlyArray<PackageVerifyWorkspace>,
+    paths: ReadonlyArray<string>
+  ): ReadonlyArray<string> =>
+    pipe(
+      paths,
+      A.map((filePath) => workspaceForFile(repoRoot, workspaces, filePath)),
+      A.getSomes,
+      A.map((workspace) => workspace.name),
+      A.dedupe,
+      A.sort(Order.String)
+    )
+);
 
 const fail = (message: string): Effect.Effect<never, QualityScriptCommandError> =>
   Effect.fail(QualityScriptCommandError.make({ message, exitCode: 2 }));
@@ -346,14 +454,7 @@ export const selectPackageVerifyTargetForTesting = Effect.fn("PackageVerify.sele
     return yield* fail(`pkg-verify: unknown package "${packageName.value}".`);
   }
 
-  const changedPackageNames = pipe(
-    changedFiles,
-    A.map((file) => workspaceForFile(repoRoot, workspaces, file)),
-    A.getSomes,
-    A.map((workspace) => workspace.name),
-    A.dedupe,
-    A.sort(Order.String)
-  );
+  const changedPackageNames = changedPackageNamesForPaths(repoRoot, workspaces, changedFiles);
 
   return yield* A.match(changedPackageNames, {
     onEmpty: () =>
@@ -399,7 +500,32 @@ const readPackageWorkspace = Effect.fn("PackageVerify.readPackageWorkspace")(fun
   });
 });
 
-const collectWorkspaces = Effect.fn("PackageVerify.collectWorkspaces")(function* (
+/**
+ * Read every workspace the repository declares, with its directory and scripts.
+ *
+ * **Details**
+ *
+ * The workspace globs come from the root `package.json`, each package's own
+ * `package.json` supplies the name and scripts, and the result is sorted by
+ * name. The Yeet verdict writer reads this to map an attempt's changed paths
+ * onto packages, so it provides `FsUtils` itself rather than widening the
+ * verdict path's requirement set.
+ *
+ * **Example** (Build the collector effect)
+ *
+ * ```ts
+ * import { collectWorkspaces } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(collectWorkspaces("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @returns Every declared workspace, sorted by package name.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const collectWorkspaces = Effect.fn("PackageVerify.collectWorkspaces")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   ReadonlyArray<PackageVerifyWorkspace>,

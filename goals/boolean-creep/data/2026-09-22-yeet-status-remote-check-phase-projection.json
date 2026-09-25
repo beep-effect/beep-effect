@@ -1,0 +1,86 @@
+[
+  {
+    "available": false,
+    "checked": false,
+    "isDraft": null,
+    "historicallySupported": true,
+    "requiresRuling": false
+  },
+  {
+    "available": false,
+    "checked": false,
+    "isDraft": false,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": false,
+    "checked": false,
+    "isDraft": true,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": false,
+    "checked": true,
+    "isDraft": null,
+    "historicallySupported": true,
+    "requiresRuling": false
+  },
+  {
+    "available": false,
+    "checked": true,
+    "isDraft": false,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": false,
+    "checked": true,
+    "isDraft": true,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": true,
+    "checked": false,
+    "isDraft": null,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": true,
+    "checked": false,
+    "isDraft": false,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": true,
+    "checked": false,
+    "isDraft": true,
+    "historicallySupported": false,
+    "requiresRuling": true
+  },
+  {
+    "available": true,
+    "checked": true,
+    "isDraft": null,
+    "historicallySupported": true,
+    "requiresRuling": false
+  },
+  {
+    "available": true,
+    "checked": true,
+    "isDraft": false,
+    "historicallySupported": true,
+    "requiresRuling": false
+  },
+  {
+    "available": true,
+    "checked": true,
+    "isDraft": true,
+    "historicallySupported": true,
+    "requiresRuling": false
+  }
+]

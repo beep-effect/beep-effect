@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "boolean-creep-open-owner-hold-index/v1",
+  "date": "2026-09-22",
+  "sourceSha": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "holds": [
+    {
+      "ownerIds": ["constitutional-citation-preamble"],
+      "receipt": "data/r31-law-owner-holds.json",
+      "disposition": "Constitutional preamble Some(false) with locator contract question remains unanswered. All three inheritance owners now qualified/designed; P3 and implementation pending.",
+      "inheritanceDecision": "DECISIONS.md#2026-09-22-inherited-pincite-stable-id-ruling"
+    }
+  ],
+  "reconciliationComplete": false,
+  "gate2Passed": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "resolvedOwners": [
+    {
+      "ownerIds": ["knowledge-ref-classification-input"],
+      "receipt": "data/knowledge-classifier-hold-2026-09-22.md",
+      "disposition": "Resolved by owner kind-specific ruling; restored as qualified/designed16/6. P3 and implementation pending.",
+      "additionalEvidence": [
+        "data/knowledge-classifier-contract-addendum-2026-09-22.md",
+        "data/knowledge-classifier-independent-adjudication-2026-09-22.md"
+      ],
+      "ownerDecision": "DECISIONS.md#2026-09-22-knowledge-classifier-input-ruling",
+      "resolutionReceipt": "data/classifier-score-refresh-2026-09-22.json"
+    },
+    {
+      "ownerIds": ["id-citation-pincite-inherited"],
+      "disposition": "Restored as qualified/designed8/5 under source contract and owner ruling; P3 and implementation pending.",
+      "resolutionReceipt": "data/id-citation-admission-2026-09-22.json"
+    },
+    {
+      "ownerIds": [
+        "supra-citation-pincite-inherited",
+        "short-form-case-citation-pincite-inherited"
+      ],
+      "disposition": "Restored qualified/designed8/5 each under source contract and stable-ID-only ruling.",
+      "resolutionReceipt": "data/supra-shortform-admission-2026-09-22.json"
+    },
+    {
+      "ownerIds": ["goals-packet-migration-kind"],
+      "receipt": "data/goals-packet-migration-contract-hold-2026-09-22.md",
+      "disposition": "Resolved by explicit owner ruling and restored qualified/designed24/12; P3 and implementation pending.",
+      "ownerDecision": "DECISIONS.md#2026-09-22-packet-migration-operation-constraints",
+      "resolutionReceipt": "data/packet-migration-readmission-2026-09-22.json"
+    }
+  ]
+}

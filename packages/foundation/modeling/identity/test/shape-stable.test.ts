@@ -1,7 +1,8 @@
 import * as Identity from "@beep/identity";
 import { make } from "@beep/identity";
 import * as IdentityPackages from "@beep/identity/packages";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 import type {
   DeclarationAnnotationExtras,

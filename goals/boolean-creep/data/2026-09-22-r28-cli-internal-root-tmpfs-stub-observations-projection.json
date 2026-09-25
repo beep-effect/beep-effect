@@ -1,0 +1,581 @@
+{
+  "scope": "algebraic source implications only; no filesystem probe",
+  "rows": [
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": false,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": false,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "unknown",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "exists",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "unknown",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "exists",
+      "contentsExact": true,
+      "legal": false
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": false,
+      "legal": true
+    },
+    {
+      "gitPresent": true,
+      "parentPresent": true,
+      "gitObservation": "missing",
+      "parentObservation": "missing",
+      "contentsExact": true,
+      "legal": true
+    }
+  ]
+}

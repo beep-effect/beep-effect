@@ -1,0 +1,2943 @@
+{
+  "schemaVersion": "boolean-creep-source-impact/v1",
+  "date": "2026-09-22",
+  "sourceSha": "dc852c92efdd7d259e3983ec30cd19cb9b4fd65d",
+  "originMainSha": "dc852c92efdd7d259e3983ec30cd19cb9b4fd65d",
+  "comparisonSha": "cecfb9f8e9a5f20d768666c65f89425349f7f9e6",
+  "purpose": "Mechanical scheduling evidence only. Comparison SHA is the September 14 resumption base, not a claim that every inventory row was audited there. Changed owner/evidence paths do not establish semantic changes or full remaining backlog. Unchanged paths do not establish current-source review completion; downstream consumers and uncatalogued owners still require census.",
+  "inventorySha256": "04e53a7c4755efb9acbafed10291dde7f67a7d03f1eb3c1232cf31e63b020146",
+  "corpus": {
+    "corpusFileCount": 3139,
+    "corpusPathsSha256": "6e906bd1a85dd4d3916a817099d269dcf26e8928fe692d56d79132c5ef6f517e",
+    "partitionCorrection": {
+      "kind": "explicit-graft-corpus-owner/v1",
+      "lane": "r32-cli-commands-d-k",
+      "addedArea": "packages/tooling/tool/cli/src/commands/Graft",
+      "classifier": {
+        "partitionModuleSha256": "8fe36cb21146d3ed0b9f00f48d9189bad38e194fbd5121e6244a197cb33b44bd",
+        "controllerSha256": "b7b9881335bddf08dd7a0b601e5d07dc3ed48e7f94a56b315d2645109302de34"
+      }
+    },
+    "scopeCorrection": "goals/boolean-creep/data/r28-generated-scope-correction.json",
+    "scopeCorrectionSha256": "203f15c95554aea6dd33b24bfd95f910b6155f3732e94c5f9076a4583c1e9798"
+  },
+  "laneCount": 27,
+  "lanes": [
+    {
+      "lane": "r32-foundation-primitive",
+      "areas": [
+        "packages/foundation/primitive/data/src",
+        "packages/foundation/primitive/types/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 30
+    },
+    {
+      "lane": "r32-foundation-capability",
+      "areas": [
+        "packages/foundation/capability/api-transport/src",
+        "packages/foundation/capability/chalk/src",
+        "packages/foundation/capability/colors/src",
+        "packages/foundation/capability/file-processing/src",
+        "packages/foundation/capability/langextract/src",
+        "packages/foundation/capability/mcp-kit/src",
+        "packages/foundation/capability/nlp-processing/src",
+        "packages/foundation/capability/observability/src",
+        "packages/foundation/capability/semantic-web/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 163
+    },
+    {
+      "lane": "r32-foundation-modeling-rest",
+      "areas": [
+        "packages/foundation/modeling/html/src",
+        "packages/foundation/modeling/identity/src",
+        "packages/foundation/modeling/lexical/src",
+        "packages/foundation/modeling/md/src",
+        "packages/foundation/modeling/nlp/src",
+        "packages/foundation/modeling/ontology/src",
+        "packages/foundation/modeling/pandoc-ast/src",
+        "packages/foundation/modeling/provenance/src",
+        "packages/foundation/modeling/rdf/src",
+        "packages/foundation/modeling/skill-contract/src",
+        "packages/foundation/modeling/utils/src"
+      ],
+      "maxTurns": 90,
+      "fileCount": 177
+    },
+    {
+      "lane": "r32-foundation-schema-a-m",
+      "areas": [
+        "packages/foundation/modeling/schema/src/AbortSignal.ts",
+        "packages/foundation/modeling/schema/src/Age",
+        "packages/foundation/modeling/schema/src/ArrayBuffer.ts",
+        "packages/foundation/modeling/schema/src/ArrayOf.ts",
+        "packages/foundation/modeling/schema/src/AtURI.ts",
+        "packages/foundation/modeling/schema/src/BigDecimal.ts",
+        "packages/foundation/modeling/schema/src/BinaryFileExtension.ts",
+        "packages/foundation/modeling/schema/src/BufferEncoding.ts",
+        "packages/foundation/modeling/schema/src/Bytes.ts",
+        "packages/foundation/modeling/schema/src/CardinalDirection",
+        "packages/foundation/modeling/schema/src/Color",
+        "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
+        "packages/foundation/modeling/schema/src/Conformance",
+        "packages/foundation/modeling/schema/src/ContinentCode.ts",
+        "packages/foundation/modeling/schema/src/ContinentName.ts",
+        "packages/foundation/modeling/schema/src/CountryCode.ts",
+        "packages/foundation/modeling/schema/src/CountryName.ts",
+        "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy",
+        "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy",
+        "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy",
+        "packages/foundation/modeling/schema/src/CryptoTxnHash",
+        "packages/foundation/modeling/schema/src/CryptoWalletAddress",
+        "packages/foundation/modeling/schema/src/Csp",
+        "packages/foundation/modeling/schema/src/Csv",
+        "packages/foundation/modeling/schema/src/CsvCodecOptions",
+        "packages/foundation/modeling/schema/src/CsvError",
+        "packages/foundation/modeling/schema/src/CsvFormatter",
+        "packages/foundation/modeling/schema/src/CsvParser",
+        "packages/foundation/modeling/schema/src/Cuid.ts",
+        "packages/foundation/modeling/schema/src/CurrencyCode.ts",
+        "packages/foundation/modeling/schema/src/DateTimeUtcFromValid",
+        "packages/foundation/modeling/schema/src/Did.ts",
+        "packages/foundation/modeling/schema/src/DomCssProperties",
+        "packages/foundation/modeling/schema/src/DomDragEvent",
+        "packages/foundation/modeling/schema/src/DomEvent",
+        "packages/foundation/modeling/schema/src/DomHtmlElement",
+        "packages/foundation/modeling/schema/src/DomMouseEvent",
+        "packages/foundation/modeling/schema/src/DomReactNode",
+        "packages/foundation/modeling/schema/src/Double.ts",
+        "packages/foundation/modeling/schema/src/Duration",
+        "packages/foundation/modeling/schema/src/EffectSchema.ts",
+        "packages/foundation/modeling/schema/src/Email.ts",
+        "packages/foundation/modeling/schema/src/EthAmount",
+        "packages/foundation/modeling/schema/src/EthereumValidatorPublicKey",
+        "packages/foundation/modeling/schema/src/EvmAddress",
+        "packages/foundation/modeling/schema/src/ExpectCt",
+        "packages/foundation/modeling/schema/src/FileDiff.schema.ts",
+        "packages/foundation/modeling/schema/src/FileExtension.ts",
+        "packages/foundation/modeling/schema/src/FileInfo.ts",
+        "packages/foundation/modeling/schema/src/FileName.ts",
+        "packages/foundation/modeling/schema/src/FilePath",
+        "packages/foundation/modeling/schema/src/FileTypeChecker",
+        "packages/foundation/modeling/schema/src/Fixed32.ts",
+        "packages/foundation/modeling/schema/src/Fixed64.ts",
+        "packages/foundation/modeling/schema/src/Float.ts",
+        "packages/foundation/modeling/schema/src/Float16Array.ts",
+        "packages/foundation/modeling/schema/src/Float32Array.ts",
+        "packages/foundation/modeling/schema/src/Float64Array.ts",
+        "packages/foundation/modeling/schema/src/Fn",
+        "packages/foundation/modeling/schema/src/ForceHttpsRedirect",
+        "packages/foundation/modeling/schema/src/FrameGuard",
+        "packages/foundation/modeling/schema/src/Glob",
+        "packages/foundation/modeling/schema/src/Graph",
+        "packages/foundation/modeling/schema/src/HashSet.ts",
+        "packages/foundation/modeling/schema/src/Html.ts",
+        "packages/foundation/modeling/schema/src/Http",
+        "packages/foundation/modeling/schema/src/HttpHeaders",
+        "packages/foundation/modeling/schema/src/HttpMethod",
+        "packages/foundation/modeling/schema/src/HttpProtocol",
+        "packages/foundation/modeling/schema/src/HttpStatus",
+        "packages/foundation/modeling/schema/src/Int.ts",
+        "packages/foundation/modeling/schema/src/Int64.ts",
+        "packages/foundation/modeling/schema/src/JSONSchema",
+        "packages/foundation/modeling/schema/src/Json.ts",
+        "packages/foundation/modeling/schema/src/Jsonc.ts",
+        "packages/foundation/modeling/schema/src/Jsonl.ts",
+        "packages/foundation/modeling/schema/src/KebabStr.ts",
+        "packages/foundation/modeling/schema/src/LiteralKit",
+        "packages/foundation/modeling/schema/src/LocalDate",
+        "packages/foundation/modeling/schema/src/Logs.ts",
+        "packages/foundation/modeling/schema/src/MappedLiteralKit",
+        "packages/foundation/modeling/schema/src/Markdown.ts",
+        "packages/foundation/modeling/schema/src/MimeType.ts",
+        "packages/foundation/modeling/schema/src/MutableHashMap.ts",
+        "packages/foundation/modeling/schema/src/MutableHashSet.ts",
+        "packages/foundation/modeling/schema/src/index.ts",
+        "packages/foundation/modeling/schema/src/internal"
+      ],
+      "maxTurns": 60,
+      "fileCount": 187
+    },
+    {
+      "lane": "r32-foundation-schema-n-z",
+      "areas": [
+        "packages/foundation/modeling/schema/src/NoOpen",
+        "packages/foundation/modeling/schema/src/NoSniff",
+        "packages/foundation/modeling/schema/src/Number.ts",
+        "packages/foundation/modeling/schema/src/Opaque.ts",
+        "packages/foundation/modeling/schema/src/Options.ts",
+        "packages/foundation/modeling/schema/src/ParserOptions",
+        "packages/foundation/modeling/schema/src/PascalStr.ts",
+        "packages/foundation/modeling/schema/src/Percentage.ts",
+        "packages/foundation/modeling/schema/src/PermissionsPolicy",
+        "packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies",
+        "packages/foundation/modeling/schema/src/Port.ts",
+        "packages/foundation/modeling/schema/src/PosixPath.ts",
+        "packages/foundation/modeling/schema/src/Primitive.ts",
+        "packages/foundation/modeling/schema/src/PromiseSchema.ts",
+        "packages/foundation/modeling/schema/src/Record",
+        "packages/foundation/modeling/schema/src/ReferrerPolicy",
+        "packages/foundation/modeling/schema/src/RegExp.ts",
+        "packages/foundation/modeling/schema/src/SafeObject",
+        "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
+        "packages/foundation/modeling/schema/src/SchemaUtils",
+        "packages/foundation/modeling/schema/src/SecureHeader",
+        "packages/foundation/modeling/schema/src/SecureHeaderError",
+        "packages/foundation/modeling/schema/src/SecureHeaderOptions",
+        "packages/foundation/modeling/schema/src/SemanticVersion.ts",
+        "packages/foundation/modeling/schema/src/Semver.ts",
+        "packages/foundation/modeling/schema/src/SeverityLevel.ts",
+        "packages/foundation/modeling/schema/src/Sex",
+        "packages/foundation/modeling/schema/src/Sfixed32.ts",
+        "packages/foundation/modeling/schema/src/Sfixed64.ts",
+        "packages/foundation/modeling/schema/src/Sha256.ts",
+        "packages/foundation/modeling/schema/src/Sint32.ts",
+        "packages/foundation/modeling/schema/src/Sint64.ts",
+        "packages/foundation/modeling/schema/src/Slug.ts",
+        "packages/foundation/modeling/schema/src/SnakeStr.ts",
+        "packages/foundation/modeling/schema/src/StatusCauseError.ts",
+        "packages/foundation/modeling/schema/src/String.ts",
+        "packages/foundation/modeling/schema/src/TerritoryCode.ts",
+        "packages/foundation/modeling/schema/src/TerritoryName.ts",
+        "packages/foundation/modeling/schema/src/Thunk.ts",
+        "packages/foundation/modeling/schema/src/Timestamp",
+        "packages/foundation/modeling/schema/src/Timezone.ts",
+        "packages/foundation/modeling/schema/src/Toml.ts",
+        "packages/foundation/modeling/schema/src/Transformations.ts",
+        "packages/foundation/modeling/schema/src/URL.ts",
+        "packages/foundation/modeling/schema/src/Uint32.ts",
+        "packages/foundation/modeling/schema/src/Uint64.ts",
+        "packages/foundation/modeling/schema/src/UnitInterval.ts",
+        "packages/foundation/modeling/schema/src/Unknown.ts",
+        "packages/foundation/modeling/schema/src/Version.ts",
+        "packages/foundation/modeling/schema/src/Xml.ts",
+        "packages/foundation/modeling/schema/src/XssProtection",
+        "packages/foundation/modeling/schema/src/Yaml.ts"
+      ],
+      "maxTurns": 60,
+      "fileCount": 82
+    },
+    {
+      "lane": "r32-foundation-ui",
+      "areas": [
+        "packages/foundation/ui-system/brand/src",
+        "packages/foundation/ui-system/dock/src",
+        "packages/foundation/ui-system/dock-react/src",
+        "packages/foundation/ui-system/editor/src",
+        "packages/foundation/ui-system/ui/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 218
+    },
+    {
+      "lane": "r32-drivers-a-f",
+      "areas": [
+        "packages/drivers/acp/src",
+        "packages/drivers/ai-provider-cli/src",
+        "packages/drivers/anthropic/src",
+        "packages/drivers/box/src",
+        "packages/drivers/box-provisioning/src",
+        "packages/drivers/cosmos/src",
+        "packages/drivers/discord/src",
+        "packages/drivers/doc-text/src",
+        "packages/drivers/drizzle/src",
+        "packages/drivers/duckdb/src",
+        "packages/drivers/ecfr/src",
+        "packages/drivers/exiftool/src",
+        "packages/drivers/face-detection/src",
+        "packages/drivers/ffmpeg/src",
+        "packages/drivers/firecrawl/src",
+        "packages/drivers/freshbooks/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 99
+    },
+    {
+      "lane": "r32-drivers-g-m",
+      "areas": [
+        "packages/drivers/gov-legal-mcp/src",
+        "packages/drivers/govinfo/src",
+        "packages/drivers/graph-3d/src",
+        "packages/drivers/hubspot/src",
+        "packages/drivers/libpff/src",
+        "packages/drivers/m365/src",
+        "packages/drivers/m365-mcp/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 68
+    },
+    {
+      "lane": "r32-drivers-n-r",
+      "areas": [
+        "packages/drivers/n3/src",
+        "packages/drivers/nlp-mcp/src",
+        "packages/drivers/obs/src",
+        "packages/drivers/onepassword-cli/src",
+        "packages/drivers/openai/src",
+        "packages/drivers/openai-compat/src",
+        "packages/drivers/openclaw/src",
+        "packages/drivers/oxigraph/src",
+        "packages/drivers/pacer/src",
+        "packages/drivers/pglite/src",
+        "packages/drivers/phoenix/src",
+        "packages/drivers/postgres/src",
+        "packages/drivers/pretext/src",
+        "packages/drivers/rdf-canonize/src",
+        "packages/drivers/runpod/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 88
+    },
+    {
+      "lane": "r32-drivers-s-z",
+      "areas": [
+        "packages/drivers/sanity/src",
+        "packages/drivers/shacl/src",
+        "packages/drivers/tailscale/src",
+        "packages/drivers/tika/src",
+        "packages/drivers/uspto/src",
+        "packages/drivers/uspto-mcp/src",
+        "packages/drivers/venice-ai/src",
+        "packages/drivers/wink/src",
+        "packages/drivers/xai/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 59
+    },
+    {
+      "lane": "r32-architecture-ecosystem-internal",
+      "areas": [
+        "packages/architecture-lab/client/src",
+        "packages/architecture-lab/config/src",
+        "packages/architecture-lab/domain/src",
+        "packages/architecture-lab/server/src",
+        "packages/architecture-lab/tables/src",
+        "packages/architecture-lab/ui/src",
+        "packages/architecture-lab/use-cases/src",
+        "packages/ecosystem/effect-drizzle/src",
+        "packages/_internal/db-admin/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 114
+    },
+    {
+      "lane": "r32-agents-workspace",
+      "areas": [
+        "packages/agents/client/src",
+        "packages/agents/domain/src",
+        "packages/agents/server/src",
+        "packages/agents/tables/src",
+        "packages/agents/use-cases/src",
+        "packages/workspace/domain/src",
+        "packages/workspace/server/src",
+        "packages/workspace/tables/src",
+        "packages/workspace/use-cases/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 144
+    },
+    {
+      "lane": "r32-epistemic-ontology",
+      "areas": [
+        "packages/epistemic/client/src",
+        "packages/epistemic/config/src",
+        "packages/epistemic/domain/src",
+        "packages/epistemic/server/src",
+        "packages/epistemic/tables/src",
+        "packages/epistemic/ui/src",
+        "packages/epistemic/use-cases/src",
+        "packages/ontology/client/src",
+        "packages/ontology/config/src",
+        "packages/ontology/domain/src",
+        "packages/ontology/server/src",
+        "packages/ontology/ui/src",
+        "packages/ontology/use-cases/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 224
+    },
+    {
+      "lane": "r32-shared-documents",
+      "areas": [
+        "packages/shared/domain/src",
+        "packages/shared/tables/src",
+        "packages/shared/use-cases/src",
+        "packages/documents/domain/src",
+        "packages/documents/server/src",
+        "packages/documents/tables/src",
+        "packages/documents/use-cases/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 216
+    },
+    {
+      "lane": "r32-law-practice-domain",
+      "areas": ["packages/law-practice/domain/src"],
+      "maxTurns": 60,
+      "fileCount": 214
+    },
+    {
+      "lane": "r32-law-practice-runtime",
+      "areas": [
+        "packages/law-practice/server/src",
+        "packages/law-practice/tables/src",
+        "packages/law-practice/use-cases/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 91
+    },
+    {
+      "lane": "r32-apps",
+      "areas": [
+        "apps/architecture-lab-proof/src",
+        "apps/oip-web/src",
+        "apps/practice-kg-mcp/src",
+        "apps/professional-desktop/src",
+        "apps/professional-desktop/src-tauri/src",
+        "apps/todox/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 131
+    },
+    {
+      "lane": "r32-tooling-library-observability",
+      "areas": [
+        "packages/tooling/library/ai-metrics/src",
+        "packages/tooling/library/ai-sync/src",
+        "packages/tooling/library/qa-capture/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 52
+    },
+    {
+      "lane": "r32-tooling-library-support",
+      "areas": [
+        "packages/tooling/library/codegen-kit/src",
+        "packages/tooling/library/repo-utils/src",
+        "packages/tooling/test-kit/fc-runs/src",
+        "packages/tooling/test-kit/test-utils/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 91
+    },
+    {
+      "lane": "r32-tooling-policy",
+      "areas": [
+        "packages/tooling/policy-pack/lint-rules/src",
+        "packages/tooling/policy-pack/repo-configs/src"
+      ],
+      "maxTurns": 60,
+      "fileCount": 41
+    },
+    {
+      "lane": "r32-tool-docgen",
+      "areas": ["packages/tooling/tool/docgen/src"],
+      "maxTurns": 60,
+      "fileCount": 13
+    },
+    {
+      "lane": "r32-cli-internal-root",
+      "areas": [
+        "packages/tooling/tool/cli/src/bin-main.ts",
+        "packages/tooling/tool/cli/src/bin.ts",
+        "packages/tooling/tool/cli/src/index.ts",
+        "packages/tooling/tool/cli/src/internal"
+      ],
+      "maxTurns": 60,
+      "fileCount": 87
+    },
+    {
+      "lane": "r32-cli-commands-a-c",
+      "areas": [
+        "packages/tooling/tool/cli/src/commands/AIMetrics",
+        "packages/tooling/tool/cli/src/commands/AgentEffectiveness",
+        "packages/tooling/tool/cli/src/commands/Architecture",
+        "packages/tooling/tool/cli/src/commands/Cache",
+        "packages/tooling/tool/cli/src/commands/Ci",
+        "packages/tooling/tool/cli/src/commands/Codegen",
+        "packages/tooling/tool/cli/src/commands/Codex",
+        "packages/tooling/tool/cli/src/commands/Corpus",
+        "packages/tooling/tool/cli/src/commands/CreatePackage"
+      ],
+      "maxTurns": 60,
+      "fileCount": 172
+    },
+    {
+      "lane": "r32-cli-commands-d-k",
+      "areas": [
+        "packages/tooling/tool/cli/src/commands/DeletePackage",
+        "packages/tooling/tool/cli/src/commands/Docgen",
+        "packages/tooling/tool/cli/src/commands/Docs",
+        "packages/tooling/tool/cli/src/commands/Explore",
+        "packages/tooling/tool/cli/src/commands/Fallow",
+        "packages/tooling/tool/cli/src/commands/Files",
+        "packages/tooling/tool/cli/src/commands/Goals",
+        "packages/tooling/tool/cli/src/commands/Image",
+        "packages/tooling/tool/cli/src/commands/Knowledge",
+        "packages/tooling/tool/cli/src/commands/Graft"
+      ],
+      "maxTurns": 60,
+      "fileCount": 118
+    },
+    {
+      "lane": "r32-cli-commands-l-q",
+      "areas": [
+        "packages/tooling/tool/cli/src/commands/Labs",
+        "packages/tooling/tool/cli/src/commands/Laws",
+        "packages/tooling/tool/cli/src/commands/Lint",
+        "packages/tooling/tool/cli/src/commands/Purge",
+        "packages/tooling/tool/cli/src/commands/Qa",
+        "packages/tooling/tool/cli/src/commands/Quality"
+      ],
+      "maxTurns": 60,
+      "fileCount": 100
+    },
+    {
+      "lane": "r32-cli-commands-r-z",
+      "areas": [
+        "packages/tooling/tool/cli/src/commands/Research",
+        "packages/tooling/tool/cli/src/commands/Root.ts",
+        "packages/tooling/tool/cli/src/commands/Runners",
+        "packages/tooling/tool/cli/src/commands/Skills",
+        "packages/tooling/tool/cli/src/commands/SyncDataToTs",
+        "packages/tooling/tool/cli/src/commands/TopoSort",
+        "packages/tooling/tool/cli/src/commands/TsconfigSync",
+        "packages/tooling/tool/cli/src/commands/VersionSync",
+        "packages/tooling/tool/cli/src/commands/Worktree"
+      ],
+      "maxTurns": 60,
+      "fileCount": 93
+    },
+    {
+      "lane": "r32-cli-yeet",
+      "areas": ["packages/tooling/tool/cli/src/commands/Yeet"],
+      "maxTurns": 60,
+      "fileCount": 67
+    }
+  ],
+  "changedIncludedFiles": [
+    "packages/drivers/acp/src/AcpJson.codec.ts",
+    "packages/drivers/acp/src/internal/jsonrpc.ts",
+    "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.behavior.ts",
+    "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.model.ts",
+    "packages/epistemic/domain/src/values/ClaimEvidenceReview/index.ts",
+    "packages/epistemic/domain/src/values/index.ts",
+    "packages/epistemic/ui/src/ClaimEvidenceReview/ClaimEvidenceReviewPanel.tsx",
+    "packages/epistemic/ui/src/index.ts",
+    "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.commands.ts",
+    "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.service.ts",
+    "packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts",
+    "packages/epistemic/use-cases/src/public.ts",
+    "packages/foundation/modeling/schema/src/EffectSchema.ts",
+    "packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts",
+    "packages/foundation/modeling/schema/src/SchemaUtils/collectAnnotationsAt.ts",
+    "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+    "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+    "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
+    "packages/tooling/library/ai-metrics/src/source-discovery.ts",
+    "packages/tooling/library/qa-capture/src/Collector.service.ts",
+    "packages/tooling/library/repo-utils/src/JsonUtils.ts",
+    "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSnapshotCodegen.ts",
+    "packages/tooling/tool/cli/src/bin-main.ts",
+    "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+    "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalComparison.ts",
+    "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Codex.command.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.normalize.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.bundle.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.errors.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.packet.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.runtime.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/index.ts",
+    "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+    "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+    "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts",
+    "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+    "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
+    "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
+    "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestStore.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.command.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.render.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/Handler.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BiomeResolver.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/EffectResolver.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/RootCatalog.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/TurboResolver.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ResolverService.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/UpdateApplierService.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/JsoncSchemaUpdater.ts",
+    "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+    "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofFact.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+    "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
+    "packages/tooling/tool/cli/src/internal/cli/Json.ts",
+    "packages/tooling/tool/cli/src/internal/cli/PolicyFindingLogger.ts",
+    "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/RunScope.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/index.ts"
+  ],
+  "inventoryRecords": 754,
+  "qualifiedRecords": 144,
+  "affectedQualifiedIds": [
+    "yeet-status-remote-check-phase",
+    "r2-tooling-bin-main-fast-paths",
+    "yeet-merge-ready-criterion-changed",
+    "worktree-removal-mode",
+    "r3-tooling-version-sync-category-filter-gates",
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin",
+    "yeet-prepared-publish-commit",
+    "worktree-fleet-epoch-target",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "r28-cli-quality-coverage-resolved-operation",
+    "r28-cli-quality-test-lane-resolved-selection",
+    "r30-cli-commands-l-q-github-check-lane-outcome"
+  ],
+  "affectedRecords": [
+    {
+      "id": "yeet-status-github-thread-mirror",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-status-remote-check-phase",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-command-shared-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-handler-test-plan-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-sweep-options-json-plan",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "turbo-summary-task-cache",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "worktree-list-entry-porcelain",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "worktree-porcelain-accumulator",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "worktree-doctor-entry-facts",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "ci-lane-run-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "ci-local-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "ci-local-step-plan",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "quality-test-lane-selection",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "codex-findings-ingest-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "codex-findings-ingest-command-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "agent-effectiveness-doctor-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "agent-effectiveness-eval-score-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "agent-effectiveness-eval-scorer-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "version-sync-options-check",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r2-tooling-bin-main-fast-paths",
+      "status": "reviewed",
+      "ownerFile": "packages/tooling/tool/cli/src/bin-main.ts",
+      "changedReferencedFiles": ["packages/tooling/tool/cli/src/bin-main.ts"],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-tooling-phoenix-sync-program-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-ack-resolution-flags",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "codex-findings-ingest-force-refresh",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "codex-findings-ingest-command-force-refresh",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-monitor-command-route",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-monitor-failed-job-flags",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-inbox-list-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "version-sync-options-write",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "version-sync-options-dry-run",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "worktree-removal-mode",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "worktree-residue-reason-flags",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-tooling-goal-doctor-supersession-loci",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-tooling-packet-mutation-restore-presence",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-tooling-packet-mutation-repair-root-residue",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-foundation-mermaid-accessible-name",
+      "status": "disqualified",
+      "ownerFile": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "changedReferencedFiles": [
+        "packages/foundation/ui-system/editor/src/mermaid-view.tsx"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-foundation-mermaid-style-safety",
+      "status": "disqualified",
+      "ownerFile": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "changedReferencedFiles": [
+        "packages/foundation/ui-system/editor/src/mermaid-view.tsx"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r2-foundation-mermaid-dompurify-profiles",
+      "status": "disqualified",
+      "ownerFile": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "changedReferencedFiles": [
+        "packages/foundation/ui-system/editor/src/mermaid-view.tsx"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r2-foundation-mermaid-runtime-config-toggles",
+      "status": "disqualified",
+      "ownerFile": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "changedReferencedFiles": [
+        "packages/foundation/ui-system/editor/src/mermaid-view.tsx"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-tooling-version-sync-category-filter-gates",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r3-tooling-attempt-journal-classified-lines",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r24-foundation-modeling-rest-recovery-budget-coherence",
+      "status": "disqualified",
+      "ownerFile": "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+      "changedReferencedFiles": [
+        "packages/foundation/modeling/skill-contract/src/Recovery.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r24-foundation-ui-mermaid-svg-safety",
+      "status": "disqualified",
+      "ownerFile": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "changedReferencedFiles": [
+        "packages/foundation/ui-system/editor/src/mermaid-view.tsx"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-list-entry-detached-branch",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-commands-r-z-porcelain-accumulator-detached-branch",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-doctor-entry-detached-branch",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-commands-r-z-fleet-checkout-detached-branch",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "coverage-baseline-write-mode",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "yeet-prepared-publish-commit",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "worktree-fleet-epoch-target",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r27-cli-commands-a-c-findings-manifest-capability-flags",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r27-cli-commands-a-c-findings-manifest-completion-gate",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r27-cli-commands-a-c-findings-manifest-sanitation",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r28-cli-internal-root-admission-journal-sidecar-remove-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "codex-findings-write-request-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r29-cli-commands-a-c-mode-validation-request",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r29-cli-commands-d-k-knowledge-tsmorph-project-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r30-tooling-library-observability-collector-serve-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/library/qa-capture/src/Collector.service.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/library/qa-capture/src/Collector.service.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r30-cli-commands-d-k-packet-mutation-empty-repair-root-remove-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "status": "designed",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
+      ],
+      "missingReferencedFiles": []
+    },
+    {
+      "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
+      "status": "disqualified",
+      "ownerFile": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "changedReferencedFiles": [
+        "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
+      ],
+      "missingReferencedFiles": []
+    }
+  ],
+  "missingReferenceIds": [],
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "referencedFileBindings": [
+    {
+      "file": "apps/oip-web/src/app/api/contact/ContactHttpApiRoute.ts",
+      "sha256": "0fe7b3b126abdff817b69a8ad28f987b8ba4c1a6261a6b24f0deb71e6526580d"
+    },
+    {
+      "file": "apps/oip-web/src/app/layout.tsx",
+      "sha256": "6787538a6409567747fa13c365f140aa525be6ae01187d1d24f34c4e7d7c7e0a"
+    },
+    {
+      "file": "apps/oip-web/src/app/sw.ts",
+      "sha256": "dac6d0a33ee91601bcc59bd0b216121ffbfb14534c969790fe91ef35b1530e79"
+    },
+    {
+      "file": "apps/oip-web/src/components/ContactForm.tsx",
+      "sha256": "0fee274f560280a25ab22bf61fcee4af396ee1f779f44e336945b3addac2532e"
+    },
+    {
+      "file": "apps/oip-web/src/components/HeroVideo.tsx",
+      "sha256": "e794854408bf5c76eb73c9a25a021c760ff1f082282ba0021c48990c2b9f469d"
+    },
+    {
+      "file": "apps/oip-web/src/components/OipHomePage.tsx",
+      "sha256": "0f206bd0762ea1a65adeb4103c0436b2b7b3f450b7eb578c6989bfe040340b66"
+    },
+    {
+      "file": "apps/oip-web/src/components/ThemeModeToggle.tsx",
+      "sha256": "b0411513fe231a56ecc6735f6bd00bf45344e1e57842fc120e277ab83961a91e"
+    },
+    {
+      "file": "apps/oip-web/src/config/OipRedirects.ts",
+      "sha256": "fee171dd75dabf58a674d3dc98ad371297ba4c60ac8cf8e578d5f6a3a01c54dd"
+    },
+    {
+      "file": "apps/oip-web/src/content/OipContent.data.ts",
+      "sha256": "6fa77a200601fe565123114c860823d03c88b287f0da0d86f8d16227746b09e6"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/PracticeKgMcp.errors.ts",
+      "sha256": "34ae36e432641cdc594077a4d357eb353951bf39cdaf7ada528b44fd62de750e"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/bin.ts",
+      "sha256": "6d34f514e81a575921ab9317cf6658e30331882a01d2ad39f8f6d7367c809c84"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/build.ts",
+      "sha256": "b9eebd4e0b1f16ffb6581f8eaee72077f2eb47442b52a6b57811251cd70574a0"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/claims.ts",
+      "sha256": "3393d93a449bd117232bed9de4310e626bb5d52f8e5abd823bfe34f61a85d9dd"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/package.ts",
+      "sha256": "a6c2d7dad842ac5ec0be972a28ac1b8be8912d9a1c724ee206c684345f274474"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/smoke.ts",
+      "sha256": "a63049a7a743a65ab3c03045b3385afe79fb5436c51d6b61c05d1cf3707ab14d"
+    },
+    {
+      "file": "apps/professional-desktop/src-tauri/src/lib.rs",
+      "sha256": "38cb7dbd02f08ba866fc589e8ba24f894f6659dc4cae818715ecfa05ab76b4b5"
+    },
+    {
+      "file": "apps/professional-desktop/src/App.tsx",
+      "sha256": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
+      "sha256": "804677782939274969d42d92d86a7a996e337d2a827caf9da3a33355e7363ad9"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/Composer.atoms.ts",
+      "sha256": "867b59c14893a0db54207763b0aaa7756a20621ddc3ccbe1dddd162652cba139"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
+      "sha256": "dda673cbc813be6d978cdc8dd70a5fcf81455ed40a90505b64f12741ad73e65b"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/Sidebar.tsx",
+      "sha256": "d68576ecdc8c96a778950a9f5617674f60ed20032c1f3fe10ca9cdd9d1537b49"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/StreamingBlocks.tsx",
+      "sha256": "920d421f4c9ec1eef5680b497c077001117301786af029e55b7f13e053749041"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/ThemeToggle.tsx",
+      "sha256": "5ac8efc345dfb691038022bf45d6d97b68430a42ad25c41cfcf1219dc207b81f"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
+      "sha256": "5a0796772c916f3050bffc4a9b150a5e5e90c022566e52537ec7dca24a32bf70"
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/Thread.tsx",
+      "sha256": "ec3a5389bc3e06046fb8ae9aaeee1f60c041cc02c09715671f63c31a55e459ca"
+    },
+    {
+      "file": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
+      "sha256": "26b51d4d3526afb639eaab2d63d4a7c16b8ce42f855c40ad20f9d668eda3f3a5"
+    },
+    {
+      "file": "apps/professional-desktop/src/editor-proof/EditorProof.atoms.ts",
+      "sha256": "2e7d002e334d25a048a764690dcac8c65f55094b4f1470be677f0dc072090f86"
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/DocumentIntakeOrchestrator.ts",
+      "sha256": "20aa913eb1ad67f1519143b547b9dab936502e48dce5fbbd38fe2aa2fe5a976c"
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "sha256": "06933cdb206075584c6b9d182dffdb0841e7a0b3b60be129c855b81f334740be"
+    },
+    {
+      "file": "apps/professional-desktop/src/main.tsx",
+      "sha256": "2587ac3debbf373eb797aacd48cf9d9bffdbb04623afa4f8e0e502faac5ace8e"
+    },
+    {
+      "file": "apps/professional-desktop/src/ontology/OntologyOrchestrator.ts",
+      "sha256": "81f4052fc2b5f5e925f3ceebc2653ad435f72075e68b5e99d1f995d7587fe93b"
+    },
+    {
+      "file": "apps/professional-desktop/src/runtime/Observability.ts",
+      "sha256": "09dfd8bfa6dc1c5b7d9ace39f7f017dfb441dcfee62223c5b7e77ee826507904"
+    },
+    {
+      "file": "apps/professional-desktop/src/runtime/Pglite.ts",
+      "sha256": "7be0e71a040fc1fd02093bd14c8a635c5570c01b1eb2804a88413b73ab967738"
+    },
+    {
+      "file": "apps/professional-desktop/src/sync/DmsMirrorDisconnected.ts",
+      "sha256": "440ea4b7dbc6b8ecc98c1a1cd59a29f2ee4ed7807b7ebe48bdbb8f608f874716"
+    },
+    {
+      "file": "apps/professional-desktop/src/sync/VaultSyncOrchestrator.ts",
+      "sha256": "e9b28d0cb9b960087f550e9f74a6be0e13fa810fa2aad1d6dc55a527ac5732c4"
+    },
+    {
+      "file": "apps/professional-desktop/src/sync/VaultSyncPanel.tsx",
+      "sha256": "a1a70dd1230186565f5c1871ee5c33d7b5f598583c0e948dfce67999c9aa86bc"
+    },
+    {
+      "file": "apps/professional-desktop/src/transport/SidecarTransport.ts",
+      "sha256": "c331eeb810a3b0a361a0fd03470e9e58465402aa155623fcfb8454efad653754"
+    },
+    {
+      "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+      "sha256": "afc1d2f678efd43f0f059a7d340f1caee3dc79b8330fdd908beb9dbac2f56768"
+    },
+    {
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "sha256": "88df970a7c96c51e5c4ab3fbd729135232a1019f657aae6a57fe7c8451170920"
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+      "sha256": "2cce3dc0e2f31c3a5cdb91f2ec84573998c29b855dff67320a571b36bd81d1bc"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/ScanState.ts",
+      "sha256": "118359ee9a25b419860a111511a62d2721ed78928acdbb7c41679e21cf07aa5a"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts",
+      "sha256": "891cf66f5401b34e6480d7f76c4704d31ee1c539f4775aaf6b90fbb9f2de9528"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts",
+      "sha256": "2d40321f190b1c975d1d50779dc40fd20ffaee3ceafae1567612d6e6dd1bc11b"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts",
+      "sha256": "f38ef426eaa52540ca7947a82a7ad9daa3b51957a002dfec674c27c39322dc6b"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.config.ts",
+      "sha256": "ad4565eac6da5a92fbf1101cf23aaf86e8916b3526c76db427bd658ef9a30f4f"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.layer.ts",
+      "sha256": "758c6d294d7e2423805cb4bd9290c92820fa25eb2167e0949c9b327c56c0a032"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
+      "sha256": "8f2a9d1dfbf1176870c7c52d1f6a31d62c28664e20265d7275f01f3923bba34d"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
+      "sha256": "abba2373867fa544580b30ed6e99b43b21fdbdb47d3c5e49199ebd80244b4249"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "sha256": "4ba8bec7124ed7e4e540c65dc2e256364cd5c7bb9847a0b36dc4776e115542cb"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts",
+      "sha256": "ab2c8419e27a52028e48d64bd95404419c15d48dc4324dbc07fe7ad96528ce48"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "sha256": "6bd7223acd3c8b572b92cba3a7878a4e595dc96dda24e2ebe588fb09d09eaf68"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "77b2ebe107883442ea9b2987ece19d11fb63f6718aee106ad29bfc286f1aa6ac"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "b4947b815dc00bdc6f4a4649c65c399823cd2ab874b8fe68e66385dee1c8d3c6"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "sha256": "c99371ff02fd2284ce5367b079cf59d1217bba81bd3547cecc08e19f95eec1c8"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningIntent.ts",
+      "sha256": "9cc23fb4aab2d742deea0a953da0a2951922ecd908233fd97361afc70ccb57d2"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts",
+      "sha256": "6ea608b04bbbfd9ba7cb8b7aba7bf8d898cce9c816c1dcf2b138b9c951a50a96"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningReceipt.ts",
+      "sha256": "54e929d448f3e258f98cc8254c959151bda1950983a9e18f3f1a8d12365ad9c0"
+    },
+    {
+      "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+      "sha256": "3c19e226aa917917356e5a5e64ef8f1d3f5c1d261865ab34e731f8711ab0da45"
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.backend.ts",
+      "sha256": "d1d06178859fcad9b82dcd31528426c7585e0ba83e160aa63cab35b856345b60"
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+      "sha256": "89701fe56aa465eada3ae718073d63f5ee92d76a9f127ea2a3ce94eb95b7806f"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "sha256": "678ef629f5faee38272d1aa33d63c0465c856dc2364ebda3d63acd1deeb50fb0"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.service.ts",
+      "sha256": "812220050985518043ca27bd38d2bbe75829edf86f2c7e8a7e227201b9fe336d"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+      "sha256": "6aba2508f67acc22da1ae0c44593bceb22cba09d7feb885e84a9c98cd489adb6"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+      "sha256": "94a65e581f745dd62199871c560baa36a5a494f5ea2ec5be82147f9bd7045a65"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+      "sha256": "0e4b60edf451afe0b2d8f4a4469ab05ce7d7c7523b54e6c8e4cb8e23de35002c"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+      "sha256": "9749c6bcdd917fe5385578d84b4f16fce9f4fcead914567a5b94503c1c1db81c"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "sha256": "365b788c48ce70b5d3b80b0dc09a27f9cc3db937a3d094a3d3df44315da01d02"
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "sha256": "ca4efa4c08bb3a9d8cc8b6401521fccfef8064383ea8c37edef79bb9a0f6743e"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/M365Handlers.ts",
+      "sha256": "60857801be3d977c63f971b31dc3340d0f81528fa0e5df04e7f775c53b2b3957"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/M365Tools.ts",
+      "sha256": "ec432d8c22ace8a8aee94d594632a4f299a1320aea26a88c374af6c81853e860"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.schemas.ts",
+      "sha256": "4063e1c7fa2ed873bd81e6dbb995d807a5c7c7035dd6ab9a7e99196625ddac07"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sha256": "688ea2f12ce41b072e2502343bf0e8a3b137a7660150715e0719945ac76674a6"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "sha256": "a4642e16a42f9ae58b58a7257dd8d85c66690e37840c846b17899af820cf21fe"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sha256": "9c62a9868449c171e02512f570e49d75882aeb1291412d0ba938fad7f18a954c"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
+      "sha256": "851e229c9406d8ed6da18f4e9cb115d53c689dbdcb75d7f5d24b93911cb60f32"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "sha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746"
+    },
+    {
+      "file": "packages/drivers/obs/src/Obs.models.ts",
+      "sha256": "c03b059ce35aea46ed77d340f9b30ecbcc028e0801851b072b64b2fb7d4e2050"
+    },
+    {
+      "file": "packages/drivers/obs/src/Obs.service.ts",
+      "sha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac"
+    },
+    {
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "sha256": "72668ac65ff9a96e59c57bd7e4d520657026d55bd382aa7edc67593ffd6fc702"
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.models.ts",
+      "sha256": "31ccd6e6d1c9d35801429c614f80c45294f426308c73aef13ffa4b57ea8f267f"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "sha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "sha256": "20d4efd792b3cf8c1579017a4607e398de6861fd88eec9f7a12c1a29df455e7c"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
+      "sha256": "55d176882446604984a36f1fd8e65db93ad6e24ddfd346781047a01f23c2c97c"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "sha256": "af83e1f74bc544bd705664c9d13bfb685dc0af8801f1d473801f0419822c99e2"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pcl.models.ts",
+      "sha256": "64696d135b14b304fb95d8708b17772f24b3928e78c77f41c1ffcc999ed11647"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+      "sha256": "d65c1297be41c3378bae043e6bda17d02f5a8e1bb8acf1067af597935c8bb8f2"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+      "sha256": "79c92d2c3fdaefefd1ce4f9b2296e29095b1dbbed176f1c0acbeeb638d9548e7"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "sha256": "71f074e09ffa63c350b8c09a0224dc3ac53c2733cebe7234f9556706bc859e66"
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "sha256": "9a0bec88800fe309d3f790976203b85d73191b66d2500d905570c5d4395b59be"
+    },
+    {
+      "file": "packages/drivers/pretext/src/browser.ts",
+      "sha256": "4948a0e12d38ba9eac882fa4c832ae99abd6b156f0ed41450a1f27b63e601e4f"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.service.ts",
+      "sha256": "2dff8e0fbfb0fe309674395585452233e9ff457bbe3d230cc751873f7e9f5d4e"
+    },
+    {
+      "file": "packages/drivers/shacl/src/Shacl.validation.ts",
+      "sha256": "eb664e17a72135024cfcca42d08b3e39be10568c6edf90d3c2e9592ecba4112c"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sha256": "0d3eb813bf472eaa0cc316fae5f4e9b687bb0c495d88461206e3c5415ea60bfa"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+      "sha256": "054b3871287e822852a87adb76bec12cf6fa411cb6b1a7e543f3b4d49b1610fe"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkBackend.service.ts",
+      "sha256": "1e1d4d5f77f35b75badf9585bb8fc0f91c9885121f2cbdbea929a9e65194f0cc"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
+      "sha256": "a3b881a4a29bd022b006c21acad84807213bb864df15fe244a7beee0c823100a"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkTokenization.service.ts",
+      "sha256": "2c195810c476d049bbcbcd922ad2a269f3e7545e8ba735a86eec726eed230b5f"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkTools.service.ts",
+      "sha256": "9aa49cc0f166a8d34b2807acf1c3972f4a44a43042ffca2283c8608a3000dd79"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.models.ts",
+      "sha256": "1f2d223ead2bc1d501dadee3153095a7d3d05d0fb32d7f5b9a5390cd579073d6"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.service.ts",
+      "sha256": "fe94aeac166efae741d048358f2555af0d33729bf498f7ff1606cc09ee95fd44"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+      "sha256": "611bef1966ebaeedfec9b36e1659d305b8678980cc72c1d671468ecf2d93ca98"
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/core/Meta.ts",
+      "sha256": "42a4413c1261106557e72d43e6a7f7d7adae58dbdd1d20f0aa80f333c685db19"
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/pg/Column.ts",
+      "sha256": "29f2050af1c66927e3eb3a0b3071b99301389bdaaffe5f94c34c7643b7c42c50"
+    },
+    {
+      "file": "packages/ecosystem/effect-drizzle/src/pg/combinators.ts",
+      "sha256": "910602cdace32ac9f691acf799dcdf2f3514470809afb97ab509c3d3821448e4"
+    },
+    {
+      "file": "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts",
+      "sha256": "b58a556ac3dc724ff69489a90f15e52beb0a51884ff8590dce435c380ea26f62"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriagePanel.tsx",
+      "sha256": "9d993442a8ba6052a65b627cc4795bcc6b3fd66c5a0fc225371656755814d4d5"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriageView.tsx",
+      "sha256": "bc3a14ce19aadd7a2976038e41b6138d1e70a25bd3cf25c7cc8eb7b0788fade8"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "sha256": "b24b47e75cd99a4a7b8a198b96d7670a81e914e6a8e758c7cfb77e3d3c81ad2e"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+      "sha256": "af640bc44d095da655fe425a37dad92b23bf9c64089b6abbe4ede59543a86656"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+      "sha256": "54aea37313f575bd57b8afe49f08aa90027749b382a80523916823bd955c8fdd"
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.service.ts",
+      "sha256": "73841280514e2fb496e04d0541d7f3a1c401ed5351e672a21179ac768e3d9ac6"
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "sha256": "45e91461e7d58b144d8a99b664412d89ea8ac4f3713a2d1d9f6c936c6690d602"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "sha256": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+      "sha256": "90491cfb18525783afb2b591db44855ec241851dd4d40da641ef0a0326d33e1b"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sha256": "b09fc5628dbe10a007dad6e12d853cf96239084bd918ca3375b2f2742fe86d59"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "sha256": "27d680e7aeee445e8d385f68cce127ca2e818c332e6e6b2eb59d7a41c0bef0bb"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "sha256": "ce85e1373f3944806e8058f430961fc828d5f3706b292677ef93ee00973d8d3f"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+      "sha256": "5dd5f1850bfe3e914f638972c159e09ba3d24e88db17c315ad9f62a8e13d71f4"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "sha256": "b00bac0173281341f9c58e4af6d1f42fa49690eb154f97e47d4e3eec47bcdfe6"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
+      "sha256": "23a794846846867ba71f5237749558d0153870535ec1bd5bc09295f44b90ac51"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "sha256": "f0f7370e52c6de1d010aed5f72e05a315e31896fd52213b2393a582bb180c9e0"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/CorpusStats.ts",
+      "sha256": "6d45c269cf9a0f74a1b64b3795570a2603033eefee3168e66d2ab5cf5d2ec9b9"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts",
+      "sha256": "3d3a20029425b69affede5d8f943984b75aaf856fe7296ddd93c4a28673eec01"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "sha256": "ab15bcb2e07eaf1333be11e31b7e84a82477f83e02e2a83931b3953df7e8b72e"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Config.ts",
+      "sha256": "bbb3efacc13c75baaac8cfb3d2ca050fb7c792eb11abfa1ff8f3ee44e3d19e3a"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+      "sha256": "b2613c19e5b5c601843f5abbc28831b51dc88354b89e3476c6d327b47d9351bb"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+      "sha256": "713a63c9ee288a60dd86385a88a0e297719cf80cef784cdb91b99f2b8956e47d"
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+      "sha256": "7a815ef355d229d005ffc62f836e1ed222865d7cd92380615a69a371f9be0956"
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "sha256": "7a9ca39b11ca3f85d426f826392150d4874d2a34c63c1b0f689906f676e3eac2"
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.form-control.ts",
+      "sha256": "34448166f2c8a7194399595e868a537be17ac531b73756d1c344c3488efb2b5e"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "sha256": "635e866e5ea6c93dc69b0be8efba9cfda83ba7e83bcda5c0ffd59431289d141f"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "sha256": "a6af6dc79755114c2bf347eeb7fa65b779f7f6891f9fd9b43689d4317c41960e"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.safe.ts",
+      "sha256": "8752ad8b63d4ca1a498afc468f52700b43030f0111f2ae53512fe9ec2518b101"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+      "sha256": "d7de63315dab330e3e994f647cf1de228e4acb7f4052b61e1238f3c40eac7e2d"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "sha256": "e4c1f8b5c6dd99c33d3256046b76dc5cb271bdb1790ada4e3262049d58f9afb7"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts",
+      "sha256": "57e6d0b68d9ed3c1f1dc65eaaca2d9a029509c80e6d983833ab9cbb92542ed0f"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+      "sha256": "9ad14c399cbbcacf5911ef8a621d2b49f3887b676e313d3f34432d27848a501f"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
+      "sha256": "73942b62bb4782552c7d6b7169a820ae8adf28072ac1f27ffb37225249345529"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Double.ts",
+      "sha256": "39c8d4b03b01f842a36424c623d45fbaa6631a5f57a6215dd03bd02af63a2203"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.behavior.ts",
+      "sha256": "b4ab50e088b09bee1b0a46552fe0cfe3e44779e7c739501ee4e266dcaf6658e7"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Float.ts",
+      "sha256": "32a4712ba8470b249869c0087b46f5187e463489a9ad18a9deb3e73e0f039d6c"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "sha256": "e9e6b9e1856d271db5045a69fb9e04b4523d112d875479dbb10de74aa209175c"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "sha256": "bffbf83b7d815a6876d71929f3cb4c6aab1191acce28ba9fdb25a31ea654357e"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
+      "sha256": "dc29bea835a5f759506ac8934b193081867aa5ccd69b7db1e3616a94fd1a5c1a"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "36915d6791ed01e0f1e33384513441570597e84d9b5750f6b6cc009a4aea24be"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+      "sha256": "6ac39215a60caab0e334e0caf02efb06bd0030dd1dcea608c54ae02918741fb9"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
+      "sha256": "70ff73067e4aa1d2c7c17367d592a737d8d8df07f06c673ceeb7dd893bb6944e"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/internal/staticDescriptors.ts",
+      "sha256": "53b1fc9ea532295d2b46eb588638d327b7e0a993a3d69e91ec9e512a866e44ce"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+      "sha256": "3fc897de55ef22621b39a82f3cd4734d8d3dc07f5a0100035c90707269661c6f"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts",
+      "sha256": "c2a9c0a2c50ee576218b6b6751d82b6d5023c28f56d87ecea756389f576ebb16"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Semver.ts",
+      "sha256": "bbeb278ac405c6cccd9bbe36b505b5cabf8aaaaaa7c11bf50030b185e973dea7"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Xml.ts",
+      "sha256": "c0299e42cf81c2392ddc4801d04e45b21f09222ba0c05c3b7520033cb42d3599"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
+      "sha256": "7340d2e54114eb6989d235140351ede23250812368298774c119ae6d76108f13"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+      "sha256": "f833a4c49c52f9462ebb29ef080b73558d73b5b3eddac2e41c2dfac841b2fe23"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts",
+      "sha256": "eea17db23f52e2a6bb8c1d79d965aef73ba02b4422853690ee742970f7773785"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+      "sha256": "7a717a315c615470ae0a83a21b17cf04bf93c2e47e9c664331eeed8303920744"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Glob.ts",
+      "sha256": "7df7185ed6c7bfd9e27affca38542fc814d2a9eeb48e168e243b299781550826"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Struct.ts",
+      "sha256": "34d511555166c8d41edf1f0f856d935d5199c336f314f34e4e07a3fa34625e15"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "sha256": "5da2d76d40b00909133c6087ef39ba868fa06bc170c18c9674091ca63869788b"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "sha256": "106946af1b1f17f44d6fe774778f7ce5c4b4cbdc714b60f48f86d5b5cf3df551"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "sha256": "82c59fc33872f01ffd386314370b4ab6e3d06730dd5785e239271bb6b57d8933"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "sha256": "4070036c04d14954f6c2067bd40742b71aea1626340d323f90071437afc2df41"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Geometry.projection.ts",
+      "sha256": "f6fbf8e0dbfa40a9c09be15dc9a82acb23a9fd9914ad5eb8b26cba2b69c63422"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Reducer.ts",
+      "sha256": "e4a7bed43b71bc1a2bde8180f027b59c553d80c9c5fad075d0de785296360f1a"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+      "sha256": "8a5e01f7642327622ff35c3d0d9d3702fa54badfc916a7939887fade1d46f1e6"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "sha256": "8338ea933b1cdae163c6a0201d7672a50a2caa5a377ef29c9645e5b0e2972def"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+      "sha256": "ea80fd14afe98e2e3743f98b59cd5723b6678bdf91af205087304c4065fdbbca"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
+      "sha256": "6a81a4c3ef795964ca0b49dbe339920f5c699f7573ad2a0a38ba895e80dca07a"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "sha256": "5c521a5e3a1a03f2570518b3b4a367504ad3c2b74c9e7b09f8608b4f47059e4e"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "sha256": "558256344c4431123d4d5f8f982a6a0740c6c421dde00b78def0bab6ec32260c"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/youtube-embed.tsx",
+      "sha256": "d5b1d5876e4f5c22643deae8b34b09324e0fcaff783d450163e1a50830a4eb50"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
+      "sha256": "1cca5503dd53ac1308f5feedc43e85fc0e92b3e7bc3f6f20fa77e32a3ec9a691"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/calendar.tsx",
+      "sha256": "6a6e63f2e869ae3274ade17996f535120293c03baf24ce12ab9023a5a35b647c"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/carousel.tsx",
+      "sha256": "dbd1a9027bb9ebe973f1cc0d3db990c9eb86d07980973397ddcf84664c2c8dc1"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "sha256": "0b515cbd1ee51eb79ee36bb2d941507f180fdb1ce233b0db44526de62711e0c5"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
+      "sha256": "e4f87c71b8bc8a7a7f50b87ec5c4598e57c367a6e66aa3f21366b5977090c8b0"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/combobox.tsx",
+      "sha256": "f0db38a02edf22255be7af1beb3536cd9588ef96fefb4cfabf152270a1bf408e"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/date-picker.tsx",
+      "sha256": "a756f629e0d4452f31d9d06413cab95e0e3e469efcf4fde322cb29ba3eff1592"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx",
+      "sha256": "c242edc09b2c65c472edb41ace09614d978fa9ae4a2d6331544e8913158b5af5"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/emoji-picker.tsx",
+      "sha256": "eaa45aac0045f7fdecaeb8626d3986968910ca0a0293054eeeeb297dc5a59cf4"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+      "sha256": "9343d461031eacc1a3c14b402837887928ce05e2f75998630a8006b1fbe09014"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
+      "sha256": "fa4a3628cb3a5c23804ae955649eb0d99bf096d31e38d3b74165b70743313f3c"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+      "sha256": "ec748f42c020bcb714b8e7dd62650ed7cf3864c2106df2d9b7aeb797862f8996"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+      "sha256": "aa6f424128b3e43d2b6659c72124c732d47d7bc825e7b8ca3f08e0c1826b2af0"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/orb.tsx",
+      "sha256": "e8c4cf1513dca88c221136e0f3f3a9d40a2b834ff47092c0e9a43ab556b166c4"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/resizable.tsx",
+      "sha256": "e14f7337d8b521b417e8d426fe4b58d7a37339a04852f9f6fc1d958108d9088f"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "sha256": "b39a60fc6edf7ed5b5dc753f8521589e8fba7c70e290266f5d6eede96087bdcb"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/speech-input.tsx",
+      "sha256": "0b3b5c9b37f0d0b8affa13c5198bfb7e64696a459b519bfd4270da5b82b3ffad"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+      "sha256": "c1d62d3b50a9b7b44d8ab45ef1982acd2f5997c681067927369d4ac0ec5ba6c5"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toolbar.tsx",
+      "sha256": "da2e190d0bce2408c75e0b43d84b07bb4accb4d69a4806d783c89df6b8ac7498"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "sha256": "28a8c41982baab0cd10e94da632064fab1680e089eace5aecf98853cb3b338a1"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "sha256": "6bfc87192044369f6fdd06ca91c6be1ad22da5028e23093ba8314992d1791c3e"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "sha256": "e3c10c48d870fae958875c43139fc7e1bfa197f7d6aebeb45782b4809fc25629"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "sha256": "26fa0bd3e95f5eda17b5b3ebd2d6855b5cef59e213151c0b74567b7232ec4fe8"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+      "sha256": "cb92fa1aa992b3862f58d9dbfd3c25afcbf44d1be6a361ce5aa3e9981f51a24e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/IdsSubmissionFact/IdsSubmissionFact.values.ts",
+      "sha256": "c3931cbc00d0a42aca3c0aeed1ba74185d3f9f06cf0b36a872e6bce507696863"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "sha256": "2340f0a39f198015de6ee023df62bb3774f4cd97341001d74bdd8707e016742c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "sha256": "3b9077514cae683d5df5c6e60b6ca6f5fd3c89913750141e58a40126c333a175"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "sha256": "beea4ea820621b19b03a48e1ea8ba25e4fb67b907a6fb87cf381d45b661843d7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "sha256": "29c6697e12ff006ce9752adfae2fef4516a84d9bbb1f7398e9b73deaae09b83b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
+      "sha256": "8c302f225604b49a836b00f63609cd23c9eb1feb8f0ee5598ff0e274c304c644"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
+      "sha256": "86bbd86a854a8af5d51b8aa40b86ae08a6de0975108e10f84f7c5b1beede06cb"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "sha256": "3a69f24e698c37b1ffff429998460a1d22360b87191ae020102e46852668f301"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "sha256": "8a6409f7854eff8f41768db41e8d35bf6c88e8187fc701b99a754f010e5ba329"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/StatutesAtLargeCitation.model.ts",
+      "sha256": "c16507c8b6ea8559e0ed6215918823af6f348daa9cfec3a72477b02c06c69e31"
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "sha256": "75de8b4619c393d8c42d9a732dd26ba5b0d1533dc7f503dcaa7d0c05f9945359"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.projections.ts",
+      "sha256": "53fa6479bf7b188e0fed2b4b4ca666e0125b66b0dafa83c932d5cadfe39b8fa0"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.schemas.ts",
+      "sha256": "c40c805991dedff3f8b44de286170208f8968ee83c5204335f7d4d27670e6a06"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "sha256": "23627d9752685998c3a8b569fc19d7a2630f3b231710be65b48456cfdd4151c2"
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "sha256": "8da0fadb37d135a5e7001ba4d5686fe64184a52cd518f3eedf65c10c32ac1602"
+    },
+    {
+      "file": "packages/ontology/ui/src/aggregates/Session/Session.document.tsx",
+      "sha256": "88bb747b1a1c6e9d62dbac72027fa5f7e478ce4e0321a0726bd502cac0b6bccd"
+    },
+    {
+      "file": "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx",
+      "sha256": "8e70219733c3f2096608e1efca1aae39a2eab896e82488fdf0c82d3472ee29fd"
+    },
+    {
+      "file": "packages/ontology/ui/src/aggregates/Session/Session.validation.tsx",
+      "sha256": "f24631883aecc9848ae13a6fb896105f36357036bd6b0f9eee1f1eb65328c5a1"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "sha256": "26732b77fff2af56b049b6ada0a2d5f957a97871ae0b093a72a68168fffe147e"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "sha256": "817333718f05b96bb3a6fedc14a561c3e30a885bb86b72413484c3596876da30"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "sha256": "cee78d410756b951d2235e945aa42038f3125530f077151c9855246257ed7b2c"
+    },
+    {
+      "file": "packages/shared/domain/src/entities/Organization/Organization.behavior.ts",
+      "sha256": "c1213b6a6ae6abd554cfeb5f4f4b979b87787be89763851a3153696e967ef99c"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+      "sha256": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "sha256": "0057374003fceeb5e829a70be77dfb9356c7490f9bc49e22f20e9152f6eba3ba"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
+      "sha256": "540e7924a460a7ecbf881fbe9300ea35b249c1f0b1a6dbfeb571858313140f36"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/flight-record.ts",
+      "sha256": "b0098c0eca484563e28c9ccac7fc12deba9e253fb8984e04c73fc2b83a8bb7bb"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "sha256": "447f65d89bcfbaa40161b3bdcde38000a1509b0410e323161b56085677a4529f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/install.ts",
+      "sha256": "44b64a332e439e3ad094b89a46aaf52edd75f4936c1cac869da63f67d50a9c66"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
+      "sha256": "076a962201291fba6b2e8534bb7a4471bbb23d5e8959eea2d626b47a1ac2c73f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/models.ts",
+      "sha256": "a186077d04d219482ff73fe317b37a0b850c437739d30ef86b55c1fe0e2a02fb"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/retention.ts",
+      "sha256": "11d4d9a37d0a3142bbed4b192eda88cbe4d69150ad5c652a79245a5b764b561f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/scorecard.ts",
+      "sha256": "9858b8bfcfd4e3583ee2726e50b5fbb11e8633feda8c8fec947be13107fbe5b4"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
+      "sha256": "666cadf0c3e791845410c40caf6ede7ff78757bd220de7412eb166bd7db336a0"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/ExtractionPlan.models.ts",
+      "sha256": "9c3c69f052288d0992a005f2c3482f8717cbd4820640eb2b18b5c82bae1ce99a"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/SessionStore.service.ts",
+      "sha256": "a2be51904f2a22a0bf59e2c36b18d46263f465440d527d1a65d8bc528e615546"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/witness/witness.iife.ts",
+      "sha256": "255fbc4caf28e3cf88d76b3b672e6ca408136b6cfa2952e005152a7c89268f84"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+      "sha256": "0a9a6dd51850bf5137ae79609e0916fb19a66f560d9c02e33c26e73940da6c3b"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagParameters.model.ts",
+      "sha256": "a048238186dd0d9c4e0a24416f35b21318357087a799528cd72ad2fcab01b514"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+      "sha256": "37c4f71d28faeb9fd26fa85f9fde6fb62522f003c2fa4104f1d932ac4586cbba"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+      "sha256": "15c7a691081ac69ef3efc95ef503ce9b5fa2267ea34c816517efb4e798056bef"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+      "sha256": "901218f39c9dc8feac425036201c66e6a41e583136c2c516bb81eb3110b38eaf"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+      "sha256": "cab51c93ba5e7e596d307f2b6d2251049a03ceae84b8a0a3fd46ed8505062f5d"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts",
+      "sha256": "69c32e156c63354823456f555870d7e0da3a2cbc68651ba2d0a37ebbec3a9447"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+      "sha256": "42b826c2723532ea9781d1d2331242780bcec3ba67416cd6d83a2227b26a66bd"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts",
+      "sha256": "d0ef3e2ea861ecfa7066e9abe8670dca0972dfaaeca1f817f1d38e04c1c415c6"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+      "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Compiler.schema.ts",
+      "sha256": "d1a36cf6c5bfb6b94ff8f39660896a3029add26e794d43829d15cfad7c3fb0fe"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ConfigPrimitives.schema.ts",
+      "sha256": "414f396e37ad0641282e2cd26946c8d8c901d49fe5a485acba45a3256d2efa31"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ExperimentalConfig.schema.ts",
+      "sha256": "49ead00b4e6a6f09da68bb58f9d72101a8f6c7d46aaa47ab56b49b7668613838"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
+      "sha256": "f1b8983e0fdd258232edd2a118a4c8ab4e7c76ba95c261e216547d8c47168895"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts",
+      "sha256": "367de01f8d6e85fd662b51f25326db2932443a7f26e30c4990426af4406a08d8"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+      "sha256": "00f4f9b7c3c8be66dff6863d2169b16aa4b5be4d5cc0483213f6085605b227d2"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "sha256": "f60c016d62eb22dee35836d7df19baeca822acf8a707888e3cf7a7db6f1281ec"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+      "sha256": "b430286457dacc78134d23efdef0b6cff7fd22568663c1ac3c67935462608318"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/bin-main.ts",
+      "sha256": "7dd304115bcd6c8ac3e48f77e249b041f231e342abbf69dd4b126aef64077474"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sha256": "f7807d0240ec0665e5e6dfbc05220a68f28035d440bc99639bd1fc976abbd640"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "sha256": "c7da9015cf03c88ebf6735fc6b4f18e5767b5b9303fb85daada75c20de81fdd2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalLawLanes.ts",
+      "sha256": "dc79aeea1ef3e1fb7c7d43c540de96dc979017fc9265d14a4713f4cd8b9945e3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "sha256": "146d3415097e2791bbf6338e98750c20e852a93b3d16f8c76f8cb9d782845441"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanExecution.ts",
+      "sha256": "965c574e55ad2ca62a20d3fa594332eb5df905637d9618ff4f6f726e8af9e4c3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "sha256": "02e0e8d7f3e3b37f78546d970a94eaa99b34c66226b2e3590a6da0271a112ae5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "6d083861cc798c2c8a2bdbb1aa2bd1647036a488a480222d1b9e363e1b874104"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "sha256": "8f204c11d3b32cdb7e7f28be3c3c83b24f877db602fbcde202e1d6c05ce017ba"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "sha256": "c8d6ddccd833a27a7f9f25801152ca9d5bb98a03c2029da901ecb79fef37fc1d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "sha256": "c41e9c39c6b267304b3b054747ea941bfcd3f74548cc4487083ff6a6f6a3a2cd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+      "sha256": "229ec77ebf38ab3ca53619992e2f8d5cf5ae0b11220e8efd514f95e89a3ba834"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.write.ts",
+      "sha256": "8e10178d1fa0c80e98c6ab8f3bd4292982034ed85c32df7e3444db4c8a5a5f82"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Extract.schemas.ts",
+      "sha256": "f56bf19807b2b72e0b040546554d4ace569eeea0496e3b0d33aadf224a940e24"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.schemas.ts",
+      "sha256": "baf4b6502b089458fda82054571ad398520aec3b14dc015ed9026a5f26857417"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts",
+      "sha256": "8c78543665cd84df4e87fcb809a68766e19b020c40a48180541f042e2202c553"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
+      "sha256": "9109aab6fb7d213841c93c5363c3b403a6aac083d0444ccd30c48c6b9e12fa27"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "sha256": "2208bfdf8a6f78cb91b99bbde4ba6cabc9419d4de8220dec639e6459c411457f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "sha256": "e3fa6118dc9d2d9ab8cbc5e7e4c1d727ffe6341c245f19d70f102350ff910b9f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts",
+      "sha256": "e15c30d6cd1f58f730755438bda026a51e728cbbd6f9b883d2a04a6a436784ad"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "sha256": "114634462e491e27c25477578d32008bdac6a2c7094d404d7484c8d0b21b1c7a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
+      "sha256": "7ce3ce7ba6dc2dc699665cfeecb058ffa07da3cfc19552a1b97e39ebef36d6a7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.check.json.hbs",
+      "sha256": "01ef0df6f36d222343425768f3b1a0c59ab23a1bcb85bd205f25f62ebf7d87c7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+      "sha256": "e7c662dc5ced1598e3dd1d3bf8413d3ba9d51d499d49024d92db6c0974490d55"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "sha256": "76ff278c5339fc67efbcbc65452ae0acafecf21ddaaa51ef1c0937709d3ee906"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
+      "sha256": "82bf3a01d28acb09f53b9c5dc3355b742eb96f232c392681ac2204587b319c0e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.render.ts",
+      "sha256": "aff7dde28282058d4388dd0ff39cfdbcbc69046fc7f03c6eaa5b27762c07843d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "sha256": "6a8c8072026603aa2f149ced16c9c570ad0db5b0effd4f2a8e4ca270164c8905"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
+      "sha256": "fefaf507dd341c9e0c9a9d27f419b555df9a0493bdfbfb1d65b575b629007d2b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts",
+      "sha256": "b79f4432b8fe51526654a27a4044ea6d0f03e506977e509081e7c74a659f1ca7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts",
+      "sha256": "8ea329d5b23a6e4d5a2df6047540b6ca15470746f4227259bbe88fe18f41b7bd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+      "sha256": "241d9232d5c4b01df857b4d8715588afce653ec119e3253209d685fe5f1d81d4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+      "sha256": "4614d9f3603d0e3e0575c63f33f9a2688525acbdaf74593e22b923c41f954b06"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
+      "sha256": "febfc733b28082b43daef844c73d1ea2dac75627f7ce5b368c803573889b5d26"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
+      "sha256": "1d181497447f8e6dbfbb343b48d6a4f45a8e25a19e88a2f537fe6d6c4f5fc9a0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "sha256": "4a76d791b598187897f29408ed00edfb9f03652b9a5966e395bf0ac7fc4c2dc3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.service.ts",
+      "sha256": "e608927c34929c99c3526776f25781ecc90de3e973d913b3b8b914d2f9dd6f16"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+      "sha256": "82ca325dc6881dfe72a4b736993ab417f81c1e21cccc967b8950e652d9cf56d3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+      "sha256": "c3649fb3dfd079dc4e2b39ae01ce7716f738c93afef68b4abfd5fe06b817682b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Analysis.ts",
+      "sha256": "4be4542e7b4b31fcc3e9c5ee6ffa715379f20f192db468821345ad96bf65a28f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Apply.ts",
+      "sha256": "5cc9c9eeef54b7f11805c3d4ad1a9c45ce3b277aca54002fe7efb3f49b880df4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
+      "sha256": "a5282aaabe01f75a57c9550b877b9493b83a4f8b631aaf442de45a80b42e20c9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/BorderDetection.ts",
+      "sha256": "31ba83424e5bffffbf2d36a0b9e4e94d8e577b011457d52fe606b2a81c3cedc3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
+      "sha256": "36de3e3a811f1f2f6cbc164e4ced7d67e52677a360e42e61bbba34a2037e7b03"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "sha256": "3be1634c5a9daca5fd4fd2f2bcdc70a2b3fbcdb4c052b4a3cfbce0c3e152e09c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "sha256": "a23462dda9c2ed7e7f375084e23a901d10a44d497bfb34818cc6dcac72ab7ea9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/FileTransaction.ts",
+      "sha256": "a45b7571151eb424ff0377ab8f679e1fa5e0235ebda1999d1a32681e67653466"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "sha256": "02be20cee50532e79713e543331dccf67f99a17a19467d23bb433439dc5618c2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "sha256": "c1d03bea0a7063c1c3c272a4ea9fd50812891aa3d6d29622d59805b0902ef90d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+      "sha256": "6f4fbb4b7bbe9af427920197ae16b17f54605e3f30fc6d4bf9caebfd3cf64cad"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.model-store.ts",
+      "sha256": "c34bed23f851cce7de32e7dfda16e203dd5d5c734a0590e9124955bafc4b20f9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
+      "sha256": "2fd505c8179cbf84c77819d027290157e573d3e74ebaff069211799b11c02059"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+      "sha256": "5e3dc5ec1d7776e63d7bb6a7fb19954074d08510bddbed8a9d3a10144cbed7f8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+      "sha256": "d0b73f79a59a31c7c36dacd555ff5756c1b01c6601a53ed0cfd27e5afe0ec60a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "sha256": "f2ae78c8b8afb35ef134de2e225634f428e294bc98376b33583d77ce14005f6c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Process.schemas.ts",
+      "sha256": "35ae6da3ebfe777418d2fe629603bf285c6a0f4bde63564ff79c0981cacb4f06"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Process.ts",
+      "sha256": "cabf7c3457d7c02585d82157ceeb8f405f7877b38dc4bceaa4e418b844661bfd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/SortAndRename.schemas.ts",
+      "sha256": "6ca081835e359a8ce7743248378c2243d0b9704c1f9a0a1a1ec5b98da24b6509"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts",
+      "sha256": "630b47783379a7ab519a20200d58186942138bbe28f8a619641ce259d7f08af9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+      "sha256": "eb453500d7306ad61178d4690a3ae11e97126612fc91e1e415e5aec69c7a81cf"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "sha256": "2533b88d8d434a4a45f79bc9c795b1a8f3cdf427e01bff00d8eeb2dad0f240f8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+      "sha256": "c077f133b69738f2451fe095dbda7f8f90b59cd036836325cd863117c51a960b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "sha256": "37143741702bbdc425c72cdcdf718011c5ecf7d7ba7b17f64ffbdbc1ac9e93fd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
+      "sha256": "6eae3b006d811d86eabe4144ffc82b16bf24731aa7982047f6b41ed8b76fa2c6"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "sha256": "1b1da6a3432021b6ea05f9e850bbe07178927b92fce70379aa3ed29d5572ef9d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts",
+      "sha256": "486d6192fb4df960ac73b41fd0b8e05ae0f00f87d4c5a48426547d9dd553d9f4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+      "sha256": "e6105508b649900fbcf0d161454dbb6cf96e08431f1281e2479386f8b1d5d69a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts",
+      "sha256": "da3ae9e91f9b14d6b6176b7bb8ffc7a476a7b2c547869ce91b395fffeb116301"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
+      "sha256": "4dffbe9196e81e876870adeca55700304f38cc956113dad504c982f3d80b3b85"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "sha256": "1d45d4ca3aa92695dfc654ebddaf9baaac1a44eb10704506d7f9ba78a4e44541"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "sha256": "f8ad808e75b04944f5192188642dfca5cdbe971e585742c7ebd85f3fa2138332"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
+      "sha256": "cdeec7606d804a1cd726168391a5df9d5fcb133c8ecfd616c427193e77a3429a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "sha256": "1e74990666461416bcc497746ae547bb8b7b5a722a271283a6bc49c86dd9c420"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+      "sha256": "9a0f7cc7404a01f283278c1d9153f34a0ec1563e02f77a0d34c07a069675601a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "sha256": "1622d3aed9308b58062c0c22aad704441935570733d056e4afe15d591f52c2e4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "sha256": "811fb1a59b624398bbf188e6a06931d7b361bec4f4c470c95a126d7ab2ed602f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+      "sha256": "751fed94e73e196220f83b122c188b8ac2004e3ffed0dd076fefab5fcbaeee07"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+      "sha256": "9f7d6e41cef30b2072e242e0aac767854826cac8b9ba4301adf8346ac3515844"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts",
+      "sha256": "699b574ff94f33d1c9bf5dae4e413d31ed9485df98b3a88f74b941f212389f2d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.schemas.ts",
+      "sha256": "3bbee92a16ff49305af32915882506ed7ca99a293d35e7d8a92d5acef82be79f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Record.ts",
+      "sha256": "9ca3c53a3f8270542ece87e1d88994adb8ae1a3b8d7769e555952413ae19b7c3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+      "sha256": "8ca5689638266a8dfc815ab7abdc9d107ff2df51f7b43605e0539503b4401d7c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "sha256": "88e0e5509e23451f66d585f39ee792f3f37512a0fced353018dbef87dbb8b347"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "0203b3c6df5a7848cb9547f867ad4c10fddd6bde66925820a04d0fe1509e87dd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.osv-ignore.ts",
+      "sha256": "2fb0b94c3ea05a928bab78bcf94dd3d392ddc32f1abca93bd0f00abb5958113a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "e813f6de7fde4bb1588dd8b87dce37e7d0bac03f5b9eafa84cd974df4b33320b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sha256": "83ecc7398db34c8db8f47fdd602b63059cb7c053dbdbf47a665bb02b77194c38"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowCiContract.ts",
+      "sha256": "584de738a7e860b5fab9d62444d6104a857c9655ebee728e9c507563bb984cf2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts",
+      "sha256": "329ff28e344ccbd2e0b38abbeeb62c9a57112a5b71f8da6603554731ce9cf96e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "7f2323746794e3866574793a7796e9ec7dce650f249a9b91290c617fe1352319"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "12067d83b03ab2062faf5c1b5cc8d09ded327fdeb7ad939ef588e1690d2cbc31"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "sha256": "6dba1bd00f745eb2d0f46e0ca4fea64514a7ae706eda38d47fee1b649357b07f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "sha256": "2551c8a22a43b9b272e196b5c9c440c5a01799bcfaa7b980be2cfa93cb9c64ca"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "sha256": "892c3b4f5181412a011f6dae1f2ff6bdc10da608bc724bdfae7706af27963cab"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "sha256": "d17e44f645ecbd5f3ca133736cb6ca98bf411dfe026c4b62cc358324f6313818"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+      "sha256": "890dc265860033774361bef6f2e47610b3925b01edc15a99f2c7e8cb07bc6e71"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.schemas.ts",
+      "sha256": "3da97923e22a2e53729337c4e6aaec7eb141d201409308568bf74a44f2cbf4b7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Research/internal/NotionPull.ts",
+      "sha256": "2d62476b913a014875b80b9cd408b19c07270315d0e81fb85f14e8bf9c502c85"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
+      "sha256": "fedae6402254e80da326b177a12bd112dc376d385c30c3bcfdcae35687dd42b5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "sha256": "b1e9e630bba837309e3b278b855c36d83db25e38772150bd28594d2f9aade9dc"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "sha256": "aeaa530e502117e7ce68585861e7317b492fb0451d6be41a23a6b82ad24d2bc6"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+      "sha256": "a3ec5530d93a162bb801c2d78f9f68769fb13a7b41c38183d83d4cc480dc45a5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts",
+      "sha256": "71d3c461cdad89ec8f771571bbb5b644ad402809c8aa1ed7cb95e1204da593e2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/FreeLawProject.ts",
+      "sha256": "6273df74bcb052e78550756d0df337a349f01d41ca4419c3040d417bf95ee72e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+      "sha256": "87cd9d5f21a4a4cf56c21872a94609390637a21c560d7a18b86a09908a273816"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sha256": "1f641710831d28852feb5f75f6d85de5dc1d44161267214baa7ae1e8dc6064f2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
+      "sha256": "403c1c089a7f763aaf590221984448fbd10c1394fc39c5fb1cbc2f8946c7c97a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+      "sha256": "49ecce4f2d4d53085eadca68e455aea9cbbbad529f2043e7e03f62c0c1124e8a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts",
+      "sha256": "3b3b60ee0125d007569264f4f84b3721cc85454708d5d0de9fa6cf33296c0c00"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
+      "sha256": "92fa7e2021b055059e4a5b51d3f77b272d9b3af2c0e107550d24b5d3690ef7aa"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "sha256": "ce834399710cc1c081ee1f6e9922647cf4658f42b27e0194985fd518510c6e81"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.schemas.ts",
+      "sha256": "73316900c0434fe6549b3dfadab25f18deb555e510b6b93e4df6ce2321460b23"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "sha256": "764e79c27ed155e66f828fd4648a86a4fc7c6f6f0f83fe9d9012c96da738fae8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sha256": "4b973902a0b45f2e91243a421eb3ccc835aba500d68874b4412f30b22d2c4605"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "sha256": "787f8d29da8de25b2c4c3e870f50a42b0e8414e188252e98077cc6386f0be1ea"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "sha256": "bdbc42b979d3475f0620389cf463b1b3721fc9e74b78c5be66bbb5775497c17e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "sha256": "5c3fbf1915d4483525db125ad722bd1a27204955d52b7bb25d4d4c3a2652420e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "a51ec005d919792398204e011ed2ddd1cbf1f0938a9891f6fa791ecec59a7bf6"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "sha256": "2be11b007db8ec2f5533c0c03da2a2cadf87f703b3ac828a8dde6e7fa093e21c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "sha256": "5c0919aeac3ec7cd84bdb57bee11bd5449577c51e95ce2d9838a5d9b051b36e4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "sha256": "03aa6c285215195e6952e1da5c994ca1da8c312fc1e0ded9bd7962eadfd10c59"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "sha256": "5f7ca2f766ee56b0debcf7ee71afb9204781b8fc188e30082ac42ddbd08cccaa"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+      "sha256": "8ab82fe558335084558309ade4f3d1546fe6ab9b529e3856b69529e8d44e37f9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+      "sha256": "bfc967e6e8fb307c4bcba719035732821324bd1074d694fceb6d1074ec9d4196"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+      "sha256": "23fb7624c7e30510a0f54d5e6cc2b81ce3a87dcce316dba8832c581b161f7e3b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts",
+      "sha256": "e6bfaab44970df0601ed596c029c2253801a70d7d74ad08d89a137174d92a0f6"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.schemas.ts",
+      "sha256": "9d9f7e93e91f4897ea12f8924643eeb330e435704ab454418f62a0931a51c95a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "sha256": "9075ac5f81e8a33630960407cdcdb6150a6ed6668fee5c12e8e3a68e392bf140"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "88ec5658bf142fecb7c6c5f494ee3106a179f9f8459588c8a182e77ce0620d1a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "sha256": "15a433e966df6aa8a1be309d3437173c1cc39d9eb48257a9af2b6a8304db6987"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "sha256": "48b34e69f1d1271f0413cde95f5c18e01fcd271a47d26142205b39a2a53a6eb5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "sha256": "201b156a71395243f1013c0503754a4d78d002fec6b18018e73669230c6c0357"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sha256": "df61c75c04515aa3b6938b8a74cc96ed826085c797c21265469a0bf4e5c7ba4d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "sha256": "535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "sha256": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+      "sha256": "fb05dbfa36135c3ce30b789a7bc54d108c11f327b62a757093e45905528ffba4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhSchema.ts",
+      "sha256": "6e2abdb2663fd1b2efba38789322bd6418528fa10b449efdd767008e8780068f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts",
+      "sha256": "5114a625f41242020520a07bef596ff2da963305581a9b1a3315956585871e31"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sha256": "91305359478f7e21fedf8d4fb2db80b6fc7116679a0dfcdfe89382ce5de6d474"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+      "sha256": "d1b9b413e4f7af5204fdf7643e36798f32eae85ba50cccafb17b78b1dc86631a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
+      "sha256": "159b39961af3f8ab0108bf13c7eea521f48ed2162295758e8b0007df6023867f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+      "sha256": "7d928f0ea39eece5f7ecdffe7e0b00e2b86d55ba3c16c4f3b236da6b56e53930"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sha256": "11fde46ed957f8d4a1dd59020028e3d40da53a9009017bb4278c2ac709a5dfa8"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/CLI.ts",
+      "sha256": "8094e0b4a66f0f0abe023ea479970d8af035cfc5aa80307d38d4937d849ac260"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Checker.ts",
+      "sha256": "b180f70055ff7ca72984fd83ff145f1bcf1400f7d94afcb36437c972c7e9cbc0"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+      "sha256": "ac1a676711a1eb1d4837403d642469e2ecb72e8af984892959605293b450e1fd"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Core.ts",
+      "sha256": "d6ba58abb574a4f37b789772d4bbbe253eb36628d7a9a8470b0b22628a9becca"
+    }
+  ],
+  "reproduce": [
+    "Use the hash-pinned read-only corpus_partition.derive_corpus classifier identified by partitionCorrection.classifier; it reuses the frozen controller without census dispatch.",
+    "git diff --name-only --no-renames cecfb9f8e9a5f20d768666c65f89425349f7f9e6 dc852c92efdd7d259e3983ec30cd19cb9b4fd65d",
+    "For each bound inventory row, intersect the changed-path set with its file and evidence[].cite.file; report missing referenced paths separately.",
+    "Intersect the same changed-path set with the classifier includedFiles. No design, producer or consumer completeness is inferred from these path comparisons."
+  ],
+  "inventorySnapshot": "history/inventory/2026-09-22-pre-driver-refresh.jsonl",
+  "addedIncludedFiles": [
+    "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.behavior.ts",
+    "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.model.ts",
+    "packages/epistemic/domain/src/values/ClaimEvidenceReview/index.ts",
+    "packages/epistemic/ui/src/ClaimEvidenceReview/ClaimEvidenceReviewPanel.tsx",
+    "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.commands.ts",
+    "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.service.ts",
+    "packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts",
+    "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalComparison.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.bundle.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.errors.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.packet.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.runtime.ts",
+    "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/RootCatalog.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/TurboResolver.ts",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/JsoncSchemaUpdater.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts"
+  ]
+}
