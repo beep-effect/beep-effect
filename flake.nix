@@ -12,12 +12,14 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            # Runtime
-            bun
-            nodejs_24
-
+        # Tools-only shell. Runtimes are deliberately NOT supplied here: mise owns
+        # bun (.bun-version) and node (.nvmrc), both governed by `beep version-sync`.
+        # A nixpkgs runtime on PATH would shadow them with whatever version
+        # flake.lock happens to carry, which no drift check covers.
+        # mkShellNoCC keeps gcc/binutils/glibc/coreutils off PATH; the runtimes are
+        # system-linked, so native modules resolve /usr/lib without LD_LIBRARY_PATH.
+        devShells.default = pkgs.mkShellNoCC {
+          packages = with pkgs; [
             # Python (SkillOpt training pilot — tools/skillopt uv project)
             python3
             uv
@@ -29,21 +31,16 @@
 
             # Docker
             docker-compose
-
-            # Native libs needed by globally-installed Node CLIs (e.g. grok -> keytar -> libsecret + glib)
-            libsecret
-            glib
           ];
 
           shellHook = ''
             repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
             worktree_name="$(basename "$repo_root")"
-            echo "beep-effect dev shell loaded for $worktree_name"
+            # Quiet under direnv: any output during zsh init trips Powerlevel10k's instant-prompt warning.
+            [ -z "''${DIRENV_IN_ENVRC:-}" ] && echo "beep-effect dev shell loaded for $worktree_name"
+            # Global bun installs (portless, vercel) live here; bun's cache dir is set in bunfig.toml.
             export BUN_INSTALL="$HOME/.bun"
-            export BUN_INSTALL_CACHE_DIR="''${XDG_CACHE_HOME:-$HOME/.cache}/beep-effect/bun-install-cache"
-            mkdir -p "$BUN_INSTALL_CACHE_DIR"
             export PATH="$BUN_INSTALL/bin:$PATH"
-            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libsecret pkgs.glib ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           '';
         };
       });
