@@ -78,3 +78,20 @@ first-line delta and error-text assertions remain unchanged.
 Final full package verification passed: audit 15.2 seconds, docgen 3.6 seconds.
 No production code, property floor, timeout or baseline file changed. The other
 saved property and instrumentation findings remain open.
+
+## Import-boundary vacuity controls
+
+Every real source scan now requires its known entry: root index.ts, core
+model.ts, and each dialect index.ts. The real repository source, runtime
+manifest, local import closures and integer consumer build remain the subjects.
+A synthetic parser control sends static imports, exports, import-equals,
+dynamic imports and require through the same workspace/dialect filters used
+by the source checks, with exact expected forbidden edges and an allowed edge.
+
+All seven boundary tests pass. Two temporary negative controls fail as expected:
+an empty source enumeration is rejected by its required-entry assertion, and
+a workspace filter that drops every edge is rejected by the positive control.
+Source was restored after each control before final package proof. Full audit
+passed in 14.1 seconds and docgen in 3.2 seconds. No baseline or source-tree
+replacement was used. This addresses the saved empty-enumeration finding;
+remaining generated codec laws and runtime instrumentation are still pending.
