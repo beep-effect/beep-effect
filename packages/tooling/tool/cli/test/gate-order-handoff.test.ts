@@ -143,6 +143,24 @@ const mapEncodedLaneAt = (
   lanes: A.map(encoded.lanes, (lane, position) => (position === index ? patch(lane) : lane)),
 });
 
+type IndexedLane = readonly [declarationIndex: number, lane: GithubCheckLaneSpec];
+
+// Every WAVE_ORDER_KEYS component before the deciding key ties the adjacent pair; the
+// deciding key itself orders the predecessor strictly first.
+const expectDecidingKeySeparates = (
+  laneId: string,
+  decidedBy: GateOrderSortKey,
+  previous: IndexedLane,
+  current: IndexedLane
+): void => {
+  const decidingIndex = O.getOrThrow(A.findFirstIndex(WAVE_ORDER_KEYS, ([key]) => key === decidedBy));
+  for (const [key, order] of A.take(WAVE_ORDER_KEYS, decidingIndex)) {
+    expect(order(previous, current), `${laneId}: ${key} must tie`).toBe(0);
+  }
+  const [key, order] = O.getOrThrow(A.get(WAVE_ORDER_KEYS, decidingIndex));
+  expect(order(previous, current), `${laneId}: ${key} must separate`).toBe(-1);
+};
+
 describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
   it.effect(
     "fixture 1: the seed covers exactly the declared pre-push plan",
@@ -413,25 +431,15 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       expect(A.map(ranked, (entry) => entry.lane.id)).toEqual(A.map(handoff.lanes, (lane) => lane.laneId));
 
       const indexed = A.map(ranked, (entry) => [entry.declarationIndex, entry.lane] as const);
-      const keys = A.map(WAVE_ORDER_KEYS, ([key]) => key);
-      expect(keys).toEqual(GateOrderSortKey.Options);
-      for (const [rank, lane] of handoff.lanes.entries()) {
-        if (rank === 0) {
-          assertNone(lane.decidedBy);
-          continue;
-        }
-        const decidedBy = O.getOrThrow(lane.decidedBy);
-        const decidingIndex = keys.indexOf(decidedBy);
-        const previous = O.getOrThrow(A.get(indexed, rank - 1));
-        const current = O.getOrThrow(A.get(indexed, rank));
-        for (const [position, [key, order]] of WAVE_ORDER_KEYS.entries()) {
-          if (position < decidingIndex) {
-            expect(order(previous, current), `${lane.laneId}: ${key} must tie`).toBe(0);
-          }
-          if (position === decidingIndex) {
-            expect(order(previous, current), `${lane.laneId}: ${key} must separate`).toBe(-1);
-          }
-        }
+      expect(A.map(WAVE_ORDER_KEYS, ([key]) => key)).toEqual(GateOrderSortKey.Options);
+      assertNone(O.getOrThrow(A.head(handoff.lanes)).decidedBy);
+      for (const [previousRank, lane] of A.drop(handoff.lanes, 1).entries()) {
+        expectDecidingKeySeparates(
+          lane.laneId,
+          O.getOrThrow(lane.decidedBy),
+          O.getOrThrow(A.get(indexed, previousRank)),
+          O.getOrThrow(A.get(indexed, previousRank + 1))
+        );
       }
     }, provideScopedLayer(NodeServices.layer))
   );
