@@ -17,7 +17,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, Stream } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 import { fixture, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
 const FRESH_SECONDS = 30;
