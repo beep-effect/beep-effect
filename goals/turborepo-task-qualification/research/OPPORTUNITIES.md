@@ -1964,3 +1964,21 @@ A bounded process trace identified `git rev-parse HEAD` exiting 128 because the
 new fixture had no commit. The successor creates an initial fixture commit;
 no runtime guard was weakened. Validate fixture HEAD before expensive toolchain
 fingerprinting, and retain the failing subprocess identity in bounded diagnostics.
+
+### Planner reproduction needs a complete environment recipe — 2026-09-25
+
+Refreshing the local CI/Quality planner document produced local-only cache
+arguments and an explicit cache directory where the retained document selected
+remote-read cache. The only differences were these arguments. A controlled
+synthetic complete remote-read configuration with HOME absent reproduced the
+old JSON exactly; this does not identify its actual historical environment.
+Planner receipts should bind every environment input that affects the plan,
+including HOME and cache-directory presence, without retaining credentials.
+
+### PR observation API disagreement — 2026-09-25
+
+`gh pr view 1268` reported GraphQL rate-limit exhaustion during evidence
+publication. The subsequent rate-limit endpoint reported available quota, and
+the REST pull-request endpoint returned the current head and open state.
+Preserve the failed observation and use bounded alternate read surfaces;
+do not interpret this transient failure as a terminated proof or restart it.

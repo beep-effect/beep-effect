@@ -27,8 +27,10 @@ integration remain incomplete. Existing entrypoint enforcement is not newly
 classified as unimplemented merely because historical report strings still
 list it: the v23 receipt now includes ordinary CLI execution, caller-override
 rejection and profile-drift recovery checks at `8f11af6e49`. Synthetic native key injection and declaration invalidation also passed with
-cache I/O bypassed. Ordinary-entrypoint cached replay and the full entrypoint
-population remain separate obligations. No real tuple qualifies, and no acceptance criterion is
+cache I/O bypassed. A subsequent isolated ordinary-CLI fixture also passed
+local miss/hit pairs before and after runtime declaration invalidation. The full
+entrypoint population and real-computation runtime evidence remain separate
+obligations. No real tuple qualifies, and no acceptance criterion is
 promoted to complete by this checkpoint.
 
 Checkpoint PRs #1233 and #1250 merged on 2026-09-25. PR #1250's full

@@ -397,5 +397,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PRs #1233 and #1250 merged. Frozen v23 stable/canary local matrices, scalar I/O, native input membership and capture controls have retained evidence. Repeated synthetic mixed-stream output diverges at unchanged task hashes. Semantic closure and signed sibling evidence remain pending. No tuple is qualified."
+  "statusNote": "PRs #1233 and #1250 merged. Frozen v23 local matrices and bounded capture/IO evidence retained. Current source census attachment accepted; ordinary CLI synthetic local replay and runtime declaration invalidation observed. Full semantic coverage and signed sibling evidence remain pending. No tuple is qualified."
 }

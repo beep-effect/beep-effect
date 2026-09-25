@@ -74,7 +74,7 @@ Write-review SHA-256: `353bd38a801d28c1a211b2f2fec93049d06078a9283605da0a1b97a29
 
 Remaining acceptance work includes semantic input and capture closure beyond
 the bounded observations above, validation across the full entrypoint population,
-ordinary-entrypoint cached replay, accepted signed remote comparisons,
+real-computation runtime evidence beyond the synthetic CLI replay, accepted signed remote comparisons,
 census closure, adoption handoff, and the final goal closeout requirements.
 The successful local matrices do not discharge those obligations.
 
@@ -183,3 +183,43 @@ evidence; it does not prove cached replay or qualify the real pilot.
 
 Archive-manifest SHA-256:
 `148dffc3a6100c23b81b3ba33d31a3c76a15e708a7c69fa0e31390dc84be285d`.
+
+## Ordinary CLI synthetic local replay
+
+At pinned source `8f11af6e49`, a new network-isolated fixture used the ordinary
+`cache execute` entrypoint with local cache reads and writes enabled. All four
+runs exited zero: initial miss, unchanged local hit, runtime declaration change
+miss, and changed-declaration local hit. No remote hit occurred.
+
+An ignored execution marker was removed before each invocation. The task
+recreated it on each miss and left it absent on each hit. Independent review of
+the native summaries confirmed identical task input maps and task hashes
+`7d00f8467a205d46` for the first pair and `c5a51fa4e460f1e6` for the second.
+Adding a newline to `.nvmrc` changed both the computed runtime digest and hashed
+environment metadata. The declaration was restored after the experiment.
+
+This establishes synthetic local replay and declaration invalidation through
+the ordinary CLI at that revision. It does not renew the frozen v23 matrices,
+cover every entrypoint, qualify the real lint computation or provide signed
+remote comparisons. Real pilot cache settings remain disabled.
+
+The private archive retains the runner, fixture, cache artifacts, original
+summaries, logs and independent review. Its manifest SHA-256 is
+`5d7c3995532dbcc399c47f3ed9e17937e4a8fd05a4df92b78030c2a69f5a108b`.
+
+## Current source census attachment
+
+At `821280968d`, the operational attachment boundary accepted a fresh census
+of 144 workspaces, 3,473 graph nodes and 143 entrypoint sources with 968 source
+bindings, six complete artifact documents and 23 review receipts. Thirteen
+unresolved obligations remain. Twelve changed source files received bounded
+delta review; eight additional source bindings were identified and reviewed at
+their module or command boundaries. This is not complete transitive semantic
+coverage, and historical runtime evidence is not renewed by source attachment.
+
+Five planner/workflow reproductions passed. Four matched their prior documents
+exactly. The local CI/Quality document differs only in cache mode and directory:
+its sanitized inputs select local-only cache with an explicit directory. A
+synthetic complete remote-read configuration with HOME absent reproduces the
+prior document exactly, demonstrating input sensitivity without reconstructing
+the historical environment. No remote request or secret resolution was needed.

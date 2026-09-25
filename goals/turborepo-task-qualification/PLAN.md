@@ -1592,3 +1592,17 @@ verification passed. This synthetic mixed-stream fixture is ineligible for
 exact-log determinism; retain that negative result without normalizing it away.
 No signed evidence or complete semantic closure is established by these
 local observations. No tuple is qualified.
+
+### Census attachment and ordinary CLI replay — 2026-09-25
+
+The current source census at `821280968d` accepted 968 bindings, six artifact
+documents and 23 reviews while retaining 13 unresolved obligations. Planner
+reproduction exposed an environment-dependent local cache posture; controlled
+synthetic inputs reproduce the prior document without external requests.
+
+At pinned runtime source `8f11af6e49`, the ordinary CLI completed local miss/hit
+pairs before and after a runtime declaration change. Native summaries and task
+execution markers agree; all four runs exited zero. See the v23 receipt for
+scope, hashes and retained evidence. This closes the synthetic local replay
+observation gap, not real-computation qualification or signed replay. Continue
+semantic closure, full entrypoint coverage and accepted sibling integration.
