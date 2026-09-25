@@ -617,12 +617,12 @@ cites are as verified on 2026-09-25.
   token through `readOptionalRedactedConfigString` (`Config.Redacted`). The
   promotion trigger is named: a second non-repo-cli consumer, or the client
   growing handshake/framing/retry/redaction, moves it to
-  `packages/drivers/claude-code` with `@beep/repo-cli` composing it
+  a new Claude Code driver package under `packages/drivers/` with `@beep/repo-cli` composing it
   (07:251-257). No `standards/architecture/DECISIONS.md` entry: none of
   D1–D27 meets all three criteria (architecture-wide change, hard to reverse,
   resolves a tradeoff or known unknown). D15 is a distinct PR-event delivery,
   not fleet rung 2, and cites `T6-cross-session-messaging.md:68-71`.
-- **Rejected.** `packages/drivers/claude-code` now plus a log entry modelled
+- **Rejected.** A new Claude Code driver package under `packages/drivers/` now plus a log entry modelled
   on the 2026-05-06 tooling-to-driver entry (repo-level capability for one
   consumer whose wire contract is unprobed). A repo-cli internal module
   (contradicts D20 unless the tail shells out to it).
@@ -783,8 +783,8 @@ snapshot collapse was absent from the brief; no Yeet runbook exists.
 
 - **Answer.** The five tooling-local terms land in
   `.claude/skills/yeet/SKILL.md`'s inbox section with the producer slice
-  (which already rewrites its wave paragraph). **Rejected.** A new
-  `docs/runbooks/yeet-inbox.md`; packet-only.
+  (which already rewrites its wave paragraph). **Rejected.** A new inbox runbook
+  under `docs/runbooks/`; packet-only.
 
 ### D31 — Wave return is exit 2 and never acks the wave rows
 

@@ -195,7 +195,7 @@ PROOF_JOB_FORWARDED_ENV_NAMES + CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID
 - **Sender home (D26).** Hook-side shell; any TypeScript reader goes through
   `internal/cli/EnvConfig.ts` with the token as `Config.Redacted`. Promotion
   trigger: a second non-repo-cli consumer, or handshake/framing/retry/
-  redaction growth, moves it to `packages/drivers/claude-code`.
+  redaction growth, moves it to a new Claude Code driver package under `packages/drivers/`.
 
 ### Slice 3 — escalation
 
@@ -285,7 +285,7 @@ PROOF_JOB_FORWARDED_ENV_NAMES + CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID
 - **Cross-checkout delivery or a workstation-level inbox.** Same checkout is
   the contract (D8, binding reason `standards/git-worktrees.md`);
   `sibling-collision` stays producerless.
-- **A `packages/drivers/claude-code` package or an architecture decision
+- **A new Claude Code driver package under `packages/drivers/` or an architecture decision
   entry now.** The promotion trigger is named instead (D26). No glossary
   entry, no `12-observability.md` edit.
 - **Settings-level opt-ins.** No `crossSessionInbound: accept`, no

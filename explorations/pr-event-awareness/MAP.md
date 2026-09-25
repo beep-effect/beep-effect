@@ -123,7 +123,7 @@ exploration at `decompose`; it does not spawn a goal directly.
 - Cadence changes or an adaptive regime (D12, D24); `--watch` stays at 10 s
   and changes only through the shared exempt kit and `Converge.ts` (D38).
 - Cross-checkout delivery or a workstation-level inbox (D8).
-- A `packages/drivers/claude-code` package, an architecture decision-log
+- A a new Claude Code driver package under `packages/drivers/` package, an architecture decision-log
   entry, a glossary entry, or a `12-observability.md` edit (D26).
 - Settings-level opt-ins (`crossSessionInbound`, cross-machine delivery).
 - Any change to `sequence-break-notifier.sh` or `hook-pulse.sh` invariants.

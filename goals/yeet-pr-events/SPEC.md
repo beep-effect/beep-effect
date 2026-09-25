@@ -29,7 +29,7 @@ push → row → ack timeline the cadence question is decided on.
   gated re-entry candidates in the exploration's `MAP.md`.
 - Do not add cross-checkout delivery or a workstation-level inbox;
   `sibling-collision` stays producerless.
-- Do not create `packages/drivers/claude-code`, a
+- Do not create a new Claude Code driver package under `packages/drivers/`, a
   `standards/architecture/DECISIONS.md` entry, a glossary entry, or a
   `12-observability.md` edit. The promotion trigger for the socket sender is
   named in the constraints.
@@ -138,7 +138,7 @@ Higher sources outrank lower sources when they conflict.
 - Any TypeScript reader of the socket path or token goes through
   `internal/cli/EnvConfig.ts`, the token as `Config.Redacted`. Promotion
   trigger for the sender: a second non-repo-cli consumer, or growth into
-  handshake/framing/retry/redaction, moves it to `packages/drivers/claude-code`
+  handshake/framing/retry/redaction, moves it to a new Claude Code driver package under `packages/drivers/`
   with `@beep/repo-cli` composing it.
 - Escalation is monitor-side. From a unit, notify-send needs
   `DBUS_SESSION_BUS_ADDRESS` (forwarded) and ntfy needs
