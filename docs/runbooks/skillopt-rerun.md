@@ -29,8 +29,8 @@ The cosine schedule gives these edit budgets for steps 1 to 12:
 
 ## 1. Provision the environment
 
-The repo flake provides `python3` and `uv`. The venv at `tools/skillopt/.venv`
-is git-ignored, so each clone or worktree needs its own:
+The repo flake provides `python3` and `uv`. The venv that `uv sync` creates inside `tools/skillopt` is git-ignored,
+so each clone or worktree needs its own:
 
 ```sh
 cd tools/skillopt
@@ -66,7 +66,7 @@ setsid nohup uv run --project tools/skillopt beep-skillopt-train \
   > goals/harness-evidence-ledger/history/p2-rerun/run.log 2>&1 &
 ```
 
-Artifacts go to `goals/harness-evidence-ledger/history/p2-rerun/out`
+Artifacts go to the gitignored `out` directory under `goals/harness-evidence-ledger/history/p2-rerun`
 (`env.out_root`). Follow progress with
 `tail -f goals/harness-evidence-ledger/history/p2-rerun/run.log`.
 

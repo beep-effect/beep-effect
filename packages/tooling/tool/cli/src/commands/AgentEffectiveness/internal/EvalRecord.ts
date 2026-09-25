@@ -76,8 +76,9 @@ const encodeCandidateSkillListing = S.encodeEffect(S.fromJsonString(S.Array(S.Tu
 const candidateSkillDigest = Effect.fn("AgentEffectivenessEvalScorer.candidateSkillDigest")(function* (dir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const perRoot = yield* Effect.forEach(candidateSkillRoots, (root) =>
-    Effect.gen(function* () {
+  const perRoot = yield* Effect.forEach(
+    candidateSkillRoots,
+    Effect.fnUntraced(function* (root: string) {
       const skillsDir = path.join(dir, root, "skills");
       if (!(yield* fs.exists(skillsDir))) {
         return A.empty<readonly [string, string]>();

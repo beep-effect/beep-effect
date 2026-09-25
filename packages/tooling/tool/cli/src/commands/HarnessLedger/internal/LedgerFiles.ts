@@ -73,8 +73,9 @@ export const readLedgerRows = Effect.fn("HarnessLedger.readLedgerRows")(function
   const path = yield* Path.Path;
   const dir = yield* ledgerRowsDir(repoRoot);
   const files = pipe(yield* listDirectorySorted(dir), A.filter(isRowsFile));
-  const perFile = yield* Effect.forEach(files, (name) =>
-    Effect.gen(function* () {
+  const perFile = yield* Effect.forEach(
+    files,
+    Effect.fnUntraced(function* (name: string) {
       const file = path.join(dir, name);
       const text = yield* fs
         .readFileString(file)
