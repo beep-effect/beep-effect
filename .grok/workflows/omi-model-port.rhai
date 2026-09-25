@@ -13,9 +13,9 @@ let rules = "You are porting OMI pydantic models into the beep-effect repo.\n";
 rules += "Read these files before writing code, and follow them:\n";
 rules += "- /tmp/omi-port-explore/decisions.md (wins on conflict)\n";
 rules += "- /tmp/omi-port-explore/effect-patterns.md\n";
-rules += "- /home/elpresidank/YeeBois/projects/beep-effect/.patterns/jsdoc-documentation.md\n";
-rules += "Python source root: /home/elpresidank/YeeBois/workstation-apps/omi/backend/models\n";
-rules += "Effect API checkout: /home/elpresidank/YeeBois/dev/effect (version 4.0.0-rc.117). Do not use v3 APIs.\n";
+rules += "- .patterns/jsdoc-documentation.md (repo-relative)\n";
+rules += "Python source root: $HOME/YeeBois/workstation-apps/omi/backend/models\n";
+rules += "Effect API checkout: $HOME/YeeBois/dev/effect (version 4.0.0-rc.117). Do not use v3 APIs.\n";
 rules += "Write only under scratchpad/beep/ and scratchpad/test/beep/. Do not edit any other path.\n";
 rules += "Do not git commit, push, or run yeet. Another agent owns files outside scratchpad.\n";
 rules += "Do not use ProductEntity or productEntityFactory. Use Model from @beep/effect-drizzle.\n";
@@ -97,7 +97,7 @@ if indexed == () || indexed.success != true {
 
 phase("Fix");
 let fix_prompt = "Make scratchpad/beep and scratchpad/test/beep typecheck and pass tests.\n";
-fix_prompt += "Repo: /home/elpresidank/YeeBois/projects/beep-effect. bun and tsgo are on PATH only inside zsh -ic.\n";
+fix_prompt += "Repo: the current checkout (run from its root). bun and tsgo are on PATH only inside zsh -ic.\n";
 fix_prompt += "Run tsgo -p scratchpad/tsconfig.json --noEmit. Fix only errors under scratchpad/beep and scratchpad/test/beep.\n";
 fix_prompt += "Run vitest on scratchpad/test/beep with --config scratchpad/vitest.config.ts from the repo root. The reporter must show a non-zero test count. If the config include skips the directory, pass the test files explicitly. Do not edit scratchpad/vitest.config.ts.\n";
 fix_prompt += "Run bun run beep laws native-runtime --check --include scratchpad/beep/**/*.ts and fix those findings.\n";

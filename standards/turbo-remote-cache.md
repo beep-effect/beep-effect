@@ -298,7 +298,7 @@ Two things defeat cross-checkout hits:
   own `*` gitignore, which git honors but Turbo's `$TURBO_DEFAULT$` walk hashed
   anyway (`.fallow/.gitignore` shifted seven `transit` hashes between two clean
   clones at the same commit). The root `.gitignore` now ignores `.fallow/` and
-  every `$TURBO_DEFAULT$` task excludes `!.fallow/**` next to `!.beep/**`.
+  every root task that hashes `$TURBO_DEFAULT$` excludes `!.fallow/**` next to `!.beep/**`.
 - A `bun.lock` that differs from the sibling's. The lockfile is part of every
   hash, so a branch that bumps dependencies shares nothing until it merges.
 

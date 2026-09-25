@@ -308,12 +308,20 @@
     "@beep/api-docs#build": {
       "dependsOn": ["^build"],
       "outputs": [],
-      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.*"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "!.fallow/**",
+        ".env",
+        ".env.*"
+      ]
     },
     "lint": {
       "cache": true,
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "!.fallow/**",
         "$TURBO_ROOT$/biome.jsonc",
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
@@ -546,6 +554,8 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "!.fallow/**",
         "$TURBO_ROOT$/apps/storybook/.storybook/**",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",
@@ -570,6 +580,8 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "!.fallow/**",
         "$TURBO_ROOT$/apps/storybook/.storybook/**",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts",
         "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts",

@@ -1,30 +1,24 @@
-# Accept the `.fallow/` input exclusion and the turbo 2.11.3 schema bump
+# Exclude fallow residue from every `$TURBO_DEFAULT$` task input set
 
-Commit `c9f36e36a1` (`perf(test): cache vitest transforms, share turbo cache,
-unisolate coverage`, branch `@slop/09-22-26`) adds `!.fallow/**` beside
-`!.beep/**` in the 14 of the 66 root `turbo.json` tasks that already excluded
-`.beep/`, so the git-ignored Fallow scratch directory cannot invalidate those
-tasks' hashes. Commit `849bf061ff` on the same branch bumps the `$schema` URL
-from `v2-11-2` to `v2-11-3` through `version-sync` in the root file and in ten
-workspace `turbo.json` files, five apps (`labs/api-docs`, `labs/ciops`,
-`oip-web`, `professional-desktop`, `storybook`) and five packages
-(`identity`, `types`, `ai-sync`, `repo-configs`, `cli`). Seven of the 14 tasks
-are cached (`build`, `check`, `docgen`, `lint`, `lint:deprecated-apis`,
-`test`, `test:property`) and every package inherits them from the root
-configuration, so against the prior baseline `beep quality cache-policy`
-reports `configuration-drift` for 925 of the 1253 recorded cached computations
-(every computation of those seven tasks except `@beep/api-docs#build`, whose
-own root entry excludes neither directory) and `configuration-source-drift`
-for the root file and all ten re-versioned workspace files.
+A fallow audit leaves an untracked `.fallow/` directory inside the package it
+scans, with its own `*` gitignore. Git honors that file, but Turbo's
+`$TURBO_DEFAULT$` walk hashed `.fallow/.gitignore` anyway: on 2026-09-24 two
+clean checkouts at the same commit disagreed on seven `transit` hashes
+(`@beep/schema`, `@beep/pglite`, `@beep/rdf`, `@beep/shared-domain`,
+`@beep/test-utils`, `@beep/documents-domain`, `@beep/effect-drizzle`) and on
+every task downstream of them, because one checkout carried that residue.
 
-No command, cache flag, output declaration, dependency edge or environment
-declaration changed; the drift is one additional negative input glob in each
-of the 14 tasks plus a schema URL that turbo does not hash into task inputs
-(no cached computation outside those seven tasks drifted). Excluding a
-git-ignored directory can only remove spurious invalidations, never hide a
-real input.
+`turbo.json` now excludes `!.fallow/**` beside `!.beep/**` in every root task that
+hashes `$TURBO_DEFAULT$` (the three tasks that had neither negation gain both),
+the identity package's own `turbo.json` does the same, and the root `.gitignore`
+ignores `.fallow/`. The
+reviewed baseline recorded the input sets without that negation, so
+`beep quality cache-policy` reports `configuration-drift` for every package
+computation. No command, cache flag, output declaration, dependency edge or
+global configuration changed; the drift is one added input negation per task,
+which narrows the hashed set to files that belong to the package.
 
-Accept the re-hashed configurations in the legacy configuration baseline. This
+Accept the narrowed input sets in the legacy configuration baseline. This
 review grants no runtime qualification. Retain the identity/types scope,
 `local-linux-x64-bun1.4.2` profile and `qualification-v2` epoch; the
 qualification ledger is untouched.

@@ -15,6 +15,7 @@
         "$TURBO_ROOT$/packages/foundation/.gitignore",
         "$TURBO_ROOT$/packages/foundation/modeling/.gitignore",
         "!.beep/**",
+        "!.fallow/**",
         "$TURBO_ROOT$/**/package.json",
         "$TURBO_ROOT$/**/tsconfig*.json",
         "$TURBO_ROOT$/**/turbo.json*",
@@ -24,6 +25,7 @@
         "$TURBO_ROOT$/vitest*.ts",
         "$TURBO_ROOT$/vitest*.json",
         "!$TURBO_ROOT$/.beep/**",
+        "!$TURBO_ROOT$/.fallow/**",
         "!$TURBO_ROOT$/**/node_modules/**"
       ],
       "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
