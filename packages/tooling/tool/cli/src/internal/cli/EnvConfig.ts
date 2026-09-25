@@ -674,7 +674,7 @@ const turboCacheValueSource = (value: string | undefined): O.Option<TurboCacheVa
  * ```
  *
  * @param environment - Environment record to classify; values may be undefined.
- * @returns The remote-read configuration the record carries.
+ * @returns The remote-read settings and optional cache-directory inputs carried by the record.
  * @category configuration
  * @since 0.0.0
  */
@@ -699,8 +699,9 @@ export const readTurboCacheEnvironment = (
  * **Details**
  *
  * Evaluated at call time, like every other reader here: the four
- * {@link TurboCacheEnvName} values are read through the ambient provider and
- * handed to {@link readTurboCacheEnvironment}, which owns the classification.
+ * {@link TurboCacheEnvName} values plus `TURBO_CACHE_DIR` and `HOME` are read
+ * through the ambient provider and handed to {@link readTurboCacheEnvironment}.
+ * The cache-directory inputs are optional and do not determine remote-read eligibility.
  *
  * **Example** (Read the ambient cache configuration)
  *
@@ -710,7 +711,7 @@ export const readTurboCacheEnvironment = (
  * console.log(typeof readTurboCacheEnvironmentSync().cache)
  * ```
  *
- * @returns The remote-read configuration this checkout carries.
+ * @returns The remote-read settings and optional cache-directory inputs for this checkout.
  * @category configuration
  * @since 0.0.0
  */
