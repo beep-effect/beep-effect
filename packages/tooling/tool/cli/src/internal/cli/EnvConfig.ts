@@ -116,6 +116,59 @@ export const configStringOption = (name: string): Effect.Effect<O.Option<string>
   Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>));
 
 /**
+ * Check whether the current process runs under CI, reading `CI` through the
+ * ambient `ConfigProvider`.
+ *
+ * **Details**
+ *
+ * The effectful twin of {@link isCiSync}: tests pin CI on or off by providing a
+ * `ConfigProvider` instead of mutating `process.env`, whose env-backed provider
+ * can keep serving a key it already resolved.
+ *
+ * **Example** (Pin CI through a provided ConfigProvider)
+ *
+ * ```ts
+ * import { isCi } from "@beep/repo-cli/test/SharedInternals"
+ * import { ConfigProvider, Effect } from "effect"
+ *
+ * const ci = Effect.runSync(
+ *   isCi.pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "true" }))))
+ * )
+ * console.log(ci) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const isCi: Effect.Effect<boolean> = configStringOption("CI").pipe(
+  Effect.map(O.exists((value) => value === "true"))
+);
+
+/**
+ * Check synchronously whether the current process runs under CI.
+ *
+ * **Details**
+ *
+ * True when `CI` is exactly `"true"`. `Bun.env` is consulted first so a value
+ * changed after startup is still seen; the env `ConfigProvider` is the
+ * fallback. This is the one CI predicate for synchronous call sites.
+ *
+ * **Example** (Gate a CI-only flag)
+ *
+ * ```ts
+ * import { isCiSync } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const args = isCiSync() ? ["--summarize"] : []
+ * console.log(args.length <= 1) // true
+ * ```
+ *
+ * @returns Whether `CI` is set to `"true"`.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const isCiSync = (): boolean => Bun.env.CI === "true" || configStringEqualsSync("CI", "true");
+
+/**
  * Read an optional string config value through the `ConfigProvider` service.
  *
  * **Details**

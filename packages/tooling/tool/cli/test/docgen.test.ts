@@ -772,55 +772,53 @@ describe("Docgen operations", () => {
     ]);
   });
 
-  it("builds changed-plus-dependent Turbo filters for local docgen", () => {
-    const args = docgenLocalTurboArgsForTesting(
-      [
-        DocgenLocalSelectedPackage.make({
-          name: "@beep/schema",
-          path: "packages/foundation/modeling/schema",
-          reasons: ["packages/foundation/modeling/schema/src/index.ts"],
-        }),
-      ],
-      0
-    );
+  const schemaSelection = [
+    DocgenLocalSelectedPackage.make({
+      name: "@beep/schema",
+      path: "packages/foundation/modeling/schema",
+      reasons: ["packages/foundation/modeling/schema/src/index.ts"],
+    }),
+  ];
 
-    expect(args).toEqual([
-      "turbo",
-      "run",
-      "docgen",
-      ...expectedTurboCacheArgs([
-        "--filter=...@beep/schema",
-        "--concurrency=1",
-        "--summarize",
-        "--ui=stream",
-        "--no-daemon",
-      ]),
-      "--filter=...@beep/schema",
-      "--concurrency=1",
-      "--summarize",
-      "--ui=stream",
-      "--no-daemon",
-    ]);
-  });
-
-  it("pins direct docgen Turbo invocations to a requested local-only cache", () =>
-    withEnvVar("CI", undefined, () =>
-      withEnvVar("TURBO_CACHE", "local:rw", () => {
-        const args = docgenLocalTurboArgsForTesting(
-          [
-            DocgenLocalSelectedPackage.make({
-              name: "@beep/schema",
-              path: "packages/foundation/modeling/schema",
-              reasons: ["packages/foundation/modeling/schema/src/index.ts"],
-            }),
-          ],
-          1
+  it.effect("builds changed-plus-dependent Turbo filters for local docgen without run summaries outside CI", () =>
+    withConfigEnv(
+      {},
+      Effect.gen(function* () {
+        const args = yield* docgenLocalTurboArgsForTesting(schemaSelection, 0);
+        const expected = ["--filter=...@beep/schema", "--concurrency=1", "--ui=stream", "--no-daemon"];
+        const cacheArgs = turboCachePlanArgs(
+          resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args: expected, ci: false })
         );
 
-        expect(args).toContain("--cache=local:rw");
-        expect(args).not.toContain("--cache=local:rw,remote:r");
+        expect(args).toEqual(["turbo", "run", "docgen", ...cacheArgs, ...expected]);
+        expect(args).not.toContain("--summarize");
       })
-    ));
+    )
+  );
+
+  it.effect("keeps Turbo run summaries for local docgen under CI", () =>
+    withConfigEnv(
+      { CI: "true" },
+      Effect.gen(function* () {
+        const args = yield* docgenLocalTurboArgsForTesting(schemaSelection, 0);
+
+        expect(args).toContain("--summarize");
+        expect(A.filter(args, (arg) => arg === "--summarize")).toHaveLength(1);
+      })
+    )
+  );
+
+  it("pins direct docgen Turbo invocations to a requested local-only cache", () =>
+    withEnvVar("TURBO_CACHE", "local:rw", () => {
+      const args = Effect.runSync(
+        docgenLocalTurboArgsForTesting(schemaSelection, 1).pipe(
+          Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
+        )
+      );
+
+      expect(args).toContain("--cache=local:rw");
+      expect(args).not.toContain("--cache=local:rw,remote:r");
+    }));
 
   it("writes and verifies package-level docgen proof manifests", () =>
     Effect.runPromise(

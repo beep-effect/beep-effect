@@ -2,9 +2,12 @@
  * Conservative janitor for bounded, explicitly owned home-residue classes.
  *
  * Discovery is closed over Codex session files, Codex worktree directories,
- * this checkout's Turbo cache entries, and non-durable top-level beep cache
- * directories. Every removal is age-gated and revalidated immediately before
- * mutation; recursive idleness scans and Linux cwd probes fail closed.
+ * each checkout's Turbo cache entries, Turbo run summaries, and interrupted
+ * merged-preview worktrees, the shared Turbo cache, retained qualification
+ * dependency views, and non-durable top-level beep cache directories. Every
+ * removal is age-, size-, or retention-gated and revalidated immediately before
+ * mutation; recursive idleness scans, pid probes, and Linux cwd probes fail
+ * closed.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -24,7 +27,9 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as N from "effect/Number";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -35,13 +40,17 @@ import {
   sameDirectoryIdentity,
   unlinkBoundFile,
 } from "./DirectoryHandle.ts";
+import { isRegisteredWorktree, removeGitWorktree } from "./GitWorktree.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
+  QualificationViewReceipt,
   ResidueReapAction,
   ResidueReapAgeDays,
+  ResidueReapByteCap,
   ResidueReapCandidate,
   ResidueReapClass,
   ResidueReapHomeRoot,
+  ResidueReapKeepCount,
   ResidueReapReport,
 } from "./ResidueReap.schemas.ts";
 import type * as Crypto from "effect/Crypto";
@@ -52,21 +61,109 @@ import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
 
 const decodeResidueReapAgeDays = S.decodeEffect(ResidueReapAgeDays);
 const decodeResidueReapHomeRoot = S.decodeEffect(ResidueReapHomeRoot);
+const decodeResidueReapByteCap = S.decodeEffect(ResidueReapByteCap);
+const decodeResidueReapKeepCount = S.decodeEffect(ResidueReapKeepCount);
+const decodeQualificationViewReceiptJson = S.decodeEffect(S.fromJsonString(QualificationViewReceipt));
 
 const DEFAULT_MAX_AGE_DAYS = 30;
 const DEFAULT_TURBO_MAX_AGE_DAYS = 14;
+const DEFAULT_TURBO_RUNS_MAX_AGE_DAYS = 1;
+const DEFAULT_SHARED_TURBO_MAX_AGE_DAYS = 14;
+const DEFAULT_SHARED_TURBO_MAX_BYTES = 20 * 1024 ** 3;
+const DEFAULT_QUALIFICATION_VIEWS_KEEP = 2;
+// Size eviction never touches an entry written within the last day: turbo may still
+// be writing that key, and "oldest" here means oldest-written, not least-recently-read.
+const SHARED_TURBO_EVICTION_FLOOR_DAYS = 1;
+const MERGED_PREVIEW_MIN_AGE_DAYS = 1;
 const DEFAULT_CENSUS_ENTRY_CAP = 100_000;
 const CENSUS_DEPTH_CAP = 12;
 const PROC_ROOT = "/proc";
+const MERGED_PREVIEW_PREFIX = "merged-preview-";
+const QUALIFICATION_VIEW_PREFIX = "view-";
+const TURBO_RUN_SUMMARY_SUFFIX = ".json";
+// The archive leads so a group interrupted mid-eviction is a clean turbo cache miss.
+const SHARED_TURBO_MEMBER_SUFFIXES = [".tar.zst", "-meta.json", "-manifest.json"] as const;
+const SHARED_TURBO_ARCHIVE_SUFFIX = ".tar.zst";
 
 // worktree-residue holds archive-first worktree retirement manifests, patches, and
 // preserved untracked files: an old archive is often the only remaining copy of that work.
-const DurableBeepCacheName = LiteralKit(["handoffs", "head-install", "uv", "worktree-residue"]);
+// turbo and turbo-qualification are owned by the shared-turbo-cache and
+// qualification-views classes, which evict inside them; codex-security is the Codex
+// security runtime's state directory; effect-vitest-canon and boolean-creep hold
+// evidence cited by open goal packets. None of them may ever be reaped whole.
+const DurableBeepCacheName = LiteralKit([
+  "handoffs",
+  "head-install",
+  "uv",
+  "worktree-residue",
+  "turbo",
+  "turbo-qualification",
+  "codex-security",
+  "effect-vitest-canon",
+  "boolean-creep",
+]);
 const isDurableBeepCacheName = S.is(DurableBeepCacheName);
 const ProcPidName = S.String.check(S.isPattern(/^[0-9]+$/u));
 const isProcPidName = S.is(ProcPidName);
+const MergedPreviewName = S.String.check(S.isPattern(/^merged-preview-[0-9]+$/u));
+const isMergedPreviewName = S.is(MergedPreviewName);
+// Classes whose candidates live inside one checkout; that checkout is their apply boundary.
+const RepoScopedResidueClass = LiteralKit(["turbo-cache", "turbo-runs", "merged-preview"]);
+const isRepoScopedResidueClass = S.is(RepoScopedResidueClass);
 
 type CwdProbe = (candidatePath: string) => Effect.Effect<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path>;
+
+type PidProbe = (pid: string) => Effect.Effect<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path>;
+
+// Internal evaluation policy shared by discovery and apply-time reassessment.
+type ReapPolicy = {
+  readonly cwdProbe: CwdProbe;
+  readonly entryCap: number;
+  readonly homeBoundary: string;
+  readonly maxAgeDays: number;
+  readonly nowMillis: number;
+  readonly pidProbe: PidProbe;
+  readonly qualificationViewsKeep: number;
+  readonly turboMaxAgeDays: number;
+  readonly turboRunsMaxAgeDays: number;
+};
+
+type DiscoveryRequirements =
+  | FileSystem.FileSystem
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
+
+type Discovered = {
+  readonly candidates: ReadonlyArray<ResidueReapCandidate>;
+  readonly warnings: ReadonlyArray<string>;
+};
+
+type SharedTurboMember = {
+  readonly bytes: number;
+  readonly groupKey: string;
+  readonly isArchive: boolean;
+  readonly mtimeMillis: number;
+  readonly path: string;
+};
+
+type SharedTurboGroup = {
+  readonly ageDays: number;
+  readonly bytes: number;
+  readonly key: string;
+  readonly members: ReadonlyArray<SharedTurboMember>;
+  readonly newestMillis: number;
+};
+
+type SizeEviction = {
+  readonly remaining: number;
+  readonly verdicts: ReadonlyArray<readonly [SharedTurboGroup, O.Option<ResidueReapSkipReason>]>;
+};
+
+type QualificationView = {
+  readonly modifiedMillis: number;
+  readonly path: string;
+};
 
 type Census = {
   readonly bytes: number;
@@ -226,7 +323,10 @@ const candidate = (
   options: {
     readonly ageDays?: number;
     readonly bytes?: number;
+    readonly checkoutRoot?: string;
     readonly entriesScanned?: number;
+    readonly groupKey?: string;
+    readonly mtimeMillis?: number;
     readonly skipReason?: ResidueReapSkipReason;
   } = {}
 ): ResidueReapCandidate =>
@@ -616,6 +716,413 @@ const turboCandidates = Effect.fnUntraced(function* (
   );
 });
 
+const resolvedOrLexical = Effect.fnUntraced(function* (
+  candidatePath: string
+): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return O.getOrElse(yield* fs.realPath(candidatePath).pipe(Effect.option), () => path.resolve(candidatePath));
+});
+
+const rootModifiedMillis = Effect.fnUntraced(function* (
+  candidatePath: string
+): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  return O.flatMap(yield* fs.stat(candidatePath).pipe(Effect.option), mtimeMillis);
+});
+
+const procPidProbe = Effect.fnUntraced(function* (
+  pid: string
+): Effect.fn.Return<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs.exists(path.join(PROC_ROOT, pid)).pipe(Effect.option);
+});
+
+const pidLivenessSkip = Effect.fnUntraced(function* (
+  pid: string,
+  pidProbe: PidProbe
+): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, FileSystem.FileSystem | Path.Path> {
+  const alive = yield* pidProbe(pid);
+  return O.match(alive, {
+    onNone: () => O.some<ResidueReapSkipReason>("process-probe-failed"),
+    onSome: (isAlive) => (isAlive ? O.some<ResidueReapSkipReason>("pid-alive") : O.none<ResidueReapSkipReason>()),
+  });
+});
+
+const mergedPreviewCandidate = Effect.fnUntraced(function* (
+  root: string,
+  candidatePath: string,
+  checkoutRoot: string,
+  policy: ReapPolicy
+): Effect.fn.Return<ResidueReapCandidate, never, DiscoveryRequirements> {
+  const path = yield* Path.Path;
+  const shape = yield* canonicalDirectoryShape(root, candidatePath);
+  if (Result.isFailure(shape)) {
+    return candidate(root, candidatePath, "merged-preview", "skip", { skipReason: shape.failure });
+  }
+  const skip = (skipReason: ResidueReapSkipReason, measuredAge = O.none<number>()): ResidueReapCandidate =>
+    candidate(root, shape.success, "merged-preview", "skip", {
+      ...O.getSomesStruct({ ageDays: measuredAge }),
+      skipReason,
+    });
+  // No census: an installed preview carries a full node_modules tree that overflows it.
+  // The root and its `.git` link file are written when the preview is checked out.
+  const modified = newestOption(
+    yield* rootModifiedMillis(shape.success),
+    yield* rootModifiedMillis(path.join(shape.success, ".git"))
+  );
+  if (O.isNone(modified)) {
+    return skip("stat-failed");
+  }
+  const measuredAge = ageDays(policy.nowMillis, modified.value);
+  if (measuredAge < MERGED_PREVIEW_MIN_AGE_DAYS) {
+    return skip("too-young", O.some(measuredAge));
+  }
+  const owner = Str.slice(Str.length(MERGED_PREVIEW_PREFIX))(path.basename(shape.success));
+  const ownerSkip = yield* pidLivenessSkip(owner, policy.pidProbe);
+  if (O.isSome(ownerSkip)) {
+    return skip(ownerSkip.value, O.some(measuredAge));
+  }
+  const liveness = yield* directoryLivenessSkip(shape.success, policy.cwdProbe);
+  if (O.isSome(liveness)) {
+    return skip(liveness.value, O.some(measuredAge));
+  }
+  // The preview is a synthetic merge commit and `--force` is its designed teardown, so
+  // no clean-tree gate applies; an unknown registration fails closed.
+  const registered = yield* isRegisteredWorktree(checkoutRoot, shape.success);
+  return O.match(registered, {
+    onNone: () => skip("git-probe-failed", O.some(measuredAge)),
+    onSome: (isRegistered) =>
+      candidate(root, shape.success, "merged-preview", isRegistered ? "worktree-remove" : "remove-dir", {
+        ageDays: measuredAge,
+      }),
+  });
+});
+
+const mergedPreviewCandidates = Effect.fnUntraced(function* (
+  checkoutRoot: string,
+  policy: ReapPolicy
+): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, DiscoveryRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const yeetRoot = path.join(checkoutRoot, ".beep", "yeet");
+  const exists = yield* fs.exists(yeetRoot).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return A.empty();
+  }
+  if (O.isNone(yield* canonicalDirectory(checkoutRoot, yeetRoot))) {
+    return [candidate(yeetRoot, yeetRoot, "merged-preview", "skip", { skipReason: "wrong-shape" })];
+  }
+  const listing = yield* Effect.result(fs.readDirectory(yeetRoot));
+  if (Result.isFailure(listing)) {
+    return [candidate(yeetRoot, yeetRoot, "merged-preview", "skip", { skipReason: "census-failed" })];
+  }
+  return yield* Effect.forEach(
+    A.filter(listing.success, isMergedPreviewName),
+    (name) => mergedPreviewCandidate(yeetRoot, path.join(yeetRoot, name), checkoutRoot, policy),
+    { concurrency: 4 }
+  );
+});
+
+const turboRunEntry = Effect.fnUntraced(function* (
+  runsRoot: string,
+  entryPath: string,
+  thresholdDays: number,
+  nowMillis: number
+): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+    return candidate(runsRoot, entryPath, "turbo-runs", "skip", { skipReason: "wrong-shape" });
+  }
+  const stat = yield* fs.stat(entryPath).pipe(Effect.option);
+  if (O.isNone(stat)) {
+    return candidate(runsRoot, entryPath, "turbo-runs", "skip", { skipReason: "stat-failed" });
+  }
+  return Str.Equivalence(stat.value.type, "File") && Str.endsWith(TURBO_RUN_SUMMARY_SUFFIX)(entryPath)
+    ? classifyFile(path, runsRoot, entryPath, "turbo-runs", stat.value, nowMillis, thresholdDays)
+    : candidate(runsRoot, entryPath, "turbo-runs", "skip", { skipReason: "wrong-shape" });
+});
+
+const turboRunCandidates = Effect.fnUntraced(function* (
+  checkoutRoot: string,
+  policy: ReapPolicy
+): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const runsRoot = path.join(checkoutRoot, ".turbo", "runs");
+  const exists = yield* fs.exists(runsRoot).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return A.empty();
+  }
+  // Same constraint as the per-checkout cache: a linked runs root must never let
+  // removal reach files the report attributes to this checkout.
+  if (O.isNone(yield* canonicalDirectory(checkoutRoot, runsRoot))) {
+    return [candidate(runsRoot, runsRoot, "turbo-runs", "skip", { skipReason: "wrong-shape" })];
+  }
+  const listing = yield* Effect.result(fs.readDirectory(runsRoot));
+  if (Result.isFailure(listing)) {
+    return [candidate(runsRoot, runsRoot, "turbo-runs", "skip", { skipReason: "census-failed" })];
+  }
+  return yield* Effect.forEach(
+    listing.success,
+    (name) => turboRunEntry(runsRoot, path.join(runsRoot, name), policy.turboRunsMaxAgeDays, policy.nowMillis),
+    { concurrency: 8 }
+  );
+});
+
+const sharedTurboGroupKey = (name: string): O.Option<{ readonly key: string; readonly isArchive: boolean }> =>
+  pipe(
+    A.findFirst(
+      SHARED_TURBO_MEMBER_SUFFIXES,
+      (suffix) => Str.endsWith(suffix)(name) && Str.length(name) > Str.length(suffix)
+    ),
+    O.map((suffix) => ({
+      key: Str.slice(0, Str.length(name) - Str.length(suffix))(name),
+      isArchive: Str.Equivalence(suffix, SHARED_TURBO_ARCHIVE_SUFFIX),
+    }))
+  );
+
+const sharedTurboEntry = Effect.fnUntraced(function* (
+  cacheRoot: string,
+  name: string
+): Effect.fn.Return<Result.Result<SharedTurboMember, ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entryPath = path.join(cacheRoot, name);
+  const skip = (skipReason: ResidueReapSkipReason): Result.Result<SharedTurboMember, ResidueReapCandidate> =>
+    Result.fail(candidate(cacheRoot, entryPath, "shared-turbo-cache", "skip", { skipReason }));
+  const key = sharedTurboGroupKey(name);
+  if (O.isNone(key) || O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+    return skip("wrong-shape");
+  }
+  const stat = yield* fs.stat(entryPath).pipe(Effect.option);
+  if (O.isNone(stat)) {
+    return skip("stat-failed");
+  }
+  if (!Str.Equivalence(stat.value.type, "File")) {
+    return skip("wrong-shape");
+  }
+  const modified = mtimeMillis(stat.value);
+  if (O.isNone(modified)) {
+    return skip("stat-failed");
+  }
+  return Result.succeed({
+    bytes: bytesFromInfo(stat.value),
+    groupKey: key.value.key,
+    isArchive: key.value.isArchive,
+    mtimeMillis: modified.value,
+    path: entryPath,
+  });
+});
+
+const sharedTurboGroup = (nowMillis: number, members: A.NonEmptyReadonlyArray<SharedTurboMember>): SharedTurboGroup => {
+  const newestMillis = A.reduce(members, 0, (newest, member) => N.max(newest, member.mtimeMillis));
+  return {
+    ageDays: ageDays(nowMillis, newestMillis),
+    bytes: A.reduce(members, 0, (total, member) => total + member.bytes),
+    key: A.headNonEmpty(members).groupKey,
+    members: A.sort(
+      members,
+      Order.mapInput(N.Order, (member: SharedTurboMember) => (member.isArchive ? 0 : 1))
+    ),
+    newestMillis,
+  };
+};
+
+const byNewestWrite = Order.mapInput(N.Order, (group: SharedTurboGroup) => group.newestMillis);
+
+// Pass 2 of the shared-cache eviction: walk the age survivors oldest-written first and
+// evict until the remainder fits the budget, never touching an entry under the floor.
+const evictToBudget = (survivors: ReadonlyArray<SharedTurboGroup>, maxBytes: number): SizeEviction =>
+  A.reduce(
+    A.sort(survivors, byNewestWrite),
+    {
+      remaining: A.reduce(survivors, 0, (total, group) => total + group.bytes),
+      verdicts: A.empty(),
+    } satisfies SizeEviction,
+    (state: SizeEviction, group): SizeEviction =>
+      state.remaining > maxBytes && group.ageDays >= SHARED_TURBO_EVICTION_FLOOR_DAYS
+        ? { remaining: state.remaining - group.bytes, verdicts: A.append(state.verdicts, [group, O.none()] as const) }
+        : {
+            remaining: state.remaining,
+            verdicts: A.append(state.verdicts, [
+              group,
+              O.some<ResidueReapSkipReason>(
+                group.ageDays >= SHARED_TURBO_EVICTION_FLOOR_DAYS ? "within-size-budget" : "too-young"
+              ),
+            ] as const),
+          }
+  );
+
+const sharedTurboCacheCandidates = Effect.fnUntraced(function* (
+  cacheRoot: string,
+  policy: ReapPolicy,
+  maxAgeDays: number,
+  maxBytes: number
+): Effect.fn.Return<Discovered, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const exists = yield* fs.exists(cacheRoot).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return { candidates: A.empty(), warnings: A.empty() };
+  }
+  if (!path.isAbsolute(cacheRoot) || O.isNone(yield* canonicalDirectory(policy.homeBoundary, cacheRoot))) {
+    return {
+      candidates: [candidate(cacheRoot, cacheRoot, "shared-turbo-cache", "skip", { skipReason: "path-changed" })],
+      warnings: [`Skipped shared Turbo cache ${cacheRoot}: it is not a directory inside the home root.`],
+    };
+  }
+  const listing = yield* Effect.result(fs.readDirectory(cacheRoot));
+  if (Result.isFailure(listing)) {
+    return {
+      candidates: [candidate(cacheRoot, cacheRoot, "shared-turbo-cache", "skip", { skipReason: "census-failed" })],
+      warnings: A.empty(),
+    };
+  }
+  const entries = yield* Effect.forEach(listing.success, (name) => sharedTurboEntry(cacheRoot, name), {
+    concurrency: 8,
+  });
+  const groups = A.map(R.values(A.groupBy(A.getSuccesses(entries), (member) => member.groupKey)), (members) =>
+    sharedTurboGroup(policy.nowMillis, members)
+  );
+  const aged = A.filter(groups, (group) => group.ageDays >= maxAgeDays);
+  const survivors = A.filter(groups, (group) => group.ageDays < maxAgeDays);
+  const verdicts = A.sort(
+    A.appendAll(
+      A.map(aged, (group) => [group, O.none<ResidueReapSkipReason>()] as const),
+      evictToBudget(survivors, maxBytes).verdicts
+    ),
+    Order.mapInput(byNewestWrite, ([group]: readonly [SharedTurboGroup, O.Option<ResidueReapSkipReason>]) => group)
+  );
+  const grouped = A.flatMap(verdicts, ([group, skipReason]) =>
+    A.map(group.members, (member) =>
+      candidate(cacheRoot, member.path, "shared-turbo-cache", O.isSome(skipReason) ? "skip" : "remove-file", {
+        ageDays: group.ageDays,
+        bytes: member.bytes,
+        groupKey: group.key,
+        mtimeMillis: member.mtimeMillis,
+        ...O.getSomesStruct({ skipReason }),
+      })
+    )
+  );
+  return { candidates: A.appendAll(A.getFailures(entries), grouped), warnings: A.empty() };
+});
+
+// Views cited by any qualification receipt, resolved; `None` when any receipt is
+// unreadable or malformed, so a view is never reaped on incomplete evidence.
+const citedQualificationViews = Effect.fnUntraced(function* (
+  evidenceRoot: string
+): Effect.fn.Return<O.Option<ReadonlyArray<string>>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const exists = yield* fs.exists(evidenceRoot).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return O.some(A.empty());
+  }
+  const listing = yield* fs.readDirectory(evidenceRoot).pipe(Effect.option);
+  if (O.isNone(listing)) {
+    return O.none();
+  }
+  const citations = yield* Effect.forEach(
+    listing.value,
+    Effect.fnUntraced(function* (name) {
+      const receiptPath = path.join(evidenceRoot, name, "dependencies.json");
+      if (!(yield* fs.exists(receiptPath).pipe(Effect.orElseSucceed(() => false)))) {
+        return O.some(O.none<string>());
+      }
+      const receipt = yield* fs
+        .readFileString(receiptPath)
+        .pipe(Effect.flatMap(decodeQualificationViewReceiptJson), Effect.option);
+      return O.isSome(receipt) ? O.some(O.some(yield* resolvedOrLexical(receipt.value.directory))) : O.none();
+    }),
+    { concurrency: 4 }
+  );
+  return O.map(O.all(citations), A.getSomes);
+});
+
+const qualificationView = Effect.fnUntraced(function* (
+  viewsRoot: string,
+  candidatePath: string
+): Effect.fn.Return<Result.Result<QualificationView, ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const shape = yield* canonicalDirectoryShape(viewsRoot, candidatePath);
+  if (Result.isFailure(shape)) {
+    return Result.fail(
+      candidate(viewsRoot, candidatePath, "qualification-views", "skip", { skipReason: shape.failure })
+    );
+  }
+  // A view's root mtime is its creation time: the archive copy preserves source mtimes
+  // inside, and a census would overflow on the full node_modules tree anyway.
+  const modified = yield* rootModifiedMillis(shape.success);
+  return O.match(modified, {
+    onNone: (): Result.Result<QualificationView, ResidueReapCandidate> =>
+      Result.fail(candidate(viewsRoot, shape.success, "qualification-views", "skip", { skipReason: "stat-failed" })),
+    onSome: (modifiedMillis): Result.Result<QualificationView, ResidueReapCandidate> =>
+      Result.succeed({ modifiedMillis, path: shape.success }),
+  });
+});
+
+const assessQualificationViews = Effect.fnUntraced(function* (
+  qualificationRoot: string,
+  policy: ReapPolicy,
+  selected: (candidatePath: string) => boolean
+): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const viewsRoot = path.join(qualificationRoot, "dependencies");
+  const exists = yield* fs.exists(viewsRoot).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return A.empty();
+  }
+  if (O.isNone(yield* canonicalDirectory(policy.homeBoundary, viewsRoot))) {
+    return [candidate(viewsRoot, viewsRoot, "qualification-views", "skip", { skipReason: "path-changed" })];
+  }
+  const listing = yield* Effect.result(fs.readDirectory(viewsRoot));
+  if (Result.isFailure(listing)) {
+    return [candidate(viewsRoot, viewsRoot, "qualification-views", "skip", { skipReason: "census-failed" })];
+  }
+  const views = yield* Effect.forEach(
+    A.filter(listing.success, Str.startsWith(QUALIFICATION_VIEW_PREFIX)),
+    (name) => qualificationView(viewsRoot, path.join(viewsRoot, name)),
+    { concurrency: 4 }
+  );
+  const ordered = A.sort(
+    A.getSuccesses(views),
+    Order.flip(Order.mapInput(N.Order, (view: QualificationView) => view.modifiedMillis))
+  );
+  const cited = yield* citedQualificationViews(path.join(qualificationRoot, "evidence"));
+  const assessed = yield* Effect.forEach(
+    A.filter(
+      A.map(ordered, (view, index) => [view, index] as const),
+      ([view]) => selected(view.path)
+    ),
+    Effect.fnUntraced(function* ([view, index]) {
+      const measuredAge = ageDays(policy.nowMillis, view.modifiedMillis);
+      const skip = (skipReason: ResidueReapSkipReason): ResidueReapCandidate =>
+        candidate(viewsRoot, view.path, "qualification-views", "skip", { ageDays: measuredAge, skipReason });
+      if (O.isNone(cited)) {
+        return skip("census-failed");
+      }
+      if (index < policy.qualificationViewsKeep) {
+        return skip("kept-newest");
+      }
+      if (A.contains(cited.value, yield* resolvedOrLexical(view.path))) {
+        return skip("evidence-referenced");
+      }
+      const liveness = yield* directoryLivenessSkip(view.path, policy.cwdProbe);
+      return O.isSome(liveness)
+        ? skip(liveness.value)
+        : candidate(viewsRoot, view.path, "qualification-views", "remove-dir", { ageDays: measuredAge });
+    }),
+    { concurrency: 1 }
+  );
+  return A.appendAll(
+    A.filter(A.getFailures(views), (entry) => selected(entry.path)),
+    assessed
+  );
+});
+
 const reassessSessionFile = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
   nowMillis: number,
@@ -666,40 +1173,104 @@ const reassessTurboEntry = Effect.fnUntraced(function* (
     : ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
 });
 
+const pathChanged = (assessed: ResidueReapCandidate): ResidueReapCandidate =>
+  ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
+
+const reassessTurboRun = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate,
+  policy: ReapPolicy
+): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const exists = yield* fs.exists(assessed.path).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return pathChanged(assessed);
+  }
+  return yield* turboRunEntry(assessed.root, assessed.path, policy.turboRunsMaxAgeDays, policy.nowMillis);
+});
+
+// The eviction set is a snapshot and is not recomputed here: an entry turbo rewrote
+// since the assessment (a changed mtime) is kept, and new writes only overshoot the cap.
+const reassessSharedTurboMember = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate
+): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  if (O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+    return pathChanged(assessed);
+  }
+  const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
+  const unchanged = O.exists(
+    stat,
+    (info) =>
+      Str.Equivalence(info.type, "File") &&
+      O.exists(mtimeMillis(info), (modified) =>
+        O.exists(O.fromUndefinedOr(assessed.mtimeMillis), (assessedMillis) => modified === assessedMillis)
+      )
+  );
+  return unchanged ? assessed : pathChanged(assessed);
+});
+
+const reassessMergedPreview = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate,
+  policy: ReapPolicy
+): Effect.fn.Return<ResidueReapCandidate, never, DiscoveryRequirements> {
+  const checkoutRoot = O.fromUndefinedOr(assessed.checkoutRoot);
+  if (O.isNone(checkoutRoot)) {
+    return pathChanged(assessed);
+  }
+  return yield* mergedPreviewCandidate(assessed.root, assessed.path, checkoutRoot.value, policy);
+});
+
+// Re-lists the views so newest-N and the cited set reflect the tree at apply time.
+const reassessQualificationView = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate,
+  policy: ReapPolicy
+): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const rechecked = yield* assessQualificationViews(path.dirname(assessed.root), policy, (candidatePath) =>
+    Str.Equivalence(candidatePath, assessed.path)
+  );
+  return O.getOrElse(A.head(rechecked), () => pathChanged(assessed));
+});
+
 const reassessCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
-  nowMillis: number,
-  maxAgeDays: number,
-  turboMaxAgeDays: number,
-  entryCap: number,
-  cwdProbe: CwdProbe
-): Effect.fn.Return<
-  ResidueReapCandidate,
-  never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
-> {
+  policy: ReapPolicy
+): Effect.fn.Return<ResidueReapCandidate, never, DiscoveryRequirements> {
   const path = yield* Path.Path;
   if (Str.Equivalence(assessed.action, "skip")) {
     return assessed;
   }
   if (!pathIsStrictlyWithin(path, assessed.root, assessed.path)) {
-    return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
+    return pathChanged(assessed);
   }
-  if (ResidueReapClass.is["codex-sessions"](assessed.reapClass)) {
-    return yield* reassessSessionFile(assessed, nowMillis, maxAgeDays);
-  }
-  if (ResidueReapClass.is["turbo-cache"](assessed.reapClass)) {
-    return yield* reassessTurboEntry(assessed, nowMillis, turboMaxAgeDays, entryCap, cwdProbe);
-  }
-  return yield* directoryCandidate(
-    assessed.root,
-    assessed.path,
-    assessed.reapClass,
-    nowMillis,
-    maxAgeDays,
-    entryCap,
-    cwdProbe
+  const rechecked = yield* Match.value(assessed.reapClass).pipe(
+    Match.when("codex-sessions", () => reassessSessionFile(assessed, policy.nowMillis, policy.maxAgeDays)),
+    Match.when("turbo-cache", () =>
+      reassessTurboEntry(assessed, policy.nowMillis, policy.turboMaxAgeDays, policy.entryCap, policy.cwdProbe)
+    ),
+    Match.when("turbo-runs", () => reassessTurboRun(assessed, policy)),
+    Match.when("shared-turbo-cache", () => reassessSharedTurboMember(assessed)),
+    Match.when("merged-preview", () => reassessMergedPreview(assessed, policy)),
+    Match.when("qualification-views", () => reassessQualificationView(assessed, policy)),
+    Match.whenOr("codex-worktrees", "beep-cache-disposable", (reapClass) =>
+      directoryCandidate(
+        assessed.root,
+        assessed.path,
+        reapClass,
+        policy.nowMillis,
+        policy.maxAgeDays,
+        policy.entryCap,
+        policy.cwdProbe
+      )
+    ),
+    Match.exhaustive
   );
+  // Reassessment rebuilds candidates from the filesystem; the owning checkout is
+  // discovery context, so it carries over for the removal and the report.
+  return ResidueReapCandidate.make({
+    ...rechecked,
+    ...O.getSomesStruct({ checkoutRoot: O.fromUndefinedOr(assessed.checkoutRoot) }),
+  });
 });
 
 // Internal apply-time shape (never decoded or serialized): the resolved candidate and
@@ -708,6 +1279,8 @@ type ResolvedApplyTarget = {
   readonly candidate: ResidueReapCandidate;
   readonly identity: DirectoryIdentity;
 };
+
+type ApplyRemovalOutcome = BoundRemovalOutcome | "worktree-remove-failed";
 
 const resolveApplyTarget = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
@@ -740,11 +1313,28 @@ const resolveApplyTarget = Effect.fnUntraced(function* (
   }));
 });
 
+// `git worktree remove --force` resolves the path itself, so it cannot be bound to the
+// checked inode; the identity check runs immediately before it. A failed teardown is
+// reported and left in place: falling back to a raw tree removal would strand the
+// worktree registration and bypass git's own bookkeeping.
+const removeRegisteredWorktree = Effect.fnUntraced(function* (
+  candidate: ResidueReapCandidate
+): Effect.fn.Return<ApplyRemovalOutcome, never, DiscoveryRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const checkoutRoot = O.fromUndefinedOr(candidate.checkoutRoot);
+  if (O.isNone(checkoutRoot)) {
+    return "worktree-remove-failed";
+  }
+  const removed = yield* removeGitWorktree(checkoutRoot.value, candidate.path);
+  const remains = yield* fs.exists(candidate.path).pipe(Effect.orElseSucceed(() => true));
+  return removed && !remains ? "removed" : "worktree-remove-failed";
+});
+
 const removeResolvedCandidate = Effect.fnUntraced(function* (
   candidate: ResidueReapCandidate,
   identity: DirectoryIdentity
-): Effect.fn.Return<BoundRemovalOutcome, never, Path.Path | Scope.Scope> {
-  if (!ResidueReapAction.is["remove-dir"](candidate.action)) {
+): Effect.fn.Return<ApplyRemovalOutcome, never, DiscoveryRequirements | Scope.Scope> {
+  if (ResidueReapAction.is["remove-file"](candidate.action)) {
     // A file is unlinked through its bound parent, and only while the entry there is
     // still the regular file whose inode the checks ran against.
     return yield* unlinkBoundFile(candidate.path, identity);
@@ -756,22 +1346,16 @@ const removeResolvedCandidate = Effect.fnUntraced(function* (
   if (O.isNone(handle) || !sameDirectoryIdentity(handle.value.identity, identity)) {
     return "identity-changed";
   }
-  return yield* removeThroughDirectoryHandle(handle.value, candidate.path);
+  return ResidueReapAction.is["worktree-remove"](candidate.action)
+    ? yield* removeRegisteredWorktree(candidate)
+    : yield* removeThroughDirectoryHandle(handle.value, candidate.path);
 });
 
 const applyCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
   outerBoundary: O.Option<string>,
-  nowMillis: number,
-  maxAgeDays: number,
-  turboMaxAgeDays: number,
-  entryCap: number,
-  cwdProbe: CwdProbe
-): Effect.fn.Return<
-  AppliedCandidate,
-  never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
-> {
+  policy: ReapPolicy
+): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements> {
   // Reports keep speaking the operator's lexical path even though the checks and the
   // removal below run on the resolved one.
   const reported = (candidate: ResidueReapCandidate): ResidueReapCandidate =>
@@ -779,20 +1363,13 @@ const applyCandidate = Effect.fnUntraced(function* (
   const resolved = yield* resolveApplyTarget(assessed, outerBoundary);
   if (O.isNone(resolved)) {
     return {
-      candidate: ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" }),
+      candidate: pathChanged(assessed),
       reaped: false,
       reclaimedBytes: 0,
       warnings: [`Skipped ${assessed.path}: path changed before removal.`],
     };
   }
-  const rechecked = yield* reassessCandidate(
-    resolved.value.candidate,
-    nowMillis,
-    maxAgeDays,
-    turboMaxAgeDays,
-    entryCap,
-    cwdProbe
-  );
+  const rechecked = yield* reassessCandidate(resolved.value.candidate, policy);
   if (Str.Equivalence(rechecked.action, "skip")) {
     return {
       candidate: reported(rechecked),
@@ -821,7 +1398,55 @@ const applyCandidate = Effect.fnUntraced(function* (
       skipped("path-changed", `Skipped ${assessed.path}: path changed before removal.`)
     ),
     Match.when("removal-failed", () => skipped("removal-failed", `Failed to remove ${assessed.path}.`)),
+    Match.when("worktree-remove-failed", () =>
+      skipped("worktree-remove-failed", `Failed to remove worktree ${assessed.path}; it was left in place.`)
+    ),
     Match.exhaustive
+  );
+});
+
+type CheckoutRoot = {
+  readonly lexical: string;
+  readonly real: string;
+};
+
+// One entry per distinct real checkout: a clone reached through two lexical paths is
+// swept once, under the spelling the caller named first; the result is sorted.
+const distinctCheckoutRoots = Effect.fnUntraced(function* (
+  roots: ReadonlyArray<string>
+): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const resolved = yield* Effect.forEach(
+    A.map(roots, (root) => path.resolve(root)),
+    Effect.fnUntraced(function* (lexical): Effect.fn.Return<CheckoutRoot, never, FileSystem.FileSystem | Path.Path> {
+      return { lexical, real: yield* resolvedOrLexical(lexical) };
+    })
+  );
+  return A.sort(
+    A.map(
+      A.dedupeWith(resolved, (left, right) => Str.Equivalence(left.real, right.real)),
+      (root) => root.lexical
+    ),
+    Order.String
+  );
+});
+
+const repoScopedCandidates = Effect.fnUntraced(function* (
+  checkoutRoot: string,
+  includes: (reapClass: ResidueReapClass) => boolean,
+  policy: ReapPolicy
+): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, DiscoveryRequirements> {
+  const turbo = includes("turbo-cache")
+    ? yield* turboCandidates(checkoutRoot, policy.nowMillis, policy.turboMaxAgeDays, policy.entryCap, policy.cwdProbe)
+    : A.empty<ResidueReapCandidate>();
+  const runs = includes("turbo-runs")
+    ? yield* turboRunCandidates(checkoutRoot, policy)
+    : A.empty<ResidueReapCandidate>();
+  const previews = includes("merged-preview")
+    ? yield* mergedPreviewCandidates(checkoutRoot, policy)
+    : A.empty<ResidueReapCandidate>();
+  return A.map(A.appendAll(A.appendAll(turbo, runs), previews), (entry) =>
+    ResidueReapCandidate.make({ ...entry, checkoutRoot })
   );
 });
 
@@ -831,12 +1456,18 @@ const applyCandidate = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * Version 1 deliberately does not VACUUM SQLite databases, sweep Turbo caches
- * across other checkouts, or perform size-based eviction. It removes only by
- * age or bounded newest-file idleness within the four explicit classes.
- * `homeRoot`, `repoRoot`, `nowMillis`, `censusEntryCap`, and `probeLiveCwd`
- * are injection seams for hermetic tests; production resolves HOME through
- * `Config` plus `Path` and the current checkout through `findRepoRoot`.
+ * Repository-scoped classes (`turbo-cache`, `turbo-runs`, `merged-preview`)
+ * are discovered in every checkout named by `checkoutRoots` (deduplicated by
+ * real path; the current checkout when omitted), and each candidate's apply
+ * boundary is its own checkout. The shared Turbo cache is aged and then
+ * size-evicted oldest-written first down to `sharedTurboMaxBytes`, never below a
+ * one-day floor. Qualification views keep the newest `qualificationViewsKeep`
+ * plus every view an evidence receipt cites. SQLite databases are never
+ * VACUUMed. `homeRoot`, `repoRoot`, `checkoutRoots`, `sharedTurboCacheRoot`,
+ * `nowMillis`, `censusEntryCap`, `probeLiveCwd`, and `probePidAlive` are
+ * injection seams for hermetic tests; production resolves HOME and
+ * `TURBO_CACHE_DIR` through `Config` and the current checkout through
+ * `findRepoRoot`.
  *
  * **Example** (Build a dry-run effect)
  *
@@ -847,7 +1478,7 @@ const applyCandidate = Effect.fnUntraced(function* (
  * console.log(Effect.isEffect(runResidueReap())) // true
  * ```
  *
- * @param options - Optional injected roots, thresholds, class filter, clock, probes, and apply mode.
+ * @param options - Optional injected roots, thresholds, budgets, class filter, clock, probes, and apply mode.
  * @returns A versioned report containing every candidate action and skip reason.
  * @category workflows
  * @since 0.0.0
@@ -856,13 +1487,21 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   options: {
     readonly apply?: boolean;
     readonly censusEntryCap?: number;
+    readonly checkoutRoots?: ReadonlyArray<string>;
     readonly classes?: ReadonlyArray<ResidueReapClass>;
+    readonly fleet?: boolean;
     readonly homeRoot?: string;
     readonly maxAgeDays?: number;
     readonly nowMillis?: number;
     readonly probeLiveCwd?: CwdProbe;
+    readonly probePidAlive?: PidProbe;
+    readonly qualificationViewsKeep?: number;
     readonly repoRoot?: string;
+    readonly sharedTurboCacheRoot?: string;
+    readonly sharedTurboMaxAgeDays?: number;
+    readonly sharedTurboMaxBytes?: number;
     readonly turboMaxAgeDays?: number;
+    readonly turboRunsMaxAgeDays?: number;
   } = {}
 ) {
   const path = yield* Path.Path;
@@ -881,25 +1520,56 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const turboMaxAgeDays = yield* decodeResidueReapAgeDays(
     O.getOrElse(O.fromUndefinedOr(options.turboMaxAgeDays), () => DEFAULT_TURBO_MAX_AGE_DAYS)
   );
+  const turboRunsMaxAgeDays = yield* decodeResidueReapAgeDays(
+    O.getOrElse(O.fromUndefinedOr(options.turboRunsMaxAgeDays), () => DEFAULT_TURBO_RUNS_MAX_AGE_DAYS)
+  );
+  const sharedTurboMaxAgeDays = yield* decodeResidueReapAgeDays(
+    O.getOrElse(O.fromUndefinedOr(options.sharedTurboMaxAgeDays), () => DEFAULT_SHARED_TURBO_MAX_AGE_DAYS)
+  );
+  const sharedTurboMaxBytes = yield* decodeResidueReapByteCap(
+    O.getOrElse(O.fromUndefinedOr(options.sharedTurboMaxBytes), () => DEFAULT_SHARED_TURBO_MAX_BYTES)
+  );
+  const qualificationViewsKeep = yield* decodeResidueReapKeepCount(
+    O.getOrElse(O.fromUndefinedOr(options.qualificationViewsKeep), () => DEFAULT_QUALIFICATION_VIEWS_KEEP)
+  );
   const classes = A.match(O.getOrElse(O.fromUndefinedOr(options.classes), A.empty<ResidueReapClass>), {
     onEmpty: () => ResidueReapClass.Options,
     onNonEmpty: (requested) => requested,
   });
   const includes = (reapClass: ResidueReapClass): boolean => A.contains(classes, reapClass);
   const now = yield* Clock.currentTimeMillis;
-  const nowMillis = O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => now);
-  const entryCap = O.getOrElse(O.fromUndefinedOr(options.censusEntryCap), () => DEFAULT_CENSUS_ENTRY_CAP);
-  const cwdProbe = O.getOrElse(O.fromUndefinedOr(options.probeLiveCwd), () => procCwdProbe);
   const codexRoot = path.join(homeRoot, ".codex");
   const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
+  const configuredSharedTurboRoot = O.fromUndefinedOr(options.sharedTurboCacheRoot);
+  const sharedTurboCacheRoot = O.isSome(configuredSharedTurboRoot)
+    ? configuredSharedTurboRoot.value
+    : O.getOrElse(O.filter(yield* Config.option(Config.String("TURBO_CACHE_DIR")), Str.isNonEmpty), () =>
+        path.join(beepCacheRoot, "turbo")
+      );
   const fs = yield* FileSystem.FileSystem;
   const homeBoundary = yield* fs.realPath(homeRoot);
-  const repoBoundary = yield* fs.realPath(resolvedRepoRoot).pipe(Effect.option);
+  const policy: ReapPolicy = {
+    cwdProbe: O.getOrElse(O.fromUndefinedOr(options.probeLiveCwd), () => procCwdProbe),
+    entryCap: O.getOrElse(O.fromUndefinedOr(options.censusEntryCap), () => DEFAULT_CENSUS_ENTRY_CAP),
+    homeBoundary,
+    maxAgeDays,
+    nowMillis: O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => now),
+    pidProbe: O.getOrElse(O.fromUndefinedOr(options.probePidAlive), () => procPidProbe),
+    qualificationViewsKeep,
+    turboMaxAgeDays,
+    turboRunsMaxAgeDays,
+  };
+  const checkoutRoots = yield* distinctCheckoutRoots(
+    A.match(O.getOrElse(O.fromUndefinedOr(options.checkoutRoots), A.empty<string>), {
+      onEmpty: () => [resolvedRepoRoot],
+      onNonEmpty: (requested) => requested,
+    })
+  );
 
   const sessions = includes("codex-sessions")
     ? (yield* Effect.reduce(
         [path.join(codexRoot, "sessions"), path.join(codexRoot, "archived_sessions")],
-        (): SessionScan => ({ candidates: A.empty(), remaining: entryCap }),
+        (): SessionScan => ({ candidates: A.empty(), remaining: policy.entryCap }),
         Effect.fnUntraced(function* (scan: SessionScan, root: string) {
           if (!(yield* fs.exists(root))) return scan;
           if (O.isNone(yield* canonicalDirectory(homeBoundary, root))) {
@@ -911,7 +1581,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
               remaining: scan.remaining,
             };
           }
-          const nested = yield* discoverSessionTree(root, root, nowMillis, maxAgeDays, scan.remaining);
+          const nested = yield* discoverSessionTree(root, root, policy.nowMillis, maxAgeDays, scan.remaining);
           return { candidates: A.appendAll(scan.candidates, nested.candidates), remaining: nested.remaining };
         })
       )).candidates
@@ -921,41 +1591,51 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
         path.join(codexRoot, "worktrees"),
         homeBoundary,
         "codex-worktrees",
-        nowMillis,
+        policy.nowMillis,
         maxAgeDays,
-        entryCap,
-        cwdProbe
+        policy.entryCap,
+        policy.cwdProbe
       )
     : A.empty<ResidueReapCandidate>();
-  const turbo = includes("turbo-cache")
-    ? yield* turboCandidates(resolvedRepoRoot, nowMillis, turboMaxAgeDays, entryCap, cwdProbe)
-    : A.empty<ResidueReapCandidate>();
+  const repoScoped = A.flatten(
+    yield* Effect.forEach(checkoutRoots, (checkoutRoot) => repoScopedCandidates(checkoutRoot, includes, policy), {
+      concurrency: 2,
+    })
+  );
   const beepCache = includes("beep-cache-disposable")
     ? yield* topLevelDirectoryCandidates(
         beepCacheRoot,
         homeBoundary,
         "beep-cache-disposable",
-        nowMillis,
+        policy.nowMillis,
         maxAgeDays,
-        entryCap,
-        cwdProbe
+        policy.entryCap,
+        policy.cwdProbe
       )
     : A.empty<ResidueReapCandidate>();
-  const discovered = A.appendAll(A.appendAll(sessions, worktrees), A.appendAll(turbo, beepCache));
+  const sharedTurbo = includes("shared-turbo-cache")
+    ? yield* sharedTurboCacheCandidates(sharedTurboCacheRoot, policy, sharedTurboMaxAgeDays, sharedTurboMaxBytes)
+    : { candidates: A.empty<ResidueReapCandidate>(), warnings: A.empty<string>() };
+  const views = includes("qualification-views")
+    ? yield* assessQualificationViews(path.join(beepCacheRoot, "turbo-qualification"), policy, () => true)
+    : A.empty<ResidueReapCandidate>();
+  const discovered = A.flatten([sessions, worktrees, repoScoped, beepCache, sharedTurbo.candidates, views]);
   const apply = O.getOrElse(O.fromUndefinedOr(options.apply), () => false);
+  const outerBoundary = Effect.fnUntraced(function* (
+    entry: ResidueReapCandidate
+  ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+    return isRepoScopedResidueClass(entry.reapClass)
+      ? yield* fs
+          .realPath(O.getOrElse(O.fromUndefinedOr(entry.checkoutRoot), () => resolvedRepoRoot))
+          .pipe(Effect.option)
+      : O.some(homeBoundary);
+  });
   const outcomes = apply
     ? yield* Effect.forEach(
         discovered,
-        (entry) =>
-          applyCandidate(
-            entry,
-            ResidueReapClass.is["turbo-cache"](entry.reapClass) ? repoBoundary : O.some(homeBoundary),
-            nowMillis,
-            maxAgeDays,
-            turboMaxAgeDays,
-            entryCap,
-            cwdProbe
-          ),
+        Effect.fnUntraced(function* (entry) {
+          return yield* applyCandidate(entry, yield* outerBoundary(entry), policy);
+        }),
         { concurrency: 1 }
       )
     : A.map(
@@ -969,11 +1649,18 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
     repoRoot: resolvedRepoRoot,
     maxAgeDays,
     turboMaxAgeDays,
+    turboRunsMaxAgeDays,
+    sharedTurboCacheRoot,
+    sharedTurboMaxAgeDays,
+    sharedTurboMaxBytes,
+    qualificationViewsKeep,
+    fleet: O.getOrElse(O.fromUndefinedOr(options.fleet), () => false),
+    checkoutRoots,
     applied: apply,
     classes,
     candidates: A.map(outcomes, (outcome) => outcome.candidate),
     reapedCount: A.length(A.filter(outcomes, (outcome) => outcome.reaped)),
     reclaimedBytes: A.reduce(outcomes, 0, (total, outcome) => total + outcome.reclaimedBytes),
-    warnings: A.flatten(A.map(outcomes, (outcome) => outcome.warnings)),
+    warnings: A.appendAll(sharedTurbo.warnings, A.flatten(A.map(outcomes, (outcome) => outcome.warnings))),
   });
 });
