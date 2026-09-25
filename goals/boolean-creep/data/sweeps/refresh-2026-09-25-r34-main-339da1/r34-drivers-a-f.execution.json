@@ -1,0 +1,22 @@
+{
+  "lane": "r34-drivers-a-f",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T02:19:37.507704+00:00",
+  "finished": "2026-09-25T02:24:00.873368+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/r34-drivers-a-f.jsonl` (validator: 0 records). Confirmed 0, disqualified 0.\n\nEvery assigned root was covered at `d99e4e073de5139552a97ee588117af59b8251c0`, including non-TypeScript absence (the lane is `.ts` only). Generated surfaces (`_generated`, `schema.gen.ts`, `Ecfr.gen.ts`, `Box.models.gen.ts`) were excluded. No new or changed in-net cluster.\n\nSeed withdrawals under the two-boolean owner rule (owners still exist; a non-boolean sibling was the second member): `CosmosBackendSelection` (`backend` is an enum; the cosmos/sigma pairing at `Cosmos.backend.ts:171` is unchanged), `BoxEntitlements`, `FirecrawlSdkAgentRequest`, `BrowserSessionShape`, `QueueStatusShape`, `AgentResponseShape`, `AgentStatusShape`, `BrowserCreateShape`, `BrowserDeleteShape`, `BrowserListShape`, and the three `FirecrawlError*` `retryable`/`retryAfterSeconds` owners. Two-boolean seeds (`logIncoming`/`logOutgoing`, cosmos graph flags, monitor email, `judgeDegraded`/`searchCompleted`, browser `killed`/`success` plus the error subclusters, DuckDB `began`/`closed`, ACP protocol capability objects, filesystem `force`/`recursive`, property descriptors) still match their recorded classifications. `vendor.d.ts` `Graph` config still omits `renderLinks` and `scalePointsOnZoom`; those remain on `CosmosGraphConfig` only.",
+  "transcriptSha256": "2dca898fa36757ee4ef3cd3f35ed3904a1a14d0057b026017375f18204306fae",
+  "runnerSha256": "d8db401443b10416f1050ee73177d43d17c459a516226969361b40537a1ca0f7",
+  "seedSha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

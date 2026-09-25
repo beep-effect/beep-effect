@@ -1,0 +1,5 @@
+# R38 prepared publish owner recall audit
+
+Withdraw yeet-prepared-publish-commit and archive its design. The complete private tuple at Handler.ts776 has exactly two elements: skipCommit:boolean and stash:Option<YeetStashState>. There are no spreads, intersections or inherited sibling fields. The optional stash is a payload, not a second actual Boolean; nested stash state cannot supply another sibling. The tuple fails the complete-owner two-Boolean recall threshold.
+
+The complete producers at778–831 still return true/None for existing commit795 or reusable proof826, and false/stash808 after protected commit. Their meaningful4/3 flag/payload relation does not waive eligibility. No production source, restoration behavior or consumer is changed. The private design-reference scan found no other live design naming the ID or tuple symbol. Preserve exact old row and design, without adding a D replacement. No P3 or dry credit.

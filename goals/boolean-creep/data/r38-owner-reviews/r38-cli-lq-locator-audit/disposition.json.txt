@@ -1,0 +1,146 @@
+{
+  "kind": "r38-cli-lq-locator-audit/v1",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "one-docgen-metadata-refresh-three-other-claims-no-drift",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "sha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      },
+      "priorR37ReceiptHashMatch": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "56951ce1a99404c4a607a898f6ecb8e208c8d42442c5f8f6feda444496d1b5cf",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      },
+      "priorR37ReceiptHashMatch": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      },
+      "priorR37ReceiptHashMatch": null
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      },
+      "priorR37ReceiptHashMatch": null
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "sha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "56951ce1a99404c4a607a898f6ecb8e208c8d42442c5f8f6feda444496d1b5cf"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+      "sha256": "942a8b273b4a346e6c804041db75c4f24a6a0822a987fb7d16774dc776618252"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r37-cli-lq-audit/disposition.json",
+      "sha256": "775e88a53cdbff02f28bea5e5b7f888f2b8aa56a0a325734a9cec17a191cd451"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-l-q.ndjson",
+      "sha256": "bcb69544236802f309aed422dac4abd5306aff1a474a0e70b320360b76da08b2"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-l-q.execution.json",
+      "sha256": "477453c9d1da0de7106fed9f2c128d1a82180919cbd0502f02647d8f17db60c5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-l-q.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/package-verify-step-outcome.md",
+      "sha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+      "sha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee"
+    }
+  ],
+  "replacementIds": [
+    "package-inventory-docgen-coverage"
+  ],
+  "designReplacementIds": [
+    "package-inventory-docgen-coverage"
+  ],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "trackedEdits": false,
+  "outputs": [
+    {
+      "file": "original-rows.jsonl",
+      "sha256": "761ae3d1a828eac27c54709f7f9559ceb42d76ad468022ad4f4cc034c81dcc83"
+    },
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "c692e4e2cdc8731ef339737c546c8c1041b252554e8f63f813fb5d4b6309865b"
+    },
+    {
+      "file": "package-inventory-docgen-coverage.original.md",
+      "sha256": "942a8b273b4a346e6c804041db75c4f24a6a0822a987fb7d16774dc776618252"
+    },
+    {
+      "file": "package-inventory-docgen-coverage.replacement.md",
+      "sha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "35cd42d929b436686810e963d5be021c60ca3b2b9152cfdd61a116caa77d0bae"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "lane": "r37-drivers-n-r",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:36:24.416268+00:00",
+  "finished": "2026-09-25T07:38:44.907904+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-drivers-n-r.jsonl`\n\n**Counts:** 0 confirmed, 0 disqualified (validator: 0 records, OK).\n\n**Coverage:** Every assigned root under the 15 driver `src` trees was scanned, excluding tests, `test/` directories, and `_generated`.\n\n**Seeds:** All 28 canonical lane clusters still match their owners, members, and classifications. No withdrawals. `StreamState` evidence at lines 822 and 846 and `MigrationJournalShapeRow` at 473 and 476 are unchanged. No new two-boolean owner. Single-boolean shapes (`FileInfoOutput.exists`, `PhoenixPromptReadResult.exists`, probe `ok` plus a string error, `RunpodRawRequest.authenticated`) stay out of the net.",
+  "transcriptSha256": "44e62e843fe5f2eb26b1524a7b0ad3f26b172fdb429cf19da1d31802efab838e",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

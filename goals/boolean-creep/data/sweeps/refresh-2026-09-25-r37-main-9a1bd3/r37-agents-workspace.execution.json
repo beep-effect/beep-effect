@@ -1,0 +1,22 @@
+{
+  "lane": "r37-agents-workspace",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:38:36.471381+00:00",
+  "finished": "2026-09-25T07:39:38.339289+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-agents-workspace.jsonl`\n\n**Counts:** 0 confirmed, 0 disqualified (validator: 0 records).\n\n**Coverage:** All nine assigned roots were scanned (source files only; no non-TypeScript or template files in those trees).\n\n**Seeds:** `TextInline` (`bold`, `italic`, `code`) is still D1 \u2014 `inlineToMd` treats `code === true` as a priority return, and the other marks still combine. `ScanState` (`escaped`, `inBlocksArray`, `inString`) is still the same E4 phase latch. Neither record changed, so neither was rewritten. No extra cluster on those owners.\n\n**Out of net:** lone booleans only (`requiresApproval`, `headerRow`, `holdingAfterFailure`) and predicate functions. No unresolved source question.",
+  "transcriptSha256": "aab166ab98e5cb113b34267a63f8741d5632e0fa7755e0045992f1b12b12807f",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

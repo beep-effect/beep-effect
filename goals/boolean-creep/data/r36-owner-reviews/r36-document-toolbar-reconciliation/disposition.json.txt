@@ -1,0 +1,139 @@
+{
+  "verdict": "admit-minimal-call-site-E4-with-compatible-design",
+  "supersedes": "history-provisional-rejection/disposition.json",
+  "sourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMain": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "inputs": [
+    {
+      "path": "packages/ontology/ui/src/aggregates/Session/Session.document.tsx",
+      "sha256": "88bb747b1a1c6e9d62dbac72027fa5f7e478ce4e0321a0726bd502cac0b6bccd"
+    },
+    {
+      "path": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "sha256": "a05fc428414d4d7fedc76c515d04a9a60d9f3470434e2e88d6beb7ef8807227c"
+    },
+    {
+      "path": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "sha256": "06b398df136d9892f922afed231947cc8722259a7d261a5c25e61bbb7d8fc3b8"
+    },
+    {
+      "path": "goals/boolean-creep/designs/document-toolbar-busy-disabled.md",
+      "sha256": "207bae595ea4980394db93390b6950c5ec4d3aa83c6ddaa23d5b5c034eebc28d"
+    },
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    },
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "956799a314990e1d51224758650c34f1ce2e64e44b42d29c5395631966fabd76"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a786b5b77f17f786f5988ccade2d48c49d0c8f8f46d332a8b5f4c8e441a5951f"
+    },
+    {
+      "path": "node_modules/@effect/atom-react/package.json",
+      "sha256": "b9916d974da8216e52a2263a22a036ca98c5572dbe67d28ff73e52ce48161bf2"
+    },
+    {
+      "path": "node_modules/@effect/atom-react/src/Hooks.ts",
+      "sha256": "a55441b549e067470269b5c5ec7db13945bb8a82950100a4be3eafbf7496554c"
+    },
+    {
+      "path": "node_modules/effect/package.json",
+      "sha256": "5e3b27a25a53fa0b799fe2667d39b2f5371a15a8c69d21af58e9823557111e1b"
+    },
+    {
+      "path": "node_modules/effect/src/unstable/reactivity/AtomRegistry.ts",
+      "sha256": "f5f6b89fb37e03522b4a093d8ddb7ad996d50340edca3ec633f2c0ece8fde4ca"
+    },
+    {
+      "path": "node_modules/effect/src/unstable/reactivity/Atom.ts",
+      "sha256": "bd9bd5d6a84c30aee6a146f0c0338ed2f73a80ea584001e95060ccbf28f34d71"
+    },
+    {
+      "path": "node_modules/react/package.json",
+      "sha256": "6e003e4e9ed25afa7fdd55613f8aa877cefa9b359d9c13f81ee704030248e24e"
+    },
+    {
+      "path": "node_modules/react-dom/package.json",
+      "sha256": "136d4af63de473392ea79d6a21932b0ed9eb37fe518ce70f4621250f3d79e9bb"
+    },
+    {
+      "path": "node_modules/react-dom/cjs/react-dom-client.development.js",
+      "sha256": "c10b5e5ad37ca22c88b58bf4ada9a3b655ab79934c0b5cc6bad26f42c774584f"
+    },
+    {
+      "path": ".repos/effect/packages/atom/react/src/Hooks.ts",
+      "sha256": "f566dd39e9fc7f20da975ca0d19f96fef6ee9238741ffe04ca21fc045a9bfba1"
+    },
+    {
+      "path": "goals/boolean-creep/ops/validate-designs.ts",
+      "sha256": "1f3a7ea87ff409b5ce591413e52507b0f69bbe68121517c33587c8bd85913e5a"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-epistemic-ontology.jsonl",
+      "sha256": "1103dd90c04901737869ca9acf1dfd36b99c87390d78eaf2d58e9736a2fe0bbb"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-epistemic-ontology.execution.json",
+      "sha256": "3f65a200a12eb14026feaf3cbdd8480bdc8ac1e21e587b78e7008bda756486c0"
+    }
+  ],
+  "candidate": "r36-epistemic-ontology-document-toolbar-input",
+  "openProofQuestions": [],
+  "delta": {
+    "rows": 1,
+    "qualified": 1,
+    "designs": 1
+  },
+  "existingDesignReplacement": "document-toolbar-busy-disabled.replacement.md",
+  "supportedHelperInputs": 32,
+  "minimalPair": {
+    "representable": 4,
+    "legal": 3
+  },
+  "completeOwnerBooleanCount": 5,
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "path": "compatibility-table.json",
+      "sha256": "5c840f9a0f2828806019cc46e45b4f4cb78c5ae32536d0196407fe1de8b8032d"
+    },
+    {
+      "path": "design-validation.json",
+      "sha256": "b22500128cb39134a952b0a6bf35f44749bbf463c923b35fc25f26647b3db6e3"
+    },
+    {
+      "path": "disposition.md",
+      "sha256": "56b85682577deeb5fa0623edc52c4880f07bc6c6715b3d2712f69cb6dfa72a15"
+    },
+    {
+      "path": "document-toolbar-busy-disabled.replacement.md",
+      "sha256": "d884d0709fcb163cdf32955eb25f9b4ea724a7585dcee37b3773d89aa8d131ba"
+    },
+    {
+      "path": "history-provisional-rejection/disposition.md",
+      "sha256": "98572bdba92e050018bb6bba3295c26a735f09d4a604a8132d568319a2a7043f"
+    },
+    {
+      "path": "proposed-rows.jsonl",
+      "sha256": "5542460d03f15925050ccd2f229aa35008ffb6f962798229006baf5c4dfb69d4"
+    },
+    {
+      "path": "r36-epistemic-ontology-document-toolbar-input.md",
+      "sha256": "49d5ed42d938299f25d442b77bcc23d2b3a89fe6688d913694bcedc6007338bf"
+    }
+  ]
+}

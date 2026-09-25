@@ -1,0 +1,18 @@
+# R38 R–Z complete-owner recall audit
+
+Withdraw four designed Q rows and archive their four designs. Do not create D replacements. This supersedes the primary footer's unchanged-classification assertion for these owners.
+
+| Complete actual owner | Complete fields | Actual Booleans |
+| --- | --- | --- |
+| ProcessCwdReading, Fleet599–602 | cwd:Option<string>, unreadable:boolean |1|
+| BranchDiffReading, Fleet997–1001 | count:number/null, paths:string array, probeFailed:boolean |1|
+| PolicyReading, Fleet1022–1027 | movement:indexed literal type, reason:indexed nullable literal type, paths:string array, probeFailed:boolean |1|
+| IdleReading, Reap89–92 | hours:Option<number>, failed:boolean |1|
+
+All four are direct type literals, without extends/intersections/mapped members or spreads that introduce Boolean members. Concrete producers preserve exactly those fields. Policy's indexed aliases resolve via FleetCheckout.policyMovement1250 and policyReason1251 to FleetPolicyMovement1119 (moved/unmoved/unknown) and NullOr(FleetUnknownReason1147), a four-string reason kit. Indexing those properties does not inherit FleetCheckout's other fields, including detached. No alias supplies another Boolean. Arrays, magnitude, nullness and Option presence are not Boolean fields for recall. E3 evidence of a one-Boolean payload relation is insufficient without an eligible larger complete owner; none exists here. Nearby aggregate types are distinct owners and must not be flattened in.
+
+Retain eligible PrClassification81–87: failed and reusedBranch are actual Booleans. Its four reapClass values and two Option payload presences may therefore contribute to its existing64/5 relation. Refresh full writers/readers only. Retain Docker tag pair4/3; move anchor423 and evidence426. PorcelainAccumulator604 remains an eligible three-Boolean external-token mirror; refresh only stale parser-note locations. The separate detached/branch D2 row needs no change.
+
+Design-dependency scan finds policy/branch-diff mutual coordination; both are withdrawn together. Other references are listed in JSON and remain historical unless they are the archived owner itself. No runtime helpers are deleted, and no surviving design receives implementation credit. Four exact originals are archived privately. Two retained design replacements supply current source-location supplements without semantic changes.
+
+Net delta:−4rows/−4qualified/−4designs, with3metadata replacements and0new D rows. Source/current main and primary transcript hashes verified. No tracked edits/ref moves/P3/dry credit.

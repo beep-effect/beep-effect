@@ -1,0 +1,130 @@
+{
+  "kind": "r37-drivers-af-owner-locator-audit/v1",
+  "verdict": "retain-five-owner-anchors-correct-two-stale-note-cites",
+  "sourceHead": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "r36SourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "sourceBindings": [
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true
+      }
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "b4947b815dc00bdc6f4a4649c65c399823cd2ab874b8fe68e66385dee1c8d3c6",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true
+      }
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "77b2ebe107883442ea9b2987ece19d11fb63f6718aee106ad29bfc286f1aa6ac",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "b4947b815dc00bdc6f4a4649c65c399823cd2ab874b8fe68e66385dee1c8d3c6"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "77b2ebe107883442ea9b2987ece19d11fb63f6718aee106ad29bfc286f1aa6ac"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-drivers-a-f.execution.json",
+      "sha256": "2b05b1579b75e42eb444904652166c53cd6a520f06fdc56648da7e3c8f7e0082"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r37-main-9a1bd3/r37-drivers-a-f.ndjson",
+      "sha256": "a1a5dd4c77cd20219e857e2b8258a1fd1bd3bd4c8fe9583dab7315af5f65cd15"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-drivers-a-f.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "ownerAnchorDispositions": [
+    {
+      "id": "drivers-acp-protocol-logging-options",
+      "retainedAnchor": 282,
+      "reportedField": 284,
+      "reason": "S.Class declaration282; firstBoolean284 is an owned field, not moved declaration."
+    },
+    {
+      "id": "acp-client-protocol-capabilities",
+      "retainedAnchor": 841,
+      "reportedField": 851,
+      "reason": "clientProtocol actual object constructor starts841; supportsAck851 and supportsTransferables852 are members."
+    },
+    {
+      "id": "acp-server-protocol-capabilities",
+      "retainedAnchor": 856,
+      "reportedField": 869,
+      "reason": "serverProtocol actual object constructor starts856; firstBoolean supportsAck868, supportsNotifications869 is secondBoolean."
+    },
+    {
+      "id": "r29-acp-client-constructed-protocol-options",
+      "retainedAnchor": 472,
+      "reportedField": 477,
+      "reason": "Actual outer makeAcpPatchedProtocol object begins472; inner getSomesStruct475 transports Options and spreads concrete optionalflags477/478."
+    },
+    {
+      "id": "r29-acp-agent-constructed-protocol-options",
+      "retainedAnchor": 317,
+      "reportedField": 322,
+      "reason": "Actual outer makeAcpPatchedProtocol object begins317; inner getSomesStruct320 transports Options and spreads flags322/323."
+    }
+  ],
+  "proposedNoteCorrections": [
+    "r29-acp-client-constructed-protocol-options",
+    "r29-acp-agent-constructed-protocol-options"
+  ],
+  "lineAnchorChanges": [],
+  "designDependencies": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "8416bd555f236e2f2828b2787bf648401d745a34211c888a7adc2c2ca01ce39f"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "d6186d51c960ae64a1d7fe769cb831409d7d3d9cb118ba6c715e51deeb5795d6"
+    }
+  ]
+}

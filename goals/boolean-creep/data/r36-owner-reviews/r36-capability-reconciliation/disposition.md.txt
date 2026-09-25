@@ -1,0 +1,28 @@
+# R36 foundation-capability audit
+
+**Withdraw `r2-foundation-graph-validation-result` and archive its design. No D1 replacement.** Its complete instance owner at Types.ts527-558 contains only valid:Boolean, required errors:Array<String>, and required warnings:Array<String>. There is no domain inheritance or field spread. Static constructors and withWarnings preserve these same fields; callable helpers do not add Boolean instance members.
+
+The documented rule that errors imply invalidity is real, and invalid([]) remains supported. Neither changes campaign eligibility: errors is a required array, so empty/nonempty is not a second Boolean or optional payload presence. The current design's coarse four-state projection cannot replace the original >=2Boolean recall threshold. No owner-specific exception was found in SPEC/DECISIONS, and no other design depends on this migration.
+
+Preserve all runtime fields, constructors, warning aggregation and accepted invalid-empty behavior. This private disposition requests archival/removal only, not implementation.
+
+## Six locator claims
+
+All six current inventory anchors correctly identify their declaration. The footer's proposed destinations identify the first Boolean member, not a moved declaration. **No locator changes are needed.**
+
+| Owner | Declaration retained | First Boolean |
+| --- | ---: | ---: |
+| BackendCapabilities | 247 | 250 |
+| AnnotationOptions | 316 | 318 |
+| ShaclValidationResult | 284 | 286 |
+| SourceTextPageStruct | 131 | 134 |
+| UniqueMatchSearch | 32 | 33 |
+| ValidationResult | 527 | 530 |
+
+UniqueMatchSearch alone has one Boolean, but MinimalFoldMatchSearch at114 inherits ambiguous and adds exhausted at115. The existing combined record therefore has a real two-Boolean complete owner; do not extend the ValidationResult withdrawal to it. This bounded audit supplies no replacement P3 for that separate design.
+
+## Evidence and integration
+
+Source `35f8454d0414d8f79284fdc9e92c84379d919a3e`; origin/main `2bf1e16bbf368a962df32f912ef01b5f9860e7da`. All six reviewed source files match R36 frozen-input bindings. Exact input and proposal hashes are in disposition.json. metadata-updates.json records the six no-change decisions; withdrawn-rows.jsonl preserves the exact old qualification for archival. Keep the empty raw lane report and execution footer unchanged.
+
+Expected delta: **-1 inventory record, -1 qualified, no disqualified addition**. No tracked edits, ref moves, launch, implementation, P3 approval or dry-round credit.

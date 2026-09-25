@@ -1,0 +1,22 @@
+{
+  "lane": "r38-law-practice-domain",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:16:08.263327+00:00",
+  "finished": "2026-09-25T08:17:56.283249+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-law-practice-domain.jsonl`. It contains **0 confirmed** and **0 disqualified** records. The validator passed.\n\nEvery non-generated file under `packages/law-practice/domain/src` was covered. `internal/generated/**` was excluded. The seeded owners still match the current source and the canonical classifications, so nothing new was written.\n\nThe prompt seed for `FullCaseCitation` lists only `unpublished` and `hasBlankPage`. The canonical inventory already includes the inherited `inFootnote`, and the source still treats those three as independent. `PinciteInfo.isRange` is now at line 179. The inventory anchor at line 148 is still the class declaration. No classification changed.",
+  "transcriptSha256": "68ab9d7da0529b3126176e297f998ccc5a71686926ca887be5dbf27cd67beaa6",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

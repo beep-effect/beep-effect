@@ -1,0 +1,80 @@
+{
+  "kind": "r36-tool-name-owner-disposition/v1",
+  "createdAt": "2026-09-25T06:58:15.467993+00:00",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMainSha": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "inputSha256": {
+    "packages/drivers/gov-legal-mcp/src/ToolNames.ts": "3b2294360e6d1b50f42005402726beb17104ada129a26939e8c83d4f8feceb75",
+    "packages/drivers/gov-legal-mcp/test/Server.test.ts": "2f66f013f88d9f4748dd45f3a695f6f963df0cf85dfd51556ff01624b7283df5",
+    "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md": "55b954178f12e18e54c91a4c3967316de65c4d4c422f8ae9d5bfe16e97a3166d",
+    "goals/boolean-creep/data/inventory.jsonl": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-drivers-g-m.jsonl": "734b28c48676f40de9f03c864d2801fc446e818546c64d9d9759c87ad3c71cad",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-drivers-g-m.execution.json": "387cd2ab2a3cf54ee2175fa24953efb5ba900d776561dd2e563ddb905f22ec5b"
+  },
+  "reviewedRawId": "r36-drivers-g-m-tool-name-collision-row-truncation",
+  "decision": "reject-outside-recall",
+  "owner": {
+    "symbol": "ToolNameCollisionRow",
+    "declarationLine": 145,
+    "firstAndOnlyBooleanLine": 154,
+    "fields": {
+      "candidate": "NonEmptyString",
+      "digest": "NullOr(String)",
+      "duplicateVerdict": "RowDuplicateVerdict literal domain",
+      "finalWireName": "NormalizedWireName string",
+      "normalized": "NormalizedWireName string",
+      "originalOperationId": "NonEmptyString",
+      "source": "NonEmptyString",
+      "truncated": "Boolean"
+    },
+    "inheritanceOrSpreads": "Direct S.Class fields; no inherited or spread domain fields. Report container176-185 has candidate array plus verdict/version literals and adds no sibling row Boolean.",
+    "booleanMemberCount": 1
+  },
+  "producerAndConsumerAssessment": {
+    "toolNameRow": "322-338 derives truncated=O.isSome(digest), computes finalWireName and stores digest as null|string. This proves a correlation for producer outputs, not recall eligibility.",
+    "copyWriter": "collisionReportFromRows502-510 spreads existing row and changes only duplicateVerdict. Its two Boolean locals497-498 belong to the enclosing stage scope, not each row.",
+    "publicContract": "Exported row.make and schema are public; documented example128-138 and round-trip test653 establish a decoded/codec surface. Absence of a disk consumer does not establish that arbitrary structurally accepted row combinations may be rejected. No source change or narrowing is authorized.",
+    "finiteProjection": "The raw4/2 coarse Boolean/digest-presence projection describes the internal producer image; digest remains nullable text with string payloads. It does not become two Booleans and is not adopted as the full exported input contract."
+  },
+  "existingStageAssessment": {
+    "id": "r3-drivers-arch-tool-name-collision-stage-flags",
+    "decision": "retain-unchanged",
+    "members": [
+      "hasNormalizedDuplicates",
+      "hasFinalDuplicates"
+    ],
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "reason": "Private collisionReportFromRows has two actual Boolean locals. Its deterministic normalization/final-name call closure is a distinct eligible owner. Existing design explicitly excludes row truncated/digest and carries no row migration dependency. The raw proposal is not a duplicate stage cluster; it fails its own owner recall gate."
+  },
+  "inventoryActions": {
+    "addIds": [],
+    "updateIds": [],
+    "withdrawIds": [],
+    "rejectRawIds": [
+      "r36-drivers-g-m-tool-name-collision-row-truncation"
+    ]
+  },
+  "designActions": {
+    "newDesigns": [],
+    "replacementDesigns": [],
+    "retain": [
+      "r3-drivers-arch-tool-name-collision-stage-flags"
+    ]
+  },
+  "expectedInventoryDelta": {
+    "records": 0,
+    "qualified": 0,
+    "disqualified": 0
+  },
+  "sourceMatchesFrozenR36Binding": true,
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationCredit": false,
+  "trackedFilesModified": false,
+  "refsMoved": false
+}

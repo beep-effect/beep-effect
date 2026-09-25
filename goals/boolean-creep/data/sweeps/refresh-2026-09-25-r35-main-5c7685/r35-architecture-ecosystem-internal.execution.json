@@ -1,0 +1,22 @@
+{
+  "lane": "r35-architecture-ecosystem-internal",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:20:41.712450+00:00",
+  "finished": "2026-09-25T06:22:32.222789+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-architecture-ecosystem-internal.jsonl`\n\nConfirmed 0, disqualified 0. Validator: `inventory OK: 0 records`. All nine assigned roots were covered (114 authored TypeScript files; no non-TypeScript sources).\n\nThe three seeds still match their D1 rulings. `WorkItemPublicConfig` (line 49) and `readWorkItemConfig.envFlags` (line 113) are unchanged. `Meta` (`hasDefault`, `primaryKey`, `unique`, `version`, first member line 273) is still independent column intent. `generated`, `identity`, and `indexed` are `false`-or-payload sentinels, not extra Boolean members. No withdrawals and no unresolved source question. Out of net: `Timestamp.withTimezone`, `IndexIntent.unique`, `Classified.nullable`, and `Edge.optional` are single Booleans; the extras `isNamed`/`hasColumns` helpers are predicates.",
+  "transcriptSha256": "695f2a19508a13bbe64979343493c23a72d7e223daa11c66f176afb9de1313a7",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

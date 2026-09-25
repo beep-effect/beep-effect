@@ -1,0 +1,196 @@
+{
+  "kind": "r38-cli-rz-owner-audit/v1",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "withdraw-four-below-recall-retain-pr-docker-and-porcelain",
+  "withdrawnIds": [
+    "worktree-process-cwd-reading",
+    "worktree-branch-diff-reading",
+    "worktree-policy-reading",
+    "worktree-idle-reading"
+  ],
+  "actualBooleanCounts": {
+    "worktree-process-cwd-reading": 1,
+    "worktree-branch-diff-reading": 1,
+    "worktree-policy-reading": 1,
+    "worktree-idle-reading": 1
+  },
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "sha256": "fd8245c3458c1a0e1bb3b4a246ab98aafbaba25b78e9d717438edbe5fe60e3d1",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "sha256": "1d23d973237fd81a18d4ec653b4c738821e8cb9a7361c477094de609276e2e1d",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts",
+      "sha256": "1e7c5924b2d4e06535e43681a953c5407c6762406859521d6c1fd057285e3660",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "sha256": "fd8245c3458c1a0e1bb3b4a246ab98aafbaba25b78e9d717438edbe5fe60e3d1"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+      "sha256": "1d23d973237fd81a18d4ec653b4c738821e8cb9a7361c477094de609276e2e1d"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts",
+      "sha256": "1e7c5924b2d4e06535e43681a953c5407c6762406859521d6c1fd057285e3660"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/worktree-process-cwd-reading.md",
+      "sha256": "07bc173a35de3324ab16386c2e923b631658ce23528ad5e1f9310d3922492cc6"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/worktree-branch-diff-reading.md",
+      "sha256": "ab1b08a9e27c57d68c146e7d0c87d91a6cb840e30c17c7fdbc29d6ac1eba785e"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/worktree-policy-reading.md",
+      "sha256": "5edba3e00bb7a23d1752427f72008eafc62e2aeffc98df4e602a6235e603088f"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/worktree-idle-reading.md",
+      "sha256": "36b1074aaadc0212617ddaa417179fdac374c3a45d29c1a0abd044d5ae718b77"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/worktree-pr-classification.md",
+      "sha256": "f2f2d2f91081718ee617b43a2b7ac6f4710fc86508b58e326b5499801b93a7d8"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/r3-tooling-docker-tag-kind-flags.md",
+      "sha256": "631a01ff29db947a3fd05648c3e5acf412a2779d44490cb845a2247822a863e7"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-r-z.ndjson",
+      "sha256": "de04fbd7f96593fa86209370e82ba39931aa2303c98954550a57d17ffe3e44d3"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-r-z.execution.json",
+      "sha256": "0c84bfec3d246980c46969c65ccef5fb1f06da46aab0f0880f85c6fba986eb1d"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-r-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "designDependencies": {
+    "worktree-process-cwd-reading": [],
+    "worktree-branch-diff-reading": [
+      "goals/boolean-creep/designs/worktree-policy-reading.md"
+    ],
+    "worktree-policy-reading": [
+      "goals/boolean-creep/designs/worktree-branch-diff-reading.md"
+    ],
+    "worktree-idle-reading": []
+  },
+  "metadataReplacementIds": [
+    "worktree-pr-classification",
+    "r3-tooling-docker-tag-kind-flags",
+    "worktree-porcelain-accumulator"
+  ],
+  "delta": {
+    "rows": -4,
+    "qualified": -4,
+    "designs": -4,
+    "disqualified": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "trackedEdits": false,
+  "outputs": [
+    {
+      "file": "withdrawn-rows.jsonl",
+      "sha256": "8c5436987da82d7c3ce4d8cad2da3198e55598ddcb558dfcbcfcad21a8d33ea7"
+    },
+    {
+      "file": "worktree-process-cwd-reading.withdrawn-design.md",
+      "sha256": "07bc173a35de3324ab16386c2e923b631658ce23528ad5e1f9310d3922492cc6"
+    },
+    {
+      "file": "worktree-branch-diff-reading.withdrawn-design.md",
+      "sha256": "ab1b08a9e27c57d68c146e7d0c87d91a6cb840e30c17c7fdbc29d6ac1eba785e"
+    },
+    {
+      "file": "worktree-policy-reading.withdrawn-design.md",
+      "sha256": "5edba3e00bb7a23d1752427f72008eafc62e2aeffc98df4e602a6235e603088f"
+    },
+    {
+      "file": "worktree-idle-reading.withdrawn-design.md",
+      "sha256": "36b1074aaadc0212617ddaa417179fdac374c3a45d29c1a0abd044d5ae718b77"
+    },
+    {
+      "file": "design-archive-list.json",
+      "sha256": "8b706b7e049267b7a0bf17080ab049db09618731898a1a226ede02c26cb7ff89"
+    },
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "3b3f1709c3a602d491393c3402070a2693eb77b1033918949ad6a5e9020f4b6d"
+    },
+    {
+      "file": "original-metadata-rows.jsonl",
+      "sha256": "67cabb46dc9ed1d158ded9d13f3dfee2ebe181ae7533d7e7bef7b052287ce608"
+    },
+    {
+      "file": "worktree-pr-classification.original.md",
+      "sha256": "f2f2d2f91081718ee617b43a2b7ac6f4710fc86508b58e326b5499801b93a7d8"
+    },
+    {
+      "file": "worktree-pr-classification.replacement.md",
+      "sha256": "b88fa57c879c98f9343ffe37248786a935f17fc715e56c67fa92394f8bb9231b"
+    },
+    {
+      "file": "r3-tooling-docker-tag-kind-flags.original.md",
+      "sha256": "631a01ff29db947a3fd05648c3e5acf412a2779d44490cb845a2247822a863e7"
+    },
+    {
+      "file": "r3-tooling-docker-tag-kind-flags.replacement.md",
+      "sha256": "3975a7ab75eebd9a06c59d5492c9216dc4e99ae51572ff17c148aff576ebe10d"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "4244f499582f0aa571756576c05c3a8ec5f9980353cbae0908ce038dbf4d876b"
+    }
+  ]
+}

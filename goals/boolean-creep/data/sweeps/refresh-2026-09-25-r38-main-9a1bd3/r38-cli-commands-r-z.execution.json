@@ -1,0 +1,22 @@
+{
+  "lane": "r38-cli-commands-r-z",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:22:03.497536+00:00",
+  "finished": "2026-09-25T08:25:11.133516+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-r-z.jsonl`. It contains 0 confirmed and 0 disqualified records. Every assigned root was covered, including `Root.ts` and `TopoSort`.\n\nThe source SHA matches `ab77f10cb74ad96404b05d1ab5a1d4968cef847b`. All seeded owners, members, and classifications still hold, so nothing was withdrawn or rewritten. A few canonical line citations have drifted without changing the ruling: the porcelain accumulator note still points at the old 383\u2013471 range while the live parser is at `Worktree.schemas.ts:626\u2013673`, and the Docker tag-kind, process-cwd, branch-diff, policy, idle, and PR-classification declaration lines have shifted by a few lines. No source question is unresolved.",
+  "transcriptSha256": "de04fbd7f96593fa86209370e82ba39931aa2303c98954550a57d17ffe3e44d3",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}
