@@ -1,4 +1,5 @@
 {
+  "kind": "health",
   "finding_counts": {
     "apps/oip-web/src/components/ContactForm.tsx": {
       "complexity_moderate": {
@@ -110,11 +111,6 @@
         "count": 1
       }
     },
-    "packages/ecosystem/effect-drizzle/src/pg/derive.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts": {
       "complexity_moderate": {
         "count": 1
@@ -134,14 +130,8 @@
       }
     },
     "packages/foundation/modeling/rdf/src/Iri.ts": {
-      "complexity_high": {
-        "count": 1
-      },
       "complexity_moderate": {
         "count": 5
-      },
-      "crap_high": {
-        "count": 1
       },
       "crap_moderate": {
         "count": 4
@@ -574,21 +564,11 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts": {
       "complexity_high": {
         "count": 1
       },
       "crap_high": {
-        "count": 1
-      }
-    },
-    "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-      "complexity_moderate": {
         "count": 1
       }
     },
@@ -636,11 +616,6 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts": {
       "complexity_moderate": {
         "count": 3
@@ -656,17 +631,7 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ResolverService.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/YamlFileUpdater.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts": {
       "complexity_moderate": {
         "count": 1
       }
