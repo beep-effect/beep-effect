@@ -103,6 +103,8 @@ describe("reference planning and refresh", () => {
         .use((service) => service.refresh(f.home, f.root, 3))
         .pipe(Effect.provide(f.service));
       expect(status.members.map((report) => report.outcome)).toEqual(["pulled", "unchanged"]);
+      const exclude = yield* f.fs.readFileString(f.path.join(f.root, "effect", ".git", "info", "exclude"));
+      expect(exclude).toBe("graft/\n.graft/\n.ignore\n");
       const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
       expect(log).toContain(
         "graft effect build --deep --allow-partial -j 3 --only-dir packages/effect --only-dir packages/platform env=1"

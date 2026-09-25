@@ -114,6 +114,9 @@ link_reference() {
       log "cloning ${MEMBER_NAME} reference into ${MEMBER_ROOT}"
       mkdir -p "${REFERENCES_ROOT}"
       git clone --quiet "${MEMBER_URL}" "${MEMBER_ROOT}"
+      # graft writes graft/, .graft/ and .ignore into the clone; exclude them per clone (R3).
+      mkdir -p "${MEMBER_ROOT}/.git/info"
+      printf 'graft/\n.graft/\n.ignore\n' >> "${MEMBER_ROOT}/.git/info/exclude"
     fi
     link_reference ".repos/${MEMBER_NAME}" "${MEMBER_ROOT}"
   done

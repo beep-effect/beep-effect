@@ -11,6 +11,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -38,6 +39,9 @@ import {
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ReferenceMember } from "./Refs.schemas.ts";
+
+/** Untracked artifacts graft leaves in a member; excluded per clone, never via .gitignore (R3). */
+const GRAFT_EXCLUDE_ENTRIES: ReadonlyArray<string> = ["graft/", ".graft/", ".ignore"];
 
 const $I = $RepoCliId.create("commands/Refs/Refs.service");
 
@@ -253,6 +257,27 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       if (!S.is(S.Int.check(S.isGreaterThan(0)))(jobs))
         return yield* ReferenceWorkspaceError.make({ path: root, message: "--jobs must be a positive integer." });
       const manifest = yield* readManifest();
+      const ensureGraftExcludes = Effect.fnUntraced(function* (cwd: string) {
+        const gitDir = path.join(cwd, ".git");
+        const gitInfo = yield* fs
+          .stat(gitDir)
+          .pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata.")));
+        // A linked worktree keeps a .git file; its exclude file lives elsewhere, so skip it.
+        if (gitInfo.type !== "Directory") return;
+        const infoDir = path.join(gitDir, "info");
+        const excludeFile = path.join(infoDir, "exclude");
+        yield* fs
+          .makeDirectory(infoDir, { recursive: true })
+          .pipe(Effect.mapError(ioError(cwd, "Cannot create .git/info.")));
+        const existing = yield* fs.readFileString(excludeFile).pipe(Effect.orElseSucceed(() => ""));
+        const present = HashSet.fromIterable(Str.split(existing, "\n"));
+        const missing = A.filter(GRAFT_EXCLUDE_ENTRIES, (entry) => !HashSet.has(present, entry));
+        if (!A.isReadonlyArrayNonEmpty(missing)) return;
+        const separator = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
+        yield* fs
+          .writeFileString(excludeFile, `${existing}${separator}${A.join(missing, "\n")}\n`)
+          .pipe(Effect.mapError(ioError(cwd, "Cannot write .git/info/exclude.")));
+      });
       let reports = HashMap.empty<string, MemberRefreshReport>();
       for (const member of manifest.members) {
         const cwd = path.join(root, member.name);
@@ -267,6 +292,9 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
               .pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata."))))
           )
             return report("pull-failed");
+          // graft writes graft/, .graft/ and .ignore into the member; keep them out of the
+          // cleanliness check without touching the member's tracked .gitignore (R3).
+          yield* ensureGraftExcludes(cwd);
           const dirty = yield* git(["status", "--porcelain", "--untracked-files=all"]);
           if (dirty.exitCode !== 0) return report("pull-failed");
           if (Str.isNonEmpty(dirty.output)) return report("skipped-dirty");

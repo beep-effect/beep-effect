@@ -58,8 +58,8 @@ const timerCommand = Command.make(
     owner: Flag.String("owner").pipe(Flag.optional),
     onCalendar: Flag.String("on-calendar").pipe(Flag.optional),
     bunPath: Flag.String("bun-path").pipe(Flag.optional),
-    refresh: Flag.Boolean("refresh"),
-    uninstall: Flag.Boolean("uninstall"),
+    refresh: Flag.Boolean("refresh").pipe(Flag.withDefault(false)),
+    uninstall: Flag.Boolean("uninstall").pipe(Flag.withDefault(false)),
   },
   Effect.fn("Refs.installTimer")(function* (options) {
     const home = yield* homeConfig;
