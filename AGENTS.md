@@ -172,9 +172,10 @@ Runbook: `docs/runbooks/agent-pools.md`.
   `cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>`.
   The trailing `cd` moves the shell to the swept clone. When the merged
   change touched a systemd unit renderer, follow with
-  `bun run beep research install-timers --refresh` and/or
-  `bun run beep graft deep install-timer --refresh` (the latter is the only
-  agent-allowed form of that command) from the swept clone — the installed
+  `bun run beep research install-timers --refresh`,
+  `bun run beep graft deep install-timer --refresh`, and/or
+  `bun run beep refs install-timer --refresh` (the `--refresh` forms are the
+  only agent-allowed forms of those commands) from the swept clone — the installed
   units are snapshots and stay stale until re-rendered. These are granted Bash
   permissions; do not hand them back to the operator. Runbook:
   `docs/runbooks/systemd-timers.md`.

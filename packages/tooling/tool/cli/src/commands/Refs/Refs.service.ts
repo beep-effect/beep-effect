@@ -347,16 +347,23 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       const temporary = yield* fs.makeTempFile({ directory: stateDir, prefix: ".refresh-" });
       yield* fs.writeFileString(temporary, `${encoded}\n`);
       yield* fs.rename(temporary, statusPath);
+      // Intentional skips (dirty or off-main members are never reset, R9) are recorded in the
+      // status file but do not page: critical notification is reserved for pull/build failures,
+      // a deep member that built without coverage, and a failed workspace build or check.
+      const reachedBuild = (report: MemberRefreshReport) =>
+        report.outcome === "pulled" || report.outcome === "unchanged";
       const degraded = A.some(
         status.members,
         (report) =>
-          (report.outcome !== "pulled" && report.outcome !== "unchanged") ||
+          report.outcome === "pull-failed" ||
+          report.outcome === "build-failed" ||
           O.exists(report.coverage, (coverage) => coverage.covered < coverage.total || coverage.failedFiles > 0)
       );
       const missingCoverage = A.some(
         manifest.members,
         (member) =>
-          member.tier === "deep" && O.exists(HashMap.get(reports, member.name), (report) => O.isNone(report.coverage))
+          member.tier === "deep" &&
+          O.exists(HashMap.get(reports, member.name), (report) => reachedBuild(report) && O.isNone(report.coverage))
       );
       if (degraded || missingCoverage || build.exitCode !== 0 || check.exitCode !== 0) {
         yield* Effect.ignore(
