@@ -1748,3 +1748,19 @@ Review 30 is accepted with all 13 broader obligations unchanged. This batch
 includes previously reviewed files; it is not 25 newly closed obligations.
 Emitter equality cannot establish type-level or downstream runtime equivalence,
 remove source inputs, or replace the remaining runtime-change reviews.
+
+### Proof identity and shadow-row compatibility — 2026-09-25
+
+Four runtime-changing source deltas now have a bounded review: shared artifact
+ids, Yeet artifact paths, proof digests and proof fact schemas. Five synthetic
+artifact identities and three command digests match independent SHA-256
+calculations. Sanitized-prefix collisions remain distinguished by the digest.
+The current shadow schema rejects an old-format row and a negative duration;
+an isolated real ledger reader counts both malformed and retains one valid
+current row. Thirteen existing tests passed across three suites. See
+[the receipt](./research/proof-identity-delta-review.json).
+
+Review 31 is accepted with all 13 broader obligations retained. Machine/user/
+runtime-root inputs remain explicit for coordinator paths; version-pin files
+are not measurements of installed binaries. Full ledger enforcement, transitive
+input closure and signed remote evidence are not established by these controls.
