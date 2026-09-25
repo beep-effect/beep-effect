@@ -8,7 +8,15 @@
  // async: the breadth tier's WASM grammars load asynchronously and must be warmed
  // before the (synchronous) re-extraction below, exactly as buildGraph does — else
  // breadth-tier files (.rs, …) would re-extract as empty here and read as `removed`
-@@ -107,15 +108,25 @@
+@@ -44,6 +45,7 @@
+         pending: 0,
+         pendingIds: [],
+         nodes: 0,
++        eligibleNodes: 0,
+     };
+     const committed = readGraph(wiringPath(outDir));
+     if (!committed) {
+@@ -107,15 +109,26 @@
      }
      const committedById = new Map(committed.nodes.map((n) => [n.id, n]));
      result.nodes = committedById.size;
@@ -29,10 +37,30 @@
              result.changed.push(id);
 -        if (node.summary_state === "stale")
 +        const ignored = ignore(node.path);
++        if (!ignored) result.eligibleNodes++;
 +        if (node.summary_state === "stale" && !ignored)
              result.stale.push(id);
 -        if (node.summary_state === "pending") {
-+        if (node.summary_state === "pending" || (node.summary_state === "excluded" && !ignored)) {
++        if (!ignored && (node.summary_state === "pending" || node.summary_state === "excluded")) {
              result.pending++;
              result.pendingIds.push(id);
          }
+@@ -142,7 +155,8 @@
+     if (r.ok) {
+         // A share, not a bare count: "1203 not yet summarized" reads the same whether
+         // the repo was never deep-built or a deep build failed most of its calls.
+-        const pct = r.nodes > 0 ? Math.round(((r.nodes - r.pending) / r.nodes) * 100) : 0;
++        const eligible = r.eligibleNodes ?? r.nodes;
++        const pct = eligible > 0 ? Math.round(((eligible - r.pending) / eligible) * 100) : 0;
+         const note = r.pending ? ` (${formatPendingNote(r, pct)})` : "";
+         return `graph check: OK — the wiring graph is in sync with the code.${note}`;
+     }
+@@ -186,7 +200,7 @@
+     // is the right next step. A deep build that still left them pending used to
+     // dead-end here (#172): re-running the same command never cleared empty/failed
+     // meaning replies, so name the nodes and point at the last build's errors.
+-    return (`meaning tier ${pct}% complete — ${r.pending} of ${r.nodes} node(s) pending${named}. ` +
++    return (`meaning tier ${pct}% complete — ${r.pending} of ${r.eligibleNodes ?? r.nodes} node(s) pending${named}. ` +
+         `Run \`graft build --deep\` to summarize them; if a deep build already left these pending, ` +
+         `that meaning pass failed — see that build's errors (re-running alone will not clear them)`);
+ }

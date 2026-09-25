@@ -32,11 +32,11 @@
 +        // Local patch (2026-09-09): grok-class models ignore the forced tool call on a
 +        // share of crux requests and answer in prose; retry those before recording a miss.
 +        const emptyRetries = Number(process.env.GRAFT_CRUX_EMPTY_RETRIES ?? 2);
-+        const isEmpty = (r) => ((r && (r.size ?? r.length)) ?? 0) === 0;
++        const hasUsableSummary = (entries) => entries.some((entry) => entry.summary.trim().length > 0);
 +        let res = await this.model.create(request);
 +        let parsed = parseResults(argsFromResponse(res));
 +        let miss = classifyCruxMiss(res, parsed);
-+        for (let attempt = 1; isEmpty(parsed) && miss && miss.kind !== "truncated" && attempt <= emptyRetries; attempt++) {
++        for (let attempt = 1; !hasUsableSummary(parsed) && miss && miss.kind !== "truncated" && attempt <= emptyRetries; attempt++) {
 +            console.error(`  crux ${input.path ?? ""}: ${miss.kind}, retry ${attempt}/${emptyRetries}`);
 +            res = await this.model.create(request);
 +            parsed = parseResults(argsFromResponse(res));

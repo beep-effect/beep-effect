@@ -1,6 +1,6 @@
 --- a/context/build.js
 +++ b/context/build.js
-@@ -153,6 +153,45 @@
+@@ -158,6 +158,54 @@
      const batches = batchBySize(summarized, BATCH_CHAR_BUDGET);
      result.batches = batches.length;
      const synthNodes = [];
@@ -36,8 +36,17 @@
 +                    fill(i + 1);
 +                    const settled = await inflight.get(batch);
 +                    inflight.delete(batch);
-+                    if (settled.e)
++                    if ("e" in settled) {
++                        // Drain the bounded window and retain successful work before failing.
++                        const completed = await Promise.all([...inflight].map(async ([other, promise]) => [other, await promise]));
++                        for (const [other, outcome] of completed) {
++                            if ("v" in outcome && outcome.v.length > 0)
++                                cache.synth[batchKey(other, hashByPath)] = outcome.v;
++                        }
++                        saveCache(outDir, cache);
++                        inflight.clear();
 +                        throw settled.e;
++                    }
 +                    return settled.v;
 +                },
 +            },
@@ -46,7 +55,7 @@
      for (let b = 0; b < batches.length; b++) {
          opts.onProgress?.({ phase: "synthesize", index: b, total: batches.length, file: `batch ${b + 1}` });
          const key = batchKey(batches[b], hashByPath);
-@@ -162,10 +201,21 @@
+@@ -167,10 +215,21 @@
          const cached = Array.isArray(nodes) && nodes.length > 0;
          if (!cached) {
              nodes = await opts.synthesizer.synthesize(batches[b]);
