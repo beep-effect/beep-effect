@@ -654,6 +654,10 @@ export type LocatorRender = typeof LocatorRender.Type;
  * exists for the JetBrains rollout files, whose attribute holds a
  * `&quot;`-escaped JSON array. `ts-literal` names an exported symbol in source
  * and is the one locator whose edits can move a docgen ratchet.
+ * `line-value` reads literal-delimited values only on lines with a declared
+ * prefix; it inventories existing doctrine, examples, and command templates
+ * before generated-block adoption. Distinct matches remain visible together
+ * so a mixed file cannot pass by presenting a current first value (R9).
  *
  * **Example** (Guard a generated-block locator)
  *
@@ -683,6 +687,7 @@ export const Locator = LiteralKit([
   "xml-attribute",
   "xml-escaped-json-attribute",
   "ts-literal",
+  "line-value",
 ])
   .toTaggedUnion("_tag")({
     "md-generated-block": {
@@ -739,6 +744,13 @@ export const Locator = LiteralKit([
       binding: LocatorBinding,
       render: LocatorRender,
       symbol: S.NonEmptyString,
+    },
+    "line-value": {
+      binding: LocatorBinding,
+      render: LocatorRender,
+      linePrefix: S.String,
+      before: S.NonEmptyString,
+      after: S.NonEmptyString,
     },
   })
   .pipe(
