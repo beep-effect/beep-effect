@@ -18,9 +18,10 @@ import {
   ObsUnknownEvent,
   resolveObsConfig,
 } from "@beep/obs";
+import { it } from "@beep/test-runner";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { assert, describe, expect, it, layer } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { Deferred, Effect, Fiber, PubSub, Queue, Redacted, Ref } from "effect";
 import { Socket } from "effect/unstable/socket";
 import type { ObsIdentify, ObsIncomingMessage, ObsRequestEnvelope } from "@beep/obs";
@@ -145,8 +146,8 @@ const respondSuccess = (
   );
 
 describe("computeObsAuthentication", () => {
-  layer(NodeCrypto.layer)((it) => {
-    it.effect(
+  it.layer(NodeCrypto.layer, { timeout: "5 seconds" })((cryptoIt) => {
+    cryptoIt.effect(
       "reproduces the documented obs-websocket authentication vector",
       Effect.fnUntraced(function* () {
         expect(
@@ -162,6 +163,7 @@ describe("ObsProtocol.connectWith", () => {
     "completes the handshake without authentication and identifies with the configured subscriptions",
     Effect.fnUntraced(function* () {
       const server = yield* makeFakeObsServer();
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
 
       expect(protocol.identified.negotiatedRpcVersion).toBe(1);
@@ -182,6 +184,7 @@ describe("ObsProtocol.connectWith", () => {
       const server = yield* makeFakeObsServer({
         authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }),
       });
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(
         server.socket,
         resolveObsConfig({ password: O.some(Redacted.make(DOC_PASSWORD)) })
@@ -205,6 +208,7 @@ describe("ObsProtocol.connectWith", () => {
           const server = yield* makeFakeObsServer({
             authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }),
           });
+          yield* Effect.log("OBS protocol phase: await expected handshake rejection");
           return yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
         })
       ).pipe(Effect.flip);
@@ -226,6 +230,7 @@ describe("ObsProtocol.connectWith", () => {
             authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }),
             rejectIdentifyWithCloseCode: 4009,
           });
+          yield* Effect.log("OBS protocol phase: await expected handshake rejection");
           return yield* ObsProtocol.connectWith(
             server.socket,
             resolveObsConfig({ password: O.some(Redacted.make("wrong-password")) })
@@ -246,6 +251,7 @@ describe("ObsProtocol.connectWith", () => {
       const server = yield* makeFakeObsServer({
         onRequest: (envelope, emit) => respondSuccess(envelope, emit, O.none()),
       });
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
 
       yield* server.emitMessage(
@@ -288,8 +294,10 @@ describe("ObsProtocol.connectWith", () => {
             )
           ),
       });
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
 
+      yield* Effect.log("OBS protocol phase: await reversed concurrent request responses");
       const [first, second] = yield* Effect.all([protocol.request("GetVersion"), protocol.request("GetRecordStatus")], {
         concurrency: 2,
       });
@@ -320,8 +328,10 @@ describe("ObsProtocol.connectWith", () => {
             })
           ),
       });
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
 
+      yield* Effect.log("OBS protocol phase: await failed request status");
       const error = yield* protocol.request("SetCurrentProgramScene", { sceneName: "missing" }).pipe(Effect.flip);
 
       assert(ObsError.is(error));
@@ -339,6 +349,7 @@ describe("ObsProtocol.connectWith", () => {
     "decodes RecordStateChanged events and passes unknown events through losslessly",
     Effect.fnUntraced(function* () {
       const server = yield* makeFakeObsServer();
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
       const subscription = yield* protocol.subscribeEvents;
 
@@ -365,6 +376,7 @@ describe("ObsProtocol.connectWith", () => {
         })
       );
 
+      yield* Effect.log("OBS protocol phase: await subscribed events");
       const first = yield* PubSub.take(subscription);
       assert(ObsRecordStateChangedEvent.is(first));
       expect(first.outputState).toBe("OBS_WEBSOCKET_OUTPUT_STARTED");
@@ -386,12 +398,15 @@ describe("ObsProtocol.connectWith", () => {
       const server = yield* makeFakeObsServer({
         onRequest: () => Deferred.succeed(received, undefined).pipe(Effect.asVoid),
       });
+      yield* Effect.log("OBS protocol phase: await Hello and complete Identify handshake");
       const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
 
       const fiber = yield* protocol.request("GetVersion").pipe(Effect.forkChild);
+      yield* Effect.log("OBS protocol phase: await request receipt before dropping connection");
       yield* Deferred.await(received);
       yield* server.end;
 
+      yield* Effect.log("OBS protocol phase: await in-flight request failure after connection drop");
       const error = yield* Fiber.join(fiber).pipe(Effect.flip);
       assert(ObsError.is(error));
       assert(O.isSome(error.closeCode));
