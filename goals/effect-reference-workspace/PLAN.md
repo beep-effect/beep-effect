@@ -22,8 +22,9 @@ this runbook, not alternate reference locations. Preserve the operator-approved
 layout recorded in `research/2026-09-25-00-aligned-design.md` (R1) and the source
 locations recorded in `research/2026-09-25-01-current-state.md`.
 
-- `BEEP_REFERENCES_ROOT`: resolve `scripts/references.json`'s `rootDefault`
-  against the operator's home directory, or use the explicitly chosen override.
+- `BEEP_REFERENCES_ROOT`: after S1 creates the reference manifest, resolve its
+  `rootDefault` against the operator's home directory, or use the explicitly
+  chosen override.
 - `OLD_EFFECT_ROOT`: resolve the current checkout's `.repos/effect` link before
   relinking. Verify its Git origin against the manifest's Effect member.
 - `OLD_EFFECT_TSGO_ROOT`: select the existing Effect compiler clone from the
