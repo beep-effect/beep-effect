@@ -78,11 +78,12 @@ Acceptance:
 - Each evaluated candidate edit becomes one ledger row via the CLI, with its
   disposition. Rejected edits stay as negative evidence.
 - Scorer wall time per task is compared with P5's roughly 2 minutes.
-- `bun run beep harness-ledger prune-proposals --window 30` output is saved.
-  Proposals are rows with disposition `proposed`. Nothing is applied.
-- TODO (D9): restrict the prune-proposals window to sessions under the
-  current harness hash once hook-pulse stamps that hash at SessionStart.
-  Until then the window is the last N sessions regardless of regime.
+- Defer pruning proposal evidence until hook-pulse stamps the harness hash at
+  SessionStart and the scan filters sessions by the current hash. Then save
+  `bun run beep harness-ledger prune-proposals --window 30` output for P4.
+- The current read-only scan is diagnostic and spans mixed harness regimes;
+  it is not current-harness evidence. Writes remain blocked until the gate exists.
+- Proposals have disposition `proposed`. Nothing is applied.
 
 ## P3 Yeet PR1 to mergeable
 
@@ -94,7 +95,8 @@ Acceptance: `merge-ready: yes`; zero outstanding review threads.
 
 ## P4 PR2 results + reflection
 
-Ship the rerun results, the first rows, and the pruning proposal output.
+Ship the rerun results and the first rows. Include pruning proposal output only
+after the current-harness session gate described in P2 is implemented.
 Write the reflection with the `/reflect` skill.
 
 Acceptance: PR2 merge-ready; `bun run beep lint reflection-artifacts` passes.

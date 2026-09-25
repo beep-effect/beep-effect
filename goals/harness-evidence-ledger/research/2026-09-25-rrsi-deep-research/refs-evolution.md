@@ -585,8 +585,8 @@ components aren't coordinates of a shared vector.
 
 **C.2 Proposal side (Algorithm 1).**
 1. F_t ← Analyze(H_t, D_evolve).
-2. b_t ← b_min + (b_max − b_min)·½(1 + cos(πt/T)): L0-style cap. The proposer drafts an atomic edit pool E_t
-   (redrawn each round from open Ω); a candidate is a subset z_t ∈ {0,1}^{|E_t|} with ‖z_t‖_0 ≤ b_t. This caps
+2. b_t ← b_min + (b_max − b_min)·½(1 + cos(πt/T)): L0-style cap. The proposer drafts an atomic edit pool P_t
+   (redrawn each round from open Ω); a candidate is a subset z_t ∈ {0,1}^{|P_t|} with ‖z_t‖_0 ≤ b_t. This caps
    *independently attributable edits bundled per candidate*, not which components may ever change.
 3. Stall σ_t ← 𝟙[Ŝ_t − Ŝ_{t−w} ≤ δ].
 4. T_t ← components with ≥1 measured edit; U_t ← K \ T_t (never-exercised components).

@@ -1,6 +1,7 @@
 import { contextSurfaceId, HarnessLedgerRow, HookPulseV1 } from "@beep/repo-ai-metrics";
 import {
   HarnessLedgerDispositionOptions,
+  HarnessLedgerInputError,
   HarnessLedgerListOptions,
   HarnessLedgerProposeOptions,
   HarnessLedgerPruneOptions,
@@ -13,6 +14,7 @@ import { Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -337,13 +339,20 @@ layer(TestLayer)("harness-ledger service", (it) => {
       expect(first?.row.windowSessions).toStrictEqual(O.some(5));
       expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
 
-      const written = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, write: true }));
-      expect(written.written).toBe(true);
-      expect(yield* readLedgerLines(root)).toHaveLength(2);
+      const denied = yield* Effect.result(
+        ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, write: true }))
+      );
+      assertFailure(
+        denied,
+        HarnessLedgerInputError.new(
+          "Cannot append pruning proposals until hook-pulse sessions are scoped by the current harness hash."
+        )
+      );
+      expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
 
       const again = yield* ledger.pruneProposals(options);
-      expect(again.proposals).toHaveLength(0);
-      expect(again.alreadyProposed).toBe(2);
+      expect(again.proposals).toHaveLength(2);
+      expect(again.alreadyProposed).toBe(0);
 
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);

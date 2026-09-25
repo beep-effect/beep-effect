@@ -437,7 +437,8 @@ const pruneLines = (report: HarnessLedgerPruneReport): ReadonlyArray<string> => 
  *
  * D9 restricts the window to sessions under the current harness hash. That
  * restriction is deferred until hook-pulse stamps the harness hash at
- * SessionStart; today the window is the last N sessions regardless of regime.
+ * SessionStart; today the read-only window spans the last N sessions regardless
+ * of regime. Writes fail until that filter exists.
  *
  * **Example** (Log command name)
  *
@@ -465,7 +466,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
     ),
     write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Append the proposals to the ledger (default is a dry run)")
+      Flag.withDescription("Request append (blocked until current-harness session filtering exists)")
     ),
     model: modelFlag,
     reasoningEffort: reasoningEffortFlag,

@@ -89,7 +89,8 @@ export interface HarnessLedgerServiceShape {
 
   /**
    * Propose retiring every skill and MCP server with zero touches in
-   * the last N hook-pulse sessions; append them only when `write` is set.
+   * the last N hook-pulse sessions for read-only inspection. Writes fail until
+   * sessions can be filtered by the current harness hash.
    *
    * @since 0.0.0
    */
@@ -308,6 +309,11 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
 });
 
 const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (options: HarnessLedgerPruneOptions) {
+  if (options.write) {
+    return yield* HarnessLedgerInputError.new(
+      "Cannot append pruning proposals until hook-pulse sessions are scoped by the current harness hash."
+    );
+  }
   const candidates = yield* enumeratePruneCandidates(options.repoRoot);
   const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions);
   const plan = planPruneProposals(options, candidates, observed);
