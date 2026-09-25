@@ -43,6 +43,17 @@ import type { ReferenceMember } from "./Refs.schemas.ts";
 /** Untracked artifacts graft leaves in a member; excluded per clone, never via .gitignore (R3). */
 const GRAFT_EXCLUDE_ENTRIES: ReadonlyArray<string> = ["graft/", ".graft/", ".ignore"];
 
+/** Result of bringing one member to origin/main: skipped by policy, failed, or synced. */
+type MemberSync =
+  | { readonly _tag: "skipped"; readonly outcome: "skipped-dirty" | "skipped-off-branch" }
+  | { readonly _tag: "failed" }
+  | { readonly _tag: "synced"; readonly changed: boolean };
+const MemberSync = {
+  failed: { _tag: "failed" } as const satisfies MemberSync,
+  skipped: (outcome: "skipped-dirty" | "skipped-off-branch"): MemberSync => ({ _tag: "skipped", outcome }),
+  synced: (changed: boolean): MemberSync => ({ _tag: "synced", changed }),
+};
+
 const $I = $RepoCliId.create("commands/Refs/Refs.service");
 
 /**
@@ -282,37 +293,47 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       for (const member of manifest.members) {
         const cwd = path.join(root, member.name);
         const git = (args: ReadonlyArray<string>) => step(home, cwd, "git", args, false, true);
+        // A git call that either yields its trimmed stdout or none when it exited non-zero.
+        const gitOutput = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
+          const result = yield* git(args);
+          return result.exitCode === 0 ? O.some(result.output) : O.none<string>();
+        });
+        // Bring the member to origin/main without ever rewriting local state (R9): a dirty or
+        // off-main member is skipped, a failing git call fails the member, else it is synced.
+        const syncMember = Effect.fnUntraced(function* () {
+          const dirty = yield* gitOutput(["status", "--porcelain", "--untracked-files=all"]);
+          if (O.isNone(dirty)) return MemberSync.failed;
+          if (Str.isNonEmpty(dirty.value)) return MemberSync.skipped("skipped-dirty");
+          const branch = yield* gitOutput(["branch", "--show-current"]);
+          if (O.isNone(branch)) return MemberSync.failed;
+          if (branch.value !== "main") return MemberSync.skipped("skipped-off-branch");
+          const before = yield* gitOutput(["rev-parse", "HEAD"]);
+          if (O.isNone(before)) return MemberSync.failed;
+          const pulled = yield* gitOutput(["pull", "--ff-only"]);
+          const after = yield* gitOutput(["rev-parse", "HEAD"]);
+          return O.isNone(pulled) || O.isNone(after)
+            ? MemberSync.failed
+            : MemberSync.synced(before.value !== after.value);
+        });
         const memberRun = Effect.fn("ReferenceWorkspace.refreshMember")(function* () {
           const report = (outcome: MemberRefreshReport["outcome"]) =>
             MemberRefreshReport.make({ name: member.name, outcome, coverage: O.none() });
           // A missing member must not let Git walk upward into a different checkout.
-          if (
-            !(yield* fs
-              .exists(path.join(cwd, ".git"))
-              .pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata."))))
-          )
-            return report("pull-failed");
+          const hasGit = yield* fs
+            .exists(path.join(cwd, ".git"))
+            .pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata.")));
+          if (!hasGit) return report("pull-failed");
           // graft writes graft/, .graft/ and .ignore into the member; keep them out of the
           // cleanliness check without touching the member's tracked .gitignore (R3).
           yield* ensureGraftExcludes(cwd);
-          const dirty = yield* git(["status", "--porcelain", "--untracked-files=all"]);
-          if (dirty.exitCode !== 0) return report("pull-failed");
-          if (Str.isNonEmpty(dirty.output)) return report("skipped-dirty");
-          const branch = yield* git(["branch", "--show-current"]);
-          if (branch.exitCode !== 0) return report("pull-failed");
-          if (branch.output !== "main") return report("skipped-off-branch");
-          const before = yield* git(["rev-parse", "HEAD"]);
-          if (before.exitCode !== 0) return report("pull-failed");
-          const pull = yield* git(["pull", "--ff-only"]);
-          if (pull.exitCode !== 0) return report("pull-failed");
-          const after = yield* git(["rev-parse", "HEAD"]);
-          if (after.exitCode !== 0) return report("pull-failed");
+          const sync = yield* syncMember();
+          if (sync._tag !== "synced") return report(sync._tag === "skipped" ? sync.outcome : "pull-failed");
           const build = yield* step(home, cwd, "graft", buildArgs(member, jobs), member.tier === "deep").pipe(
             Effect.catchTag("ReferenceWorkspaceError", capturedFailure)
           );
           return MemberRefreshReport.make({
             name: member.name,
-            outcome: build.exitCode !== 0 ? "build-failed" : before.output === after.output ? "unchanged" : "pulled",
+            outcome: build.exitCode !== 0 ? "build-failed" : sync.changed ? "pulled" : "unchanged",
             coverage: member.tier === "deep" ? parseDeepCoverage(build.output) : O.none(),
           });
         });
@@ -432,13 +453,14 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       }),
     ];
   });
+  const timerOptions = (home: string, root: string, calendar: string, bunPath: string) =>
+    S.decodeEffect(RefsTimerOptions)({ home, root, calendar, bunPath, owner }).pipe(
+      Effect.mapError(ioError(owner, "Invalid systemd unit values."))
+    );
   const renderTimerUnits: ReferenceWorkspaceShape["renderTimerUnits"] = Effect.fn(
     "ReferenceWorkspace.renderTimerUnits"
   )(function* (home, root, calendar, bunPath) {
-    const options = yield* S.decodeEffect(RefsTimerOptions)({ home, root, calendar, bunPath, owner }).pipe(
-      Effect.mapError(ioError(owner, "Invalid systemd unit values."))
-    );
-    return yield* renderFor(options);
+    return yield* renderFor(yield* timerOptions(home, root, calendar, bunPath));
   });
   const installFor = Effect.fn("ReferenceWorkspace.installFor")(
     function* (options: RefsTimerOptions) {
@@ -465,10 +487,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   );
   const installTimer: ReferenceWorkspaceShape["installTimer"] = Effect.fn("ReferenceWorkspace.installTimer")(
     function* (home, root, calendar, bunPath) {
-      const options = yield* S.decodeEffect(RefsTimerOptions)({ home, root, calendar, bunPath, owner }).pipe(
-        Effect.mapError(ioError(owner, "Invalid systemd unit values."))
-      );
-      return yield* installFor(options);
+      return yield* installFor(yield* timerOptions(home, root, calendar, bunPath));
     }
   );
   const refreshTimer: ReferenceWorkspaceShape["refreshTimer"] = Effect.fn("ReferenceWorkspace.refreshTimer")(

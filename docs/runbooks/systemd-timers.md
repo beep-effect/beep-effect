@@ -42,9 +42,13 @@ Three things rot it:
 
 `--refresh` is the answer to the third: it re-renders the installed units from
 what they recorded — `WorkingDirectory` (repo root / owner), the `--page` in
-`ExecStart` (research), `EnvironmentFile` and the timer's `OnCalendar` (graft and refs)
-— with a fresh Bun resolution; a flag given alongside `--refresh` still
-wins over the recorded value:
+`ExecStart` (research), `EnvironmentFile` (graft), the `--root` in `ExecStart`
+(refs), and the timer's `OnCalendar` (graft and refs) — with a fresh Bun
+resolution. For research and graft a flag given alongside `--refresh` still
+wins over the recorded value. For refs only `--bun-path` may accompany
+`--refresh`; `--owner` and `--on-calendar` are rejected because the installed
+unit is the truth for them, and a new owner or calendar needs a fresh
+`install-timer` (operator only):
 
 ```bash
 bun run beep research install-timers --refresh
