@@ -40,7 +40,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -48,7 +48,7 @@ import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { appendContainedFileString } from "../../../internal/cli/FsGuards.ts";
+import { appendContainedFileString, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { safeArtifactName } from "./ArtifactPaths.ts";
@@ -419,6 +419,249 @@ export class YeetBaseDriftRow extends S.Class<YeetBaseDriftRow>($I`YeetBaseDrift
 ) {}
 
 /**
+ * A pull request head that no longer merges into its base.
+ *
+ * **Details**
+ *
+ * The merge loop reads the conflict with `yeetBaseConflictFor` from the pull
+ * request view: `mergeable: CONFLICTING` or `mergeStateStatus: DIRTY`. The raw
+ * `mergeable` and `mergeStateStatus` strings are kept as evidence, the same
+ * way a failure capsule keeps its check's raw bucket and state. `base` names
+ * the ref to merge, and `link` is the pull request URL, which the inbox hook
+ * renders beside the row.
+ *
+ * `generation` counts the conflicts on this head that the merge loop already
+ * acked `cleared`: 0 for the first conflict on (prNumber, headSha), 1 for a
+ * conflict that came back on the same head after that clear, and so on. It is
+ * part of the row id, so each returning conflict is a new row. A row written
+ * before the field existed decodes as generation 0.
+ *
+ * **Example** (Describe a base conflict)
+ *
+ * ```ts
+ * import { YeetBaseConflictCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetBaseConflictCapsule.make({
+ *   base: "origin/main",
+ *   headSha: "abc123",
+ *   link: "https://github.com/o/r/pull/900",
+ *   mergeable: "CONFLICTING",
+ *   mergeStateStatus: "DIRTY",
+ *   prNumber: 900
+ * })
+ * console.log(capsule.mergeStateStatus) // "DIRTY"
+ * console.log(capsule.generation) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseConflictCapsule extends S.Class<YeetBaseConflictCapsule>($I`YeetBaseConflictCapsule`)(
+  {
+    base: S.NonEmptyString,
+    headSha: S.NonEmptyString,
+    link: S.NullOr(S.String),
+    mergeable: S.NullOr(S.String),
+    mergeStateStatus: S.NullOr(S.String),
+    prNumber: S.Finite,
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(SchemaUtils.withKeyDefaults(0)),
+  },
+  $I.annote("YeetBaseConflictCapsule", {
+    description: "One pull request head that no longer merges into its base, with the raw merge fields observed.",
+  })
+) {}
+
+/**
+ * One P0 base-conflict row: the head needs the base merged in and a push.
+ *
+ * **Details**
+ *
+ * The `--until-ready` merge loop appends it once per conflict on a head, the
+ * first poll that reads the conflict. The kind reuses the `base-conflict`
+ * settle reason: the settle wait clears by re-reading the pull request, and
+ * the row clears in one of two ways. A push supersedes it, because the loop
+ * pins the wave record to the new head. If the same head reads mergeable
+ * again (the other change was reverted), the loop writes a `cleared` ack
+ * receipt for the row.
+ *
+ * **Gotchas**
+ *
+ * The id is keyed on (prNumber, headSha, generation). A conflict that comes
+ * back on the same head after a `cleared` receipt is the next generation, so
+ * it gets a fresh id, a new row, and a new wave; it never reuses the
+ * acknowledged id. The next push starts again at generation 0.
+ *
+ * **Example** (Build a base-conflict row)
+ *
+ * ```ts
+ * import { YeetBaseConflictCapsule, YeetBaseConflictRow } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetBaseConflictRow.make({
+ *   capsule: YeetBaseConflictCapsule.make({
+ *     base: "origin/main", headSha: "abc123", link: null,
+ *     mergeable: "CONFLICTING", mergeStateStatus: "DIRTY", prNumber: 900
+ *   }),
+ *   checkout: "/repo", id: "base-conflict-abc", severity: "P0", ts: "2026-09-25T00:00:00Z"
+ * })
+ * console.log(row.kind) // "base-conflict"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseConflictRow extends S.Class<YeetBaseConflictRow>($I`YeetBaseConflictRow`)(
+  {
+    kind: S.tag("base-conflict"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P0"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetBaseConflictCapsule,
+  },
+  $I.annote("YeetBaseConflictRow", {
+    description: "One P0 base-conflict row: the pull request head no longer merges into its base.",
+  })
+) {}
+
+/**
+ * Which GitHub collection a pull request comment row came from.
+ *
+ * **Details**
+ *
+ * `issue` is a conversation comment and `review-body` is the prose a reviewer
+ * submits with a review; both are top-level. Inline review comments are not a
+ * source: they belong to review threads, which have their own row. The two
+ * collections number their ids independently, so the source is part of the
+ * row id.
+ *
+ * **Example** (Check a source)
+ *
+ * ```ts
+ * import { YeetPrCommentSource } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetPrCommentSource.is.issue("issue")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetPrCommentSource = LiteralKit(["issue", "review-body"]).pipe(
+  $I.annoteSchema("YeetPrCommentSource", {
+    title: "Yeet PR Comment Source",
+    description: "The GitHub collection a top-level pull request comment row came from.",
+  })
+);
+
+/**
+ * Which GitHub collection a pull request comment row came from.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetPrCommentSource = typeof YeetPrCommentSource.Type;
+
+/**
+ * One top-level pull request comment from a person other than the acting login.
+ *
+ * **Details**
+ *
+ * `excerpt` is a bounded, whitespace-collapsed copy of the body (about 200
+ * characters); the full comment is one read of `link` away. `headSha` is the
+ * head the comment was observed on, kept as evidence; a push does not resolve
+ * a comment, so the row is wave-exempt and its liveness never reads it.
+ * `link` is the comment URL, under the field name the inbox hook renders.
+ *
+ * **Example** (Describe a comment)
+ *
+ * ```ts
+ * import { YeetPrCommentCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetPrCommentCapsule.make({
+ *   author: "reviewer",
+ *   commentId: 44,
+ *   createdAt: "2026-09-25T00:00:00Z",
+ *   excerpt: "Please rebase onto main before the next push.",
+ *   headSha: "abc123",
+ *   link: "https://github.com/o/r/pull/900#issuecomment-44",
+ *   prNumber: 900,
+ *   source: "issue"
+ * })
+ * console.log(capsule.author) // "reviewer"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPrCommentCapsule extends S.Class<YeetPrCommentCapsule>($I`YeetPrCommentCapsule`)(
+  {
+    author: S.NonEmptyString,
+    commentId: S.Finite,
+    createdAt: S.String,
+    excerpt: S.String,
+    headSha: S.NonEmptyString,
+    link: S.String,
+    prNumber: S.Finite,
+    source: YeetPrCommentSource,
+  },
+  $I.annote("YeetPrCommentCapsule", {
+    description:
+      "One top-level pull request comment from a person other than the acting login: URL, author and a bounded excerpt.",
+  })
+) {}
+
+/**
+ * One P1 pull request comment row, injected as context without denying tools.
+ *
+ * **Details**
+ *
+ * The `--until-ready` merge loop appends one per qualifying comment: a
+ * conversation comment or review body, written by a person (not a bot) other
+ * than the acting login, and created after the monitor job was submitted. A
+ * comment is answered, not outdated, so the row is wave-exempt: it stays live
+ * across a push and never joins the per-head wave record. It joins the
+ * `yeet job wait` wave through its capsule's PR number, so a new comment wakes
+ * a waiting orchestrator like a new red does. It closes with an attributed
+ * ack, typically `--thread-url` with the reply.
+ *
+ * **Example** (Build a comment row)
+ *
+ * ```ts
+ * import { YeetPrCommentCapsule, YeetPrCommentRow } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetPrCommentRow.make({
+ *   capsule: YeetPrCommentCapsule.make({
+ *     author: "reviewer", commentId: 44, createdAt: "2026-09-25T00:00:00Z", excerpt: "Please rebase.",
+ *     headSha: "abc123", link: "https://github.com/o/r/pull/900#issuecomment-44", prNumber: 900, source: "issue"
+ *   }),
+ *   checkout: "/repo", id: "pr-comment-abc", severity: "P1", ts: "2026-09-25T00:00:00Z"
+ * })
+ * console.log(row.kind) // "pr-comment"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPrCommentRow extends S.Class<YeetPrCommentRow>($I`YeetPrCommentRow`)(
+  {
+    kind: S.tag("pr-comment"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P1"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetPrCommentCapsule,
+  },
+  $I.annote("YeetPrCommentRow", {
+    description: "One P1 top-level pull request comment row injected as context without denying tools.",
+  })
+) {}
+
+/**
  * One named local proof shard that exited unsuccessfully.
  *
  * **Example** (Describe a local shard failure)
@@ -641,7 +884,8 @@ export const yeetProofJobRowId = (capsule: Pick<YeetProofJobCapsule, "jobId">): 
  * Every member carries `schemaVersion`, a discriminating `kind`, a
  * deterministic `id`, and a `severity`, so a consumer can decode line-by-line
  * without context and gate enforcement on the tier. Required-check failures,
- * sibling collisions, review threads, and base drift share this contract.
+ * sibling collisions, review threads, base drift, base conflicts, and pull
+ * request comments share this contract.
  *
  * @category models
  * @since 0.0.0
@@ -651,6 +895,8 @@ export const YeetInboxRow = S.Union([
   YeetSiblingCollisionRow,
   YeetReviewThreadRow,
   YeetBaseDriftRow,
+  YeetBaseConflictRow,
+  YeetPrCommentRow,
   YeetLocalShardFailedRow,
   YeetPrMergeReadyRow,
   YeetProofJobFinishedRow,
@@ -749,6 +995,169 @@ const isYeetInboxObservedRowKind = S.is(YeetInboxObservedRowKind);
 export const yeetInboxRowIsObserved = (
   row: YeetInboxRow
 ): row is Extract<YeetInboxRow, { readonly kind: YeetInboxObservedRowKind }> => isYeetInboxObservedRowKind(row.kind);
+
+/**
+ * The inbox row kinds whose liveness survives a push.
+ *
+ * **Details**
+ *
+ * GitHub resolves a review thread or answers a comment in the conversation,
+ * not by a push, so rows of these kinds stay live when the wave record moves
+ * to a new head. Every other wave-joined kind (`check-failed`, `base-drift`,
+ * `base-conflict`) is superseded by the push, since the push is its fix and the
+ * next poll re-emits it if not.
+ *
+ * `yeetInboxRowLiveness` reads this kit. The inbox hook carries this kit plus
+ * {@link YeetInboxObservedRowKind} as one marked jq literal line, and a
+ * repo-cli test fails when that line and the two kits disagree: jq cannot
+ * import a TypeScript kit, so parity is tested rather than generated.
+ *
+ * **Example** (Check a row kind)
+ *
+ * ```ts
+ * import { YeetInboxWaveExemptRowKind } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetInboxWaveExemptRowKind.is["review-thread"]("review-thread")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetInboxWaveExemptRowKind = LiteralKit(["review-thread", "pr-comment"]).pipe(
+  $I.annoteSchema("YeetInboxWaveExemptRowKind", {
+    title: "Yeet Inbox Wave Exempt Row Kind",
+    description: "Inbox row kinds that stay live across a push: review threads and pull request comments.",
+  })
+);
+
+/**
+ * The inbox row kinds whose liveness survives a push.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetInboxWaveExemptRowKind = typeof YeetInboxWaveExemptRowKind.Type;
+
+const isYeetInboxWaveExemptRowKind = S.is(YeetInboxWaveExemptRowKind);
+
+/**
+ * Whether an inbox row stays live across a push instead of joining the wave record.
+ *
+ * **Example** (A review thread is wave-exempt; base drift is not)
+ *
+ * ```ts
+ * import {
+ *   YeetBaseDriftCapsule,
+ *   YeetBaseDriftRow,
+ *   YeetReviewThreadCapsule,
+ *   YeetReviewThreadRow,
+ *   yeetInboxRowIsWaveExempt
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const thread = YeetReviewThreadRow.make({
+ *   capsule: YeetReviewThreadCapsule.make({ headSha: "abc123", link: null, prNumber: 900, threadId: "PRRT_abc" }),
+ *   checkout: "/repo", id: "review-thread-abc", severity: "P1", ts: "2026-09-25T00:00:00Z"
+ * })
+ * const drift = YeetBaseDriftRow.make({
+ *   capsule: YeetBaseDriftCapsule.make({ base: "origin/main", headSha: "abc123", prNumber: 900 }),
+ *   checkout: "/repo", id: "base-drift-abc", severity: "P2", ts: "2026-09-25T00:00:00Z"
+ * })
+ *
+ * console.log(yeetInboxRowIsWaveExempt(thread)) // true
+ * console.log(yeetInboxRowIsWaveExempt(drift)) // false
+ * ```
+ *
+ * @param row - The inbox row to classify.
+ * @returns Whether the row's kind is in {@link YeetInboxWaveExemptRowKind}, narrowing the row to those kinds.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetInboxRowIsWaveExempt = (
+  row: YeetInboxRow
+): row is Extract<YeetInboxRow, { readonly kind: YeetInboxWaveExemptRowKind }> =>
+  isYeetInboxWaveExemptRowKind(row.kind);
+
+/**
+ * The P1 inbox row kinds that wake a waiter.
+ *
+ * **Details**
+ *
+ * A waiter is `yeet job wait` on a monitor job, or an attached
+ * `--until-ready` loop. It returns with exit 2 on a new wave, and only rows in
+ * the wake set count toward one: every P0 row, plus P1 rows of these kinds.
+ * The P0 rows are a required red (`check-failed`), a `base-conflict`, and the
+ * checkout-scoped `sibling-collision` and `local-shard-failed` rows. The
+ * checkout-scoped rows carry no pull request, so they never reach a waiter
+ * on one. Any other P1 row is still written and still injected by the inbox
+ * hook, but it never wakes a waiter. That covers an optional red (a P1
+ * `check-failed` row, a rate-limited Vercel deployment among them), because
+ * optional checks never affect an exit code in any mode (ttc ruling 42). The
+ * observed kinds ({@link YeetInboxObservedRowKind}) never wake one either.
+ *
+ * **Example** (A review thread wakes at P1)
+ *
+ * ```ts
+ * import { YeetInboxP1WakeRowKind } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetInboxP1WakeRowKind.is["review-thread"]("review-thread")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetInboxP1WakeRowKind = LiteralKit(["review-thread", "pr-comment"]).pipe(
+  $I.annoteSchema("YeetInboxP1WakeRowKind", {
+    title: "Yeet Inbox P1 Wake Row Kind",
+    description:
+      "P1 inbox row kinds that wake a job wait or an attached until-ready loop: review threads and pull request comments.",
+  })
+);
+
+/**
+ * The P1 inbox row kinds that wake a waiter.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetInboxP1WakeRowKind = typeof YeetInboxP1WakeRowKind.Type;
+
+const isYeetInboxP1WakeRowKind = S.is(YeetInboxP1WakeRowKind);
+
+/**
+ * Whether an inbox row can wake a waiter with a new wave.
+ *
+ * **Details**
+ *
+ * The wake set is every P0 row plus the P1 rows whose kind is in
+ * {@link YeetInboxP1WakeRowKind}, minus the observed kinds. Both waiters,
+ * `yeet job wait` and an attached `--until-ready` loop, read it through the
+ * same wave loader, so an optional red never returns either one.
+ *
+ * **Example** (An optional red never wakes; a required red does)
+ *
+ * ```ts
+ * import { YeetCheckFailedRow, YeetFailureCapsule, yeetInboxRowWakes } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail", headSha: "abc123", lane: "Vercel", link: null,
+ *   observedAt: "2026-09-25T00:00:00Z", prNumber: 900, state: "FAILURE", workflow: null
+ * })
+ * const red = (severity: "P0" | "P1") =>
+ *   YeetCheckFailedRow.make({ capsule, checkout: "/repo", id: "Vercel-abc", severity, ts: "2026-09-25T00:00:00Z" })
+ *
+ * console.log(yeetInboxRowWakes(red("P1"))) // false
+ * console.log(yeetInboxRowWakes(red("P0"))) // true
+ * ```
+ *
+ * @param row - The inbox row to classify.
+ * @returns Whether the row counts toward a wave that returns a waiter.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetInboxRowWakes = (row: YeetInboxRow): boolean =>
+  !yeetInboxRowIsObserved(row) &&
+  (YeetInboxSeverity.is.P0(row.severity) ||
+    (YeetInboxSeverity.is.P1(row.severity) && isYeetInboxP1WakeRowKind(row.kind)));
 
 const yeetInboxIdentityId = Effect.fnUntraced(function* (label: string, parts: ReadonlyArray<string>) {
   const crypto = yield* Crypto.Crypto;
@@ -874,6 +1283,75 @@ export const yeetBaseDriftRowId = (capsule: Pick<YeetBaseDriftCapsule, "base" | 
   yeetInboxIdentityId("base-drift", [`${capsule.prNumber}`, capsule.headSha, capsule.base]);
 
 /**
+ * Derive the stable base-conflict row id for one conflict generation on a pull request head.
+ *
+ * **Details**
+ *
+ * PR number, head SHA and conflict generation: one row per conflict on a
+ * head, so every poll that re-reads the same conflict derives the same id and
+ * appends nothing, a conflict that returns on the same head after a `cleared`
+ * receipt (the next generation) gets a new id, and a push gets a new id. The
+ * `cleared` receipt the merge loop writes is keyed on this id. Generation 0
+ * hashes only the PR number and head SHA, so rows and receipts written before
+ * generations existed keep their ids.
+ *
+ * **Example** (Build a conflict id)
+ *
+ * ```ts
+ * import { yeetBaseConflictRowId } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetBaseConflictRowId({ generation: 0, headSha: "abc123", prNumber: 900 }).pipe(
+ *   Effect.map((id) => id.startsWith("base-conflict-"))
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param capsule - Pull request number, head SHA and conflict generation.
+ * @returns A stable base-conflict receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetBaseConflictRowId = (capsule: Pick<YeetBaseConflictCapsule, "generation" | "headSha" | "prNumber">) =>
+  yeetInboxIdentityId(
+    "base-conflict",
+    capsule.generation === 0
+      ? [`${capsule.prNumber}`, capsule.headSha]
+      : [`${capsule.prNumber}`, capsule.headSha, `${capsule.generation}`]
+  );
+
+/**
+ * Derive the stable pull request comment row id for one GitHub comment.
+ *
+ * **Details**
+ *
+ * PR number, source collection and GitHub comment id; never the head or the
+ * observation time. Every poll that sees the same comment derives the same id
+ * and appends nothing, a push keeps it, and the ack receipt stays keyed on it.
+ * The source is part of the key because conversation comments and review
+ * bodies number their ids independently.
+ *
+ * **Example** (Same comment, same id)
+ *
+ * ```ts
+ * import { yeetPrCommentRowId } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetPrCommentRowId({ commentId: 44, prNumber: 900, source: "issue" }).pipe(
+ *   Effect.map((id) => id.startsWith("pr-comment-"))
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param capsule - Pull request number, source collection and GitHub comment id.
+ * @returns A stable pull request comment receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetPrCommentRowId = (capsule: Pick<YeetPrCommentCapsule, "commentId" | "prNumber" | "source">) =>
+  yeetInboxIdentityId("pr-comment", [`${capsule.prNumber}`, capsule.source, `${capsule.commentId}`]);
+
+/**
  * Derive a stable poison-pill id for one local shard on one head.
  *
  * **Example** (Build a local shard id)
@@ -926,6 +1404,54 @@ export const yeetPrMergeReadyRowId = (capsule: Pick<YeetPrMergeReadyCapsule, "he
   yeetInboxIdentityId("pr-merge-ready", [`${capsule.prNumber}`, capsule.headSha]);
 
 /**
+ * The pull request an inbox row belongs to, when it belongs to one.
+ *
+ * **Details**
+ *
+ * Rows produced from a pull-request observation (`check-failed`,
+ * `review-thread`, `base-drift`, `base-conflict`, `pr-comment`,
+ * `pr-merge-ready`) carry the number in their capsule. Checkout-scoped rows (`sibling-collision`, `local-shard-failed`,
+ * `proof-job-finished`) belong to no pull request. `yeet job wait` scopes its
+ * wave return with this, so a row on another pull request in the same
+ * checkout never wakes the waiter.
+ *
+ * **Example** (A check row names its pull request)
+ *
+ * ```ts
+ * import { YeetCheckFailedRow, YeetFailureCapsule, yeetInboxRowPrNumber } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const row = YeetCheckFailedRow.make({
+ *   capsule: YeetFailureCapsule.make({
+ *     bucket: "fail", headSha: "abc123", lane: "Check", link: null,
+ *     observedAt: "2026-09-25T00:00:00Z", prNumber: 900, state: "FAILURE", workflow: null
+ *   }),
+ *   checkout: "/repo", id: "Check-abc", severity: "P0", ts: "2026-09-25T00:00:00Z"
+ * })
+ * console.log(O.getOrNull(yeetInboxRowPrNumber(row))) // 900
+ * ```
+ *
+ * @param row - Any inbox row variant, from a pull-request observation or scoped to the checkout.
+ * @returns The row's pull request number, or `None` for a checkout-scoped row.
+ * @category getters
+ * @since 0.0.0
+ */
+export const yeetInboxRowPrNumber = (row: YeetInboxRow): O.Option<number> =>
+  Match.value(row).pipe(
+    Match.discriminator("kind")(
+      "check-failed",
+      "review-thread",
+      "base-drift",
+      "base-conflict",
+      "pr-comment",
+      "pr-merge-ready",
+      ({ capsule }) => O.some(capsule.prNumber)
+    ),
+    Match.discriminator("kind")("sibling-collision", "local-shard-failed", "proof-job-finished", O.none<number>),
+    Match.exhaustive
+  );
+
+/**
  * Recompute the deterministic receipt id for any inbox row variant.
  *
  * **Example** (Validate a check row id)
@@ -962,6 +1488,8 @@ export const yeetInboxExpectedRowId = (row: YeetInboxRow) =>
     Match.discriminator("kind")("sibling-collision", (subject) => yeetSiblingCollisionRowId(subject.capsule)),
     Match.discriminator("kind")("review-thread", (subject) => yeetReviewThreadRowId(subject.capsule)),
     Match.discriminator("kind")("base-drift", (subject) => yeetBaseDriftRowId(subject.capsule)),
+    Match.discriminator("kind")("base-conflict", (subject) => yeetBaseConflictRowId(subject.capsule)),
+    Match.discriminator("kind")("pr-comment", (subject) => yeetPrCommentRowId(subject.capsule)),
     Match.discriminator("kind")("local-shard-failed", (subject) => yeetLocalShardFailedRowId(subject.capsule)),
     Match.discriminator("kind")("pr-merge-ready", (subject) => yeetPrMergeReadyRowId(subject.capsule)),
     Match.exhaustive
@@ -1012,6 +1540,16 @@ export const describeYeetInboxRow = (row: YeetInboxRow): string =>
     Match.discriminator("kind")(
       "base-drift",
       ({ capsule }) => `base drift from ${capsule.base} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`
+    ),
+    Match.discriminator("kind")(
+      "base-conflict",
+      ({ capsule }) =>
+        `base conflict with ${capsule.base} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`
+    ),
+    Match.discriminator("kind")(
+      "pr-comment",
+      ({ capsule }) =>
+        `comment by @${capsule.author} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)}): ${capsule.excerpt} ${capsule.link}`
     ),
     Match.discriminator("kind")(
       "local-shard-failed",
@@ -1353,6 +1891,13 @@ export const appendYeetInboxRow = Effect.fn("Yeet.appendYeetInboxRow")(function*
  * the identity boundary: concurrent writers can still race, and consumers
  * continue to deduplicate by id.
  *
+ * An ack receipt under `acks/<id>` also counts as held. Receipts are only
+ * written for rows that were appended, and an ack drops its row from the
+ * rebuilt active index, so without the receipt check a row that is acked but
+ * still outstanding (a thread acked with its reply URL and not yet resolved, a
+ * base still `BEHIND`, a red still failing) would be appended again on every
+ * poll after the next unrelated append rebuilt the index.
+ *
  * **Example** (Build an idempotent append effect)
  *
  * ```ts
@@ -1373,6 +1918,30 @@ export const appendYeetInboxRowOnce = Effect.fn("Yeet.appendYeetInboxRowOnce")(f
   repoRoot: string,
   row: YeetInboxRow
 ): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  if ((yield* yeetInboxAckReceiptExists(repoRoot, row.id)) || (yield* yeetInboxHoldsRow(repoRoot, row.id))) {
+    return false;
+  }
+  yield* appendYeetInboxRow(repoRoot, row);
+  return true;
+});
+
+// Whether an ack receipt entry exists for the id: one no-follow read of
+// `acks/<id>`, like the ack reader's. A symlinked or unreadable path reads as
+// no receipt, so the append goes ahead rather than trusting it.
+const yeetInboxAckReceiptExists = Effect.fnUntraced(function* (
+  repoRoot: string,
+  id: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+  const ackPath = yield* yeetInboxAckPath(repoRoot, id);
+  const read = yield* Effect.option(readContainedFileStringNoFollow(repoRoot, ackPath));
+  return O.exists(read, (entry) => entry.exists);
+});
+
+// The lines the dedup reads: the bounded active index when it is current,
+// otherwise the full failures file. Every read failure reads as no lines.
+const readYeetInboxHeldLines = Effect.fnUntraced(function* (
+  repoRoot: string
+): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const paths = yield* yeetInboxPaths(repoRoot);
@@ -1380,12 +1949,81 @@ export const appendYeetInboxRowOnce = Effect.fn("Yeet.appendYeetInboxRowOnce")(f
   const activeIndexCurrent = yield* fs.exists(activeVersionPath).pipe(Effect.orElseSucceed(() => false));
   const sourcePath = activeIndexCurrent ? paths.activePath : paths.failuresPath;
   const text = yield* fs.readFileString(sourcePath).pipe(Effect.orElseSucceed(() => ""));
-  const present = A.some(Str.split(text, "\n"), (line) =>
-    O.exists(YeetInboxRowJson.decodeOption(line), (decoded) => decoded.id === row.id)
+  return Str.split(text, "\n");
+});
+
+/**
+ * Whether the checkout's inbox currently holds a row with this id.
+ *
+ * **Details**
+ *
+ * Reads the bounded active index when it is current, otherwise the full
+ * failures file, the same source {@link appendYeetInboxRowOnce} dedups
+ * against. A row that an ack removed from a rebuilt active index therefore
+ * reads as absent here; the append also consults the ack receipt, so such a
+ * row is still not appended twice. Every read failure reads as absent.
+ *
+ * **Example** (Build the presence check)
+ *
+ * ```ts
+ * import { yeetInboxHoldsRow } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(yeetInboxHoldsRow("/repo", "base-conflict-abc"))) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose inbox is read.
+ * @param id - The row id to look for.
+ * @returns Whether a decodable row with that id is present; never fails.
+ * @category services
+ * @since 0.0.0
+ */
+export const yeetInboxHoldsRow = Effect.fn("Yeet.yeetInboxHoldsRow")(function* (
+  repoRoot: string,
+  id: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+  return A.some(yield* readYeetInboxHeldLines(repoRoot), (line) =>
+    O.exists(YeetInboxRowJson.decodeOption(line), (decoded) => decoded.id === id)
   );
-  if (present) {
-    return false;
-  }
-  yield* appendYeetInboxRow(repoRoot, row);
-  return true;
+});
+
+/**
+ * The ids of the review-thread rows the checkout's inbox holds for one thread, on any head.
+ *
+ * **Details**
+ *
+ * Reads the same source as {@link yeetInboxHoldsRow}. A review-thread row id
+ * is keyed on the head, but the row is wave-exempt and stays live across a
+ * push, so inbox convergence uses this to find a thread's earlier rows before
+ * it writes one for a new head. Every read failure reads as no rows.
+ *
+ * **Example** (Build the lookup)
+ *
+ * ```ts
+ * import { yeetInboxReviewThreadRowIds } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(yeetInboxReviewThreadRowIds("/repo", 900, "PRRT_abc"))) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose inbox is read.
+ * @param prNumber - The pull request the thread belongs to.
+ * @param threadId - The review thread's GitHub node id.
+ * @returns The ids of the held rows for that thread, in inbox order; never fails.
+ * @category services
+ * @since 0.0.0
+ */
+export const yeetInboxReviewThreadRowIds = Effect.fn("Yeet.yeetInboxReviewThreadRowIds")(function* (
+  repoRoot: string,
+  prNumber: number,
+  threadId: string
+): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
+  return A.flatMap(yield* readYeetInboxHeldLines(repoRoot), (line) =>
+    YeetInboxRowJson.decodeOption(line).pipe(
+      O.filter((row): row is YeetReviewThreadRow => row.kind === "review-thread"),
+      O.filter((row) => row.capsule.prNumber === prNumber && row.capsule.threadId === threadId),
+      O.map((row) => row.id),
+      O.toArray
+    )
+  );
 });

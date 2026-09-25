@@ -3,13 +3,13 @@
   "initiative": {
     "id": "yeet-pr-events",
     "title": "Yeet PR Events",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-25",
     "updated": "2026-09-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-pr-events",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Make `yeet monitor --until-ready` the durable producer of every PR event that matters (required reds, base conflicts, review threads, human comments) as attributed, per-head-coalesced inbox rows; deliver them to the owning session whether it is blocked, idle, or dead; and measure the push -> row -> ack timeline.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,32 +61,32 @@
     {
       "id": "W1",
       "name": "Check fidelity and measurement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W2",
       "name": "Converge.ts, loop contract and wave return",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W3",
       "name": "Conflict row and cleared ack",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W4",
       "name": "Comment rows and per-consumer cursor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W5",
       "name": "Wave-exempt kit and hook parity",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W6",
       "name": "Attribution and law text",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W7",
@@ -111,7 +111,7 @@
     {
       "id": "P11",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P12",

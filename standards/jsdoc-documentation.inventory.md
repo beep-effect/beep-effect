@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-25T07:30:17.649Z
+Generated: 2026-09-25T23:09:36.464Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2900 |
-| publicExports | 20478 |
+| publicModules | 2905 |
+| publicExports | 20526 |
 | openModules | 377 |
-| openExports | 3095 |
+| openExports | 3097 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3333 |
+| exampleImportFindings | 3335 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3332 |
+| no-root-package-import | 3334 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -171,7 +171,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
 | 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 276 | 2353 | 47 | 288 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2401 | 47 | 290 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 3 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -498,38 +498,38 @@ Export findings:
 - `src/Path.ts:69` `export { fromFileUrl, toFileUrl } from "./NodeUrl.ts";` (re-export) - 1 example import violation(s)
 - `src/Predicate.ts:207` `chainRefinements` (function) - 1 example import violation(s)
 - `src/Predicate.ts:156` `hasInspectableObjectShape` (const) - 1 example import violation(s)
-- `src/Str.ts:834` `export * from "effect/String";` (re-export) - 1 example import violation(s)
+- `src/Str.ts:826` `export * from "effect/String";` (re-export) - 1 example import violation(s)
+- `src/Str.ts:294` `mapPrefix` (function) - 2 example import violation(s)
+- `src/Str.ts:339` `mapPostfix` (function) - 2 example import violation(s)
 - `src/Str.ts:41` `equivalence` (const) - 2 example import violation(s)
 - `src/Str.ts:71` `orderAsc` (const) - 2 example import violation(s)
 - `src/Str.ts:118` `prefix` (const) - 2 example import violation(s)
 - `src/Str.ts:159` `prefixThunk` (const) - 2 example import violation(s)
 - `src/Str.ts:212` `postfix` (const) - 2 example import violation(s)
 - `src/Str.ts:253` `postfixThunk` (const) - 2 example import violation(s)
-- `src/Str.ts:294` `mapPrefix` (const) - 2 example import violation(s)
-- `src/Str.ts:343` `mapPostfix` (const) - 2 example import violation(s)
-- `src/Str.ts:378` `camelCase` (const) - 1 example import violation(s)
-- `src/Str.ts:396` `snakeCase` (const) - 1 example import violation(s)
-- `src/Str.ts:414` `kebabCase` (const) - 1 example import violation(s)
-- `src/Str.ts:433` `screamingSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:452` `pascalCase` (const) - 1 example import violation(s)
-- `src/Str.ts:470` `pascalToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:489` `snakeToCamel` (const) - 1 example import violation(s)
-- `src/Str.ts:508` `snakeToKebab` (const) - 1 example import violation(s)
-- `src/Str.ts:527` `camelToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:546` `snakeToPascal` (const) - 1 example import violation(s)
-- `src/Str.ts:565` `kebabToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:592` `startsWith` (const) - 2 example import violation(s)
-- `src/Str.ts:632` `endsWith` (const) - 2 example import violation(s)
-- `src/Str.ts:677` `contains` (const) - 2 example import violation(s)
-- `src/Str.ts:721` `repeat` (const) - 2 example import violation(s)
-- `src/Str.ts:757` `replaceWith` (const) - 2 example import violation(s)
-- `src/Str.ts:801` `replaceAllWith` (const) - 2 example import violation(s)
-- `src/Str.ts:854` `trimThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:874` `fromNumber` (const) - 1 example import violation(s)
-- `src/Str.ts:891` `toSlug` (const) - 1 example import violation(s)
-- `src/Str.ts:929` `truncate` (const) - 2 example import violation(s)
-- `src/Str.ts:955` `orEmpty` (const) - 1 example import violation(s)
-- `src/Str.ts:1003` `matchEmpty` (const) - 1 example import violation(s)
+- `src/Str.ts:370` `camelCase` (const) - 1 example import violation(s)
+- `src/Str.ts:388` `snakeCase` (const) - 1 example import violation(s)
+- `src/Str.ts:406` `kebabCase` (const) - 1 example import violation(s)
+- `src/Str.ts:425` `screamingSnake` (const) - 1 example import violation(s)
+- `src/Str.ts:444` `pascalCase` (const) - 1 example import violation(s)
+- `src/Str.ts:462` `pascalToSnake` (const) - 1 example import violation(s)
+- `src/Str.ts:481` `snakeToCamel` (const) - 1 example import violation(s)
+- `src/Str.ts:500` `snakeToKebab` (const) - 1 example import violation(s)
+- `src/Str.ts:519` `camelToSnake` (const) - 1 example import violation(s)
+- `src/Str.ts:538` `snakeToPascal` (const) - 1 example import violation(s)
+- `src/Str.ts:557` `kebabToSnake` (const) - 1 example import violation(s)
+- `src/Str.ts:584` `startsWith` (const) - 2 example import violation(s)
+- `src/Str.ts:624` `endsWith` (const) - 2 example import violation(s)
+- `src/Str.ts:669` `contains` (const) - 2 example import violation(s)
+- `src/Str.ts:713` `repeat` (const) - 2 example import violation(s)
+- `src/Str.ts:749` `replaceWith` (const) - 2 example import violation(s)
+- `src/Str.ts:793` `replaceAllWith` (const) - 2 example import violation(s)
+- `src/Str.ts:846` `trimThunk` (const) - 1 example import violation(s)
+- `src/Str.ts:866` `fromNumber` (const) - 1 example import violation(s)
+- `src/Str.ts:883` `toSlug` (const) - 1 example import violation(s)
+- `src/Str.ts:921` `truncate` (const) - 2 example import violation(s)
+- `src/Str.ts:947` `orEmpty` (const) - 1 example import violation(s)
+- `src/Str.ts:995` `matchEmpty` (const) - 1 example import violation(s)
 - `src/Stream.ts:46` `streamFilterJson` (const) - 1 example import violation(s)
 - `src/Struct.ts:172` `dotGet` (const) - 2 example import violation(s)
 - `src/Struct.ts:219` `dotGetOption` (const) - 2 example import violation(s)
@@ -3675,10 +3675,10 @@ Export findings:
 - `src/commands/Architecture/OperationPlanExecution.ts:183` `checkCanonicalSliceOperationPlan` (const) - 1 example import violation(s)
 - `src/commands/Architecture/OperationPlanExecution.ts:281` `applyCanonicalSliceOperationPlan` (const) - 1 example import violation(s)
 - `src/commands/Architecture/OperationPlanPackageJson.ts:93` `renderPackageJsonOperation` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:254` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:280` `runCacheWarmForTesting` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:454` `buildCacheDashboard` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:509` `runCacheRestorationProbe` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:255` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:281` `runCacheWarmForTesting` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:452` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:507` `runCacheRestorationProbe` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.schemas.ts:244` `CacheDashboardReportJson` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.schemas.ts:261` `CacheWarmReceiptJson` (const) - 1 example import violation(s)
 - `src/commands/Ci/Ci.command.ts:270` `appendTurboSummary` (const) - 1 example import violation(s)
@@ -3860,14 +3860,15 @@ Export findings:
 - `src/commands/Quality/ChangesetGraph.ts:385` `changesetPackageReferencesFromText` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:1253` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:2471` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:947` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1077` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:948` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1078` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:113` `printQualityProfileDetection` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.schemas.ts:445` `decodePackageJsonDocument` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.schemas.ts:844` `decodeGithubChecksFallowFeatureMatrix` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.schemas.ts:451` `decodePackageJsonDocument` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.schemas.ts:850` `decodeGithubChecksFallowFeatureMatrix` (const) - 1 example import violation(s)
+- `src/commands/Refs/Refs.service.ts:112` `ReferenceWorkspace` (class) - 1 example import violation(s)
 - `src/commands/Research/Research.command.ts:403` `runResearchInstallTimers` (const) - 1 example import violation(s)
 - `src/commands/Research/Research.schemas.ts:243` `ResearchHistorySiftOptions` (class) - 1 example import violation(s)
 - `src/commands/Research/Research.schemas.ts:276` `ResearchHistorySiftSummary` (class) - 1 example import violation(s)
@@ -3933,13 +3934,14 @@ Export findings:
 - `src/commands/TsconfigSync/TsconfigSync.service.ts:80` `syncTsconfigAtRoot` (const) - 1 example import violation(s)
 - `src/commands/VersionSync/VersionSync.command.ts:50` `versionSyncCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:330` `parseProcStatStartTime` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Fleet.service.ts:440` `FleetMirrorService` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:347` `resolveWorktreeContext` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:405` `addWorktree` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:452` `copyLocalFiles` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:550` `worktreeDoctorReportForContext` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:833` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:1023` `worktreeCommand` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Fleet.service.ts:448` `FleetMirrorService` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:350` `resolveWorktreeContext` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:408` `addWorktree` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:455` `copyLocalFiles` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:553` `worktreeDoctorReportForContext` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:722` `linkReferences` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:876` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:1066` `worktreeCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:204` `WorktreeUpstreamVerdict` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:312` `WorktreeResidueManifest` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:393` `WorktreeSessionMarker` (class) - 1 example import violation(s)
@@ -3950,7 +3952,7 @@ Export findings:
 - `src/commands/Worktree/Worktree.service.ts:472` `WorktreeRemovalService` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:533` `runWorktreeGitCapture` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:1515` `WorktreeRemovalServiceLayer` (const) - 1 example import violation(s)
-- `src/commands/Yeet/Yeet.command.ts:517` `yeetMonitorDurationMillis` (const) - 1 example import violation(s)
+- `src/commands/Yeet/Yeet.command.ts:522` `yeetMonitorDurationMillis` (const) - 1 example import violation(s)
 
 ### @beep/ai-sync
 
@@ -3968,13 +3970,13 @@ Export findings:
 - `src/index.ts:46` `export * from "./drift.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:137` `export * from "./validation.ts";` (re-export) - 1 example import violation(s)
 - `src/schemas.ts:89` `NormalizedAgentInstructionDocument` (const) - 1 example import violation(s)
-- `src/validation.ts:406` `validateRepoConfig` (const) - 1 example import violation(s)
-- `src/validation.ts:449` `validateRepoSafetyPolicy` (const) - 1 example import violation(s)
-- `src/validation.ts:490` `validateDogfoodConfig` (const) - 1 example import violation(s)
-- `src/validation.ts:518` `validateDogfoodConfigs` (const) - 1 example import violation(s)
-- `src/validation.ts:544` `defaultRepoRoot` (const) - 1 example import violation(s)
-- `src/validation.ts:572` `validateCurrentCheckoutDogfood` (const) - 1 example import violation(s)
-- `src/validation.ts:601` `validateCurrentCheckoutDogfoodConfigs` (const) - 1 example import violation(s)
+- `src/validation.ts:410` `validateRepoConfig` (const) - 1 example import violation(s)
+- `src/validation.ts:453` `validateRepoSafetyPolicy` (const) - 1 example import violation(s)
+- `src/validation.ts:494` `validateDogfoodConfig` (const) - 1 example import violation(s)
+- `src/validation.ts:522` `validateDogfoodConfigs` (const) - 1 example import violation(s)
+- `src/validation.ts:548` `defaultRepoRoot` (const) - 1 example import violation(s)
+- `src/validation.ts:576` `validateCurrentCheckoutDogfood` (const) - 1 example import violation(s)
+- `src/validation.ts:605` `validateCurrentCheckoutDogfoodConfigs` (const) - 1 example import violation(s)
 
 ### @beep/nlp-mcp
 

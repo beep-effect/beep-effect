@@ -28,6 +28,12 @@ const $I = $RepoCliId.create("internal/github/GhSchema");
  * newest comment, and it is optional rather than a separate class so the many
  * queries that never select it keep decoding unchanged.
  *
+ * `type` is the REST API's account type (`"User"`, `"Bot"`, `"Organization"`)
+ * on a REST payload's `user`. A GitHub App can post under a login without the
+ * `[bot]` suffix (Copilot's reviewer posts as `Copilot`), and `type: "Bot"` is
+ * then the only field that says it is not a person. It is optional for the
+ * same reason as `__typename`: GraphQL actors never carry it.
+ *
  * **Example** (Make actor from login)
  *
  * ```ts
@@ -43,9 +49,11 @@ export class GhActor extends S.Class<GhActor>($I`GhActor`)(
   {
     __typename: S.optionalKey(S.String),
     login: S.String,
+    type: S.optionalKey(S.String),
   },
   $I.annote("GhActor", {
-    description: "GitHub actor metadata returned by gh, optionally carrying the GraphQL actor typename.",
+    description:
+      "GitHub actor metadata returned by gh, optionally carrying the GraphQL actor typename or the REST account type.",
   })
 ) {}
 

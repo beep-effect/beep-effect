@@ -11,7 +11,8 @@
  * a machine surface a consumer can pipe line-by-line into a decoder.
  *
  * The stream is also the backpressure writer: after every poll the inbox is
- * *converged* to the snapshot — each failing check dispatches through
+ * *converged* to the snapshot through `Converge`, the step it shares with
+ * `yeet monitor --until-ready` — each failing check dispatches through
  * `Remediation` on the tick that observed it, appending a failure capsule and
  * advancing the wave record, with deterministic capsule ids making the
  * convergence idempotent. A head change supersedes the wave before the new
@@ -41,7 +42,6 @@ import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, pipe, R
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -51,15 +51,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
 import { PrCloseoutReportJson } from "./Closeout.ts";
-import {
-  appendYeetInboxRowOnce,
-  YeetBaseDriftCapsule,
-  YeetBaseDriftRow,
-  YeetReviewThreadCapsule,
-  YeetReviewThreadRow,
-  yeetBaseDriftRowId,
-  yeetReviewThreadRowId,
-} from "./Inbox.ts";
+import { convergeYeetInbox, YeetConvergeObservation } from "./Converge.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
@@ -70,7 +62,7 @@ import {
   YEET_MONITOR_COMMENT_FAILURE_BUDGET,
 } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
-import { dispatchYeetCheckFailure, supersedeYeetDispatchState } from "./Remediation.ts";
+import { supersedeYeetDispatchState } from "./Remediation.ts";
 import {
   deriveYeetReviewThreadState,
   YeetReviewThreadNewestComment,
@@ -108,9 +100,9 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetCheckRecordText,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
-  yeetWatchThreadOutstanding,
 } from "./WatchStream.ts";
 import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
@@ -211,11 +203,6 @@ const decodeThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(WatchThread
 
 const watchThreadsQuery =
   "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{author{login} reviewThreads(first:100,after:$cursor){pageInfo{hasNextPage endCursor} nodes{id isResolved isOutdated path line resolvedBy{login} latest:comments(last:1){nodes{author{__typename login} createdAt}}}}}}}";
-
-// gh renders an absent link or workflow as "" in some check sources (plain
-// commit statuses); the domain speaks null for "the record has no such field".
-const presentOrNull = (value: string | null): string | null =>
-  P.isNotNull(value) && Str.isNonEmpty(value) ? value : null;
 
 const acceptableWatchMergeStates: ReadonlyArray<string> = ["BEHIND", "CLEAN", "HAS_HOOKS", "UNSTABLE"];
 
@@ -447,9 +434,9 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
         name: row.name,
         outcome: classifyYeetCheckOutcome(signal),
         required: A.some(requiredCheckRows, (requiredRow) => requiredRow.name === row.name),
-        link: presentOrNull(row.link),
+        link: O.getOrNull(yeetCheckRecordText(row.link)),
         signal,
-        workflow: presentOrNull(row.workflow),
+        workflow: O.getOrNull(yeetCheckRecordText(row.workflow)),
       });
     }),
     headSha: view.headRefOid,
@@ -586,75 +573,26 @@ const emitWatchEvent = (event: YeetWatchEvent): Effect.Effect<void, YeetCommandE
     Effect.flatMap(Console.log)
   );
 
-// Converge the inbox to the snapshot: dispatch every check it reports
-// failing, passing each failing check's own record — never a name to
-// re-resolve, because a rollup can carry two same-named checks. Row ids are
-// deterministic and the wave record drops known ids as duplicates, so running
-// this on every tick is idempotent — which is also the retry path for a
-// capsule whose append failed while its red stayed steady.
-const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(function* (
+// Converge the inbox to the snapshot through the shared `Converge` module:
+// each failing check dispatches with its own record, outstanding threads and
+// a BEHIND merge state append once. Running this on every tick is idempotent,
+// which is also the retry path for a row whose append failed.
+const convergeYeetWatchSnapshot = (
   context: RepoRunContext,
   snapshot: YeetWatchSnapshot,
   at: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  yield* Effect.forEach(
-    A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
-    (check) => dispatchYeetCheckFailure(context.repoRoot, snapshot, check, at),
-    { discard: true }
-  );
-  yield* Effect.forEach(
-    A.filter(snapshot.threads, yeetWatchThreadOutstanding),
-    (thread) =>
-      Effect.gen(function* () {
-        const capsule = YeetReviewThreadCapsule.make({
-          headSha: snapshot.headSha,
-          link: null,
-          prNumber: snapshot.prNumber,
-          threadId: thread.id,
-        });
-        const id = yield* yeetReviewThreadRowId(capsule);
-        yield* appendYeetInboxRowOnce(
-          context.repoRoot,
-          YeetReviewThreadRow.make({
-            capsule,
-            checkout: context.repoRoot,
-            id,
-            severity: "P1",
-            ts: at,
-          })
-        );
-      }).pipe(
-        Effect.catch((error) =>
-          Console.error(`[yeet] failed to append review-thread inbox row ${thread.id}: ${error.message}`)
-        ),
-        Effect.asVoid
-      ),
-    { discard: true }
-  );
-  if (Str.toUpperCase(snapshot.mergeStateStatus) === "BEHIND") {
-    const capsule = YeetBaseDriftCapsule.make({
-      base: context.base,
+): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+  convergeYeetInbox(
+    context,
+    YeetConvergeObservation.make({
+      checks: snapshot.checks,
       headSha: snapshot.headSha,
+      mergeStateStatus: snapshot.mergeStateStatus,
       prNumber: snapshot.prNumber,
-    });
-    yield* yeetBaseDriftRowId(capsule).pipe(
-      Effect.flatMap((driftId) =>
-        appendYeetInboxRowOnce(
-          context.repoRoot,
-          YeetBaseDriftRow.make({
-            capsule,
-            checkout: context.repoRoot,
-            id: driftId,
-            severity: "P2",
-            ts: at,
-          })
-        )
-      ),
-      Effect.catch((error) => Console.error(`[yeet] failed to append base-drift inbox row: ${error.message}`)),
-      Effect.asVoid
-    );
-  }
-});
+      threads: snapshot.threads,
+    }),
+    at
+  );
 
 // How many consecutive zero-check polls the watch sits through before it
 // believes an empty rollup. GitHub registers a push's checks a few seconds
@@ -821,7 +759,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   if (headChanged) {
     yield* supersedeYeetDispatchState(context.repoRoot, next.headSha, next.prNumber, observedAt);
   }
-  yield* convergeYeetWatchDispatch(context, next, observedAt);
+  yield* convergeYeetWatchSnapshot(context, next, observedAt);
   // The registration window belongs to a head: a new push starts its own
   // patience budget rather than inheriting whatever the superseded head spent.
   return O.some({
@@ -1007,7 +945,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   // first red as a mere queue entry. Both calls are idempotent when nothing
   // changed.
   yield* supersedeYeetDispatchState(context.repoRoot, current.headSha, current.prNumber, startedAt);
-  yield* convergeYeetWatchDispatch(context, current, startedAt);
+  yield* convergeYeetWatchSnapshot(context, current, startedAt);
   let emptyPolls = A.isReadonlyArrayEmpty(current.checks) ? 1 : 0;
 
   // A red snapshot is already durable after convergence. Do not let a slow

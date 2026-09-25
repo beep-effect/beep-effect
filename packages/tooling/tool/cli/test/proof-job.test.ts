@@ -13,7 +13,7 @@ import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import {
   Arbitrary,
   ConfigProvider,
@@ -21,6 +21,7 @@ import {
   Deferred,
   Effect,
   FileSystem,
+  HashSet,
   Layer,
   Path,
   Ref,
@@ -34,6 +35,7 @@ import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const $I = $RepoCliId.create("test/proof-job.test");
@@ -124,6 +126,51 @@ const inbox = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(`${root}/.beep/inbox/failures.ndjson`);
   return A.getSomes(A.map(A.filter(Str.split(text, "\n"), Str.isNonEmpty), YeetInboxRowJson.decodeOption));
+});
+
+const waveRow = Effect.fnUntraced(function* (root: string, prNumber: number, lane: string) {
+  const capsule = Job.YeetFailureCapsule.make({
+    bucket: "fail",
+    headSha: "abc123",
+    lane,
+    link: `https://github.com/beep/repo/actions/runs/${prNumber}`,
+    observedAt: stamp,
+    prNumber,
+    state: "FAILURE",
+    workflow: "CI",
+  });
+  const row = Job.YeetCheckFailedRow.make({
+    capsule,
+    checkout: root,
+    id: yield* Job.yeetInboxRowId(capsule),
+    severity: "P0",
+    ts: stamp,
+  });
+  yield* Job.appendYeetInboxRow(root, row);
+  return row;
+});
+
+// A top-level comment row (pr-event-awareness W4): P1, wave-exempt, on one pull request.
+const commentRow = Effect.fnUntraced(function* (root: string, prNumber: number, commentId: number) {
+  const capsule = Job.YeetPrCommentCapsule.make({
+    author: "reviewer",
+    commentId,
+    createdAt: stamp,
+    excerpt: "Please rebase onto main.",
+    headSha: "abc123",
+    link: `https://github.com/beep/repo/pull/${prNumber}#issuecomment-${commentId}`,
+    prNumber,
+    source: "issue",
+  });
+  const row = Job.YeetPrCommentRow.make({
+    capsule,
+    checkout: root,
+    id: yield* Job.yeetPrCommentRowId(capsule),
+    severity: "P1",
+    ts: stamp,
+  });
+  yield* Job.appendYeetInboxRow(root, row);
+  return row;
 });
 
 describe("proof job schemas", () => {
@@ -321,6 +368,13 @@ describe("proof job schemas", () => {
         OTHER: "x",
       })
     ).toEqual({ PATH: "/bin", BEEP_RUN_SCOPES: "1" });
+    expect(
+      Job.forwardedProofJobEnvironment({
+        CLAUDE_CODE_SESSION_ID: "claude-session",
+        CODEX_THREAD_ID: "codex-thread",
+        CLAUDE_CODE_ENTRYPOINT: "cli",
+      })
+    ).toEqual({ CLAUDE_CODE_SESSION_ID: "claude-session", CODEX_THREAD_ID: "codex-thread" });
   });
 });
 
@@ -457,9 +511,9 @@ describe("proof job launcher", () => {
         );
         expect(finalized.attemptTerminated).toBe(false);
         expect((yield* inbox(root))[0]?.severity).toBe("P2");
-        expect((yield* launcher.wait(record.jobId, Job.ProofJobWaitOptions.make({ pollIntervalMs: 1 }))).phase).toBe(
-          "finished"
-        );
+        expect(
+          (yield* launcher.wait(record.jobId, Job.ProofJobWaitOptions.make({ pollIntervalMs: 1 }))).record.phase
+        ).toBe("finished");
         const ack = yield* readYeetAckState(root, yeetProofJobRowId(record));
         expect(ack.receipt?.resolution).toMatchObject({ kind: "observed", via: "job-wait" });
       })
@@ -577,9 +631,9 @@ describe("proof job recovery boundaries", () => {
       })
     )
   );
-  // it.live: the finalizer lands between real poll ticks; the TestClock would freeze the
-  // polling loop before the stamp appears.
-  it.live("wait observes a finalizer that completes after polling begins", () =>
+  // TestClock.withLive: the finalizer lands between real poll ticks; the TestClock would
+  // freeze the polling loop before the stamp appears.
+  it.effect("wait observes a finalizer that completes after polling begins", () =>
     fixture(
       Effect.fnUntraced(function* (root) {
         const launcher = yield* ProofJobLauncher.make(root);
@@ -591,9 +645,10 @@ describe("proof job recovery boundaries", () => {
           record.jobId,
           Job.ProofJobWaitOptions.make({ timeoutMs: O.some(2000), pollIntervalMs: 1 })
         );
-        expect(done.phase).toBe("terminated");
+        expect(done.kind).toBe("settled");
+        expect(done.record.phase).toBe("terminated");
       })
-    )
+    ).pipe(TestClock.withLive)
   );
   it.effect("quotes systemd command words and omits an absent runtime ceiling", () =>
     fixture(
@@ -737,7 +792,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
             const reconciled = O.getOrThrow(yield* launcher.read(record.jobId));
             expect(reconciled.phase).toBe("finished");
             expect(O.getOrThrow(reconciled.systemd).serviceResult).toBe("unknown");
-            expect(yield* launcher.wait(record.jobId, Job.ProofJobWaitOptions.make({}))).toEqual(reconciled);
+            expect(yield* launcher.wait(record.jobId, Job.ProofJobWaitOptions.make({}))).toEqual(
+              Job.ProofJobWaitSettled.make({ record: reconciled })
+            );
             const rows = yield* inbox(root);
             expect(rows).toHaveLength(1);
             expect(rows[0]?.severity).toBe(verdictOutcome === "success" ? "P2" : "P1");
@@ -752,6 +809,162 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     }
   }
 );
+
+describe("job wait wave return", () => {
+  it("maps every wait outcome through one exit table, with the wave on 2", () => {
+    expect(A.map(Job.proofJobWaitExitTable, (row) => row.outcome)).toEqual(Job.ProofJobWaitOutcome.Options);
+    expect(A.map(Job.proofJobWaitExitTable, (row) => [row.outcome, row.exitCode])).toEqual([
+      ["success", 0],
+      ["failure", 1],
+      ["wave", 2],
+      ["terminated", 3],
+    ]);
+  });
+  it("selects only unacknowledged, not superseded P0/P1 rows on the job's own pull request", () => {
+    const head = "abc123";
+    const failed = (id: string, prNumber: number) =>
+      Job.YeetCheckFailedRow.make({
+        capsule: Job.YeetFailureCapsule.make({
+          bucket: "fail",
+          headSha: head,
+          lane: id,
+          link: null,
+          observedAt: stamp,
+          prNumber,
+          state: "FAILURE",
+          workflow: null,
+        }),
+        checkout: "/repo",
+        id,
+        severity: "P0",
+        ts: stamp,
+      });
+    const open = Job.YeetAckState.make({ acked: false, receipt: null });
+    const entry = (
+      row: Job.YeetInboxRow,
+      liveness: Job.YeetInboxLiveness = "live",
+      ack: Job.YeetAckState = open
+    ): Job.YeetInboxEntry => Job.YeetInboxEntry.make({ ack, liveness, row });
+    const thread = Job.YeetReviewThreadRow.make({
+      capsule: Job.YeetReviewThreadCapsule.make({ headSha: head, link: null, prNumber: 7, threadId: "T1" }),
+      checkout: "/repo",
+      id: "review-thread-t1",
+      severity: "P1",
+      ts: stamp,
+    });
+    const drift = Job.YeetBaseDriftRow.make({
+      capsule: Job.YeetBaseDriftCapsule.make({ base: "origin/main", headSha: head, prNumber: 7 }),
+      checkout: "/repo",
+      id: "base-drift-7",
+      severity: "P2",
+      ts: stamp,
+    });
+    const ready = Job.YeetPrMergeReadyRow.make({
+      capsule: Job.YeetPrMergeReadyCapsule.make({
+        headSha: head,
+        prNumber: 7,
+        url: null,
+        readyAt: stamp,
+        pushedAt: null,
+        settledAt: null,
+        closeoutAt: null,
+        pushToReadyMs: null,
+      }),
+      checkout: "/repo",
+      id: "pr-merge-ready-7",
+      severity: "P1",
+      ts: stamp,
+    });
+    const entries = [
+      entry(failed("mine", 7)),
+      entry(failed("other-pr", 8)),
+      entry(thread, "unknown"),
+      entry(failed("acked", 7), "live", Job.YeetAckState.make({ acked: true, receipt: null })),
+      entry(failed("superseded", 7), "superseded"),
+      entry(drift),
+      entry(ready),
+      entry(failed("returned", 7)),
+    ];
+    const wave = Job.selectYeetPrWave(entries, 7, HashSet.make("returned"));
+    assertSome(
+      O.map(wave, (value) => A.map(value.entries, (item) => item.row.id)),
+      ["mine", "review-thread-t1"]
+    );
+    assertNone(Job.selectYeetPrWave(entries, 9, HashSet.empty()));
+  });
+  // TestClock.withLive: the waits that must not return time out against real sleeps.
+  it.effect(
+    "returns a wave only for its own pull request, leaves the rows live, and never twice for the same rows",
+    () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const launcher = yield* ProofJobLauncher.make(root);
+          const seven = yield* launcher.submit(submission(root));
+          const eight = yield* launcher.submit(submission(root));
+          yield* launcher.bindPullRequest(seven.jobId, 7);
+          yield* launcher.bindPullRequest(eight.jobId, 8);
+          const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(60), pollIntervalMs: 1 });
+          const redOnEight = yield* waveRow(root, 8, "Check");
+          // Two monitors share this checkout: PR 8's red must not wake PR 7's waiter.
+          expect((yield* launcher.wait(seven.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+          const eightWave = yield* launcher.wait(eight.jobId, quick);
+          if (eightWave.kind !== "wave") return yield* Effect.die("Expected a wave return");
+          expect(eightWave.wave.prNumber).toBe(8);
+          expect(A.map(eightWave.wave.entries, (entry) => entry.row.id)).toEqual([redOnEight.id]);
+          // The return is not an acknowledgement: the row and the job row stay open.
+          expect((yield* readYeetAckState(root, redOnEight.id)).acked).toBe(false);
+          expect((yield* readYeetAckState(root, yeetProofJobRowId(eight))).acked).toBe(false);
+          expect(O.getOrThrow(yield* launcher.read(eight.jobId)).returnedWaveRowIds).toEqual([redOnEight.id]);
+          // A re-run on the same running job waits past the wave it already returned.
+          expect((yield* launcher.wait(eight.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+          const redOnSeven = yield* waveRow(root, 7, "Lint");
+          const sevenWave = yield* launcher.wait(seven.jobId, quick);
+          expect(sevenWave.kind === "wave" ? A.map(sevenWave.wave.entries, (entry) => entry.row.id) : []).toEqual([
+            redOnSeven.id,
+          ]);
+          // Settling still returns settled and observes only the proof-job row.
+          yield* launcher.markFinished(
+            seven.jobId,
+            Job.ProofJobOutcome.make({ verdictOutcome: "success", endedAt: stamp })
+          );
+          yield* launcher.finalize(
+            seven.jobId,
+            Job.ProofJobSystemdResult.make({ serviceResult: "success", finalizedAt: stamp })
+          );
+          expect((yield* launcher.wait(seven.jobId, quick)).kind).toBe("settled");
+          expect((yield* readYeetAckState(root, yeetProofJobRowId(seven))).receipt?.resolution).toMatchObject({
+            kind: "observed",
+            via: "job-wait",
+          });
+          expect((yield* readYeetAckState(root, redOnSeven.id)).acked).toBe(false);
+        })
+      ).pipe(TestClock.withLive)
+  );
+  // A comment row never joins the per-head wave record; the waiter reads the
+  // inbox, so a new comment wakes it like a new red, even after a push.
+  it.effect("returns a wave for a new comment row on its own pull request, whatever head the wave record holds", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const launcher = yield* ProofJobLauncher.make(root);
+        const job = yield* launcher.submit(submission(root));
+        yield* launcher.bindPullRequest(job.jobId, 7);
+        const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(60), pollIntervalMs: 1 });
+        yield* commentRow(root, 8, 40);
+        expect((yield* launcher.wait(job.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+        // The fix push moved the wave record to a new head before the comment landed.
+        yield* Job.supersedeYeetDispatchState(root, "def456", 7, stamp);
+        const comment = yield* commentRow(root, 7, 41);
+        const returned = yield* launcher.wait(job.jobId, quick);
+        if (returned.kind !== "wave") return yield* Effect.die("Expected a wave return");
+        expect(A.map(returned.wave.entries, (entry) => [entry.row.id, entry.liveness])).toStrictEqual([
+          [comment.id, "live"],
+        ]);
+        expect((yield* readYeetAckState(root, comment.id)).acked).toBe(false);
+        expect((yield* launcher.wait(job.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+      })
+    ).pipe(TestClock.withLive)
+  );
+});
 
 const runJobCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 class CommandCheckout extends Context.Service<
@@ -842,8 +1055,9 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
         via: "job-status",
       });
       yield* runJobCommand(["job", "cancel", record.jobId]);
+      // A terminated job exits 3; exit 2 is the wave return (pr-event-awareness D31).
       expect(yield* runJobCommand(["job", "wait", record.jobId, "--json"]).pipe(Effect.flip)).toMatchObject({
-        exitCode: 2,
+        exitCode: 3,
       });
       const row = (yield* inbox(root))[0];
       if (row === undefined) return yield* Effect.die("Expected finalization inbox row");
@@ -908,7 +1122,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
   for (const [ending, command, exitCode] of [
     ["a clean loop exit", Effect.void, 0],
     ["a red loop exit", Effect.fail("required-red"), 1],
-    ["a stopped loop", Effect.interrupt, 2],
+    ["a stopped loop", Effect.interrupt, 3],
   ] as const) {
     it.effect(
       `records ${ending} from a porcelain command inside the job so wait exits ${exitCode}`,
@@ -1071,6 +1285,119 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       });
     })
   );
+  it.effect(
+    "wait exits 2 on a wave, names its rows and the re-run command, and keeps JSON mode's stdout the record",
+    Effect.fnUntraced(function* () {
+      const { root, launcher } = yield* CommandCheckout;
+      const record = yield* launcher.submit(submission(root));
+      yield* launcher.bindPullRequest(record.jobId, 7);
+      const first = yield* waveRow(root, 7, "Check");
+      expect(yield* runJobCommand(["job", "wait", record.jobId]).pipe(Effect.flip)).toMatchObject({ exitCode: 2 });
+      const printed = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+      expect(printed).toContain("[yeet] wave on PR #7: 1 new P0/P1 inbox row(s): P0 Check (pr #7 @ abc123)");
+      expect(printed).toContain(`[${first.id}]`);
+      expect(printed).toContain(`re-run: bun run beep yeet job wait ${record.jobId}`);
+      expect((yield* readYeetAckState(root, first.id)).acked).toBe(false);
+      // The re-run returns only the row that landed after the first return.
+      const second = yield* waveRow(root, 7, "Lint");
+      expect(yield* runJobCommand(["job", "wait", record.jobId, "--json"]).pipe(Effect.flip)).toMatchObject({
+        exitCode: 2,
+      });
+      const errors = A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n");
+      expect(errors).toContain(`[${second.id}]`);
+      expect(errors).not.toContain(`[${first.id}]`);
+    })
+  );
+  // The in-memory PR session registry keeps the monitor off the live registry.
+  it.layer(Job.layerPrSessionRegistryMemory, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "a detached monitor binds the pull request it follows to its job record and windows comments at its submit",
+      Effect.fnUntraced(function* () {
+        const { root, launcher } = yield* CommandCheckout;
+        const record = yield* launcher.submit(submission(root));
+        const windows = yield* Ref.make<ReadonlyArray<string | undefined>>(A.empty());
+        const route = Effect.gen(function* () {
+          const registry = yield* Job.PrSessionRegistry;
+          yield* Job.runYeetMergeLoop(
+            { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
+            {
+              capture: () => Effect.succeed({ exitCode: 1, output: "", truncated: false }),
+              hydrate: () =>
+                Effect.succeed(
+                  Job.RepoRunContext.make({
+                    base: "origin/main",
+                    branch: "feat/job",
+                    cwd: root,
+                    head: "HEAD",
+                    originalArgv: [],
+                    packetDir: ".beep/yeet",
+                    repoRoot: root,
+                    turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+                  })
+                ),
+              mergeLoop: (_context, options) =>
+                Ref.update(windows, A.append(options.commentsSince)).pipe(
+                  Effect.as(Job.YeetMonitorTerminalState.Enum.ready)
+                ),
+              registry,
+              view: () => Effect.succeed(Job.GhPrView.make({ headRefName: "feat/job", number: 42, state: "OPEN" })),
+            }
+          );
+        });
+        yield* route.pipe(Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record)));
+        assertSome(O.getOrThrow(yield* launcher.read(record.jobId)).prNumber, 42);
+        // An attached run has no job: its loop starts the window itself.
+        yield* route.pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ PATH: root }))
+        );
+        expect(yield* Ref.get(windows)).toStrictEqual([record.submittedAt, undefined]);
+      })
+    );
+    it.effect(
+      "an until-ready monitor binds its pull request after the loop's first pin and runs detached only inside a job",
+      Effect.fnUntraced(function* () {
+        const { root, launcher } = yield* CommandCheckout;
+        const record = yield* launcher.submit(submission(root));
+        const attachments = yield* Ref.make(A.empty<string | undefined>());
+        const route = Effect.gen(function* () {
+          const registry = yield* Job.PrSessionRegistry;
+          yield* Job.runYeetMergeLoop(
+            { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
+            {
+              capture: () => Effect.succeed({ exitCode: 1, output: "", truncated: false }),
+              hydrate: () =>
+                Effect.succeed(
+                  Job.RepoRunContext.make({
+                    base: "origin/main",
+                    branch: "feat/job",
+                    cwd: root,
+                    head: "HEAD",
+                    originalArgv: [],
+                    packetDir: ".beep/yeet",
+                    repoRoot: root,
+                    turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+                  })
+                ),
+              // The loop seam never pins, so a bind can only have come from hydration.
+              mergeLoop: (_context, options) =>
+                Ref.update(attachments, A.append(options.attachment)).pipe(
+                  Effect.as(Job.YeetMonitorTerminalState.Enum.ready)
+                ),
+              policy: Job.YeetUntilReadyPolicy.make({}),
+              registry,
+              view: () => Effect.succeed(Job.GhPrView.make({ headRefName: "feat/job", number: 42, state: "OPEN" })),
+            }
+          );
+        });
+        yield* route.pipe(Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record)));
+        assertNone(O.getOrThrow(yield* launcher.read(record.jobId)).prNumber);
+        yield* route.pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ PATH: root }))
+        );
+        expect(yield* Ref.get(attachments)).toStrictEqual(["detached", "attached"]);
+      })
+    );
+  });
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })(
