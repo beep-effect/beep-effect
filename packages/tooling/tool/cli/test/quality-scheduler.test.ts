@@ -4606,7 +4606,10 @@ describe("quality-scheduler", () => {
                   fastConfig
                 )
               );
-              yield* Effect.sleep("100 millis");
+              yield* Effect.repeat(listDirectory(tempRoot.queue), {
+                until: A.isReadonlyArrayNonEmpty,
+                schedule: Schedule.spaced(Duration.millis(10)),
+              }).pipe(Effect.timeout(Duration.seconds(5)));
 
               const snapshot = yield* withPrependedPath(binDirectory, admissionStatus());
               expect(snapshot.leases[0]?.runScope).toMatchObject({

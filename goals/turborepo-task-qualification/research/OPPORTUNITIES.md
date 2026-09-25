@@ -2164,3 +2164,32 @@ was correctly refused after main changed the cache baseline. A three-way JSON
 review preserved both independent projection changes and recorded their basis.
 An existing-PR lookup that can recover after rate-limit reset, plus structured
 baseline diffs, would reduce repeated publication and conflict-review work.
+
+### Job wait journal recovery warning — 2026-09-25
+
+While waiting on an admitted proof, Yeet reported `journal lock generation
+displaced during release` and retained a recovery record. Systemd still
+reported the same runner active, and the wait handle remained live. Recovery
+files were preserved; no lock was removed and no proof was restarted. A
+waiter diagnostic that clearly distinguishes journal recovery from runner
+termination would prevent unnecessary retries.
+
+### Hosted scheduler telemetry failure during qualification closeout
+
+- Evidence: PR #1268 at `90fdc29897`, Property Laws job `108267028865` failed
+  `quality-scheduler` / `enriches active lease scopes with live memory and task
+  telemetry`: expected one queue ticket, observed zero. The test source is
+  byte-identical to the current local `origin/main` reference.
+- A focused local reproduction passed (one selected test, 132 skipped); this
+  does not clear the hosted failure or prove its cause. The test sleeps for
+  100 ms before reading queue state, so delayed enqueue remains a candidate
+  explanation. Hosted stack-map lines also differ from source locations.
+- Prevention candidate: synchronize on observable queue admission with a bounded
+  wait, retaining the telemetry assertions, rather than relying on elapsed time.
+  Keep the failure attributed separately from cache qualification evidence.
+
+- Remediation: the telemetry test now waits for a non-empty queue with the
+  existing 10 ms polling / five-second timeout pattern. All telemetry and
+  ticket-count assertions remain intact. The full scheduler file passed all
+  133 tests; repo-cli quick package verification passed lint and type checks.
+  Hosted verification and full-proof completion remain outstanding.
