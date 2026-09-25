@@ -1700,3 +1700,12 @@ The runner's live-main guard refused the changed revision. Preserve the
 partial round and reusable runner tests, but use a fresh full census for
 current-source convergence. Check provider availability before starting a
 round and minimize the delay between runner admission and census execution.
+
+### 2026-09-25 — Source moves while credit and proof remain queued
+
+A live-main read returned `6709f713` while R41 launcher review was pending.
+PRs #1229 and #1245 changed runtime source and dependency inputs, superseding
+the unlaunched preparation pinned to `41d6c9eb`. The queued publication proof
+was cancelled before merging main; its terminal result was observed. Preserve
+launcher review work separately from source admission so a source refresh can
+reuse proven execution behavior without claiming stale census coverage.

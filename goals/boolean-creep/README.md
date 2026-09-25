@@ -1,5 +1,16 @@
 # Boolean-Creep Eradication
 
+## Source advance during R41 preparation, 2026-09-25
+
+Main `6709f713` includes PRs #1229 and #1245, changing `Cache.pilot.ts`,
+`Str.ts`, and dependency inputs. The branch includes this forward merge.
+The unlaunched R41 preparation was pinned to main `41d6c9eb` and source
+`df458c7a`; it cannot establish current-source census coverage. Preserve its
+frozen inputs and launcher reviews, then refresh the full census inputs and
+admission against current source when provider availability is confirmed.
+No census execution or dry-round credit is claimed for R41. The inventory
+remains 725 rows, with 108 qualified and 617 disqualified; zero are applied.
+
 ## Source advance after R40, 2026-09-25
 
 Main `41d6c9eb` changes the CLI EnvConfig and TurboCache source files. The
