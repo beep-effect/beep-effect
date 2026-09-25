@@ -1,0 +1,46 @@
+{
+  "kind": "r39-post-census-main-forward/v1",
+  "fromSource": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "toSource": "220d9426dad4b708807b6297cb71d75449288749",
+  "changes": [
+    {
+      "id": "r32-cli-commands-d-k-graft-deep-refresh-options",
+      "before": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r32-cli-commands-d-k-graft-deep-refresh-options",
+        "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+        "line": 404,
+        "symbol": "GraftDeepRefreshOptions",
+        "kind": "schema-struct",
+        "members": ["seed", "rebuild"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D1",
+          "note": "Independent refresh consents. CLI defaults both true and documents --no-seed and --no-rebuild separately (Graft.command.ts:138-144). seedPhase returns no report when seed is false; rebuildTargets then rebuilds nothing, including when rebuild stays true. Both true is the schema example. All four request pairs are accepted."
+        }
+      },
+      "after": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r32-cli-commands-d-k-graft-deep-refresh-options",
+        "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+        "line": 434,
+        "symbol": "GraftDeepRefreshOptions",
+        "kind": "schema-struct",
+        "members": ["seed", "rebuild"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D1",
+          "note": "Independent refresh consents. CLI defaults both true and documents --no-seed and --no-rebuild separately (Graft.command.ts:138-144). seedPhase returns no report when seed is false; rebuildTargets then rebuilds nothing, including when rebuild stays true. Both true is the schema example. All four request pairs are accepted."
+        }
+      }
+    }
+  ],
+  "sourceSha256": "a5dab38f614a470c82dfcef033c54af4abac78bee018b78769d0cca47cc398dd",
+  "completeOwnerByteIdentical": true,
+  "historicalOwnerLines": [398, 412],
+  "currentOwnerLines": [428, 442],
+  "inventoryBeforeSha256": "a044e9df1564289cd85b79b38ab72f7b9bb3f7811f3cee8ea1bbdb963e4e0d7b",
+  "inventoryAfterSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+  "historicalRoundEvidenceModified": false,
+  "dryCredit": false
+}

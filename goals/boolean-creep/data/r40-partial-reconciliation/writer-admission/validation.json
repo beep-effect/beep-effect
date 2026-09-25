@@ -1,0 +1,19 @@
+{
+  "inventoryShapeValidation": {
+    "command": "bun goals/boolean-creep/ops/validate-inventory.ts private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/stream-choice-writer-proposal/r40-drivers-openai-compat-stream-choice-writer.proposed.jsonl",
+    "exitCode": 0,
+    "output": "inventory OK: 1 records, 1 unique ids"
+  },
+  "canonicalDeduplication": {
+    "idUnique": true,
+    "fileSymbolMemberSetUnique": true,
+    "existingStoredClassRemainsSeparate": true
+  },
+  "allInputAndOutputHashesRechecked": true,
+  "compatibilityEvidence": "The source-derived nine-witness receipt plus companion design preserve the existing mapped Effect, choice ordering, usage/reason/tool payloads, late/duplicate stream and onHalt semantics. Runtime equivalence is a required future implementation gate; no runtime test claimed.",
+  "credit": {
+    "P3": false,
+    "dryRound": false,
+    "implementation": false
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "lane": "r39-cli-commands-d-k",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "sourceFiles": 118,
+  "seeds": 82,
+  "classificationsChanged": 0,
+  "newQualified": 0,
+  "completeParentReconciliation": true,
+  "independentReview": false,
+  "inputs": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-d-k.execution.json",
+      "sha256": "236871551832c94abaa36db2a3866db3017488f27d50aeba3bba9b8ddc7e67c3"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-d-k.ndjson",
+      "sha256": "4db9ac1a78090274f45bc6603ae26acfe3c6f790f5fc4aefe65b863874d33f3e"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-knowledge-citation-audit/disposition.json",
+      "sha256": "c37efc4f77cd41db5833a76c4e24fbb5be0221838f01d551cb51b1cd240856c9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
+      "sha256": "c66a1611565b51a9f4b7286fda990208ef2c54cab89d8cf3ddef934ad86dd8bc"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/AUDIT.md",
+      "sha256": "1a4a4502adde6a6e8e8b628ae13fd0c6b3b00aef52ff0dc311e153e4680bd1a1"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/coverage.json",
+      "sha256": "392e2ab02187dd38d930bbc10ff36b49254a043543d704e935c575f8f3cf8d80"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/inventory-proposals.json",
+      "sha256": "a61a7ace5d1b16a0986f72c3bb1a7e580c8c0ffb3eb9c8c376b9685572a5e2de"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/knowledge-ref-candidate.md",
+      "sha256": "4ffb5fe45a4116732928e2396dd435d375476d8d68b2855c419aa5512f8386e4"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/knowledge-ref-classification-input.md",
+      "sha256": "365fe0adfa52af6500df3a7a3fb56bfb95a6c62a54a2c74abb276a918c178c44"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/knowledge-source.diff",
+      "sha256": "d096212a5bb8148171017f9e6818697f621a7be31e064c32207c1044125d322c"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/knowledge-tests.diff",
+      "sha256": "ac9dd42447dc584af229d8d5ffcfcb49417571588034295dc1121e1a7eacc77f"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/seed-accounting.json",
+      "sha256": "03aa0d43b624d9dcb5d4e7a8263f52cc2d6578c04eb0a8034e378b0cd92af816"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/sibling-scan.py",
+      "sha256": "a30f0b9f3454dec47192896b155630c6ff46824af77b5b382c017b67e1954b76"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/sibling-scan.txt",
+      "sha256": "02ea2a361f7c0f6347184e0dac8c1effb9892fc9ecb11264c253027d25f5e180"
+    }
+  ]
+}

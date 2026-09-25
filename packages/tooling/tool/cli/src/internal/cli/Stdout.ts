@@ -165,11 +165,28 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     MutableRef.set(failure, O.some(StreamWriteFailure.make({ stream: name, message, droppedLines: 1 })));
     marker(`[beep-cli] ${name} write failed: ${message}; later ${name} lines are dropped`);
   };
+  // Bun completes many writes synchronously and runs their callbacks inside `write`, so
+  // chaining the next line or chunk from a callback nests one stack frame set per write.
+  // A 100 MB payload then overflows the stack; the overflow lands in a chunk that already
+  // settled, is swallowed, and the chain stops with nothing keeping the loop alive, so the
+  // process exits 0 with the output cut short. Both chains are trampolined instead: a
+  // synchronous completion is recorded and the driving loop takes the next step.
+  const startingLine = MutableRef.make(false);
+  const lineReady = MutableRef.make(false);
   const startNext = (): void => {
-    A.match(MutableRef.get(queue), {
-      onEmpty: () => undefined,
-      onNonEmpty: ([start]) => start(),
-    });
+    if (MutableRef.get(startingLine)) {
+      MutableRef.set(lineReady, true);
+      return;
+    }
+    MutableRef.set(startingLine, true);
+    do {
+      MutableRef.set(lineReady, false);
+      A.match(MutableRef.get(queue), {
+        onEmpty: () => undefined,
+        onNonEmpty: ([start]) => start(),
+      });
+    } while (MutableRef.get(lineReady));
+    MutableRef.set(startingLine, false);
   };
 
   const write = (args: ReadonlyArray<unknown>): void => {
@@ -203,24 +220,44 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
       }
       complete();
     };
-    const writeNext = (failure: O.Option<string>): void => {
-      if (O.isSome(failure)) {
-        fail(failure.value);
+    const writing = MutableRef.make(false);
+    const settledDuringWrite = MutableRef.make<O.Option<O.Option<string>>>(O.none());
+    const writeNext = (initial: O.Option<string>): void => {
+      let next = O.some(initial);
+      while (O.isSome(next)) {
+        const failure = next.value;
+        next = O.none();
+        if (O.isSome(failure)) {
+          fail(failure.value);
+          return;
+        }
+        if (failed()) {
+          dropLine();
+          complete();
+          return;
+        }
+        const start = MutableRef.get(offset);
+        if (start >= bytes.byteLength) {
+          complete();
+          return;
+        }
+        MutableRef.set(offset, start + STREAM_CHUNK_SIZE_BYTES);
+        MutableRef.set(writing, true);
+        MutableRef.set(settledDuringWrite, O.none());
+        // Each chunk owns its once-only completion; a duplicate callback must not advance a later chunk.
+        writeChunkOnce(stream(), bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), chunkSettled);
+        MutableRef.set(writing, false);
+        next = MutableRef.get(settledDuringWrite);
+      }
+    };
+    // A chunk settled inside its own `write` call resumes the loop above; a later callback
+    // re-enters it from the top of a fresh stack.
+    const chunkSettled = (failure: O.Option<string>): void => {
+      if (MutableRef.get(writing)) {
+        MutableRef.set(settledDuringWrite, O.some(failure));
         return;
       }
-      if (failed()) {
-        dropLine();
-        complete();
-        return;
-      }
-      const start = MutableRef.get(offset);
-      if (start >= bytes.byteLength) {
-        complete();
-        return;
-      }
-      MutableRef.set(offset, start + STREAM_CHUNK_SIZE_BYTES);
-      // Each chunk owns its once-only completion; a duplicate callback must not advance a later chunk.
-      writeChunkOnce(stream(), bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), writeNext);
+      writeNext(failure);
     };
     const idle = A.isReadonlyArrayEmpty(MutableRef.get(queue));
     const start = (): void => writeNext(O.none());
