@@ -55,7 +55,9 @@
   (`turbo query affected` + decoded schemas, `YEET_FEEDBACK_TASKS`),
   `internal/Planner.ts` (`YeetProofTier`: full | cheap-gates | review-fix),
   `internal/Verdict.ts` + `.beep/yeet/runs/*/verdict.json` (per-lane `durationMs`,
-  `outcome`, `createdAt`, `branch`, `head` — the KPI's T1 vein).
+  `outcome`, `createdAt`, `branch`, `head` — the KPI's T1 vein),
+  `internal/WaveOrder.ts` (`WaveOrder`, `DEFAULT_GATE_ORDER_SEED`, `gate-order/v1`; handoff
+  document `goals/time-to-certainty/research/gate-order-handoff.json`).
 - `packages/tooling/tool/cli` Quality internals — REUSE: `commands/Quality/Tasks.ts`
   (lane assembly, concurrency bounds, coverage CI-identity pinning, `--force` in CI),
   `internal/cli/TurboCache.ts` (cache-posture state machine).
