@@ -1,11 +1,11 @@
 import { fcRuns } from "@beep/fc-runs";
+import { it } from "@beep/test-runner";
 import { AppendFileSyncOptions, ReaddirSyncOptions, RmSyncOptions } from "@beep/utils/FileSystem";
 import { GlobOptions, Pattern } from "@beep/utils/Glob";
 import { PathInput } from "@beep/utils/Struct";
-import { Effect, Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
+import { describe, expect } from "@effect/vitest";
+import { Result } from "effect";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const encode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -17,22 +17,6 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
   const decoded = decode(schema, encode(schema, value));
 
   expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
-
-const expectSchemaRoundTrips = <C extends S.Codec<unknown, unknown>>(schema: C): void => {
-  const result = Effect.runSync(
-    Arbitrary.checkEffect(
-      Arbitrary.schema(schema),
-      (value) => {
-        expectRoundTrip(schema, value);
-
-        return true;
-      },
-      fcRuns(50)
-    )
-  );
-
-  expect(result._tag).toBe("Passed");
 };
 
 describe("@beep/utils schema parity", () => {
@@ -83,12 +67,57 @@ describe("@beep/utils schema parity", () => {
     expect(encode(PathInput, ["profile", "name"])).toEqual(["profile", "name"]);
   });
 
-  it("round-trips schema-derived arbitrary values through encoded form", () => {
-    expectSchemaRoundTrips(Pattern);
-    expectSchemaRoundTrips(GlobOptions);
-    expectSchemaRoundTrips(AppendFileSyncOptions);
-    expectSchemaRoundTrips(RmSyncOptions);
-    expectSchemaRoundTrips(ReaddirSyncOptions);
-    expectSchemaRoundTrips(PathInput);
-  });
+  it.prop(
+    "round-trips Pattern",
+    { value: Pattern },
+    ({ value }) => {
+      expectRoundTrip(Pattern, value);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "round-trips GlobOptions",
+    { value: GlobOptions },
+    ({ value }) => {
+      expectRoundTrip(GlobOptions, value);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "round-trips AppendFileSyncOptions",
+    { value: AppendFileSyncOptions },
+    ({ value }) => {
+      expectRoundTrip(AppendFileSyncOptions, value);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "round-trips RmSyncOptions",
+    { value: RmSyncOptions },
+    ({ value }) => {
+      expectRoundTrip(RmSyncOptions, value);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "round-trips ReaddirSyncOptions",
+    { value: ReaddirSyncOptions },
+    ({ value }) => {
+      expectRoundTrip(ReaddirSyncOptions, value);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "round-trips PathInput",
+    { value: PathInput },
+    ({ value }) => {
+      expectRoundTrip(PathInput, value);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

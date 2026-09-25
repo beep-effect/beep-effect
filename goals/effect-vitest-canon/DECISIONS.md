@@ -575,3 +575,10 @@ remaining census delta until the existing backlog is exhausted. Keep dependency
 order, lens order, package verification, timing and PR gates. Benjamin retains
 merge authority. The first remediation slice is the identity registry resource
 finding in foundation/modeling; keep this family in its own PR.
+
+## 2026-09-25 — Narrow utils curried-form source repair
+
+Benjamin authorized fixing the reproduced `Str.mapPrefix` and `Str.mapPostfix`
+curried-form bugs as a narrow exception to the production-code non-goal. Preserve
+the existing two-argument APIs and add actual curried parity tests. This approval
+does not authorize unrelated production changes or waive other inventory findings.

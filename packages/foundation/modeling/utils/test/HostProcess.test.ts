@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import {
   currentHostArchitecture,
   currentHostPlatform,
@@ -5,7 +6,7 @@ import {
   HostProcessPlatform,
 } from "@beep/utils/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
@@ -40,7 +41,7 @@ describe("HostProcess", () => {
   );
 });
 
-it.layer(NodeServices.layer)("HostProcess browser-eval guard", (it) => {
+it.layer(NodeServices.layer, { timeout: "5 seconds" })("HostProcess browser-eval guard", (it) => {
   // Regression guard for the professional-desktop blank shell: evaluating the
   // `@beep/utils` barrel in an environment with no `process` global (a browser
   // bundle) must not throw, and the host constants must take their fallbacks.
