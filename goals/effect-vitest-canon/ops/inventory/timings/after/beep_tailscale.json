@@ -1,0 +1,71 @@
+{
+  "package": "@beep/tailscale",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T14:21:17.741290+00:00",
+  "totalMs": 2922.216552734375,
+  "testCount": 20,
+  "files": [
+    {
+      "file": "packages/drivers/tailscale/test/Tailscale.equivalence.test.ts",
+      "ms": 1.69677734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "ms": 47.216552734375,
+      "tests": 15
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale retains mixed status IPv4 addresses in order including duplicates",
+      "ms": 47.21653499999957
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale with a non-terminating tailscale status process times out tailscale status through TestClock",
+      "ms": 18.488324999999804
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale detects Tailnet IPv4 addresses",
+      "ms": 14.88169199999993
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale parses MagicDNS names from tailscale status",
+      "ms": 14.787426999999752
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale parses status facts",
+      "ms": 14.781347000000096
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale preserves status decoding failures without exposing cause text",
+      "ms": 14.774947999999767
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale rejects malformed MagicDNS status fields",
+      "ms": 3.420505999999932
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale rejects malformed Tailscale IP status fields",
+      "ms": 3.407767000000149
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale builds clean HTTPS base URLs",
+      "ms": 3.4025289999999586
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale with a failing tailscale process spawn preserves tailscale spawn failures as causes",
+      "ms": 2.7001960000002327
+    }
+  ]
+}
