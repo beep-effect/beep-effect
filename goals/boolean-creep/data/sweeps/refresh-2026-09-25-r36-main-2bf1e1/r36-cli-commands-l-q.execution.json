@@ -1,0 +1,22 @@
+{
+  "lane": "r36-cli-commands-l-q",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T07:04:24.099634+00:00",
+  "finished": "2026-09-25T07:08:33.829691+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-cli-commands-l-q.jsonl`. Confirmed 1, disqualified 0. All seven assigned roots were covered at `35f8454d0414d8f79284fdc9e92c84379d919a3e` (115 non-test source files).\n\nSeed drift: `EffectImportRulesSummary` still excludes `write && candidate`, and the same owner now also carries `strictFailure` (8 representable, 6 legal). That expanded cluster is the only record. The other seeded owners still match their members and classifications, so they were not repeated. No seeded declaration was withdrawn, and no source question was left unresolved.",
+  "transcriptSha256": "a185e4ef2832c5173ff8c792d441e696ff297efa22dd2d15fd1ce2520d3f3ed1",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

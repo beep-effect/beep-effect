@@ -1,0 +1,7 @@
+# Meaning-tier ignore list for graft (workstation dist patch kit, scripts/graft/patches).
+# Files listed here are never sent to the LLM for symbol or concept summaries and
+# never count as stale in `graft check`; the structural graph still indexes them.
+# Syntax: gitignore subset (`*`, `**`, `?`, `#` comments, trailing `/`).
+#
+# 17,800 lines / 833 exports: every crux call answers with an empty tool call.
+/packages/drivers/box/src/_generated/Box.models.gen.ts

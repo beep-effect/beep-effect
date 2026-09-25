@@ -1,0 +1,22 @@
+{
+  "lane": "r35-cli-commands-a-c",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:27:49.703424+00:00",
+  "finished": "2026-09-25T06:31:29.859516+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 7,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-commands-a-c.jsonl`. Confirmed 0, disqualified 7. All nine assigned roots were covered, including Codegen (no boolean cluster).\n\nSeed drift: `MailStoreExceptionRecord` is withdrawn. `disposition` is an optional `MailDisposition`, so the owner has only `approved`. The other seeded clusters still match the current source and were left unchanged. No unresolved source question.",
+  "transcriptSha256": "8e488497f354d4c1421c0dabcdba666752ee32526d607bba6d8e07e8414554d3",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 7 records, 7 unique ids\n"
+}

@@ -1,0 +1,7 @@
+# R36 cache task-selection pending-state admission
+
+Admit the raw candidate as one new designed E1/E4 cluster. The two mutable siblings encode4 combinations but only3 are reachable. They are implementation locals, not excluded Boolean function parameters. Sequential traversal, early return on cache-value consumption, and clearing optional pending before classification prove mutual exclusion. All writes and final error paths were inspected. No canonical duplicate exists.
+
+The private full design replaces the two latches with Option of a two-literal pending obligation; idle=None. It preserves public array input/output, token order, first separator, missing-value errors, optional-Boolean fallthrough and accepted edge tokens. 88744 representative sequence cases matched the original and proposed transition models with zero differences and no both-true state. This is proposal-level symbolic checking, not a production runtime test.
+
+Sources match frozen HEAD and origin/main. disposition.json binds all source, raw/execution, rule, inventory, dependency and validator hashes. New row and full design are private. Delta+1Q/+1design. No source or canonical edits, ref changes, launches, P3 or dry credit.

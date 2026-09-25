@@ -1,0 +1,22 @@
+{
+  "lane": "r37-apps",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:41:19.805767+00:00",
+  "finished": "2026-09-25T07:44:16.841103+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-apps.jsonl`. Confirmed 1, disqualified 0. Validator passed.\n\nEvery assigned root was covered (`architecture-lab-proof`, `oip-web`, `practice-kg-mcp`, `professional-desktop` including `src-tauri`, `todox`), including non-TypeScript sources. Generated `Migrations.gen.ts` was excluded.\n\nSeed drift: `ThreadTranscriptView.streaming` is `Option<StreamingTurn>`, so the seeded four-boolean cluster was corrected to `empty`, `failed`, and `loading` under the same id. The other seeded owners still match their current declarations and classifications. No unresolved source question.",
+  "transcriptSha256": "6f0370d783609a81bb7df6471f738ffac7516eda4750edfd94650b52c7aeb2d6",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

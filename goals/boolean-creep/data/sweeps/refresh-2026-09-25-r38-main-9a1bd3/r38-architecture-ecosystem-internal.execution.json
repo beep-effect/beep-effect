@@ -1,0 +1,22 @@
+{
+  "lane": "r38-architecture-ecosystem-internal",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:14:42.170040+00:00",
+  "finished": "2026-09-25T08:16:11.603234+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-architecture-ecosystem-internal.jsonl`\n\nConfirmed 0, disqualified 0. All nine assigned roots were covered (114 non-test TypeScript files).\n\nSeed classifications are unchanged, so nothing was re-recorded. `WorkItemPublicConfig` and `readWorkItemConfig.envFlags` still sit at lines 49 and 113. `Meta`\u2019s four flags are still independent. The first of those flags, `hasDefault`, is now at line 273 (the seed cited 267). `IndexIntent.unique` is a separate one-boolean field, not part of that cluster. No unresolved source question.",
+  "transcriptSha256": "8ab4b9fd3b560332f52cc1044f50dc70cd93ec2e4019c1b649d50160c5a1d3de",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

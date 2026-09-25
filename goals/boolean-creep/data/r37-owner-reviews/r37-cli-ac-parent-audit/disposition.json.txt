@@ -1,0 +1,59 @@
+{
+  "kind": "r37-cli-ac-parent-audit/v1",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "inputs": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-test-health.test.ts.hbs",
+      "sha256": "64fd6ccdc79fa7c5376604166d6fc60c82faa917b815ff576a4174dd4eb987e0"
+    },
+    {
+      "file": "node_modules/effect/src/unstable/http/HttpRouter.ts",
+      "sha256": "a4919a7b36e78edf4f512ebe4c0ee19866e5447ac0fdbb2de2e6fd0e1684a5b0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "sha256": "114634462e491e27c25477578d32008bdac6a2c7094d404d7484c8d0b21b1c7a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "sha256": "b41602afd2abd5da4224db88b28377993e9d3950ea9fb36033538909d25ab711"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-a-c.execution.json",
+      "sha256": "12e741e6541d5d4a517b5c3977ee8b332a4449db4010ca5ff3c685fee3bea96c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-a-c.jsonl",
+      "sha256": "13039baf01adfbc3684dd5baf78a17c23f4720365e4b56a74f496a4885620be5"
+    }
+  ],
+  "disposition": "Admit health template concrete options object D2: two actualBoolean fields mirror installedEffect HttpRouter.serve options1282-1283; consumers1311/1325 independently handle middleware logger/address logger. Neither same producertrue/true nor generatedtestoutput narrows externaldomain. Reference checkout unavailable; exact installeddependency bound. No duplicate canonicalowner. RetainTemplateContext declaration734 (747firstBoolean). Update4Drowanchors: CiLocalStepPlan2405,actualrunCaptured1968,namedCodexoptionstype122(two separatememberpairs). No qualified change.",
+  "newDisqualifiedIds": [
+    "r37-cli-commands-a-c-health-serve-log-options"
+  ],
+  "metadataIds": [
+    "ci-local-step-plan",
+    "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+    "codex-findings-ingest-command-options",
+    "codex-findings-ingest-command-force-refresh"
+  ],
+  "outputs": [
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "073c774247a3eb72106b5f31f216db6424987fe2620c27065b826a833c4b0d2b"
+    },
+    {
+      "file": "proposed-additions.jsonl",
+      "sha256": "effcc8ccb2ec74284646f92a12cc97cf8b0e97a3a499b607dd02a30a7d8531e6"
+    }
+  ],
+  "dryCredit": false
+}

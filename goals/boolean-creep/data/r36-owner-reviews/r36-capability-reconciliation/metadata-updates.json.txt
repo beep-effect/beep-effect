@@ -1,0 +1,73 @@
+{
+  "kind": "r36-capability-locator-review/v1",
+  "updates": [],
+  "reviewed": [
+    {
+      "id": "backend-capabilities",
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+      "symbol": "BackendCapabilities",
+      "currentInventoryLine": 247,
+      "declarationLine": 247,
+      "firstBooleanLine": 250,
+      "changeRequired": false,
+      "decision": "Preserve correct declaration anchor; footer reports member location, not source drift.",
+      "pendingWithdrawal": false
+    },
+    {
+      "id": "annotation-options-include-flags",
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "symbol": "AnnotationOptions",
+      "currentInventoryLine": 316,
+      "declarationLine": 316,
+      "firstBooleanLine": 318,
+      "changeRequired": false,
+      "decision": "Preserve correct declaration anchor; footer reports member location, not source drift.",
+      "pendingWithdrawal": false
+    },
+    {
+      "id": "shacl-validation-result-flags",
+      "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+      "symbol": "ShaclValidationResult",
+      "currentInventoryLine": 284,
+      "declarationLine": 284,
+      "firstBooleanLine": 286,
+      "changeRequired": false,
+      "decision": "Preserve correct declaration anchor; footer reports member location, not source drift.",
+      "pendingWithdrawal": false
+    },
+    {
+      "id": "source-text-page-nav-flags",
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "symbol": "SourceTextPageStruct",
+      "currentInventoryLine": 131,
+      "declarationLine": 131,
+      "firstBooleanLine": 134,
+      "changeRequired": false,
+      "decision": "Preserve correct declaration anchor; footer reports member location, not source drift.",
+      "pendingWithdrawal": false
+    },
+    {
+      "id": "r2-foundation-unique-match-search",
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "symbol": "UniqueMatchSearch",
+      "currentInventoryLine": 32,
+      "declarationLine": 32,
+      "firstBooleanLine": 33,
+      "changeRequired": false,
+      "decision": "Preserve correct declaration anchor; footer reports member location, not source drift.",
+      "pendingWithdrawal": false
+    },
+    {
+      "id": "r2-foundation-graph-validation-result",
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "symbol": "ValidationResult",
+      "currentInventoryLine": 527,
+      "declarationLine": 527,
+      "firstBooleanLine": 530,
+      "changeRequired": false,
+      "decision": "Preserve correct declaration anchor; footer reports member location, not source drift.",
+      "pendingWithdrawal": true
+    }
+  ],
+  "note": "No locator edits needed. All six existing lines identify the declaration; raw footer destinations identify first Boolean fields."
+}

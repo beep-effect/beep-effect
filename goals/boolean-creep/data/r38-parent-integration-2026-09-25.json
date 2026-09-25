@@ -1,0 +1,132 @@
+{
+  "kind": "boolean-creep-r38-parent-integration/v1",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "inventoryBefore": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r38-reconciliation.jsonl",
+    "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+  },
+  "inventoryAfter": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-r38-final-reconciled.jsonl",
+    "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+  },
+  "records": 722,
+  "qualified": 106,
+  "disqualified": 616,
+  "applied": 0,
+  "withdrawnQualifiedIds": [
+    "worktree-branch-diff-reading",
+    "worktree-idle-reading",
+    "worktree-policy-reading",
+    "worktree-process-cwd-reading",
+    "yeet-prepared-publish-commit"
+  ],
+  "newDisqualifiedIds": [],
+  "metadataUpdatedIds": [
+    "r3-tooling-packet-mutation-restore-presence",
+    "r3-tooling-packet-mutation-repair-root-residue",
+    "r30-cli-commands-d-k-packet-mutation-empty-repair-root-remove-options",
+    "package-inventory-docgen-coverage",
+    "turbo-summary-task-cache",
+    "ci-lane-run-options",
+    "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+    "codex-findings-ingest-options",
+    "codex-findings-ingest-force-refresh",
+    "aimetrics-install-apply-options",
+    "aimetrics-sources-discover-options",
+    "aimetrics-forwarder-run-options",
+    "aimetrics-forwarder-timer-options",
+    "aimetrics-benchmark-run-options",
+    "aimetrics-label-add-options",
+    "agent-effectiveness-doctor-options",
+    "agent-effectiveness-eval-scorer-options",
+    "r3-tooling-phoenix-sync-program-options",
+    "r26-cli-commands-a-c-validate-pst-export-acceptance-gates",
+    "r27-cli-commands-a-c-findings-manifest-capability-flags",
+    "r27-cli-commands-a-c-findings-manifest-completion-gate",
+    "r27-cli-commands-a-c-findings-manifest-sanitation",
+    "r28-cli-commands-a-c-eval-law-lanes-spawn-options",
+    "r28-cli-commands-a-c-preservation-capacity-spawn-options",
+    "codex-findings-write-request-options",
+    "r29-cli-commands-a-c-mode-validation-request",
+    "r30-cli-commands-a-c-preservation-dest-partial-exists",
+    "r30-cli-commands-a-c-legacy-word-dest-partial-exists",
+    "r31-cli-commands-a-c-storybook-affected-spawn-options",
+    "corpus-pst-terminal",
+    "corpus-legacy-word-terminal",
+    "cache-pilot-non-execution",
+    "worktree-pr-classification",
+    "r3-tooling-docker-tag-kind-flags",
+    "worktree-porcelain-accumulator"
+  ],
+  "archivedDesigns": [
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/cache-pilot-non-execution.md",
+      "sha256": "e57eed531719ccd32066ed2851e1ebef82ee1b7b688dc1ad814e2fb94ff75b09"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/corpus-legacy-word-terminal.md",
+      "sha256": "0a3fd27786bbb8b0734bea77bc5376258a233b514004dc2317a0a7dce41691ac"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/corpus-pst-terminal.md",
+      "sha256": "37fd0dded32871ecfd7f0df714b8dbc119c1242270b64a7e604844e428f6cf9c"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/package-inventory-docgen-coverage.md",
+      "sha256": "942a8b273b4a346e6c804041db75c4f24a6a0822a987fb7d16774dc776618252"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/r3-tooling-docker-tag-kind-flags.md",
+      "sha256": "631a01ff29db947a3fd05648c3e5acf412a2779d44490cb845a2247822a863e7"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/worktree-branch-diff-reading.md",
+      "sha256": "ab1b08a9e27c57d68c146e7d0c87d91a6cb840e30c17c7fdbc29d6ac1eba785e"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/worktree-idle-reading.md",
+      "sha256": "36b1074aaadc0212617ddaa417179fdac374c3a45d29c1a0abd044d5ae718b77"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/worktree-policy-reading.md",
+      "sha256": "5edba3e00bb7a23d1752427f72008eafc62e2aeffc98df4e602a6235e603088f"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/worktree-pr-classification.md",
+      "sha256": "f2f2d2f91081718ee617b43a2b7ac6f4710fc86508b58e326b5499801b93a7d8"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/worktree-process-cwd-reading.md",
+      "sha256": "07bc173a35de3324ab16386c2e923b631658ce23528ad5e1f9310d3922492cc6"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r38-reconciliation/yeet-prepared-publish-commit.md",
+      "sha256": "f27d5c5f3710f76999e2cd7170174d3e5a987c24270e5effde6e7afb1231bec2"
+    }
+  ],
+  "designReplacements": [
+    "package-inventory-docgen-coverage",
+    "corpus-pst-terminal",
+    "corpus-legacy-word-terminal",
+    "cache-pilot-non-execution",
+    "worktree-pr-classification",
+    "r3-tooling-docker-tag-kind-flags"
+  ],
+  "rawDispositions": [
+    {
+      "id": "r2-foundation-unique-match-search",
+      "disposition": "retain-existing8/4-reject-truncated4/3",
+      "ownerAudit": "r38-alignment-owner-audit"
+    },
+    {
+      "id": "r38-apps-webkit-extension-open-options",
+      "disposition": "excluded-builder-method-flag-arguments",
+      "ownerAudit": "r38-rust-open-options-audit"
+    }
+  ],
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "publicationEvidencePending": false,
+  "ownerArtifactIndex": "goals/boolean-creep/data/r38-owner-reviews/artifact-index.json",
+  "reconciliationReceipt": "goals/boolean-creep/data/r38-reconciliation-progress-2026-09-25.json"
+}

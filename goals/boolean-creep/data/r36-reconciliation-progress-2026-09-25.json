@@ -1,0 +1,388 @@
+{
+  "round": "refresh-2026-09-25-r36-main-2bf1e1",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "complete": true,
+  "dryCredit": false,
+  "reviewedLanes": [
+    {
+      "lane": "r36-foundation-primitive",
+      "executionSha256": "de34154c848837ffdde87d1e2a06762a2477039d620afab810ad8de2a2331ab8",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Both assigned primitive roots covered, no seeds; empty validated report. Single module latch, false-or-MimeType sentinel and type-level Boolean results correctly excluded from two-member co-carried owner net. Execution/transcript/seed/runner bindings verified; no unresolved question."
+    },
+    {
+      "lane": "r36-foundation-schema-a-m",
+      "executionSha256": "f8fdb933582fb8ecc7e84b3f5bdac2f4bf72f0eb972225914bb8a2e76ee246c8",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All188assignedsources and10seededclusters covered; unchanged owners/members/classifications, no drift or unresolved question. Empty validated report and execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r36-foundation-schema-n-z",
+      "executionSha256": "795af27d0b01989f1acd8e98de7ca39efca078c1d2d0853699972a095673161b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots and7seedclusters covered; unchanged D1/D2 rulings. ParserOptions139 is first Boolean vs canonical class declaration137, not locator drift. Empty validated report and bindings verified."
+    },
+    {
+      "lane": "r36-foundation-modeling-rest",
+      "executionSha256": "935150f453df327f8347d73a153e367857b02fe6ea78278f8b988b8d26388957",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All11assignedroots covered; retained seed classifications and canonical anchors. Parent verified non-TypeScript ontology seed coverage in transcript1110/1118: unrestricted-extension seed glob, true|false|boolean query, completed0matches/no stderr. Generated exclusions maintained. No new rows or unresolved source question."
+    },
+    {
+      "lane": "r36-foundation-capability",
+      "executionSha256": "441f196dd1a9ee63a3db4af5abc7389374dc9501b8470c6f974e574cbba208db",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All roots covered. Independent complete-owner audit withdraws ValidationResult: sole validBoolean plus required errors/warnings arrays; no inheritance or scope waiver.13input/2proposal hashes verified. Six claimed locator changes are firstBooleanfield vs existing declaration, no edits. MinimalFoldMatchSearch real inherited secondBoolean retained."
+    },
+    {
+      "lane": "r36-drivers-n-r",
+      "executionSha256": "836cdfb3da9233dd3b2238802be97f74189bc241f5dbb67a6d81ff99821e2fd9",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots covered; seeds retained. Resolve speculative OBS pair without newQ: inputAttached is branch-local inside existing-input else while sceneExists is parent local; prior complete-owner audit explicitly excludes cross-scope pairing and source is byte-identical. Separate protocol observations impose no new supported contract restriction. Existing sceneExists/existingSettings/inputCreated E3 remains. FileInfoOutput soleBoolean excluded.",
+      "sourceBindings": [
+        {
+          "file": "packages/drivers/obs/src/Obs.service.ts",
+          "sha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac"
+        },
+        {
+          "file": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/audit.json.txt",
+          "sha256": "0f0ea7e8c6e44e5bd869de58b79f9f69e4b80fefaf8eda6683148ed15ca72690"
+        },
+        {
+          "file": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/disposition.md",
+          "sha256": "f81d68582d7d09df3af4eb53851bab07757aeeaf078e515c105c7a7b617d9378"
+        }
+      ]
+    },
+    {
+      "lane": "r36-drivers-g-m",
+      "executionSha256": "387cd2ab2a3cf54ee2175fa24953efb5ba900d776561dd2e563ddb905f22ec5b",
+      "reportSha256": "734b28c48676f40de9f03c864d2801fc446e818546c64d9d9759c87ad3c71cad",
+      "disposition": "All7roots covered. Independent complete-owner audit rejects ToolNameCollisionRow newQ: sole truncatedBoolean plus nullable string/literal/text fields; no domain spread or inheritance. Existing stage twoBoolean qualification unchanged, no row migration dependency.8inputhashes verified."
+    },
+    {
+      "lane": "r36-agents-workspace",
+      "executionSha256": "9618c34ba13c4de3c4e34f6938c5f6132bc00b84c42ff18f7792a1abe109e721",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All149files andassignedroots covered; TextInline independentD1 and ScanState escaped=>inString E4 retained; no additional cluster or questions. Empty validated report, allbindings verified."
+    },
+    {
+      "lane": "r36-drivers-s-z",
+      "executionSha256": "92e3604bd9581577fd05f9b7c8e6ea15fc7ea432b8def865c7629a7e229b8c58",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All9roots covered;5seedD1owners unchanged, no withdrawn/newrows or questions. Empty validatedreport, allbindingsverified."
+    },
+    {
+      "lane": "r36-foundation-ui",
+      "executionSha256": "a1b94a437334db22614e701bcbcd21f1f14719265ebf0f30aeb0e0f144c306aa",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All5roots and64canonicalseeds covered; currentowners/members/classifications retained after R35corrections. Empty validatedreport,no withdrawals/questions, allbindingsverified."
+    },
+    {
+      "lane": "r36-architecture-ecosystem-internal",
+      "executionSha256": "fa30f9e7a654ef425fad7df1a0d53c86f60e80e0001c6f91b6b03f37be3f3e82",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All9roots114sources covered;3seedD1owners unchanged. Meta273 is firstBoolean while267 remains class declaration; no locator change. Empty validatedreport,no newclusters or questions; bindings verified."
+    },
+    {
+      "lane": "r36-law-practice-domain",
+      "executionSha256": "0af336b686f2458d8dddf7584f636a2554d9ca3043f6cfcb0efddaabdfc76f59",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Assigneddomainrootsand25seedscovered; unchanged owners/members/classes. ConstitutionalCitation explicit owner rulings remain binding; no newproducer finding supersedes them. Empty validatedreport, no withdrawal."
+    },
+    {
+      "lane": "r36-law-practice-runtime",
+      "executionSha256": "eb46556b20932cbbdd9f38ff1df1ef51a4d71ba960d965d9874280bc457a2299",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All3rootscovered;3D1/D1/D2seedsretained, singleBoolean and previouslywithdrawn cross-owner gateexcluded. Empty validatedreport,no questions."
+    },
+    {
+      "lane": "r36-drivers-a-f",
+      "executionSha256": "1abd719479169c231e7e88714f55f8411c76a331aaf6c78d420eb6df2abee461",
+      "reportSha256": "87b8301a52baeeadbfd8817ee7bf240b1ed8099785942f035fc15a00d9a00fbd",
+      "disposition": "All16roots99sources covered. Independent full-owner audit withdraws soleBoolean ClaudeauthD2; retains3challenged Firecrawl rows because completeowners have2Booleans, sameR34sourcebinding. ACPdeclaration390 and Cosmosconstructorcite445 corrected;12inputs5outputsparentverified."
+    },
+    {
+      "lane": "r36-shared-documents",
+      "executionSha256": "e2def0cf894954f69056b55d7576ff6abdd47691ebc8740d0546afbd6effa696",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All7rootscovered; existingenqueueMoveDeltasD1/requeueE4retained. Independentcompleteownerauditwithdraws2timestampD1rows withsoleconnectedBoolean, noinheritanceextras/dependentdesigns.11input2outputhashesverified; sourcebyteidenticalR33."
+    },
+    {
+      "lane": "r36-apps",
+      "executionSha256": "673c2b0c0e0902fb04047823a50a706860413a45fa351314bbe734fa37731c02",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "AllassignedrootsincludingRustcovered. Parentcompleteownerinspectionwithdraws3fabricatedDcarriers acrossseparateoptionobjects/JSXnodes/stringcomparison; metadatarepairs2retainedDrows. Sourceauditbound privately."
+    },
+    {
+      "lane": "r36-tooling-library-support",
+      "executionSha256": "61b7eee6a6ef8098d2e6084ebceba0a3099241366d6996b048f31395a9ab1be5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All5rootscovered;seedowners/members/classificationsunchanged;emptyvalidatedreport,noquestions. SingleBoolean/functionflagparameters excluded."
+    },
+    {
+      "lane": "r36-tooling-library-observability",
+      "executionSha256": "4afa54771bf8c969e077f6ae27117154b25736bb229459f36d22b38018778261",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allassignedrootscovered. Reject3footerwithdrawals: completeOutcomeLabel/AiMetricsOutcomeLabelInput/OutcomeLabelAnnotationRow eachhasactualpassed+followUpFixBooleans;qualityGatestringnotcounted. RetainexistingD1rows; independent8inputbindingsverified,zero inventorydelta."
+    },
+    {
+      "lane": "r36-tool-docgen",
+      "executionSha256": "365e51d39f1fcf48d08ab6104579c165340dc5fdc540ed922e0e8e8bd37572fb",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allsourcescovered;17seedownerssameanchors/members/D1D2,emptyvalidatedreport,no withdrawals/questions. Predicate/FlaghandlesandsingleBooleanexcluded."
+    },
+    {
+      "lane": "r36-tooling-policy",
+      "executionSha256": "2abb28ce13f2826cf4083b7a3b541b35dffe2502abad569615b1f4f8eb64ea94",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Bothrootscovered generatedsnapshotexcluded; seeds unchanged,emptyvalidatedreport,nodrift/withdrawals/questions. SingleBooleanmodels excluded."
+    },
+    {
+      "lane": "r36-cli-commands-d-k",
+      "executionSha256": "227e1c70acff8b841e69a7f81e404723f2fc6d658532bb9757825ad68ced5787",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All118non-testfiles/assignedrootscovered; existingowners andclassesretained, emptyvalidatedreport. FirstBooleanmemberoffsets not declarationdrift; noqualifyingnewowner/questions."
+    },
+    {
+      "lane": "r36-cli-internal-root",
+      "executionSha256": "9ab3debd73aa66ac797cc2ccde77da9b69d8247444fb691d595e491031a6bbbf",
+      "reportSha256": "f0a89cb58640df9ce5a415508eb01c07bba19fc93be85dc59b6ddaa5f35ae605",
+      "disposition": "All87sourcescovered; rawfunctionflagparameterrejected againstunchangedR35source. Fullownerinspectionwithdraws2singleBoolean schedulerQrows, archivedesigns; no otherdesign dependency."
+    },
+    {
+      "lane": "r36-cli-commands-l-q",
+      "executionSha256": "b512634eb4b338cd87a90d3470d174f3a8addc63310d4cfb9cfe0803b2a97e02",
+      "reportSha256": "8f6e9b74907f9b9d229f73182e517b1b9e19be3f5f981a600eae1316d4042034",
+      "disposition": "All7roots115sourcescovered; retainexistingminimal4/3summarypair, independentstrictFailurealreadyretainedinrevieweddesign. Rejectunnecessary8/6crossproduct, correctdeclarationanchor241."
+    },
+    {
+      "lane": "r36-epistemic-ontology",
+      "executionSha256": "3f65a200a12eb14026feaf3cbdd8480bdc8ac1e21e587b78e7008bda756486c0",
+      "reportSha256": "1103dd90c04901737869ca9acf1dfd36b99c87390d78eaf2d58e9736a2fe0bbb",
+      "disposition": "Allrootscovered. Source/dependency-boundauditadmitsminimalcall-site sessionOpen/dirty4/3inside5Booleanowner; pinnedhook/registry/Reactprovescoherence, noopenquestion. Compatiblepublicadapterretains32inputs; newdesigncoordinatesexistingoutputprojection.21input7outputhashesverified."
+    },
+    {
+      "lane": "r36-cli-yeet",
+      "executionSha256": "d51cda29a4ab490bdeda5522f4a71e1ffdbf9497a072f8bbfb0672b96087caeb",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "AllYeetfilescovered; existingseedownersretained. Resolveoccupancyquestion againstexplicitR35completeownerruling:6source/test/design/rulefiles byteidentical. Conservativeobserverassignmentdoesnotrestrictsupportedpartialfactshelperinputs; preserveindependentmainoccupancy andexisting4/3probe/address. No newqualification. R35metadataalreadycorrected actualdeclarations; genericfirstfield driftclaimsnotadmitted.",
+      "sourceBindings": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+          "sha256": "97b5d41c7f2c90f8ca917f50329e8a2b580b7563c300d13720d59420e55999f2"
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+          "sha256": "99a83ceb5e9a3a9042baf7ee8572f82de9dfb89bb273a9ff6de81537e4857d4e"
+        },
+        {
+          "file": "packages/tooling/tool/cli/test/support/RetireFenceInvoker.ts",
+          "sha256": "60dd792ab885b47f9a41747a9a63ed00f287b77a4e50a648f2fbb29434401f5a"
+        },
+        {
+          "file": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+          "sha256": "6142f066feac1f4d1bce1fb8282cf87837d52d34d477331035c9b9969a6c5c5e"
+        },
+        {
+          "file": "goals/boolean-creep/SPEC.md",
+          "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+        },
+        {
+          "file": "goals/boolean-creep/DECISIONS.md",
+          "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+        }
+      ],
+      "priorAuditSha256": "4e69feb09b63c1657e8045e05699d272b00c044b2aed00b62a4d10357045ef2f"
+    },
+    {
+      "lane": "r36-cli-commands-a-c",
+      "executionSha256": "eef7ac0e3fa9b9c71122b8f65aa1ed71a175311b0cefc9219ed71e2c6e92faff",
+      "reportSha256": "96f82557e91348a0120c68e35cd7ce78abcbdf75d7b11494c39c9a6dc4697fe4",
+      "disposition": "All9roots173sourcescovered;77seedownersunchanged. Fulltwo-latchparserauditadmitsnewstored4/3cluster withOptionliteraldesign.12input4outputhashesverified;88744representativealgorithmsequences0mismatches supportproposalonly."
+    },
+    {
+      "lane": "r36-cli-commands-r-z",
+      "executionSha256": "3ffc598e45b7d81a03d0816e1c3a51511daef365eabed62c2f6c96bfc82aa32c",
+      "reportSha256": "4afd1eb0890d75d1eb90ab40fc6f30a328d16c812071cea999036918e939ea4f",
+      "disposition": "Allrootscovered;independenttailauditrejects2functionflagparameters,withdrawssingleBooleanFleetEpochTarget,retains7completeowners,7boundedinventorymetadataupdatesand2designcitationupdates.16input8outputhashesverified."
+    }
+  ],
+  "pendingWithdrawals": [
+    {
+      "id": "r2-foundation-graph-validation-result",
+      "ownerAudit": "r36-capability-reconciliation",
+      "archiveDesign": true,
+      "disposition": "Only one actual Boolean in complete owner. Required errors array is always present; emptiness/nonemptiness is not sibling optional payload presence or an additional Boolean. The documented errors=>!valid relation and accepted invalid([]) behavior remain real but cannot bypass the >=2Boolean recall gate."
+    },
+    {
+      "id": "ai-provider-cli-claude-auth-status-payload",
+      "ownerAudit": "r36-drivers-a-f-reconciliation",
+      "archiveDesign": false,
+      "disposition": "Complete Claudeauthpayload has sole loggedInBoolean; optional text fields do not satisfy ownerrecall."
+    },
+    {
+      "id": "r25-shared-documents-dms-mirror-probe-probed-at",
+      "ownerAudit": "r36-shared-documents-reconciliation",
+      "archiveDesign": false,
+      "disposition": "Completeowner hasonlyconnectedBoolean; probedAt OptionDateTime is not secondBoolean; priorD1record outside recall."
+    },
+    {
+      "id": "r25-shared-documents-vault-sync-status-probed-at",
+      "ownerAudit": "r36-shared-documents-reconciliation",
+      "archiveDesign": false,
+      "disposition": "Completeowner hasonlyconnectedBoolean; probedAt OptionDateTime is not secondBoolean; priorD1record outside recall."
+    },
+    {
+      "id": "r3-apps-smoke-mkdir-recursive",
+      "ownerAudit": "r36-apps-reconciliation",
+      "archiveDesign": false,
+      "disposition": "Three distinct makeDirectory options objects at164-166 each contain only recursive; no sibling Boolean local or common object holds the three flags."
+    },
+    {
+      "id": "r3-apps-ontology-menu-aria-hidden",
+      "ownerAudit": "r36-apps-reconciliation",
+      "archiveDesign": false,
+      "disposition": "aria-hidden at674 and748 occurs on separate JSX elements in separate components; not a co-carried Boolean owner."
+    },
+    {
+      "id": "r2-apps-renderer-react-grab-gate",
+      "ownerAudit": "r36-apps-reconciliation",
+      "archiveDesign": false,
+      "disposition": "The gate at18 combines env.DEV with a comparison on a string env var. No reactGrabGate model or pair of Boolean locals is declared; expression operands do not invent Boolean members."
+    },
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "ownerAudit": "r36-cli-parent-reconciliation",
+      "archiveDesign": true,
+      "disposition": "AdmissionAttempt1784-1787 andPromotionTick1940-1944 eachdeclare onlyoriginBusyBoolean alongside admittedOption; nestedinfo hasnumericfields+state object, no domaininheritance/spread addsBoolean. No SPEC/DECISIONSscopeexception. Their onlydesign dependencies areeachother. Preserve historical4/3relations without runtimechanges."
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "ownerAudit": "r36-cli-parent-reconciliation",
+      "archiveDesign": true,
+      "disposition": "AdmissionAttempt1784-1787 andPromotionTick1940-1944 eachdeclare onlyoriginBusyBoolean alongside admittedOption; nestedinfo hasnumericfields+state object, no domaininheritance/spread addsBoolean. No SPEC/DECISIONSscopeexception. Their onlydesign dependencies areeachother. Preserve historical4/3relations without runtimechanges."
+    },
+    {
+      "id": "worktree-fleet-epoch-target",
+      "ownerAudit": "r36-cli-tail-reconciliation",
+      "archiveDesign": true,
+      "disposition": "Complete direct3field owner onlymaterializedBoolean;refstring andsha nullableString do notsatisfyrecall. Archiveexistingdesign,no runtimechange."
+    }
+  ],
+  "pendingMetadataUpdates": [
+    {
+      "id": "r2-apps-smoke-practice-kg-options",
+      "line": 178,
+      "kind": "object-literal",
+      "symbol": "makeFixtureBundle.options",
+      "file": "apps/practice-kg-mcp/src/smoke.ts",
+      "sourceSha256": "03135f74063d827c5e4761e1a30964c561cbeceb4a2f60cfed4e0c388fd02905"
+    },
+    {
+      "id": "r2-apps-ontology-menu-open-current",
+      "line": 720,
+      "file": "apps/professional-desktop/src/App.tsx",
+      "sourceSha256": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17"
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sourceSha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+      "line": 241
+    }
+  ],
+  "rawDispositions": [
+    {
+      "id": "r36-drivers-g-m-tool-name-collision-row-truncation",
+      "disposition": "outside-recall-net-single-Boolean-owner",
+      "ownerAudit": "r36-tool-name-reconciliation"
+    },
+    {
+      "id": "r36-cli-internal-root-exclusive-mode-flags",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r36-cli-parent-reconciliation"
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "disposition": "retain-minimal4/3-preserve-independent-strictFailure",
+      "ownerAudit": "r36-cli-parent-reconciliation"
+    },
+    {
+      "id": "r36-cli-commands-r-z-install-timers-request",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r36-cli-tail-reconciliation"
+    },
+    {
+      "id": "r36-cli-commands-r-z-worktree-remove-options",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r36-cli-tail-reconciliation"
+    }
+  ],
+  "pendingOwnerAudits": [],
+  "pendingLocatorAudits": [],
+  "pendingNewDisqualified": [],
+  "pendingDesignReplacements": [
+    "document-toolbar-busy-disabled",
+    "sync-data-target-selection",
+    "worktree-removal-mode"
+  ],
+  "pendingInventoryProposals": [
+    {
+      "file": "r36-drivers-a-f-reconciliation/proposed-inventory-updates.jsonl",
+      "sha256": "1f126ae20c416812d263ae7f0c88fd87dd72e0099b54b409febddd7c4132409a"
+    },
+    {
+      "file": "r36-cli-tail-reconciliation/proposed-inventory-updates.jsonl",
+      "sha256": "fe3dcf558e946d3f07856e966c9938a202214f96fed8e02a56601c5d6842b23f"
+    }
+  ],
+  "launchState": "completed",
+  "wetIfFinalized": true,
+  "capabilityAuditSha256": "9a72866d560b787b7836cc9f406f6bee2533235854021b03840a4c9cb78d87c8",
+  "toolNameAuditSha256": "beff7090e6453dd7a6e149b43725bba97786198ac4a069c2950bd5304e83946e",
+  "driversAFAuditSha256": "1025eeccd52f88249927db306d33bf198ae4a05624944bccbca913b79599acd6",
+  "sharedDocumentsAuditSha256": "1384bedc8c7ae2ec6395b5170f69aafa481cc801b4ee885db9263b9b93b38599",
+  "appsAuditSha256": "0dc437898a7a4671e3c12759ab2ae312d0d598b9571cbae30e4168b67e61c6b4",
+  "observabilityAuditSha256": "73eca52f0eaa5bcc4d051269d3ec12c00ab35d5ed7ab2e3a3efceb0db72fd672",
+  "cliParentAuditSha256": "436bd120afc1f329c130b42aeafae781933d3ebf571ad9b180d6ce30ffea2d04",
+  "pendingNewQualified": [
+    {
+      "id": "r36-epistemic-ontology-document-toolbar-input",
+      "proposal": "r36-document-toolbar-reconciliation/proposed-rows.jsonl",
+      "sha256": "5542460d03f15925050ccd2f229aa35008ffb6f962798229006baf5c4dfb69d4",
+      "design": "r36-document-toolbar-reconciliation/r36-epistemic-ontology-document-toolbar-input.md",
+      "designSha256": "49d5ed42d938299f25d442b77bcc23d2b3a89fe6688d913694bcedc6007338bf"
+    },
+    {
+      "id": "r36-cli-commands-a-c-cache-task-selection-pending",
+      "proposal": "r36-cache-selection-reconciliation/proposed-rows.jsonl",
+      "sha256": "e3e1911c9ed125be558d216dca372b566738f1f0d1ccd6a83ba13f9a4b678703",
+      "design": "r36-cache-selection-reconciliation/r36-cli-commands-a-c-cache-task-selection-pending.md",
+      "designSha256": "bc2a0caa445cf346316ce9fc8090c5d7b2503dc00030c034623d3b6cfa824ad6"
+    }
+  ],
+  "designReplacementProposals": [
+    {
+      "id": "document-toolbar-busy-disabled",
+      "file": "r36-document-toolbar-reconciliation/document-toolbar-busy-disabled.replacement.md",
+      "sha256": "d884d0709fcb163cdf32955eb25f9b4ea724a7585dcee37b3773d89aa8d131ba"
+    },
+    {
+      "id": "sync-data-target-selection",
+      "file": "r36-cli-tail-reconciliation/sync-data-target-selection.metadata-replacement.md",
+      "sha256": "23d667cc57a2efa2b16e63e87c1147a4eefe5b1fa3dc2bb2a441ec32d52119f1"
+    },
+    {
+      "id": "worktree-removal-mode",
+      "file": "r36-cli-tail-reconciliation/worktree-removal-mode.metadata-replacement.md",
+      "sha256": "34e5b095ba1a17d79b1fac861544087fd052de3fbc4f553ccce4b14cce5453d6"
+    }
+  ],
+  "toolbarAuditSha256": "121433a5c434c4f060e1524eab42c53d1280c8e0083108b58b1a676601a1b09a",
+  "cacheSelectionAuditSha256": "cac0f644314c61aecc3fb44f801bd619cfa95061c73e2ff17ce52a364061feb2",
+  "cliTailAuditSha256": "56be450e0c72c19110a5439459022858326eec99d41d7792f18e79e1f19af257",
+  "integrationState": "integrated",
+  "originalProgressSha256": "506c5a4eb81505d287d625b339aa662e6f565602c4a7d0bb2c836e01508851e0",
+  "proposalFieldsAreHistorical": true
+}

@@ -27,6 +27,9 @@ Scope:
 - In: `packages/tooling/tool/cli/src/commands/Models/**`, its registration in
   the CLI root, tests for it, and this packet. A `model-ids` lane under
   `commands/Lint/` is a later slice.
+- Approved 2026-09-25 addition: package-local `isolate: true` in the Vitest
+  configs for `@beep/wink`, `@beep/utils`, and `@beep/identity`, with coverage
+  verification. Preserve shared defaults, assertions, and thresholds.
 - Out: any `--write` path (slice 2); other products' configs
   (`$HOME/.config/semantica/runtime.env`, `$HOME/.config/muse/settings.json`,
   `$HOME/.claude-mem/settings.json`) which are opt-in later; agent memory

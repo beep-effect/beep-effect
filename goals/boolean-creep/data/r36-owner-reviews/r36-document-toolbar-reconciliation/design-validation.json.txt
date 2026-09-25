@@ -1,0 +1,28 @@
+{
+  "canonicalValidator": "goals/boolean-creep/ops/validate-designs.ts",
+  "privatePathArgumentSupported": false,
+  "privateEquivalentRequiredSectionChecks": {
+    "r36-epistemic-ontology-document-toolbar-input.md": {
+      "Current shape": true,
+      "Cardinality gap": true,
+      "Target schema": true,
+      "Migration inventory": true,
+      "Guard-deletion accounting": true,
+      "Encoded-side impact": true,
+      "Test impact": true,
+      "Risk": true
+    },
+    "document-toolbar-busy-disabled.replacement.md": {
+      "Current shape": true,
+      "Cardinality gap": true,
+      "Target schema": true,
+      "Migration inventory": true,
+      "Guard-deletion accounting": true,
+      "Encoded-side impact": true,
+      "Test impact": true,
+      "Risk": true
+    }
+  },
+  "allPassed": true,
+  "note": "Canonical validator hardcodes checkout paths; private equivalent checks avoid tracked mutation."
+}
