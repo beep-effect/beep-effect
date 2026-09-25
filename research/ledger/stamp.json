@@ -1,11 +1,11 @@
 {
   "lastSuccessfulRun": "2026-09-25T08:17:00-05:00",
   "lastSuccessfulPacket": "research/2026-09-25",
-  "lastSuccessfulPr": null,
+  "lastSuccessfulPr": 1261,
   "lastAttemptedRun": "2026-09-25T08:17:00-05:00",
   "lastAttemptedStatus": "partial",
   "lastAttemptedPacket": "research/2026-09-25",
-  "lastAttemptedPr": null,
+  "lastAttemptedPr": 1261,
   "note": "Draft until human merge of research/2026-09-25 nightly packet. Never auto-merge. Partial: X client-not-enrolled. Prior #1215 merged 2026-09-24.",
   "excludedUnmergedPackets": [
     {
