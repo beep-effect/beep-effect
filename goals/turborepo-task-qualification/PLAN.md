@@ -1918,3 +1918,22 @@ pass; the latter reports zero introduced findings. See
 [the receipt](./research/refs-provider-test-repair.json).
 Canonical package test-typechecking and full package verification remain
 pending; scoped success does not close exact-head repository/hosted proof.
+
+
+### Dependency repair and registry discovery gap — 2026-09-25
+
+Removing the unsafe AI-sync test assertion exposed an unused development
+dependency. Its manifest/lock entry and generated TypeScript references are
+removed, and an in-branch patch changeset records the package change.
+Nine executable dependency arrays lose only types-task edges; five are
+cache-enabled. The reviewed baseline is refreshed through Cache's guarded
+writer. Scope, profile, epoch, commands, cache settings and ledger are unchanged.
+The cache-policy gate has zero blockers. See
+[the policy review](./research/ai-sync-dependency-policy-review.json).
+
+A direct root-registry audit finds 36 imported command barrels, only five
+of which are in the current attachment. The other 31 require discovery work;
+this static result is not an assertion that all their runtime behaviors are
+in scope or unreviewed. See
+[the diagnostic](./research/registered-command-binding-audit.json).
+Historical runtime evidence is not renewed by dependency/source hash refresh.

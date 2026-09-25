@@ -358,7 +358,9 @@
     "research/refs-entrypoint-review.json",
     "research/refs-canonical-test-repair.json",
     "research/scoped-resource-test-repair.json",
-    "research/refs-provider-test-repair.json"
+    "research/refs-provider-test-repair.json",
+    "research/ai-sync-dependency-policy-review.json",
+    "research/registered-command-binding-audit.json"
   ],
   "agentLaunchers": [
     {
