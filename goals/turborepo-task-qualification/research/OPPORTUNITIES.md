@@ -2100,3 +2100,11 @@ baseline was expanded to waive the findings.
   package passed all 14 tests. Do not count an unselected suite as proof.
 - The executable census must retain runner project selection and package
   working directory, alongside the literal test command.
+
+### 2026-09-25 — Scoped npm source paths rejected by attachment schema
+- Attaching verified Babel tool sources failed decoding at `sources[1002].path`
+  because the path schema rejects `node_modules/@babel/cli/package.json`.
+- Removed the proposed tool source bindings and retained their hashes inside
+  the bounded review receipt. No path rewrite or schema exception was applied.
+- A future tool-identity attachment contract must explicitly model scoped npm
+  paths and installed dependency provenance before counting these as bindings.

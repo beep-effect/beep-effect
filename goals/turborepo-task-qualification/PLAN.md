@@ -1966,3 +1966,27 @@ pass. The attachment validator accepts 990 sources, six artifacts and 42 reviews
 with all 14 unresolved obligations retained. Full planner/schema/formatter
 closure and runtime perturbation evidence remain incomplete. No cache tuple
 is promoted and historical runtime observations are not renewed.
+
+### Retained static evidence and nested Lambda boundary — 2026-09-25
+
+The Lambda boundary review resolves the leading directory change against its
+standalone manifest: typecheck, bundle and ZIP scripts exist there. It records
+install/build/archive effects and their remaining runtime obligations, without
+executing the chain or changing infra cache policy. See
+[the nested review](./research/nested-lambda-boundary-review.json).
+
+Eight application configuration/helper hashes and seven recorded command
+definitions still match historical static reviews. Reuse preserves their
+original revisions and narrow scope; plugin execution and framework effects
+remain unproven. See [the reuse receipt](./research/application-static-review-reuse.json).
+
+All 117 recorded Babel command definitions remain unchanged. Twenty-three
+changed manifests have no script delta, but dependency/export changes do not
+establish output equivalence. Four installed tool files match historical
+hashes; these identities are retained only inside the review because the
+attachment path schema rejects scoped npm paths. See
+[the compiled-output review](./research/compiled-output-delta-review.json).
+
+The attachment validator accepts 1002 sources, six planner artifacts and 45
+reviews. All 14 unresolved obligations remain. These reviews do not renew any
+runtime result, discharge signed sibling evidence, or promote a cache tuple.
