@@ -388,9 +388,11 @@ export class CallerControlledTurboCache extends S.Class<CallerControlledTurboCac
   {
     _tag: S.tag("caller-controlled"),
     reason: TurboCacheCallerReason,
+    cacheDir: S.optionalKey(S.String),
   },
   $I.annote("CallerControlledTurboCache", {
-    description: "The caller already controls Turbo caching, so the CLI injects no cache flag.",
+    description:
+      "The caller already controls the Turbo cache mode, so the CLI injects no mode flag; an explicit cache argument still keeps the shared workstation directory, CI keeps nothing.",
   })
 ) {}
 
@@ -579,11 +581,12 @@ export const isTurboCacheDirArg = (arg: string): boolean =>
  *
  * **Details**
  *
- * The directory is `$HOME/.cache/beep/turbo`. It is left to the caller when the
- * environment already sets `TURBO_CACHE_DIR`, when the arguments carry a
- * `--cache-dir` flag, or when `HOME` is unknown. CI never reaches this helper:
- * {@link resolveTurboCachePlan} leaves CI caller-controlled, and hosted runners
- * keep their own cache directory.
+ * The directory is `$HOME/.cache/beep/turbo`. It is left to the caller only when
+ * the environment already sets `TURBO_CACHE_DIR`, when the arguments carry a
+ * `--cache-dir` flag, or when `HOME` is unknown; cache-mode arguments such as
+ * `--cache=` or `--force` do not suppress it. CI never reaches this helper:
+ * {@link resolveTurboCachePlan} leaves CI caller-controlled before the directory
+ * is resolved, and hosted runners keep their own cache directory.
  *
  * **Example** (Derive the shared directory)
  *
@@ -743,11 +746,11 @@ export const resolveTurboCachePlan: {
     return CallerControlledTurboCache.make({ reason: "ci" });
   }
 
+  const cacheDir = O.getSomesStruct({ cacheDir: sharedTurboCacheDir(environment, options.args) });
   if (A.some(options.args, isTurboCacheControlArg)) {
-    return CallerControlledTurboCache.make({ reason: "explicit-cache-arg" });
+    return CallerControlledTurboCache.make({ reason: "explicit-cache-arg", ...cacheDir });
   }
 
-  const cacheDir = O.getSomesStruct({ cacheDir: sharedTurboCacheDir(environment, options.args) });
   const missing = missingTurboCacheEnvNames(environment);
   if (!A.isReadonlyArrayEmpty(missing)) {
     return LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing, ...cacheDir });
@@ -772,9 +775,10 @@ export const resolveTurboCachePlan: {
  *
  * **Details**
  *
- * A local-only or remote-read plan resolved on a workstation also carries the
- * shared cache directory (see {@link sharedTurboCacheDir}), emitted as
- * `--cache-dir=`; a caller-controlled plan contributes nothing.
+ * A plan resolved on a workstation also carries the shared cache directory (see
+ * {@link sharedTurboCacheDir}), emitted as `--cache-dir=`. The cache *mode* and
+ * the cache *directory* are independent: a caller-supplied `--cache=` or
+ * `--force` keeps the directory, while a CI plan contributes nothing at all.
  *
  * **Example** (Inject the local-only flag)
  *
@@ -794,7 +798,7 @@ export const resolveTurboCachePlan: {
  */
 export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> =>
   Match.value(plan).pipe(
-    Match.discriminator("_tag")("caller-controlled", A.empty<string>),
+    Match.discriminator("_tag")("caller-controlled", ({ cacheDir }) => cacheDirArgs(cacheDir)),
     Match.discriminator("_tag")("local-only", ({ cacheDir }) => [
       `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`,
       ...cacheDirArgs(cacheDir),

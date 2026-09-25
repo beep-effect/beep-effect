@@ -5,6 +5,8 @@ import {
   LocalOnlyTurboCache,
   localOnlyTurboCacheArgs,
   RemoteReadTurboCache,
+  readTurboCacheEnvironment,
+  readTurboCacheEnvironmentSync,
   resolveTurboCachePlan,
   SHARED_TURBO_CACHE_DIR_SUFFIX,
   sharedTurboCacheDir,
@@ -239,6 +241,27 @@ describe("shared turbo cache directory", () => {
     const environment = TurboCacheEnvironment.make({ home: HOME, cacheDir: "/mnt/turbo" });
     assertNone(sharedTurboCacheDir(environment, []));
     expect(turboCachePlanArgs(resolveTurboCachePlan(environment, { args: [], ci: false }))).toEqual([LOCAL_ONLY_ARG]);
+  });
+
+  it.each(["--cache=local:rw", "--force", "--remote-cache-read-only"])(
+    "keeps the shared directory when the caller pins the cache mode with %s",
+    (arg) => {
+      const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [arg], ci: false });
+      expect(plan._tag).toBe("caller-controlled");
+      expect(turboCachePlanArgs(plan)).toEqual([SHARED_DIR_ARG]);
+    }
+  );
+
+  it("reads HOME and TURBO_CACHE_DIR from a process environment", () => {
+    expect(readTurboCacheEnvironment({ HOME: HOME })).toEqual(TurboCacheEnvironment.make({ home: HOME }));
+    expect(readTurboCacheEnvironment({ HOME: HOME, TURBO_CACHE_DIR: "  /mnt/turbo  " })).toEqual(
+      TurboCacheEnvironment.make({ home: HOME, cacheDir: "/mnt/turbo" })
+    );
+    expect(readTurboCacheEnvironment({ HOME: "  ", TURBO_CACHE_DIR: "" })).toEqual(TurboCacheEnvironment.make({}));
+  });
+
+  it("populates home from the live environment through the sync reader", () => {
+    expect(readTurboCacheEnvironmentSync().home).toBe(Bun.env.HOME);
   });
 
   it("defers to a caller-supplied --cache-dir flag", () => {

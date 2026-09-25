@@ -292,7 +292,9 @@ workstation (quality tasks, Yeet proofs, detached proof jobs, `beep ci lane`
 bodies, local docgen) resolves its cache plan through
 `internal/cli/TurboCache`, which appends `--cache-dir=$HOME/.cache/beep/turbo`
 whenever `TURBO_CACHE_DIR` is unset and the arguments carry no `--cache-dir`.
-CI stays caller-controlled and keeps the hosted runner's own directory. The
+Cache mode and cache directory are independent, so a caller-supplied `--cache=`
+or `--force` keeps the shared directory. CI stays caller-controlled and keeps
+the hosted runner's own directory. The
 repository `.envrc` exports the same value under direnv for bare `turbo` and
 package-script runs outside the CLI; it needs the direnv binary and a
 whitelisted or allowed checkout, which agent shells and detached proofs do not
