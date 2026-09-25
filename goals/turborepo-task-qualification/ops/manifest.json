@@ -356,7 +356,8 @@
     "research/package-verifier-review.json",
     "research/quality-entrypoint-review.json",
     "research/refs-entrypoint-review.json",
-    "research/refs-canonical-test-repair.json"
+    "research/refs-canonical-test-repair.json",
+    "research/scoped-resource-test-repair.json"
   ],
   "agentLaunchers": [
     {
@@ -410,7 +411,9 @@
     "bun run beep goals doctor",
     "bun run beep explore --check",
     "git diff --check -- goals/turborepo-task-qualification",
-    "bun run beep lint reflection-artifacts"
+    "bun run beep lint reflection-artifacts",
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bun run beep quality package-verify @beep/ai-sync"
   ],
   "stopConditions": [
     "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",

@@ -1895,3 +1895,15 @@ from 23 to 18 introduced findings without changing its baseline. See
 [the repair receipt](./research/refs-canonical-test-repair.json).
 Full package verification remains pending; the remaining layer/resource
 findings still prevent green proof.
+
+
+### Scoped test resources and typed platform layer — 2026-09-25
+
+Setup-script tests now allocate fresh scoped temporary directories per test
+under the platform layer. AI-sync removes its unsafe layer assertion, and
+both suites declare bounded hook timeouts. Seven setup tests, fifteen AI-sync
+tests, its test typecheck and its full audit/docgen verification pass.
+The remaining Effect/Vitest findings decrease from 18 to 16, all per-test
+layer provisions. See [the receipt](./research/scoped-resource-test-repair.json).
+The repo-cli verification remains pending. AI-sync is added to the touched
+workspace verification list; no baseline was expanded.
