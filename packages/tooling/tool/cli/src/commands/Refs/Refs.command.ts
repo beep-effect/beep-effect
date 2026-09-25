@@ -1,5 +1,6 @@
 /**
  * Operator commands for the manifest-defined Effect reference workspace.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -117,6 +118,7 @@ const timerCommand = Command.make(
  * import { refsCommand } from "@beep/repo-cli/commands/Refs"
  * refsCommand.name // => "refs"
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

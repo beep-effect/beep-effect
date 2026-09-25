@@ -87,6 +87,8 @@ function mockSpawnerLayer(
   );
 }
 
+const encodeTailscaleStatusJson = S.encodeEffect(S.fromJsonString(TailscaleStatusJson));
+
 describe("tailscale", () => {
   it.effect("detects Tailnet IPv4 addresses", () =>
     Effect.sync(() => {
@@ -135,7 +137,7 @@ describe("tailscale", () => {
             ],
           }),
         });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(TailscaleStatusJson))(statusJson);
+        const encoded = yield* encodeTailscaleStatusJson(statusJson);
         const status = yield* parseTailscaleStatus(encoded);
         assert.deepEqual(status.tailnetIpv4Addresses, expected);
       }),
