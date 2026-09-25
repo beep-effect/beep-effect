@@ -65,5 +65,57 @@
       "ms": 116.083740234375,
       "tests": 10
     }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec repeats deterministic round-trips over the entire registry",
+      "ms": 266.340832
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec decodes and encodes known CURIEs",
+      "ms": 266.336496
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec round-trips generated CoreVocab IRIs through the schema codec",
+      "ms": 266.33173799999986
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec preserves literal expansion types",
+      "ms": 266.3312169999999
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec round-trips every CoreVocab term",
+      "ms": 266.16492299999993
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps the current root type-only named import inventory documented",
+      "ms": 112.67206399999998
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps every current runtime named import from @beep/identity available",
+      "ms": 112.52501900000004
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps every current runtime named import from @beep/identity/packages available",
+      "ms": 112.51005599999996
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness pins every generated package composer export to today's literal identity",
+      "ms": 112.50424699999996
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps RepoPkgs backed by the generated composer record",
+      "ms": 112.49901899999998
+    }
   ]
 }

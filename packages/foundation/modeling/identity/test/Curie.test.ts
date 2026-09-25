@@ -50,6 +50,8 @@ describe("CURIE codec", () => {
     }
   });
 
+  // Arbitrary.Constant ignores size/seed: the 100-run floor intentionally repeats
+  // the same fixed registry list rather than exploring a generated domain.
   it.prop(
     "repeats deterministic round-trips over the entire registry",
     [Arbitrary.Constant(coreCurieCases)],

@@ -18,6 +18,7 @@
   ],
   "commandQualification": "Run from the package directory, matching the baseline command shape. The committed after file is the summary shape with repo-relative paths; the raw reporter output is retained privately.",
   "wholeCommandSeconds": 1.5425338745117188,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing; wholeCommandSeconds measures process elapsed time separately and is never the summary totalMs",
   "registeredTestStatuses": {
     "passed": 115
   },
