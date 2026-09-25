@@ -74,6 +74,8 @@ describe("reference planning and refresh", () => {
         yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))
       );
       expect(saved.members).toEqual(status.members);
+      // Skips are policy, not failure: no critical notification fires for them.
+      expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
     }, testPlatform)
   );
 
