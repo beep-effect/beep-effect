@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: the manifest-configured reference root holds `effect` and `effect-tsgo`,
+Outcome: the configured reference root holds `effect` and `effect-tsgo`,
 indexed by graft in workspace mode with a nightly `claude-opus-5` deep refresh,
 and every beep checkout (clones and worktrees) reaches it through
 `.repos/effect`, `.repos/effect-tsgo`, and `.repos/effect-workspace`, provisioned
