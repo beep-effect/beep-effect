@@ -2318,3 +2318,18 @@ The test-only repair targets the adapter public `PgClient.makeClient` entry poin
 while retaining the real test-utils layer/retry implementation. A mock-hit assertion
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
+
+### 2026-09-25 — Main merge introduces Fallow health debt into a docs checkpoint
+
+- Activity: republish modeling inventory PR #1273 after merging main, preserving
+  its docs-only diff.
+- Evidence: `bun run beep yeet publish --start-pr-early --monitor --pr` pushed
+  successfully, then cheap gates failed only `fallow:health`. The report lists
+  five complexity findings in `MonitorLoop.ts` and `yeet-check-fidelity.test.ts`,
+  both byte-identical to origin/main and landed by PR #1270. The Effect/Vitest
+  ratchet passed. This is inherited tooling debt, not a modeling inventory defect.
+- Prevention: require the Fallow health baseline check on the final merged result
+  of tooling PRs, and retain file-level provenance in the failure envelope; its
+  current `not-applicable` attribution requires manual comparison with main.
+- Disposition: keep proof red; repair tooling in its separate D13 lane rather
+  than modifying the modeling checkpoint or waiving the gate.
