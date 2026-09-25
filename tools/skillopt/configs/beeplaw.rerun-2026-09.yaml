@@ -15,7 +15,7 @@ model:
   codex_exec_sandbox: workspace-write
   codex_exec_profile: ""
   codex_exec_full_auto: false
-  codex_exec_reasoning_effort: none
+  codex_exec_reasoning_effort: medium
   codex_exec_use_sdk: auto
   codex_exec_network_access: false
   codex_exec_web_search: false
