@@ -14,8 +14,9 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            # Runtime
-            bun
+            # Runtime. Bun is deliberately NOT supplied here: mise owns the pin via
+            # .bun-version (governed by `beep version-sync`), and a nixpkgs bun on
+            # PATH shadows it with whatever version the flake.lock happens to carry.
             nodejs_24
 
             # Python (SkillOpt training pilot — tools/skillopt uv project)
