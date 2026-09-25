@@ -763,7 +763,7 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
               Ref.update(captures, A.append(args)).pipe(
                 Effect.as({
                   exitCode: 0,
-                  output: args[0] === "diff" ? "packages/a/src/index.ts\n" : at,
+                  output: args[0] === "diff" ? "packages/a/src/index.ts\0" : at,
                   truncated: false,
                 })
               ),

@@ -175,9 +175,9 @@ export type HeavyAdmissionEventName = typeof HeavyAdmissionEventName.Type;
  * **Details**
  *
  * Built from the GitHub event payload in CI and from `gh pr view` plus
- * `git diff --name-only <base>...HEAD` in the monitor. `changedPaths` is the
- * merge-base diff and is empty on `push` and `merge_group`, where no
- * pull-request diff exists.
+ * `git diff --name-only --no-renames -z <base>...HEAD` in the monitor.
+ * `changedPaths` is the merge-base diff and is empty on `push` and
+ * `merge_group`, where no pull-request diff exists.
  *
  * **Example** (A labelled pull request)
  *
