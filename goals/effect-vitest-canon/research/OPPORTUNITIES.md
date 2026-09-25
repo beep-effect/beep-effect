@@ -2308,3 +2308,12 @@ Node/Bun conformance does not establish browser compatibility. Resource and clic
 changes are being proven with the upstream live tester while browser-compatible
 instrumentation remains an open prerequisite. A browser import/conformance case
 in runner promotion would have caught this platform boundary earlier.
+
+### Reviewed exception identities after a test-title correction
+
+While checking the Graph3D wave, `bun run beep lint effect-vitest` reported three
+new EV004 findings in CosmosProjection.test.ts. The inherited source only changed
+a test title after its scoped exceptions were reviewed; all three occurrence
+identities changed. Preserve the scope decisions and refresh their identities in
+the owning lane. A focused post-title ratchet check would have caught this before
+stack propagation. Evidence: graph3d partial-proof receipt dated 2026-09-25.

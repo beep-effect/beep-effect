@@ -42,3 +42,17 @@ runner behavior; a global mutable fallback would not satisfy that contract.
 Next: resolve the browser runner prerequisite, update the reviewed scanner and
 lens dispositions with exact commit provenance, then publish and complete the
 hosted review gates. No root coverage or full proof was requested by this receipt.
+
+## Reviewed dispositions
+
+The implementation commit is `862cd3e2c9254dcdbba3e8db03502409a39811e0`.
+Resource L-RES-02 and property L-PROP-04 are fixed with that provenance.
+Five EV009 candidates are exceptions because the real browser renderer is the
+subject. Five coverage-only rows remain unchanged. L-OBS-01 remains open.
+All 13 package rows passed strict EffectVitestFinding decoding.
+
+The ratchet rerun found no new Graph3D candidates, but failed on three inherited
+Cosmos EV004 occurrences. Cosmos source is unchanged in this checkpoint; its
+recent test-title change invalidated the occurrence identities of three already
+reviewed shorter-scope exceptions. Repair their identities in the owning Cosmos
+lane and propagate the commit. Do not refresh the repository baseline wholesale.
