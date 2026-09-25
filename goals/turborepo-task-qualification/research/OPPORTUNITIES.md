@@ -1982,3 +1982,13 @@ publication. The subsequent rate-limit endpoint reported available quota, and
 the REST pull-request endpoint returned the current head and open state.
 Preserve the failed observation and use bounded alternate read surfaces;
 do not interpret this transient failure as a terminated proof or restart it.
+
+### Debugger status is not target status — 2026-09-25
+
+A focused ring-queue observation used GDB with startup-with-shell disabled.
+Adding redirection to `run` replaced the target arguments, so Node attempted
+to load a module named `>` and exited 1 while batch GDB returned 0. Preserve
+that failed attempt. The corrected run retained the configured target arguments
+and recorded the inferior exit event explicitly; target exit 0 and the expected
+Biome completion were both required. Future debugger recipes should assert
+inferior completion, not infer it from the debugger process status.

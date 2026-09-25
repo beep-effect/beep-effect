@@ -223,3 +223,29 @@ its sanitized inputs select local-only cache with an explicit directory. A
 synthetic complete remote-read configuration with HOME absent reproduces the
 prior document exactly, demonstrating input sensitivity without reconstructing
 the historical environment. No remote request or secret resolution was needed.
+
+## Focused ring submission and completion observation
+
+A separate diagnostic run at frozen source `ed2742ff4f` retained the actual
+`bun run lint` wrapper chain and output redirection. A Node debugger shim called
+the pinned Node binary and captured queue metadata at epoll-flush entry and
+all observed `io_uring_enter` entry/return stops in that Node process and its
+threads. Five calls matched five batches containing 12 submission entries.
+Every entry used `IORING_OP_EPOLL_CTL` (29), verified against the local Linux
+header; every completion result was zero. Both the wrapper and Node target
+exited zero. Stdout and stderr hashes matched the prior full capture exactly.
+
+Earlier direct-launcher controls observed five calls/12 entries and six
+calls/13 entries. These scheduling counts are observations, not invariants.
+A failed initial debugger recipe treated redirection as target arguments;
+that attempt is retained separately and supplies no successful task evidence.
+
+The wrapped capture does not retroactively decode the original trace. The
+shim can affect scheduling; forked children detach from the debugger. This
+narrows the observed Node ring operations to successful epoll control, without
+establishing complete semantic-input coverage or signed replay. Task cache
+settings and qualification state remain unchanged.
+
+The private archive retains the shim, debugger recipe, queue metadata, syscall
+pairs, target-exit receipt, original streams and independent review. Its manifest
+SHA-256 is `cca3bca3f97666af750bfdd0524a1cc442888ba9defcda9082192473abcc0640`.

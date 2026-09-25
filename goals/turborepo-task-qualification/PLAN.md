@@ -1606,3 +1606,11 @@ execution markers agree; all four runs exited zero. See the v23 receipt for
 scope, hashes and retained evidence. This closes the synthetic local replay
 observation gap, not real-computation qualification or signed replay. Continue
 semantic closure, full entrypoint coverage and accepted sibling integration.
+
+### Wrapped ring metadata follow-up — 2026-09-25
+
+The actual frozen lint wrapper chain completed under a diagnostic Node shim.
+All five observed ring calls matched 12 epoll-control submissions and successful
+completions. Captured streams match the previous full trace. Retain the scoped
+result and failed debugger recipe in the v23 receipt; this does not decode the
+historical trace or close semantic/signed requirements. No tuple is qualified.

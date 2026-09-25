@@ -17,7 +17,9 @@ hashes were checked again when the compact receipt was authored.
 
 This advances the local portion of real-pilot evidence. Native scalar I/O and
 archived-source input reviews passed, with hashes retained in the v23 receipt.
-Ring I/O remains uninterpreted. Both clients passed five synthetic capture
+The original trace lacks ring-entry bytes. A separate wrapped diagnostic run
+observed successful epoll-control submissions and completions with matching
+streams; its instrumentation and child-process limits remain explicit. Both clients passed five synthetic capture
 controls with independent retained-byte and production-parser review; repeated
 mixed-stream observations found two output orderings per client at unchanged
 task hashes. This synthetic fixture is ineligible for exact-log determinism;
