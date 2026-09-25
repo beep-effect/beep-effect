@@ -1,0 +1,39 @@
+{
+  "authority": "refs-canonical-test-repair",
+  "baseHead": "9868e69023f37a39b9688147afb99c534bcaa5b6",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "sha256": "c6fda481502da0bc98743eabb87e3c86370102b4440f8f85c90daa7a79d6cd98"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-schemas.test.ts",
+      "sha256": "7ebf87b9d1449682fa65c6f78bb13232a23cbb5899f9824f3ef2fde463157800"
+    }
+  ],
+  "changes": [
+    "Two manual Arbitrary.checkEffect loops now register through it.effect.prop with the same schema arbitraries, schema equivalence and fcRuns(100) configuration.",
+    "Two None predicates use assertNone. The Some check uses assertSome with the exact coverage payload emitted by the fixture: covered=9, total=10, failedFiles=1."
+  ],
+  "validation": {
+    "focusedTests": 13,
+    "testFiles": 2,
+    "biome": "passed; one file formatted",
+    "effectVitest": {
+      "beforeIntroduced": 23,
+      "afterIntroduced": 18,
+      "exit": 1,
+      "remaining": "16 layer-provision findings, one resource wrapper and one unsafe layer assertion"
+    },
+    "packageVerify": "Full @beep/repo-cli verification launched and still pending at receipt creation."
+  },
+  "limits": [
+    "No baseline update, exception or waiver.",
+    "This repairs five specific findings; it does not clear full repository proof or qualify a cache tuple.",
+    "Full package proof and remaining test-lifetime repairs remain required."
+  ],
+  "retention": {
+    "fileCount": 4,
+    "archiveManifestSha256": "b70a98ad128525ba46814399cada8aabaef74665d59a762009f9ff93b375fd4d"
+  }
+}

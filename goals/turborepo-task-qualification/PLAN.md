@@ -1883,3 +1883,15 @@ clock, filesystem writes and service-manager effects remain explicit.
 No production reference refresh, deep build or timer mutation was executed.
 All 14 broader census obligations remain; this bounded review does not close
 transitive input discovery or qualify any tuple.
+
+
+### Canonical Refs assertions and properties — 2026-09-25
+
+Two property tests now use it.effect.prop with unchanged schema generators,
+equivalence and sample configuration. Option assertions use canonical helpers;
+the coverage fixture now checks its emitted 9/10 symbols and one failed file.
+All 13 focused tests and Biome passed. The fresh Effect/Vitest gate decreased
+from 23 to 18 introduced findings without changing its baseline. See
+[the repair receipt](./research/refs-canonical-test-repair.json).
+Full package verification remains pending; the remaining layer/resource
+findings still prevent green proof.

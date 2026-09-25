@@ -1,7 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
+import { GraftDeepCoverage } from "@beep/repo-cli/commands/Graft";
 import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -42,23 +45,15 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
 });
 
 describe("reference planning and refresh", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips manifests through the JSON codec",
-    Effect.fnUntraced(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(ReferenceWorkspaceManifest),
-        (manifest) =>
-          ReferenceWorkspaceManifest.encodeJson(manifest).pipe(
-            Effect.flatMap(ReferenceWorkspaceManifest.decodeJson),
-            Effect.map((decoded) => {
-              expect(manifestEquivalent(decoded, manifest)).toBe(true);
-              return true;
-            })
-          ),
-        fcRuns(100)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+    [Arbitrary.schema(ReferenceWorkspaceManifest)],
+    Effect.fnUntraced(function* ([manifest]) {
+      const encoded = yield* ReferenceWorkspaceManifest.encodeJson(manifest);
+      const decoded = yield* ReferenceWorkspaceManifest.decodeJson(encoded);
+      expect(manifestEquivalent(decoded, manifest)).toBe(true);
+    }),
+    { arbitrary: fcRuns(100) }
   );
 
   it.effect(
@@ -84,23 +79,15 @@ describe("reference planning and refresh", () => {
     })
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips refresh status through the JSON codec",
-    Effect.fnUntraced(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(RefsRefreshStatus),
-        (status) =>
-          RefsRefreshStatus.encodeJson(status).pipe(
-            Effect.flatMap(RefsRefreshStatus.decodeJson),
-            Effect.map((decoded) => {
-              expect(refreshStatusEquivalent(decoded, status)).toBe(true);
-              return true;
-            })
-          ),
-        fcRuns(100)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+    [Arbitrary.schema(RefsRefreshStatus)],
+    Effect.fnUntraced(function* ([status]) {
+      const encoded = yield* RefsRefreshStatus.encodeJson(status);
+      const decoded = yield* RefsRefreshStatus.decodeJson(encoded);
+      expect(refreshStatusEquivalent(decoded, status)).toBe(true);
+    }),
+    { arbitrary: fcRuns(100) }
   );
 
   it.effect(
@@ -177,8 +164,15 @@ describe("reference planning and refresh", () => {
         "graft effect build --deep --allow-partial -j 3 --only-dir packages/effect --only-dir packages/platform env=1"
       );
       expect(log).toContain("graft effect-tsgo build --only-dir src env=1");
-      expect(O.isSome(status.members[0]?.coverage ?? O.none())).toBe(true);
-      expect(O.isNone(status.members[1]?.coverage ?? O.none())).toBe(true);
+      assertSome(
+        status.members[0]?.coverage ?? O.none(),
+        GraftDeepCoverage.make({
+          covered: NonNegativeInt.make(9),
+          total: NonNegativeInt.make(10),
+          failedFiles: NonNegativeInt.make(1),
+        })
+      );
+      assertNone(status.members[1]?.coverage ?? O.none());
       expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
     }, testPlatform)
   );

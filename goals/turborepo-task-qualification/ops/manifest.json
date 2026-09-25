@@ -355,7 +355,8 @@
     "research/quality-helper-review.json",
     "research/package-verifier-review.json",
     "research/quality-entrypoint-review.json",
-    "research/refs-entrypoint-review.json"
+    "research/refs-entrypoint-review.json",
+    "research/refs-canonical-test-repair.json"
   ],
   "agentLaunchers": [
     {
