@@ -9,6 +9,7 @@ export * from "./AdmissionJournal.ts";
 export * from "./AttemptTerminationJournal.ts";
 export * from "./DirectoryHandle.ts";
 export * from "./GitExec.ts";
+export * from "./GitWorktree.ts";
 export * from "./JournalFile.ts";
 export * from "./ProcessAttachment.ts";
 export * from "./ProcessIdentity.ts";

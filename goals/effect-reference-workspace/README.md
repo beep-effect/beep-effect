@@ -9,7 +9,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Consolidate the upstream Effect clones agents read as truth into
-`~/YeeBois/references/effect/`, index them with graft in workspace mode with a nightly
+the manifest-configured reference root, index them with graft in workspace mode with a nightly
 `claude-opus-5` deep tier, and reach them from every beep-effect checkout through stable
 `.repos/effect`, `.repos/effect-tsgo`, and `.repos/effect-workspace` links provisioned from a
 checked-in manifest.
@@ -41,12 +41,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, slice S1 (manifest + provisioner) not started. Next concrete action: a Codex
-`gpt-6-astra` medium lane implements S1 from `PLAN.md` in this worktree.
+P4 Close. PR #1257 merged to `main` (`217e308592`, 2026-09-25); the lint-policy follow-up is PR #1271.
+The seed deep pass finished 16:50 UTC (effect 15943/19938 cards, effect-tsgo 5257/5908) and the
+`beep-refs-refresh` timer owner is `beep-effect0` (next run 2026-09-26 03:35 CDT). Remaining: closeout
+reflection, remove the session symlink, retire the worktree (see
+`history/2026-09-25-p2-p3-closeout.md`).
 
 ## Latest Evidence
 
-Not started. P0 evidence is the three research files above.
+[`history/2026-09-25-s4-move.md`](./history/2026-09-25-s4-move.md): move, worktree repair, structural
+build (`effect/` 19937 nodes / 1679 cards, `effect-tsgo/` 5908 nodes / 1153 cards, `graft check` OK),
+fleet relink (140 of 152 checkouts fully linked; 12 vendored-directory holdouts listed), timer
+installed for 03:30, seed started 07:39 CDT. Federated and narrowed `graft ask` verified through
+`.repos/effect-workspace` and `.repos/effect`; `beep worktree new` probe linked all three.
 
 ## Notes
 
@@ -54,5 +61,5 @@ Not started. P0 evidence is the three research files above.
   `beep-effect2` and must not run lanes in `beep-effect0`.
 - The move itself (PLAN S4) is executed by the orchestrating session with the operator present,
   never by a Codex lane, and the deep seed runs once under systemd, never in the foreground.
-- Graft facts the design depends on were read from `~/YeeBois/dev/Graft` at v0.18.0; re-verify
-  `discoverWorkspaceChildren` and `isWorkspaceBuildRoot` if graft is upgraded before S4.
+- Graft facts the design depends on were read from the machine-local Graft checkout at v0.18.0
+  (recorded in the frozen current-state report); re-verify `discoverWorkspaceChildren` and `isWorkspaceBuildRoot` if graft is upgraded before S4.

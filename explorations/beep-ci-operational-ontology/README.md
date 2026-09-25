@@ -194,6 +194,11 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-25: time-to-certainty D1 (rulings 76–79) hands the pre-push gate order as
+  gate-order-handoff/v1 (sha256 c9619cee69e05a8e45555696292579864cbadcc965d2be4f4251a41182554c9b)
+  and names iv-1006-wave-order as an open item; no auditor run, corpus recapture,
+  ratification, CQ, control-intervention or ciops change.
+
 - 2026-09-16: Reconciled inherited citation-line drift for security closeout;
   [receipt](../../goals/codex-security-findings-2026-09-08/research/citation-refresh-2026-09-16.json)
   maps unchanged source blocks from capture to current HEAD. No auditor run or

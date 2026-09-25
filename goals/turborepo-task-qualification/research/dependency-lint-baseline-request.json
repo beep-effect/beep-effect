@@ -1,0 +1,19 @@
+{
+  "previous": "7c4415e31459a5b196a04a6309e393589eec22f693ad3205d87b10b9afab2cbd",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Extend the bounded identity pilot scope to its two newly selected lint dependencies and explicitly disable their reuse; no qualification or cache activation.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/dependency-lint-exclusion-review.md",
+      "sha256": "cb188d63404ad76b063b384f65819043d1f676b396e906e3e82c0002e2ee57e4"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

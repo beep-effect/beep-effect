@@ -1,0 +1,22 @@
+{
+  "lane": "r40-foundation-modeling-rest",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "maxTurns": 90,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T10:39:32.466813+00:00",
+  "finished": "2026-09-25T10:42:19.300120+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-modeling-rest.jsonl`\n\nConfirmed 0, disqualified 0. The validator accepted the empty file (`inventory OK: 0 records`).\n\nEvery assigned root was covered (187 source files under the eleven `src` trees, plus the ontology seed `.jsonld`, `.ttl`, and `.json`). Generated surfaces (`Html.meta.ts`, `Html.model.ts`, `*generated*`) and tests were left out.\n\nAll 26 seeded clusters still exist at the recorded lines with the same members and classifications. No seed drift, no withdrawals, and no new co-carried boolean owner.",
+  "transcriptSha256": "20839dd66db4e03f4f0e1c170cd85eff0a2887eb9dd3425fa908a6e925454253",
+  "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a",
+  "seedSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

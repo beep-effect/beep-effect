@@ -1,0 +1,353 @@
+{
+  "kind": "r39-ui-coverage-supplement/v1",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "originMain": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "verdict": "all64-seeds-accounted-two-css-gap-closed",
+  "counts": {
+    "manifest": 218,
+    "typescript": 216,
+    "css": 2,
+    "canonicalSeeds": 64,
+    "hardcodedSeeds": 64,
+    "matchedSeeds": 64,
+    "missingSeeds": 0
+  },
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "sha256": "5da2d76d40b00909133c6087ef39ba868fa06bc170c18c9674091ca63869788b",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "sha256": "106946af1b1f17f44d6fe774778f7ce5c4b4cbdc714b60f48f86d5b5cf3df551",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "sha256": "82c59fc33872f01ffd386314370b4ab6e3d06730dd5785e239271bb6b57d8933",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "sha256": "4070036c04d14954f6c2067bd40742b71aea1626340d323f90071437afc2df41",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Geometry.projection.ts",
+      "sha256": "0aaa52fa49f38bad9dfd5b24d32e88d18d40a62056090838a863b74a5045d3a4",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Reducer.ts",
+      "sha256": "e4a7bed43b71bc1a2bde8180f027b59c553d80c9c5fad075d0de785296360f1a",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+      "sha256": "8a5e01f7642327622ff35c3d0d9d3702fa54badfc916a7939887fade1d46f1e6",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "sha256": "60b43928ce5ce6d738f26b7fde3aebfeebe618079c91470858bec5c4d062afd2",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+      "sha256": "ea80fd14afe98e2e3743f98b59cd5723b6678bdf91af205087304c4065fdbbca",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
+      "sha256": "6a81a4c3ef795964ca0b49dbe339920f5c699f7573ad2a0a38ba895e80dca07a",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "sha256": "5c521a5e3a1a03f2570518b3b4a367504ad3c2b74c9e7b09f8608b4f47059e4e",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "sha256": "558256344c4431123d4d5f8f982a6a0740c6c421dde00b78def0bab6ec32260c",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/youtube-embed.tsx",
+      "sha256": "d5b1d5876e4f5c22643deae8b34b09324e0fcaff783d450163e1a50830a4eb50",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
+      "sha256": "1cca5503dd53ac1308f5feedc43e85fc0e92b3e7bc3f6f20fa77e32a3ec9a691",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/calendar.tsx",
+      "sha256": "f936e834fada80a84671ee7cf253d5fa1d1aed6b4491c30d7aa6bd77347c6307",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/carousel.tsx",
+      "sha256": "dbd1a9027bb9ebe973f1cc0d3db990c9eb86d07980973397ddcf84664c2c8dc1",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "sha256": "0b515cbd1ee51eb79ee36bb2d941507f180fdb1ce233b0db44526de62711e0c5",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/combobox.tsx",
+      "sha256": "f0db38a02edf22255be7af1beb3536cd9588ef96fefb4cfabf152270a1bf408e",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.css",
+      "sha256": "5dc7ceac2d116411103637bd174c5efc3b28b5734e546f029bfccf067a503aa6",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx",
+      "sha256": "c242edc09b2c65c472edb41ace09614d978fa9ae4a2d6331544e8913158b5af5",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+      "sha256": "9343d461031eacc1a3c14b402837887928ce05e2f75998630a8006b1fbe09014",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
+      "sha256": "94fcd5e380ae594d6f43fdf98112a57bd3e44ee7fa26cb9e96e1d928e05455ab",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+      "sha256": "ec748f42c020bcb714b8e7dd62650ed7cf3864c2106df2d9b7aeb797862f8996",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+      "sha256": "aa6f424128b3e43d2b6659c72124c732d47d7bc825e7b8ca3f08e0c1826b2af0",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/orb.tsx",
+      "sha256": "e8c4cf1513dca88c221136e0f3f3a9d40a2b834ff47092c0e9a43ab556b166c4",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/resizable.tsx",
+      "sha256": "e14f7337d8b521b417e8d426fe4b58d7a37339a04852f9f6fc1d958108d9088f",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "sha256": "b39a60fc6edf7ed5b5dc753f8521589e8fba7c70e290266f5d6eede96087bdcb",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/speech-input.tsx",
+      "sha256": "0b3b5c9b37f0d0b8affa13c5198bfb7e64696a459b519bfd4270da5b82b3ffad",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+      "sha256": "c1d62d3b50a9b7b44d8ab45ef1982acd2f5997c681067927369d4ac0ec5ba6c5",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toolbar.tsx",
+      "sha256": "da2e190d0bce2408c75e0b43d84b07bb4accb4d69a4806d783c89df6b8ac7498",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "sha256": "28a8c41982baab0cd10e94da632064fab1680e089eace5aecf98853cb3b338a1",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "sha256": "6bfc87192044369f6fdd06ca91c6be1ad22da5028e23093ba8314992d1791c3e",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "sha256": "e3c10c48d870fae958875c43139fc7e1bfa197f7d6aebeb45782b4809fc25629",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "sha256": "26fa0bd3e95f5eda17b5b3ebd2d6855b5cef59e213151c0b74567b7232ec4fe8",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/styles/globals.css",
+      "sha256": "062b56971d1d9a4d3c5a7b2d6afb937b4f9612969ad623e965cb335e617e7a75",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    }
+  ],
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/lane-map.json",
+      "sha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-foundation-ui.ndjson",
+      "sha256": "5f9c5d4acea4eb77db5bda31c420e9b85efe21530497277ca1c09dfe242be02b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-foundation-ui.execution.json",
+      "sha256": "560c0e06c4446f4224d5075ddb12f0f4c7370d308d934462d88b8424f5634c4f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "coverageGapsClosed": [
+    "packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.css",
+    "packages/foundation/ui-system/ui/src/styles/globals.css"
+  ],
+  "unresolvedOwnerQuestions": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "file": "seed-accounting.json",
+      "sha256": "50c03fa46979afb3650c47922461276e1ede902d51d951d5a86405204655ac27"
+    },
+    {
+      "file": "proposed-rows.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "1f5c0e269f8eb2224ee2b3203f9d47538176c973f0e20c17acfd0723ee298e76"
+    }
+  ]
+}

@@ -2317,3 +2317,23 @@ a test title after its scoped exceptions were reviewed; all three occurrence
 identities changed. Preserve the scope decisions and refresh their identities in
 the owning lane. A focused post-title ratchet check would have caught this before
 stack propagation. Evidence: graph3d partial-proof receipt dated 2026-09-25.
+
+### 2026-09-25 — review reply blocked after evidence remediation
+
+Tailscale PR #1265 has both provenance corrections pushed in a7fe3d14a4,
+but `bun run beep yeet reply` failed before posting either saved draft:
+`GraphQL: API rate limit already exceeded`. The reply report confirms no
+partial publication; both threads remain unresolved pending a whole-run retry.
+A quota-aware repository-identity cache or scoped retry after reset would avoid
+blocking already prepared replies on a redundant repository lookup.
+
+### 2026-09-25 — offline SQL mock stopped intercepting the current adapter
+
+During the test-utils retry-readiness migration, an explicit attempt counter
+observed zero calls to the existing `pg.Client` mock, although the old test still
+reached its expected typed failure. The current SQL adapter uses its native
+connection path instead. Waiting on the unused mock exposed the stale test seam.
+The test-only repair targets the adapter public `PgClient.makeClient` entry point
+while retaining the real test-utils layer/retry implementation. A mock-hit assertion
+and exact twenty-retries-plus-initial-attempt check would have caught this drift
+when the adapter changed. Production code remains outside this repair.

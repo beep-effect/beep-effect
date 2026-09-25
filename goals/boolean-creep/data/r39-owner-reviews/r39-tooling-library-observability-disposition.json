@@ -1,0 +1,82 @@
+{
+  "verdict": "retain-three-reject-footer-withdrawals",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "originMain": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/library/ai-metrics/src/models.ts",
+      "sha256": "2dac11d497c2d23dfaad6ab052cc340abfdff2787185d11cd30ad321d8522817"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/scorecard.ts",
+      "sha256": "9858b8bfcfd4e3583ee2726e50b5fbb11e8633feda8c8fec947be13107fbe5b4"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+      "sha256": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-observability.execution.json",
+      "sha256": "636b87d18db65041bcd76e243776793413320f166781bcf06fb48d2f8b3123d4"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-observability.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-observability.ndjson",
+      "sha256": "50a2a72780164a17c2e7ab57bde28b7d7a9f04d5f4e88e5fc77806eef1cb53c0"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r36-observability-reconciliation/disposition.json",
+      "sha256": "73eca52f0eaa5bcc4d051269d3ec12c00ab35d5ed7ab2e3a3efceb0db72fd672"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r36-observability-reconciliation/disposition.md",
+      "sha256": "3c5e230b6266ebccdf2afa72f040776bb74f3732d8e5672ff65c2a3648004816"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r36-observability-reconciliation/retained-rows.jsonl",
+      "sha256": "43f5af7fdb910cc2b0c4986904563c12cd27d0759615633f255c725820b820cb"
+    },
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    }
+  ],
+  "retainIds": [
+    "r25-tooling-library-policy-test-outcome-label-quality-gate",
+    "r25-tooling-library-policy-test-outcome-label-input-quality-gate",
+    "r31-tooling-library-observability-outcome-label-annotation-row-quality-gate"
+  ],
+  "withdrawIds": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "disqualified": 0,
+    "designs": 0
+  },
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "04f4a85fd549b51f099dc20049c42764274cadcf274e5ca2f2030937fe0770db"
+    },
+    {
+      "path": "retained-rows.jsonl",
+      "sha256": "43f5af7fdb910cc2b0c4986904563c12cd27d0759615633f255c725820b820cb"
+    }
+  ]
+}

@@ -231,6 +231,14 @@ night. The first seed is what saves the first night's full build: the refresh
 re-summarizes only changed files, so the owner starts from a meaning tier rather
 than from nothing.
 
+The Effect reference workspace at `$HOME/YeeBois/references/effect` has its own
+03:30 `beep-refs-refresh` timer, rendered by `beep refs install-timer`.
+It uses `claude-opus-5` through CLIProxyAPI and reuses
+`$HOME/.config/beep-graft/env` unchanged. See the [systemd timer
+runbook](systemd-timers.md) for the agent-permitted `beep refs plan` and
+`beep refs install-timer --refresh` forms; agents never run `beep refs refresh`
+or a fresh refs timer install.
+
 The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
@@ -452,9 +460,26 @@ version manager tree, and `graft telemetry disable` has been run once on the
 workstation:
 
 ```sh
-npm install -g --prefix "$HOME/.local" @nanonets/graft@0.18.0
+npm install -g --prefix "$HOME/.local" @nanonets/graft@0.19.0
 graft --version
 ```
+
+Do not pass `--ignore-scripts` to that install: `tree-sitter-kotlin` ships no
+prebuilt Linux binding and builds it in its install script, and without it
+every `graft` invocation dies at startup with `No native build was found`.
+If an install already skipped it, resolve the installed package root and rebuild:
+
+```sh
+graft_package="$(npm root -g --prefix "$HOME/.local")/@nanonets/graft"
+(cd "$graft_package" && npm rebuild tree-sitter-kotlin)
+```
+
+Resolve the package from the same user-local npm prefix used for installation.
+`command -v graft` can select a mise shim, whose location does not identify the
+installed package root.
+Keep exactly one `graft` on the machine: a second copy installed into a mise node
+global shadows this one on the systemd unit's PATH and the preflight then reads
+the wrong version.
 The deep build depends on workstation-local patches to the installed `dist/`,
 recorded as unified diffs under `scripts/graft/patches/<graft version>/`. Four
 fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
@@ -475,7 +500,7 @@ needs no `graft init`.
 
 ### Meaning-tier ignore list (`.graftignore`)
 
-Graft 0.18.0 selects files from `git ls-files` plus a fixed directory skip
+Graft 0.19.0 still selects files from `git ls-files` plus a fixed directory skip
 list, so a generated file the model cannot summarize (the 17,000-line
 `packages/drivers/box/src/_generated/Box.models.gen.ts` answers every crux
 call with an empty tool call) was retried twice per night and left `graft
@@ -487,9 +512,12 @@ them, so `graft grep` and `graft callers` keep seeing every symbol. The syntax
 is a gitignore subset (`*`, `**`, `?`, `#` comments, a trailing `/`); a
 pattern without a leading `/` matches at any depth, and a trailing `/` or
 `/**` matches only that path and its descendants. The rule file's hash is
-recorded in the graph fingerprint, so editing it alone counts as drift for the
-query-time refresh, and `graft check` reports a symbol still `excluded` after
-its rule was removed as pending. A rule file that exists but cannot be read
+recorded in the graph fingerprint (read once per build, so the matcher and
+the recorded hash always describe the same rules), so editing it alone counts
+as drift for the query-time refresh; `graft check` reports the same policy
+drift as a changed `.graftignore` until a `graft build` records the new rules,
+and reports a symbol still `excluded` after its rule was removed as pending. A
+rule file that exists but cannot be read
 fails the build rather than silently ignoring nothing. The list is honoured
 only by a dist that carries the `util-deep-ignore` patch family, which
 `apply-dist-patches.sh --check` verifies.

@@ -179,10 +179,20 @@ orchestrator owns schemas, contracts, and judgment.
       (epoch and cross-profile fixtures in #1214; the changed-package tripwire, its package-scope
       plumbing and its fixtures in this PR under rulings 68–70).
 
-## P3 — Ordering handoff
+## P3 — Ordering handoff — COMPLETE 2026-09-25
 
-- [ ] D1 pre-push wave ordered by (cost, red probability, precision) from A1; inputs handed to the
-      ontology packet's planner seam with a receipt.
+- [x] D1 pre-push wave ordered by (cost, red probability, precision) from A1; inputs handed to the
+      ontology packet's planner seam with a receipt — done 2026-09-25 (rulings 76–79): the wave keeps
+      B3's lexicographic key over the `gate-order/v1` seed, named `gate-order-lexicographic/v1`
+      (seeded first, policy-preflight before heavy, A1 cost P50 ascending, A1 first-red share
+      descending, precise before imprecise, declaration index); `quality:cache-policy`, the one
+      declared pre-push lane without a seed row, takes the 183 s Repo Sanity proxy and moves from
+      rank 31 to rank 19; every seed pointer and cost source is checked against the pinned A1
+      baseline bytes, and the first-red share is a rank weight carried with its 832 and 1610
+      populations, not P(red); the 32-lane order is committed as `research/gate-order-handoff.json`
+      (`gate-order-handoff/v1`, guarded by a repo-cli fixture) and offered by path, not wired, to the
+      ontology packet's S7-v2 `planEpisode` seam, with a receipt in both packets and
+      `iv-1006-wave-order` left as an open item for that packet's steward.
 - [x] D2 reviewer follow-ups are a merge gate and the comment stream is durable — done 2026-09-22
       (rulings 65–67): one pure four-state thread union (`unresolved`, `resolved-answered`,
       `resolved-follow-up`, `resolved-acknowledged`) derived from structure alone drives
@@ -196,7 +206,11 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P4 — Close
 
-- [ ] A3 yeet economics surface prints the report at closeout.
+- [x] A3 yeet economics surface prints the report at closeout — done 2026-09-25 (rulings 73–75):
+      `bun run beep yeet economics [--json] [--branch <b>] [--fleet] [--packet-dir <dir>]` prints the
+      `yeet-economics/v1` report (attempt mixes, wrapper and inner lanes as separate populations, first
+      failure, red-to-green episodes, terminations, the M4 fingerprint-repeat proxy, data quality) and
+      `yeet closeout` prints its five-line branch summary.
 - [ ] A1 re-run at close; M1–M5 compared with the P0 baseline.
 - [ ] Closeout reflection, status flip, final PR to Yeet merge-ready; merge subject cites the
       packet slug.

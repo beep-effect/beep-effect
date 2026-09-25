@@ -35,6 +35,7 @@ import {
   canUseTurboCacheSecretSession,
   configStringEqualsSync,
   configStringOption,
+  isCiSync,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
   renderTurboEnvironmentHealthWarning,
@@ -990,7 +991,7 @@ const shouldRunRepoWideSteps = (args: ReadonlyArray<string>): boolean => !A.some
 const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, isExplicitTurboAffectedOrScopeArg);
 
-const isCi = (): boolean => Bun.env.CI === "true" || configStringEqualsSync("CI", "true");
+const isCi = isCiSync;
 
 // A workstation configured for remote reads is honored; everything else falls
 // back to local-only. The decision itself lives in `internal/cli/TurboCache`
@@ -1878,7 +1879,29 @@ const stopAfterRed = (): GateRedSchedulingDecision => GateRedSchedulingDecision.
 const continueAfterImpreciseRed = (): GateRedSchedulingDecision =>
   GateRedSchedulingDecision.Enum["continue-after-imprecise-red"];
 
-const redSchedulingDecision = (
+/**
+ * Decide whether a red lane stops the local proof wave.
+ *
+ * **Details**
+ *
+ * An unseeded lane and a lane whose seed row is `precise` stop scheduling
+ * after a red; only an explicitly `imprecise` lane lets the wave continue.
+ *
+ * **Example** (Stop after an unseeded red)
+ *
+ * ```ts
+ * import { redSchedulingDecision } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * console.log(redSchedulingDecision(O.none())) // "stop-after-red"
+ * ```
+ *
+ * @param estimate - The lane's gate-order seed row, when the seed covers it.
+ * @returns The scheduling decision applied when the lane turns red.
+ * @category policies
+ * @since 0.0.0
+ */
+export const redSchedulingDecision = (
   estimate: GithubCheckLaneWaveSpec["lanes"][number]["orderEstimate"]
 ): GateRedSchedulingDecision =>
   O.match(estimate, {

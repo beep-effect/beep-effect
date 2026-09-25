@@ -1,0 +1,15 @@
+{
+  "lane": "r40-drivers-g-m",
+  "reviewedAt": "2026-09-25T10:46:36.328493+00:00",
+  "executionSha256": "f7a17c36f1219c8dac538ec01f704573b2bab9bc4741cc51c93b108a71a94e80",
+  "transcriptSha256": "dc0510226c92ab33b039ce7861d61e9d343cafa0554b21ca6dbfd5c57bd927ef",
+  "sourceFiles": 68,
+  "seedRows": 7,
+  "newQualified": 0,
+  "newDisqualified": 0,
+  "coverage": "Reviewed transcript enumeration and all seven root scans, owner reads and inferred/literal Boolean probes. Independently inspected GraphMessage/Event, four Three.js constructor objects, complete private collisionReportFromRows and both callers/projectors, frozen final-only collision fixture and reviewed design. Retain six D2 rows and one E4 owner.",
+  "qualifiedOwnerProof": "Normalized duplicates imply final duplicates for deterministic digest projection and synchronous no-digest projection; final-only fixture remains. Both callers remain private-provenance Result boundary; arbitrary public rows remain unrestricted. Complete4/3 invariant/design unchanged.",
+  "disposition": "reconciled-no-new-records",
+  "dryCredit": false,
+  "P3Credit": false
+}

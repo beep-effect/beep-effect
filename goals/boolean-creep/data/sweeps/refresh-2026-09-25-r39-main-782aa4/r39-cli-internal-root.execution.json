@@ -1,0 +1,22 @@
+{
+  "lane": "r39-cli-internal-root",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:58:05.642336+00:00",
+  "finished": "2026-09-25T09:01:15.916096+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-internal-root.jsonl`. Confirmed 1, disqualified 0. Every assigned root was covered (`bin-main.ts`, `bin.ts`, `index.ts`, and `internal`, 87 source files). All 18 seed clusters still match current writers and readers, so none were rewritten or withdrawn. One new cluster: `appendedTerminal` / `terminalAlreadyExists` in `appendEncodedAttemptJournalEvent`.",
+  "transcriptSha256": "b03de9519b7eae9012e9d0436d89bbf26af7185df8fb0f7ca1c1b486540cfb6e",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

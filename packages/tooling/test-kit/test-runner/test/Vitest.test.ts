@@ -1,13 +1,26 @@
 import { fcRuns } from "@beep/fc-runs";
 import { it, TestContextUnavailable, TestHang } from "@beep/test-runner";
 import { makeIt } from "@beep/test-runner/test/Vitest";
-import { afterAll, expect, expectTypeOf, TestRunner, it as upstreamIt } from "@effect/vitest";
+import { afterAll, beforeEach, expect, expectTypeOf, TestRunner, it as upstreamIt } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Clock, Config, ConfigProvider, Context, Duration, Effect, Layer, Logger, Option as O, Ref } from "effect";
+import {
+  Clock,
+  Config,
+  ConfigProvider,
+  Context,
+  Deferred,
+  Duration,
+  Effect,
+  Layer,
+  Logger,
+  Option as O,
+  Ref,
+} from "effect";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
-import type { Vitest } from "@effect/vitest";
+import type { TestContext, Vitest } from "@effect/vitest";
 
 class Probe extends Context.Service<Probe, { readonly value: number }>()("@beep/test-runner/test/Vitest.test/Probe") {}
 
@@ -360,4 +373,113 @@ it.layer(Layer.empty)("plain property passthrough", (layerIt) => {
     },
     { arbitrary: { ...fcRuns(4), seed: 4242 } }
   );
+});
+
+const duplicateCasesReady = Deferred.makeUnsafe<void>();
+const duplicateTuplesReady = Deferred.makeUnsafe<void>();
+let duplicateCaseStarts = 0;
+let duplicateTupleStarts = 0;
+let duplicateCaseReleases = 0;
+let caseLayerReleases = 0;
+let caseRetryAttempts = 0;
+const caseContexts: Array<TestContext> = [];
+const caseLifecycleStarts: Array<string> = [];
+const caseLifecycleEnds: Array<string> = [];
+
+const CaseProbeLayer = Layer.mergeAll(
+  Layer.effect(
+    Probe,
+    Effect.acquireRelease(Effect.succeed({ value: 7 }), () =>
+      Effect.sync(() => {
+        caseLayerReleases += 1;
+      })
+    )
+  ),
+  ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_TEST_TRACE: "1", CI: false })),
+  Logger.layer(
+    [
+      Logger.make((options) => {
+        const { annotations } = Logger.formatStructured.log(options);
+        if (P.isString(annotations.testName)) {
+          if (annotations.event === "start") caseLifecycleStarts.push(annotations.testName);
+          if (annotations.event === "end") caseLifecycleEnds.push(annotations.testName);
+        }
+      }),
+    ],
+    { mergeWithExisting: true }
+  )
+);
+
+it.layer(CaseProbeLayer, { concurrent: true })("concurrent duplicate cases", (caseIt) => {
+  beforeEach((context) => {
+    caseContexts.push(context);
+  });
+  caseIt.effect.each([7, 7, 7])(
+    "keeps scalar row %# (%$): %s",
+    (...values) =>
+      Effect.gen(function* () {
+        expect(values).toEqual([7]);
+        expect((yield* Probe).value).toBe(7);
+        yield* Effect.acquireRelease(Effect.void, () =>
+          Effect.sync(() => {
+            duplicateCaseReleases += 1;
+          })
+        );
+        duplicateCaseStarts += 1;
+        if (duplicateCaseStarts === 3) yield* Deferred.succeed(duplicateCasesReady, undefined);
+        yield* Deferred.await(duplicateCasesReady);
+        yield* Effect.yieldNow;
+      }),
+    { timeout: 1_000 }
+  );
+});
+
+it.live.each([
+  [2, 3],
+  [2, 3],
+])(
+  "keeps duplicate live tuple %i + %i",
+  (...values) =>
+    Effect.gen(function* () {
+      expect(values).toEqual([[2, 3]]);
+      duplicateTupleStarts += 1;
+      if (duplicateTupleStarts === 2) yield* Deferred.succeed(duplicateTuplesReady, undefined);
+      yield* Deferred.await(duplicateTuplesReady);
+      yield* Effect.yieldNow;
+    }),
+  { concurrent: true, timeout: 1_000 }
+);
+
+it.effect.each([1])(
+  "retries a parameterized Effect with its original options",
+  () =>
+    Effect.sync(() => {
+      caseRetryAttempts += 1;
+      expect(caseRetryAttempts).toBe(2);
+    }),
+  { retry: 1, timeout: 1_000 }
+);
+
+it.effect.each([1])("preserves each skip options", () => Effect.die("must not run"), { skip: true });
+it.effect.each([1])("preserves each expected failures", () => Effect.fail("expected case failure"), { fails: true });
+
+afterAll(() => {
+  expect(duplicateCaseStarts).toBe(3);
+  expect(duplicateTupleStarts).toBe(2);
+  expect(duplicateCaseReleases).toBe(3);
+  expect(caseLayerReleases).toBe(1);
+  expect(caseRetryAttempts).toBe(2);
+  expect(caseContexts).toHaveLength(3);
+  expect(caseContexts[0]).not.toBe(caseContexts[1]);
+  expect(caseContexts[1]).not.toBe(caseContexts[2]);
+  expect(A.map(caseContexts, (context) => context.task.name)).toEqual([
+    "keeps scalar row 0 (1): 7",
+    "keeps scalar row 1 (2): 7",
+    "keeps scalar row 2 (3): 7",
+  ]);
+  const names = A.map(caseContexts, (context) => context.task.fullTestName);
+  expect(caseLifecycleStarts).toHaveLength(3);
+  expect(caseLifecycleEnds).toHaveLength(3);
+  expect(caseLifecycleStarts).toEqual(expect.arrayContaining(names));
+  expect(caseLifecycleEnds).toEqual(expect.arrayContaining(names));
 });
