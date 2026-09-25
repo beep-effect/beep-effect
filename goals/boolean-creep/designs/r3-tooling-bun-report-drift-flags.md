@@ -66,6 +66,6 @@ At source `ea3ac40867e4f292b7f0708b156231f0462ddcd9`, the historical R28 contrac
 - Existing array-to-status implementations: `NodeResolver.ts:255-258`, `BiomeResolver.ts:189-192`, `EffectResolver.ts:229-232`. Reuse this vocabulary and pattern; no additional domain.
 - `internal/services/ResolverService.ts`: Bun import20; category resolution87-95 preserves error fallback to the empty state and absence when the local version is empty.
 - `test/version-sync-effect.test.ts`: schema-derived round trip316-327; unequal pin fixtures390-418; equal pins with Vercel/archive drift420-442; post-update clean report483; updater report543 onward. Preserve these fixtures and the previously specified newer-latest case.
-- `src/test/VersionSync.test-kit.ts:10` reexports the Bun resolver. Package exports retain the `./commands/VersionSync` entry. No API visibility change is proposed.
+- `src/test/VersionSync.test-kit.ts:10` reexports the Bun resolver. Package exports retain the `@beep/repo-cli/commands/VersionSync` subpath, backed by `packages/tooling/tool/cli/src/commands/VersionSync/index.ts`. No API visibility change is proposed.
 
 The migration still removes two derived Boolean locals, one redundant inequality and one OR; it preserves every drift item and derives the same status from array emptiness. The 4/3 implication follows from raw string equality, including empty and non-semver strings. Full string/Option payloads, defaults, item order and encoded report remain unchanged. Tests were inspected, not executed as implementation proof.

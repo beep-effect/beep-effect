@@ -1709,3 +1709,12 @@ the unlaunched preparation pinned to `41d6c9eb`. The queued publication proof
 was cancelled before merging main; its terminal result was observed. Preserve
 launcher review work separately from source admission so a source refresh can
 reuse proven execution behavior without claiming stale census coverage.
+
+### 2026-09-25 — Package subpath mistaken for a relative document target
+
+PR #1246 Heavy / Lint Policy failed its knowledge reference and semantic-delta
+checks on the Bun report design's unqualified VersionSync package subpath.
+The checker treated it as a path relative to the design directory. The design
+now names the full package subpath and tracked repository target. Preserve
+historical receipt hashes and bind this mechanical correction separately.
+Run both knowledge checks on refreshed design prose before publication.
