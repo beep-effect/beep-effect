@@ -40,6 +40,8 @@ import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ReferenceMember } from "./Refs.schemas.ts";
 
+const isPositiveInteger = S.is(S.Int.check(S.isGreaterThan(0)));
+
 /** Untracked artifacts graft leaves in a member; excluded per clone, never via .gitignore (R3). */
 const GRAFT_EXCLUDE_ENTRIES: ReadonlyArray<string> = ["graft/", ".graft/", ".ignore"];
 
@@ -259,13 +261,13 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       );
     },
     Effect.mapError((cause) =>
-      S.is(ReferenceWorkspaceError)(cause) ? cause : ioError(manifestPath, "Cannot link reference workspace.")(cause)
+      ReferenceWorkspaceError.is(cause) ? cause : ioError(manifestPath, "Cannot link reference workspace.")(cause)
     )
   );
 
   const refresh: ReferenceWorkspaceShape["refresh"] = Effect.fn("ReferenceWorkspace.refresh")(
     function* (home, root, jobs) {
-      if (!S.is(S.Int.check(S.isGreaterThan(0)))(jobs))
+      if (!isPositiveInteger(jobs))
         return yield* ReferenceWorkspaceError.make({ path: root, message: "--jobs must be a positive integer." });
       const manifest = yield* readManifest();
       const ensureGraftExcludes = Effect.fnUntraced(function* (cwd: string) {
@@ -363,7 +365,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       });
       const stateDir = path.join(home, ".local", "state", "beep", "refs");
       const statusPath = path.join(stateDir, "last-refresh.json");
-      const encoded = yield* S.encodeEffect(S.fromJsonString(RefsRefreshStatus))(status);
+      const encoded = yield* RefsRefreshStatus.encodeJson(status);
       yield* fs.makeDirectory(stateDir, { recursive: true });
       const temporary = yield* fs.makeTempFile({ directory: stateDir, prefix: ".refresh-" });
       yield* fs.writeFileString(temporary, `${encoded}\n`);
@@ -398,12 +400,12 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       return status;
     },
     Effect.mapError((cause) =>
-      S.is(ReferenceWorkspaceError)(cause) ? cause : ioError(manifestPath, "Cannot complete reference refresh.")(cause)
+      ReferenceWorkspaceError.is(cause) ? cause : ioError(manifestPath, "Cannot complete reference refresh.")(cause)
     )
   );
 
   const renderFor = Effect.fn("ReferenceWorkspace.renderFor")(function* (input: RefsTimerOptions) {
-    const options = yield* S.decodeEffect(RefsTimerOptions)(input).pipe(
+    const options = yield* RefsTimerOptions.decode(input).pipe(
       Effect.mapError(ioError(owner, "Invalid systemd unit values."))
     );
     return [
@@ -454,7 +456,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     ];
   });
   const timerOptions = (home: string, root: string, calendar: string, bunPath: string) =>
-    S.decodeEffect(RefsTimerOptions)({ home, root, calendar, bunPath, owner }).pipe(
+    RefsTimerOptions.decode({ home, root, calendar, bunPath, owner }).pipe(
       Effect.mapError(ioError(owner, "Invalid systemd unit values."))
     );
   const renderTimerUnits: ReferenceWorkspaceShape["renderTimerUnits"] = Effect.fn(
@@ -482,7 +484,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       return paths;
     },
     Effect.mapError((cause) =>
-      S.is(ReferenceWorkspaceError)(cause) ? cause : ioError(owner, "Cannot install reference timer.")(cause)
+      ReferenceWorkspaceError.is(cause) ? cause : ioError(owner, "Cannot install reference timer.")(cause)
     )
   );
   const installTimer: ReferenceWorkspaceShape["installTimer"] = Effect.fn("ReferenceWorkspace.installTimer")(
@@ -510,7 +512,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           message: "--refresh requires installed beep-refs-refresh units with recorded owner, root, and calendar.",
         });
       const bunPath = yield* resolveUnitBunPath({ home, pinned }).pipe(Effect.provide(platform));
-      const options = yield* S.decodeEffect(RefsTimerOptions)({
+      const options = yield* RefsTimerOptions.decode({
         home,
         owner: recordedOwner.value,
         root: root.value,
@@ -520,7 +522,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       return yield* installFor(options);
     },
     Effect.mapError((cause) =>
-      S.is(ReferenceWorkspaceError)(cause) ? cause : ioError(owner, "Cannot refresh installed reference timer.")(cause)
+      ReferenceWorkspaceError.is(cause) ? cause : ioError(owner, "Cannot refresh installed reference timer.")(cause)
     )
   );
   const uninstallTimer: ReferenceWorkspaceShape["uninstallTimer"] = Effect.fn("ReferenceWorkspace.uninstallTimer")(
@@ -543,7 +545,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       return removed;
     },
     Effect.mapError((cause) =>
-      S.is(ReferenceWorkspaceError)(cause) ? cause : ioError(owner, "Cannot uninstall reference timer.")(cause)
+      ReferenceWorkspaceError.is(cause) ? cause : ioError(owner, "Cannot uninstall reference timer.")(cause)
     )
   );
   return ReferenceWorkspace.of({

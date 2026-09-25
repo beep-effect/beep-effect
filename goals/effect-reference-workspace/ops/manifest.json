@@ -62,12 +62,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
@@ -75,5 +75,8 @@
       "status": "pending"
     }
   ],
-  "evidence": ["history/2026-09-25-s4-move.md"]
+  "evidence": [
+    "history/2026-09-25-s4-move.md",
+    "history/2026-09-25-p2-p3-closeout.md"
+  ]
 }
