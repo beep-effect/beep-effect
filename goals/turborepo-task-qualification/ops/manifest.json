@@ -349,7 +349,8 @@
     "research/type-only-delta-review.json",
     "research/proof-identity-delta-review.json",
     "research/proof-ledger-shadow-review.json",
-    "research/proof-authority-review.json"
+    "research/proof-authority-review.json",
+    "research/environment-process-review.json"
   ],
   "agentLaunchers": [
     {

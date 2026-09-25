@@ -1795,3 +1795,17 @@ verified-state guard compares Git state and selectors but does not independently
 compare actual toolchain binaries, ambient environment or the current proof
 command. These bounded checks do not satisfy complete tuple qualification.
 All 13 broader census obligations remain unresolved; no proof ownership changed.
+
+### Environment and admission identity deltas — 2026-09-25
+
+Review 34 covers two more historical runtime-changing source deltas: EnvConfig
+and StepExec. Synthetic controls prove fresh synchronous environment reads
+across set/change/delete, exact CI recognition, provider/process separation and
+optional cache-directory classification. All 115 tests in shared-internals,
+turbo-cache and step-capture-lifecycle passed, including the admission identity
+failure contract. See [the receipt](./research/environment-process-review.json).
+
+These paths retain mutable environment, ConfigProvider, filesystem, random
+identity and subprocess dependencies. No secret resolution was performed, and
+no remote-read or namespace trust was inferred. All 13 broader census
+obligations remain open; the review count is not a completion denominator.
