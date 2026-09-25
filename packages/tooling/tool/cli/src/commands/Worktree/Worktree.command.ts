@@ -16,15 +16,18 @@ import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import * as Bool from "effect/Boolean";
+import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constFalse, dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
+import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
@@ -575,7 +578,8 @@ const renderCreationSummary = Effect.fn("Worktree.renderCreationSummary")(functi
   name: string,
   branch: string,
   targetPath: string,
-  copies: ReadonlyArray<WorktreeCopyOutcome>
+  copies: ReadonlyArray<WorktreeCopyOutcome>,
+  references: ReadonlyArray<string>
 ) {
   const copied = A.filter(copies, (copy) => copy.status === "copied");
   const skipped = A.filter(copies, (copy) => copy.status === "skipped");
@@ -603,6 +607,7 @@ const renderCreationSummary = Effect.fn("Worktree.renderCreationSummary")(functi
           )
     }`
   );
+  for (const reference of references) yield* Console.log(`  reference: ${reference}`);
   yield* Console.log(`  next: cd ${targetPath}`);
 });
 
@@ -698,6 +703,43 @@ const renderDoctorReport = Effect.fn("Worktree.renderDoctorReport")(function* (r
   }
 });
 
+/**
+ * Links the shared references after local files have been copied into a worktree.
+ *
+ * **Details**
+ * Missing roots and other reference failures become warning lines so creation
+ * remains usable on machines that have not provisioned references yet.
+ *
+ * **Example** (Prepare worktree reference linking)
+ * ```ts
+ * import { linkReferences } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect } from "effect"
+ * Effect.isEffect(linkReferences("/checkout", "/checkout-worktrees/topic")) // => true
+ * ```
+ * @category workflows
+ * @since 0.0.0
+ */
+export const linkReferences = Effect.fn("Worktree.linkReferences")(
+  function* (checkoutRoot: string, targetPath: string) {
+    const home = yield* Config.String("HOME");
+    const program = ReferenceWorkspace.use(
+      Effect.fnUntraced(function* (workspace) {
+        const root = yield* workspace.resolveRoot(home, O.none());
+        return yield* workspace.linkInto(targetPath, root);
+      })
+    );
+    return yield* referenceWorkspaceLayer(checkoutRoot).pipe(
+      Layer.build,
+      Effect.flatMap((context) => program.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
+  },
+  Effect.catchTags({
+    ReferenceWorkspaceError: (error) => Effect.succeed([`warning: ${error.message}`]),
+    ConfigError: () => Effect.succeed(["warning: HOME is missing; reference links were not created."]),
+  })
+);
+
 const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: {
   readonly name: string;
   readonly branch: O.Option<string>;
@@ -717,7 +759,8 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
   );
   yield* runStreamingStep("bun", ["install"], targetPath, "Failed to run bun install in the new worktree.");
   const copies = yield* copyLocalFiles(context.mainCheckout, targetPath);
-  yield* renderCreationSummary(options.name, branch, targetPath, copies);
+  const references = yield* linkReferences(context.currentRoot, targetPath);
+  yield* renderCreationSummary(options.name, branch, targetPath, copies, references);
 });
 
 const upstreamVerdictLabel = (verdict: WorktreeUpstreamVerdict): string =>

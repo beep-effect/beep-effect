@@ -6,6 +6,7 @@ import {
   FleetCheckout,
   FleetContestedPath,
   FleetLivenessReadings,
+  linkReferences,
   parseMergeTreeConflictNames,
   parseProcStatStartTime,
   parseStatusPorcelainZ,
@@ -14,6 +15,9 @@ import {
 } from "@beep/repo-cli/commands/Worktree";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Config, Effect, Stream } from "effect";
+import { ChildProcess } from "effect/unstable/process";
+import { fixture, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
 const FRESH_SECONDS = 30;
 const STALE_SECONDS = FLEET_LIVENESS_WINDOW_SECONDS * 2;
@@ -334,3 +338,93 @@ describe("contestedSwampingNotes", () => {
     expect(contestedSwampingNotes(contested, rows)).toEqual([]);
   });
 });
+
+// The same step runWorktreeNew invokes immediately after copyLocalFiles.
+describe("worktree reference linking", () => {
+  it.effect(
+    "links and repairs every manifest member plus the workspace",
+    Effect.fnUntraced(function* () {
+      const f = yield* fixture();
+      const target = f.path.join(f.temp, "new-worktree");
+      yield* f.fs.makeDirectory(target);
+      const lines = yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config));
+      expect(lines).toHaveLength(3);
+      for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
+        const link = f.path.join(target, ".repos", name);
+        expect(yield* f.fs.readLink(link)).toBe(name === "effect-workspace" ? f.root : f.path.join(f.root, name));
+        yield* f.fs.remove(link);
+        yield* f.fs.symlink(f.path.join(f.temp, "missing"), link);
+      }
+      expect(yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config))).toEqual(lines);
+      const collision = f.path.join(target, ".repos/effect");
+      yield* f.fs.remove(collision);
+      yield* f.fs.makeDirectory(collision);
+      yield* f.fs.writeFileString(f.path.join(collision, "keep"), "preserve");
+      const preserved = yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config));
+      expect(preserved[0]).toContain("warning:");
+      expect(yield* f.fs.readFileString(f.path.join(collision, "keep"))).toBe("preserve");
+    }, testPlatform)
+  );
+
+  it.effect(
+    "returns a warning without failing creation when the reference root is missing",
+    Effect.fnUntraced(function* () {
+      const f = yield* fixture();
+      yield* f.fs.remove(f.root, { recursive: true });
+      const target = f.path.join(f.temp, "new-worktree");
+      yield* f.fs.makeDirectory(target);
+      const lines = yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config));
+      expect(lines[0]).toContain("warning: Reference root is missing");
+      expect(yield* f.fs.exists(f.path.join(target, ".repos"))).toBe(false);
+    }, testPlatform)
+  );
+});
+
+it.effect(
+  "worktree new calls reference linking after copying files and prints its links",
+  Effect.fnUntraced(function* () {
+    const f = yield* fixture();
+    yield* f.fs.makeDirectory(f.path.join(f.owner, ".git"));
+    yield* f.fs.writeFileString(f.path.join(f.owner, ".env"), "COPIED=yes\n");
+    yield* writeExecutable(
+      f.path.join(f.bin, "git"),
+      `#!/bin/sh
+case "$1 $2" in
+  "worktree list") printf 'worktree %s\\0HEAD 0000000000000000000000000000000000000000\\0branch refs/heads/main\\0\\0' "$PWD" ;;
+  "worktree add") mkdir -p "$3" ;;
+  "submodule update") exit 0 ;;
+  *) exit 91 ;;
+esac
+`
+    );
+    yield* writeExecutable(f.path.join(f.bin, "bun"), "#!/bin/sh\nexit 0\n");
+    const cli = yield* f.path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
+    const ambientPath = yield* Config.String("PATH");
+    const bun = process.execPath;
+    const handle = yield* ChildProcess.make(bun, [cli, "worktree", "new", "topic"], {
+      cwd: f.owner,
+      env: { HOME: f.home, PATH: `${f.bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: f.root },
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [exitCode, stdout, stderr] = yield* Effect.all(
+      [
+        handle.exitCode,
+        handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+        handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+      ],
+      { concurrency: "unbounded" }
+    );
+    expect(exitCode, stderr).toBe(0);
+    const target = f.path.join(f.temp, "owner-worktrees/topic");
+    expect(yield* f.fs.readFileString(f.path.join(target, ".env"))).toBe("COPIED=yes\n");
+    for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
+      expect(stdout).toContain(`reference: .repos/${name} ->`);
+      expect(yield* f.fs.readLink(f.path.join(target, ".repos", name))).toBe(
+        name === "effect-workspace" ? f.root : f.path.join(f.root, name)
+      );
+    }
+  }, testPlatform),
+  30000
+);

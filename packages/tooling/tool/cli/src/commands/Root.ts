@@ -33,6 +33,7 @@ import { modelsCommand } from "./Models/index.ts";
 import { purgeCommand } from "./Purge/index.ts";
 import { qaCommand } from "./Qa/index.ts";
 import { qualityCommand } from "./Quality/index.ts";
+import { refsCommand } from "./Refs/index.ts";
 import { researchCommand } from "./Research/index.ts";
 import { runnersCommand } from "./Runners/index.ts";
 import { skillsCommand } from "./Skills/index.ts";
@@ -85,6 +86,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     filesCommand,
     goalsCommand as Command.Command<"goals", {}, {}, never, never>,
     graftCommand,
+    refsCommand,
     imageCommand,
     knowledgeCommand,
     labsCommand,
