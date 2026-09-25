@@ -591,6 +591,7 @@ describe("Yeet inbox hook first-seen stamps", () => {
 
 const hookExemptMarker = "# yeet-inbox: wave-exempt-kinds (parity-tested)";
 const HookExemptKinds = S.String.pipe(S.Array, S.fromJsonString);
+const decodeHookExemptKinds = S.decodeUnknownOption(HookExemptKinds);
 
 // The JSON array on the one line under the marker, sorted. Any other shape,
 // including a missing marker or a second line, reads as None.
@@ -601,7 +602,7 @@ const hookExemptKindsIn = (hookText: string): O.Option<ReadonlyArray<string>> =>
     O.flatMap((index) => A.get(lines, index + 1)),
     O.flatMap(Str.match(/^wave_exempt_kinds='(\[.*\])'$/)),
     O.flatMap((match) => O.fromUndefinedOr(match[1])),
-    O.flatMap(S.decodeUnknownOption(HookExemptKinds)),
+    O.flatMap(decodeHookExemptKinds),
     O.map(A.sort(Order.String))
   );
 };

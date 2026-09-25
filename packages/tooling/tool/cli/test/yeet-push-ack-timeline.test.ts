@@ -35,6 +35,8 @@ const pr = 754;
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const HeadTimelineJson = S.fromJsonString(YeetHeadTimeline);
+const decodeHeadTimelineJson = S.decodeEffect(HeadTimelineJson);
+const encodeHeadTimelineJson = S.encodeEffect(HeadTimelineJson);
 const roundTripRuns = { arbitrary: { runs: 20, seed: 5 } };
 
 const makeTempRoot = Effect.fn("pushAckTimelineTest.makeTempRoot")(function* () {
@@ -170,7 +172,7 @@ describe("push → row → ack schemas", () => {
     "round trips a head timeline through its JSON encoding",
     [Arbitrary.schema(YeetHeadTimeline)],
     Effect.fnUntraced(function* ([timeline]) {
-      const decoded = yield* S.decodeEffect(HeadTimelineJson)(yield* S.encodeEffect(HeadTimelineJson)(timeline));
+      const decoded = yield* decodeHeadTimelineJson(yield* encodeHeadTimelineJson(timeline));
       assertTrue(S.toEquivalence(YeetHeadTimeline)(decoded, timeline));
     }),
     roundTripRuns
@@ -383,7 +385,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
       // A record encoded before redLane existed decodes without it, and the
       // join falls back to the earliest P0 row: with equal stamps, the row
       // dispatched first.
-      const legacy = yield* S.decodeEffect(HeadTimelineJson)(yield* encodeJson(legacyRecord));
+      const legacy = yield* decodeHeadTimelineJson(yield* encodeJson(legacyRecord));
       assertNone(legacy.redLane);
       strictEqual(
         renderYeetPushToAckTimeline(yield* loadYeetPushToAckTimeline(root, legacy, O.some(pr))),
