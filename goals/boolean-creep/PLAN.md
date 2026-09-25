@@ -2,16 +2,16 @@
 
 ## R39 complete census and reconciliation, 2026-09-25
 
-R39 completed all27 census lanes against historical source `ea3ac408` and
-main `782aa4d3`. All3,946 frozen bindings match that exact Git source. Parent
+R39 completed all 27 census lanes against historical source `ea3ac408` and
+main `782aa4d3`. All 3,946 frozen bindings match that exact Git source. Parent
 reconciliation finished after main advanced; this preserves historical evidence
 and grants no current-main dry credit.
 
 Two new qualified owners passed bounded independent admission review. The final
-CLI lane accounts for62 original seeds and12 existing qualified designs with
-no unresolved owner-contract findings. Inventory has **726 rows:108 qualified,
-618 disqualified,zero applied**. Forty-four citation/status-note updates, two D2
-records and15 existing-design supplements are installed with originals retained.
+CLI lane accounts for 62 original seeds and 12 existing qualified designs with
+no unresolved owner-contract findings. Inventory has **726 rows: 108 qualified,
+618 disqualified, zero applied**. Forty-four citation/status-note updates, two D2
+records and 15 existing-design supplements are installed with originals retained.
 
 R39 is complete and wet. The dry streak remains zero. See
 `data/sweeps/refresh-2026-09-25-r39-main-782aa4/round-verdict.json` and
