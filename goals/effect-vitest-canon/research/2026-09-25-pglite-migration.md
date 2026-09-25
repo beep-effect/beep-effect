@@ -26,3 +26,20 @@ The cause property covers codec-supported native Error fields, not lossless
 round trips of arbitrary opaque values. Fallback cleanup follows scopedWith
 semantics; the preserved early-close witness does not inject interruption.
 Goal-ledger reconciliation and hosted PR closure remain separate work.
+
+## Review provenance correction
+
+The active detector sidecar now mirrors the seven current source-anchored
+exceptions in the standards baseline. The eight original P1 detector rows and
+their P2 dispositions are preserved in
+`2026-09-25-pglite-original-detector-dispositions.jsonl` beside this receipt.
+Together with the twelve unchanged lens rows, that archive preserves all twenty
+original inventory decisions without presenting deleted helper names as current
+detector identities. The original inventory totals remain historical accounting.
+
+A second timing sample is collected from committed migration head dd15e8c40e.
+Its headBefore/headAfter fields are the actual Git heads at collection boundaries.
+The first sample ran against uncommitted migration source at the OBS base; its
+source manifest was stable, but its Git head alone did not identify those edits.
+The first raw sample, context and source manifest remain in private provenance
+receipts. The current timing artifacts carry the second sample unchanged.
