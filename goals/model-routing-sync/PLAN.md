@@ -6,6 +6,18 @@ P1 Implement, slice 1 landed (2026-09-22) in worktree `model-routing-sync`, bran
 `feat/model-routing-sync`. The packet was materialized from the compiled bootstrap plan. Slice 1 is
 deliberately read-only (R12); its smoke run is recorded in [`README.md`](./README.md).
 
+2026-09-24 acceptance follow-up: P2 local evidence now covers lossless external
+decoding, every conflict category, read-only hashes, missing JSDoc targets, and
+the JudgePack template. See `history/2026-09-24-slice-1-acceptance.md`. Full package
+proof and schema-first pass; P3 full Yeet proof and hosted closeout remain delivery
+gates; S2 and S3 remain outside this goal.
+
+2026-09-25 coverage follow-up: the operator approved three package-local Vitest
+isolation exceptions (wink, utils, identity). PR #1224 reached hosted merge
+readiness and was merged by the operator before implementation of these
+exceptions. Deliver the exceptions and final packet closeout in a follow-up PR,
+left open and mergeable. The agreed scope is recorded in `DECISIONS.md`.
+
 ## Phases
 
 - **P0 Research — complete.** Three Opus 5 exploration lanes (CLIProxyAPI catalog, `repo-cli` sync
@@ -16,7 +28,7 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
      schemas; fetch the upstream manifest (fallback to the raw GitHub URL); read
      `$HOME/.codex/models_cache.json`; run `cursor-agent models`; read proxy `GET /v1/models` as an
      availability overlay only (R1); decode; diff against the ledger; print drift per declared
-     target. No writes (R12). Command group `commands/Models/` in `@beep/repo-cli` (R5).
+     target. No projection writes (R12). Command group `commands/Models/` in `@beep/repo-cli` (R5).
   2. **S2 write path.** `--write` with `$HOME/.config-backups/` backups, idempotent line-anchored
      rewrites, the dirty-checkout refusal for repo targets, and the one-time prose rewrite that
      adopts `<!-- beep-models:begin -->` blocks with a `superseded:` list (R4, R7).
@@ -27,10 +39,10 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
        the manifest binding names the bare `claude-fable-5-1`, so the `orchestrator x claude-code`
        row reports `stale` on a value that is arguably correct. Either the binding grows a
        context-window axis or the `json-key` locator grows a suffix-tolerant render.
-     - **`Qa/JudgePack.ts` has no slice-1 locator.** The R9 target is a `--model gpt-6-astra
+     - **`Qa/JudgePack.ts` locator — resolved in the acceptance follow-up.** The R9 target is a `--model gpt-6-astra
        --effort medium` fragment inside a template literal, not an `export const <symbol> = "…"`,
-       so the `ts-literal` grammar cannot address it. It is omitted from the seed manifest until a
-       locator tag that can reach it exists.
+       so the `ts-literal` grammar cannot address it. The read-only `line-value`
+       locator now covers both its model and effort without rewriting the template.
   3. **S3 lint + timer + shim.** Register `beep lint model-ids` with the R11 exclusions; render the
      daily `systemd --user` timer via `beep models install-timer` with the critical-notification
      drift path (R8); land the `$HOME/.local/bin/beep-models` shim (R5).
@@ -43,11 +55,11 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
 
 ## P4 Closeout Checklist
 
-- [ ] Reflection at `history/reflections/<date>-<agent>.md`; `bun run beep lint reflection-artifacts`.
-- [ ] `bun run beep goals set-status model-routing-sync completed-retained` in the final PR.
-- [ ] Friction receipts recorded in the active packet's opportunities ledger as they happen, not at
+- [x] Reflection at `history/reflections/<date>-<agent>.md`; `bun run beep lint reflection-artifacts`.
+- [ ] `bun run beep goals set-status model-routing-sync completed-retained` after delivery proof, in the final PR.
+- [x] Friction receipts recorded in the active packet's opportunities ledger as they happen, not at
       closeout.
-- [ ] `bun run beep goals index --write`; Atlas regenerated if `explore atlas --check` says stale.
+- [x] `bun run beep goals index --write`; Atlas regenerated if `explore atlas --check` says stale.
 
 ## Execution Notes
 
@@ -57,7 +69,7 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
 - Prose naming a not-yet-existing command uses the bare form `beep models check`, never
   `bun run beep models check`, until the command is registered — the semantic-delta gate treats the
   latter as an introduced broken reference.
-- The 19 JSDoc examples are cosmetic; the docgen ratchet is the real risk on that target, so they
+- The six seeded JSDoc example files are cosmetic; the docgen ratchet is the real risk on that target, so they
   move last inside S2.
 
 ## Verification Commands

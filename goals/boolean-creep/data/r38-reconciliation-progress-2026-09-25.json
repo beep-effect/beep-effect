@@ -1,0 +1,321 @@
+{
+  "round": "refresh-2026-09-25-r38-main-9a1bd3",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "complete": true,
+  "dryCredit": false,
+  "reviewedLanes": [
+    {
+      "lane": "r38-foundation-primitive",
+      "executionSha256": "cffd1507f928dc686951c888dc61b996b4d613d3c6532ebb0d9162f26bb1648a",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Both assigned primitive roots covered at frozen HEAD; no seeds or multi-Boolean owners. Generated data excluded; single latch, false-or-MimeType sentinel and type-level Boolean result outside recall. Empty report validated; execution/transcript/seed/runner hashes verified. No unresolved question."
+    },
+    {
+      "lane": "r38-foundation-schema-n-z",
+      "executionSha256": "68c0b610bc6872842c756f63813932124074a8433b9c9a4daa4acf075aa445ce",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Every assigned root covered; seven seed clusters retain owner/member and D1/D2 classifications. Parser options, derived parser observations, XML parser, property descriptors and prerelease comparison unchanged. Empty report validated; execution/transcript/seed/runner hashes verified; no withdrawal or unresolved source question."
+    },
+    {
+      "lane": "r38-foundation-schema-a-m",
+      "executionSha256": "cf678ecfc70bddb469b0712291082c375def33f7c49d3b158b5134afcc65676f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All88 assigned roots and188 included files covered. Seed owners/members/classifications and current source anchors retained. Empty validated report; execution/transcript/seed/runner bindings verified; no withdrawal or unresolved question."
+    },
+    {
+      "lane": "r38-drivers-g-m",
+      "executionSha256": "f08ec1fce21ed81f5fdb4dc8d3160629e0ce6a66bbc70c4a7ba1153fe1971125",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All seven assigned driver roots covered; seeded wire-mirror and SDK option D2 records unchanged. Collision duplicate flags retain independent priority behavior. Empty validated report; execution/transcript/seed/runner hashes verified. No seed drift or unresolved question."
+    },
+    {
+      "lane": "r38-foundation-capability",
+      "executionSha256": "807a018887c3dc6ff5eebe35e3ca7afacf5aaa4f990b14cde8e7a2736fbf9eb0",
+      "reportSha256": "ccb8a2f96cfcc4bc28f99bc69a1b297d3b6194ba2d473a603b4dba1fefbf411d",
+      "disposition": "Reject raw4/3 truncation; complete inherited owner has2actualBooleans and optionalmatch legitimate finitepayloadaxis. Existing8/4 fouroutcome design retained, fullproducer/consumer/test audit verified. Other lane roots/seeds unchanged.",
+      "ownerAudit": "r38-alignment-owner-audit",
+      "auditSha256": "c23a1ef10ca6ff3ccce79fc804b11ea9546e533305bfcbfce94ee355102695ed",
+      "verifiedInputs": 10,
+      "verifiedOutputs": 3
+    },
+    {
+      "lane": "r38-foundation-modeling-rest",
+      "executionSha256": "3426afff346ba33c9e594e752dcb63232f9a1413ba6354e1347b490d11c19d07",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All lane roots/seeds unchanged; supplement reread90JSONLD/34Turtle lines, noBooleanvalues/coercions/owners. Closes nonTScoverage without synthetic flags or inventory changes.",
+      "ownerAudit": "r38-modeling-supplement",
+      "auditSha256": "d0f03414ae3edc8eff66182c6a33a5156036b17f83862681d9c95587343da33a",
+      "verifiedInputs": 11,
+      "verifiedOutputs": 2
+    },
+    {
+      "lane": "r38-drivers-a-f",
+      "executionSha256": "1571a6fd813aacecad4fb3c96c57af2f0bb84853a0a0fb7ee042aedf1cf6f35c",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots99files covered,24seed owners unchanged. Protocol declaration anchors841/856 remain valid despite later Boolean fields; no correction. SingleBoolean and function parameters excluded. Empty report validated;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-drivers-n-r",
+      "executionSha256": "ac72e21c69afaacf33bd5d64c78c627e81e77ed6cc6f008f42c9fab7c513e810",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All15roots88includedfiles covered;generated runpod excluded. Complete scopedowners/members/classifications retained;no withdrawal or question. Empty report validated;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-drivers-s-z",
+      "executionSha256": "74f3b0e1b59cc40ffd1dda982df6722abc9c97bce32974f1a5c42ec143bc4afb",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allnine assignedroots covered,fiveD1seeds unchanged. SingleBoolean SSE/WebSocket payload carriers outside recall;no withdrawal/question. Empty report validated;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-foundation-ui",
+      "executionSha256": "24e9b0cc65e7d4605ae7eaf13a54a6facb5365ecc59511cf7c3b0103a4d12041",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allfive roots includingnonTS covered;seedowners/members/classifications retained,sourceclean;no withdrawal/question. Empty report validated;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-agents-workspace",
+      "executionSha256": "59743144fda6bac6304b36273e10faac901d702e0590cdf3be50f7848a364977",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots149authoredTS files covered;no nonTS/templates. TextInline independentmarkD1 and ScanStateE4 retained. No drift or question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-architecture-ecosystem-internal",
+      "executionSha256": "7ed156afc5b8eee6ee4aa52e1e33fa6d4b423a049d6e24c6dada801cd1998d20",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All9roots114files covered;manifest confirms no nonTS omitted. Reject reportedMetaanchor drift: interface declaration267 remains current;hasDefault273 is firstfield,not declaration. AllthreeD1classifications unchanged. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified.",
+      "sourceBindings": [
+        {
+          "file": "packages/ecosystem/effect-drizzle/src/core/Meta.ts",
+          "sha256": "42a4413c1261106557e72d43e6a7f7d7adae58dbdd1d20f0aa80f333c685db19"
+        }
+      ]
+    },
+    {
+      "lane": "r38-shared-documents",
+      "executionSha256": "9763a025bb1f2a5ad8ce4ce7aeedeed61163cca2a51d13399f44ddaa10211760",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All7roots220TSfiles covered,no otherauthoredtypes. enqueueMoveDeltas independentD1 and recordPushFailureE4 retained,currentanchorsunchanged. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-epistemic-ontology",
+      "executionSha256": "d26761f010ffebaa913a5816ed6009da5cf1d2762ae74ca8f51381564f43ce9f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All13roots230files covered;parent independently confirmed manifest13roots and22scopedseeds. All22owners/classifications including inspector/dirty/toolbar retained;no drift/question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-law-practice-runtime",
+      "executionSha256": "5c7561f33719d727cd9a2021a78a3a8b8322182f77dbb986ef65f7cf6310f1e8",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All3roots covered;PracticeKgOptions,existingSourceSpecs,closedWorldReadOnlyHints retain completeowners andD1/D2 classifications;no drift/question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-law-practice-domain",
+      "executionSha256": "303d2d4b4338ccc6fac97f7f6aa42a6092e577350e9b4dd4d5ffb98d7776f5d6",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Complete nongenerated domain covered;canonicalFullCaseCitation includes inherited inFootnote and independentflags unchanged. Pincite148declaration retained vs179field. No classification change. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-tooling-library-observability",
+      "executionSha256": "adf63b63a597f00e78a2085a6578442d8be4cebaa42e59db99b22865a8ffb14d",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All3roots covered,seeds retained. Truncated+optionalreason soleBoolean owner outside recall. No withdrawals/question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-tooling-library-support",
+      "executionSha256": "b8143f97b9eedfedfa3f90c6a6a1ee5a604fd40017f4245408c68bea8d57eb39",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assignedroots covered,seeds retained. Parent resolves footerquestion bycompleteJSDocTagDefinition70-134read: direct13fieldS.Class,soleisDeprecatedBoolean;deprecatedNoteOptionString,astDerivableLiteralKitfull/partial/none,remaining scalars/arrays/nestedparameters not siblingBooleans. No spread/custominheritance. Owner outside recall; no contract decision or inventedDrow needed. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified.",
+      "sourceBindings": [
+        {
+          "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+          "sha256": "3d49f272624baa69d5854548c926d0930d05d2d69d4aac8c586d9a42efee0273"
+        },
+        {
+          "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTDerivability.model.ts",
+          "sha256": "ee05634fabb282e21612768e841daca00d1ad6fad976a967dbc744a6393b0086"
+        }
+      ]
+    },
+    {
+      "lane": "r38-tool-docgen",
+      "executionSha256": "80835be40b6eeb9b89d41be0aae8beaee8f88837de1fcffacf9fd35ab4f2c2f2",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All docgen source covered;18seedclusters retain owners,members,locators andD1/D2classifications. No withdrawal/question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-tooling-policy",
+      "executionSha256": "27917d76271806cbaa0c94c6c1cafc1319580ba139e71d9333d32725709850de",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assignedroots covered,generatedallowlist excluded;24seedowners/member sets retainD1/D2. SingleBoolean shapes and literalfalse-onlyfields excluded correctly. No drift/question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-apps",
+      "executionSha256": "ee5f99cc73c950966cd0cee9f1d6b5f808fda450124e39128256b3b35df61d88",
+      "reportSha256": "992967a95ab4b9e6c9e4ac3510eeaae3d5acd10a3d8633c4699bff7771ade121",
+      "disposition": "Allsix assignedroots includingRust covered,seedsunchanged. RejectrawD2: externalbuilderBoolean methodarguments excluded; localtemporaryisFile,not authoredtwoBooleanobject. D2doesnotwaiverecall. Independentcallsite/policy/localRustdocs audithashesverified;noinventorydelta.",
+      "ownerAudit": "r38-rust-open-options-audit",
+      "auditSha256": "d7a12299e4b1ad1d2e7788fb6b6b23fb3a54834da0369154cbb1f75a425a2cc1",
+      "verifiedInputs": 8,
+      "verifiedOutputs": 2
+    },
+    {
+      "lane": "r38-cli-internal-root",
+      "executionSha256": "6ad99b9a695117586c9dcfba2abe03f31782d334ad933585a348a5f3b7113397",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allassignedroots87files covered;18seedowners and classifications retained,no drift/withdrawal/question. Emptyvalidatedreport;execution/transcript/seed/runner hashes verified."
+    },
+    {
+      "lane": "r38-cli-commands-d-k",
+      "executionSha256": "eb8f57814143cc197fc981565a1954013e77b0af5f9e722fc867262167ab06b2",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Everyassignedrootcovered,seedsclassificationsretained. Parentboundedsourceauditconfirms2D1anchorupdates267/305and1D2supportnote308. Proposalsprivateuntilterminal;noqualificationchange.",
+      "ownerAudit": "r38-packet-mutation-locator-audit",
+      "auditSha256": "05b32585b63e8bf6c48d4cc81e09160dfca75563cad69235ba102752fc961816"
+    },
+    {
+      "lane": "r38-cli-commands-l-q",
+      "executionSha256": "477453c9d1da0de7106fed9f2c128d1a82180919cbd0502f02647d8f17db60c5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All7roots115filescovered;retainclassifications. Verified15input5outputaudit: oneoldDocgencitationdebt corrected;16/10anddesignsemanticsretained. Rejectother3field-vsdeclarationclaims.",
+      "ownerAudit": "r38-cli-lq-locator-audit",
+      "auditSha256": "7f28b16554aca8b18e60d03407dabc46e22041dda479e095b1a97a83eca810a4"
+    },
+    {
+      "lane": "r38-cli-yeet",
+      "executionSha256": "72492903a47a0d3c4d48a2f9089538117f7a4e47a4fb1ff88f4dccc2fea6f3c5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "PrimarycoveredallYeetfiles;parentcompleteownercheckwithdrawsPreparedPublishCommitsoleBoolean tuple despiteproducerrelation. Originalrow/designpreserved;nootherdesigndependency. Allotherseedclassificationsretained.",
+      "ownerAudit": "r38-yeet-prepared-owner-audit",
+      "auditSha256": "f9fae6b7b62acb318eb2ac06208d08a74b4bf3d6da1a2b25c6faba903e1f0fbc"
+    },
+    {
+      "lane": "r38-cli-commands-a-c",
+      "executionSha256": "dbc2c33e1cae5a27236b45489291d025426c22fc9db3745bfc55d81c9a54ae44",
+      "reportSha256": "c21179e2882b66377c90dd936a6be5d8b127c7dcf3d1b5d1864bc46f76d87221",
+      "disposition": "Allassignedrootsincludingauthoredtemplatescovered. Auditall28rawand2footerclaims:accept28metadatareplacements(25D3designedQ),reject2validobjectstartshifts,preservefullcontract/status. Three designcitationmaps;noqualificationdelta.",
+      "ownerAudit": "r38-cli-ac-locator-audit",
+      "auditSha256": "3176eb857f21d617f5a9abc4333b087930437808fd062041acb7d309c7e20a62",
+      "verifiedInputs": 24,
+      "verifiedOutputs": 10
+    },
+    {
+      "lane": "r38-cli-commands-r-z",
+      "executionSha256": "0c84bfec3d246980c46969c65ccef5fb1f06da46aab0f0880f85c6fba986eb1d",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Completeownerindependentauditwithdraws4soleBooleanQowners;policyindexedaliasesarestringdomains,nothiddenBooleans. Bothmutuallydependentdesignswithdrawntogether. RetainPr64/5,Docker4/3;3metadatarows2designcitationmaps. Fullsource/input/outputhashesverified.",
+      "ownerAudit": "r38-cli-rz-owner-audit",
+      "auditSha256": "cf5091b969b85ce65cb21d571a9b369b995420f24a79338b882d32b1b16aba62",
+      "verifiedInputs": 16,
+      "verifiedOutputs": 13
+    }
+  ],
+  "pendingWithdrawals": [
+    {
+      "id": "yeet-prepared-publish-commit",
+      "ownerAudit": "r38-yeet-prepared-owner-audit",
+      "archiveDesign": true,
+      "disposition": "Complete tuple has onlyskipCommitBoolean;Optionstash is notanotherBoolean."
+    },
+    {
+      "id": "worktree-process-cwd-reading",
+      "ownerAudit": "r38-cli-rz-owner-audit",
+      "archiveDesign": true,
+      "disposition": "CompleteownercontainssoleactualBoolean;payloadpresence/literaltype notadditionalBoolean."
+    },
+    {
+      "id": "worktree-branch-diff-reading",
+      "ownerAudit": "r38-cli-rz-owner-audit",
+      "archiveDesign": true,
+      "disposition": "CompleteownercontainssoleactualBoolean;payloadpresence/literaltype notadditionalBoolean."
+    },
+    {
+      "id": "worktree-policy-reading",
+      "ownerAudit": "r38-cli-rz-owner-audit",
+      "archiveDesign": true,
+      "disposition": "CompleteownercontainssoleactualBoolean;payloadpresence/literaltype notadditionalBoolean."
+    },
+    {
+      "id": "worktree-idle-reading",
+      "ownerAudit": "r38-cli-rz-owner-audit",
+      "archiveDesign": true,
+      "disposition": "CompleteownercontainssoleactualBoolean;payloadpresence/literaltype notadditionalBoolean."
+    }
+  ],
+  "pendingMetadataUpdates": [],
+  "rawDispositions": [
+    {
+      "id": "r2-foundation-unique-match-search",
+      "disposition": "retain-existing8/4-reject-truncated4/3",
+      "ownerAudit": "r38-alignment-owner-audit"
+    },
+    {
+      "id": "r38-apps-webkit-extension-open-options",
+      "disposition": "excluded-builder-method-flag-arguments",
+      "ownerAudit": "r38-rust-open-options-audit"
+    }
+  ],
+  "pendingOwnerAudits": [],
+  "pendingLocatorAudits": [],
+  "pendingNewDisqualified": [],
+  "pendingDesignReplacements": [
+    {
+      "id": "package-inventory-docgen-coverage",
+      "file": "r38-cli-lq-locator-audit/package-inventory-docgen-coverage.replacement.md",
+      "sha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288",
+      "original": "r38-cli-lq-locator-audit/package-inventory-docgen-coverage.original.md"
+    },
+    {
+      "id": "corpus-pst-terminal",
+      "file": "r38-cli-ac-locator-audit/corpus-pst-terminal.replacement.md",
+      "sha256": "1fc91b92fafa0020da7af0d004255a9bb1aae9c40526e14b4e418579883f8a5c",
+      "original": "r38-cli-ac-locator-audit/corpus-pst-terminal.original.md"
+    },
+    {
+      "id": "corpus-legacy-word-terminal",
+      "file": "r38-cli-ac-locator-audit/corpus-legacy-word-terminal.replacement.md",
+      "sha256": "55d620d86bd1f118b8e27fb7858ddbadc14b184ed2d0b6e9571ed2c2dbc218b4",
+      "original": "r38-cli-ac-locator-audit/corpus-legacy-word-terminal.original.md"
+    },
+    {
+      "id": "cache-pilot-non-execution",
+      "file": "r38-cli-ac-locator-audit/cache-pilot-non-execution.replacement.md",
+      "sha256": "45c529a7cde82f9bbb22fefe6eaa058df264f448ad797a80e6f1ac32b8037b3b",
+      "original": "r38-cli-ac-locator-audit/cache-pilot-non-execution.original.md"
+    },
+    {
+      "id": "worktree-pr-classification",
+      "file": "r38-cli-rz-owner-audit/worktree-pr-classification.replacement.md",
+      "sha256": "b88fa57c879c98f9343ffe37248786a935f17fc715e56c67fa92394f8bb9231b",
+      "original": "r38-cli-rz-owner-audit/worktree-pr-classification.original.md"
+    },
+    {
+      "id": "r3-tooling-docker-tag-kind-flags",
+      "file": "r38-cli-rz-owner-audit/r3-tooling-docker-tag-kind-flags.replacement.md",
+      "sha256": "3975a7ab75eebd9a06c59d5492c9216dc4e99ae51572ff17c148aff576ebe10d",
+      "original": "r38-cli-rz-owner-audit/r3-tooling-docker-tag-kind-flags.original.md"
+    }
+  ],
+  "pendingInventoryProposals": [
+    {
+      "file": "r38-packet-mutation-locator-audit/proposed-row-replacements.jsonl",
+      "sha256": "0cf7346e0fd318ee419277287e6b54466318a92b3bb29516adfa3d7bd72b5cc2"
+    },
+    {
+      "file": "r38-cli-lq-locator-audit/proposed-row-replacements.jsonl",
+      "sha256": "c692e4e2cdc8731ef339737c546c8c1041b252554e8f63f813fb5d4b6309865b"
+    },
+    {
+      "file": "r38-cli-ac-locator-audit/proposed-row-replacements.jsonl",
+      "sha256": "60a1474b6bc052168edce954b24b1cc109a2e03db8066024fa5aff73b9f6810d"
+    },
+    {
+      "file": "r38-cli-rz-owner-audit/proposed-row-replacements.jsonl",
+      "sha256": "3b3f1709c3a602d491393c3402070a2693eb77b1033918949ad6a5e9020f4b6d"
+    }
+  ],
+  "pendingNewQualified": [],
+  "designReplacementProposals": [],
+  "launchState": "terminal-exit-0",
+  "wetIfFinalized": true,
+  "integrationComplete": true
+}

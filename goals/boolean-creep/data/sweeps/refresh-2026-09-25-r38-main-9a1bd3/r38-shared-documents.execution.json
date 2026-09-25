@@ -1,0 +1,22 @@
+{
+  "lane": "r38-shared-documents",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:15:00.221992+00:00",
+  "finished": "2026-09-25T08:16:37.141274+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-shared-documents.jsonl` (validator: 0 records). Confirmed 0, disqualified 0. All seven assigned roots were covered (220 non-test TypeScript files; no other authored types in those trees).\n\nSeed drift: none. `enqueueMoveDeltas` (`parentChanged`, `nameChanged` at line 736) is still an independent D1 pair, and `recordPushFailure` (`requeue` at line 1057 is still `error.retryable` and the attempt budget) is still the same E4 alias. No new cluster of two or more Boolean members turned up.",
+  "transcriptSha256": "374d1c77e9f8c585b269cf02be3712119ec801582cb7646e63375d45d21d8deb",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

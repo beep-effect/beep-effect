@@ -42,6 +42,9 @@ harness hooks and machine-local state, not notifications someone might read.
   headSha+lane). One accumulated fix commit per wave, not one push per lane. A new push
   supersedes the prior wave. Acceptance: synthetic first-red reaches the inbox in <15s p95;
   three reds on one head produce one repair session with three queued capsules.
+  (2026-09-25: the spawn clause — a repair session started in the owning checkout or a spun-up
+  worktree — is retired by PR #921 and `explorations/pr-event-awareness` D14; the wave record
+  stays the countable unit and the woken owner dispatches.)
 - **A2 Hook-mutex + ACK inbox** (ADHD survivor 1; `research/adhd-ideation.md` §deepen1). Writers
   (watch, local lane runner, collision detector) append typed NDJSON rows to
   `<checkout>/.beep/inbox/`; hot path is stat+read of local git-ignored files only. Claude

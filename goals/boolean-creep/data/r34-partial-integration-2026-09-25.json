@@ -1,0 +1,143 @@
+{
+  "sourceHead": "b78eb6da2ab8d1f8f64082922106472d7c326bc9",
+  "scope": "Partial R34 findings revalidated after main merge; not a completed census",
+  "verifiedInputBindings": 45,
+  "inputBindingMismatches": 0,
+  "withdrawals": [
+    {
+      "id": "cosmos-backend-selection-webgl2",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    },
+    {
+      "id": "firecrawl-agent-response-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "firecrawl-agent-status-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "firecrawl-browser-create-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "firecrawl-browser-delete-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "firecrawl-browser-list-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-drivers-a-f-firecrawl-error-options-retryable",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-drivers-a-f-firecrawl-error-options-input-retryable",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-drivers-a-f-firecrawl-error-retryable",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-drivers-a-f-box-entitlements-paid-seats",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r26-drivers-a-f-firecrawl-sdk-agent-request",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r26-drivers-a-f-browser-session-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r26-drivers-a-f-queue-status-shape",
+      "ownerAudit": "r34-drivers-a-f-scope",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "chat-timeline-refresh-latch",
+      "disposition": "outside-recall-net-cross-owner",
+      "archiveDesign": false,
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "sourceSha256": "88df970a7c96c51e5c4ab3fbd729135232a1019f657aae6a57fe7c8451170920",
+      "declarationStart": 966,
+      "declarationEnd": 987,
+      "actualBooleanMembers": ["refreshStarted"],
+      "otherObservedFlag": "result.waiting is callback AsyncResult payload member, not a sibling Boolean local"
+    },
+    {
+      "id": "dms-mirror-unavailable-retryable",
+      "disposition": "outside-recall-net-single-Boolean",
+      "archiveDesign": false,
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts",
+      "sourceSha256": "ab2c8419e27a52028e48d64bd95404419c15d48dc4324dbc07fe7ad96528ce48",
+      "declarationStart": 36,
+      "declarationEnd": 57,
+      "actualBooleanMembers": ["retryable"]
+    },
+    {
+      "id": "r2-domains-ontology-graph-worker-requeue-latches",
+      "disposition": "Complete closure owner has exactly one actual Boolean (requeuedAfterFailure); three sibling Option locals and callable/Worker handles do not satisfy >=2 actual Boolean recall net. Historical 12/5 relation remains valid but does not establish recall eligibility.",
+      "archiveDesign": true
+    }
+  ],
+  "metadataUpdates": {
+    "mapped-literalkit-attach-helper-descriptors": {
+      "kind": "object-literal"
+    },
+    "mapped-literalkit-make-directional-kit-readonly-property": {
+      "kind": "object-literal"
+    },
+    "mapped-literalkit-readonly-property": {
+      "kind": "object-literal"
+    },
+    "r2-domains-ontology-auto-open-and-inferred-atoms": {
+      "line": 2997
+    }
+  },
+  "inventoryBeforeSha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "inventoryAfterSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "counts": {
+    "total": 731,
+    "qualified": 121,
+    "disqualified": 610,
+    "applied": 0
+  },
+  "historicalInventory": "goals/boolean-creep/history/inventory/2026-09-25-pre-r34-partial-reconciliation.jsonl",
+  "archivedDesigns": [
+    "goals/boolean-creep/history/designs/2026-09-25-r34-partial-reconciliation/cosmos-backend-selection-webgl2.md",
+    "goals/boolean-creep/history/designs/2026-09-25-r34-partial-reconciliation/r2-domains-ontology-graph-worker-requeue-latches.md"
+  ],
+  "completedRoundCredit": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "productionImplementation": false
+}

@@ -148,6 +148,22 @@ const readEnvKey = (content: string, key: string): O.Option<string> =>
 const readTsLiteral = (content: string, symbol: string): O.Option<string> =>
   firstMatch([content], new RegExp(`export\\s+const\\s+${escapeRegExp(symbol)}\\s*(?::[^=]+)?=\\s*"([^"]*)"`));
 
+// Literal delimiters keep this read-only locator bounded to named examples
+// and doctrine spellings (R9). Keep every distinct value, so a mixed file
+// cannot look current just because its first occurrence is current.
+const readLineValues = (content: string, linePrefix: string, before: string, after: string): O.Option<string> => {
+  const pattern = new RegExp(`${escapeRegExp(before)}(.*?)${escapeRegExp(after)}`, "g");
+  const values = pipe(
+    Str.split(content, "\n"),
+    A.filter(Str.startsWith(linePrefix)),
+    A.flatMap(flow(Str.matchAll(pattern), A.fromIterable)),
+    A.map((match) => O.fromNullishOr(match[1])),
+    A.getSomes,
+    A.dedupe
+  );
+  return A.isReadonlyArrayNonEmpty(values) ? O.some(A.join(values, ", ")) : O.none();
+};
+
 const isScalar = P.some<unknown>([P.isString, P.isNumber, P.isBoolean]);
 
 const scalarText = (leaf: unknown): O.Option<string> => (isScalar(leaf) ? O.some(`${leaf}`) : O.none<string>());
@@ -299,6 +315,9 @@ const makeLocatorReader = (): ModelsLocatorReaderShape => ({
         )
       ),
       Match.tag("ts-literal", ({ symbol }) => Effect.succeed(readTsLiteral(file.content, symbol))),
+      Match.tag("line-value", ({ linePrefix, before, after }) =>
+        Effect.succeed(readLineValues(file.content, linePrefix, before, after))
+      ),
       Match.exhaustive
     );
   }),

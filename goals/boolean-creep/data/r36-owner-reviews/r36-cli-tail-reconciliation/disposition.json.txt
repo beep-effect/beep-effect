@@ -1,0 +1,174 @@
+{
+  "verdict": "reject-two-excluded-raws-withdraw-one-qualified-owner-update-metadata",
+  "sourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMain": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    },
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-cli-commands-r-z.jsonl",
+      "sha256": "4afd1eb0890d75d1eb90ab40fc6f30a328d16c812071cea999036918e939ea4f"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-cli-commands-r-z.execution.json",
+      "sha256": "3ffc598e45b7d81a03d0816e1c3a51511daef365eabed62c2f6c96bfc82aa32c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Research/Research.command.ts",
+      "sha256": "632c18568d721fee75b987279a233f8c735e97f72e8c2c83af91e4fe886ae792"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "sha256": "b1e9e630bba837309e3b278b855c36d83db25e38772150bd28594d2f9aade9dc"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
+      "sha256": "fedae6402254e80da326b177a12bd112dc376d385c30c3bcfdcae35687dd42b5"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sha256": "1c395b9af66034c2db877a1d72fcc079e7a246f0b6c313d8e31c586a60e3c3e8"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "sha256": "0ecf2874735ffc7650712822ffa9034b662400d069858f20e067f65d06fee2d2"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts",
+      "sha256": "dcc9585621bb77a88f9878301b961465f4d225d2fdc04de9c6854ddecf81d3c5"
+    },
+    {
+      "path": "goals/boolean-creep/designs/worktree-fleet-epoch-target.md",
+      "sha256": "ad2d00d8625ae0b41e5ce1adc97a6802b5d4d674314d057e02a8c15b48e75919"
+    },
+    {
+      "path": "goals/boolean-creep/designs/worktree-removal-mode.md",
+      "sha256": "050a79ac5d16dfc151e81d9581cc36ff6356504e2ecc58495e2b90bdbcda6c31"
+    },
+    {
+      "path": "goals/boolean-creep/designs/sync-data-target-selection.md",
+      "sha256": "1465c0d9ddf9254ff77a7a013fa49e6ca149ebcf61c93201329f15c3f035fc4a"
+    }
+  ],
+  "rejectedRawIds": [
+    "r36-cli-commands-r-z-install-timers-request",
+    "r36-cli-commands-r-z-worktree-remove-options"
+  ],
+  "withdrawIds": [
+    "worktree-fleet-epoch-target"
+  ],
+  "designArchives": [
+    "goals/boolean-creep/designs/worktree-fleet-epoch-target.md"
+  ],
+  "metadataUpdates": [
+    {
+      "id": "worktree-list-entry-porcelain",
+      "oldLine": 54,
+      "newLine": 55
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-list-entry-detached-branch",
+      "oldLine": 54,
+      "newLine": 55
+    },
+    {
+      "id": "sync-data-target-selection",
+      "oldLine": 61,
+      "newLine": 62
+    },
+    {
+      "id": "r27-cli-commands-r-z-sync-data-target-selection-auth",
+      "oldLine": 63,
+      "newLine": 64
+    },
+    {
+      "id": "worktree-removal-mode",
+      "evidenceOldLine": 986,
+      "evidenceNewLine": 994,
+      "declarationLine": 489
+    },
+    {
+      "id": "tsconfig-workspace-descriptor-presence",
+      "declarationLine": 966,
+      "noteCorrection": "WorkspaceDescriptor958\u2192966; other historical citations not broadly re-audited"
+    },
+    {
+      "id": "tsconfig-workspace-owner-presence",
+      "declarationLine": 966,
+      "noteCorrection": "WorkspaceDescriptor958\u2192966; other historical citations not broadly re-audited"
+    }
+  ],
+  "designMetadataReplacements": [
+    {
+      "id": "sync-data-target-selection",
+      "reason": "bounded verified source citation amendment only",
+      "replacement": "sync-data-target-selection.metadata-replacement.md"
+    },
+    {
+      "id": "worktree-removal-mode",
+      "reason": "bounded verified source citation amendment only",
+      "replacement": "worktree-removal-mode.metadata-replacement.md"
+    }
+  ],
+  "delta": {
+    "rows": -1,
+    "qualified": -1,
+    "disqualified": 0,
+    "designs": -1
+  },
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "6f127d0537abba16c0b75862e6555cc42cfcf09559c339ce0092484e18ad3c31"
+    },
+    {
+      "path": "metadata-updates.json",
+      "sha256": "cdc1cda50788c7d82ed21c90d93a61da518722c68bdd4f91cbb8bb2d15346f69"
+    },
+    {
+      "path": "owner-dispositions.json",
+      "sha256": "574b37d9e5cba551641188631b18b964c04e6b5db3f73aefccd53ad923c136c7"
+    },
+    {
+      "path": "proposed-inventory-updates.jsonl",
+      "sha256": "fe3dcf558e946d3f07856e966c9938a202214f96fed8e02a56601c5d6842b23f"
+    },
+    {
+      "path": "sync-data-target-selection.metadata-replacement.md",
+      "sha256": "23d667cc57a2efa2b16e63e87c1147a4eefe5b1fa3dc2bb2a441ec32d52119f1"
+    },
+    {
+      "path": "withdrawn-rows.jsonl",
+      "sha256": "311be4afdd60cb5458d1849fa34eb3a277f87523c3c1ee1ea288d25b5caa74df"
+    },
+    {
+      "path": "worktree-fleet-epoch-target.archived-design.md",
+      "sha256": "ad2d00d8625ae0b41e5ce1adc97a6802b5d4d674314d057e02a8c15b48e75919"
+    },
+    {
+      "path": "worktree-removal-mode.metadata-replacement.md",
+      "sha256": "34e5b095ba1a17d79b1fac861544087fd052de3fbc4f553ccce4b14cce5453d6"
+    }
+  ]
+}

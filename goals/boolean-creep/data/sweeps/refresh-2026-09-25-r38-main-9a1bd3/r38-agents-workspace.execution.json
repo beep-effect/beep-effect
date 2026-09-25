@@ -1,0 +1,22 @@
+{
+  "lane": "r38-agents-workspace",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:14:45.394547+00:00",
+  "finished": "2026-09-25T08:16:08.187022+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-agents-workspace.jsonl` (validator: 0 records, OK).\n\nConfirmed 0, disqualified 0. Every assigned root was covered (149 authored `.ts` files; no non-TypeScript or template files in the lane).\n\nSeed recheck, no drift and nothing new to append: `TextInline` (`bold`, `italic`, `code`) is still an independent mark set (code wins at render and still accepts the other marks). `ScanState` (`escaped`, `inBlocksArray`, `inString`) still has `escaped` only while `inString` is true. No unresolved source question.",
+  "transcriptSha256": "cf1872649553cdef0b3805a05c1ec2db67ec46d4d961762027e1dd545d03686f",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

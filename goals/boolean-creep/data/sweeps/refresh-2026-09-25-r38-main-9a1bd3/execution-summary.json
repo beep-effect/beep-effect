@@ -1,0 +1,11 @@
+{
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMainSha": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "finalSourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "finalOriginMainSha": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "sourceStable": true,
+  "sourceDrift": [],
+  "complete": true,
+  "lanes": 27,
+  "qualifiedCandidates": 2
+}

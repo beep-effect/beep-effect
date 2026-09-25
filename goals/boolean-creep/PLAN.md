@@ -1,5 +1,87 @@
 # PLAN — Boolean-Creep Eradication
 
+## R38 complete census and reconciliation, 2026-09-25
+
+R38 completed and reconciled all 27 census lanes against source `ab77f10c`
+and main `9a1bd380`. All 3,951 frozen input bindings were verified before
+integration. The inventory now has **722 rows: 106 qualified and 616
+disqualified**, with zero applied.
+
+Five qualified owners were withdrawn because each contains only one actual
+Boolean: process cwd, branch diff, policy reading, idle reading, and prepared
+publish commit. Their original rows and designs are archived. Thirty-five
+inventory citation corrections and six design location maps preserve the
+remaining contracts; all eleven affected original designs remain in history.
+The alignment model retains its optional match payload and existing 8/4
+relation. Rust builder-method flag arguments remain outside recall.
+
+R38 is complete and wet. The dry streak remains zero. See
+`data/r38-parent-integration-2026-09-25.json`,
+`data/r38-owner-reviews/README.md`, and the R38 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
+
+## R37 complete census and reconciliation, 2026-09-25
+
+R37 completed and reconciled all 27 census lanes against source `84058d64`
+and main `9a1bd380`. All 3,953 frozen input bindings were verified before
+integration. The inventory now has **727 rows: 111 qualified and 616
+disqualified**, with zero applied.
+
+Two qualified worker-source owners were withdrawn because each contains only
+one actual Boolean member. Their rows and designs are archived. Two distinct
+constructed objects were added as disqualified records. Source citations were
+corrected in 16 existing rows and two designs, preserving their contracts.
+R37 also includes five authored templates omitted from earlier coverage;
+the scope-correction receipt preserves that historical limitation.
+
+R37 is complete and wet. The dry streak remains zero. See
+`data/r37-parent-integration-2026-09-25.json`,
+`data/r37-owner-reviews/README.md`, and the R37 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
+
+## R36 complete census and reconciliation, 2026-09-25
+
+R36 completed and reconciled all 27 census lanes against source `35f8454d`
+and main `2bf1e16b`. All 3,950 frozen input bindings were verified before
+integration. The inventory now has **727 rows: 113 qualified and 614
+disqualified**, with zero applied.
+
+Ten rows outside the recall net were withdrawn, including four qualified
+rows. Two new qualified designs cover the document toolbar input and cache
+argument parser. The toolbar design preserves all 32 public helper inputs;
+the parser proposal matched 88,744 representative token sequences. These are
+design checks, not evidence of a runtime migration. Three existing designs
+were replaced or received citation updates; all seven originals are archived.
+
+R36 is complete and wet. The dry streak remains zero. See
+`data/r36-parent-integration-2026-09-25.json`,
+`data/r36-owner-reviews/README.md`, and the R36 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
+
+## R35 complete census and reconciliation, 2026-09-25
+
+R35 completed all 27 census lanes against an unchanged frozen source. Parent
+reconciliation verified all execution receipts and 3,956 input bindings.
+The inventory now has **735 rows: 115 qualified and 620 disqualified**, with
+zero applied. Ten out-of-scope rows were withdrawn, including six qualified
+rows; fourteen disqualified records were added. The Notification design was
+corrected and the SpeechInput dependency repaired. Original inventory rows
+and all eight affected designs are preserved in history.
+
+The existing Yeet probe/address contract remains unchanged: the proposed
+stronger restriction lacked supporting contract evidence. R35 is complete
+and wet, with no dry-round credit. See
+`data/r35-parent-integration-2026-09-25.json` and
+`data/r35-owner-reviews/README.md`.
+
+PR #1223 merged the R33 checkpoint. R34 remains interrupted and source-invalid.
+The dry streak is zero. Two consecutive complete current-source dry rounds,
+replacement independent P3 review, Benjamin's ratification merge,
+implementation, and final exact-main closure remain required.
+
 ## R33 reconciliation, 2026-09-25
 
 R33 is finalized complete/wet on 2026-09-25. All 27 primary lanes completed on
@@ -886,12 +968,16 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Remaining gates
 
-R32 is finalized complete/wet with three new qualified owners and zero dry
-credit. Preserve its execution/finalization receipts. Synchronize the next
-source snapshot with main, reconcile any new source impact, then prepare R33
-admission against the updated inventory and complete designs. Do not restart
-the completed R32 controller. No owner question remains unanswered.
+R38 is complete and wet, with 722 inventory rows: 106 qualified and 616
+disqualified. The dry streak remains zero. Preserve the completed rounds'
+frozen execution evidence, reconciled inventories, archived designs, and owner
+audits; do not restart their controllers. Continue the current-source census
+from the reconciled inventory and complete designs, with fresh admission inputs
+and independent review for each new round.
 
-P2R still requires two complete current-source dry rounds. P3 and P4 remain
-evidence-gated on census, replacement zero-finding review, and the merged
-packet-only ratification PR. No implementation or dry credit is claimed.
+Two consecutive complete current-source dry rounds remain required, followed
+by replacement independent zero-finding P3 review and a packet ratification
+PR merged by Benjamin. Then implement the reviewed designs, obtain Benjamin's
+implementation merges, run two final exact-main dry rounds, and merge the
+reflection and completed-retained closeout. This checkpoint claims neither
+implementation nor dry-round credit.

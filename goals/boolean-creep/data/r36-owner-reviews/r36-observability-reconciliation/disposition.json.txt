@@ -1,0 +1,80 @@
+{
+  "verdict": "retain-three-reject-footer-withdrawals",
+  "sourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMain": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/library/ai-metrics/src/models.ts",
+      "sha256": "2dac11d497c2d23dfaad6ab052cc340abfdff2787185d11cd30ad321d8522817",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/scorecard.ts",
+      "sha256": "9858b8bfcfd4e3583ee2726e50b5fbb11e8633feda8c8fec947be13107fbe5b4",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+      "sha256": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    },
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-tooling-library-observability.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-tooling-library-observability.execution.json",
+      "sha256": "4afa54771bf8c969e077f6ae27117154b25736bb229459f36d22b38018778261"
+    }
+  ],
+  "retainIds": [
+    "r25-tooling-library-policy-test-outcome-label-quality-gate",
+    "r25-tooling-library-policy-test-outcome-label-input-quality-gate",
+    "r31-tooling-library-observability-outcome-label-annotation-row-quality-gate"
+  ],
+  "withdrawIds": [],
+  "designDependencies": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "disqualified": 0,
+    "designs": 0
+  },
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "graftEstimatedTokensSaved": 132596,
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "3c5e230b6266ebccdf2afa72f040776bb74f3732d8e5672ff65c2a3648004816"
+    },
+    {
+      "path": "retained-rows.jsonl",
+      "sha256": "43f5af7fdb910cc2b0c4986904563c12cd27d0759615633f255c725820b820cb"
+    }
+  ]
+}

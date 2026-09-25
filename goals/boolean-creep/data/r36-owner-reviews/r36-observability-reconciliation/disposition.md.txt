@@ -1,0 +1,11 @@
+# R36 observability complete-owner reconciliation
+
+Reject all three footer-proposed withdrawals. Retain the three qualityGate D1 rows unchanged. Delta zero; no design changes or new records.
+
+OutcomeLabel at models.ts:896-914 is a direct S.Class with nine instance fields. followUpFix899 and passed904 are required Boolean; qualityGate905 is a status domain. AiMetricsOutcomeLabelInput at scorecard.ts:197-211 is a direct S.Class with eight fields, including followUpFix200 and passed204 as required Boolean; qualityGate205 is the same status domain. OutcomeLabelAnnotationRow at agent-effectiveness.ts:2055-2070 is a direct S.Class with seven fields, including followUpFix2058 and passed2061 as required Boolean; qualityGate2062 is S.String. All three owners have two actual Boolean fields without requiring inheritance, spread or payload-presence counting. Their static codec helpers add no data fields.
+
+The footer correctly identifies qualityGate as non-Boolean but incorrectly infers that each entire owner has only one Boolean. It omits followUpFix. SPEC's complete-owner recall threshold is satisfied for every owner. The independently adjudicated passed/qualityGate subclusters need not each contain both Boolean fields once their real owner meets recall. They remain D1: the writer at scorecard.ts:797-808 copies followUpFix, passed and qualityGate independently. The existing annotation-row inventory note explicitly records the complete-owner rationale. Existing followUpFix/passed sibling rows are distinct member sets and remain unchanged.
+
+Retain exactly r25-tooling-library-policy-test-outcome-label-quality-gate, r25-tooling-library-policy-test-outcome-label-input-quality-gate and r31-tooling-library-observability-outcome-label-annotation-row-quality-gate. These are current disqualified D1 rows; no live design references these owners. There is no withdrawal or design dependency to process. Exact rows are in retained-rows.jsonl. All three source files match frozen HEAD and origin/main; disposition.json contains exact source, rules, inventory, raw output and footer hashes.
+
+No tracked edits, ref changes, launches, implementation, P3 or dry credit.

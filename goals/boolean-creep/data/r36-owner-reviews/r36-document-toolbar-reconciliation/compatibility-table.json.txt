@@ -1,0 +1,358 @@
+{
+  "kind": "finite-proposed-algorithm-comparison-not-runtime-implementation-test",
+  "cases": [
+    {
+      "input": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        true,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        false,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        false,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        true,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        true,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        false,
+        true,
+        true,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        false,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        false,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        false,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        false,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        true,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        true,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        true,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        false,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        true,
+        false,
+        true
+      ],
+      "phase": "closed",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "phase": "saved",
+      "equivalent": true
+    },
+    {
+      "input": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "phase": "dirty",
+      "equivalent": true
+    }
+  ],
+  "all32Equivalent": true
+}

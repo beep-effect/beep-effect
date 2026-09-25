@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/fc-runs",
+  "phase": "after",
+  "headBefore": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "sourceFiles": {
+    "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts": "17dc73d2ce1750a16b5c524f9177ac7a7db7f68b01ad9ffa88b9dde90234bacd"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-reporter>"
+  ],
+  "wholeCommandSeconds": 0.7661969079999835,
+  "loadAverage": [7.41552734375, 9.0087890625, 12.77294921875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.03 avg60=0.12 avg300=0.27 total=171797845\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=18457391\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=17230880\n",
+    "io": "some avg10=0.08 avg60=0.06 avg300=0.15 total=53173281\nfull avg10=0.04 avg60=0.03 avg300=0.08 total=40842518\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.03 avg60=0.12 avg300=0.27 total=171802903\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=18457392\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=17230881\n",
+    "io": "some avg10=0.08 avg60=0.06 avg300=0.15 total=53174868\nfull avg10=0.04 avg60=0.03 avg300=0.08 total=40843269\n"
+  },
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "comparability": "Fresh evidence on current runtime and test source; historical rc.113 baseline retained. No speedup claim; pressure measurements are context, not numerical timing adjustments."
+}
