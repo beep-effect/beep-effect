@@ -1673,3 +1673,21 @@ for the new Refs command. Main merged cleanly, and regenerating the alias data
 added exactly that missing entry. The tsgo-rules/alias-parity gate passed; see
 `research/main-alias-integration-repair.json`. Final merged-head proof remains
 required. Frozen experiments retain their original source and runtime identity.
+
+### Census refresh and generated-input attribution — 2026-09-25
+
+The post-main census at `278b083df6` retains 144 workspaces and 3,473 nodes.
+All five planner snapshots reproduce the prior JSON. Twenty-eight source
+bindings changed: test-runner/fc-runs workspace dependencies and references,
+the workspace lock records, and Refs exports/aliases. The refreshed attachment
+accepted 968 bindings, six artifacts and 27 reviews, retaining 13 obligations.
+See [the receipt](./research/post-main-census-refresh.json).
+
+Identity lint's input count increased from 767 to 890 because the working tree
+contains 120 utils build outputs and three utils Turbo logs. Read-only,
+network-isolated plans that mask only those generated directories return to
+767 inputs. Two masked plans agree; the unmasked hash differs and all shared
+input digests match. No host files were removed and no lint body executed.
+This establishes generated-file sensitivity, not semantic irrelevance or a
+justification for exclusions. Frozen pilot evidence retains its recorded
+filesystem/source identity; no tuple is qualified by this refresh.

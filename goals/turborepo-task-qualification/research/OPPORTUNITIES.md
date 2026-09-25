@@ -2022,3 +2022,13 @@ Regenerating from root `compilerOptions.paths` added three lines and restored
 the parity check. Evidence: `research/main-alias-integration-repair.json`.
 Updating both projections when adding command exports would avoid discovering
 this after a long proof queue. No baseline was weakened.
+
+### Generated utils artifacts enter the pilot hash — 2026-09-25
+
+The current native identity-lint plan contains 123 untracked files under utils
+`dist` and `.turbo`. Ephemeral read-only masking of those directories removes
+exactly those entries and changes the hash; repeat masked plans agree. Evidence:
+`research/post-main-census-refresh.json`. Explicit generated-artifact controls
+in input-profile validation would expose this before a long comparison matrix.
+Do not remove live proof artifacts or add exclusions without establishing their
+semantic relevance. No task body was executed by these controls.

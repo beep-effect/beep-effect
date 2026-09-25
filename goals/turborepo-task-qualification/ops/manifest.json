@@ -340,7 +340,8 @@
     "research/lambda-zip-controls-current.json",
     "research/census-config-delta-review.json",
     "research/ci-entrypoint-delta-review.json",
-    "research/main-alias-integration-repair.json"
+    "research/main-alias-integration-repair.json",
+    "research/post-main-census-refresh.json"
   ],
   "agentLaunchers": [
     {
