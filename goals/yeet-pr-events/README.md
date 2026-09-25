@@ -2,13 +2,12 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-This packet is authored but not yet started. Resume with
-`bun run beep goals set-status yeet-pr-events active` and launch the command
-below.
+Slice 1 (W1-W6) is implemented and in P11 verification; slice 2 (W7, W8)
+and slice 3 (W9) have not started.
 
 ## Mission
 
@@ -41,9 +40,9 @@ Use this command after the packet is activated:
 
 ## Current phase
 
-Paused before W1. On activation, begin slice 1 with W1 (check fidelity and
-measurement) and keep W1-W6 joined as one producer PR whose own babysit is
-the first vertical slice.
+P11 verify for slice 1. W1-W6 ship as one producer PR whose own babysit is
+the first vertical slice; after it merges, slice 2 starts with the W7 socket
+probe.
 
 ## Latest evidence
 

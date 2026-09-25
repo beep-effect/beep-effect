@@ -121,13 +121,22 @@ if [ -f "$dispatch" ] && [ ! -L "$dispatch" ] && [ -r "$dispatch" ]; then
   [ -n "$wave" ] || wave='null'
 fi
 
+# Row kinds whose liveness is not a wave question: the wave-exempt kinds a push
+# does not resolve (YeetInboxWaveExemptRowKind) plus the observed kinds
+# (YeetInboxObservedRowKind). Keep the line under the marker one JSON array: a
+# repo-cli test parses exactly that line and fails when it drifts from the kits.
+# yeet-inbox: wave-exempt-kinds (parity-tested)
+wave_exempt_kinds='["pr-comment","pr-merge-ready","proof-job-finished","review-thread"]'
+
 # Decode complete NDJSON rows, keep the first observation for each id, join
 # receipt existence and current-head liveness, and drop superseded evidence.
-# Readiness rows use the monitor-owned fix-sha receipts; a remediation wave
-# from an older failed head must not suppress a newly ready head.
+# Wave-exempt and observed kinds are live whatever the wave record says:
+# readiness rows use the monitor-owned fix-sha receipts, so a remediation wave
+# from an older failed head must not suppress a newly ready head, and review
+# threads and comments survive a push.
 entries='[]'
 if [ "$failures_present" = true ]; then
-entries="$(jq -Rsc --argjson acks "$ack_ids" --argjson wave "$wave" '
+entries="$(jq -Rsc --argjson acks "$ack_ids" --argjson wave "$wave" --argjson exempt "$wave_exempt_kinds" '
   def valid_id: type == "string" and test("^[A-Za-z0-9._-]+$");
   def decoded_rows:
     split("\n")
@@ -138,7 +147,7 @@ entries="$(jq -Rsc --argjson acks "$ack_ids" --argjson wave "$wave" '
   | map(. as $row | select(($acks | index($row.id)) == null))
   | map(. + {
       _liveness: (
-        if .kind == "pr-merge-ready" then "unknown"
+        if (.kind as $kind | $exempt | index($kind)) != null then "live"
         elif ($wave | type) != "object" then "unknown"
         elif (.capsule.headSha? == null or .capsule.prNumber? == null) then "unknown"
         elif (.capsule.headSha == $wave.headSha and .capsule.prNumber == $wave.prNumber) then "live"
@@ -197,10 +206,34 @@ render_context() {
   '
 }
 
+# Additive first-injection stamps (pr-event-awareness W1): firstSeenAt maps a
+# row id to the first time this session was handed the row. An existing stamp
+# is never overwritten and nothing is pruned; schemaVersion and seenIds keep
+# their shape. The caller writes the state.
+stamp_first_seen() {
+  stamp_ids="$(printf '%s' "$1" | jq -c 'map(.id)' 2>/dev/null || true)"
+  [ -n "$stamp_ids" ] || return 0
+  stamp_now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  stamped="$(printf '%s' "$state" | jq -c --argjson ids "$stamp_ids" --arg now "$stamp_now" '
+    .firstSeenAt = (reduce $ids[] as $id
+      ((if (.firstSeenAt | type) == "object" then .firstSeenAt else {} end);
+        if has($id) then . else .[$id] = $now end))' 2>/dev/null || true)"
+  [ -z "$stamped" ] || state="$stamped"
+}
+
+# P0 rows reach the session at PreToolUse and Stop without entering seenIds, so
+# those paths stamp directly and write only when a new stamp landed.
+stamp_first_seen_and_write() {
+  stamp_previous_state="$state"
+  stamp_first_seen "$1"
+  [ "$state" = "$stamp_previous_state" ] || write_state
+}
+
 mark_seen() {
   selected="$1"
   ids="$(printf '%s' "$selected" | jq -c 'map(.id)')"
   state="$(printf '%s' "$state" | jq -c --argjson ids "$ids" '.seenIds = ((.seenIds + $ids) | unique)')"
+  stamp_first_seen "$selected"
   write_state
 }
 
@@ -248,6 +281,7 @@ case "$harness:$event" in
 
   *:PreToolUse)
     if [ -n "$first_p0" ]; then
+      stamp_first_seen_and_write "[$first_p0]"
       incident_id="$(printf '%s' "$state" | jq -r '.incidentId // empty')"
       row_id="$(printf '%s' "$first_p0" | jq -r '.id')"
       context="$(render_context "[$first_p0]")"
@@ -299,6 +333,7 @@ $context"
 
   *:Stop|*:SubagentStop)
     if [ -n "$first_p0" ]; then
+      stamp_first_seen_and_write "$entries"
       context="$(render_context "$entries")"
       jq -cn --arg context "$context" '{decision:"block",reason:$context}'
     else
