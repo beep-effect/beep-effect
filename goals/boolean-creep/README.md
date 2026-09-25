@@ -2,21 +2,21 @@
 
 ## Status
 
-R36 completed and reconciled all 27 census lanes against source `35f8454d`
-and main `2bf1e16b`. All 3,950 frozen input bindings were verified before
-integration. The inventory now has **727 rows: 113 qualified and 614
+R37 completed and reconciled all 27 census lanes against source `84058d64`
+and main `9a1bd380`. All 3,953 frozen input bindings were verified before
+integration. The inventory now has **727 rows: 111 qualified and 616
 disqualified**, with zero applied.
 
-Ten rows outside the recall net were withdrawn, including four qualified
-rows. Two new qualified designs cover the document toolbar input and cache
-argument parser. The toolbar design preserves all 32 public helper inputs;
-the parser proposal matched 88,744 representative token sequences. These are
-design checks, not evidence of a runtime migration. Three existing designs
-were replaced or received citation updates; all seven originals are archived.
+Two qualified worker-source owners were withdrawn because each contains only
+one actual Boolean member. Their rows and designs are archived. Two distinct
+constructed objects were added as disqualified records. Source citations were
+corrected in 16 existing rows and two designs, preserving their contracts.
+R37 also includes five authored templates omitted from earlier coverage;
+the scope-correction receipt preserves that historical limitation.
 
-R36 is complete and wet. The dry streak remains zero. See
-`data/r36-parent-integration-2026-09-25.json`,
-`data/r36-owner-reviews/README.md`, and the R36 round verdict. Two consecutive
+R37 is complete and wet. The dry streak remains zero. See
+`data/r37-parent-integration-2026-09-25.json`,
+`data/r37-owner-reviews/README.md`, and the R37 round verdict. Two consecutive
 current-source dry rounds, replacement independent P3 review, Benjamin's
 ratification merge, implementation, and final exact-main closure remain required.
 

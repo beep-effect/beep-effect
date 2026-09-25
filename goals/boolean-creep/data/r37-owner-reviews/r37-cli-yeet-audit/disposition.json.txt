@@ -1,0 +1,105 @@
+{
+  "kind": "r37-cli-yeet-metadata-audit/v1",
+  "sourceHead": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "retain-three-D1-refresh-locators-and-evidence",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+      "sha256": "f1f67b19e7064e368e0968fb49870a74a9973a76bc68591dd5ff2881f3fb344e",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "sha256": "145228e2d0e77f0b0309df22a034812509d9e189893e0f1a0e821c3a97c8c2c4",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+      "sha256": "1b6a9c57af55378ebf5b5634f6630e27f9cf463fc43482d44659674f7174549d",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+      "sha256": "f1f67b19e7064e368e0968fb49870a74a9973a76bc68591dd5ff2881f3fb344e"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "sha256": "145228e2d0e77f0b0309df22a034812509d9e189893e0f1a0e821c3a97c8c2c4"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+      "sha256": "1b6a9c57af55378ebf5b5634f6630e27f9cf463fc43482d44659674f7174549d"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-yeet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-yeet.execution.json",
+      "sha256": "8792da73351794248d8eba5861926ff1254264770460a8c4834265a4ae75c0da"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-yeet.ndjson",
+      "sha256": "3ddc4e7b6c6910341186c04b0286b7b1f701a8e24dc892aba2bcf60a890a8924"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "rowIds": [
+    "r26-cli-yeet-provenance-stamp-lane-status",
+    "r32-cli-yeet-settle-input-observations",
+    "r32-cli-yeet-settle-budget-phase"
+  ],
+  "designReferences": {
+    "r26-cli-yeet-provenance-stamp-lane-status": [],
+    "r32-cli-yeet-settle-input-observations": [],
+    "r32-cli-yeet-settle-budget-phase": []
+  },
+  "designChanges": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "disqualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "sourceEdits": false,
+  "outputs": [
+    {
+      "file": "original-rows.jsonl",
+      "sha256": "9f1d79ad47d1d6512749fdc6ce013db54b20f4a671972958b20cfce98cb3d150"
+    },
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "43cc981c25c4f67e92ea257b3561b1f86baf15367da0d288d782cd45e43ebdfe"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "168069d5c9583d2f7a4c257872dde30fe820633e9322bfbc1e63d607b8507a51"
+    }
+  ],
+  "validation": "inventory OK: 3 records, 3 unique ids"
+}

@@ -1,13 +1,3 @@
-## R37 exact-source locator refresh (authoritative)
-
-This section supersedes every earlier numeric source/test locator in this document. Earlier source identities describe historical review provenance; current binding is HEAD84058d6470137e35f108d13c7dba52129db9a301/main9a1bd3805574bca087d4da09ece4a628038afb27. Semantic target,4/3 relation, complete payload contract and migration obligations above remain unchanged.
-
-Current PackageVerify.ts locations: complete direct seven-field S.Class152-165 (skipped156,ok157); absent-script writer636-644 (true,true); executed writer651-659 (false,exitCode===0). Render mark824 and timing825, failure output832, P0 inbox fallback768, shard skip-filter774, successful full-audit780, CLI failure887. Update the JSDoc example134-147 and declaration152-165. The class annotation now says “Package verification subprocess result.” Preserve that current description. There are no spreads/inherited Boolean fields. Other five fields remain step,script,durationMillis,exitCode:Option<Finite>,output.
-
-The current implementation migration must update these exact reader/writer sites atomically. The full audit upstream plan and its execution receipts remain intact. Guard credit is limited to replacing the two result members and the listed result interpretations with one outcome; actual subprocess error handling and full-audit/quick behavior remain. Current test/package-verify.test.ts514-534 explicitly constructs executed success and failure with exitCode=None, so do not narrow Option absence or finite values from production Some writers. Existing assertions around315-324 and renderer/inbox fixtures must migrate without synthetic skipped-failure acceptance. All prior required test behaviors remain; enumerate current test symbols instead of applying stale numerical offsets.
-
-No encoded change, added defaults or payload constraints. Retain the existing schema-first LiteralKit target and exported test barrel change. No implementation or independent P3 credit. Exact source, tests and historical design hashes accompany r37-cli-lq-audit/disposition.json.
-
 ## Instance
 
 - id: `package-verify-step-outcome`

@@ -1,15 +1,3 @@
-## R37 exact-source locator refresh (authoritative)
-
-This section supersedes every earlier numeric source/test locator in this document. Earlier source identities are historical provenance; current binding is HEAD84058d6470137e35f108d13c7dba52129db9a301/main9a1bd3805574bca087d4da09ece4a628038afb27. Full4/3 contribution design, all payload/Option obligations, encoded compatibility and behavior tests above remain unchanged.
-
-Current Tasks.ts: complete six-field type2021-2028 contains lane,session,laneRun,failures,reused,stopAfterRed. Reuse producer2044-2059 preserves original lane/session plus Some run with commandText and absent timing/defaults, emptyfailures, reused2057=true and stopAfterRed2058=false. Executed producer2070-2079 keeps result payloads, reused2075=false and stopAfterRed2076-2078 from failure+present stopping decision. Both real Boolean fields coexist; no inherited/spread fields add axes. No callable-parameter or cross-expression owner is invented.
-
-Current consumer sites: persistGithubCheckLaneProof2082-2103 with reused/failure exclusion2085, optional duration fallback2088-2092 and optional session2093 onward. runGithubCheckWave concurrently produces outcomes2138-2140, then folds declaration order2141-2152: reuse attribution2142, optional run journal2145-2147, failures2149, failFast stop latch2150 and proof persistence2151. Preserve this exact event order and common work. The earlier private type anchors1980 and writers2014/2032 are obsolete.
-
-Implement the existing single contribution classifier at this exact private carrier; retain all four payloads and Option absence. Reused run commandText must survive, ran may contain imprecise failures, missing decision/run maps defensively to ran, and missing duration remains0. Do not infer successful proof eligibility from ran alone. Keep proof policy, session identity, warning behavior, serial persistence and skipped-tail scheduling. Existing R27 pre-execution owner receives no duplicate guard credit. Run the existing scenario tests by symbol rather than stale test line numbers, retaining precise/imprecise/estimate-less red, collect-all, proof reuse and declaration-order concurrent journaling.
-
-This is a source-location refresh, not new cardinality, input narrowing, implementation or P3 proof. Full prior design text is preserved for semantic requirements; exact input hashes and old design bytes are captured in the private audit for integration archival.
-
 # r30-cli-commands-l-q-github-check-lane-outcome
 
 P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, 2026-09-22.

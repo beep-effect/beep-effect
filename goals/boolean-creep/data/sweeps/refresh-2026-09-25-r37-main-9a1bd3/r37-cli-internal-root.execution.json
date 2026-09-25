@@ -1,0 +1,22 @@
+{
+  "lane": "r37-cli-internal-root",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:44:05.154212+00:00",
+  "finished": "2026-09-25T07:47:47.342733+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-internal-root.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered (87 source files under the lane paths). All 18 seed owners still match their declarations, members, and classifications, with no line drift and no unresolved source question. Single-boolean-plus-payload shapes and function flag parameters stayed out of the net.",
+  "transcriptSha256": "3d1a435e52e3ff9979572275a9bfefc55f882d12e002c0dbaf42f1e97e9620df",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -1,5 +1,25 @@
 # PLAN — Boolean-Creep Eradication
 
+## R37 complete census and reconciliation, 2026-09-25
+
+R37 completed and reconciled all 27 census lanes against source `84058d64`
+and main `9a1bd380`. All 3,953 frozen input bindings were verified before
+integration. The inventory now has **727 rows: 111 qualified and 616
+disqualified**, with zero applied.
+
+Two qualified worker-source owners were withdrawn because each contains only
+one actual Boolean member. Their rows and designs are archived. Two distinct
+constructed objects were added as disqualified records. Source citations were
+corrected in 16 existing rows and two designs, preserving their contracts.
+R37 also includes five authored templates omitted from earlier coverage;
+the scope-correction receipt preserves that historical limitation.
+
+R37 is complete and wet. The dry streak remains zero. See
+`data/r37-parent-integration-2026-09-25.json`,
+`data/r37-owner-reviews/README.md`, and the R37 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
+
 ## R36 complete census and reconciliation, 2026-09-25
 
 R36 completed and reconciled all 27 census lanes against source `35f8454d`
