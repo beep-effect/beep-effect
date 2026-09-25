@@ -1,11 +1,13 @@
+import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
@@ -20,11 +22,27 @@ const watchEvents = Effect.fnUntraced(function* (
   options?: FileSystem.WatchOptions
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const events = yield* fs
-    .watch(path, options)
-    .pipe(Stream.take(count), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
+  const observed = yield* Ref.make<ReadonlyArray<FileSystem.WatchEvent>>([]);
+  const events = yield* fs.watch(path, options).pipe(
+    Stream.tap((event) =>
+      Ref.updateAndGet(observed, (prefix) => A.take(A.append(prefix, event), count)).pipe(
+        Effect.flatMap((prefix) =>
+          Effect.log("MemoryFS watch phase: awaiting exact event count", { expectedCount: count, observed: prefix })
+        )
+      )
+    ),
+    Stream.take(count),
+    Stream.runCollect,
+    Effect.forkChild({ startImmediately: true })
+  );
 
+  yield* Effect.log("MemoryFS watch phase: apply mutation", { path, expectedCount: count });
   yield* mutation;
+  yield* Effect.log("MemoryFS watch phase: await exact event count", {
+    path,
+    expectedCount: count,
+    observed: yield* Ref.get(observed),
+  });
   return A.fromIterable(yield* Fiber.join(events));
 });
 

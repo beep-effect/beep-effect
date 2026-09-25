@@ -7,8 +7,9 @@ import {
   MimeType,
   TextMimeType,
 } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { Struct } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 
 describe("MimeType helpers", () => {
   it("dedupes extracted file extensions while preserving first-seen order", () => {

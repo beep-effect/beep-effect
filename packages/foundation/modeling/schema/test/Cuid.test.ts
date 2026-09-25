@@ -1,7 +1,8 @@
 import { fcRuns } from "@beep/fc-runs";
 import { Cuid, CuidSeed, CuidState, cuid, sha512 } from "@beep/schema/Cuid";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Encoding, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -15,7 +16,7 @@ const beepSha512Digest =
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
 
 describe("Cuid", () => {
-  it.layer(CuidTestLayer)((it) => {
+  it.layer(CuidTestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "computes SHA-512 with the platform Crypto service",
       Effect.fnUntraced(function* () {

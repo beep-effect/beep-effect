@@ -42,3 +42,23 @@ Retained Node22.22.3/Bun1.4.2/Vitest4.1.11 cohort: accepted-node-command-baselin
 ## Proposed P2 sequence and uncertainty
 
 Scope → assertions → property → flake → observability. Preserve every original test, operand, polarity, timeout and native subject; properties retain explicit repository floor/seed, no weaker test schema. Resolve scanner candidates alongside the independent constraints above, then collect authorized package/runtime proofs and comparable timing. This audit performs no tests and grants no exceptions. Source-only hazards are not claimed observed failures. P2 remains gated.
+
+## P2 implementation checkpoint
+
+Implementation `94f19c393b9333bb411b9e10bf59434322c2b847` fixes all eight detector rows and the one property
+judgment. Coverage-only resource, flake and observability rows are retained.
+No scoped resource or live clock was introduced. Both laws retain the full
+ProcessLike generator, original override operands, and original value equality.
+Canonical Some presence checks deliberately remain separate from `toEqual`: the
+generator can emit null-prototype environment objects, and strict payload equality
+would strengthen the previous law.
+
+All 15 tests pass under Node and Bun, including explicit 400-run / 20260708 seed
+checks. Package audit and docgen pass. The selected package has zero remaining
+detector findings; the full syntax ratchet introduces zero findings. The four
+unrelated resolved rows were left untouched.
+
+The configured Node timing sample records 2939.02 ms reporter time and 3.505 s
+whole-command time, with workstation load/pressure and source hashes retained.
+The older baseline used another Node/Vitest cohort; no causal speedup is claimed.
+Publication, hosted checks, review and prerequisite integration remain separate.

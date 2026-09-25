@@ -1,5 +1,7 @@
 import { makeStatusCauseError, StatusCauseFields, statusCauseInput } from "@beep/schema/StatusCauseError";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { Option as O, pipe } from "effect";
 import * as S from "effect/Schema";
 
@@ -19,49 +21,64 @@ describe("StatusCauseError", () => {
   });
 
   it("normalizes optional causes when constructing payloads", () => {
-    expect(statusCauseInput("boom", { status: 500, cause: undefined })).toEqual({
-      message: "boom",
-      status: 500,
-      cause: O.none(),
-    });
+    deepStrictEqual(
+      { ...statusCauseInput("boom", { status: 500, cause: undefined }) },
+      {
+        message: "boom",
+        status: 500,
+        cause: O.none(),
+      }
+    );
   });
 
   it("builds reusable constructors for status/cause tagged errors", () => {
     const toBeepStatusError = makeStatusCauseError(BeepStatusError);
-    const error = toBeepStatusError({ message: "boom", status: 500, cause: new Error("kapow") });
+    const cause = new Error("kapow");
+    const error = toBeepStatusError({ message: "boom", status: 500, cause });
 
     expect(error).toBeInstanceOf(BeepStatusError);
     expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
-    expect(O.isSome(error.cause)).toBe(true);
+    expect(error.message).toBe("boom");
+    assertSome(error.cause, cause);
+    expect(error.cause.value).toBe(cause);
   });
 
   it("supports partial application for catch handlers", () => {
     const toBeepStatusError = makeStatusCauseError(BeepStatusError);
-    const error = toBeepStatusError({ message: "boom", status: 500 })(new Error("kapow"));
+    const cause = new Error("kapow");
+    const error = toBeepStatusError({ message: "boom", status: 500 })(cause);
 
     expect(error).toBeInstanceOf(BeepStatusError);
     expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
-    expect(O.isSome(error.cause)).toBe(true);
+    expect(error.message).toBe("boom");
+    assertSome(error.cause, cause);
+    expect(error.cause.value).toBe(cause);
   });
 
   it("supports direct data-first partial application", () => {
-    const error = makeStatusCauseError(BeepStatusError, { message: "boom", status: 500 })(new Error("kapow"));
+    const cause = new Error("kapow");
+    const error = makeStatusCauseError(BeepStatusError, { message: "boom", status: 500 })(cause);
 
     expect(error).toBeInstanceOf(BeepStatusError);
     expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
-    expect(O.isSome(error.cause)).toBe(true);
+    expect(error.message).toBe("boom");
+    assertSome(error.cause, cause);
+    expect(error.cause.value).toBe(cause);
   });
 
   it("supports pipeable data-last partial application", () => {
-    const error = pipe(BeepStatusError, makeStatusCauseError({ message: "boom", status: 500 }))(new Error("kapow"));
+    const cause = new Error("kapow");
+    const error = pipe(BeepStatusError, makeStatusCauseError({ message: "boom", status: 500 }))(cause);
 
     expect(error).toBeInstanceOf(BeepStatusError);
     expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
-    expect(O.isSome(error.cause)).toBe(true);
+    expect(error.message).toBe("boom");
+    assertSome(error.cause, cause);
+    expect(error.cause.value).toBe(cause);
   });
 
   it("supports explicit no-cause construction", () => {
@@ -71,6 +88,6 @@ describe("StatusCauseError", () => {
     expect(error).toBeInstanceOf(BeepStatusError);
     expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
-    expect(O.isNone(error.cause)).toBe(true);
+    pipe(error.cause, O.isNone, assertTrue);
   });
 });

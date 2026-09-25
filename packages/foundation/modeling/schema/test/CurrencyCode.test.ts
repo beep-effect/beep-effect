@@ -1,7 +1,9 @@
 import { CurrencyCode, CurrencyName, isCurrencyCode, USD } from "@beep/schema/CurrencyCode";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeCurrencyCodeEffect = S.decodeEffect(CurrencyCode);
@@ -32,8 +34,8 @@ describe("CurrencyCode", () => {
     Effect.fnUntraced(function* () {
       expect(isCurrencyCode("USD")).toBe(true);
       expect(isCurrencyCode("usd")).toBe(false);
-      const failure1 = yield* Effect.result(decodeUnknownCurrencyCodeEffect("ZZZ"));
-      expect(Result.isFailure(failure1)).toBe(true);
+      const failure1 = yield* Effect.exit(decodeUnknownCurrencyCodeEffect("ZZZ"));
+      pipe(failure1, Exit.hasFails, assertTrue);
     })
   );
 });

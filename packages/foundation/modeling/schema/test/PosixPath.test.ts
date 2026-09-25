@@ -1,7 +1,11 @@
 import { normalizePath, PosixPath } from "@beep/schema/PosixPath";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodePosixPathEffect = S.decodeEffect(PosixPath);
@@ -23,10 +27,12 @@ describe("PosixPath", () => {
   it.effect(
     "rejects paths that still contain backslashes",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodePosixPathEffect("packages\\common\\schema"));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected a string matching");
+      const failure1 = yield* Effect.exit(decodePosixPathEffect("packages\\common\\schema"));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected a string matching"
+        );
       }
     })
   );

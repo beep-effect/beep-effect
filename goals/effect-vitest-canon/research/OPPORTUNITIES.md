@@ -2196,3 +2196,125 @@ Full utils package verification also passes (audit and docgen). The shared
 coverage optimization needs package-level isolation qualification for tests that
 change runtime globals or depend on fresh module state. Wink independently
 reproduces 12 failures; its isolation experiment remains separate evidence.
+
+### 2026-09-25 — PR lookup hides GraphQL rate-limit attribution
+
+During PR #1245 closeout, `bun run beep yeet closeout --summary
+--require-review-comments 0` reported that the branch had no open PR. REST
+confirmed the exact-head PR was open; a direct GraphQL review-thread read returned
+`graphql_rate_limit`. Existing resolution evidence plus the REST review-comment
+list confirmed no new follow-up, and exact-head checks were green before the
+ready-for-heavy label was applied. Distinguishing API quota exhaustion from an
+absent PR would prevent unnecessary local-proof fallbacks and duplicate PR work.
+
+### 2026-09-25 — Schema adoption reproduces pending runner context prerequisite
+
+After all 78 schema files adopted instrumented it, isolated Node and Bun unit runs
+passed 725 tests. Package-only coverage with `--fileParallelism=true --maxWorkers=1`
+failed 60 tests with TestContextUnavailable. The branch predates PR #1241's
+per-suite registration fix. Keep this failure explicit, integrate the prerequisite
+after its authorized merge, and rerun this exact mode before wave completion.
+A prerequisite integration gate before shared-worker coverage would prevent
+confusing passing isolated tests with successful cross-file context ownership.
+
+## Schema-first inventory location drift during Wave C
+
+While running `bun run beep yeet verify --tier cheap-gates`, five pre-existing
+SFV4-arbitrary-tests advisories became both stale and untracked after test imports
+shifted their line numbers (CurrencyCode, Fn, TerritoryCode, Transformations,
+Unknown). Package audit did not exercise this root inventory gate. Preserve
+existing dispositions while refreshing locations, and compare the generated
+inventory structurally before accepting it. Stable finding identities independent
+of import offsets would avoid this bookkeeping failure.
+
+The generated `lint schema-first --write` result also dropped five unrelated
+Models exceptions and replaced the five moved exceptions with advisory status.
+That output was not accepted wholesale. Only the five regenerated line numbers
+were applied to the original inventory; every original reason and status was
+retained. A generator that preserves reviewed dispositions across location-only
+changes would prevent this manual reconciliation.
+
+## PR 1252 external reviewer unavailable
+
+The `openclaw/pr-review` check failed before publishing any advisory review.
+Its check-run output reports `402 Payment Required: Grok Build usage balance
+exhausted`. There are no inline review findings to repair from this attempt.
+Keep this separate from code failures and do not claim review closure; the
+external reviewer needs available quota before a retry can produce evidence.
+Vercel deployment failures separately report the daily deployment rate limit.
+
+## Wave D publication API quota and reviewer failure
+
+Yeet early publication pushed the codegen checkpoint, but `gh pr create` failed
+with `GraphQL: API rate limit already exceeded`. REST created PR #1255 against
+its schema parent. `yeet monitor --until-ready` then reported no open PR despite
+REST confirming the branch PR. Preserve that distinction: a REST fallback or
+explicit API-error attribution would prevent misclassifying quota as absent work.
+The first hosted OpenClaw check failed before review with `402 Payment Required:
+Grok Build usage balance exhausted`; it produced no findings to remediate.
+Neither API availability nor the stacked PR's skipped checks establish readiness.
+
+## Colors property equality semantics during canonical assertion migration
+
+The initial `assertSome(decoded, processLike)` replacement failed on a generated
+empty environment with a null prototype. `assertSome` uses strict deep equality,
+whereas the original Vitest `toEqual` law compares its values without requiring
+that prototype. Preserve canonical Some presence assertions and the original
+full-value `toEqual` separately; do not narrow the ProcessLike generator.
+Node reproduced the mismatch after 36 runs and three shrinks. A migration rule
+that distinguishes presence checks from payload equality semantics would prevent
+this accidental strengthening.
+
+## Cosmos hoisted vendor mocks require the direct Vitest API import
+
+Moving `vi` from `vitest` to its public `@effect/vitest` re-export caused Vitest
+5 to reject CosmosProjection before test registration: `There are some problems
+in resolving the mocks API`. The error requests a direct import or globals.
+Retain the direct vi import with an EV011 exception for hoisted Graphology/Sigma
+mocks. A detector hint that distinguishes hoisted vendor mocks from ordinary
+runner imports would prevent this non-equivalent rewrite.
+
+The added failure-cleanup probe initially ran as a separate test and observed
+three vendor kill calls instead of one: shared Vitest configuration enables
+concurrent tests. Both cases mutated the same vendor state/global stubs. Keep
+normal and failure cleanup probes within the existing renderer test, preserving
+one fixture owner; do not disable concurrency across the package or loosen the
+exact kill assertion.
+
+## Schema runner-context reproduction resolved after prerequisite merge
+
+After PR #1241 landed, merge `654e80230f` incorporated the runner fix. The same
+schema package-only shared-worker coverage command now passes 725 tests across
+78 files, exit 0, with no TestContextUnavailable failures. The prior 60 failures
+remain documented above as pre-integration evidence. The integration receipt is
+`history/2026-09-25-schema-runner-integration.md`.
+
+## Stack merge resolution must fail closed
+
+During runner integration, the cache baseline's synthetic merge-base blob
+contained conflict markers and could not decode as JSON. The resolution command
+lacked fail-fast shell handling, so later staging and commit steps still ran.
+The unpublished merge was corrected and amended before any push; verification
+compared the real parent projections and preserved the eight codegen-only
+dependency changes. Use fail-fast sequencing and validate both JSON and conflict
+markers before staging. Existing commit hooks did not reject these markers.
+
+### 2026-09-25 — review reply blocked after evidence remediation
+
+Tailscale PR #1265 has both provenance corrections pushed in a7fe3d14a4,
+but `bun run beep yeet reply` failed before posting either saved draft:
+`GraphQL: API rate limit already exceeded`. The reply report confirms no
+partial publication; both threads remain unresolved pending a whole-run retry.
+A quota-aware repository-identity cache or scoped retry after reset would avoid
+blocking already prepared replies on a redundant repository lookup.
+
+### 2026-09-25 — offline SQL mock stopped intercepting the current adapter
+
+During the test-utils retry-readiness migration, an explicit attempt counter
+observed zero calls to the existing `pg.Client` mock, although the old test still
+reached its expected typed failure. The current SQL adapter uses its native
+connection path instead. Waiting on the unused mock exposed the stale test seam.
+The test-only repair targets the adapter public `PgClient.makeClient` entry point
+while retaining the real test-utils layer/retry implementation. A mock-hit assertion
+and exact twenty-retries-plus-initial-attempt check would have caught this drift
+when the adapter changed. Production code remains outside this repair.

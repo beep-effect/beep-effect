@@ -1,11 +1,11 @@
 import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
-import { expect, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 
-const UnknownTestLayer = Layer.empty as Layer.Layer<unknown>;
-
-layer(UnknownTestLayer)("parseCsvRows", (it) => {
+describe("parseCsvRows", () => {
   it.effect(
     "parses BOM-prefixed CSV with CRLF and CR row delimiters",
     Effect.fnUntraced(function* () {
@@ -78,7 +78,7 @@ layer(UnknownTestLayer)("parseCsvRows", (it) => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(parseCsvRows('"unterminated', ParserOptions.new()));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         expect(Cause.pretty(result.cause)).toContain("missing closing quote");
       }
@@ -90,7 +90,7 @@ layer(UnknownTestLayer)("parseCsvRows", (it) => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(parseCsvRows('"quoted"x,next', ParserOptions.new()));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         expect(Cause.pretty(result.cause)).toContain("expected delimiter or newline after closing quote");
       }
