@@ -416,3 +416,21 @@ archive determinism across environments, deployed behavior or signed replay.
 No part of the chain was executed for this review. Six review/source files are
 archived with verified hashes; review SHA-256:
 `37353cfd13052e1d7d2601fac515cc055e63e94c8da8fc5405ade76f36ce2c51`.
+
+### Storybook dispatcher and migration generator controls
+
+Ten disposable controls ran the current scripts at `32e271e543`; see
+[nested-command-controls-current.json](./nested-command-controls-current.json).
+The Storybook dispatcher sorted 41 regular stories into 20/20/1 chunks, ignored
+a symlink and a non-story file, continued after a failed first chunk, and failed
+the aggregate. Browser-install failure stopped before Vitest; an empty story
+population failed. Only the exact string `CI=true` skipped installation.
+Playwright and Vitest were recorder executables: no browser or story result is
+claimed from this control.
+
+The actual migration generator ran against disposable SQL directories and a
+generated target. Stale checks failed without writing; generation sorted names
+and escaped template syntax; fresh checks passed without writing. Changing SQL
+made the check fail, and rewrite refreshed the target. No database migration
+was applied. Both census tasks retain `cache:false`; downstream runtime effects,
+complete semantic coverage and signed qualification remain separate obligations.

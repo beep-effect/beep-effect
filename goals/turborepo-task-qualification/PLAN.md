@@ -1614,3 +1614,11 @@ All five observed ring calls matched 12 epoll-control submissions and successful
 completions. Captured streams match the previous full trace. Retain the scoped
 result and failed debugger recipe in the v23 receipt; this does not decode the
 historical trace or close semantic/signed requirements. No tuple is qualified.
+
+### Nested-command behavioral controls — 2026-09-25
+
+Five Storybook-dispatch controls and five migration-generator controls passed
+against disposable inputs at `32e271e543`. These establish branching, chunking,
+failure propagation and generated-source invalidation for the recorded scope.
+They do not execute browser tests or database migrations. The acceptance audit
+links the bounded receipt and states the remaining semantic obligations.
