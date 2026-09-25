@@ -663,3 +663,19 @@ Record receipts at the moment friction happens; redact for the public repo.
   Run that focused selection with the package's `bunx --bun vitest run` runtime:
   all 120 related tests pass there; a Node invocation exposed a Bun-spawn fixture
   difference in the pre-existing bootstrap test.
+
+### No janitor covered interrupted previews, run summaries, or retained views
+
+On 2026-09-25 a fleet-wide disk audit found four interrupted
+`.beep/yeet/merged-preview-<pid>` worktrees from August 29 to September 3 still
+registered in their clones, 16.6 GB of `.turbo/runs` docgen summaries across 74
+checkouts, 37 GB of retained `turbo-qualification/dependencies/view-*` copies,
+and per-clone `.turbo/cache` directories totalling 46.8 GB of which only 8.8 GB
+was duplicated by hash. `beep quality residue-reap` already aged two of these
+pools but had no timer, and `beep-tmpfs-reap.timer` ran hourly without
+`--apply`, so neither reaped anything. The large `~/.cache/beep` directories
+were skipped only because they exceed the 100k-entry census cap, not because
+they were marked durable. A one-off cleanup removed about 100 GB; the
+`residue-reap` classes in this branch and a daily `--apply --fleet` timer
+would have prevented the accumulation. Evidence: `du` summaries in
+`~/.claude/memory/beep-effect/disk-footprint-audit-2026-09-25.md`.

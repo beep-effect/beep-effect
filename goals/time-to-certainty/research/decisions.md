@@ -931,3 +931,117 @@ Context: `explorations/pr-event-awareness` (`DECISIONS.md` D16–D27) extends `y
 stop being terminal under `--until-ready`, `yeet job wait` returns on a wave, two allowlist names
 are forwarded, and the idle-wake spike is superseded. The rulings it touches are amended in place
 above rather than renumbered; the exit-code table change lands with that packet's producer slice.
+
+## 2026-09-25 — A3 economics surface, round 23 (three rulings, proposed by the orchestrator; the merge of this PR is the lock)
+
+Context: PLAN A3 turns the A1 computation into a Yeet subcommand reading the same journals, so every
+closeout can print where the minutes went. The design contract is
+`research/a3-economics-surface.md`; its §0 findings are why the surface is not a line-for-line port:
+post-A5 verdicts carry wrapper and inner lanes together, the script's live-journal discovery misses the
+`beep-effectN-worktrees/*` lanes, and M4 and the termination mix are never computed there. Round 22 is
+reserved by the concurrent pr-event-awareness amendments, so these rulings are round 23.
+
+Amended in review round 1 of #1239 before the lock: rulings 73, 74 and 75.
+
+**Ruling 73 (A3-1) — `yeet economics` is a checkout report over live attempt journals.**
+
+`bun run beep yeet economics [--json] [--branch <name>] [--fleet] [--packet-dir <dir>]`.
+
+- **Default scope**: every `<packetDir>/runs/<runId>/attempts.ndjson` of the current checkout
+  (`--packet-dir`, default `.beep/yeet`, resolved against each checkout unless absolute), plus an
+  orphan `verdict.json` beside a journal that has no terminal row for that attempt. `--branch`
+  narrows to that branch's run directory (`repoRunArtifactId(branch)`). `--fleet` adds every sibling
+  checkout under the projects root, the parent of the clone. The clone comes from the checkout's git
+  metadata without spawning git: a `.git` directory makes the checkout its own clone, and a `.git`
+  file's `gitdir:` line names `<clone>/.git/worktrees/<name>`. Only when `.git` is unreadable does
+  the directory name decide (a lane under `<clone>-worktrees/` sits one level deeper than a clone).
+  The fleet is the directories named `beep-effect*`, the lanes under `beep-effect-worktrees/*` and
+  `beep-effect*-worktrees/*`, and the lanes under every clone's `.claude/worktrees/*`, each labelled
+  by its path relative to the projects root. Symlinked candidates are skipped. Checkouts without
+  `<packetDir>/runs` are skipped, not errors.
+- **Document**: `YeetEconomicsReport`, an `S.Class`, `schemaVersion: "yeet-economics/v1"`;
+  `--json` prints it through a `JsonStringCodec`. Field names shared with
+  `verification-economics/v1` keep the Python spelling (`p50Ms`, `closedEpisodes`,
+  `startsWithoutFinish`, …) so rows compare by name; nothing is written to `research/`.
+- **Stays with the A1 script**: hosted runs, admission, the hosted execution-amplification join
+  (M3), the article comparison, corpus replay, input receipts, and the ratified close re-run
+  (ruling 8: same script, row by row).
+- **Rejected**: reusing `verification-economics/v1` (the document drops four sections and adds two);
+  a section in `yeet status` (per-branch; the sample is per-checkout); writing a persisted artifact
+  at closeout (nothing reads one).
+
+**Ruling 74 (A3-2) — wrapper lanes and inner lanes are separate populations.**
+
+- A verdict lane is **inner** when it carries `parentLaneId`; `YeetVerdictLane` gains
+  `parentLaneId: S.optionalKey(S.String)` (additive; `yeet-verdict/v2` unchanged), set by
+  `laneFromQualityTaskRun` from `QualityTaskLaneRunReport.parentLaneId`. For verdicts written before
+  this lands, a lane is a **wrapper** when its id starts with one of `full:`, `feedback:`,
+  `prepare:`, `publish:`, `monitor:`, `closeout:`, `advisory:`, `commit:`; every other lane is inner.
+- Each population has its own denominator: share percentages, totals and the accounted-time
+  percentage are computed within the population, whose attempt time is the elapsed time of the
+  attempts that contributed at least one observation to it. The two are never summed.
+- First-failure offsets (M2) have one definition for every attempt, stated by the constant
+  `firstFailure.offsetMethod`. The failing lane is the first failed **inner** lane that carries a
+  duration; if none, the first failed **wrapper** that carries a duration; if none, the attempt is
+  `notReconstructable`. Start offset = the non-negative durations of every wrapper that precedes
+  the failing lane's parent wrapper in verdict order (the parent is `parentLaneId`; for a legacy
+  verdict without it, the first failed timed wrapper; when no parent is found, every wrapper
+  precedes) plus the durations of that wrapper's inner lanes that precede the failing inner lane.
+  When the failing lane is itself a wrapper, the start offset is the wrappers before it. Completion
+  offset = start offset + the failing lane's duration. The actionable lane order is unchanged: the
+  first failed inner lane, else `failedStepId`, else the first failed lane of either population,
+  else `unlocated`.
+
+**Ruling 75 (A3-3) — metric definitions carried by the surface.**
+
+- **M1** `redToGreen`: episodes keyed by `(checkout, runId)`, attempts sorted by
+  `(startedAt, attemptId)`; a red attempt joins the streak, a green attempt with no streak closes
+  nothing, a green attempt after a streak closes an episode with `spanMs = max(0, end − start)`
+  (`end` = the green's `endedAt`, else its `startedAt`; `start` = the first red's `startedAt`). Red =
+  `outcome !== "success"`; a terminated row is red. **Comparable** = mode in
+  `verify | repair | publish` and not a lock bounce (`failureKind === "handler-error"` and the
+  message contains `Another Yeet full proof`, case-sensitive). `comparable24h` keeps closed episodes
+  with span ≤ 86 400 000 ms; `uncut` keeps all closed episodes. **Left-censored** (ruling 18): the
+  journal has a compaction cutoff (`terminalEvictionCutoffRecordedAt`, else
+  `oldestEvictedRecordedAt`) and `start ≤ cutoff`. **Right-censored**: a streak still open at the
+  end, reported with its observed lower bound `rightCensoredObservedSpanMinutes`, which stops at the
+  last measured time (summed over open streaks: the last member's `endedAt`, else `startedAt`, minus
+  the first red's `startedAt`; when the last member is a reconciler-stamped termination, its
+  `startedAt`, since its `recordedAt` is the sweep). Each
+  summary: `closedEpisodes`, `p50Ms`, `p95Ms`, `totalEpisodeSpanMinutes`,
+  `measuredAttemptMachineMinutes`, `leftCensoredEpisodesExcluded`, `leftCensoredObservedAttempts`,
+  `rightCensoredStreaks`, `rightCensoredRedAttempts`, `rightCensoredObservedSpanMinutes`, and for
+  `comparable24h` also `closedEpisodesOver24hExcluded`. **Elapsed**: a terminated row whose reason
+  the journal reconciler stamps at sweep time (`legacy-unowned-start`, `owner-dead`,
+  `stale-unverifiable-owner`) has `elapsedMs = None`, so its `recordedAt` ends no duration (episode
+  machine minutes, `attemptElapsedMs`, the right-censored bound, which stops at its `startedAt`); it
+  still orders the attempt and keeps it red. Rows written when the attempt dies (`interrupted`,
+  `signal`, `oom-killed`, `timeout`, `cancelled`, `lease-eviction`, `queued-submitter-death`,
+  `unrecorded-failure`, …) keep the `endedAt − startedAt` fallback.
+- **M2** `firstFailure.completionOffsetP50Ms` per ruling 74, plus `startOffsetP50Ms`, both P95s,
+  `redAttempts`, `attemptsWithReconstructableOuterFailure`,
+  `attemptsWithoutReconstructableOuterFailure`, `actionableLaneMix` and `receiptProxyMix` (the
+  seven proxy classes and match order of the A1 script: `scheduler-lock-bounce`,
+  `native-compiler-flake`, `stale-workspace-or-projection`, `base-churn`,
+  `scheduler-or-submitter`, `semantic-delta-path`, `unclassified`, matched on the lowercased
+  concatenation of message, every lane's `repairCommand`, and `failedStepId`).
+- **M4** `unchangedFingerprint` is the fingerprint-repeat proxy for M4: within one
+  `(checkout, runId)`, `failedUnchangedFingerprintThenGreen` pairs consecutive attempts of the
+  comparable sequence M1 walks (mode `verify | repair | publish`, not a lock bounce) and counts the
+  pairs whose red side carries a verdict (`outcome` is present, so a terminated row never counts)
+  and whose next attempt is green with the same `diffFingerprint`. `byActionableLane` and
+  `byReceiptProxy` key each counted red attempt by its actionable lane and receipt-proxy class, as
+  M2 computes them, so completion gate 3's classes can be read. `attemptsWithFingerprint` counts
+  attempts carrying one; `classification` is `measured` when at least one attempt carries a
+  fingerprint, else `unmeasurable`. SPEC M4's join with ack resolution kinds is not on this
+  surface. The A1 script still hardcodes `unmeasurable`; the packet records that the close re-run
+  inherits it.
+- **M5** `terminations`: `starts`, `startsWithoutFinish` (starts minus terminal rows), and
+  `reasonMix` over `YeetAttemptTerminationReason` (the 16 values), sorted by count then reason.
+- **M3** is not on this surface (it needs the hosted join); recorded as the A1 close re-run's job.
+- **Estimator**: nearest rank, index `clamp(ceil(p · n) − 1, 0, n − 1)`, `None` on empty input;
+  rounding is `Math.round` (not round-half-to-even; documented in the schema annotation). Missing
+  percentiles encode as `null` (`S.OptionFromNullOr`). The `Option`-returning helper at
+  `Ci/LaneTimings.ts` (`nearestRank`, ~L2194) is promoted to a shared internal module and
+  `Cache/Cache.command.ts` (~L342) points at it; no third copy.
+

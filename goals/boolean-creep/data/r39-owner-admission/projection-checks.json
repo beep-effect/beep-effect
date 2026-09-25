@@ -1,0 +1,42 @@
+{
+  "inspectContext": [
+    {
+      "mode": "outside",
+      "bits": [false, false, false]
+    },
+    {
+      "mode": "plain",
+      "bits": [true, false, false]
+    },
+    {
+      "mode": "live",
+      "bits": [true, true, false]
+    },
+    {
+      "mode": "effect",
+      "bits": [true, true, true]
+    }
+  ],
+  "appendTerminal": [
+    {
+      "terminal": false,
+      "priorTerminalId": false,
+      "bits": [false, false]
+    },
+    {
+      "terminal": false,
+      "priorTerminalId": true,
+      "bits": [false, false]
+    },
+    {
+      "terminal": true,
+      "priorTerminalId": false,
+      "bits": [true, false]
+    },
+    {
+      "terminal": true,
+      "priorTerminalId": true,
+      "bits": [true, true]
+    }
+  ]
+}

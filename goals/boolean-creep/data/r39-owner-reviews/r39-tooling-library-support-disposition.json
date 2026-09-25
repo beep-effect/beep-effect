@@ -1,0 +1,427 @@
+{
+  "verdict": "retain-20-seeds-two-citation-corrections",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts",
+      "sha256": "8e676350be14b56aff68709c800a8d5f3181ef5d5b42ac0e0cc9d9379633c5c4"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.errors.ts",
+      "sha256": "51122576b1e07537b760e7c589b7d4b0b03af44b7c576a05f28bf00588e35616"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.models.ts",
+      "sha256": "db28ef01c6b7b65bb8b3ce4d435480a6f8e96f314167e7a3d789d6b251d8b557"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts",
+      "sha256": "ac5bd26f8e3ea3d54923f40f824ccc474b468cf6a4839d519484776dffdbf86a"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/index.ts",
+      "sha256": "e1ca196c342577e436ce66233f58381c1cc1fc894301bd16015396859ff8205c"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/internal/format.ts",
+      "sha256": "3e773b65303fb7f2e8c4e2721ebb7493854a33ca123eb6a876822bec45aad453"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/internal/postProcess.ts",
+      "sha256": "dddc28fed4b014a1a6af29937e09608759219b7ac9a299f861eb918291dc53fe"
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/src/internal/transforms.ts",
+      "sha256": "a581bafbac1ab282f1bfb7dc692ddcf8085f5cd22fc9f9e1a17986ac38796c44"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Dependencies.ts",
+      "sha256": "c8f3ffc764be687b423ed74dd6ed11e522aaf6143fd2e45f8dac9ce742467238"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/DependencyIndex.ts",
+      "sha256": "cfcfa9fdc34ab481c528c7e650cca62120e228087fa8c7185c94ccf121c53f44"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+      "sha256": "0a9a6dd51850bf5137ae79609e0916fb19a66f560d9c02e33c26e73940da6c3b"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Graph.ts",
+      "sha256": "cac3f6affef1ebbd50ad30e056da415d34faf3e2589313ca194c78e891d0e24f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts",
+      "sha256": "6a52a8b730ab31acd0a6d5b08cddc79751aadd901879184fa3d004923c6a98ee"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/index.ts",
+      "sha256": "c0ad94a031f4cea93197151fb1996f584c9d3b4c0adc69075e1b943590340144"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTDerivability.model.ts",
+      "sha256": "ee05634fabb282e21612768e841daca00d1ad6fad976a967dbc744a6393b0086"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTSignal.model.ts",
+      "sha256": "f3a81b9fd4f9dea2d1837fa6dc12f4b9abd3557ce44ea356534d34e735905117"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ApplicableTo.model.ts",
+      "sha256": "48fff3aa7575594d80080645d8f1be95d12becca6b656f768df73e487c5c5ecc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ArchitecturalLayer.model.ts",
+      "sha256": "da67b70c83bc194ff9f50a03f2ae2b0b91c6cf1fca361ab1aca3c1281a4cf7bb"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/CanonicalJSDocSourceMetadata.model.ts",
+      "sha256": "4c1ac3a8cd6530f92bca79fc5aa78c2c0206b8b15743074fc10fb3a3b353dc71"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/DependencyProfile.model.ts",
+      "sha256": "e399dbe9443a1dc09440ba1834e981d1364557e82cc5e299eb817aa220f8a2e4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/HasJSDocApplicableToMapEntry.model.ts",
+      "sha256": "343e3be7bdfe574b365d315caa1d5b03b3cdbd6c6c81acbe3f2d1662e48db0d9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagAnnotation.model.ts",
+      "sha256": "5efda968cfb5fbcaecf9a722a5ce0febb1300308e10a30c53c37e23fa6b29471"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+      "sha256": "3d49f272624baa69d5854548c926d0930d05d2d69d4aac8c586d9a42efee0273"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/Specification.model.ts",
+      "sha256": "b2a148133c1025240d0a570ccc79016dc7ebce0fea93b596c22cd9dc7d41aa00"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+      "sha256": "2b64baf38b6e8c75404fcd04ea3939182739f890f3ecd04a68fad86566ccf924"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagKind.model.ts",
+      "sha256": "7e4fef889ff7e0d68b4376b22d31304729c692591ae0f193b4c34ff87de96e22"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagParameters.model.ts",
+      "sha256": "a048238186dd0d9c4e0a24416f35b21318357087a799528cd72ad2fcab01b514"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagValue.model.ts",
+      "sha256": "1c8c605719cd697f7f878b8699b5d971bdaa856e876e6c83f35a4593595fa7af"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/index.ts",
+      "sha256": "3841c0e6b9a6516032d11698c15beecf5ac6457ccbebab038e8d442969a8ab3d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/AccessModifierTagValues.ts",
+      "sha256": "a039fdfee448d6624594df1a47a869302045c9055d6dc0107ad1d23fd09ac374"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/ClosureTagValues.ts",
+      "sha256": "84dfefd137f759b3122e187020e377881b05cbd87f1d321c11f3bdbe3cccf2aa"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/DocumentationTagValues.ts",
+      "sha256": "7d9a5a545cbc89579d675dae5072c3e770dacb3439cd34fd8310826b183d9f75"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/EventDependencyTagValues.ts",
+      "sha256": "c8047fd87ecbcc005a2571f5ac477081581f4ee8702ae3b2992c3566a0c42bd8"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/InlineTagValues.ts",
+      "sha256": "b82842ee16da93a0bf6176ac6b0d40884a6f6f35d45d75d4b91ff5c12861ed55"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/OrganizationalTagValues.ts",
+      "sha256": "cca43329e8ee5c37fada87f3b5002bf9cd6d77c5104a3163992304338e060d82"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/RemainingTagValues.ts",
+      "sha256": "2998a89a17287704586c1dc7b3b356033d31d5e9898e6d59743d4a67aa52e335"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/StructuralTagValues.ts",
+      "sha256": "daa0874099c875271074b6bfd27ebacbfca53ff51b62bfc9eb7da62b19077c23"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TSDocTagValues.ts",
+      "sha256": "de080214c54820622f5e86ddf1ecc4b7d5cfaea2a73bfe78fd254eb3904ec8d2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TypeDocTagValues.ts",
+      "sha256": "4aa2109fc2a36a323ba152968e0c8dabc8ae738f67cbd6bc3d9d3b13245e5597"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TypeScriptTagValues.ts",
+      "sha256": "7b0ebcfa0aad667563e5a2e4deb40a991bf8b797980840764750e0fa2e3bb8f5"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/_fields.ts",
+      "sha256": "2863c8ddf01b799bdc4fdaa209d11bf15d86be5a960ab00db6a23678f3caf116"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/index.ts",
+      "sha256": "528b0a0a24a7e03e43d7e84c4cb082807a5ca53569308e00e3a22f030db8bc81"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JsonUtils.ts",
+      "sha256": "50a76174a1e682937ff6aa9d8a1d5a2c74e108de0b799456058bb1e4723e21df"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/ProcessArgs.ts",
+      "sha256": "cffa73641746fa37e4c2301a464763a5a96cd3b177fb0066944708da10f0e3c1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Root.ts",
+      "sha256": "7ad8da2f1670b6c9e51edce6ce9a9727e752c4a853f98856e92ecc1225292bfd"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Sha256Hex.ts",
+      "sha256": "780e7f0e711c693021f93beb00898adfe6fd466cdc82ca8763d95153f49308ea"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "sha256": "1fbc8dbabe71f01333ebb7f469d41790160d5ab30e7c58fe28338f5dedd728e1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+      "sha256": "37c4f71d28faeb9fd26fa85f9fde6fb62522f003c2fa4104f1d932ac4586cbba"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.shared.ts",
+      "sha256": "f733e14b10154555c2a4ba0ac7ad20b78d42c676b99948408fd38b71c7094277"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/index.ts",
+      "sha256": "517eeb762ad7aedb107bf3ca5e72e109f49e6e9e9ee271bf8522bb84d93e5ebe"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TsConfig.ts",
+      "sha256": "da57d6f5eac51f029ef9772d2dfd3b3613d4dc5238e8c68f80e0c6edfda9ca7a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/index.ts",
+      "sha256": "bfe27aefd5b46abe9d97904a4f7fa7be5db3938df596778055330f79cb3447aa"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
+      "sha256": "656e103080c507e04663611e5ff80b8831dccc976f3b3fe9e1b1125181169640"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/models/index.ts",
+      "sha256": "e63502a71bdd60178f87eadd11afcb9053a96169df443ad76ed2a74a8337d6b2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/UniqueDeps.ts",
+      "sha256": "6bed89f40a408e00e50e51cca994a9433148099acc42877e1e59b7f5cd5184d4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Workspaces.ts",
+      "sha256": "3fd37151a18dd113af2609af790f1a04813375e8b1865c10f3b5f4c5a369c3b1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts",
+      "sha256": "bb791feb809a646b8ee113d9a8cc1dec3a5353bd8148db3fe38b6de520935866"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/DomainError.ts",
+      "sha256": "981ff992a0a1435de0f54935e32d2f7392628900a88918a07a9ae62421b5e320"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/NoSuchFileError.ts",
+      "sha256": "4b4ee96e4f64b0edaba24dc105013492656a098bacc965e911de629fa1386009"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/OptionInjectionError.ts",
+      "sha256": "c2647337e1bc48a8f06f23385067a1b93bf9dec9a1517655c0ab25924562942d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/index.ts",
+      "sha256": "c568f3a0995bf586dc35c31cf6b21c3ed6315464b1899919c5a4a8ffdabe81cb"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/index.ts",
+      "sha256": "3a7433df94484c3bc41a1a28889fd110d81f7f187a9abe59f72d5a853ac41fc7"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
+      "sha256": "92e820c5d12afaebaa493b3baf720f4d5ee46ad2916804d0fdf65f8e1815ce70"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+      "sha256": "15c7a691081ac69ef3efc95ef503ce9b5fa2267ea34c816517efb4e798056bef"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+      "sha256": "05cfd0d414d564faf9094a4d747b5e03a55e0709ee3d7af3be1a72528214e0d9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+      "sha256": "901218f39c9dc8feac425036201c66e6a41e583136c2c516bb81eb3110b38eaf"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+      "sha256": "628734b6918aa0182ff45019b9cf18cb26cc1832aa34698a0e8c93fc47d1b9e2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+      "sha256": "cab51c93ba5e7e596d307f2b6d2251049a03ceae84b8a0a3fd46ed8505062f5d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
+      "sha256": "02fc12379729c541532b6deea06157489c634d4f7c467e646460cbce6492ac84"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+      "sha256": "6749400f553216b91e33e175ff41fbc2dd232f83db5be7604db7a1ecbe56437e"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/WorkspaceDeps.ts",
+      "sha256": "f42b424e82b8c22a9582889da2899bd429cd1b6a54c8910dbfe5f0bc2017786a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/index.ts",
+      "sha256": "e1231c12f8b06443b81373a18fac8ca5b4c3844440cdb16cfca73b48fa0d2146"
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/src/FastCheckRuns.ts",
+      "sha256": "cbe8e524ed1a5d1dde45c0391ada360775cf212dd275e02384ac5bdd02d353c2"
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/src/index.ts",
+      "sha256": "deffe8181e6e8ac4881496306a4fe1f5c080276d1c02cfe381e83b1ffd5ef846"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-runner/src/Vitest.errors.ts",
+      "sha256": "073f071427e66a2308630e60510004459350ea24da2a30534220ef0dfceac76a"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-runner/src/Vitest.ts",
+      "sha256": "035a80bc06694b09f0f6bdb45fa4d4aff9d362d55d219112cef00f05e4f60d4a"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-runner/src/index.ts",
+      "sha256": "33eb68ffdb33b83e16bd51db96ceceebf5dffe00f0a6c6df8a8a804904f8f3f7"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-runner/src/internal/VitestInstrumentation.ts",
+      "sha256": "813911d0ac2b625346b4ce1a6ba605d4f170701e993ea7280ddb93d2898fdbcf"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-runner/src/internal/VitestRuntime.ts",
+      "sha256": "0e982fc1a8343a1ebebd33e257a6602370b418ffb30b486806a63bd51d05ba36"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts",
+      "sha256": "e7ee1f10655e91218e820bbb0361f24f43acc665d54713d4d9c8ad37ecb7b77b"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.schema.ts",
+      "sha256": "d2b5e158f85d20bae66c06936841b1ac7a3bab3df3c6cc298f007c0c8f1933b0"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.test-kit.ts",
+      "sha256": "8e81d51f6cead71a83663f733c108443d96e2f59fc6e1c038b100db5a787fbe5"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/ConformanceLedger/index.ts",
+      "sha256": "fbf2f6008305383ddd66df0df48a9ae1000a884b43de48c380688cf58e850ea3"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/Entity.ts",
+      "sha256": "c82e7adb5fca4b00a2ce1be567bec281f47e7ee4546fec4cba690300c2f0900c"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+      "sha256": "42051fe3987d22cf31d7ebe7f71357c9899a04f397658d1b69435a172ddf6fb5"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+      "sha256": "00f4f9b7c3c8be66dff6863d2169b16aa4b5be4d5cc0483213f6085605b227d2"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/Layer.ts",
+      "sha256": "ea0f8acec5c240de7e3e906141b1080e4202edeb0b6daf6cd8e87efd3756ad9b"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "sha256": "a5fa12a967c5a983ff644e7226c85a1f337059e92ec37b58ef71007f6119ce52"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts",
+      "sha256": "caa92d1c0f1d3ebf5787f1d58d8e291fc362e0d164d19ca67edea49f8f7b77cf"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/Schema.ts",
+      "sha256": "c6c6ee55ccd9f94e74ed9c31b07b64cfa674863233c3af99229298e9c37f7fef"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+      "sha256": "07e556391cc20635422460251a66106f7e5c72e0f689c9085278d868a88d950b"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
+      "sha256": "1456eabe18c3a9dfca04c680c42f199cbe2d891a74aca5bd259aef994254be8c"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/Vitest.errors.ts",
+      "sha256": "943f9ee12a1b5ba1045366238e7872b08a895757eec4092a26024a324932ae26"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/Vitest.ts",
+      "sha256": "b573619560d664d3925767d1da0d5d47127dbd24a891e0c903129b4d26873a9d"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/index.ts",
+      "sha256": "cb9eb1e2d550b68e08666169da1fa2cf5f783bca196d86724d766e1dd9e91646"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25-r39-main-782aa4.seed.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-support.execution.json",
+      "sha256": "af6b776206a7fea1e8a9839a0e07ff684d381cebc31b3cad8341175927842c54"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-support.ndjson",
+      "sha256": "ed8d2dbd381aea3cf69f928016b3773bc50084868b50f06ebde06ee9db1ef6bf"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-support.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "0a4e4090d8fbf1c673fb5fc95ff8fb6909058bc1871070f3dd8631178dc981ac"
+    },
+    {
+      "path": "seed-accounting.json",
+      "sha256": "02d676a668ee711b141a415be476e6fc86f278c8752684c8606ea1df5978f24b"
+    },
+    {
+      "path": "inventory-proposals.json",
+      "sha256": "919d93ad641cb1ea384a036edf1af720b286853b0d02f941b89b3b8081addcb1"
+    },
+    {
+      "path": "open-mode-projection.json",
+      "sha256": "1214553d7ad8739e6247058ebebd663a3de2e1b2060afa6f2f3b2638304b74fd"
+    }
+  ],
+  "rowDelta": 0,
+  "qualifiedDelta": 0,
+  "noteCorrections": 2,
+  "P3Credit": false,
+  "dryCredit": false
+}

@@ -1,0 +1,71 @@
+{
+  "kind": "r39-partial-citation-integration/v1",
+  "sourceHead": "220d9426dad4b708807b6297cb71d75449288749",
+  "historicalRoundSource": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "updated": 44,
+  "addedDisqualified": 2,
+  "inputs": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-support-supplement/inventory-proposals.json",
+      "sha256": "919d93ad641cb1ea384a036edf1af720b286853b0d02f941b89b3b8081addcb1",
+      "count": 2
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-package-shell-audit/admitted-rows.jsonl",
+      "sha256": "9a93fb90adb6d22663d97499c6cc0a9e232fc19b2f3b32ff6a1a143efe47806b",
+      "count": 2
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-yeet-supplement/inventory-proposals.json",
+      "sha256": "19d24d66d8b0f2f8c601d1e3efe58116f6253c7204ff864968e4def61ff6d958",
+      "count": 1
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-rz-anchor-audit/inventory-proposals.json",
+      "sha256": "ac792577243f61d5e78f5031c90b0d7ebd50391903713917bad9201988c03fae",
+      "count": 3
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-knowledge-citation-audit/inventory-proposals.json",
+      "sha256": "d5347d166062d1ba7232f0fef8d626b3405d717579047bfa491e6bc881381106",
+      "count": 2
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-dk-lane-supplement/inventory-proposals.json",
+      "sha256": "a61a7ace5d1b16a0986f72c3bb1a7e580c8c0ffb3eb9c8c376b9685572a5e2de",
+      "count": 2
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-law-domain-supplement/inventory-proposals.json",
+      "sha256": "3a03fc5d4ec3b8d46e7def969eb466d62eed45119c6fd7e6b40652942127b5dd",
+      "count": 2
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-internal-root-supplement/inventory-proposals.json",
+      "sha256": "ac5c458640d15fe58275e2ef0344c257d39d769aa6aef1dd4cc4946ba7ac39c9",
+      "count": 3
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-anchor-audit/inventory-proposals.json",
+      "sha256": "1e3e6c68867865c8e7ee0eadb5c84eaffbbf20b94664b38cfa7acd2f078d2231",
+      "count": 13
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-citations/inventory-proposals.json",
+      "sha256": "2b6dc20e80b684efdfb39e773ce393ea84b3696aef24b184ff90f99dc113c86c",
+      "count": 16
+    }
+  ],
+  "inventoryBeforeSha256": "44f8554d9573dc275a21ebc900e04e1b34f31c798c31fa486767325a68a58cf2",
+  "inventoryAfterSha256": "a044e9df1564289cd85b79b38ab72f7b9bb3f7811f3cee8ea1bbdb963e4e0d7b",
+  "counts": {
+    "rows": 726,
+    "qualified": 108,
+    "disqualified": 618,
+    "applied": 0
+  },
+  "roundComplete": false,
+  "dryCredit": false,
+  "implementation": false,
+  "remaining": "Current Graft forward anchor remains separate; final L-Q design/test reconciliation and remaining proposed design installations pending."
+}
