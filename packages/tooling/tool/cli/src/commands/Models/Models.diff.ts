@@ -44,12 +44,15 @@ const isProviderSection = S.is(ProviderSection);
 
 interface CatalogDraft {
   codexCli: boolean;
+  codexLevels: ReadonlyArray<string>;
   cursor: boolean;
   grokCli: boolean;
+  grokLevels: ReadonlyArray<string>;
   levels: ReadonlyArray<EffortLevel>;
   origin: CatalogSource;
   provider: O.Option<ProviderSection>;
   proxy: boolean;
+  upstreamLevels: ReadonlyArray<string>;
 }
 
 type Drafts = MutableHashMap.MutableHashMap<string, CatalogDraft>;
@@ -67,6 +70,9 @@ const touch = (drafts: Drafts, id: string, origin: CatalogSource): CatalogDraft 
         provider: O.none(),
         origin,
         levels: [],
+        upstreamLevels: [],
+        codexLevels: [],
+        grokLevels: [],
         proxy: false,
         codexCli: false,
         grokCli: false,
@@ -87,13 +93,13 @@ const mergeUpstream = (drafts: Drafts, upstream: UpstreamCatalog): void => {
         if (isProviderSection(section)) {
           draft.provider = O.some(section);
         }
-        draft.levels = pipe(
+        draft.upstreamLevels = pipe(
           entry.thinking,
           O.fromNullishOr,
           O.flatMap((thinking) => O.fromNullishOr(thinking.levels)),
-          O.map(normalizeLevels),
-          O.getOrElse(() => draft.levels)
+          O.getOrElse(() => draft.upstreamLevels)
         );
+        draft.levels = normalizeLevels(draft.upstreamLevels);
       });
     })
   );
@@ -105,12 +111,13 @@ const mergeCodex = (drafts: Drafts, cache: CodexModelsCache): void => {
     // A `hide` slug exists in the cache but is not operator-selectable, so it
     // is a member of the catalog without being Codex availability.
     draft.codexCli = entry.visibility !== "hide";
+    draft.codexLevels = pipe(
+      O.fromNullishOr(entry.supported_reasoning_levels),
+      O.map(A.map(Struct.get("effort"))),
+      O.getOrElse((): ReadonlyArray<string> => [])
+    );
     if (A.isReadonlyArrayEmpty(draft.levels)) {
-      draft.levels = pipe(
-        O.fromNullishOr(entry.supported_reasoning_levels),
-        O.map((levels) => normalizeLevels(A.map(levels, Struct.get("effort")))),
-        O.getOrElse((): ReadonlyArray<EffortLevel> => [])
-      );
+      draft.levels = normalizeLevels(draft.codexLevels);
     }
   });
 };
@@ -122,12 +129,13 @@ const mergeGrok = (drafts: Drafts, cache: GrokModelsCache): void => {
     A.forEach(([id, entry]) => {
       const draft = touch(drafts, id, "grok-cache");
       draft.grokCli = entry.info.hidden !== true;
+      draft.grokLevels = pipe(
+        O.fromNullishOr(entry.info.reasoning_efforts),
+        O.map(A.map(Struct.get("value"))),
+        O.getOrElse((): ReadonlyArray<string> => [])
+      );
       if (A.isReadonlyArrayEmpty(draft.levels)) {
-        draft.levels = pipe(
-          O.fromNullishOr(entry.info.reasoning_efforts),
-          O.map((efforts) => normalizeLevels(A.map(efforts, Struct.get("value")))),
-          O.getOrElse((): ReadonlyArray<EffortLevel> => [])
-        );
+        draft.levels = normalizeLevels(draft.grokLevels);
       }
     })
   );
@@ -200,6 +208,9 @@ export const mergeLayers = (layers: {
         provider: draft.provider,
         origin: draft.origin,
         levels: draft.levels,
+        upstreamLevels: draft.upstreamLevels,
+        codexLevels: draft.codexLevels,
+        grokLevels: draft.grokLevels,
         availability: CatalogAvailability.make({
           proxy: draft.proxy,
           codexCli: draft.codexCli,
@@ -295,12 +306,24 @@ export const diffSnapshots: {
       A.map(([id, previousModel]) =>
         pipe(
           HashMap.get(after, id),
-          O.filter((nextModel) => !Eq.equals(previousModel.levels, nextModel.levels)),
+          O.filter(
+            (nextModel) =>
+              !Eq.equals(previousModel.levels, nextModel.levels) ||
+              !Eq.equals(previousModel.upstreamLevels, nextModel.upstreamLevels) ||
+              !Eq.equals(previousModel.codexLevels, nextModel.codexLevels) ||
+              !Eq.equals(previousModel.grokLevels, nextModel.grokLevels)
+          ),
           O.map((nextModel) =>
             CatalogLevelsChange.make({
               id,
               before: previousModel.levels,
               after: nextModel.levels,
+              upstreamBefore: previousModel.upstreamLevels,
+              upstreamAfter: nextModel.upstreamLevels,
+              codexBefore: previousModel.codexLevels,
+              codexAfter: nextModel.codexLevels,
+              grokBefore: previousModel.grokLevels,
+              grokAfter: nextModel.grokLevels,
             })
           )
         )

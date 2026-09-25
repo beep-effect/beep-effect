@@ -18,7 +18,7 @@ import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
-import { CatalogDiff, CatalogSnapshotSummary } from "./Models.catalog.schemas.ts";
+import { CatalogDiff, CatalogSnapshotSummary, ModelId } from "./Models.catalog.schemas.ts";
 import { Locator, TargetId } from "./Models.manifest.schemas.ts";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 
@@ -263,6 +263,8 @@ export class DriftFinding extends S.Class<DriftFinding>($I`DriftFinding`)(
  * systemd timer reads a persisted report and fires a critical notification on
  * that one field; a consumer must not have to re-derive the verdict from a
  * shape that may grow more finding kinds.
+ * `candidates` names routable Codex ids without any manifest binding (R2).
+ * These are informational proposals and never make a clean report drift.
  *
  * **Gotchas**
  *
@@ -303,6 +305,10 @@ export class ModelsCheckReport extends S.Class<ModelsCheckReport>($I`ModelsCheck
     diff: CatalogDiff,
     diffScope: CatalogDiffScope.pipe(S.withDecodingDefaultKey(Effect.succeed<CatalogDiffScope>("full"))),
     findings: S.Array(DriftFinding),
+    candidates: S.Array(ModelId).pipe(
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     hasDrift: S.Boolean,
   },
   $I.annote("ModelsCheckReport", {
