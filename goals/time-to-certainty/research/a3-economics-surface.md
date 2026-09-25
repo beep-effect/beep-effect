@@ -91,18 +91,20 @@ Amended in review round 1 of #1239 before the lock: rulings 73, 74 and 75.
   with span ≤ 86 400 000 ms; `uncut` keeps all closed episodes. **Left-censored** (ruling 18): the
   journal has a compaction cutoff (`terminalEvictionCutoffRecordedAt`, else
   `oldestEvictedRecordedAt`) and `start ≤ cutoff`. **Right-censored**: a streak still open at the
-  end, reported with its observed lower bound `rightCensoredObservedSpanMinutes` (summed over open
-  streaks: the last member's `endedAt`, else `startedAt`, minus the first red's `startedAt`). Each
+  end, reported with its observed lower bound `rightCensoredObservedSpanMinutes`, which stops at the
+  last measured time (summed over open streaks: the last member's `endedAt`, else `startedAt`, minus
+  the first red's `startedAt`; when the last member is a reconciler-stamped termination, its
+  `startedAt`, since its `recordedAt` is the sweep). Each
   summary: `closedEpisodes`, `p50Ms`, `p95Ms`, `totalEpisodeSpanMinutes`,
   `measuredAttemptMachineMinutes`, `leftCensoredEpisodesExcluded`, `leftCensoredObservedAttempts`,
   `rightCensoredStreaks`, `rightCensoredRedAttempts`, `rightCensoredObservedSpanMinutes`, and for
   `comparable24h` also `closedEpisodesOver24hExcluded`. **Elapsed**: a terminated row whose reason
   the journal reconciler stamps at sweep time (`legacy-unowned-start`, `owner-dead`,
   `stale-unverifiable-owner`) has `elapsedMs = None`, so its `recordedAt` ends no duration (episode
-  machine minutes, `attemptElapsedMs`); it still orders the attempt, keeps it red and bounds a
-  right-censored streak. Rows written when the attempt dies (`interrupted`, `signal`, `oom-killed`,
-  `timeout`, `cancelled`, `lease-eviction`, `queued-submitter-death`, `unrecorded-failure`, …) keep
-  the `endedAt − startedAt` fallback.
+  machine minutes, `attemptElapsedMs`, the right-censored bound, which stops at its `startedAt`); it
+  still orders the attempt and keeps it red. Rows written when the attempt dies (`interrupted`,
+  `signal`, `oom-killed`, `timeout`, `cancelled`, `lease-eviction`, `queued-submitter-death`,
+  `unrecorded-failure`, …) keep the `endedAt − startedAt` fallback.
 - **M2** `firstFailure.completionOffsetP50Ms` per ruling 74, plus `startOffsetP50Ms`, both P95s,
   `redAttempts`, `attemptsWithReconstructableOuterFailure`,
   `attemptsWithoutReconstructableOuterFailure`, `actionableLaneMix` and `receiptProxyMix` (the
@@ -211,8 +213,8 @@ loader: live terminal row wins over an orphan verdict; `startedAt` from the verd
 row; `endedAt` from the verdict's `endedAt`, then `createdAt`, then the row's `recordedAt`;
 `elapsedMs` from the verdict, else `endedAt − startedAt`, except that a terminated row whose reason
 the reconciler stamps at sweep time (`legacy-unowned-start`, `owner-dead`,
-`stale-unverifiable-owner`) has `elapsedMs = None` and its `recordedAt` ends no duration, while
-still ordering the attempt and bounding a right-censored streak (ruling 75); facts from the terminal
+`stale-unverifiable-owner`) has `elapsedMs = None` and its `recordedAt` ends no duration, not even a
+right-censored streak's bound, while still ordering the attempt (ruling 75); facts from the terminal
 row then the start row; `branch` from the verdict, then the start row, then the runId; a terminated
 row has no verdict so its `outcome` is `None` (red) and no lanes.
 

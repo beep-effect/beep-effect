@@ -380,9 +380,10 @@ export class EconomicsFirstFailure extends S.Class<EconomicsFirstFailure>($I`Eco
  * left-censored episode started at or before its journal's compaction cutoff,
  * a right-censored streak was still red at the end of its journal.
  * `rightCensoredObservedSpanMinutes` is the observed lower bound of the open
- * streaks: for each, its last member's end (else start) minus its first
- * red's start, summed. `closedEpisodesOver24hExcluded` is set on the 24-hour
- * cut only.
+ * streaks: for each, its last member's last measured time minus its first
+ * red's start, summed. The last measured time is the member's end (else its
+ * start), and its start when it is a reconciler-stamped termination.
+ * `closedEpisodesOver24hExcluded` is set on the 24-hour cut only.
  *
  * **Example** (An empty summary)
  *
@@ -942,7 +943,8 @@ export class EconomicsLane extends S.Class<EconomicsLane>($I`EconomicsLane`)(
  * has no lanes. A termination the reconciler wrote later
  * (`legacy-unowned-start`, `owner-dead`, `stale-unverifiable-owner`) is
  * stamped when the reconciler ran, not when the attempt died, so its
- * `elapsedMs` is none; its `endedAt` still orders it.
+ * `elapsedMs` is none; its `endedAt` still orders it but never bounds a
+ * right-censored streak.
  *
  * **Example** (A green verify attempt)
  *

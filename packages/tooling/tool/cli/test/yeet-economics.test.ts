@@ -833,6 +833,27 @@ describe("yeet economics red to green", () => {
   });
 });
 
+describe("yeet economics right-censored bound", () => {
+  it("stops an open streak at its last member's last measured time", () => {
+    const terminatedAs = (
+      attemptId: string,
+      reason: "legacy-unowned-start" | "interrupted",
+      recordedMinutes: number
+    ): EconomicsAttempt =>
+      red(attemptId, 10, recordedMinutes, {
+        outcome: O.none(),
+        failureKind: O.none(),
+        terminationReason: O.some(reason),
+      });
+    const openSpan = (last: EconomicsAttempt) =>
+      report([journal("run-1", [red("first-red", 0, 5), last])]).redToGreen.uncut.rightCensoredObservedSpanMinutes;
+    // A reconciler-stamped red recorded 11 days later counts only up to its start.
+    expect(openSpan(terminatedAs("legacy", "legacy-unowned-start", 10 + 11 * DAY_MINUTES))).toBe(10);
+    // A red terminated when it died counts up to its recordedAt.
+    expect(openSpan(terminatedAs("interrupted", "interrupted", 15))).toBe(15);
+  });
+});
+
 describe("yeet economics unchanged fingerprint", () => {
   it("counts a verdict red then green on the same fingerprint once, keyed by lane and proxy class", () => {
     const fingerprinted = report([

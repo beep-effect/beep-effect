@@ -411,7 +411,7 @@ const elapsedBetween = (startedAt: O.Option<string>, endedAt: O.Option<string>):
 // terminal row's facts win over the start row's; a terminated row has no
 // verdict, so its outcome is none (red) and it has no lanes. A reconciler-
 // stamped termination still orders by its `recordedAt` but measures no
-// elapsed time (ruling 75).
+// elapsed time and ends no streak bound (ruling 75).
 const attemptFromTerminal = (
   journal: { readonly checkout: string; readonly runId: string },
   attemptId: string,
@@ -1109,6 +1109,10 @@ const endMillis = (timed: TimedAttempt): number =>
     thunk0
   );
 const startMillis = (timed: TimedAttempt): number => O.getOrElse(timed.startedMs, thunk0);
+// The last time an attempt was measured: its end, except that a reconciler-
+// stamped termination's end is the sweep, so it stops at its start.
+const measuredEndMillis = (timed: TimedAttempt): number =>
+  O.exists(timed.attempt.terminationReason, isReconcilerStampedReason) ? startMillis(timed) : endMillis(timed);
 const machineMillis = (members: ReadonlyArray<TimedAttempt>): number =>
   sumOf(members, (timed) => O.getOrElse(timed.attempt.elapsedMs, thunk0));
 
@@ -1152,13 +1156,14 @@ const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   return {
     closed: walk.episodes,
     // A streak still red at the end is right-censored; its observed lower
-    // bound runs from the first red's start to the last member's end.
+    // bound runs from the first red's start to the last member's last
+    // measured time.
     openStreak: A.match(walk.streak, {
       onEmpty: O.none,
       onNonEmpty: (streak) =>
         O.some({
           attempts: A.length(streak),
-          observedSpanMs: Math.max(0, endMillis(A.lastNonEmpty(streak)) - startMillis(A.headNonEmpty(streak))),
+          observedSpanMs: Math.max(0, measuredEndMillis(A.lastNonEmpty(streak)) - startMillis(A.headNonEmpty(streak))),
         }),
     }),
   };
