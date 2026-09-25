@@ -1701,7 +1701,8 @@ reported `Could not connect to socket`. Agent-side `op-doctor` passed; repeating
 the commit with the user-session runtime environment still failed. Preserve the
 pending merge and avoid changing signing policy. A signing-route health check
 before commit would distinguish this publication dependency from proof admission.
-# Initial comparison diagnostics need bounded original logs
+
+### Initial comparison diagnostics need bounded original logs
 
 The private current-profile diagnostic retained eleven observations and isolated
 failure to the cache-enabled producer and replay, both exiting 1. It retained
@@ -1723,7 +1724,7 @@ checks: producer exit 0, replay local hit with exit 0, and identical logs.
 That establishes attribution for this failure and permits the full local pilot
 to resume; it does not establish complete qualification.
 
-# Fetch failure obscured checkpoint verification diagnosis
+### Fetch failure obscured checkpoint verification diagnosis
 
 On 2026-09-24, `bun run beep yeet verify --tier cheap-gates` stopped
 before its checks because the `origin/main` fetch exited 128. Its log retained
