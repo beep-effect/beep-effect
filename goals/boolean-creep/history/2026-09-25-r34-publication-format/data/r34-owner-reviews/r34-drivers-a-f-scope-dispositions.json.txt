@@ -1,0 +1,223 @@
+[
+  {
+    "id": "cosmos-backend-selection-webgl2",
+    "symbol": "CosmosBackendSelection",
+    "file": "packages/drivers/cosmos/src/Cosmos.backend.ts",
+    "completeOwnerLines": [
+      105,
+      114
+    ],
+    "booleanBearingMembers": [
+      "webGl2"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; backend is the two-string CosmosBackend LiteralKit, reason string",
+    "previousStatus": "designed",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "firecrawl-agent-response-shape",
+    "symbol": "AgentResponseShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      313,
+      317
+    ],
+    "booleanBearingMembers": [
+      "success"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; id and optional error strings",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "firecrawl-agent-status-shape",
+    "symbol": "AgentStatusShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      318,
+      326
+    ],
+    "booleanBearingMembers": [
+      "success"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; status/model literal strings, optional unknown data and numeric/string payloads",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "firecrawl-browser-create-shape",
+    "symbol": "BrowserCreateShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      328,
+      336
+    ],
+    "booleanBearingMembers": [
+      "success"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; every other field optional string",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "firecrawl-browser-delete-shape",
+    "symbol": "BrowserDeleteShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      350,
+      355
+    ],
+    "booleanBearingMembers": [
+      "success"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; optional numeric diagnostics and string error",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "firecrawl-browser-list-shape",
+    "symbol": "BrowserListShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      366,
+      370
+    ],
+    "booleanBearingMembers": [
+      "success"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; nested sessions array does not flatten session flags into envelope",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r25-drivers-a-f-firecrawl-error-options-retryable",
+    "symbol": "FirecrawlErrorOptions",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+    "completeOwnerLines": [
+      266,
+      279
+    ],
+    "booleanBearingMembers": [
+      "retryable"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "Option<Boolean> via optionalBoolean26; no second Boolean even allowing optional Boolean-bearing fields in recall",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r25-drivers-a-f-firecrawl-error-options-input-retryable",
+    "symbol": "FirecrawlErrorOptionsInput",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+    "completeOwnerLines": [
+      281,
+      294
+    ],
+    "booleanBearingMembers": [
+      "retryable"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "optional Boolean; cause unknown, numeric diagnostics, nested failure, method/sdk strings",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r25-drivers-a-f-firecrawl-error-retryable",
+    "symbol": "FirecrawlError",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+    "completeOwnerLines": [
+      311,
+      398
+    ],
+    "booleanBearingMembers": [
+      "retryable"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "Option<Boolean> via optionalBoolean26; TaggedError adds a string _tag, not another Boolean; class static methods are not instance Boolean fields",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r25-drivers-a-f-box-entitlements-paid-seats",
+    "symbol": "BoxEntitlements",
+    "file": "packages/drivers/box-provisioning/src/BoxProvisioningIntent.ts",
+    "completeOwnerLines": [
+      391,
+      402
+    ],
+    "booleanBearingMembers": [
+      "externalCollaboratorsRequirePaidSeats"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; planName and metadata/retention are string literals; annual allowance Option<Natural>",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r26-drivers-a-f-firecrawl-sdk-agent-request",
+    "symbol": "FirecrawlSdkAgentRequest",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "completeOwnerLines": [
+      59,
+      69
+    ],
+    "booleanBearingMembers": [
+      "strictConstrainToURLs"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "optional Boolean; no extends/intersection/spread in this owner; nested schema and webhook payloads are not Boolean siblings",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r26-drivers-a-f-browser-session-shape",
+    "symbol": "BrowserSessionShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      356,
+      365
+    ],
+    "booleanBearingMembers": [
+      "streamWebView"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; remaining fields strings or optional string",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  },
+  {
+    "id": "r26-drivers-a-f-queue-status-shape",
+    "symbol": "QueueStatusShape",
+    "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+    "completeOwnerLines": [
+      408,
+      415
+    ],
+    "booleanBearingMembers": [
+      "success"
+    ],
+    "maximumRecallBooleanCount": 1,
+    "explanation": "required Boolean; numeric counts and nullable timestamp are not Boolean axes",
+    "previousStatus": "disqualified",
+    "disposition": "withdraw-outside-recall-net",
+    "replacementRow": null
+  }
+]

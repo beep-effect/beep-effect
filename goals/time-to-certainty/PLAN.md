@@ -80,7 +80,8 @@ orchestrator owns schemas, contracts, and judgment.
       codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
       measurement. PR1 #1149 merged 2026-09-16 (push→ready 1h 0m 7s on its own babysit, exit 0 with
       two optional reds); PR2 #1161: detach recipe, `--observed` for merge-ready rows, inbox-list
-      liveness, idle-wake spike, watcher retirement.
+      liveness, idle-wake spike (proposed, not exercised; superseded 2026-09-25 by
+      `explorations/pr-event-awareness` D10/D15/D20 — ruling 46 amendment), watcher retirement.
 - [x] B8 heavy-check admission (rulings 50–57) — merged 2026-09-16 (PR A #1151, PR B #1155):
       three-valued admission (`run`, `skip-satisfied`, `hold`) decided by `bun run beep ci admission`
       from the `ready-for-heavy` label and a docs-only merge-base diff; `heavy.yml` `admitted` input

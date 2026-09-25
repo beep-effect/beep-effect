@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import * as Fn from "@beep/utils/Function";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "@effect/vitest";
 
 describe("@beep/utils Function.tuple", () => {
   it("preserves the provided elements in order", () => {

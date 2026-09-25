@@ -1,0 +1,74 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r38-main-9a1bd3",
+  "roundNumber": 38,
+  "finalizedAt": "2026-09-25T08:34:40.614082+00:00",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMainSha": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "newQualifiedIds": [],
+  "newQualifiedCount": 0,
+  "changedQualifiedIds": [],
+  "withdrawnQualifiedIds": [
+    "worktree-branch-diff-reading",
+    "worktree-idle-reading",
+    "worktree-policy-reading",
+    "worktree-process-cwd-reading",
+    "yeet-prepared-publish-commit"
+  ],
+  "records": 722,
+  "qualified": 106,
+  "disqualified": 616,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/execution-summary.json",
+      "sha256": "e4e5b357014cc9ca9d68a34b4eae4d0381c4c761fccd37351e31269955f89080"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/execution-audit.json",
+      "sha256": "c6f3632ef1d848bee0636fd169c01e7b567ec10b781d60eabc2375fc5b95786a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/lane-map.json",
+      "sha256": "0aaa0c5e3363a78b3fde53e8632fb72c26371fbf150ec6ae2e5463f14acd6cd5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/source-sha.txt",
+      "sha256": "4bca29814b37a01336b77eedb48c123232fce58c2360b5652a1894f1bc8606df"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/launch-controller-exit.json",
+      "sha256": "61a7772e944c76de230dc69ac35356265ee8c30c3428ed065f26eabb439024ca"
+    },
+    {
+      "file": "goals/boolean-creep/data/r38-parent-integration-2026-09-25.json",
+      "sha256": "e1d219ec7d2d55ba5cf0260ebdcc09c87d2d23b69aa431a86d841faacaf15044"
+    },
+    {
+      "file": "goals/boolean-creep/data/r38-owner-reviews/artifact-index.json",
+      "sha256": "0d6eb37ed826abde9f570515265d15518cb2bb43182ce99f4f36452f1f71e956"
+    },
+    {
+      "file": "goals/boolean-creep/data/r38-reconciliation-progress-2026-09-25.json",
+      "sha256": "0b97671d4e162cbd921020bc27125642954dc4547345e651fd13366b4997960f"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r38-final-reconciled.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    }
+  ]
+}

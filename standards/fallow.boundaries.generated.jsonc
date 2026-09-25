@@ -2597,11 +2597,13 @@
         "from": "@beep/ontology-config",
         "allow": [
           "@beep/identity",
-          "@beep/ontology-config"
+          "@beep/ontology-config",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/ontology-config"
+          "@beep/ontology-config",
+          "@beep/test-runner"
         ]
       },
       {
@@ -3647,12 +3649,14 @@
         "allow": [
           "@beep/fc-runs",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/types",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/fc-runs",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/types",
           "@beep/utils"
         ]

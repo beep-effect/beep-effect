@@ -310,6 +310,11 @@ export class GraftDeepCoverage extends S.Class<GraftDeepCoverage>($I`GraftDeepCo
 // build.
 const DEEP_COVERAGE_LINE = /meaning coverage:\s*(\d+)\s*\/\s*(\d+)\s*symbols/gu;
 const DEEP_FAILED_FILES_LINE = /(\d+)\s*file\(s\)\s+failed to summarize/gu;
+// Graft prints the `meaning coverage:` line only when the deep pass degraded. A
+// clean build prints just this tally, so it is the coverage source when no
+// coverage line exists. `excluded` symbols (`.graftignore`) are not owed a
+// summary and stay out of both counts.
+const DEEP_MEANING_TALLY_LINE = /meaning:\s*(\d+)\s*computed,\s*(\d+)\s*cached,\s*(\d+)\s*stale,\s*(\d+)\s*pending/gu;
 
 const DeepCoverageCounts = S.Struct({
   covered: S.FiniteFromString,
@@ -329,7 +334,11 @@ const lastDeepMatch = (pattern: RegExp, text: string): O.Option<RegExpMatchArray
  *
  * Carriage returns are normalized to newlines before matching, and the last
  * coverage line wins. A missing `file(s) failed to summarize` line means no
- * file failed, not unknown; a missing coverage line yields `O.none()`.
+ * file failed, not unknown. Graft prints the `meaning coverage:` line only for
+ * a degraded deep pass; a clean build prints just the meaning tally
+ * (`N computed, N cached, N stale, N pending`), which then supplies the counts:
+ * covered is computed plus cached, and total adds stale and pending. Output
+ * with neither line yields `O.none()`.
  *
  * **Example** (Read coverage out of build output)
  *
@@ -340,6 +349,15 @@ const lastDeepMatch = (pattern: RegExp, text: string): O.Option<RegExpMatchArray
  * console.log(O.map(parsed, (coverage) => coverage.total)) // { _id: 'Option', _tag: 'Some', value: 39115 }
  * ```
  *
+ * **Example** (A clean build prints only the tally)
+ *
+ * ```ts import.meta.vitest name="A clean build prints only the tally"
+ * import { parseDeepCoverage } from "@beep/repo-cli/commands/Graft"
+ * import * as O from "effect/Option"
+ * const parsed = parseDeepCoverage("  meaning: 120 computed, 39000 cached, 0 stale, 0 pending, 608 excluded\n")
+ * console.log(O.map(parsed, (coverage) => [coverage.covered, coverage.total])) // { _id: 'Option', _tag: 'Some', value: [ 39120, 39120 ] }
+ * ```
+ *
  * @param text - Captured stdout and stderr of `graft build --deep`.
  * @returns The parsed coverage when the build printed a coverage line.
  * @category parsing
@@ -347,21 +365,33 @@ const lastDeepMatch = (pattern: RegExp, text: string): O.Option<RegExpMatchArray
  */
 export const parseDeepCoverage = (text: string): O.Option<GraftDeepCoverage> => {
   const normalized = Str.replaceAll("\r", "\n")(text);
-  return pipe(
+  const fromCoverageLine = pipe(
     lastDeepMatch(DEEP_COVERAGE_LINE, normalized),
-    O.flatMap((coverage) =>
+    O.flatMap((coverage) => O.all({ covered: O.fromUndefinedOr(coverage[1]), total: O.fromUndefinedOr(coverage[2]) }))
+  );
+  const fromTally = pipe(
+    lastDeepMatch(DEEP_MEANING_TALLY_LINE, normalized),
+    O.flatMap((tally) =>
       O.all({
-        covered: O.fromUndefinedOr(coverage[1]),
-        total: O.fromUndefinedOr(coverage[2]),
-        failedFiles: O.some(
-          pipe(
-            lastDeepMatch(DEEP_FAILED_FILES_LINE, normalized),
-            O.flatMap((failed) => O.fromUndefinedOr(failed[1])),
-            O.getOrElse(() => "0")
-          )
-        ),
+        computed: O.fromUndefinedOr(tally[1]),
+        cached: O.fromUndefinedOr(tally[2]),
+        stale: O.fromUndefinedOr(tally[3]),
+        pending: O.fromUndefinedOr(tally[4]),
       })
     ),
+    O.map(({ cached, computed, pending, stale }) => {
+      const covered = Number(computed) + Number(cached);
+      return { covered: `${covered}`, total: `${covered + Number(stale) + Number(pending)}` };
+    })
+  );
+  const failedFiles = pipe(
+    lastDeepMatch(DEEP_FAILED_FILES_LINE, normalized),
+    O.flatMap((failed) => O.fromUndefinedOr(failed[1])),
+    O.getOrElse(() => "0")
+  );
+  return pipe(
+    O.orElse(fromCoverageLine, () => fromTally),
+    O.map((counts) => ({ ...counts, failedFiles })),
     O.flatMap((counts) => Result.getSuccess(decodeDeepCoverageCounts(counts)))
   );
 };

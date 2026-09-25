@@ -1,0 +1,205 @@
+{
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "completedReceipts": [
+    {
+      "lane": "r35-agents-workspace",
+      "executionSha256": "5cf47e0b4766d4f97a97ebf753415529f1dc68f529c5b489d365a38f965a5172",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "2a66c2c00315e95a57de431651bb684a4aea738b547b765b843c47994fa8d8c8",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-apps",
+      "executionSha256": "fb26deb10dff502f343c8c233453785c916d4826ec7daa433a200fdc4ae6aa92",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "0ef440979b60dd70769c2df111576d5e0a21c0a6b0a6ad1084dbad4393babc08",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-architecture-ecosystem-internal",
+      "executionSha256": "16b2acc692439f8039a2c1e8539647e152ab95a3dd467cb977ccbffd9939feb0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "695f2a19508a13bbe64979343493c23a72d7e223daa11c66f176afb9de1313a7",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-cli-commands-a-c",
+      "executionSha256": "4909330d7fbf45a56c6fc1513908f79ac1c895bae5b506fca94b0c31a561a167",
+      "reportSha256": "f980e5a2dc5a1e808a5c0315b8df3cef179a0582d9919a6bb96558af3df98e0a",
+      "transcriptSha256": "8e488497f354d4c1421c0dabcdba666752ee32526d607bba6d8e07e8414554d3",
+      "reportRecords": 7
+    },
+    {
+      "lane": "r35-cli-commands-d-k",
+      "executionSha256": "d7842d488e1255903541f15c6ea4b3dc713379d49a9a9ff1067b81c27be29e1f",
+      "reportSha256": "454073be9b668275d48dc08a34e4cc27b66ea0c446f4a2d1d16b62954372dcf9",
+      "transcriptSha256": "06f23443ff8a446a2e7d49b1341df13b9deea55dcef8de739654635b43a66ac4",
+      "reportRecords": 2
+    },
+    {
+      "lane": "r35-cli-commands-l-q",
+      "executionSha256": "59430966b3baf10981358950b112961e65dbbfefb1c692635accbc15cf4d9e78",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "6758d7f5ef64b686a99d5b6f7bc6041875f9218d2d48fd711a489a8eda9ce0f8",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-cli-commands-r-z",
+      "executionSha256": "3780b3721906095976643c53ac3e3847364ff1fb3fc0f54e685b646d34712c6a",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "85dc6830ae214531ec16d3a4e6784d8726234e75fdcca717a334de20693d2516",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-cli-internal-root",
+      "executionSha256": "bb2843271e6e4408411408967699c453590ee4233328ad511edb97ed38a7b7ec",
+      "reportSha256": "028d8b06bc774fc1bbb178990f37a6c2252cf0fa98f170121df7c9d80c93d62b",
+      "transcriptSha256": "41813bb626aae8241630eb52982e30c986675c58ec51e9946102c130fdcf1983",
+      "reportRecords": 4
+    },
+    {
+      "lane": "r35-cli-yeet",
+      "executionSha256": "f619402aec71f05fdcfe93725df207b44efa79a1f119e442352643e7f0aae36e",
+      "reportSha256": "b2677c2f032658fc6be93f2619b12ea37e22db30ee942062239d98d789944f44",
+      "transcriptSha256": "68e483ee2859aa021346bf26fb931190c1c3d8e11ce5e7bcc3f33ac3c79ac490",
+      "reportRecords": 2
+    },
+    {
+      "lane": "r35-drivers-a-f",
+      "executionSha256": "4f2544b95e8ce85dab12910e2597cd692e17e2bad2348b3f9b02b56e81816cf4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ad75e399d9660dc9ab4a75bfc938c8fa8fea29d978c7574ae652f9f45b014788",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-drivers-g-m",
+      "executionSha256": "a1fc1d85e2df5f1cdbdff403fbe7a14f09d9504fbe091914cf71136553b75681",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "0f5731f4ed1a63869b3e9cde5207b7b7de3af6e8000b18f487c110290b177466",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-drivers-n-r",
+      "executionSha256": "c16ce0be01219c65da0c910cc4a58db5dc62ed668913814bd88bf481ce2d8332",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "50ad7a1979069c938ad912742facdf94196bf018a508a787fff0ce2f787a8d05",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-drivers-s-z",
+      "executionSha256": "c848f0d9c467bd0675aa784095d6838236b0cbe9abb7fe4f9ff763d128c123f5",
+      "reportSha256": "8d99c177afda6d210efae63a3ea47f6a63d89c3b28a742ec4ba6665d6208eee0",
+      "transcriptSha256": "82965e77a033cb5c326031e77857fd347df3f3f8b9504c1c942ee2a9f4708df3",
+      "reportRecords": 2
+    },
+    {
+      "lane": "r35-epistemic-ontology",
+      "executionSha256": "2f3d5170f7bd2dc9105ca61f013aabff8bc3d74e9108b7d19d3122131c64dfa8",
+      "reportSha256": "c65c292cc736b0e1b1fe3c187bf971018f5fff8d17ab17f05c5fba90d687e331",
+      "transcriptSha256": "1eb808f2290a2231766e8cf6955065ee4bd76afec6c06f4e0930fb18acc57888",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r35-foundation-capability",
+      "executionSha256": "a50cea9fe8638b52be34904ed1ac90284cfc1d17b7f7178dd18d38a8adaac828",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "23bcbcb7b84f69494a37ced6a412cba52ede689e07d8b78c0bed365a5601a110",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-foundation-modeling-rest",
+      "executionSha256": "7c7e84150cc7ca9bcf0c4a26f4a767602d3f019a5d0287a0a61f339993783973",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "0df65ffbff08f2e0c46ac42cff044591b317b7f72177f60f4e041b0c26e15f20",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-foundation-primitive",
+      "executionSha256": "f0320341a6c399827367648070ba04bd6baf37b5be8686241b5b8081d86e350e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ba8f42bed7f6f237db8540caf7dc613f7f55a18de2793c405ba622229a701a0c",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-foundation-schema-a-m",
+      "executionSha256": "867dca83e052378f00a86fb69e6febf092b6af3fc25252ce9c6fe03bb9cfd1cf",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "259a26d93e23c38cb4a395df0965f1adfad17be7eb8c8784b397ed27392b0fab",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-foundation-schema-n-z",
+      "executionSha256": "80ca6f8b5f6758ebd91c2afbe2dfbf041723447bc4dc3d22a4dacff532a88e4c",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "4d80c112bd9c106ad25b325cc421f460f27e72da2316f9303710f3baf52190ee",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-foundation-ui",
+      "executionSha256": "9f230444b43ca0c8a14f1009bcf9663d1c81036baabbb83fe4c92bd33950d15d",
+      "reportSha256": "2ed288ae8d2d00f94889168ff834bcb41fb4b4d32f8e0795abf07c94b400bb39",
+      "transcriptSha256": "cd3c987a9fe7f7f631a04414c1372db8afed0cca8635348f4992ad1d193f0541",
+      "reportRecords": 5
+    },
+    {
+      "lane": "r35-law-practice-domain",
+      "executionSha256": "1c4b0d30c18e7e9c462ac0ebed67065d0d4ca2db7a8ac7df7f9f1c9d27bc493e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ecfc38abedfc841739c0838d75df532f86cd62b731199a43cc0f78825f2b3bfe",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-law-practice-runtime",
+      "executionSha256": "7bba2a7a051bcf2fc6ed0d98e483ceb15fd47de82e271ef2f5f42703e86577b0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "9a5ced8f145afa98fed2d56b6ad0db238b89f003bae24df1597d482e2d498f86",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-shared-documents",
+      "executionSha256": "761b6130d68c731e04ab5375d5b327eb61069ceff201e556cbe682b0edef2fe3",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "0d2250df0548c7404f1ec02cd8a83c67c7657520df2e4a0ef1ca7d38a09d62f0",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-tool-docgen",
+      "executionSha256": "e8f222109b636988ca0976a1e1ed093e81503639d0e18a1163ba571e17a39f6b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "dce1430fc2ec01e5d2a2d7a469bf44c170d4a256824378877f772faf307f252b",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-tooling-library-observability",
+      "executionSha256": "20999d66b60c76b7a67fa8fa2d1bb7be144565ffa274bc46b1c1eb43469f04dc",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "3da52a23e90e3e458f11e7e1b6bcfd99ba59ee36eb79ddfc18c56259d9ab7e2e",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r35-tooling-library-support",
+      "executionSha256": "31efd806976262241ec2cd23b4faec138aaeda685751a2418eecd0cfd8febc6f",
+      "reportSha256": "47dc2f66c43d3f96c506e4effe855e51b918bc033df36ed5029a0731ca090c8e",
+      "transcriptSha256": "7228c18163ef4ef1dfc6740afae31afd14804a78d61ae817e05fdfe10bfcb351",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r35-tooling-policy",
+      "executionSha256": "f7c88d860d0579b3f421c2c488ebb86d05e3f809914f3389553e578ea5f75a35",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ff4c378e6821728b4d514001b9bca7cd833f176abcf6bb66592ba0c4a9bbc9c2",
+      "reportRecords": 0
+    }
+  ],
+  "missingLanes": [],
+  "rawRecords": 24,
+  "complete": true,
+  "sourceStable": true,
+  "frozenBindingsVerified": 3956,
+  "controllerExitCode": 0,
+  "dryCredit": false,
+  "semanticReconciliationComplete": true,
+  "note": "All27 execution receipts, transcript hashes, seed hash, runner hash and report counts verified. All3956 frozen inputs and both Git refs matched at terminal verification. Execution completeness does not establish semantic admission or dry credit.",
+  "semanticReconciliationFile": "goals/boolean-creep/data/r35-reconciliation-progress-2026-09-25.json"
+}

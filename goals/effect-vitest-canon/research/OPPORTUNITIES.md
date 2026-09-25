@@ -2161,3 +2161,38 @@ barrel and the three test-utils compatibility entrypoints. Added canonical
 The bounded docgen command refuses this branch because global inputs changed,
 so use full `bun run docgen` for the validation. Inventory-ratchet success does
 not establish the full docgen metadata contract.
+
+## Wave A fast publication still queues before push
+
+Publishing with `yeet publish --fast --monitor --pr` committed the reviewed
+change but queued for full-proof admission before pushing. This defeats the
+operator's early-push request despite passing package proofs. The owned queued
+process was interrupted before it ran a proof; retry with the explicit
+`--start-pr-early` route. Fast publication should avoid admission that is only
+needed for the skipped local full proof, or document the remaining dependency.
+
+### 2026-09-25 — Post-merge coverage exposes cross-file runner context loss
+
+PR #1235 merged while its optional Coverage Regression job was still running. Job
+107991558825 later failed in utils, identity, and wink. Identity is locally reproducible:
+`CI=true bun run coverage -- --fileParallelism=true --maxWorkers=1` in `@beep/identity`
+fails three PnLocal parameterized cases with `TestContextUnavailable`; the same file
+passes alone with coverage. The isolated utils equivalence test passes, so attribution
+there remains open. Wink reports runtime initialization `RangeError: Invalid string length`.
+
+A multi-file, single-worker coverage conformance case for the instrumented runner
+would have exposed this before broader adoption. Preserve the failing run and repair
+the runner separately from the modeling-only utils wave; do not count the optional
+coverage job as passing based on required-check readiness.
+
+### 2026-09-25 — Coverage isolation attribution for utils
+
+The full utils package coverage run reproduced the hosted private Node error
+equivalence failure (one failure, 181 passes), while its file passed alone.
+The package caches lazy built-in handles; earlier files populate those handles
+before the test disables `process.getBuiltinModule`. Restoring package file
+isolation preserves the runtime-boundary test and passes all 182 tests.
+Full utils package verification also passes (audit and docgen). The shared
+coverage optimization needs package-level isolation qualification for tests that
+change runtime globals or depend on fresh module state. Wink independently
+reproduces 12 failures; its isolation experiment remains separate evidence.

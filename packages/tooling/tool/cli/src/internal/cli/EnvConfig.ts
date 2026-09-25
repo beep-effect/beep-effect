@@ -687,6 +687,10 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   };
 });
 
+// The two ambient values behind the shared workstation cache directory; they sit
+// outside the remote-read quad so a missing one never downgrades the plan.
+const TURBO_CACHE_DIR_ENV_NAMES: ReadonlyArray<string> = ["TURBO_CACHE_DIR", "HOME"];
+
 const configuredValue = (value: string | undefined): O.Option<string> =>
   pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
 
@@ -736,6 +740,8 @@ export const readTurboCacheEnvironment = (
       token: turboCacheValueSource(environment.TURBO_TOKEN),
       team: turboCacheValueSource(environment.TURBO_TEAM),
       cache: configuredValue(environment.TURBO_CACHE),
+      cacheDir: configuredValue(environment.TURBO_CACHE_DIR),
+      home: configuredValue(environment.HOME),
     })
   );
 
@@ -763,7 +769,10 @@ export const readTurboCacheEnvironment = (
  */
 export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
   readTurboCacheEnvironment(
-    R.fromIterableWith(TurboCacheEnvName.Options, (name) => [name, O.getOrUndefined(configStringOptionSync(name))])
+    R.fromIterableWith([...TurboCacheEnvName.Options, ...TURBO_CACHE_DIR_ENV_NAMES], (name) => [
+      name,
+      O.getOrUndefined(configStringOptionSync(name)),
+    ])
   );
 
 const turboSecretSessionVerdicts = MutableHashMap.empty<string, boolean>();

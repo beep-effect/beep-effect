@@ -1,0 +1,23 @@
+# R35 Yeet reconciliation
+
+Retain the admitted **4/3** worktree reliability/address qualification and existing P2 design. Reject the proposed **8/5** checkout expansion as an unsupported strengthening of the planner/helper contract. Add the distinct independent three-Boolean D1 record. No new qualified record, withdrawal, or replacement design is warranted.
+
+Source `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`; main `5c768538e434336885d324cbf56d04fc2684959b`.
+
+## Complete owner and supported inputs
+
+SweepGitState178-201 contains seven actual Booleans, so the minimal reliability/address cluster satisfies recall through its complete owner. mainWorktreePath is a genuine optional payload, not a fabricated Boolean. Keep the separate status/dirty relation and independent ancestry, lockfile and occupancy facts.
+
+The raw8/5 argument recognizes that branch occupancy must not be forced true: the explicit handoff fixture848 inherits false while unreliable is true. It therefore improves on the rejected R32 proposal, but it does not establish a new restriction on main occupancy. Its additional evidence is still the observer's conservative assignment plus absence of an opposite fixture. The admitted design distinguishes that observer image from the documented world/planner seam. Reliable held-main/None inputs280/286 and the retirement invoker's reliable Some(path)/both occupancy-false construction show that direct helper facts are supported beyond observer output. Main/branch preconditions268-279 first branch on reliability before inspecting occupancy. Preserve the existing broad partial-facts contract; do not normalize or reject another combination without affirmative contract evidence.
+
+Sweep.ts, yeet-sweep-plan.test.ts and RetireFenceInvoker.ts are byte-identical to the prior admitted R32 source bindings. The historical disposition and exact source evidence therefore remain relevant; this is not an assumption based on an old summary. Retain the existing design, which includes the retirement invoker and preserves occupancy fields. No new design dependency follows from rejecting the expansion.
+
+## Independent D1 addition
+
+The proposed trio branchCheckedOutElsewhere/branchMergedIntoBase/lockfileMovedOnMainUpdate is distinct from existing status/dirty and reliability/address clusters. The complete public helper owner accepts separately supplied observations, and the actual probes describe different facts. Preserve each Boolean and all supported partial combinations. The D1 note deliberately avoids claiming that fixtures explicitly enumerate all eight assignments.
+
+## Locator proposals
+
+The private locator-changes.json records unambiguous declaration-anchor updates across existing Yeet records. These changes do not requalify cases or certify their complete designs. Expression/local-specific anchors are left untouched. For the two reported examples: YeetMergeReadyCriterionChanged class is433, with Boolean fields444-445; GhReviewThread class is275, with Boolean fields279-280. The raw footer gave first-member coordinates. The criterion event's moved producer and semantic annotation cites are refreshed to950/953 and447-448; classification remains designed4/2. Other historical design coordinates still require their normal exact-source P3 refresh.
+
+Use proposed-inventory-additions.jsonl for one new D1 row and proposed-inventory-updates.jsonl for declaration/evidence metadata updates. Expected census delta: **+1 record, +1 disqualified, no qualified change**. Raw lane artifacts stay unchanged. All hashes and decisions are in disposition.json. No tracked edits, ref moves, P3 approval, implementation or dry credit.

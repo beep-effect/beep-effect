@@ -1,0 +1,22 @@
+{
+  "lane": "r35-law-practice-runtime",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:23:53.640925+00:00",
+  "finished": "2026-09-25T06:25:39.605036+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-law-practice-runtime.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered (`packages/law-practice/server/src`, `tables/src`, `use-cases/src`; no non-TypeScript files in those trees).\n\n`PracticeKgOptions`, `existingSourceSpecs`, and `closedWorldReadOnlyHints` still match the canonical D1/D1/D2 records, so they were not rewritten. Seed `r25-law-practice-runtime-bundle-overwrite-gate` is withdrawn: `manifestExists` is a local filesystem probe and `overwrite` is `PracticeKgOptions.overwrite`, so they are not one boolean owner. No unresolved source question.",
+  "transcriptSha256": "9a5ced8f145afa98fed2d56b6ad0db238b89f003bae24df1597d482e2d498f86",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

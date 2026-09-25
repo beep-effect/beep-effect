@@ -1,0 +1,4 @@
+[
+  "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+  "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md"
+]

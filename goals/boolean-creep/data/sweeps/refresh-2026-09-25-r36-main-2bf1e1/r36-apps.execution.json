@@ -1,0 +1,22 @@
+{
+  "lane": "r36-apps",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:59:52.309910+00:00",
+  "finished": "2026-09-25T07:03:04.584803+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-apps.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered (`architecture-lab-proof`, `oip-web`, `practice-kg-mcp`, `professional-desktop` including `src-tauri`, `todox`).\n\nSeed owners and member sets still match the current source, so nothing was re-emitted. Anchor drift only: `makeFixtureBundle` options moved from `smoke.ts:166` to `:178`, its `recursive` mkdir calls from `:152` to `:164`, the react-grab gate from `main.tsx:17` to `:18`, and `OntologyMenu` from `App.tsx:719` to `:720`. No withdrawals and no unresolved source question. The validator reported `inventory OK: 0 records`.",
+  "transcriptSha256": "e7e81ea8ad9b70d120c4fe01a89f732ce9a0cebdbd05382ddcffaa6ae62495f5",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

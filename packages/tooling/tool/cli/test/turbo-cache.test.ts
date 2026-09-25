@@ -1,10 +1,15 @@
 import {
   hasRemoteTurboCacheArgs,
   isTurboCacheControlArg,
+  isTurboCacheDirArg,
   LocalOnlyTurboCache,
   localOnlyTurboCacheArgs,
   RemoteReadTurboCache,
+  readTurboCacheEnvironment,
+  readTurboCacheEnvironmentSync,
   resolveTurboCachePlan,
+  SHARED_TURBO_CACHE_DIR_SUFFIX,
+  sharedTurboCacheDir,
   TurboCacheEnvironment,
   TurboCacheEnvName,
   TurboCacheMode,
@@ -16,7 +21,9 @@ import {
   turboCachePullRequestPosture,
   turboCacheValueSourceFor,
 } from "@beep/repo-cli/test/SharedInternals";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
@@ -25,6 +32,8 @@ import * as Str from "effect/String";
 import type { TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
 
 const decodeTurboCachePlanEffect = S.decodeEffect(TurboCachePlan);
+const decodeTurboCachePlanJson = S.decodeEffect(S.fromJsonString(TurboCachePlan));
+const encodeTurboCachePlanJson = S.encodeEffect(S.fromJsonString(TurboCachePlan));
 
 const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
 const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
@@ -206,4 +215,84 @@ describe("turboCachePullRequestPosture", () => {
     });
     expect(turboCachePullRequestPosture.TURBO_CACHE).toBe(TurboCacheMode.Enum.LocalOnly);
   });
+});
+
+describe("shared turbo cache directory", () => {
+  const HOME = "/home/dev";
+  const SHARED_DIR_ARG = `--cache-dir=${HOME}/${SHARED_TURBO_CACHE_DIR_SUFFIX}`;
+  const withHome = (environment: TurboCacheEnvironment, home: string = HOME): TurboCacheEnvironment =>
+    TurboCacheEnvironment.make({ ...environment, home });
+
+  it("appends the shared directory to a local-only plan on a workstation", () => {
+    const plan = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: false });
+    expect(turboCachePlanArgs(plan)).toEqual([LOCAL_ONLY_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("appends the shared directory to a remote-read plan", () => {
+    const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
+    expect(turboCachePlanArgs(plan)).toEqual([REMOTE_READ_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("strips a trailing slash from HOME", () => {
+    assertSome(
+      sharedTurboCacheDir(withHome(TurboCacheEnvironment.make({}), `${HOME}/`), []),
+      `${HOME}/${SHARED_TURBO_CACHE_DIR_SUFFIX}`
+    );
+  });
+
+  it("defers to an ambient TURBO_CACHE_DIR", () => {
+    const environment = TurboCacheEnvironment.make({ home: HOME, cacheDir: "/mnt/turbo" });
+    assertNone(sharedTurboCacheDir(environment, []));
+    expect(turboCachePlanArgs(resolveTurboCachePlan(environment, { args: [], ci: false }))).toEqual([LOCAL_ONLY_ARG]);
+  });
+
+  it.each(["--cache=local:rw", "--force", "--remote-cache-read-only"])(
+    "keeps the shared directory when the caller pins the cache mode with %s",
+    (arg) => {
+      const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [arg], ci: false });
+      expect(plan._tag).toBe("caller-controlled");
+      expect(turboCachePlanArgs(plan)).toEqual([SHARED_DIR_ARG]);
+    }
+  );
+
+  it("reads HOME and TURBO_CACHE_DIR from a process environment", () => {
+    expect(readTurboCacheEnvironment({ HOME: HOME })).toEqual(TurboCacheEnvironment.make({ home: HOME }));
+    expect(readTurboCacheEnvironment({ HOME: HOME, TURBO_CACHE_DIR: "  /mnt/turbo  " })).toEqual(
+      TurboCacheEnvironment.make({ home: HOME, cacheDir: "/mnt/turbo" })
+    );
+    expect(readTurboCacheEnvironment({ HOME: "  ", TURBO_CACHE_DIR: "" })).toEqual(TurboCacheEnvironment.make({}));
+  });
+
+  it("populates home from the live environment through the sync reader", () => {
+    expect(readTurboCacheEnvironmentSync().home).toBe(Bun.env.HOME);
+  });
+
+  it("defers to a caller-supplied --cache-dir flag", () => {
+    const environment = withHome(TurboCacheEnvironment.make({}));
+    assertNone(sharedTurboCacheDir(environment, ["--cache-dir=/mnt/turbo"]));
+    assertNone(sharedTurboCacheDir(environment, ["--cache-dir", "/mnt/turbo"]));
+    expect(isTurboCacheDirArg("--cache=local:rw")).toBe(false);
+  });
+
+  it("stays silent without HOME and under CI", () => {
+    assertNone(sharedTurboCacheDir(TurboCacheEnvironment.make({}), []));
+    const ci = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: true });
+    expect(turboCachePlanArgs(ci)).toEqual([]);
+  });
+
+  it("survives the coverage local-only rewrite", () => {
+    const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
+    expect(localOnlyTurboCacheArgs(turboCachePlanArgs(plan))).toEqual([LOCAL_ONLY_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("decodes every generated plan back to itself", () => {
+    assertSchemaArbitraryDecodesToSelf(TurboCachePlan);
+  });
+
+  it.effect("round-trips a plan that carries the directory", () =>
+    Effect.gen(function* () {
+      const plan = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: false });
+      expect(yield* decodeTurboCachePlanJson(yield* encodeTurboCachePlanJson(plan))).toEqual(plan);
+    })
+  );
 });
