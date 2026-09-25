@@ -128,7 +128,8 @@ const config = {
       // tstyche (classic API despite its open `>=5.4` peer), and commitlint's
       // cosmiconfig-typescript-loader. ts-morph vendors its own TS 6 copy in
       // @ts-morph/common and knip 6 parses with oxc, so neither needs this
-      // pin. The split ends when typescript-eslint releases against 7.1.
+      // pin. The split ends when typescript-eslint and tstyche both release
+      // against 7.1's API.
       // Microsoft's @typescript/typescript6 bridge was blocked by
       // oven-sh/bun#33834; that fix merged 2026-08-06 (bun 1.4.0 shipped
       // after it), so the bridge is now an option but a separate decision.
