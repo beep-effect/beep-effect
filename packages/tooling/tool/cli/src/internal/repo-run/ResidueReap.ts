@@ -24,7 +24,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as Order from "effect/Order";
@@ -1450,6 +1450,237 @@ const repoScopedCandidates = Effect.fnUntraced(function* (
   );
 });
 
+type ResidueReapOptions = {
+  readonly apply?: boolean;
+  readonly censusEntryCap?: number;
+  readonly checkoutRoots?: ReadonlyArray<string>;
+  readonly classes?: ReadonlyArray<ResidueReapClass>;
+  readonly fleet?: boolean;
+  readonly homeRoot?: string;
+  readonly maxAgeDays?: number;
+  readonly nowMillis?: number;
+  readonly probeLiveCwd?: CwdProbe;
+  readonly probePidAlive?: PidProbe;
+  readonly qualificationViewsKeep?: number;
+  readonly repoRoot?: string;
+  readonly sharedTurboCacheRoot?: string;
+  readonly sharedTurboMaxAgeDays?: number;
+  readonly sharedTurboMaxBytes?: number;
+  readonly turboMaxAgeDays?: number;
+  readonly turboRunsMaxAgeDays?: number;
+};
+
+// Internal resolved run settings (never decoded or serialized).
+type ResidueReapSettings = {
+  readonly beepCacheRoot: string;
+  readonly checkoutRoots: ReadonlyArray<string>;
+  readonly classes: ReadonlyArray<ResidueReapClass>;
+  readonly codexRoot: string;
+  readonly homeRoot: string;
+  readonly policy: ReapPolicy;
+  readonly repoRoot: string;
+  readonly sharedTurboCacheRoot: string;
+  readonly sharedTurboMaxAgeDays: number;
+  readonly sharedTurboMaxBytes: number;
+};
+
+const optionOr = <A>(value: A | undefined, fallback: A): A => O.getOrElse(O.fromUndefinedOr(value), () => fallback);
+
+const nonEmptyOr = <A>(requested: ReadonlyArray<A> | undefined, fallback: ReadonlyArray<A>): ReadonlyArray<A> =>
+  A.match(optionOr(requested, A.empty<A>()), { onEmpty: () => fallback, onNonEmpty: (values) => values });
+
+const resolveHomeRoot = Effect.fnUntraced(function* (options: ResidueReapOptions) {
+  const path = yield* Path.Path;
+  // An empty or relative HOME must fail closed here: resolving it would silently make
+  // the current working directory the cleanup root.
+  const configured = O.fromUndefinedOr(options.homeRoot);
+  return path.resolve(
+    yield* decodeResidueReapHomeRoot(O.isSome(configured) ? configured.value : yield* Config.String("HOME"))
+  );
+});
+
+const resolveRepoRoot = Effect.fnUntraced(function* (options: ResidueReapOptions) {
+  const path = yield* Path.Path;
+  const repoRoot = path.resolve(optionOr(options.repoRoot, ""));
+  return Str.isNonEmpty(repoRoot) && O.isSome(O.fromUndefinedOr(options.repoRoot)) ? repoRoot : yield* findRepoRoot();
+});
+
+const resolveSharedTurboCacheRoot = Effect.fnUntraced(function* (options: ResidueReapOptions, beepCacheRoot: string) {
+  const path = yield* Path.Path;
+  const configured = O.fromUndefinedOr(options.sharedTurboCacheRoot);
+  return O.isSome(configured)
+    ? configured.value
+    : O.getOrElse(O.filter(yield* Config.option(Config.String("TURBO_CACHE_DIR")), Str.isNonEmpty), () =>
+        path.join(beepCacheRoot, "turbo")
+      );
+});
+
+const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions) {
+  const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
+  const homeRoot = yield* resolveHomeRoot(options);
+  const repoRoot = yield* resolveRepoRoot(options);
+  const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
+  const now = yield* Clock.currentTimeMillis;
+  const policy: ReapPolicy = {
+    cwdProbe: optionOr<CwdProbe>(options.probeLiveCwd, procCwdProbe),
+    entryCap: optionOr(options.censusEntryCap, DEFAULT_CENSUS_ENTRY_CAP),
+    homeBoundary: yield* fs.realPath(homeRoot),
+    maxAgeDays: yield* decodeResidueReapAgeDays(optionOr(options.maxAgeDays, DEFAULT_MAX_AGE_DAYS)),
+    nowMillis: optionOr(options.nowMillis, now),
+    pidProbe: optionOr<PidProbe>(options.probePidAlive, procPidProbe),
+    qualificationViewsKeep: yield* decodeResidueReapKeepCount(
+      optionOr(options.qualificationViewsKeep, DEFAULT_QUALIFICATION_VIEWS_KEEP)
+    ),
+    turboMaxAgeDays: yield* decodeResidueReapAgeDays(optionOr(options.turboMaxAgeDays, DEFAULT_TURBO_MAX_AGE_DAYS)),
+    turboRunsMaxAgeDays: yield* decodeResidueReapAgeDays(
+      optionOr(options.turboRunsMaxAgeDays, DEFAULT_TURBO_RUNS_MAX_AGE_DAYS)
+    ),
+  };
+  return {
+    beepCacheRoot,
+    checkoutRoots: yield* distinctCheckoutRoots(nonEmptyOr(options.checkoutRoots, [repoRoot])),
+    classes: nonEmptyOr(options.classes, ResidueReapClass.Options),
+    codexRoot: path.join(homeRoot, ".codex"),
+    homeRoot,
+    policy,
+    repoRoot,
+    sharedTurboCacheRoot: yield* resolveSharedTurboCacheRoot(options, beepCacheRoot),
+    sharedTurboMaxAgeDays: yield* decodeResidueReapAgeDays(
+      optionOr(options.sharedTurboMaxAgeDays, DEFAULT_SHARED_TURBO_MAX_AGE_DAYS)
+    ),
+    sharedTurboMaxBytes: yield* decodeResidueReapByteCap(
+      optionOr(options.sharedTurboMaxBytes, DEFAULT_SHARED_TURBO_MAX_BYTES)
+    ),
+  } satisfies ResidueReapSettings;
+});
+
+const noDiscovery: Discovered = { candidates: A.empty(), warnings: A.empty() };
+
+// Run one class's discovery only when the class is selected.
+const whenIncluded = <E, R>(
+  settings: ResidueReapSettings,
+  reapClass: ResidueReapClass,
+  discover: () => Effect.Effect<Discovered, E, R>
+): Effect.Effect<Discovered, E, R> =>
+  A.contains(settings.classes, reapClass) ? discover() : Effect.succeed(noDiscovery);
+
+const discovered = (candidates: ReadonlyArray<ResidueReapCandidate>): Discovered => ({
+  candidates,
+  warnings: A.empty(),
+});
+
+const sessionCandidates = Effect.fnUntraced(function* (settings: ResidueReapSettings) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const { policy } = settings;
+  const scan = yield* Effect.reduce(
+    [path.join(settings.codexRoot, "sessions"), path.join(settings.codexRoot, "archived_sessions")],
+    (): SessionScan => ({ candidates: A.empty(), remaining: policy.entryCap }),
+    Effect.fnUntraced(function* (scan: SessionScan, root: string) {
+      if (!(yield* fs.exists(root))) return scan;
+      if (O.isNone(yield* canonicalDirectory(policy.homeBoundary, root))) {
+        return {
+          candidates: A.append(
+            scan.candidates,
+            candidate(root, root, "codex-sessions", "skip", { skipReason: "path-changed" })
+          ),
+          remaining: scan.remaining,
+        };
+      }
+      const nested = yield* discoverSessionTree(root, root, policy.nowMillis, policy.maxAgeDays, scan.remaining);
+      return { candidates: A.appendAll(scan.candidates, nested.candidates), remaining: nested.remaining };
+    })
+  );
+  return scan.candidates;
+});
+
+const topLevelDiscovery = (
+  settings: ResidueReapSettings,
+  root: string,
+  reapClass: "codex-worktrees" | "beep-cache-disposable"
+) =>
+  whenIncluded(settings, reapClass, () =>
+    topLevelDirectoryCandidates(
+      root,
+      settings.policy.homeBoundary,
+      reapClass,
+      settings.policy.nowMillis,
+      settings.policy.maxAgeDays,
+      settings.policy.entryCap,
+      settings.policy.cwdProbe
+    ).pipe(Effect.map(discovered))
+  );
+
+// Every selected class in report order: home Codex residue, each checkout's repository-scoped
+// residue, then the beep cache classes.
+const discoverResidue = Effect.fnUntraced(function* (settings: ResidueReapSettings) {
+  const path = yield* Path.Path;
+  const includes = (reapClass: ResidueReapClass): boolean => A.contains(settings.classes, reapClass);
+  const parts = yield* Effect.all([
+    whenIncluded(settings, "codex-sessions", () => sessionCandidates(settings).pipe(Effect.map(discovered))),
+    topLevelDiscovery(settings, path.join(settings.codexRoot, "worktrees"), "codex-worktrees"),
+    Effect.forEach(
+      settings.checkoutRoots,
+      (checkoutRoot) => repoScopedCandidates(checkoutRoot, includes, settings.policy),
+      { concurrency: 2 }
+    ).pipe(Effect.map(flow(A.flatten, discovered))),
+    topLevelDiscovery(settings, settings.beepCacheRoot, "beep-cache-disposable"),
+    whenIncluded(settings, "shared-turbo-cache", () =>
+      sharedTurboCacheCandidates(
+        settings.sharedTurboCacheRoot,
+        settings.policy,
+        settings.sharedTurboMaxAgeDays,
+        settings.sharedTurboMaxBytes
+      )
+    ),
+    whenIncluded(settings, "qualification-views", () =>
+      assessQualificationViews(
+        path.join(settings.beepCacheRoot, "turbo-qualification"),
+        settings.policy,
+        () => true
+      ).pipe(Effect.map(discovered))
+    ),
+  ]);
+  return {
+    candidates: A.flatMap(parts, (part) => part.candidates),
+    warnings: A.flatMap(parts, (part) => part.warnings),
+  };
+});
+
+const unapplied = (entry: ResidueReapCandidate): AppliedCandidate => ({
+  candidate: entry,
+  reaped: false,
+  reclaimedBytes: 0,
+  warnings: A.empty(),
+});
+
+// Repository-scoped candidates are bounded by their own checkout; everything else by home.
+const outerBoundaryFor = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings,
+  entry: ResidueReapCandidate
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  return isRepoScopedResidueClass(entry.reapClass)
+    ? yield* fs.realPath(optionOr(entry.checkoutRoot, settings.repoRoot)).pipe(Effect.option)
+    : O.some(settings.policy.homeBoundary);
+});
+
+const applyResidue = (
+  settings: ResidueReapSettings,
+  candidates: ReadonlyArray<ResidueReapCandidate>,
+  apply: boolean
+): Effect.Effect<ReadonlyArray<AppliedCandidate>, never, DiscoveryRequirements> =>
+  apply
+    ? Effect.forEach(
+        candidates,
+        Effect.fnUntraced(function* (entry) {
+          return yield* applyCandidate(entry, yield* outerBoundaryFor(settings, entry), settings.policy);
+        }),
+        { concurrency: 1 }
+      )
+    : Effect.succeed(A.map(candidates, unapplied));
+
 /**
  * Discover bounded home residue, classify it with complete safety evidence,
  * and optionally remove eligible entries.
@@ -1483,184 +1714,33 @@ const repoScopedCandidates = Effect.fnUntraced(function* (
  * @category workflows
  * @since 0.0.0
  */
-export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* (
-  options: {
-    readonly apply?: boolean;
-    readonly censusEntryCap?: number;
-    readonly checkoutRoots?: ReadonlyArray<string>;
-    readonly classes?: ReadonlyArray<ResidueReapClass>;
-    readonly fleet?: boolean;
-    readonly homeRoot?: string;
-    readonly maxAgeDays?: number;
-    readonly nowMillis?: number;
-    readonly probeLiveCwd?: CwdProbe;
-    readonly probePidAlive?: PidProbe;
-    readonly qualificationViewsKeep?: number;
-    readonly repoRoot?: string;
-    readonly sharedTurboCacheRoot?: string;
-    readonly sharedTurboMaxAgeDays?: number;
-    readonly sharedTurboMaxBytes?: number;
-    readonly turboMaxAgeDays?: number;
-    readonly turboRunsMaxAgeDays?: number;
-  } = {}
-) {
-  const path = yield* Path.Path;
-  const configuredHome = O.fromUndefinedOr(options.homeRoot);
-  // An empty or relative HOME must fail closed here: resolving it would silently make
-  // the current working directory the cleanup root.
-  const homeRoot = path.resolve(
-    yield* decodeResidueReapHomeRoot(O.isSome(configuredHome) ? configuredHome.value : yield* Config.String("HOME"))
-  );
-  const repoRoot = path.resolve(O.getOrElse(O.fromUndefinedOr(options.repoRoot), () => ""));
-  const resolvedRepoRoot =
-    Str.isNonEmpty(repoRoot) && O.isSome(O.fromUndefinedOr(options.repoRoot)) ? repoRoot : yield* findRepoRoot();
-  const maxAgeDays = yield* decodeResidueReapAgeDays(
-    O.getOrElse(O.fromUndefinedOr(options.maxAgeDays), () => DEFAULT_MAX_AGE_DAYS)
-  );
-  const turboMaxAgeDays = yield* decodeResidueReapAgeDays(
-    O.getOrElse(O.fromUndefinedOr(options.turboMaxAgeDays), () => DEFAULT_TURBO_MAX_AGE_DAYS)
-  );
-  const turboRunsMaxAgeDays = yield* decodeResidueReapAgeDays(
-    O.getOrElse(O.fromUndefinedOr(options.turboRunsMaxAgeDays), () => DEFAULT_TURBO_RUNS_MAX_AGE_DAYS)
-  );
-  const sharedTurboMaxAgeDays = yield* decodeResidueReapAgeDays(
-    O.getOrElse(O.fromUndefinedOr(options.sharedTurboMaxAgeDays), () => DEFAULT_SHARED_TURBO_MAX_AGE_DAYS)
-  );
-  const sharedTurboMaxBytes = yield* decodeResidueReapByteCap(
-    O.getOrElse(O.fromUndefinedOr(options.sharedTurboMaxBytes), () => DEFAULT_SHARED_TURBO_MAX_BYTES)
-  );
-  const qualificationViewsKeep = yield* decodeResidueReapKeepCount(
-    O.getOrElse(O.fromUndefinedOr(options.qualificationViewsKeep), () => DEFAULT_QUALIFICATION_VIEWS_KEEP)
-  );
-  const classes = A.match(O.getOrElse(O.fromUndefinedOr(options.classes), A.empty<ResidueReapClass>), {
-    onEmpty: () => ResidueReapClass.Options,
-    onNonEmpty: (requested) => requested,
-  });
-  const includes = (reapClass: ResidueReapClass): boolean => A.contains(classes, reapClass);
-  const now = yield* Clock.currentTimeMillis;
-  const codexRoot = path.join(homeRoot, ".codex");
-  const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
-  const configuredSharedTurboRoot = O.fromUndefinedOr(options.sharedTurboCacheRoot);
-  const sharedTurboCacheRoot = O.isSome(configuredSharedTurboRoot)
-    ? configuredSharedTurboRoot.value
-    : O.getOrElse(O.filter(yield* Config.option(Config.String("TURBO_CACHE_DIR")), Str.isNonEmpty), () =>
-        path.join(beepCacheRoot, "turbo")
-      );
-  const fs = yield* FileSystem.FileSystem;
-  const homeBoundary = yield* fs.realPath(homeRoot);
-  const policy: ReapPolicy = {
-    cwdProbe: O.getOrElse(O.fromUndefinedOr(options.probeLiveCwd), () => procCwdProbe),
-    entryCap: O.getOrElse(O.fromUndefinedOr(options.censusEntryCap), () => DEFAULT_CENSUS_ENTRY_CAP),
-    homeBoundary,
-    maxAgeDays,
-    nowMillis: O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => now),
-    pidProbe: O.getOrElse(O.fromUndefinedOr(options.probePidAlive), () => procPidProbe),
-    qualificationViewsKeep,
-    turboMaxAgeDays,
-    turboRunsMaxAgeDays,
-  };
-  const checkoutRoots = yield* distinctCheckoutRoots(
-    A.match(O.getOrElse(O.fromUndefinedOr(options.checkoutRoots), A.empty<string>), {
-      onEmpty: () => [resolvedRepoRoot],
-      onNonEmpty: (requested) => requested,
-    })
-  );
-
-  const sessions = includes("codex-sessions")
-    ? (yield* Effect.reduce(
-        [path.join(codexRoot, "sessions"), path.join(codexRoot, "archived_sessions")],
-        (): SessionScan => ({ candidates: A.empty(), remaining: policy.entryCap }),
-        Effect.fnUntraced(function* (scan: SessionScan, root: string) {
-          if (!(yield* fs.exists(root))) return scan;
-          if (O.isNone(yield* canonicalDirectory(homeBoundary, root))) {
-            return {
-              candidates: A.append(
-                scan.candidates,
-                candidate(root, root, "codex-sessions", "skip", { skipReason: "path-changed" })
-              ),
-              remaining: scan.remaining,
-            };
-          }
-          const nested = yield* discoverSessionTree(root, root, policy.nowMillis, maxAgeDays, scan.remaining);
-          return { candidates: A.appendAll(scan.candidates, nested.candidates), remaining: nested.remaining };
-        })
-      )).candidates
-    : A.empty<ResidueReapCandidate>();
-  const worktrees = includes("codex-worktrees")
-    ? yield* topLevelDirectoryCandidates(
-        path.join(codexRoot, "worktrees"),
-        homeBoundary,
-        "codex-worktrees",
-        policy.nowMillis,
-        maxAgeDays,
-        policy.entryCap,
-        policy.cwdProbe
-      )
-    : A.empty<ResidueReapCandidate>();
-  const repoScoped = A.flatten(
-    yield* Effect.forEach(checkoutRoots, (checkoutRoot) => repoScopedCandidates(checkoutRoot, includes, policy), {
-      concurrency: 2,
-    })
-  );
-  const beepCache = includes("beep-cache-disposable")
-    ? yield* topLevelDirectoryCandidates(
-        beepCacheRoot,
-        homeBoundary,
-        "beep-cache-disposable",
-        policy.nowMillis,
-        maxAgeDays,
-        policy.entryCap,
-        policy.cwdProbe
-      )
-    : A.empty<ResidueReapCandidate>();
-  const sharedTurbo = includes("shared-turbo-cache")
-    ? yield* sharedTurboCacheCandidates(sharedTurboCacheRoot, policy, sharedTurboMaxAgeDays, sharedTurboMaxBytes)
-    : { candidates: A.empty<ResidueReapCandidate>(), warnings: A.empty<string>() };
-  const views = includes("qualification-views")
-    ? yield* assessQualificationViews(path.join(beepCacheRoot, "turbo-qualification"), policy, () => true)
-    : A.empty<ResidueReapCandidate>();
-  const discovered = A.flatten([sessions, worktrees, repoScoped, beepCache, sharedTurbo.candidates, views]);
-  const apply = O.getOrElse(O.fromUndefinedOr(options.apply), () => false);
-  const outerBoundary = Effect.fnUntraced(function* (
-    entry: ResidueReapCandidate
-  ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
-    return isRepoScopedResidueClass(entry.reapClass)
-      ? yield* fs
-          .realPath(O.getOrElse(O.fromUndefinedOr(entry.checkoutRoot), () => resolvedRepoRoot))
-          .pipe(Effect.option)
-      : O.some(homeBoundary);
-  });
-  const outcomes = apply
-    ? yield* Effect.forEach(
-        discovered,
-        Effect.fnUntraced(function* (entry) {
-          return yield* applyCandidate(entry, yield* outerBoundary(entry), policy);
-        }),
-        { concurrency: 1 }
-      )
-    : A.map(
-        discovered,
-        (entry): AppliedCandidate => ({ candidate: entry, reaped: false, reclaimedBytes: 0, warnings: A.empty() })
-      );
+export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* (options: ResidueReapOptions = {}) {
+  const settings = yield* resolveSettings(options);
+  const apply = optionOr(options.apply, false);
+  const found = yield* discoverResidue(settings);
+  const outcomes = yield* applyResidue(settings, found.candidates, apply);
   const scannedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   return ResidueReapReport.make({
     scannedAt,
-    homeRoot,
-    repoRoot: resolvedRepoRoot,
-    maxAgeDays,
-    turboMaxAgeDays,
-    turboRunsMaxAgeDays,
-    sharedTurboCacheRoot,
-    sharedTurboMaxAgeDays,
-    sharedTurboMaxBytes,
-    qualificationViewsKeep,
-    fleet: O.getOrElse(O.fromUndefinedOr(options.fleet), () => false),
-    checkoutRoots,
+    homeRoot: settings.homeRoot,
+    repoRoot: settings.repoRoot,
+    maxAgeDays: settings.policy.maxAgeDays,
+    turboMaxAgeDays: settings.policy.turboMaxAgeDays,
+    turboRunsMaxAgeDays: settings.policy.turboRunsMaxAgeDays,
+    sharedTurboCacheRoot: settings.sharedTurboCacheRoot,
+    sharedTurboMaxAgeDays: settings.sharedTurboMaxAgeDays,
+    sharedTurboMaxBytes: settings.sharedTurboMaxBytes,
+    qualificationViewsKeep: settings.policy.qualificationViewsKeep,
+    fleet: optionOr(options.fleet, false),
+    checkoutRoots: settings.checkoutRoots,
     applied: apply,
-    classes,
+    classes: settings.classes,
     candidates: A.map(outcomes, (outcome) => outcome.candidate),
     reapedCount: A.length(A.filter(outcomes, (outcome) => outcome.reaped)),
     reclaimedBytes: A.reduce(outcomes, 0, (total, outcome) => total + outcome.reclaimedBytes),
-    warnings: A.appendAll(sharedTurbo.warnings, A.flatten(A.map(outcomes, (outcome) => outcome.warnings))),
+    warnings: A.appendAll(
+      found.warnings,
+      A.flatMap(outcomes, (outcome) => outcome.warnings)
+    ),
   });
 });
