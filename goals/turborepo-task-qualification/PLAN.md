@@ -1849,3 +1849,21 @@ and failure handling, not Turbo replay. See
 Root policy paths map to no package, so mapping does not close root semantic
 inputs. Native quick evidence remains scoped to its actual run. All 13 broad
 census obligations remain open; no tuple lifecycle or proof ownership changed.
+
+### Quality command and task-runner deltas — 2026-09-25
+
+Review 38 covers Quality command wiring, lane package-scope reporting and its
+legacy schema default. Recovered residue/diagnostic fixtures report 76 passing
+tests; nine fresh digest tests passed. Earlier task-runner evidence remains
+bound to unchanged sources. See
+[the receipt](./research/quality-entrypoint-review.json).
+
+Empty package scope does not prove complete input coverage. Diagnostic roots
+and residue flags expand the relevant filesystem inputs and effects; this
+review did not execute workstation cleanup. All 13 broad census obligations
+remain open. The preceding publication proof failed schema-first and
+Effect/Vitest gates. The Refs remediation was merged from main cleanly. A normal census refresh
+retains 144 workspaces and 3473 nodes. Four Refs sources were missing from
+the attachment and are now bound explicitly: 972 sources, six artifacts,
+38 reviews and 14 unresolved obligations. Their semantics remain unreviewed;
+the prior proof failure is not yet cleared.

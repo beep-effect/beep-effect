@@ -2068,3 +2068,13 @@ baseline was expanded to waive the findings.
   migration (`JSDocMigrateExtract.ts`). Repaired both examples; bounded docgen
   and direct example controls pass. Updating caller examples in the same API
   migration would prevent this documentation drift.
+
+
+### 2026-09-25 — Source attachment missed the Refs entrypoint
+- While integrating #1271, comparing the four changed Refs implementation files
+  against the census attachment found no existing bindings.
+- A normal census refresh preserved 144 workspaces and 3473 nodes; adding those
+  four sources explicitly raised the attachment to 972 sources.
+- Exhaustive command-registry traversal and a missing-binding check would have
+  surfaced this gap before historical-delta review. Their semantics remain an
+  explicit unresolved obligation.
