@@ -9,10 +9,12 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Consolidate the upstream Effect clones agents read as truth into
-`~/YeeBois/references/effect/`, index them with graft in workspace mode with a nightly
+`$BEEP_REFERENCES_ROOT/`, index them with graft in workspace mode with a nightly
 `claude-opus-5` deep tier, and reach them from every beep-effect checkout through stable
 `.repos/effect`, `.repos/effect-tsgo`, and `.repos/effect-workspace` links provisioned from a
 checked-in manifest.
+
+Operator path variables are resolved by the binding procedure in `PLAN.md`.
 
 ## Launch
 
@@ -54,5 +56,6 @@ Not started. P0 evidence is the three research files above.
   `beep-effect2` and must not run lanes in `beep-effect0`.
 - The move itself (PLAN S4) is executed by the orchestrating session with the operator present,
   never by a Codex lane, and the deep seed runs once under systemd, never in the foreground.
-- Graft facts the design depends on were read from `~/YeeBois/dev/Graft` at v0.18.0; re-verify
-  `discoverWorkspaceChildren` and `isWorkspaceBuildRoot` if graft is upgraded before S4.
+- Graft facts were read at v0.18.0 from the checkout identified in
+  `research/2026-09-25-01-current-state.md`. Re-verify `discoverWorkspaceChildren`
+  and `isWorkspaceBuildRoot` if graft is upgraded before S4.
