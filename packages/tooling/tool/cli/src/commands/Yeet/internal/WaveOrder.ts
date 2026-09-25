@@ -761,6 +761,32 @@ const durationSourceFindings = (
     ],
   });
 
+const sourceFindings = (
+  source: O.Option<GateOrderCostSource>,
+  check: (entry: GateOrderCostSource) => ReadonlyArray<GateOrderSeedFinding>
+): ReadonlyArray<GateOrderSeedFinding> => O.getOrElse(O.map(source, check), A.empty<GateOrderSeedFinding>);
+
+const resolvedDurationFindings = (
+  row: GateOrderSeedRow,
+  source: O.Option<GateOrderCostSource>,
+  rows: ReadonlyArray<ResolvedA1Row>,
+  resolved: O.Option<ResolvedA1Row>
+): ReadonlyArray<GateOrderSeedFinding> =>
+  O.match(resolved, {
+    onNone: () => [finding("duration-unresolved", { laneId: row.laneId, pointer: row.durationPointer })],
+    onSome: (resolvedRow) => [
+      ...findingUnless(Math.round(row.costP50Seconds * 1000) === resolvedRow.p50DurationMs, () =>
+        finding("duration-mismatch", {
+          laneId: row.laneId,
+          pointer: row.durationPointer,
+          expected: Math.round(row.costP50Seconds * 1000),
+          actual: resolvedRow.p50DurationMs,
+        })
+      ),
+      ...sourceFindings(source, (entry) => durationSourceFindings(row, entry, O.some(resolvedRow), rows)),
+    ],
+  });
+
 const durationFindings = (
   row: GateOrderSeedRow,
   source: O.Option<GateOrderCostSource>,
@@ -770,33 +796,42 @@ const durationFindings = (
     onNone: () => [finding("pointer-shape-unknown", { laneId: row.laneId, pointer: row.durationPointer })],
     onSome: ([kind, index]) => {
       if (kind === "hosted-lane-array") {
-        return O.match(source, {
-          onNone: A.empty<GateOrderSeedFinding>,
-          onSome: (entry) => durationSourceFindings(row, entry, O.none(), []),
-        });
+        return sourceFindings(source, (entry) => durationSourceFindings(row, entry, O.none(), []));
       }
       const rows = rowsForDurationKind(view, kind);
-      return O.match(
-        O.flatMap(index, (position) => A.get(rows, position)),
-        {
-          onNone: () => [finding("duration-unresolved", { laneId: row.laneId, pointer: row.durationPointer })],
-          onSome: (resolvedRow) => [
-            ...findingUnless(Math.round(row.costP50Seconds * 1000) === resolvedRow.p50DurationMs, () =>
-              finding("duration-mismatch", {
-                laneId: row.laneId,
-                pointer: row.durationPointer,
-                expected: Math.round(row.costP50Seconds * 1000),
-                actual: resolvedRow.p50DurationMs,
-              })
-            ),
-            ...O.match(source, {
-              onNone: A.empty<GateOrderSeedFinding>,
-              onSome: (entry) => durationSourceFindings(row, entry, O.some(resolvedRow), rows),
-            }),
-          ],
-        }
+      return resolvedDurationFindings(
+        row,
+        source,
+        rows,
+        O.flatMap(index, (position) => A.get(rows, position))
       );
     },
+  });
+
+const exactRedFindings = (
+  row: GateOrderSeedRow,
+  count: number,
+  resolved: O.Option<EconomicsSeedSourceView["firstFailure"]["actionableLaneMix"][number]>
+): ReadonlyArray<GateOrderSeedFinding> =>
+  O.match(resolved, {
+    onNone: () => [finding("red-unresolved", { laneId: row.laneId, pointer: row.firstRedPointer })],
+    onSome: (entry) => [
+      ...findingUnless(count === entry.attempts, () =>
+        finding("red-mismatch", {
+          laneId: row.laneId,
+          pointer: row.firstRedPointer,
+          expected: count,
+          actual: entry.attempts,
+        })
+      ),
+      ...findingUnless(entry.lane === row.laneId || entry.lane === ruling28Alias(row.laneId), () =>
+        finding("red-lane-mismatch", {
+          laneId: row.laneId,
+          pointer: row.firstRedPointer,
+          detail: `expected ${row.laneId} or ${ruling28Alias(row.laneId)}, resolved ${entry.lane}`,
+        })
+      ),
+    ],
   });
 
 const redFindings = (
@@ -817,28 +852,10 @@ const redFindings = (
               actual: count,
             })
           )
-        : O.match(
-            O.flatMap(index, (position) => A.get(view.firstFailure.actionableLaneMix, position)),
-            {
-              onNone: () => [finding("red-unresolved", { laneId: row.laneId, pointer: row.firstRedPointer })],
-              onSome: (entry) => [
-                ...findingUnless(count === entry.attempts, () =>
-                  finding("red-mismatch", {
-                    laneId: row.laneId,
-                    pointer: row.firstRedPointer,
-                    expected: count,
-                    actual: entry.attempts,
-                  })
-                ),
-                ...findingUnless(entry.lane === row.laneId || entry.lane === ruling28Alias(row.laneId), () =>
-                  finding("red-lane-mismatch", {
-                    laneId: row.laneId,
-                    pointer: row.firstRedPointer,
-                    detail: `expected ${row.laneId} or ${ruling28Alias(row.laneId)}, resolved ${entry.lane}`,
-                  })
-                ),
-              ],
-            }
+        : exactRedFindings(
+            row,
+            count,
+            O.flatMap(index, (position) => A.get(view.firstFailure.actionableLaneMix, position))
           ),
   });
 };

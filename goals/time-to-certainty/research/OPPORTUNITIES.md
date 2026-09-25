@@ -2439,7 +2439,8 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 - Doing: the same D1 design pass, reading how the seed's `durationPointer` and `firstRedPointer`
   values are checked against `research/economics.json`.
 - Evidence: the A3 contract says "`WaveOrder.ts` reads the committed `research/economics.json` by
-  JSON pointer" (`research/a3-economics-surface.md:30-31`), but `WaveOrder.ts:8-21` imports no
+  JSON pointer" (`research/a3-economics-surface.md:30-31`; every line number here is at
+  d9f74d230a), but `WaveOrder.ts:8-21` imports no
   `FileSystem`, the pointer builders at `:32-34` return strings, and the only pointer strings in
   tests are placeholders. Resolving them by hand showed what an unchecked pointer hides:
   `quality:jsdoc-ratchet` reads `hosted.laneRows[16]`, the `"Heavy / Doctest"` row it shares with
@@ -2481,7 +2482,9 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 
 - Doing: the same D1 design pass, choosing which lane list the gate-order fixtures should join the
   seed against.
-- Evidence: `proofLanesForTier` (`packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:413-421`)
+- Evidence: every line number here is at d9f74d230a, before this PR moved the plan onto
+  `githubCheckPrePushLanes`. `proofLanesForTier`
+  (`packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:413-421`)
   and `runPrePushChecks` (`packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:1008-1019`)
   each spell the same five-group concatenation (changeset status, repo sanity, quality, fallow,
   pre-push external). The plan calls `orderWaveLanes(DEFAULT_GATE_ORDER_SEED, …)` directly

@@ -167,8 +167,9 @@ receipt in both packets.
   ascending, A1 first-red share descending, `precise` before `imprecise`, declaration index. This is
   D1's reading of "(cost, red probability, precision)". Any change of key, sequence or direction is a
   new `orderRule` literal.
-- Every lane the non-main full-tier pre-push plan declares (`Planner.ts:413-421` with
-  `githubCheckChangesetStatusLane`) carries exactly one seed row, and every seed row names a lane of
+- Every lane the non-main full-tier pre-push plan declares (the lanes
+  `githubCheckPrePushLanes` in `GithubChecks.ts` returns with `githubCheckChangesetStatusLane`)
+  carries exactly one seed row, and every seed row names a lane of
   that plan. `quality:cache-policy` gets the Repo Sanity aggregate proxy its eight repo-sanity
   siblings use: 183 s at `/hosted/laneRows/7/p50DurationMs`, first-red share 0 by absence,
   `precise`, `policy-preflight`. Its basis prose says the lane postdates the A1 window; it does not
@@ -250,7 +251,7 @@ cache-policy red now stops before `quality:build` through `quality:coverage`), f
   stays frozen at `gate-order/v1`; the contract and the JSDoc call the value a first-red share, a
   rank weight and not P(red).
 - The seed pins the P0 baseline bytes (sha256 `37e854ef…`); where the P4 close report lands is
-  P4's call under `SPEC.md:184`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
+  P4's call under `SPEC.md:185`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
   needs its own ruling.
 - **Pin move, not reseed.** A PR that edits `research/scripts/economics.py` and re-renders
   `economics.json` without a P4 re-run moves the file's bytes through the script's self-receipt
@@ -287,7 +288,7 @@ carried beside it as data (A, recommended), or rename or re-denominate before ha
 lands. `research/scripts/economics.py:32`, `:50` write the report to `research/economics.json`, the
 path the seed pins. (A) a new path beside the baseline through a P4 output option in the script,
 which P4 must reconcile with the "same script, row by row" of rulings 8 and 73; (B) P4 overwrites
-`economics.json`, `SPEC.md:184` then still requires the baseline to survive in `research/` under
+`economics.json`, `SPEC.md:185` then still requires the baseline to survive in `research/` under
 another name, and fixtures 2–4 stay red until a reseed ruling. §5 decision 7 has the SPEC
 reconciliation.
 
@@ -745,7 +746,13 @@ Changes, all pure and behavior-preserving except the one new seed row:
   proxy; the lane joined the group on 2026-09-10 (#1068), after the A1 window."`, `redProbability 0`,
   `firstRedPointer NO_EXACT_FIRST_RED_POINTER`, `firstRedBasis POSTDATES_A1_FIRST_RED_BASIS`,
   `precision "precise"` with `PRECISE_BASIS`, `laneClass "policy-preflight"` with
-  `POLICY_PREFLIGHT_BASIS`.
+  `POLICY_PREFLIGHT_BASIS`. This row is the one behavior change, and it reaches the runtime as well
+  as the plan: `beep quality github-checks pre-push` orders its lanes through `WaveOrder.Default`
+  (`Quality.command.ts:808-810`, `:1019`), which is built from the same `DEFAULT_GATE_ORDER_SEED`,
+  so the runtime also moves `quality:cache-policy` from rank 31 to rank 19, and under fail-fast a
+  red there (stop-after-red, as when it was unseeded) now records `quality:build` and the eleven
+  heavy lanes after it, through `quality:coverage`, as `not-run-early-stop`, where before it ran
+  last and stopped nothing.
 - **Postdating bases.** A new constant beside `NO_EXACT_FIRST_RED_BASIS` (`WaveOrder.ts:28`):
   `POSTDATES_A1_FIRST_RED_BASIS = "The lane postdates the A1 window; the share is 0 by absence, not by
   observation."`, and a pure `postdatesA1Window(row) => GateOrderSeedRow.make({ ...row, firstRedBasis:
@@ -940,11 +947,21 @@ digest uses `S.decodeEffect(Sha256HexFromBytes)` (`packages/foundation/modeling/
 
 Code gates: `bunx turbo run check --filter=@beep/repo-cli`; `bunx vitest run` on
 `gate-order-handoff.test.ts`, `yeet.test.ts` and `quality-tasks.test.ts`;
-`bun run beep lint effect-vitest --write` (one inventory row for the new test file plus re-anchored
-`yeet.test.ts` lines; review that the diff touches only those); the JSDoc ratchet at zero introduced
+`bun run beep lint effect-vitest --write` (eight inventory rows for the new test file at b14139a476:
+seven open `EV002` `unresolved-layer-provide` rows, one per `it.effect` that wraps its own
+`provideScopedLayer(NodeServices.layer)` as the §3 test shape prescribes, and one `EV010` row for
+the `@effect/platform-node` import; plus re-anchored `yeet.test.ts` lines; review that the diff
+touches only those); the JSDoc ratchet at zero introduced
 (new exports: the literal kits, the classes, `DEFAULT_GATE_ORDER_COST_SOURCES`, `GATE_ORDER_SOURCE`,
 `rankWaveLanes`, `redSchedulingDecision`, `githubCheckPrePushLanes`, the folds);
-`bunx biome check <touched files>`; `bun run beep quality package-verify @beep/repo-cli`. No new
+`bunx biome check <touched files>`; `bun run beep quality package-verify @beep/repo-cli`;
+`bun run beep ci lane fallow --base origin/main`, the lane the hosted `Fallow Advisory Envelopes`
+job runs: despite the job's name its audit, dead-code and health sub-lanes are blocking
+(`FALLOW_BLOCKING_LANES` in `commands/Ci/CiLane.ts`), and at f0219b5d61 an introduced
+cognitive-complexity finding in the new test file failed it (hosted run 36171449800, fixed in
+d6f8fc5e48); `bun run lint:oxlint`, a policy-state step of `quality:lint-policy`
+(`policyStateTasks` in `Tasks.ts`) that the hosted `Heavy / Lint Policy` lane runs only once
+`ready-for-heavy` is applied, so the local run is its first signal. No new
 source file, so no hand-spliced coverage row is expected; if the hosted coverage lane still reports a
 lowered row, splice the hosted measured row by hand (precedent 71a11ae563).
 `packages/tooling/tool/cli/turbo.json` gains
@@ -968,7 +985,7 @@ Its body is a `CacheBaselineRequest` (`commands/Cache/Cache.schemas.ts:701-710`;
       "sha256": "<sha256sum of d1-cache-review.md>"
     }
   },
-  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint", "@beep/fc-runs#lint", "@beep/test-runner#lint"],
   "profile": "local-linux-x64-bun1.4.2",
   "epoch": "qualification-v2",
   "previous": "<sha256sum of standards/cache-qualification-baseline.json just before the re-record>"
@@ -976,7 +993,10 @@ Its body is a `CacheBaselineRequest` (`commands/Cache/Cache.schemas.ts:701-710`;
 ```
 
 `scope`, `profile` and `epoch` are copied from the baseline as it stands at re-record time (the
-values above are today's; its digest today is `bd8649cc4cdaf393ae5f5ec4e198c7e01fc8204adb94d98005747479bb8b6f5a`).
+values above are main's at 5488de57c7, the lane's latest `origin/main` merge, whose baseline digest
+is `c0c04efe7c1e3f42454d915de6409b9e78e414213053bb60ff8d79d102b1f85c`; at d9f74d230a the scope held
+only the first two entries and the digest was
+`bd8649cc4cdaf393ae5f5ec4e198c7e01fc8204adb94d98005747479bb8b6f5a`).
 `previous` is compared with the digest of the current baseline text and a mismatch refuses the write
 (`Cache.service.ts:281-288`). The basis is a new dedicated review note, not this contract: every
 baseline load re-verifies the basis bytes (`Cache.service.ts:100-101` → `verifyReference` `:83-89`
@@ -1046,9 +1066,11 @@ Bookkeeping in the same PR:
   `research/gate-order-handoff.json`, are backticked, as the first two are today; that is the 3545
   count, measured 2026-09-25 by substituting the draft for lines 40-48 with `wc -m`. With only the
   first two backticked it is 3543).
-- `.claude/skills/yeet/SKILL.md:781-788` (the economics-seed paragraph) gains one sentence: a lane
-  added to the pre-push plan needs a gate-order seed row and cost-source entry under the ruling 76
-  seeding rule, or `gate-order-handoff.test.ts` fails.
+- `.claude/skills/yeet/SKILL.md:781-788` (the economics-seed paragraph) gains two sentences: a lane
+  added to `githubCheckPrePushLanes` needs a gate-order seed row and cost-source entry under the
+  ruling 76 seeding rule, or `gate-order-handoff.test.ts` fails; the runtime pre-push check still
+  assembles its own lane list in `Quality.command.ts` until the follow-up PR (§8), so a lane group
+  added only there escapes the fixture and runs last.
 - `research/OPPORTUNITIES.md`, appended after `:2415` in the `## <date> — <lowercase title>` +
   `- Doing:` / `- Evidence:` / `- Prevention:` form (`:2394-2415`). Receipts 1–4 below were found on
   2026-09-25 by the §0 probes against d9f74d230a, so they are appended on 2026-09-25 in this lane,
@@ -1152,12 +1174,12 @@ history; a later regeneration does not edit them.
    carried in the handoff source.
 7. **P4 close report location (P4's call; recorded here, not decided by D1)** — the SPEC text pulls
    two ways: `SPEC.md:49-50` names `research/economics.json` as A1's output and says it "is re-run at
-   close", while `SPEC.md:184` requires that "both reports are in `research/`"; ruling 8
+   close", while `SPEC.md:185` requires that "both reports are in `research/`"; ruling 8
    (`research/decisions.md:71`) and ruling 73 (`:968`) require the close to re-run "the same script,
    row by row", and that script writes only `research/economics.json` (`economics.py:32`, `:50`).
    Option A: a P4 output option in `economics.py` puts the close report beside the baseline; P4 must
    then say whether a script with a new output path is still "the same script" of rulings 8 and 73.
-   Option B: P4 overwrites `economics.json`; `SPEC.md:184` then still requires the baseline to
+   Option B: P4 overwrites `economics.json`; `SPEC.md:185` then still requires the baseline to
    survive in `research/` under another name, and D1's fixtures 2–4 go red until a reseed ruling.
    Ruling 77 binds P4 neither way.
    **Assumed for the implementation PR:** nothing for P4; the seed and `GATE_ORDER_SOURCE` pin the
@@ -1200,7 +1222,8 @@ declared pre-push lane.** The pre-push wave keeps B3's `orderWaveLanes` key over
 before heavy, A1 cost P50 ascending, A1 first-red share descending, precise before imprecise, then
 declaration index. This is D1's reading of "(cost, red probability, precision)"; any change of key,
 sequence or direction is a new literal. Every lane the non-main full-tier pre-push plan declares
-(`Planner.ts:413-421` with `githubCheckChangesetStatusLane`) carries exactly one seed row, and every
+(the lanes `githubCheckPrePushLanes` in `GithubChecks.ts` returns with
+`githubCheckChangesetStatusLane`) carries exactly one seed row, and every
 seed row names a lane of that plan. `quality:cache-policy` gets the Repo Sanity aggregate proxy (183 s
 at `/hosted/laneRows/7/p50DurationMs`, first-red share 0 by absence because the lane postdates the A1
 window, precise, policy-preflight); the four seeded lanes that already postdate the window
@@ -1244,7 +1267,7 @@ attempts. The handoff carries the 832 first-failure population, the 1610 red att
 from, and the resolved A1 lane key for exact rows. The field `redProbability` stays at `gate-order/v1`,
 and it means a first-red share, a rank weight and not P(red). The pre-push runtime never reads the
 file. The seed pins the P0 baseline bytes (sha256 `37e854ef…`); where the P4 close report lands is
-P4's call under `SPEC.md:184`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
+P4's call under `SPEC.md:185`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
 needs its own ruling. A PR that edits `research/scripts/economics.py` and re-renders
 `economics.json` without a P4 re-run (the script's self-receipt moves, as in #964, #978 and #1026)
 is a pin move: it updates `GATE_ORDER_SOURCE.sha256` and regenerates the handoff with no ruling,
@@ -1327,7 +1350,7 @@ provisional lane-order A-Box; ontology DECISIONS rulings ratified by a ttc merge
 - Routing `Planner.ts:431` through the `WaveOrder` service, and switching `Quality.command.ts:1008-1019`
   to `githubCheckPrePushLanes` (runtime assembly stays as is; receipt 4).
 - Ordering for the cheap-gates and review-fix tiers (`Planner.ts:431-442`) and for labs (labs is not
-  in the full-tier lane set, `Planner.ts:413-421`).
+  in the full-tier lane set, `githubCheckPrePushLanes`).
 - Rulings 71–72 and any C4.2 work.
 
 ## 8. Implementation slices
@@ -1371,7 +1394,7 @@ provisional lane-order A-Box; ontology DECISIONS rulings ratified by a ttc merge
 - **Follow-up (not D1, recorded in receipt 4)**: `Quality.command.ts` adopts
   `githubCheckPrePushLanes` with a runtime-parity fixture, and optionally `Planner.ts:431` goes
   through the `WaveOrder` service.
-- **P4 close (owned by P4)**: where the A1 close report lands is P4's call under `SPEC.md:184`
+- **P4 close (owned by P4)**: where the A1 close report lands is P4's call under `SPEC.md:185`
   (§5 decision 7). If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed needs its own
   ruling. Reseeding the gate order from the close report, and regenerating `gate-order-handoff.json`
   with it, is a separate ruling P4 may propose; ruling 77 does not require it.

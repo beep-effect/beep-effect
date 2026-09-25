@@ -1065,7 +1065,8 @@ declared pre-push lane.** The pre-push wave keeps B3's `orderWaveLanes` key over
 before heavy, A1 cost P50 ascending, A1 first-red share descending, precise before imprecise, then
 declaration index. This is D1's reading of "(cost, red probability, precision)"; any change of key,
 sequence or direction is a new literal. Every lane the non-main full-tier pre-push plan declares
-(`Planner.ts:413-421` with `githubCheckChangesetStatusLane`) carries exactly one seed row, and every
+(the lanes `githubCheckPrePushLanes` in `GithubChecks.ts` returns with
+`githubCheckChangesetStatusLane`) carries exactly one seed row, and every
 seed row names a lane of that plan. `quality:cache-policy` gets the Repo Sanity aggregate proxy (183 s
 at `/hosted/laneRows/7/p50DurationMs`, first-red share 0 by absence because the lane postdates the A1
 window, precise, policy-preflight); the four seeded lanes that already postdate the window
@@ -1109,7 +1110,7 @@ attempts. The handoff carries the 832 first-failure population, the 1610 red att
 from, and the resolved A1 lane key for exact rows. The field `redProbability` stays at `gate-order/v1`,
 and it means a first-red share, a rank weight and not P(red). The pre-push runtime never reads the
 file. The seed pins the P0 baseline bytes (sha256 `37e854ef…`); where the P4 close report lands is
-P4's call under `SPEC.md:184`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
+P4's call under `SPEC.md:185`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
 needs its own ruling. A PR that edits `research/scripts/economics.py` and re-renders
 `economics.json` without a P4 re-run (the script's self-receipt moves, as in #964, #978 and #1026)
 is a pin move: it updates `GATE_ORDER_SOURCE.sha256` and regenerates the handoff with no ruling,

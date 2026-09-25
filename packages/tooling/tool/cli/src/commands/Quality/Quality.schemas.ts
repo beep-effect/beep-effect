@@ -1668,7 +1668,7 @@ export class GateOrderHandoffSource extends S.Class<GateOrderHandoffSource>($I`G
  * const lane = GateOrderHandoffLane.make({
  *   rank: 0,
  *   laneId: "fallow:audit",
- *   declarationIndex: 26,
+ *   declarationIndex: 25,
  *   decidedBy: O.none(),
  *   redScheduling: "stop-after-red",
  *   costBasis: "a1-proxy-row",

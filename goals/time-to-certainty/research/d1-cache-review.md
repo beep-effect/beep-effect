@@ -20,8 +20,12 @@ Why this is not blanket cache-key tuning: it names the two files one fixture
 reads, so each task's key covers what the task tests. It moves no hit rate on
 purpose and changes no other key.
 
-Accept only the two named inputs on those two tasks. Preserve the
-identity/types scope, the existing profile and the qualification-v2 epoch. Do
+Accept only the two named inputs on those two tasks. Preserve the scope, the
+profile and the epoch as they stand in the baseline at re-record time. Today
+that is the four excluded computations `@beep/identity#lint`,
+`@beep/types#lint`, `@beep/fc-runs#lint` and `@beep/test-runner#lint`, the
+`local-linux-x64-bun1.4.2` profile and the `qualification-v2` epoch; if main
+has changed any of them by a later re-record, copy main's values instead. Do
 not change commands, cache flags, output declarations, global configuration, or
 the qualification ledger. Compare the generated projection with the previous
 baseline and require zero remaining cache-policy findings before publication.

@@ -36,9 +36,11 @@ import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type {
   GateOrderSeedFinding,
   GateOrderSeedFindingKind,
@@ -59,10 +61,39 @@ const declaredLanes: ReadonlyArray<GithubCheckLaneSpec> = githubCheckPrePushLane
   githubCheckChangesetStatusLane("/repo"),
 ]);
 
+const encodeHandoffPretty = S.encodeEffect(S.fromJsonString(GateOrderHandoff, { space: 2 }));
+const encodeHandoff = S.encodeEffect(GateOrderHandoff);
+const encodeJsonText = S.encodeEffect(UnknownFromJsonString);
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+
+// Every GateOrderHandoffCoherence issue. A must-fail in fixture 7 names one of these (or a
+// structural issue) and must carry no other, so each rejection is its named check's.
+const COHERENCE_ISSUES: ReadonlyArray<string> = [
+  "Lane ranks must be 0..n-1 in array order.",
+  "Lane ids must be unique.",
+  "Declaration indexes must be unique.",
+  "decidedBy is None exactly at rank 0.",
+  "A lane has no resolved A1 duration row exactly when its cost basis is external-run.",
+  "Every lane has exactly one seed row by laneId and every seed row names a lane.",
+  "A lane has no resolved A1 P50 or P95 exactly when its cost basis is external-run.",
+  "A lane carries a resolved A1 first-red lane exactly when its seed row points at an exact actionableLaneMix row.",
+  "The source and the seed carry the same A1 measurementAsOf.",
+  "The source and the seed carry the same first-failure population.",
+  "The source reference names the file the seed's pointers resolve in.",
+];
+
+const expectOnlyIssue = (label: string, message: string, issue: string): void => {
+  expect(message, `${label}: expected issue`).toContain(issue);
+  expect(
+    A.filter(COHERENCE_ISSUES, (candidate) => candidate !== issue && Str.includes(candidate)(message)),
+    `${label}: other coherence issues`
+  ).toEqual([]);
+};
+
 // The §1 canonical encoding: two-space pretty JSON plus a trailing newline. Only this
 // fixture computes the committed bytes; GateOrderHandoffJson encodes compact JSON.
 const encodeHandoffBytes = (handoff: GateOrderHandoff) =>
-  Effect.map(S.encodeEffect(S.fromJsonString(GateOrderHandoff, { space: 2 }))(handoff), (text) => `${text}\n`);
+  Effect.map(encodeHandoffPretty(handoff), (text) => `${text}\n`);
 
 const loadEconomics = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -308,6 +339,27 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       expect(findingsFor(withSeedRow(DEFAULT_GATE_ORDER_SEED, "quality:lint", { redProbability: 66 / 832 }))).toEqual(
         one("red-mismatch", "quality:lint")
       );
+
+      // Must-fail: a valid pointer kind in the other slot is an unknown shape for that slot.
+      expect(
+        findingsFor(
+          withSeedRow(DEFAULT_GATE_ORDER_SEED, "quality:lint", { durationPointer: "/firstFailure/actionableLaneMix/6" })
+        )
+      ).toEqual(one("pointer-shape-unknown", "quality:lint"));
+      expect(
+        findingsFor(
+          withSeedRow(DEFAULT_GATE_ORDER_SEED, "quality:lint", { firstRedPointer: "/hosted/laneRows/7/p50DurationMs" })
+        )
+      ).toEqual(one("pointer-shape-unknown", "quality:lint"));
+
+      // Must-fail: the external-run sentinel takes a keyless external-run entry and nothing
+      // else, and a resolved pointer refuses an external-run entry.
+      expect(
+        findingsFor(DEFAULT_GATE_ORDER_SEED, withCostSource("quality:storybook", { sourceKey: O.some("SAST") }))
+      ).toEqual(one("duration-source-mismatch", "quality:storybook"));
+      expect(
+        findingsFor(DEFAULT_GATE_ORDER_SEED, withCostSource("quality:lint", { costBasis: "external-run" }))
+      ).toEqual(one("duration-source-mismatch", "quality:lint"));
       expect(
         findingsFor(
           DEFAULT_GATE_ORDER_SEED,
@@ -352,8 +404,8 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       const changed = Uint8Array.from(bytes);
       changed[0] = (changed[0] ?? 0) ^ 1;
 
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(bytes)).toBe(GATE_ORDER_SOURCE.sha256);
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(changed)).not.toBe(GATE_ORDER_SOURCE.sha256);
+      expect(yield* hashBytes(bytes)).toBe(GATE_ORDER_SOURCE.sha256);
+      expect(yield* hashBytes(changed)).not.toBe(GATE_ORDER_SOURCE.sha256);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -475,6 +527,15 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
           )
         )
       ).toBe(true);
+      // One cost source per seed row: 32 unique lane ids, exactly the seed's.
+      const costIds = A.map(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.laneId);
+      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(32);
+      expect(A.sort(costIds, Order.String)).toEqual(
+        A.sort(
+          A.map(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId),
+          Order.String
+        )
+      );
       expect(countBy(handoff.lanes, (lane) => lane.costBasis)).toEqual({
         "a1-lane-row": 16,
         "a1-proxy-row": 15,
@@ -513,74 +574,109 @@ describe("gate-order handoff (TTC D1, rulings 76-78)", () => {
       const roundTrip = yield* GateOrderHandoffJson.decode(yield* GateOrderHandoffJson.encode(handoff));
       expect(S.toEquivalence(GateOrderHandoff)(roundTrip, handoff)).toBe(true);
 
-      const encoded = yield* S.encodeEffect(GateOrderHandoff)(handoff);
-      const rejects = Effect.fnUntraced(function* (label: string, document: EncodedHandoff) {
-        const text = yield* S.encodeEffect(UnknownFromJsonString)(document);
+      const encoded = yield* encodeHandoff(handoff);
+      const lastIndex = encoded.lanes.length;
+      const firstLane = O.getOrThrow(A.head(encoded.lanes));
+      const firstSeedRow = O.getOrThrow(A.head(encoded.seed.lanes));
+      const rejects = Effect.fnUntraced(function* (label: string, issue: string, document: EncodedHandoff) {
+        const text = yield* encodeJsonText(document);
         const error = yield* Effect.flip(GateOrderHandoffJson.decode(text));
         assertInstanceOf(error, S.SchemaError, label);
+        expectOnlyIssue(label, String(error), issue);
       });
 
       // The unmutated encoded document decodes, so every rejection below is the mutation's.
-      yield* GateOrderHandoffJson.decode(yield* S.encodeEffect(UnknownFromJsonString)(encoded));
+      yield* GateOrderHandoffJson.decode(yield* encodeJsonText(encoded));
 
-      yield* rejects("schemaVersion v0", {
+      yield* rejects("schemaVersion v0", '"gate-order-handoff/v1"', {
         ...encoded,
         schemaVersion: "gate-order-handoff/v0" as "gate-order-handoff/v1",
       });
-      yield* rejects("scope main", { ...encoded, scope: "pre-push:main" as "pre-push:non-main" });
-      yield* rejects("source sha256", {
+      yield* rejects("scope main", "GateOrderHandoffScope", {
+        ...encoded,
+        scope: "pre-push:main" as "pre-push:non-main",
+      });
+      yield* rejects("source sha256", "SHA-256 digest must be exactly 64 characters long", {
         ...encoded,
         source: { ...encoded.source, reference: { ...encoded.source.reference, sha256: "XYZ" } },
       });
       yield* rejects(
         "rank gap",
+        "Lane ranks must be 0..n-1 in array order.",
         mapEncodedLaneAt(encoded, 1, (lane) => ({ ...lane, rank: 2 }))
       );
+      // An appended copy of lane 0 with a fresh rank, declaration index and deciding key
+      // keeps the id set equal to the seed's, so only the uniqueness check fires.
+      yield* rejects("duplicate lane id", "Lane ids must be unique.", {
+        ...encoded,
+        lanes: A.append(encoded.lanes, {
+          ...firstLane,
+          rank: lastIndex,
+          declarationIndex: lastIndex,
+          decidedBy: "declaration-index",
+        }),
+      });
       yield* rejects(
-        "duplicate lane id",
-        mapEncodedLaneAt(encoded, 1, (lane) => ({ ...lane, laneId: encoded.lanes[0]?.laneId ?? lane.laneId }))
+        "duplicate declaration index",
+        "Declaration indexes must be unique.",
+        mapEncodedLaneAt(encoded, 1, (lane) => ({ ...lane, declarationIndex: firstLane.declarationIndex }))
       );
       yield* rejects(
         "decidedBy at rank 0",
+        "decidedBy is None exactly at rank 0.",
         mapEncodedLaneAt(encoded, 0, (lane) => ({ ...lane, decidedBy: "cost-p50" }))
       );
       yield* rejects(
         "decidedBy null at rank 1",
+        "decidedBy is None exactly at rank 0.",
         mapEncodedLaneAt(encoded, 1, (lane) => ({ ...lane, decidedBy: null }))
       );
+      // quality:docgen's seed row points at the absent sentinel, so renaming it leaves the
+      // first-red presence check satisfied and isolates the bijection.
       yield* rejects(
         "lane id without seed row",
-        mapEncodedLane(encoded, "quality:lint", (lane) => ({ ...lane, laneId: "quality:retired" }))
+        "Every lane has exactly one seed row by laneId and every seed row names a lane.",
+        mapEncodedLane(encoded, "quality:docgen", (lane) => ({ ...lane, laneId: "quality:retired" }))
+      );
+      yield* rejects(
+        "duplicated seed row",
+        "Every lane has exactly one seed row by laneId and every seed row names a lane.",
+        { ...encoded, seed: { ...encoded.seed, lanes: A.append(encoded.seed.lanes, firstSeedRow) } }
       );
       yield* rejects(
         "external-run lane with a duration source key",
+        "A lane has no resolved A1 duration row exactly when its cost basis is external-run.",
         mapEncodedLane(encoded, "quality:storybook", (lane) => ({ ...lane, durationSourceKey: "SAST" }))
       );
       yield* rejects(
         "external-run lane with a P50",
+        "A lane has no resolved A1 P50 or P95 exactly when its cost basis is external-run.",
         mapEncodedLane(encoded, "quality:storybook", (lane) => ({ ...lane, durationP50Ms: 584000 }))
       );
       yield* rejects(
         "A1 lane without a P95",
+        "A lane has no resolved A1 P50 or P95 exactly when its cost basis is external-run.",
         mapEncodedLane(encoded, "quality:lint", (lane) => ({ ...lane, durationP95Ms: null }))
       );
       yield* rejects(
         "exact first-red row without its lane",
+        "A lane carries a resolved A1 first-red lane exactly when its seed row points at an exact actionableLaneMix row.",
         mapEncodedLane(encoded, "quality:lint", (lane) => ({ ...lane, firstRedSourceLane: null }))
       );
       yield* rejects(
         "absent first-red row with a lane",
+        "A lane carries a resolved A1 first-red lane exactly when its seed row points at an exact actionableLaneMix row.",
         mapEncodedLane(encoded, "quality:docgen", (lane) => ({ ...lane, firstRedSourceLane: "quality:docgen" }))
       );
-      yield* rejects("source measurementAsOf", {
+      yield* rejects("source measurementAsOf", "The source and the seed carry the same A1 measurementAsOf.", {
         ...encoded,
         source: { ...encoded.source, measurementAsOf: "2026-09-04T00:00:00.000Z" },
       });
-      yield* rejects("source population", {
+      yield* rejects("source population", "The source and the seed carry the same first-failure population.", {
         ...encoded,
         source: { ...encoded.source, firstFailurePopulation: 833 },
       });
-      yield* rejects("source path", {
+      yield* rejects("source path", "The source reference names the file the seed's pointers resolve in.", {
         ...encoded,
         source: { ...encoded.source, reference: { ...encoded.source.reference, path: "research/economics.json" } },
       });
