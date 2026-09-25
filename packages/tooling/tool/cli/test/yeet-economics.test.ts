@@ -278,6 +278,12 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
         "run-a",
         [
           compacted,
+          YeetAttemptJournalCompacted.make({
+            ...compacted,
+            terminalEvictionCutoffRecordedAt: O.none(),
+            oldestEvictedRecordedAt: at(-30),
+          }),
+          '{"schemaVersion":"yeet-attempt-journal/v1","_tag":"journal-compacted","oldestEvictedRecordedAt":"not-a-date"}',
           started(id("1")),
           started(id("1")),
           finished(id("1"), verdict(O.some(id("1")))),
@@ -285,6 +291,7 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
           terminated(id("2"), "interrupted"),
           terminated(id("2"), "interrupted"),
           started(id("3")),
+          terminated(id("5"), "signal"),
           "not-json",
           '{"schemaVersion":"yeet-attempt-journal/v0","_tag":"attempt-started","attemptId":"x"}',
           '{"schemaVersion":',
@@ -292,11 +299,15 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
         ""
       );
       // An orphan verdict for an attempt with no terminal row synthesizes one.
-      yield* writeVerdict(root, "run-a", verdict(O.some(id("4")), { outcome: "failure" }));
+      yield* writeVerdict(root, "run-a", verdict(O.some(id("4")), { outcome: "failure", endedAt: O.none() }));
       // A run whose journal is unreadable and whose verdict has no attempt id.
       const unreadable = yield* runDirectory(root, "run-b");
       yield* fs.makeDirectory(path.join(unreadable, "attempts.ndjson"));
       yield* writeVerdict(root, "run-b", verdict(O.none()));
+      // A symlinked journal is refused by the no-follow reader and counts as unreadable.
+      const linked = yield* runDirectory(root, "run-c");
+      yield* fs.writeFileString(path.join(root, "elsewhere.ndjson"), "");
+      yield* fs.symlink(path.join(root, "elsewhere.ndjson"), path.join(linked, "attempts.ndjson"));
 
       const journals = yield* readScope(root);
       const runA = A.findFirst(journals, (entry) => entry.runId === "run-a");
@@ -304,29 +315,43 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerI
         O.flatMap(runA, (entry) => entry.cutoff),
         at(-10)
       );
+      // A terminal row with neither a verdict nor a start falls back to the run id for its branch.
+      assertSome(
+        O.map(
+          A.findFirst(
+            A.flatMap(journals, (entry) => entry.attempts),
+            (entry) => entry.attemptId === id("5")
+          ),
+          (entry) => entry.branch
+        ),
+        "run-a"
+      );
       const economics = report(journals);
       expect(economics.dataQuality.diagnostics).toMatchObject({
         journalsObserved: 1,
-        unreadableJournals: 1,
+        unreadableJournals: 2,
         invalidRows: 2,
-        compactionReceipts: 1,
+        compactionReceipts: 3,
         leftCensoredJournals: 1,
         duplicateStartedRowsDeduplicated: 1,
         duplicateFinishedRowsDeduplicated: 1,
         orphanVerdictFilesAdded: 1,
         unkeyedVerdictFiles: 1,
         starts: 3,
-        finishedAttempts: 3,
+        finishedAttempts: 4,
         startsWithoutFinish: 1,
-        verdictsWithoutStart: 1,
+        verdictsWithoutStart: 2,
         verdictV2Attempts: 2,
-        verdictOtherAttempts: 1,
+        verdictOtherAttempts: 2,
       });
-      expect(economics.terminations.reasonMix).toEqual([{ key: "interrupted", count: 1 }]);
+      expect(economics.terminations.reasonMix).toEqual([
+        { key: "interrupted", count: 1 },
+        { key: "signal", count: 1 },
+      ]);
       expect(economics.attempts.all.outcomeMix).toEqual([
+        { key: "unknown", count: 2 },
         { key: "failure", count: 1 },
         { key: "success", count: 1 },
-        { key: "unknown", count: 1 },
       ]);
     })
   );
@@ -552,25 +577,28 @@ describe("yeet economics red to green", () => {
       ]),
       journal("run-5", [red("lonely-red", 0, 5)]),
       journal("run-6", [green("other-run-green", 10, 20)]),
+      // A green without an end time closes at its start.
+      journal("run-7", [red("short-red", 0, 5), green("endless-green", 10, 20, { endedAt: O.none() })]),
     ]);
     const { comparable24h, uncut } = economics.redToGreen;
     expect(comparable24h).toMatchObject({
-      closedEpisodes: 1,
-      totalEpisodeSpanMinutes: 50,
-      measuredAttemptMachineMinutes: 30,
+      closedEpisodes: 2,
+      totalEpisodeSpanMinutes: 60,
+      measuredAttemptMachineMinutes: 45,
       leftCensoredEpisodesExcluded: 1,
       leftCensoredObservedAttempts: 2,
       rightCensoredStreaks: 2,
       rightCensoredRedAttempts: 3,
     });
-    assertSome(comparable24h.p50Ms, 50 * MINUTE);
+    assertSome(comparable24h.p50Ms, 10 * MINUTE);
+    assertSome(comparable24h.p95Ms, 50 * MINUTE);
     assertSome(comparable24h.closedEpisodesOver24hExcluded, 1);
-    expect(uncut.closedEpisodes).toBe(2);
+    expect(uncut.closedEpisodes).toBe(3);
     assertSome(uncut.p50Ms, 50 * MINUTE);
     assertSome(uncut.p95Ms, 1_500 * MINUTE);
     assertNone(uncut.closedEpisodesOver24hExcluded);
     expect(economics.attempts.comparable.failureKindMix).toEqual([
-      { key: "step-exit", count: 6 },
+      { key: "step-exit", count: 7 },
       { key: "unknown", count: 1 },
     ]);
   });
@@ -708,14 +736,26 @@ it.layer(LiveSourceWithConsole, { timeout: "30 seconds" })("yeet economics comma
       yield* runYeetEconomics(options(true, O.some("feat/economics")), Effect.succeed(root));
       const empty = yield* fs.makeTempDirectoryScoped({ prefix: "economics-run-empty-" });
       yield* runYeetEconomics(options(true, O.none()), Effect.succeed(empty));
+      const projects = yield* fs.makeTempDirectoryScoped({ prefix: "economics-run-fleet-" });
+      const fleetCheckout = `${projects}/beep-effect-fleet`;
+      yield* writeJournal(fleetCheckout, "run-fleet", [
+        started(id("62")),
+        finished(id("62"), verdict(O.some(id("62")))),
+      ]);
+      yield* runYeetEconomics(
+        YeetEconomicsOptions.make({ json: true, branch: O.none(), fleet: true }),
+        Effect.succeed(fleetCheckout)
+      );
       const lines = yield* TestConsole.logLines;
-      expect(A.length(lines)).toBe(3);
+      expect(A.length(lines)).toBe(4);
       expect(Str.startsWith("yeet economics")(`${lines[0]}`)).toBe(true);
       const branchReport = yield* YeetEconomicsReportJson.decode(`${lines[1]}`);
       expect(branchReport.scope).toMatchObject({ kind: "branch", checkouts: [A.lastNonEmpty(Str.split(root, "/"))] });
       const emptyReport = yield* YeetEconomicsReportJson.decode(`${lines[2]}`);
       expect(emptyReport.scope.checkouts).toEqual([]);
       expect(emptyReport.dataQuality.diagnostics.finishedAttempts).toBe(0);
+      const fleetReport = yield* YeetEconomicsReportJson.decode(`${lines[3]}`);
+      expect(fleetReport.scope).toMatchObject({ kind: "fleet", checkouts: ["beep-effect-fleet"] });
       expect(Effect.isEffect(runYeetEconomicsCommand({ json: false, branch: O.none(), fleet: false }))).toBe(true);
     })
   );
@@ -739,9 +779,16 @@ describe("yeet economics rendering", () => {
     const wrapperRuns = A.map(A.range(1, 12), (index) =>
       lane(`full:${Str.padStart(2, "0")(`${index}`)}-step`, "passed", O.some(index * 1_000), "wrapper")
     );
+    // Same id and total as the top lane, a different label: ordered by label, rendered as `id / label`.
+    const relabelled = EconomicsLane.make({
+      ...lane("full:12-step", "passed", O.some(12_000), "wrapper"),
+      label: "full:twelve",
+    });
     const populated = report([
       journal("run-1", [
-        red("r", 0, 10, { lanes: [...wrapperRuns, lane("quality:coverage", "failed", O.some(90 * MINUTE), "inner")] }),
+        red("r", 0, 10, {
+          lanes: [...wrapperRuns, relabelled, lane("quality:coverage", "failed", O.some(90 * MINUTE), "inner")],
+        }),
         green("g", 20, 90),
       ]),
     ]);
@@ -755,11 +802,18 @@ describe("yeet economics rendering", () => {
       expect(A.every(summary, Str.startsWith("economics:"))).toBe(true);
     }
     const text = renderYeetEconomicsReport(populated);
-    expect(Str.includes("+2 more lane(s)")(text)).toBe(true);
+    expect(Str.includes("+3 more lane(s)")(text)).toBe(true);
+    expect(Str.includes("full:12-step / full:twelve (full)")(text)).toBe(true);
     expect(Str.includes("1.50h")(text)).toBe(true);
     expect(renderYeetEconomicsCloseoutSummary(populated)[3]).toBe(
-      "economics: top wrapper lane full:12-step 12.0s (15.38% of wrapper time)"
+      "economics: top wrapper lane full:12-step 12.0s (13.33% of wrapper time)"
     );
+    const fleetScope = EconomicsScope.make({ kind: "fleet", checkouts: ["a", "b", "c", "d"], branch: O.some("main") });
+    expect(
+      Str.startsWith("yeet economics (yeet-economics/v1) — fleet main: a, b, c, +1 more;")(
+        renderYeetEconomicsReport(buildYeetEconomicsReport([], fleetScope, NOW))
+      )
+    ).toBe(true);
   });
 });
 

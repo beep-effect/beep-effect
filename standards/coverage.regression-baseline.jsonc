@@ -26733,6 +26733,30 @@
             "functions": 7
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts": {
+          "lines": 99.21,
+          "statements": 99.31,
+          "branches": 100,
+          "functions": 98.74,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 3
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/FallowFeedback.ts": {
           "lines": 63.24,
           "statements": 63.07,
@@ -28342,6 +28366,18 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
