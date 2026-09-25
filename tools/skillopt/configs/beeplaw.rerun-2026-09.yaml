@@ -15,7 +15,7 @@ model:
   codex_exec_sandbox: workspace-write
   codex_exec_profile: ""
   codex_exec_full_auto: false
-  codex_exec_reasoning_effort: medium
+  codex_exec_reasoning_effort: low
   codex_exec_use_sdk: auto
   codex_exec_network_access: false
   codex_exec_web_search: false
@@ -64,9 +64,9 @@ env:
   repo_root: .
   stub_scorer: false
   max_turns: 1
-  exec_timeout: 600
+  exec_timeout: 1500
   score_timeout: 600
-  task_timeout: 900
+  task_timeout: 1800
   workers: 4
   limit: 0
   max_completion_tokens: 4096

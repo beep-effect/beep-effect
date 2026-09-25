@@ -15,7 +15,8 @@ What changed from the P5 run
 | Rollout workers | 1 | 4 |
 | Analyst workers | 1 | 2 |
 | Optimizer | `claude_chat` sonnet | `claude_chat` opus |
-| Codex rollout effort | `none` | `medium` (gpt-6-astra rejects `none`; AGENTS.md Codex default) |
+| Codex rollout effort | `none` | `low` (gpt-6-astra rejects `none`; `medium` timed out all 4 baseline items at 600 s) |
+| Rollout exec / task timeout | 600 s / 900 s | 1500 s / 1800 s |
 
 The target (`codex_exec`), the 8 train / 4 validation split, batch and
 minibatch 2, the soft gate over the full 4-item selection set, and the scorer
