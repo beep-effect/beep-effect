@@ -1,0 +1,19 @@
+--- a/graph/build.js
++++ b/graph/build.js
+@@ -24,6 +24,7 @@
+ import { relPosix } from "../util/paths.js";
+ import { readSourceFile } from "../util/source.js";
+ import { readFollowNestedRepos, readFollowSubmodules, readIncludeDirs } from "../util/state.js";
++import { readDeepIgnore } from "../util/deep-ignore.js";
+ import { emptyExtractCache, readExtractCache, writeExtractCache, } from "./extract-cache.js";
+ import { writeFingerprint } from "./fingerprint.js";
+ import { seedGraph } from "./seed.js";
+@@ -240,6 +241,8 @@
+     const meaning = await enrichGraph(nodes, priorById, sources, {
+         summarizer: opts.summarizer,
+         concurrency: opts.concurrency,
++        // Local patch (2026-09-25): repo-level `.graftignore` for the meaning tier.
++        ignore: readDeepIgnore(root),
+         onProgress: ({ index, total, node }) => opts.onProgress?.({ phase: "enrich", index, total, file: node }),
+         // Periodic durability flush of partial crux; the next run folds it back in by
+         // body_hash, so an interrupted --deep run never repays the crux it computed.

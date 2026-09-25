@@ -1,0 +1,73 @@
+--- a/util/deep-ignore.js
++++ b/util/deep-ignore.js
+@@ -0,0 +1,70 @@
++/**
++ * Local patch (2026-09-25): a committed, repo-level ignore list for the meaning
++ * tier. `<root>/.graftignore` names files the LLM passes must never spend a
++ * call on (generated code, vendored blobs): the crux pass marks their symbols
++ * `excluded` instead of `pending`/`stale`, and the concept pass neither
++ * summarizes nor coverage-checks them. The structural (tree-sitter) graph is
++ * untouched, so `graft grep` / `graft callers` still see every symbol.
++ *
++ * Syntax is a gitignore subset: one pattern per line, `#` comments, `*` (one
++ * segment), `**` (any depth), `?`; a pattern with no leading `/` matches at any
++ * depth; a trailing `/` or `/**` matches everything under a directory.
++ */
++import { readFileSync } from "node:fs";
++import { join } from "node:path";
++export const DEEP_IGNORE_FILE = ".graftignore";
++function toRegExp(pattern) {
++    let p = pattern.trim();
++    const anchored = p.startsWith("/");
++    if (anchored)
++        p = p.slice(1);
++    if (p.endsWith("/"))
++        p = `${p}**`;
++    let re = "";
++    for (let i = 0; i < p.length; i++) {
++        const c = p[i];
++        if (c === "*") {
++            if (p[i + 1] === "*") {
++                i++;
++                if (p[i + 1] === "/") {
++                    i++;
++                    re += "(?:.*/)?";
++                }
++                else {
++                    re += ".*";
++                }
++            }
++            else {
++                re += "[^/]*";
++            }
++        }
++        else if (c === "?")
++            re += "[^/]";
++        else
++            re += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
++    }
++    const prefix = anchored || p.startsWith("**") ? "^" : "^(?:.*/)?";
++    return new RegExp(`${prefix}${re}$`);
++}
++/** Parse ignore-file text into a matcher over repo-relative POSIX paths. */
++export function compileDeepIgnore(text) {
++    const rules = text
++        .split("\n")
++        .map((line) => line.trim())
++        .filter((line) => line !== "" && !line.startsWith("#"))
++        .map(toRegExp);
++    if (rules.length === 0)
++        return () => false;
++    return (rel) => rules.some((r) => r.test(rel));
++}
++/** The matcher for `<root>/.graftignore`; a missing file ignores nothing. */
++export function readDeepIgnore(root) {
++    let text = "";
++    try {
++        text = readFileSync(join(root, DEEP_IGNORE_FILE), "utf8");
++    }
++    catch {
++        return () => false;
++    }
++    return compileDeepIgnore(text);
++}
