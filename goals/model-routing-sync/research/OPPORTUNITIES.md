@@ -120,3 +120,8 @@
   been committed. The agent did not merge it. Keep the running proof to terminal
   and preserve its result; use an explicit delivery handoff before operator merge
   so the packet and implementation can finish in the same PR.
+- The documentation closeout publisher committed and pushed successfully, then
+  `gh pr create` failed with `API rate limit already exceeded`. The canonical
+  waiter confirmed a failed publication job. A subsequent quota read showed
+  capacity available; retry publication through Yeet after checking for an
+  existing PR. Keep API quota failures separate from network and content failures.
