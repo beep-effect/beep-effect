@@ -337,7 +337,8 @@
     "research/dependency-lint-exclusion-verification.json",
     "research/local-matrix-v23.md",
     "research/nested-command-controls-current.json",
-    "research/lambda-zip-controls-current.json"
+    "research/lambda-zip-controls-current.json",
+    "research/census-config-delta-review.json"
   ],
   "agentLaunchers": [
     {

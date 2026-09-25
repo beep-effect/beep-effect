@@ -446,3 +446,18 @@ this assembler. The undersize case failed after writing its archive; the missing
 writer case failed before archive creation. These are packaging controls only:
 no real bundle, handler, deployment or signed replay was executed. No tuple is
 qualified, and the complete nested-command obligation remains open.
+
+### Configuration-delta reconciliation — 2026-09-25
+
+The historical 133-source drift population now has a direct delta review for
+32 compiler configurations and 16 package manifests at `7468d15b17`. The
+compiler deltas select libraries, extend project references or change diagnostic
+configuration. Manifest scripts are unchanged; dependencies, patches, export
+routes and metadata changed. See [the receipt](./census-config-delta-review.json).
+
+The operational attachment accepted both review documents: 968 source bindings,
+six artifacts, 25 reviews and 13 unresolved obligations. The other 85 files
+remain outside this batch; separate evidence for them still requires assessment.
+Nineteen original drift members changed again after the historical checkpoint.
+Retain exact revision/hash boundaries. This source review establishes neither
+transitive semantic closure nor runtime or signed qualification.
