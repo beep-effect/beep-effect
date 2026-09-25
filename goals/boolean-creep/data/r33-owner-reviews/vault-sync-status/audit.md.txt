@@ -1,0 +1,25 @@
+# VaultSyncStatus source bindings
+
+Exact source/packet inputs for private scope audit; two-row withdrawal only.
+
+- `AGENTS.md`: `e72d3febf2eea6ef6cbd29300ebde44775560d4237506bb27492a0ac407ca9a9`
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- `goals/boolean-creep/DECISIONS.md`: `af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084`
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- `goals/boolean-creep/designs/vault-sync-status-connected.md`: `46d66dc07eff18cb1b5140f2e2f90ec655b03a8c5c0c239987165b2d85f723d3`
+- `packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts`: `6bd7223acd3c8b572b92cba3a7878a4e595dc96dda24e2ebe588fb09d09eaf68`
+- `packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts`: `4ba8bec7124ed7e4e540c65dc2e256364cd5c7bb9847a0b36dc4776e115542cb`
+- `packages/documents/domain/src/values/Sync/Sync.values.ts`: `e1b7e2f38f55e295d834c15f8d27a17cc277a1fcd677906ed6ba36745fb19df6`
+- `packages/documents/use-cases/src/public.ts`: `facd6d6e45239448cf38a34b0a8ed0bcd5123035dd610b5a6ac97a6e1e276572`
+- `packages/documents/use-cases/src/aggregates/Sync/index.ts`: `5805be896403fcddd1770a0c55becb8d79fd92400c13e66a4540f2096f00bfa7`
+- `packages/documents/use-cases/src/aggregates/Sync/Sync.rpc.ts`: `2ece68d2bc8c820f80e9efa2daa22866111f86e218c1b807a5151d14f89e3522`
+- `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts`: `abba2373867fa544580b30ed6e99b43b21fdbdb47d3c5e49199ebd80244b4249`
+- `packages/documents/use-cases/test/Sync.test.ts`: `d1014bdfb1d61f6e0d4f5acf1769853a07e1d63dd6b5accf035977cfc73e64d7`
+
+## Private output bindings
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/original-rows.jsonl`: `dbdbaa25ca79da31695dc6017e6e97f3aad013ccb2afeff43d5aff0c8c3365c9`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/original-vault-sync-status-connected-design.md`: `46d66dc07eff18cb1b5140f2e2f90ec655b03a8c5c0c239987165b2d85f723d3`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/proposed-row.json`: `38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/withdrawal-proposal.json`: `fb9c99d437ce68dbc8c9c70d4ba29c662498b576c0fd9daf4a388f8e6664ab60`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/disposition.md`: `d5b957a2761b1893eff69af2bd2cd68da34b501fcec29b66225a4fccee61cd87`

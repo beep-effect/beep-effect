@@ -1,0 +1,22 @@
+{
+  "lane": "r33-tooling-library-observability",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:45:34.084377+00:00",
+  "finished": "2026-09-25T01:50:44.027473+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 17,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl`: **0 confirmed**, **17 disqualified**. Every assigned root was covered (`ai-metrics/src`, `ai-sync/src`, `qa-capture/src`), with tests and `_generated` excluded.\n\nSeed drift: `HttpRouter.serve` options moved from line 432 to the object at line 430. The classification stays D2. No withdrawals and no unresolved source question.\n\nOut of net (single Boolean, or a Boolean plus a non-Boolean enum): `AiMetricsRedactionResult.safeForDerivedUi`, `AiMetricsMirrorPrivacyProof.safe`, `p6ProofPreserved`, `BenchmarkRun` and `AiMetricsBenchmarkRunInput` `passed` plus `qualityGate`, `BeaconEvent.isWhite`, and `CaptureSession.commitDirty`.",
+  "transcriptSha256": "f7be34be561de9e1237af6d2c9fe1f9ae148e7574bd218148f4e5fcab89ec36d",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 17 records, 17 unique ids\n"
+}

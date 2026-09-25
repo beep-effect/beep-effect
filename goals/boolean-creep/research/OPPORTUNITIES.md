@@ -1573,3 +1573,41 @@ exactly against saved hashes; values are unchanged. The repair receipt retains
 those bytes and updates the dependent bindings after formatting. Format every
 receipt before binding it, then recheck bindings after the actual commit.
 Evidence: `data/publication-format-repair-2026-09-25.json`.
+
+## 2026-09-25 — R33 broad-root scan differed from assigned corpus
+
+The modeling-rest lane emitted 15 rows from `Html.meta.ts` and `Html.model.ts`,
+both explicitly excluded generated files, while its transcript did not cover two
+assigned ontology seed files (`legal-intake.jsonld` and `legal-intake.ttl`).
+Preserve the original lane receipt and record separate supplemental coverage;
+do not infer exact coverage from an all-roots completion footer. Future runners
+should make the exact included-file list the scan boundary, including non-TS
+source formats, and verify exclusion membership before accepting raw findings.
+Evidence: R33 modeling-rest lane map, execution receipt, and private owner audit.
+
+### R33 complete-owner and evidence reconciliation
+
+Several primary footers retained seeded classifications whose full declarations
+contained only one Boolean. Source-bound parent audits withdrew 51 such rows;
+the raw reports remain unchanged. Recall checks must count actual Boolean
+members in the complete owner before considering a payload correlation. The
+opposite mistake also occurred: an initial private OBS audit applied the
+threshold to a minimal alias pair rather than its full local scope. Its two
+coexisting Booleans make that scope eligible, and the corrected design retains
+the independent scene axis. Explicitly separating owner eligibility from
+cluster precision would have prevented both errors.
+
+The first integrated inventory duplicated the existing metadata-flag census
+when reclassifying image orientation. The validator rejected the duplicate;
+retaining the distinct orientation pair fixed it without adding a second copy
+of the five-flag owner. Validation then passed for 747 rows and 123 designs.
+
+### R33 publication false-positive secret scan
+
+The precommit scanner classified 39 SHA-256 path-map entries in the redundant
+`input-bindings.json.txt` evidence copy as secrets. All findings were confined
+to that copy. The full original remains private, and a concise provenance
+receipt binds it by hash; the existing public frozen-input and execution
+receipts retain source evidence. No scanner rule or allowlist was changed.
+Publishing the receipt instead of duplicating the full private map would have
+avoided this failed commit attempt.

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "boolean-creep-owner-net-audit/v1",
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "withdrawCanonicalIds": [
+    "r2-tooling-packet-transition-stream-trace",
+    "goals-transition-plan-disposition",
+    "goals-packet-migration-kind"
+  ],
+  "newInventoryRows": [],
+  "owners": [
+    {
+      "symbol": "PacketTransitionOutcome",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts",
+      "declarationLine": 304,
+      "fields": {
+        "disposition": "three-string LiteralKit",
+        "appended": "PacketRevision numeric",
+        "tip": "optional PacketTip object",
+        "tracePath": "String",
+        "traceWritten": "Boolean"
+      },
+      "booleanTypedMembers": [
+        "traceWritten"
+      ],
+      "booleanCount": 1
+    },
+    {
+      "symbol": "PacketTransitionPlan",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts",
+      "declarationLine": 268,
+      "fields": {
+        "request": "PacketPlanRequest object",
+        "disposition": "three-string LiteralKit",
+        "streamPresent": "Boolean",
+        "currentRevision": "PacketRevision numeric",
+        "currentTip": "optional PacketTip object",
+        "events": "Array<PacketEvent>",
+        "derivedAfter": "optional PacketDerivedState object",
+        "tracePath": "String"
+      },
+      "booleanTypedMembers": [
+        "streamPresent"
+      ],
+      "booleanCount": 1
+    },
+    {
+      "symbol": "GoalPacketMigration",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+      "declarationLine": 343,
+      "fields": {
+        "slug": "String",
+        "edits": "Array<String>",
+        "manifestText": "optional String",
+        "readmeText": "optional String",
+        "isBackfill": "optional Boolean",
+        "parked": "optional String"
+      },
+      "booleanTypedMembers": [
+        "isBackfill"
+      ],
+      "booleanCount": 1
+    }
+  ],
+  "minimumBooleanTypedMembers": 2,
+  "inheritanceOrSpreads": false,
+  "disposition": "withdraw-all-three-outside-boolean-net",
+  "existingOwnerRulings": "Preserve unchanged; scope withdrawal does not repeal or rewrite operation constraints or historical decisions.",
+  "dryCredit": false,
+  "independentP3Credit": false
+}

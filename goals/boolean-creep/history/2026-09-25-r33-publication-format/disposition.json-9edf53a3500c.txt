@@ -1,0 +1,52 @@
+{
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "mainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "withdrawals": [
+    {
+      "id": "r3-drivers-arch-folder-resolution-blocked-provider",
+      "classification": "outside-recall-net",
+      "ownerLine": 67,
+      "actualBooleanMembers": [
+        "blocked"
+      ],
+      "nonBooleanMembers": [
+        "actionKey: Sha256Hex",
+        "providerId: Option<BoxProviderId>"
+      ],
+      "archiveExistingDesign": true
+    },
+    {
+      "id": "r25-drivers-a-f-box-action-base-destructive-provider",
+      "classification": "outside-recall-net",
+      "ownerLine": 73,
+      "actualBooleanMembers": [
+        "destructive"
+      ],
+      "nonBooleanMembers": [
+        "actionTag",
+        "afterDigest",
+        "beforeDigest",
+        "dependencies",
+        "etag",
+        "logicalKey",
+        "providerId",
+        "resourceKind",
+        "state"
+      ],
+      "archiveExistingDesign": false
+    }
+  ],
+  "retainedD2": [
+    {
+      "id": "acp-client-protocol-capabilities",
+      "objectLine": 841,
+      "firstBooleanLine": 851
+    },
+    {
+      "id": "acp-server-protocol-capabilities",
+      "objectLine": 856,
+      "firstBooleanLine": 868
+    }
+  ],
+  "integration": "Parent only after R33 terminal; preserve raw footer and historical evidence. No D1/D2 substitutes for withdrawals."
+}

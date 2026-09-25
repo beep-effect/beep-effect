@@ -1,0 +1,36 @@
+{
+  "kind": "boolean-creep-r33-launch-observation/v1",
+  "round": "refresh-2026-09-25-r33-main-339da1",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "service": "agent-run-boolean-creep-r33-20260925-339da1.service",
+  "observedActive": true,
+  "createdInputsVerified": true,
+  "corpusFiles": 3181,
+  "qualifiedDesigns": 142,
+  "lanes": 27,
+  "frozenInputs": 3977,
+  "frozenInputDrift": [],
+  "bindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/launch-admission.json",
+      "sha256": "c702ca1356d46bef5367be541d5ef3620eb68f469c61d72517bba7cd2462bcb9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/launch-created-inputs.json",
+      "sha256": "f491ec3789b05b4ac2c0d513e1075d81e213694f2f3de0699b846a78346c7a85"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/frozen-inputs.json",
+      "sha256": "2a2a6afc4fac10b3b61677066d07b3f7279399f156bb949f5662292d128eed48"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/lane-map.json",
+      "sha256": "9e6a2fcf470d041b79acd07b6413259a2763284174ef0d5a96d399117f93e303"
+    }
+  ],
+  "reconciliationComplete": false,
+  "dryRoundCredit": false,
+  "independentP3Approval": false,
+  "note": "Observed active after dispatch and created-input verification. Completion and semantic reconciliation remain required. Corrected packet commit pushed to PR1223; full local proof remains queued."
+}

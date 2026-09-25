@@ -1,5 +1,24 @@
 # Campaign resumed after PR #1176 — 2026-09-22
 
+## R33 reconciliation, 2026-09-25
+
+R33 is finalized complete/wet on 2026-09-25. All 27 primary lanes completed on
+unchanged source and main; the separate supplemental audit covers the two
+ontology seed files omitted by the primary lane. The 50 raw records reconcile
+to one new qualified owner, ClipScan, and a corrected OBS E3 design.
+
+The inventory has 747 rows: 123 qualified and 624 disqualified, with zero
+applied. Complete-owner audits withdrew 51 records outside the Boolean recall
+net, including 19 prior qualifications. The unsupported image-orientation
+design is archived and its observation pair is retained as D1. Historical
+rows and designs remain available. See `data/r33-parent-integration-2026-09-25.json`
+and the R33 round verdict.
+
+The current dry streak remains zero. Two current-source dry rounds,
+replacement independent P3 review, packet ratification merged by Benjamin,
+implementation, and final exact-main closure remain required.
+
+
 R32 is finalized complete/wet on 2026-09-25: 27 successful lanes, 3,181 corpus
 files, source-stable execution, and all 53 raw records reconciled. Inventory is
 778 rows /142 qualified /636 disqualified (16 historical reviewed, 126 designed,

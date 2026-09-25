@@ -1,0 +1,132 @@
+{
+  "id": "obs-qa-scene-provisioning",
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "disposition": "CORRECTED: retain local E3 owner8/4; preserve independent scene axis and public result",
+  "sourceFiles": [
+    {
+      "file": "packages/drivers/obs/src/Obs.service.ts",
+      "sha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/Obs.models.ts",
+      "sha256": "c03b059ce35aea46ed77d340f9b30ecbcc028e0801851b072b64b2fb7d4e2050",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "sha256": "72668ac65ff9a96e59c57bd7e4d520657026d55bd382aa7edc67593ffd6fc702",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/index.ts",
+      "sha256": "cd987ef1f1d7adb46ca2f8084ad9129520f8eb84f32a69654dbb794bf0dd497f",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/package.json",
+      "sha256": "a97f8209b5b36b54404ba62a2985ec560237e482194b67ca0e3572fe6bbe0d01",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "sha256": "734e3bfbda52622ea54b99da149578caa4ec71c2d661606b72b6119660cb8417",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Record.ts",
+      "sha256": "e41c2ba8907d054afc69d7affe7bebb38d7426562c367aab0651cf048cd06646",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    }
+  ],
+  "inputs": [
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/ops/prompts/sweep-lane-round1.md",
+      "sha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b"
+    },
+    {
+      "file": "goals/boolean-creep/ops/prompts/design-batch.md",
+      "sha256": "a663ffcf7d2286fc84c54ca54d9b8dee128a195b40f615a79110ae3b0ec6c028"
+    },
+    {
+      "file": "goals/boolean-creep/designs/obs-qa-scene-provisioning.md",
+      "sha256": "e567a9c317ccb660694135b7aecd1db4166cf5730c56f8711215e9fba9aaa668"
+    },
+    {
+      "file": "goals/boolean-creep/data/design-refresh-2026-09-09-obs-qa-scene.md",
+      "sha256": "976fd6080136221665c090b3e577f928a5041e72a82534c3cf503c28a15f97b6"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-n-r.jsonl",
+      "sha256": "b635d8c6340a62868908aa13d20644414dca3d814f69edc667fb61bfb4dc390a"
+    }
+  ],
+  "effectReference": {
+    "file": ".repos/effect/packages/effect/src/Option.ts",
+    "sha256": "6304e49e82a88ea2176f0c273013562b3f0ce5a0b39020140a7166a23c78909e",
+    "lines": "372-425"
+  },
+  "outputs": [
+    {
+      "file": "disposition.md",
+      "sha256": "f81d68582d7d09df3af4eb53851bab07757aeeaf078e515c105c7a7b617d9378"
+    },
+    {
+      "file": "finite-table.json",
+      "sha256": "7593e1b29560d7de8b7861fde8ee4d96663bc6bc3a8bc6fbd45b0eb3347f2832"
+    },
+    {
+      "file": "proposed-row.jsonl",
+      "sha256": "5d3622e62474a2ad209e55ef013b323882e203cc45f61eb4806a3a8ec20e3919"
+    },
+    {
+      "file": "design.md",
+      "sha256": "c267e1bfca096aec077586202b56b2ff9d7ee3d81acfa3f9daa2899a791c05bd"
+    }
+  ],
+  "sourceEdits": false,
+  "canonicalEdits": false,
+  "runtimeTestsRun": false,
+  "independentP3Credit": false,
+  "dryRoundCredit": false,
+  "graft": {
+    "calls": 2,
+    "estimatedTokensSaved": 26026
+  },
+  "supersedes": "superseded-minimal-cluster-ruling/audit.json",
+  "ruleCorrection": "SPEC33-38 full-scope Boolean count; DECISIONS117 E3; independent clusters allowedSPEC58-60.",
+  "correctionBindings": [
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": ".repos/effect/packages/effect/src/Option.ts",
+      "sha256": "6304e49e82a88ea2176f0c273013562b3f0ce5a0b39020140a7166a23c78909e"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "workerThresholds": {
+    "axisOrder": [
+      "couldMeetMatchThreshold",
+      "mustMeetMatchThreshold",
+      "couldMeetReviewThreshold",
+      "couldMissReviewThreshold"
+    ],
+    "representable": 16,
+    "legal": 6,
+    "table": [
+      {
+        "bits": "0000",
+        "supported": false
+      },
+      {
+        "bits": "0001",
+        "supported": true
+      },
+      {
+        "bits": "0010",
+        "supported": true
+      },
+      {
+        "bits": "0011",
+        "supported": true
+      },
+      {
+        "bits": "0100",
+        "supported": false
+      },
+      {
+        "bits": "0101",
+        "supported": false
+      },
+      {
+        "bits": "0110",
+        "supported": false
+      },
+      {
+        "bits": "0111",
+        "supported": false
+      },
+      {
+        "bits": "1000",
+        "supported": false
+      },
+      {
+        "bits": "1001",
+        "supported": false
+      },
+      {
+        "bits": "1010",
+        "supported": true
+      },
+      {
+        "bits": "1011",
+        "supported": true
+      },
+      {
+        "bits": "1100",
+        "supported": false
+      },
+      {
+        "bits": "1101",
+        "supported": false
+      },
+      {
+        "bits": "1110",
+        "supported": true
+      },
+      {
+        "bits": "1111",
+        "supported": false
+      }
+    ],
+    "witnesses": [
+      {
+        "score": 0.1,
+        "reviewThreshold": 0.3,
+        "matchThreshold": 0.8,
+        "bits": "0001"
+      },
+      {
+        "score": 0.3,
+        "reviewThreshold": 0.3,
+        "matchThreshold": 0.8,
+        "bits": "0011"
+      },
+      {
+        "score": 0.5,
+        "reviewThreshold": 0.3,
+        "matchThreshold": 0.8,
+        "bits": "0010"
+      },
+      {
+        "score": 0.5,
+        "reviewThreshold": 0.5,
+        "matchThreshold": 0.500001,
+        "bits": "1011"
+      },
+      {
+        "score": 0.8,
+        "reviewThreshold": 0.3,
+        "matchThreshold": 0.8,
+        "bits": "1010"
+      },
+      {
+        "score": 0.9,
+        "reviewThreshold": 0.3,
+        "matchThreshold": 0.8,
+        "bits": "1110"
+      }
+    ],
+    "independentLocals": [
+      "hasQualityFlags",
+      "hasPartialAlignerRejection"
+    ]
+  },
+  "orientation": {
+    "completeOwnerBooleanCount": 5,
+    "coarseOrientationPairRepresentable": 4,
+    "coarsePublicSchemaAccepted": 4,
+    "publicWitnesses": [
+      {
+        "orientationApplied": false
+      },
+      {
+        "orientationApplied": true
+      },
+      {
+        "orientationApplied": false,
+        "orientation": 2
+      },
+      {
+        "orientationApplied": true,
+        "orientation": 1
+      }
+    ],
+    "producerNote": "Absent/false, identity1/false and nonidentity/true are producer states; optional-presence alone merges distinct present payload meanings. Public schema does not enforce that producer relation."
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "boolean-creep-supplemental-file-coverage/v1",
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "supplementsLane": "r33-foundation-modeling-rest",
+  "basis": "Separate parent-requested read-only review after discovering original lane TS enumeration omitted two included files. Does not amend original footer or transcript.",
+  "records": [
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849",
+      "bytes": 2669,
+      "lines": 90,
+      "reviewedRange": "1-90",
+      "disposition": "no-applicable-boolean-owner",
+      "qualifiedFindings": 0,
+      "disqualifiedRows": 0,
+      "jsonBooleanPaths": [],
+      "graphRecordCount": 11,
+      "rationale": "Complete JSON-LD taxonomy object uses context/IRI/type strings, labels, relation objects, path string array and concept graph. No Boolean value or Boolean-typed members; conceptual Draft/Filed/Privileged labels are separate concepts, not Boolean fields in one owner."
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2",
+      "bytes": 2113,
+      "lines": 34,
+      "reviewedRange": "1-34",
+      "disposition": "no-applicable-boolean-owner",
+      "qualifiedFindings": 0,
+      "disqualifiedRows": 0,
+      "booleanLiteralOrDatatypeTokens": [],
+      "rationale": "Complete Turtle taxonomy defines scheme/concept triples, IRI relations, language-tagged labels/definition and path/root strings. No Boolean literals, Boolean datatype declarations or modeled Boolean member cluster. Concept membership does not create Boolean state flags."
+    }
+  ],
+  "originalLaneIncludedEnumerated": 175,
+  "originalLaneIncludedTotal": 177,
+  "supplementalFullFileReviewed": 2,
+  "qualifiedFindings": 0,
+  "inventoryRowsAdded": 0,
+  "roundDryCreditClaimed": false
+}

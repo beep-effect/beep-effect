@@ -1,0 +1,26 @@
+# Goals owner source bindings
+
+Three complete declarations each have oneBoolean, with optionalBoolean counted.
+
+## Inputs
+
+- `AGENTS.md`: `e72d3febf2eea6ef6cbd29300ebde44775560d4237506bb27492a0ac407ca9a9`
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- `goals/boolean-creep/DECISIONS.md`: `af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084`
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts`: `ca35f48dee6ec993076827dfe22ca126e010764a82ac665a5ec9ffb7b8f1feab`
+- `packages/tooling/tool/cli/src/commands/Goals/Migration.ts`: `c077f133b69738f2451fe095dbda7f8f90b59cd036836325cd863117c51a960b`
+- `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.schemas.ts`: `c0865c3d4e86bf6a34a6fbcf1bfa6a4e1acbb04bb8bdb1750a69d5719e9cf536`
+- `goals/boolean-creep/designs/r2-tooling-packet-transition-stream-trace.md`: `48a5e8631f330c5d59d7fbf4b29d37abad0a01a4f487a4d1d91acc2adbf45648`
+- `goals/boolean-creep/designs/goals-transition-plan-disposition.md`: `a48692bc497dafb3b15ac0bf825d55af6ba207eadd3140cbcc5bda0911422f2a`
+- `goals/boolean-creep/designs/goals-packet-migration-kind.md`: `3013362ddbbb3d3a20b45c40bccfe1ad04942f748bf595e45d0d555cc977d87c`
+
+## Outputs
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/disposition.md`: `87b0de28134b9cc14dd05fae878bc54d15969fe3cabdc77ec50f0dfc3789f59d`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/original-goals-packet-migration-kind.md`: `3013362ddbbb3d3a20b45c40bccfe1ad04942f748bf595e45d0d555cc977d87c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/original-goals-transition-plan-disposition.md`: `a48692bc497dafb3b15ac0bf825d55af6ba207eadd3140cbcc5bda0911422f2a`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/original-r2-tooling-packet-transition-stream-trace.md`: `48a5e8631f330c5d59d7fbf4b29d37abad0a01a4f487a4d1d91acc2adbf45648`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/original-rows.jsonl`: `c7a590585f154496d667440469a716ffe70611d6e3e297df90df6050eccc10da`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/proposed-row.json`: `38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/scope-proposal.json`: `5f9efcd5d59330311bd6c07d7d7e862fa942b35c1c7eef60f006b63a5af36cba`
