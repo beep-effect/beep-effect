@@ -2264,3 +2264,11 @@ full-value `toEqual` separately; do not narrow the ProcessLike generator.
 Node reproduced the mismatch after 36 runs and three shrinks. A migration rule
 that distinguishes presence checks from payload equality semantics would prevent
 this accidental strengthening.
+
+## Schema runner-context reproduction resolved after prerequisite merge
+
+After PR #1241 landed, merge `654e80230f` incorporated the runner fix. The same
+schema package-only shared-worker coverage command now passes 725 tests across
+78 files, exit 0, with no TestContextUnavailable failures. The prior 60 failures
+remain documented above as pre-integration evidence. The integration receipt is
+`history/2026-09-25-schema-runner-integration.md`.

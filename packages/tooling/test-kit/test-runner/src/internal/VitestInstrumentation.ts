@@ -1,5 +1,5 @@
 import * as NodeAsyncHooks from "node:async_hooks";
-import { aroundEach } from "@effect/vitest";
+import { aroundEach, TestRunner } from "@effect/vitest";
 import {
   Array as Arr,
   Cause,
@@ -295,17 +295,32 @@ const finishPropertyRuns = (execution: TestExecutionState): Promise<void> =>
     { discard: true }
   ).pipe(Effect.runPromise);
 
-aroundEach((runTest, context) => {
-  const execution: TestExecutionState = { context, propertyRuns: new Map() };
-  testExecutions.set(context, execution);
-  return testExecutionStorage.run(execution, () =>
-    runTest()
-      .finally(() => finishPropertyRuns(execution))
-      .finally(() => {
-        testExecutions.delete(context);
-      })
-  );
-});
+// Coverage reuses this module across files, while hooks belong to the current suite.
+const instrumentedSuites = new WeakSet<object>();
+
+const ensureExecutionContext = (): void => {
+  const collector = TestRunner.getCurrentSuite();
+  const suite = collector.suite ?? collector.file;
+  if (instrumentedSuites.has(suite)) {
+    return;
+  }
+  instrumentedSuites.add(suite);
+  aroundEach((runTest, context) => {
+    // An ancestor suite can already own this execution and its finalization.
+    if (testExecutions.has(context)) {
+      return runTest();
+    }
+    const execution: TestExecutionState = { context, propertyRuns: new Map() };
+    testExecutions.set(context, execution);
+    return testExecutionStorage.run(execution, () =>
+      runTest()
+        .finally(() => finishPropertyRuns(execution))
+        .finally(() => {
+          testExecutions.delete(context);
+        })
+    );
+  });
+};
 
 const instrumentContextCallback =
   <Args extends Array<unknown>, A, E, R>(
@@ -358,6 +373,7 @@ const instrumentEach = <R>(each: Vitest.Tester<R>["each"], clock: Clock.Clock): 
       const [cases] = args;
       return new Proxy(() => undefined, {
         apply(_register, registerThisArg, registerArgs) {
+          ensureExecutionContext();
           const [name, self, timeout] = registerArgs;
           const registration = Reflect.apply(target, thisArg, [cases]);
           return Reflect.apply(registration, registerThisArg, [name, instrumentCaseCallback(self, clock), timeout]);
@@ -369,6 +385,7 @@ const instrumentEach = <R>(each: Vitest.Tester<R>["each"], clock: Clock.Clock): 
 const instrumentProperty = <R>(property: Vitest.Tester<R>["prop"], clock: Clock.Clock): Vitest.Tester<R>["prop"] =>
   new Proxy(property, {
     apply(target, thisArg, args) {
+      ensureExecutionContext();
       const [name, arbitraries, self, timeout] = args;
       const propertyRegistration = {};
       return Reflect.apply(target, thisArg, [
