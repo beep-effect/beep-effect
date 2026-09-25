@@ -1,0 +1,26 @@
+{
+  "lane": "r40-agents-workspace",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T10:46:18.866774+00:00",
+  "finished": "2026-09-25T10:48:32.483358+00:00",
+  "exitCode": 1,
+  "endTurnEvent": false,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [
+    "Grok provider usage balance exhausted (HTTP 402).",
+    "Provider/tool error event; inspect private transcript.",
+    "Diagnostic; inspect private transcript."
+  ],
+  "completionSummary": "I'll open the lane report immediately, then sweep only the assigned agents and workspace sources for boolean clusters.",
+  "transcriptSha256": "a24cb559285d7f8944f1e4789050317f692023bcf9866c8aab954c898c7ca18d",
+  "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a",
+  "seedSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

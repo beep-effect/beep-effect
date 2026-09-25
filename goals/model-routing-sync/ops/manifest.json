@@ -3,13 +3,13 @@
   "initiative": {
     "id": "model-routing-sync",
     "title": "Model Routing Sync",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-22",
     "updated": "2026-09-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/model-routing-sync",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "One role x surface routing manifest at $HOME, projected into repo doctrine, skills, code defaults, and dotfiles from a layered model catalog.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -73,13 +73,13 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress",
-      "exit": "Approved three-package coverage exceptions and packet closeout in a follow-up to merged PR #1224; final local proof and hosted merge-ready required; leave follow-up open."
+      "status": "complete",
+      "exit": "Implementation and coverage repair delivered in operator-merged PRs #1224 and #1240. Documentation-only closeout PR carries lifecycle and evidence; final local proof and hosted merge-ready required before goal completion; leave it open."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

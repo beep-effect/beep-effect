@@ -116,6 +116,59 @@ export const configStringOption = (name: string): Effect.Effect<O.Option<string>
   Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>));
 
 /**
+ * Check whether the current process runs under CI, reading `CI` through the
+ * ambient `ConfigProvider`.
+ *
+ * **Details**
+ *
+ * The effectful twin of {@link isCiSync}: tests pin CI on or off by providing a
+ * `ConfigProvider` instead of mutating `process.env`, whose env-backed provider
+ * can keep serving a key it already resolved.
+ *
+ * **Example** (Pin CI through a provided ConfigProvider)
+ *
+ * ```ts
+ * import { isCi } from "@beep/repo-cli/test/SharedInternals"
+ * import { ConfigProvider, Effect } from "effect"
+ *
+ * const ci = Effect.runSync(
+ *   isCi.pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "true" }))))
+ * )
+ * console.log(ci) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const isCi: Effect.Effect<boolean> = configStringOption("CI").pipe(
+  Effect.map(O.exists((value) => value === "true"))
+);
+
+/**
+ * Check synchronously whether the current process runs under CI.
+ *
+ * **Details**
+ *
+ * True when `CI` is exactly `"true"`. `Bun.env` is consulted first so a value
+ * changed after startup is still seen; the env `ConfigProvider` is the
+ * fallback. This is the one CI predicate for synchronous call sites.
+ *
+ * **Example** (Gate a CI-only flag)
+ *
+ * ```ts
+ * import { isCiSync } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const args = isCiSync() ? ["--summarize"] : []
+ * console.log(args.length <= 1) // true
+ * ```
+ *
+ * @returns Whether `CI` is set to `"true"`.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const isCiSync = (): boolean => Bun.env.CI === "true" || configStringEqualsSync("CI", "true");
+
+/**
  * Read an optional string config value through the `ConfigProvider` service.
  *
  * **Details**
@@ -674,7 +727,7 @@ const turboCacheValueSource = (value: string | undefined): O.Option<TurboCacheVa
  * ```
  *
  * @param environment - Environment record to classify; values may be undefined.
- * @returns The remote-read configuration the record carries.
+ * @returns The remote-read settings and optional cache-directory inputs carried by the record.
  * @category configuration
  * @since 0.0.0
  */
@@ -699,8 +752,9 @@ export const readTurboCacheEnvironment = (
  * **Details**
  *
  * Evaluated at call time, like every other reader here: the four
- * {@link TurboCacheEnvName} values are read through the ambient provider and
- * handed to {@link readTurboCacheEnvironment}, which owns the classification.
+ * {@link TurboCacheEnvName} values plus `TURBO_CACHE_DIR` and `HOME` are read
+ * through the ambient provider and handed to {@link readTurboCacheEnvironment}.
+ * The cache-directory inputs are optional and do not determine remote-read eligibility.
  *
  * **Example** (Read the ambient cache configuration)
  *
@@ -710,7 +764,7 @@ export const readTurboCacheEnvironment = (
  * console.log(typeof readTurboCacheEnvironmentSync().cache)
  * ```
  *
- * @returns The remote-read configuration this checkout carries.
+ * @returns The remote-read settings and optional cache-directory inputs for this checkout.
  * @category configuration
  * @since 0.0.0
  */

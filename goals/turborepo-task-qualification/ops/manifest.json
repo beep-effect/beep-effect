@@ -5,7 +5,7 @@
     "title": "Turborepo task qualification",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-22",
+    "updated": "2026-09-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
@@ -329,7 +329,12 @@
     "research/profile-closure-refresh-2026-09-22.json",
     "research/current-profile-capture-2026-09-22.json",
     "research/descriptor-capture-2026-09-22.json",
-    "research/ring-attribution-2026-09-22.json"
+    "research/ring-attribution-2026-09-22.json",
+    "research/dependency-lint-exclusion-review.md",
+    "research/fc-runs-exclusion-request.json",
+    "research/test-runner-exclusion-request.json",
+    "research/dependency-lint-baseline-request.json",
+    "research/dependency-lint-exclusion-verification.json"
   ],
   "agentLaunchers": [
     {

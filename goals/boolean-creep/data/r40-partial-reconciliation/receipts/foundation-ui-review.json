@@ -1,0 +1,2422 @@
+{
+  "kind": "r40-foundation-ui-reconciliation/v1",
+  "createdAt": "2026-09-25T10:55:51.644501+00:00",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "disposition": "complete-bounded-reconciliation-one-Q-withdrawal-proposed",
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/lane-map.json",
+      "sha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/frozen-inputs.json",
+      "sha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-ui.execution.json",
+      "sha256": "16d3fbf3eade25da539420524044bee420e12768d4f2cb8073f19f3a747c89da"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "private-evidence/boolean-creep/transcripts/refresh-2026-09-25-r40-main-5bb775/r40-foundation-ui.ndjson",
+      "sha256": "73d3ddd948211bfbc31a0982e53b540f8405a87175479896969d081ea6519986"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r39-ui-supplement/disposition.json",
+      "sha256": "186374785f914f3cde91fbeb1606c677dbb9b3bc381d7bdf0e377f01bbbd8ed9"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r39-ui-supplement/seed-accounting.json",
+      "sha256": "50c03fa46979afb3650c47922461276e1ede902d51d951d5a86405204655ac27"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.asset.d.ts",
+      "sha256": "ed19a149ccc8c7664a164b9a9ba71a231b4e506998aeaa36244bdd6b86d8d27e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.assets.ts",
+      "sha256": "52699c7e5676483ab71ab6f7b240d87c4d4725eacf3e5b2da67db13846184904",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.css.ts",
+      "sha256": "8f645991fc05a60c38094f0312f3e61ad6f4d28c7630c7957b879db01e121223",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "sha256": "0edd9f0f56b58c4c426bf4b0b4bdfce3be7661002872b35da64fc06391044c75",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.svg.ts",
+      "sha256": "6977fb07eb3d60f041f839a5e1d46564d08938b4137c2fb1b8dbf082835b2e06",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.tokens.ts",
+      "sha256": "6ce6cdb5129ec9278646984aba049cd40d5e5372ee16a01cc2ae65be51aa8f66",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/index.ts",
+      "sha256": "883909c52a3e0027a0bb67a3c7a2ece884b48842b08fb7f4b901e95e02ac4dc1",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/react.tsx",
+      "sha256": "4c745752cbe50db93570ea510b52e628c783e56d777e9d89a42b03d85cf86ab0",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "sha256": "c4d968e329c85793d35a7102aeb6f27d0c3ccd662ee69d0c013936732afe48dc",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "sha256": "5da2d76d40b00909133c6087ef39ba868fa06bc170c18c9674091ca63869788b",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/index.ts",
+      "sha256": "6412a93c62364cecd826948bc7262571bf6cc67ccc956f49fdf6eaf72bfc1697",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "sha256": "1861bc1d88815ab410ee3fcc2393330fb0d67bc6d81461add485afef4902cc6e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "sha256": "bf36b95ff10f5646be98e4c70880ce0ce1a8a7e26b2ad6bf15759b32f9d5e50f",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/FloatingPane.tsx",
+      "sha256": "96ea1e179ee2825893f99ed5f8e701097f60601c04f15537d71bb737a8dc93d3",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "sha256": "106946af1b1f17f44d6fe774778f7ce5c4b4cbdc714b60f48f86d5b5cf3df551",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "sha256": "82c59fc33872f01ffd386314370b4ab6e3d06730dd5785e239271bb6b57d8933",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Icons.tsx",
+      "sha256": "f83a585690352ed68df07824d26fa9b5d3ee20549355e3be99f1c471a0131019",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/PanelHost.tsx",
+      "sha256": "c0ae3e61f506d27d153273b4b07935391aabb24bbc81bacae89e269b67b5d766",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
+      "sha256": "a2af3a799812a4c70e91028b702d64fb24402316ff44268de848bc935121f87b",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Sash.tsx",
+      "sha256": "be7718fbe3cf7762644dffd14ea96ba2d29574a37a8af516a16d449452a52b60",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "sha256": "9a4b6e4aa544c3040f00c7896d01f74fa8199f6661059f1a96f99c04793e160c",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.atoms.ts",
+      "sha256": "37e551acabc761fd2338d6f954abdff2e9de62cba6a0dc070b6871915329a9f4",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "sha256": "4d0c17052386c747a5a1837480462c8ad8716ce2fff18143a2910f7dcefdfb06",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "sha256": "c0c89352f93249578b135ad4288d5e8a04bd59a04be3c06e313ae464aeda7771",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "sha256": "a5d8135697ad55a4f02cd72afcad9e2134e786382be4ba58a4053dffff52b00a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.geometry.ts",
+      "sha256": "fd2a6cc18f450aab29cadbb7fc2c0df8d3bba1c9a9b147aeb0e754bf3568744d",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "sha256": "db29ff4cad9d9b56e8c4017664871ba530829c6ebd6afe1a9d525520b2623c25",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "sha256": "4070036c04d14954f6c2067bd40742b71aea1626340d323f90071437afc2df41",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models.ts",
+      "sha256": "69c6eee95bfc579e2ded597c239a24a41167e23b7abc3d9c2e24dc193663ad09",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "sha256": "1e0de48a45af13675bb4946764a206175339b8ff217513b0974d731b458ac211",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "sha256": "32cd33077174cd04f417cb5e2e69ce008714b5759acd22636c3315df65be2a11",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "sha256": "8e439ece25c0de5284c0f3824b312fbfcfe3f3be5a0ccd57907b142a14046383",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.reducer.ts",
+      "sha256": "4c366bc923a1fa92018171da5bdf0ca71b8dbf3dd60a67b4df8cbbf32904d6e6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.tree.ts",
+      "sha256": "a48a8f38844526181033ef41047a041efa3501b7388ee89e238d61f0c500a348",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
+      "sha256": "d3c1c49a91310c8119b1f410768a9140fdd7cb6ff69894beaf58edfd20c8f2db",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/DockPolicy.ts",
+      "sha256": "a7d3fdc9222f9798b4a25233660290b41c84bf4c01abdd441410455ee75929e6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "sha256": "1b1aa501322bda2fa21046f3d38bd7c161e1a6659451a15a2951c8f9ed7f4eb7",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Minima.ts",
+      "sha256": "a4556c456115a24ee72a3188b4f002f6322511081340467b18df61ebcfc1511d",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Recency.ts",
+      "sha256": "a9773e42e6b5b757e302e355a23fb3b4a11959ad9aca78f1b87250eb62ffbd03",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/index.ts",
+      "sha256": "327c450ccee1527b67065a8be6b317fdbcb6efddb71bb5f84d05cdd9e70633ed",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/DockAtoms.session.ts",
+      "sha256": "430e9745da06be7520c4ad2b191c462a48cd98ce8917590680502e143d827474",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Dual.ts",
+      "sha256": "35a71f4239ab35efa20606a7bca51c2259b259c1b51e8686e94df3797548cc70",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Geometry.projection.ts",
+      "sha256": "0aaa52fa49f38bad9dfd5b24d32e88d18d40a62056090838a863b74a5045d3a4",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Reducer.ts",
+      "sha256": "e4a7bed43b71bc1a2bde8180f027b59c553d80c9c5fad075d0de785296360f1a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/Version.ts",
+      "sha256": "5f948ff3d2673a4a7ba1d09356c80461a7143a6b13e4ac877c60b142adb40cc2",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx",
+      "sha256": "3aeb59b92889732ad499674911d827d0b31220abad5153496f48cf24663ad497",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/catalog.ts",
+      "sha256": "b636c2a69a7ef912957c3119b025e0b20134fd0e755191e0ce990d34cb88b624",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/composer.tsx",
+      "sha256": "dc2b3f787a9d0304f8ff723cb4da16e16edb97a43bdd680dd48d64cc41f7ba60",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "sha256": "87dabdf4869c41c14ee48dd37e5bc480dd7d2f3305c3963f4c8152267129abaf",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/index.ts",
+      "sha256": "2b37056a3fdf31c7791d0a2993075b0e24c5a5c311e9f1067fb1de4264124f7c",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/profiles.ts",
+      "sha256": "1a75e085f70be24bc6b5f990e4a9074a9885fe1d9f79304c5d0e1e3f4fd1adad",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/projection.ts",
+      "sha256": "684e7bc9ac0318834d95bba757cfc4e1eed58e51b897c3ab0915b0d535f124f2",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/resolver.ts",
+      "sha256": "e173cb7520edbfab0493eaefa6551c9c6013845e021a7338f17fd47811f17cdf",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/runtime.tsx",
+      "sha256": "00112d7ecbfbcb210b2d45c84edde2d3bd181d95a3e2747e7aa5ffb44c906641",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "sha256": "8527e383284989cd8c40466cd2c85e3f34311691b49680e90a8a927d2a7c574c",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/shortcut-help.tsx",
+      "sha256": "f2bf2a86f20d63930643a80f89422229dc1561d94f1f82414b4ac23208331ea2",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/toolbar.tsx",
+      "sha256": "92e4f54c259c26b2bc03807075f8bb9b7fe0c6138f9469303d5d77b14aec5e7a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+      "sha256": "8a5e01f7642327622ff35c3d0d9d3702fa54badfc916a7939887fade1d46f1e6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+      "sha256": "063f97f11e664e7a6821dac0793ed879ad8466f0f61ddf044802aee78732dabe",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/attachments.tsx",
+      "sha256": "9b6b644d1a3bc45bc5c83df25825a2a0021ad0efad5ddfdcf3775800bc04b224",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "sha256": "60b43928ce5ce6d738f26b7fde3aebfeebe618079c91470858bec5c4d062afd2",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/code-fence.ts",
+      "sha256": "8ec36dc6462de4ea53896a3f2d0d1f893ad9d779eae26fb346b5832dd354f634",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/commands.ts",
+      "sha256": "2b040b09e670d374eacf28d26e0e9595e80ccf18fc5bc01beb4e887a97820491",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+      "sha256": "ea80fd14afe98e2e3743f98b59cd5723b6678bdf91af205087304c4065fdbbca",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/send.tsx",
+      "sha256": "0cc2602e72949016603878920969e35367116e73991f5abf16dec4290c4060d6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/slash-items.tsx",
+      "sha256": "586330ab20763f0c73015131430e5b052c0c889ba8dd59b08b799d93558eb8b6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
+      "sha256": "6a81a4c3ef795964ca0b49dbe339920f5c699f7573ad2a0a38ba895e80dca07a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "sha256": "5c521a5e3a1a03f2570518b3b4a367504ad3c2b74c9e7b09f8608b4f47059e4e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/code-block-node.tsx",
+      "sha256": "c3a6334f732111d99bfd44da022f16e42d8d52d2fc0157281b50bbe338c50bc7",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/code-block-view.tsx",
+      "sha256": "eaeea60900f4eebb8e30a36fa9221f3a5ea8be1f109bf248bcf667c64bef15ce",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/composer.tsx",
+      "sha256": "4b76be4608841061c22b9a508edb2191c0cc6e819100519b4bcd0bbde9109959",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/index.ts",
+      "sha256": "7211222fa3fc0bcab8317b9b6a995882aaf319187ad49069d965278e12c27dfb",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-node.tsx",
+      "sha256": "7976a7cac6dbd53d5bfcbab87b3f816072e912e8f879ee8c6e49af5a6afc413d",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "sha256": "558256344c4431123d4d5f8f982a6a0740c6c421dde00b78def0bab6ec32260c",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/nodes.ts",
+      "sha256": "3468f5332a650eb11e52f48b98b68309a8cc4595d88bc4e77d46a2bfcebda25e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/runtime.ts",
+      "sha256": "377229f001a045332e76243981526dd73026260bc23811df78eca89580f79f21",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/theme.ts",
+      "sha256": "9a618b25013a52a7d38a05d11ebedd4bba0833763b4187c397a19992d887d743",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/viewer.tsx",
+      "sha256": "de2ebe025c98afd44ac5b4745077274fe5b623fcf992d02cd0f83dca0032e94f",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/youtube-embed.tsx",
+      "sha256": "d5b1d5876e4f5c22643deae8b34b09324e0fcaff783d450163e1a50830a4eb50",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
+      "sha256": "ba794c4166af293ed324a042d02372e751379fd37e3a1f8255759853fb2bf6b0",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/Version.ts",
+      "sha256": "398345403f19bef5389ff5236425d7c8d069221f54da918e31d576a112918e50",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/accordion.tsx",
+      "sha256": "cbf360cb507b0f14324229c8254a933d359d9c4b0f174bf51c5e3808c24dab49",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/alert-dialog.tsx",
+      "sha256": "42d2f47d6a3a6f84f640f4f6f211436bc6bde8e648bc744342e9b123b90ebaf8",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/alert.tsx",
+      "sha256": "180d63413506bf6c122b153bec1c8ac4307b628db33598d93212fabe53d6637e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/aspect-ratio.tsx",
+      "sha256": "5f514ea3e234f911271f25a9d91317c834274a19d2f5c3df1ba0066b80e19388",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/attachment.tsx",
+      "sha256": "38ef9dd2130c62668850d750c79ae15423c1dbfe61281a5e6dcc4f4071d95fd6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/avatar.tsx",
+      "sha256": "4f6d836b2f4b1b46949143b9405fea70deb0401849ac23d9d5db85aca2f8a26f",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/badge.tsx",
+      "sha256": "aeb5265e99f1e4d9f2fc09706fdc698c53cde201f7696a28aa85e85f0691e1f9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/banner.tsx",
+      "sha256": "c2c5cc63b7d371287c6f429f181b136bec13e2eee5d01ae4ea7d0da708e7cce9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/blocks/editor-00/editor.tsx",
+      "sha256": "b571e936a39ab0213778e041480f558f3704f6e4574ab9448d874f8a238f36dd",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/blocks/editor-00/nodes.ts",
+      "sha256": "b8b3a56cc413ef452602207153f5339a7e79365ed5613f6bee9f2c7d81e0fde3",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/blocks/editor-00/plugins.tsx",
+      "sha256": "45fd0e9b5d450158e4c8f775d24fa3e41b4acc16367a4c40bc1c6862eea4ee2c",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/breadcrumb.tsx",
+      "sha256": "3afe4da4142eca622ef5d2766d409121b52875f3fe9b2debf49a657d27d29855",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/bubble.tsx",
+      "sha256": "3356ef4d73c02480c0d19883de9bbf27ab9b3f3e6bde271b254f8638a18842f9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/button-group.tsx",
+      "sha256": "5732aeb7fd441c0490f08a22e35ddc8e6d87c9cd4eeedfbddddcfb43d1663ede",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/button.tsx",
+      "sha256": "9fafe0328a777643390724074e983be39d2d2a993880311b27d88a76f4855fef",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
+      "sha256": "1cca5503dd53ac1308f5feedc43e85fc0e92b3e7bc3f6f20fa77e32a3ec9a691",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/calendar.tsx",
+      "sha256": "f936e834fada80a84671ee7cf253d5fa1d1aed6b4491c30d7aa6bd77347c6307",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/card.tsx",
+      "sha256": "cbf1178a0cd125385ec6dc0a767ba15ad6b94ec3de27528f9478a28d980ccc71",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/carousel.tsx",
+      "sha256": "dbd1a9027bb9ebe973f1cc0d3db990c9eb86d07980973397ddcf84664c2c8dc1",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "sha256": "0b515cbd1ee51eb79ee36bb2d941507f180fdb1ce233b0db44526de62711e0c5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/checkbox.tsx",
+      "sha256": "9254ebd57711ca6695720ca6c9e70ec31649c792e9a5e69a807826030d478ba0",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/collapsible.tsx",
+      "sha256": "1ebe5b515eeda4fcbab9ca9f26f140e022b476c7a99877ded12b29f21525d180",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
+      "sha256": "e4f87c71b8bc8a7a7f50b87ec5c4598e57c367a6e66aa3f21366b5977090c8b0",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/combobox.tsx",
+      "sha256": "f0db38a02edf22255be7af1beb3536cd9588ef96fefb4cfabf152270a1bf408e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/command.tsx",
+      "sha256": "a7da61b8408bb92817c8ecf5940cb18d75359d9bab568d3902a21eacefb1cb46",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/context-menu.tsx",
+      "sha256": "74f5e7d8be57ad345cf30fe0911012ffad477d30da35e5d7a3c13433911e8844",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/conversation.tsx",
+      "sha256": "12c7ec14c5499281ef1e07ffcb0a38779b0e141070bce88277abe22bbe13b4ed",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
+      "sha256": "11a36e29c1eb3fea22e43c56589a8a9f2603e11f377a73923eea05880c9fe877",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/date-picker.tsx",
+      "sha256": "a756f629e0d4452f31d9d06413cab95e0e3e469efcf4fde322cb29ba3eff1592",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/dialog.tsx",
+      "sha256": "167bda70406012048eb81863da81f6828596744af332c5b37dba4aea49426f0e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/direction.tsx",
+      "sha256": "ec98d2f809a5e032c21ef519a98ae1132a4669025697d93e902b26770e547b2d",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/drawer.tsx",
+      "sha256": "7a0d47f6ace5f5c08faf5a26a521f0901a4c20257150ff13d8ff6c404b7618bb",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/dropdown-menu.tsx",
+      "sha256": "410898dcc0652c9d61ebc12520601cce6df294a534ac4e6415be55c2fdfac42a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx",
+      "sha256": "7a305c5e3cb2e2c29f547f8e6830b3b7fd01ff49daf5719d505128ea8454ccb1",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.css",
+      "sha256": "5dc7ceac2d116411103637bd174c5efc3b28b5734e546f029bfccf067a503aa6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.ts",
+      "sha256": "ecfaa1e9bd803f5d8e6e5c491f17bf9e2994cd290bee61b71bdaffad53f4b536",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx",
+      "sha256": "c242edc09b2c65c472edb41ace09614d978fa9ae4a2d6331544e8913158b5af5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/emoji-picker.tsx",
+      "sha256": "eaa45aac0045f7fdecaeb8626d3986968910ca0a0293054eeeeb297dc5a59cf4",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/empty.tsx",
+      "sha256": "830c53ec0049e9707082839347cff8d39a16900d48a3580029cd4bd2d06e7dee",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/field.tsx",
+      "sha256": "00a2f304cb3a18a68172f4c2b56fd931f7802ec6390dac21447124bf383b1359",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/hover-card.tsx",
+      "sha256": "183e9de069d5387af9847e95679c039e293eaf974ea36037b873afa75bf4c719",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/input-group.tsx",
+      "sha256": "968f81a0777cabd80536c17c96bc42de897a07442f3eec893665d76e2e249ca9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/input-otp.tsx",
+      "sha256": "9268a76f53010f4f18338fd01a3479ec20c8424491b26ea8e8c78e2ed63e42fe",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/input.tsx",
+      "sha256": "5dc6e9364ebd563052158081d68deae5da86fd011b4d88eb2ede7f031574bae8",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/item.tsx",
+      "sha256": "3d65721cd972448e14a51c20a90ba86bd54e1d9246f86fe4eaa47e2bfbc9ce4a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/kbd.tsx",
+      "sha256": "f8d61d12f50a4a746ac98ec66850656dafccf18f75cda321e8723412bcfbb6c9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+      "sha256": "9343d461031eacc1a3c14b402837887928ce05e2f75998630a8006b1fbe09014",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/label.tsx",
+      "sha256": "0a42031192de9a87d0d53923b41c32bec0abf7429408a259c8774893ae8e4cb3",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
+      "sha256": "94fcd5e380ae594d6f43fdf98112a57bd3e44ee7fa26cb9e96e1d928e05455ab",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+      "sha256": "ec748f42c020bcb714b8e7dd62650ed7cf3864c2106df2d9b7aeb797862f8996",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/marker.tsx",
+      "sha256": "ef0d5b9e1eac5f3fe4df1f2dc0238b794c783cfed8880c885de9794d7d82fc95",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/menubar.tsx",
+      "sha256": "85965b5b8b210938591f320bc0eef183caddc8df9006ae86c03523df4b6cc022",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/message-scroller.tsx",
+      "sha256": "369810c85b0681630150f4a6520c376a6140530ec4fd98b51f21d0d8b2edcbd4",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/message.tsx",
+      "sha256": "b326480321a041ca61047af91abe3c5f128d268c16693bea70c10fb47f92f8ff",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/native-select.tsx",
+      "sha256": "9bb9346db53c825fc4b5a5dad1f891bc6138898c81b60baabbcffab2399e4b63",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/navigation-menu.tsx",
+      "sha256": "9a47fb88f67120ed59676e106bb9c507e71381e5e58c65ac4e74617ec8b23824",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+      "sha256": "aa6f424128b3e43d2b6659c72124c732d47d7bc825e7b8ca3f08e0c1826b2af0",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/orb-background.tsx",
+      "sha256": "dc470707d87576f9f7178ce386584ec5312ba7b36b8710a4940f1c04d2848f44",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/orb.tsx",
+      "sha256": "e8c4cf1513dca88c221136e0f3f3a9d40a2b834ff47092c0e9a43ab556b166c4",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/pagination.tsx",
+      "sha256": "9c2984d282061f0636d5af51acd6efb3973f55a9d64d7369731d0f291794ca7a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/phone-input.tsx",
+      "sha256": "9a164d4ff3c5fecc1e5bb98746590b3a9162380c4ec6f8f93333d430845df22e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/popover.tsx",
+      "sha256": "7d701f0a5aa9f5c905d763898775bafc54b05b904d013b32cfef0256ebe22bf3",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/progress.tsx",
+      "sha256": "cef0e22c5f5461ba71e39f8888ce501c1912660183c3e4abc789bdc0bd6a4648",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/radio-group.tsx",
+      "sha256": "50259b05d31d9e289694d9570c6f606e2b255dce1b2a5078e6c568c2d24f80f3",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/rating.tsx",
+      "sha256": "9a0d2ad3744a59286fef9c8fef644dea9d45389facf568234b0f8d9d0110996a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/resizable.tsx",
+      "sha256": "e14f7337d8b521b417e8d426fe4b58d7a37339a04852f9f6fc1d958108d9088f",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/scroll-area.tsx",
+      "sha256": "7dd4b9a68623960d89fe769f97d7d03d2ac28cbd8a5bafcf0be4a9c8bfd1654d",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/select.tsx",
+      "sha256": "5bfd3038a214b180b6f0cbd9f645c65ad08378370f2565620aa7f2424c452eb7",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/separator.tsx",
+      "sha256": "f965116accf1ab5929a8abe2a30cb037ca7b23745b0bc4d80af6cdee79eff36a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/sheet.tsx",
+      "sha256": "9a0b79904f6df1f096be71c4049f06173acc43c87b1142b4f2a2093f391d7876",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "sha256": "b39a60fc6edf7ed5b5dc753f8521589e8fba7c70e290266f5d6eede96087bdcb",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/skeleton.tsx",
+      "sha256": "a87f4d18fd1e081ba8cfa12b4bedc1226bb4ef50edb6f78c1a24cf89fdea87cb",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/slider.tsx",
+      "sha256": "0c832ebca8ce4df4a6459c3ebead0f114fcbf8cff52154ad33e42cb89166ea45",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/sonner.tsx",
+      "sha256": "24955b735d996e86b90543dc994cab091034742c93019db433f262aae5f6c835",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/speech-input.tsx",
+      "sha256": "0b3b5c9b37f0d0b8affa13c5198bfb7e64696a459b519bfd4270da5b82b3ffad",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/spinner.tsx",
+      "sha256": "b6c9cd76776859952d4a98f4dfc484a05782a9ddc5644cb98a851f110159f358",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/switch.tsx",
+      "sha256": "381b485ef6e94fd65d91ef678d03db56f98d49f41f32a8689cd17ccc3c4a79cc",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/table-icons.tsx",
+      "sha256": "d1cc35d469c8fd76c2faf9e94b39f5c4edc0a53229370df5abd6361fa3fb841a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/table.tsx",
+      "sha256": "ab2589f34210530eda5ff4e11f7a80a4d9c2fcf96c67bee4e23477bf6aad861e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tabs.tsx",
+      "sha256": "0d5e6a7dd68580cf9474a9a8523e337ba6a2fff2921d48565bc9c19361f31ce8",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/textarea.tsx",
+      "sha256": "4d20669bdffdee11a771f08e30d948b0390c55840d55d8ff21243b53a5dc4478",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toast.tsx",
+      "sha256": "6c61eab7c0d86f892f3a9019155950e2153ff03474f5f398fefe61f281e270cd",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toaster.tsx",
+      "sha256": "2d90058577793a077cd439c4efb3a66c32c7499fea2072cd6363f9ca217a3478",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+      "sha256": "c1d62d3b50a9b7b44d8ab45ef1982acd2f5997c681067927369d4ac0ec5ba6c5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toggle-group.tsx",
+      "sha256": "22ef4583199cbbd4f3e143301023ee3c31fd890a61b6c15a206fbfc60f664ae9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toggle.tsx",
+      "sha256": "037d666158de9b51d1517d257ebaee2743c94b1de4abe4510076d0dcfc16707e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/toolbar.tsx",
+      "sha256": "da2e190d0bce2408c75e0b43d84b07bb4accb4d69a4806d783c89df6b8ac7498",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tooltip.tsx",
+      "sha256": "5cd252b3b5ca405613aad619e03826b00a0f50860909d915533c7e477ca8989b",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "sha256": "28a8c41982baab0cd10e94da632064fab1680e089eace5aecf98853cb3b338a1",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/ui/button.tsx",
+      "sha256": "7a13c4358c5a4d69f5fbeae933ec9461b053debf97b0a5e2dc1df3b222d46608",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/ui/tooltip.tsx",
+      "sha256": "33e2322313789da76bbb42249a123e6d00546a262d3bcabc41e87450509fb5ce",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "sha256": "6bfc87192044369f6fdd06ca91c6be1ad22da5028e23093ba8314992d1791c3e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/verified-source-text-viewer.tsx",
+      "sha256": "747ff89d201b98e02752f4f30838ac73d83a843a9cf1ff50d4bd15220c33d54d",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/css.d.ts",
+      "sha256": "35d26ea66c86da9701e4f4b467913481ffeae910761cea34c775c5dacb7f8eaa",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/index.ts",
+      "sha256": "cd92311826b4a77155a03dcbbea13bf05bb0e2edbebea826987fce19e2843846",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "sha256": "e3c10c48d870fae958875c43139fc7e1bfa197f7d6aebeb45782b4809fc25629",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/useMobile.ts",
+      "sha256": "1f7bcc95ede0e2d8ad364a6fcc6a004380a9b4867115841bafc655d5ce94a4e0",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "sha256": "26fa0bd3e95f5eda17b5b3ebd2d6855b5cef59e213151c0b74567b7232ec4fe8",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+      "sha256": "8ac1c75527e20c7378f8eb9066c47b2c6646cb49af1302181ddfa8adfcab9231",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/index.ts",
+      "sha256": "cdc48ff9fa995147217ecead2ea9ab147851f0811e038516c8a51123be3b7deb",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/internal/react-atoms.ts",
+      "sha256": "b0297d21965ee4dab234acf8715539a1044034352458d5f28ccdd79944fd20f8",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/lib/date-time.ts",
+      "sha256": "2e95bedc2c2d3f4e14bc7c23e053049cb8c36e782e248bcde06288d34d2068d9",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/lib/index.ts",
+      "sha256": "cc94a74cdc5680ea3e75b3bd019bdfad8152ae69ad3dec6328c42f392fc05d02",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/lib/react-invariant.ts",
+      "sha256": "6349580db06a8ed9b6b8e36011adc55aee0c63284f7470bf58ea326c922f14e2",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/lib/toaster.ts",
+      "sha256": "159de978d4ef46b7873acfe49aba2e1294a7d709aa4c76104cd592ac0861b4d5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/lib/url.ts",
+      "sha256": "355ebe1511f19b0f843c9800b138b65ee56749fdb17dbcf2f460525edfc65481",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/lib/utils.ts",
+      "sha256": "cbb2fffd89621ceb0b158d76b4b13da93a1af7dbcaff7bfb4546dc07e4de2543",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/styles/globals.css",
+      "sha256": "062b56971d1d9a4d3c5a7b2d6afb937b4f9612969ad623e965cb335e617e7a75",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/colors.ts",
+      "sha256": "cebd09bff113c445c6b8a7000af934add840c028dcb957ccca06f0c11286e041",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/alert.ts",
+      "sha256": "dd9f71d86cc4b5ab10e881aaef494985be46d282b5a00feae3f66c2ba70264be",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/autocomplete.ts",
+      "sha256": "6e4ed8bf7b2d0580dbbc36d569c61c91d935c757bcf893265ce300a83468991a",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/avatar.ts",
+      "sha256": "045ee330e06c108b0a6e59b711f901df646c5f3cc4a8510dd44a05aed1108748",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/button.ts",
+      "sha256": "62230a106618d985f84e1a67c06518b2f785fa9578d52a612da85480f3997ae3",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/card.ts",
+      "sha256": "68fa760fd593466eb2ed3d9c9f3326802e60abc5916ab7aea001a99e51de0e42",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/chip.ts",
+      "sha256": "0d425b5d0253b8fc069f0d83976e73b97e2a4e4c6edc2c764e2ea5a876f2d3c5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/controls.ts",
+      "sha256": "8f10040bd5537577f7b908f10bf56fae35e21ea1478bfe4a9425d51291b40604",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/data-grid.ts",
+      "sha256": "93a338869114f2b8ac5171564af937661b08b9979128505fd7f8625a1e1fc64c",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/date-picker.ts",
+      "sha256": "47bf8969f2d961b401432096f0a9ec1ce306a263d4629b7ae489831b7ebbfe61",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/dialog.ts",
+      "sha256": "32adbbbd68db15f61654c02ecaa6f28685d4d295bcdcd73bd0886e08105bed61",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/layout.ts",
+      "sha256": "4d503d27895ca642b27fd6fc21cee5b5a10d168fb30b3b7cbe2e35f895dec645",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/link.ts",
+      "sha256": "cd2424e816fbc852125b3455d74f00de8b43850367327dd0905dbea9272606b6",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/list.ts",
+      "sha256": "6e8c5b2d692ecefe87f8056aefecccfe1aa94670c3da72c8e82c2ef969885e49",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/menu.ts",
+      "sha256": "0345eccac3795b05ba97d04313e64ed4df3009a7c2ad597d345ac8dab70d7078",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/progress.ts",
+      "sha256": "722e8536dd8ba74f4a62d3b8ae0b55e6a4dd43924aa1ed6d717ac13cf4948818",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/select.ts",
+      "sha256": "6beaba0469d553d40b8374c34e5cec41a0ada12aa8c9db3d51614754647a92dc",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/svg-icon.ts",
+      "sha256": "bc085849ab7f03e47d140eb4a7d7a5c463822f85b7c2f2340c3cc6685431c338",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/table.ts",
+      "sha256": "1e0e36ea09d7fbd2a6627b1fab068bb22652bcd826d154a559486106b40e37c5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/text-field.ts",
+      "sha256": "66a0a68e9b87fd066b64e852321b57f6f8d97cdddee1bb2d193b5f447e2ef155",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/components/tree-view.ts",
+      "sha256": "43cc12e6a4294c7f1ddd79cf2de471917c16db8d8f633fb551c7cced6911bdc5",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/index.ts",
+      "sha256": "c617af5c71db45c7668cb17af0c718a24217d8c133f8467379c673c2b1a8cc40",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/scales.ts",
+      "sha256": "6320ac196a103439233991ebc47fce5c4d962cfce2490eed3fd80921ca1bccaa",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/shadows.ts",
+      "sha256": "56e66a7edb6ef90d704ef14fe29c74b1ea3b1e1910276e750b7f48d367ab363e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/theme-init-script.tsx",
+      "sha256": "2a0f4ae85f185eb664004ce7ea9bc660f77533cf3f975cd34a8add0189c79b0e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/theme-provider.tsx",
+      "sha256": "496d422f3b549f2fe057d53c25cf979908d1b927f3b1c554154c10a81bac884e",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/theme.ts",
+      "sha256": "22cb18f64cdff9ade19bff88ece13c3cfb5d55a20d565558253e3b5c5be90be7",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/types.ts",
+      "sha256": "312daaaabc22d5919c1db8bc3547af44c0565659d9a66c738e957098812bbd35",
+      "matchesFrozenCurrentSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/themes/typography.ts",
+      "sha256": "3026dd51bb18d07e202674209f499dbd78b848fc89c75dcfc4db035b6b332ab8",
+      "matchesFrozenCurrentSourceAndR39": true
+    }
+  ],
+  "dependencyBindings": [
+    {
+      "file": "node_modules/react-day-picker/dist/cjs/types/props.d.ts",
+      "sha256": "61341dacd1164409a0eea8865c8df0b49ffb3328cc781c9fbf04e1825c26d77b"
+    },
+    {
+      "file": "node_modules/react-resizable-panels/dist/react-resizable-panels.d.ts",
+      "sha256": "50d2dcd1051ad34080064ab868d86b5b9952c851ce4e4370798e3648fc9ca44a"
+    },
+    {
+      "file": "node_modules/@types/react/index.d.ts",
+      "sha256": "814d5c7384f3ca276e9dc4bcfde5545801a3ea0bfae09916b3336774e662fd1b"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "09a0864dd98821777753f6af53acbfb1643a62fa7357e4964591a9104e12c1c1"
+    }
+  ],
+  "designBindings": [
+    {
+      "file": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "sha256": "70b4c16b34b405c85e0107296e1e4f8d37d0605d40af85e1850d47625195b1e9",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/link-preview-fetch-machine.md",
+      "sha256": "01da2051eb15dbe3aa3deda53a6c854ed7320f1a0a51431e8f8114a51c49698f",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/todo-item-due-tone.md",
+      "sha256": "7decf6802eaf1173a4eef184350cb11436c471f7c632442f362bc67658605dd5",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/foundation-ui-system-menus-open.md",
+      "sha256": "818e5c3ff9b12f107eff2fa01e90c5a86dcfdd440063b8d6ffdfef1e3117aea7",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/foundation-ui-system-speech-input-connection.md",
+      "sha256": "c6602b698d425c9209a0bf1ec3bc586ebeec74c74b7f64fedb8b7ef02f80bdc7",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-foundation-mention-plugin-lookup-phase.md",
+      "sha256": "e92189878687287559ec4a498b08151f0bb5281894405e005af2ad38236f9074",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-foundation-notification-action-busy.md",
+      "sha256": "1b246a3506e3a5ee4c6bd21afbf37c7b0a6935ffeb0a4fdae7c495df67b3dcb9",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/tour-state-open-payload.md",
+      "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82",
+      "unchangedSinceR39": true,
+      "disposition": "archive-on-withdrawal"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-foundation-todo-item-presence.md",
+      "sha256": "59019a38bdcb6891722ede838c54202b220d4002ed3c1ecf5e8e57b41971069a",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+      "sha256": "f23f0d628e21270c05af2ea0fa8bba0e5153ac623759224cb9af194989ad9b7c",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r27-boolean-state-foundation-sidebar-context-open-state.md",
+      "sha256": "48b81bbe371a2d28d878bd7951e483532ba8ce57cf7cb830119d6241bd9cbaf4",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-indicator-flags.md",
+      "sha256": "f5e5fb7aedc2b0c8785e185c42f3a3d5454e88088d8b14b3b53b59985126f254",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-default-item-flags.md",
+      "sha256": "16f194f194ab2688773063221216fd0e1f02f770cfe221342f784ef5b4ff7e09",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-item-flags.md",
+      "sha256": "656278b280a189a041ecc46379aefad87a0c8a84335fceb68a5c30db5182c56b",
+      "unchangedSinceR39": true,
+      "disposition": "retain"
+    }
+  ],
+  "counts": {
+    "roots": 5,
+    "files": 218,
+    "typescript": 216,
+    "css": 2,
+    "seeds": 64,
+    "qualified": 14,
+    "disqualified": 50,
+    "rawNewRows": 0,
+    "proposedQualifiedWithdrawals": 1,
+    "proposedDesignArchives": 1
+  },
+  "seedLedger": [
+    {
+      "id": "dock-tab-drag-phase",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "line": 24,
+      "symbol": "TabDrag",
+      "members": ["moved", "concluded"],
+      "status": "reviewed",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "moved: S.Boolean,",
+      "disposition": "retain",
+      "rationale": "Actual2Boolean TabDrag; keep4/3 concluded=>moved and pointer payload behavior."
+    },
+    {
+      "id": "link-preview-fetch-machine",
+      "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
+      "line": 46,
+      "symbol": "LinkPreviewState",
+      "members": ["isLoading", "error", "fetchedMetadata"],
+      "status": "reviewed",
+      "cardinality": {
+        "representable": 8,
+        "legal": 4
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "type LinkPreviewState = {",
+      "disposition": "retain",
+      "rationale": "Full LinkPreviewState has isLoading,validFavicon,validImage actualBooleans. E3 error/fetchedMetadata payload axes remain eligible; retain8/4 independent asset validity."
+    },
+    {
+      "id": "todo-item-due-tone",
+      "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+      "line": 139,
+      "symbol": "TodoItem",
+      "members": ["completed", "hasDueDate", "isToday", "isOverdue"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 16,
+        "legal": 7
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "const isOverdue =",
+      "disposition": "retain",
+      "rationale": "Complete component owns many actualBooleans. completed and absent due suppress today/overdue; today and overdue may coexist. Retain16/7."
+    },
+    {
+      "id": "foundation-ui-system-menus-open",
+      "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+      "line": 91,
+      "symbol": "menusOpenAtom",
+      "members": ["slash", "mention"],
+      "status": "reviewed",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "export const menusOpenAtom = Atom.family((_editor: LexicalEditor) =>",
+      "disposition": "retain",
+      "rationale": "Two sibling Boolean atom fields; retained4/3 menu exclusivity design, no owner/source change."
+    },
+    {
+      "id": "foundation-ui-system-speech-input-connection",
+      "file": "packages/foundation/ui-system/ui/src/components/speech-input.tsx",
+      "line": 53,
+      "symbol": "SpeechInputContextValue",
+      "members": ["isConnected", "isConnecting"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "readonly isConnected: boolean;",
+      "disposition": "retain",
+      "rationale": "Complete context owns2Boolean fields; retain4/3 projection from status."
+    },
+    {
+      "id": "group-metadata-display-flags",
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "line": 437,
+      "symbol": "GroupMetadata",
+      "members": ["visible", "hideHeader"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent display toggles: a group can be hidden or shown with or without a header; all 4 combos are persistable metadata."
+      },
+      "sourceAnchorText": "visible: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(true)),",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "group-patch-display-flags",
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "line": 467,
+      "symbol": "GroupPatch",
+      "members": ["visible", "hideHeader"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Optional whole-value replacements for the same independent GroupMetadata display axes; every combination of Some/None is a legal patch."
+      },
+      "sourceAnchorText": "visible: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "composer-features-toggles",
+      "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+      "line": 90,
+      "symbol": "ComposerFeatures",
+      "members": [
+        "toolbar",
+        "slash",
+        "mentions",
+        "attachments",
+        "characterCount"
+      ],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent feature-mount toggles; any subset of surfaces may be on."
+      },
+      "sourceAnchorText": "toolbar: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "toolbar-selection-marks",
+      "file": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
+      "line": 113,
+      "symbol": "SelectionState",
+      "members": ["bold", "code", "italic", "strikethrough", "underline"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independently observed Lexical format bits; bold+italic+underline+code can all be true together."
+      },
+      "sourceAnchorText": "readonly bold: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "chat-composer-props-gates",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "line": 151,
+      "symbol": "ChatComposerProps",
+      "members": ["sendDisabled", "streaming"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Actual interface remains at 151; optional Boolean fields are at 185 and 191. Omitted values default false at 579-580. Every resolved pair is supported: streaming selects Stop at 269 while sendDisabled only controls the Send branch at 287, including combined true. Preserve absent/false/true public inputs."
+      },
+      "sourceAnchorText": "export interface ChatComposerProps {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "composer-footer-feature-gates",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "line": 194,
+      "symbol": "FooterProps",
+      "members": ["attachments", "characterCount", "sendDisabled", "streaming"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Feature mounts plus the same independent sendDisabled/streaming axes as ChatComposerProps; streaming only chooses Stop vs Send, it does not mask the others."
+      },
+      "sourceAnchorText": "interface FooterProps {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "composer-surface-props-gates",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "line": 299,
+      "symbol": "ComposerSurfaceProps",
+      "members": ["sendDisabled", "streaming"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Same independent sendDisabled/streaming axes as ChatComposerProps, forwarded into the surface."
+      },
+      "sourceAnchorText": "interface ComposerSurfaceProps {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "composer-body-props-gates",
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "line": 363,
+      "symbol": "ComposerBodyProps",
+      "members": ["sendDisabled", "streaming"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Same independent sendDisabled/streaming axes as ChatComposerProps, forwarded into the body assembler."
+      },
+      "sourceAnchorText": "interface ComposerBodyProps {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "live-waveform-mode-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+      "line": 32,
+      "symbol": "LiveWaveformProps",
+      "members": ["active", "processing", "fadeEdges"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "D1 at current source93217d998f: LiveWaveformProps32-40 retains optional Boolean active,processing,fadeEdges. All eight supplied Boolean combinations are supported; omitted/undefined values also remain supported. waveformAriaLabel54-64 gives active priority and fade rendering at452,480 is independent; preserve scrolling/static mode and all other payloads."
+      },
+      "sourceAnchorText": "readonly active?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "carousel-scroll-bounds",
+      "file": "packages/foundation/ui-system/ui/src/components/carousel.tsx",
+      "line": 60,
+      "symbol": "CarouselState",
+      "members": ["canScrollNext", "canScrollPrev"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independently observed Embla facts; both/neither/one direction can be scrollable."
+      },
+      "sourceAnchorText": "readonly canScrollNext: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "carousel-context-scroll-bounds",
+      "file": "packages/foundation/ui-system/ui/src/components/carousel.tsx",
+      "line": 53,
+      "symbol": "CarouselContextProps",
+      "members": ["canScrollPrev", "canScrollNext"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Context mirror of the same independent Embla canScrollPrev/canScrollNext facts."
+      },
+      "sourceAnchorText": "readonly canScrollPrev: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "knowledge-graph-display-toggles",
+      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+      "line": 94,
+      "symbol": "KnowledgeGraphProps",
+      "members": ["showLegend", "showLinkLabels"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent display toggles; legend and link labels may each be on or off."
+      },
+      "sourceAnchorText": "readonly showLegend?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "combobox-input-chrome",
+      "file": "packages/foundation/ui-system/ui/src/components/combobox.tsx",
+      "line": 152,
+      "symbol": "ComboboxInput",
+      "members": ["showTrigger", "showClear"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent chrome toggles for the trigger affordance and the clear button."
+      },
+      "sourceAnchorText": "readonly showTrigger?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "upload-box-props-config",
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "line": 109,
+      "symbol": "UploadBoxProps",
+      "members": ["disabled", "multiple"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent upload-config toggles; a disabled multi-select is a legal combo."
+      },
+      "sourceAnchorText": "readonly disabled?: boolean | undefined;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "upload-box-dropzone-config",
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "line": 200,
+      "symbol": "UploadBoxDropzoneProps",
+      "members": ["disabled", "multiple"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Same independent disabled/multiple config forwarded into the dropzone options builder."
+      },
+      "sourceAnchorText": "readonly disabled: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "sidebar-open-surfaces",
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "line": 50,
+      "symbol": "SidebarState",
+      "members": ["open", "openMobile"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent surfaces: desktop expanded state and the mobile sheet. Writers update one field at a time; both-true is legal across a viewport resize."
+      },
+      "sourceAnchorText": "readonly open: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "sidebar-context-open-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "line": 39,
+      "symbol": "SidebarContextValue",
+      "members": ["open", "openMobile", "isMobile"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "isMobile is an independently observed media-query fact; open/openMobile are independent desktop/mobile surfaces."
+      },
+      "sourceAnchorText": "readonly open: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "sidebar-provider-controlled-open",
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "line": 96,
+      "symbol": "SidebarProviderProps",
+      "members": ["defaultOpen", "open"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Standard React controlled/uncontrolled API slots, not a single domain state variable."
+      },
+      "sourceAnchorText": "readonly defaultOpen?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "use-number-input-options",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "line": 702,
+      "symbol": "UseNumberInputOptions",
+      "members": [
+        "allowMouseWheel",
+        "clampValueOnBlur",
+        "keepWithinRange",
+        "focusInputOnChange"
+      ],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "UseNumberInputOptions702-731 declares four independently optional Boolean behavior options; all16 supplied Boolean combinations and every omission/undefined alternative are supported (3^4 value quotient before defaults). Defaults at878-885 are focus=true,keepWithinRange=true,clamp=true,wheel=false. The extracted blur helper88-113/978 retains clamp behavior without coupling the options."
+      },
+      "sourceAnchorText": "export type UseNumberInputOptions = BoundaryParamsInput &",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "number-input-modifier-keys",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "line": 63,
+      "symbol": "ModifierKeyState",
+      "members": ["metaKey", "ctrlKey", "shiftKey"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "ModifierKeyState62-66 has three optional Boolean members (27 false/true/undefined value tuples). makeStepModifierState227-228 accepts each supplied/omitted modifier independently; shift and ctrl/meta chords may co-occur. No relation or exclusive state is required."
+      },
+      "sourceAnchorText": "readonly metaKey?: boolean | undefined;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "number-input-step-modifiers",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "line": 68,
+      "symbol": "StepModifierState",
+      "members": ["coarse", "fine"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "StepModifierState68 is the actual readonly labeled tuple [coarse:boolean|undefined,fine:boolean]. makeStepModifierState227-228 retains shiftKey directly and ORs meta/ctrl into fine; all six value tuples are supported. getStepRatio230-240 prioritizes coarse then fine without rejecting their joint-true chord. Keep undefined coarse as a real alternative."
+      },
+      "sourceAnchorText": "type StepModifierState = readonly [coarse: boolean | undefined, fine: boolean];",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "use-scribe-microphone-options",
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "line": 96,
+      "symbol": "UseScribeMicrophoneOptions",
+      "members": ["autoGainControl", "echoCancellation", "noiseSuppression"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent microphone constraint toggles; any subset may be set."
+      },
+      "sourceAnchorText": "readonly autoGainControl?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "speech-input-microphone-options",
+      "file": "packages/foundation/ui-system/ui/src/components/speech-input.tsx",
+      "line": 107,
+      "symbol": "SpeechInputProps.microphone",
+      "members": ["echoCancellation", "noiseSuppression", "autoGainControl"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Same independent microphone constraint toggles as UseScribeMicrophoneOptions, inlined on SpeechInputProps."
+      },
+      "sourceAnchorText": "readonly echoCancellation?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "chart-tooltip-hide-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "line": 21,
+      "symbol": "ChartTooltipContentProps",
+      "members": ["hideLabel", "hideIndicator"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named props carrier extracted at21-28, consumed by ChartTooltipContent463-477. Optional hideLabel/hideIndicator remain independent (all four supplied Boolean pairs plus omission); defaults false at468-469. Label hiding at481 and indicator handling at295-308 are separate. Preserve indicator line/dot/dashed, nullable React label content, formatter behavior and complete Recharts payload."
+      },
+      "sourceAnchorText": "type ChartTooltipContentProps = React.ComponentProps<typeof RechartsPrimitive.Tooltip> &",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "toolbar-toggle-button-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/toolbar.tsx",
+      "line": 172,
+      "symbol": "ToolbarToggleButtonProps",
+      "members": ["isDropdown", "pressed"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent chrome vs pressed-state flags; a pressed dropdown toggle is legal."
+      },
+      "sourceAnchorText": "readonly isDropdown?: undefined | boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "todo-item-props-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+      "line": 49,
+      "symbol": "TodoItemProps",
+      "members": ["completed", "isSelected"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independently observed facts: completion vs row selection. All 4 combos are legal. (Sibling due-tone pair already inventoried as TodoItem.)"
+      },
+      "sourceAnchorText": "readonly completed: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-adapter-effect-datetime-caps",
+      "file": "packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx",
+      "line": 327,
+      "symbol": "AdapterEffectDateTime",
+      "members": ["isMUIAdapter", "isTimezoneCompatible"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Hard-coded true flags on the MUI X MuiPickersAdapter surface; they mirror the picker SDK contract rather than a domain state machine."
+      },
+      "sourceAnchorText": "public isMUIAdapter = true;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-upload-box-drag-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "line": 329,
+      "symbol": "uploadBoxClassName",
+      "members": ["disabled", "isDragAccept", "isDragActive", "isDragReject"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Flags are forwarded verbatim from react-dropzone useDropzone(); the className helper only styles SDK bits, it does not invent an exclusive domain phase."
+      },
+      "sourceAnchorText": "readonly isDragAccept: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r3-foundation-mention-plugin-lookup-phase",
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "line": 540,
+      "symbol": "MentionPlugin",
+      "members": ["pending", "settled", "failed"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 8,
+        "legal": 3
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "const pending = AsyncResult.isWaiting(lookupState);",
+      "disposition": "retain",
+      "rationale": "Three derived locals pending,settled,failed share AsyncResult; settled=!pending, failed requires settled; retain8/3."
+    },
+    {
+      "id": "r3-foundation-scribe-connect-latches",
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "line": 231,
+      "symbol": "useScribe.connect",
+      "members": ["handledError", "settled"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent callback observations: initially both false; open settles without handledError; a subsequent rejection makes both true. settleReject sets handledError before external onError and before settled; the callback may throw, leaving handledError true and settled false. Thus all four pairs remain supported observations without imposing nonthrowing callbacks."
+      },
+      "sourceAnchorText": "let handledError = false;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r3-foundation-notification-action-busy",
+      "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+      "line": 315,
+      "symbol": "NotificationCard.action",
+      "members": ["isLoading", "isExecuted", "showLoading"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 8,
+        "legal": 6
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "const isLoading = loadingActionId === action.id;",
+      "disposition": "retain",
+      "rationale": "Three actualBoolean locals at action render315-320. showLoading=>isLoading, isExecuted independent; retain8/6, not2-field NotificationAction interface."
+    },
+    {
+      "id": "r3-foundation-calendar-event-card-presence",
+      "file": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
+      "line": 105,
+      "symbol": "CalendarEventCard",
+      "members": ["hasAction", "hasLabel"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent presence facts from different props (variant+onAction vs label). Combined-true and combined-false are both rendered."
+      },
+      "sourceAnchorText": "const hasAction = variant === \"action\" && onAction !== undefined;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r3-foundation-link-preview-url-meta",
+      "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
+      "line": 297,
+      "symbol": "LinkPreview",
+      "members": ["isValidUrl", "hasSiteMeta"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent facts: href validity vs whether site name/favicon resolved. Combined-true is the happy preview; either can fail alone."
+      },
+      "sourceAnchorText": "const isValidUrl = href.length > 0 && isValidHttpUrl(href) && !isEmail(href) && !Str.startsWith(href, \"mailto:\");",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "tour-state-open-payload",
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "line": 38,
+      "symbol": "TourState",
+      "members": ["isOpen", "activeTourId"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 4,
+        "legal": 2
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "type TourState = {",
+      "disposition": "withdraw",
+      "rationale": "Withdraw: full plain type38-42 owns only isOpen:Boolean; nullable activeTourId and numeric index are notBoolean. No inheritance/intersection/spread. E3 relationship does not waive recall."
+    },
+    {
+      "id": "r2-foundation-calendar-daypicker-display",
+      "file": "packages/foundation/ui-system/ui/src/components/calendar.tsx",
+      "line": 42,
+      "symbol": "Calendar",
+      "members": ["showOutsideDays", "showWeekNumber"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent react-day-picker display toggles. Calendar defaults showOutsideDays and only restyles when showWeekNumber is true; both-true and both-false are legal DayPicker configurations."
+      },
+      "sourceAnchorText": "showOutsideDays = true,",
+      "disposition": "retain",
+      "rationale": "React.ComponentProps<typeof DayPicker> at48 includes inherited showOutsideDays and showWeekNumber; current installed props.d.ts194/201 verifies both optionalBoolean fields."
+    },
+    {
+      "id": "r2-foundation-tabstrip-floating-overflow",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "line": 291,
+      "symbol": "TabStrip",
+      "members": ["floating", "overflowOpen"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent axes: floating is the group layout kind; overflowOpen is the overflow-tab menu. A floating strip can still overflow and open the menu; measuredThisMount only gates stale hide, it does not exclude combinations."
+      },
+      "sourceAnchorText": "readonly floating: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-retry1-dock-split-visibility",
+      "file": "packages/foundation/ui-system/dock/src/internal/Geometry.projection.ts",
+      "line": 224,
+      "symbol": "projectNode",
+      "members": ["firstVisible", "secondVisible"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent visibility of the two split children. The if-chain handles none, first-only, second-only, and both-visible; all four combinations are legal layout states."
+      },
+      "sourceAnchorText": "Split: ({ splitId, layout }) => {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-retry1-number-input-spin-disabled",
+      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "line": 997,
+      "symbol": "useNumberInput",
+      "members": ["incrementDisabled", "decrementDisabled"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Actual sibling Boolean values at997-998 derive independent upper/lower-bound observations and project to disabled/aria-disabled at1023-1034. All four pairs have supported inputs: unbounded/interior or keepWithinRange=false gives00; upper bound10; lower bound01; min=max=value gives11. Required numeric value/min/max are payloads, not extra presence flags."
+      },
+      "sourceAnchorText": "const incrementDisabled = keepWithinRange && P.isNumber(numberValue) && numberValue >= max;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r3-foundation-todo-item-presence",
+      "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+      "line": 132,
+      "symbol": "TodoItem.presence",
+      "members": [
+        "priority",
+        "hasDueDate",
+        "hasProject",
+        "hasLabels",
+        "hasSubtasks",
+        "hasMetadata"
+      ],
+      "status": "designed",
+      "cardinality": {
+        "representable": 128,
+        "legal": 64
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "const hasDueDate = dueDate !== undefined;",
+      "disposition": "retain",
+      "rationale": "Multiple actualBoolean locals132-149; priority is4-valued payloadaxis. hasMetadata OR includes priority/due/labels/project/subtasks; hasDescription131 remains independent. Retain128/64 named projection."
+    },
+    {
+      "id": "r2-foundation-dock-ghost-axis-flips",
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "line": 94,
+      "symbol": "ghostPlacement",
+      "members": ["horizontal.flipped", "vertical.flipped"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent per-axis overlay clamps from two ghostAxis calls. Combined-true concatenates both translate -100% transforms; neither, either, or both flips are legal placements."
+      },
+      "sourceAnchorText": "const ghostPlacement = (pointer: PointerPosition, container: DockBox): GhostPlacement => {",
+      "disposition": "retain",
+      "rationale": "Existing D1 observes two sibling axis results in one local computation94-101; horizontal/vertical clipping independent. No new flattened record or cardinality proposed."
+    },
+    {
+      "id": "r2-foundation-typeahead-scroll-listener-options",
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "line": 190,
+      "symbol": "viewportTickAtom.listenerOptions",
+      "members": ["capture", "passive"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Hard-coded addEventListener EventListenerOptions; capture and passive are independent DOM listener axes mirroring the EventTarget wire, not a domain phase."
+      },
+      "sourceAnchorText": "const options = { capture: true, passive: true } as const;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-youtube-watch-event-init",
+      "file": "packages/foundation/ui-system/editor/src/youtube-embed.tsx",
+      "line": 233,
+      "symbol": "onWatch",
+      "members": ["bubbles", "cancelable", "composed"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Concrete CustomEvent initializer at 233-238 inside onWatch at 227. The three true flags are browser EventInit members, not an app lifecycle. Preserve full YouTubeWatchRequest detail and dispatch/fallback behavior. YouTubeWatchEventInit was a descriptive invented type name; object-literal metadata identifies the real carrier."
+      },
+      "sourceAnchorText": "const request = new CustomEvent(YOUTUBE_WATCH_EVENT, {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-mermaid-dompurify-profiles",
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "line": 95,
+      "symbol": "mermaidSanitizerConfig.USE_PROFILES",
+      "members": ["svg", "svgFilters"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "DOMPurify USE_PROFILES bag at the sanitizer SDK boundary. svg and svgFilters are independent profile toggles, not exclusive sanitizer phases."
+      },
+      "sourceAnchorText": "svg: true,",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r2-foundation-mermaid-runtime-config-toggles",
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "line": 73,
+      "symbol": "mermaidConfig",
+      "members": ["startOnLoad", "suppressErrorRendering", "htmlLabels"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Hard-coded Mermaid.initialize config bag. startOnLoad, suppressErrorRendering, and htmlLabels are independent Mermaid SDK toggles, not exclusive render phases."
+      },
+      "sourceAnchorText": "startOnLoad: false,",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r24-foundation-ui-typeahead-combobox-aria-observer",
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "line": 724,
+      "symbol": "comboboxAriaAtom.observerInit",
+      "members": ["attributes", "childList", "subtree"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Hard-coded MutationObserverInit on document.body. attributes/childList/subtree are independent DOM observer axes mirroring the MutationObserver wire, not a domain phase."
+      },
+      "sourceAnchorText": "attributes: true,",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r24-foundation-ui-tour-overlay-observer",
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "line": 136,
+      "symbol": "tourOverlayPositionAtom.observerInit",
+      "members": ["attributes", "childList", "subtree"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Hard-coded MutationObserverInit on document.body for overlay reposition. attributes/childList/subtree are independent DOM observer axes, not exclusive tour phases."
+      },
+      "sourceAnchorText": "attributes: true,",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r24-foundation-ui-orb-webgl-context",
+      "file": "packages/foundation/ui-system/ui/src/components/orb.tsx",
+      "line": 149,
+      "symbol": "Orb.gl",
+      "members": ["alpha", "antialias", "premultipliedAlpha"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Actual inline Canvas gl object at149-153, now shifted by44 lines. alpha,antialias,premultipliedAlpha are external R3F/WebGL attributes, all written true here. D2 retains this actual instantiated API options carrier; descriptive Orb.gl is an anchor label, not evidence of a declared local. AgentState null/listening/talking/thinking and auto/manual volume mode remain distinct payload domains."
+      },
+      "sourceAnchorText": "gl={{",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r24-foundation-ui-live-waveform-audio-constraints",
+      "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+      "line": 399,
+      "symbol": "LiveWaveform.setupMicrophone",
+      "members": ["echoCancellation", "noiseSuppression", "autoGainControl"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Actual inline getUserMedia audio objects at399-409 inside setupMicrophone395. Both branches write echoCancellation,noiseSuppression,autoGainControl=true; one additionally preserves deviceId:{exact:deviceId}. These are external browser MediaTrackConstraints (D2); the descriptive owner identifies real object literals, not callable Boolean members."
+      },
+      "sourceAnchorText": "? {",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r25-foundation-ui-link-preview-asset-validity",
+      "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
+      "line": 50,
+      "symbol": "LinkPreviewState",
+      "members": ["validFavicon", "validImage"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent per-asset onError latches on the leftover cluster in LinkPreviewState. Favicon and preview image can each fail alone; writers flip one field at a time and readers AND each flag with its URL independently."
+      },
+      "sourceAnchorText": "readonly validFavicon: boolean;",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r25-foundation-ui-toolbar-tooltip-mount",
+      "file": "packages/foundation/ui-system/ui/src/components/toolbar.tsx",
+      "line": 414,
+      "symbol": "withTooltip",
+      "members": ["mounted", "hasTooltip"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent axes: clientMountedAtom hydration vs tooltip payload presence. The if ANDs them to skip SSR tooltips; all four combinations are legal."
+      },
+      "sourceAnchorText": "const mounted = useAtomValue(clientMountedAtom);",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r25-foundation-ui-upload-dropzone-options",
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "line": 305,
+      "symbol": "makeDropzoneOptions",
+      "members": ["disabled", "multiple", "noClick"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "react-dropzone DropzoneOptions bag. disabled/multiple are already inventoried on UploadBoxDropzoneProps; noClick is a hard-coded SDK toggle at the dropzone driver boundary, not a domain phase."
+      },
+      "sourceAnchorText": "disabled: options.disabled,",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "tabstrip-overflow-disposition",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "line": 358,
+      "symbol": "TabStrip.measureStrip",
+      "members": ["unmeasured", "allFit"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "const unmeasured =",
+      "disposition": "retain",
+      "rationale": "unmeasured=>allFit at358-360; firstMeasurement is independent per-mount freshness/publish context and retained separately.4/3 unchanged."
+    },
+    {
+      "id": "r26-foundation-ui-activate-panel-reasons",
+      "file": "packages/foundation/ui-system/dock/src/internal/Reducer.ts",
+      "line": 344,
+      "symbol": "activatePanelCommand",
+      "members": ["panelChanged", "reveal", "restore"],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent activation reasons. Combined-true is legal and handled: the first-event if-chain is a priority order, then reveal&&panelChanged and restore&&(panelChanged||reveal) append the other events. All eight tuples are supported."
+      },
+      "sourceAnchorText": "const panelChanged = !PanelId.equals(tabs.active.id, command.panelId);",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r26-foundation-ui-upload-dropzone-interaction",
+      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+      "line": 41,
+      "symbol": "UploadDropzoneOptions",
+      "members": [
+        "noDrag",
+        "noDragEventsBubbling",
+        "noKeyboard",
+        "preventDropOnDocument",
+        "useFsAccessApi"
+      ],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D2",
+        "note": "Pick of react-dropzone DropzoneOptions at the useDropzone driver boundary. The five flags are independent SDK interaction toggles forwarded by optionalDropzoneOptions; leftover from UploadBoxProps [disabled, multiple]."
+      },
+      "sourceAnchorText": "type UploadDropzoneOptions = Pick<",
+      "disposition": "retain",
+      "rationale": "Retain independent Boolean configuration/diagnostic axes or external SDK D2; complete source and owner identity unchanged from exact prior64-seed audit. No narrowed supported combinations inferred from current constructor constants."
+    },
+    {
+      "id": "r27-boolean-state-foundation-sidebar-context-open-state",
+      "file": "packages/foundation/ui-system/ui/src/components/sidebar.tsx",
+      "line": 37,
+      "symbol": "SidebarContextValue",
+      "members": ["open", "state"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 4,
+        "legal": 2
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "type SidebarContextValue = {",
+      "disposition": "retain",
+      "rationale": "Full context37-45 owns open/openMobile/isMobile actualBooleans; state enum allowed finiteaxis after recall. Retain4/2 minimal pair and independent mobile axes."
+    },
+    {
+      "id": "r28-foundation-ui-chart-tooltip-indicator-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "line": 302,
+      "symbol": "ChartTooltipIndicator",
+      "members": ["indicator", "nestLabel"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 6,
+        "legal": 5
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "readonly indicator: \"line\" | \"dot\" | \"dashed\";",
+      "disposition": "retain",
+      "rationale": "Complete Reactprops299-305 include hideIndicator and nestLabel actualBooleans; indicator enum/nestLabel6/5 projection retained, hideIndicator independent."
+    },
+    {
+      "id": "r28-foundation-ui-chart-tooltip-default-item-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "line": 364,
+      "symbol": "ChartTooltipDefaultItem",
+      "members": ["indicator", "nestLabel"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 6,
+        "legal": 5
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "readonly indicator: \"line\" | \"dot\" | \"dashed\";",
+      "disposition": "retain",
+      "rationale": "Complete Reactprops359-367 include hideIndicator/nestLabel actualBooleans; same6/5 projection and caller compatibility unchanged."
+    },
+    {
+      "id": "r28-foundation-ui-chart-tooltip-item-flags",
+      "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+      "line": 403,
+      "symbol": "ChartTooltipItem",
+      "members": ["indicator", "nestLabel"],
+      "status": "designed",
+      "cardinality": {
+        "representable": 6,
+        "legal": 5
+      },
+      "disqualifier": null,
+      "sourceAnchorText": "readonly indicator: \"line\" | \"dot\" | \"dashed\";",
+      "disposition": "retain",
+      "rationale": "Complete Reactprops396-407 include hideIndicator/nestLabel actualBooleans; same6/5 projection unchanged; Reactprops not arbitrary functionflag exclusion."
+    },
+    {
+      "id": "r29-foundation-ui-correction-resizable-handle-props",
+      "file": "packages/foundation/ui-system/ui/src/components/resizable.tsx",
+      "line": 49,
+      "symbol": "ResizableHandleProps",
+      "members": [
+        "withHandle",
+        "disabled",
+        "disableDoubleClick",
+        "defaultChecked",
+        "suppressContentEditableWarning",
+        "suppressHydrationWarning",
+        "autoFocus",
+        "hidden",
+        "itemScope",
+        "inert"
+      ],
+      "status": "disqualified",
+      "cardinality": null,
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named ResizableHandleProps extends SeparatorProps and HTMLAttributes. withHandle affects local chrome at :78; disabled and disableDoubleClick are independent Separator controls forwarded at :84. Seven further inherited pure-Boolean HTML/React controls are forwarded unchanged in the same rest object. Installed SeparatorProps :401 extends BaseSeparatorAttributes :12 (HTMLAttributes minus role/tabIndex); React HTMLAttributes :2794-2863 declares those controls. No local writer or reader constrains their combinations. Optional orientation is a separate literal, and isVertical is a function-local projection, not another member. Mixed Boolean/string ARIA and Booleanish attributes remain SDK passthroughs and supply no invented Boolean axes or E1-E4 relation."
+      },
+      "sourceAnchorText": "interface ResizableHandleProps extends React.ComponentProps<typeof Separator> {",
+      "disposition": "retain",
+      "rationale": "withHandle plus inherited SeparatorProps disabled/disableDoubleClick actualBooleans; installed dependency458/462 verified; ReactHTML Booleans remain eligible."
+    }
+  ],
+  "coverage": {
+    "all64PriorSeedsAccounted": true,
+    "all218SourceBytesMatchR39": true,
+    "primaryFullTypescriptScanLines": [154, 261, 299, 347, 1347],
+    "primaryUnboundedBooleanQueries": [692, 694, 696, 880, 1215, 1217],
+    "primaryBoundaryReads": {
+      "TourState": [717, 1577],
+      "NotificationCard": [899, 1002],
+      "TodoItem": [951, 1004, 1109],
+      "measureStrip": [1396],
+      "chart": [1269, 1473]
+    },
+    "cssSupplement": [
+      {
+        "file": "packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.css",
+        "sha256": "5dc7ceac2d116411103637bd174c5efc3b28b5734e546f029bfccf067a503aa6",
+        "fullReadLineCount": 96,
+        "finding": "NoBoolean-typed owner. CSS declarations/custom properties/animation/media rules and attribute selectors are notBoolean data fields; data-animated=false and open selector do not create co-carried owner."
+      },
+      {
+        "file": "packages/foundation/ui-system/ui/src/styles/globals.css",
+        "sha256": "062b56971d1d9a4d3c5a7b2d6afb937b4f9612969ad623e965cb335e617e7a75",
+        "fullReadLineCount": 230,
+        "finding": "NoBoolean-typed owner. CSS declarations/custom properties/animation/media rules and attribute selectors are notBoolean data fields; data-animated=false and open selector do not create co-carried owner."
+      }
+    ],
+    "primaryLimitation": "Footer216 is TS/TSXcount, not full218manifest. Primary extension filters omittedCSS; this complete326line supplement closes that gap. Heuristic search coverage plus exact prior owner-source binding is bounded evidence, not a claim of a new exhaustive semantic proof."
+  },
+  "findings": [
+    {
+      "id": "css-coverage-gap",
+      "resolution": "closed-by-complete-private-supplement",
+      "severity": "evidence-correction"
+    },
+    {
+      "id": "tour-complete-owner-one-Boolean",
+      "resolution": "withdraw-qualified-row-and-archive-design-on-parent-integration",
+      "severity": "campaign-recall-correction",
+      "evidence": "tour.tsx38-42 plain type, initialization61-65, state Atom67, writers266-303. OneBoolean plus nullableID/index; no broader actual owner contributes secondBoolean. Other local flags in unrelated overlay callbacks are not fields of this type. Existing design correctly describes E3 but cannot override SPEC33 recall.",
+      "designDependencies": [
+        "goals/boolean-creep/designs/tour-state-open-payload.md"
+      ],
+      "otherDesignReferences": []
+    }
+  ],
+  "proposedWithdrawnRows": [
+    {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "tour-state-open-payload",
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "line": 38,
+      "symbol": "TourState",
+      "kind": "type-literal",
+      "members": ["isOpen", "activeTourId"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E3",
+          "cite": {
+            "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+            "line": 292
+          },
+          "note": "Successful start writes isOpen true with activeTourId; close and finish use closedTourState with isOpen false and a null id."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+            "line": 61
+          },
+          "note": "The closed and open writers never construct an open state without an id or a closed state with an id."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 2
+      },
+      "storage": "stored",
+      "exposure": "internal",
+      "targetShape": "tagged-union",
+      "tier": 1,
+      "notes": "Current-corpus refresh admission; open owns tour id and step index, closed owns neither."
+    }
+  ],
+  "proposedDesignArchives": [
+    {
+      "file": "goals/boolean-creep/designs/tour-state-open-payload.md",
+      "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82",
+      "unchangedSinceR39": true,
+      "disposition": "archive-on-withdrawal"
+    }
+  ],
+  "proposedRows": [],
+  "unresolvedSourceQuestions": [],
+  "terminalChecks": {
+    "exitCode": 0,
+    "endTurn": true,
+    "transcriptHashMatches": true,
+    "reportRecords": 0,
+    "reportValidationExitCode": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "sourceAndCanonicalEdited": false
+}

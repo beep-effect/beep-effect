@@ -1,0 +1,1072 @@
+{
+  "kind": "r39-lq-existing-design-reconciliation/v1",
+  "sourceHead": "220d9426dad4b708807b6297cb71d75449288749",
+  "historicalCensusSource": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "existingSeedCount": 62,
+  "existingQualifiedCount": 12,
+  "sourceFileCount": 115,
+  "currentInventoryCount": 726,
+  "currentInventorySha256": "a044e9df1564289cd85b79b38ab72f7b9bb3f7811f3cee8ea1bbdb963e4e0d7b",
+  "historicalInventorySha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts",
+      "sha256": "d910bd16d83dfa27fc98b43690c5775914bafc5f3dbf3826911603bd9b1fde09",
+      "bytes": 7349
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Labs/index.ts",
+      "sha256": "ee0133487caf8a088b165faf8b6de51713717081b1104d1abf11a3e2e2c1786e",
+      "bytes": 197
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
+      "sha256": "cdeec7606d804a1cd726168391a5df9d5fcb133c8ecfd616c427193e77a3429a",
+      "bytes": 11542
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
+      "sha256": "f7979f68102f4576fec9368854703e84fd6b51ac803aa9f6c6fbf940d533731e",
+      "bytes": 12536
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+      "bytes": 63050
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts",
+      "sha256": "5e784b9357eef493286645bce284177bcb55c3bfdeff0cf2d7655dd2ebf0f6ce",
+      "bytes": 12121
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "sha256": "1e74990666461416bcc497746ae547bb8b7b5a722a271283a6bc49c86dd9c420",
+      "bytes": 25797
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.errors.ts",
+      "sha256": "c40f2fd3433435401f0239d77c21e1d01835d1d8be0a66b3d6f26ba2bac286f9",
+      "bytes": 4932
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.model.ts",
+      "sha256": "0a9419d262d84c32ae0b65c8bbfe535fa2fe04748962e6b6f7a675afd78b20d5",
+      "bytes": 3267
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
+      "sha256": "e25c50aa6e4a52d61cab9da36035fc3efd21982aff7782c78bc95f6e08717ae7",
+      "bytes": 7612
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+      "sha256": "586bd6c0ffdd908374c702ff24cc90956d6ee203f18b6d2bed76ac230c197239",
+      "bytes": 24814
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/SchemaDiagnostics.ts",
+      "sha256": "6778a071bcbbbb494528cf7bbfbfc932ce7329cdb57ea65c1775147c73ebaa20",
+      "bytes": 3864
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+      "sha256": "9a0f7cc7404a01f283278c1d9153f34a0ec1563e02f77a0d34c07a069675601a",
+      "bytes": 27615
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/index.ts",
+      "sha256": "ed9cfcb4bcf8dfec05291c61ccf5b4c8005b4e06f8d2a610f393b763a9c0fd31",
+      "bytes": 497
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+      "sha256": "2f48163d72f00bbbe1246eb369e6f4de22aa91379d344385c3bedcb290005134",
+      "bytes": 9260
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "sha256": "1622d3aed9308b58062c0c22aad704441935570733d056e4afe15d591f52c2e4",
+      "bytes": 16053
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
+      "sha256": "1ab2bc5f80522b16a12c8d39dd0cd7cf88d97693729eadc3a65e736553a5c3b5",
+      "bytes": 3769
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts",
+      "sha256": "49073bf388601f6269ebb476613b272228c618b6f71e96b65b08cd3d918999a2",
+      "bytes": 16776
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/JudgeRubric.ts",
+      "sha256": "77e5b7eb0cd38d19548441aefbdd00e989d3745598e7f3d1e4835838a9e441b3",
+      "bytes": 6255
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "sha256": "811fb1a59b624398bbf188e6a06931d7b361bec4f4c470c95a126d7ab2ed602f",
+      "bytes": 43539
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
+      "sha256": "e6f4bc9193b82a8eb0c21cd81844ec2e2bedbe9b594e576e5d9b95e327fbf63f",
+      "bytes": 10312
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "sha256": "4059bfadd8d8d8a1a6980df643e66f795d880c31f3f5c869fe4c8a2ba809f814",
+      "bytes": 51413
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
+      "sha256": "f0f7e4e90938880c15d1b45fb73218b469d8865f8e493386c34877b41823fb73",
+      "bytes": 14911
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "sha256": "2a7c1dc347de6658e014bad8aac342aa6c70cd28bc7dbca87b047840345ee6a1",
+      "bytes": 23540
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
+      "sha256": "f49a7d4e0788e7f4c8029fe458024286cccf31ca6c11c728b37ee84caf2d7eaf",
+      "bytes": 14418
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/RoadmapRefs.ts",
+      "sha256": "04f200e3c4d6ad8bcf79b8060f9840fe153bcb8cb1fd45f40b68d4ec900b0736",
+      "bytes": 13399
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+      "sha256": "af54c8f13c2dc54f5284beec48fcd08cedddc8781e0d6103679cff86e4ce48e2",
+      "bytes": 25596
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.render.ts",
+      "sha256": "f4c918a5679e9da34ff3f2245e58b6b84ac99569f1bbb8b21a58cda099a9001c",
+      "bytes": 11061
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+      "sha256": "4098fcc593b418355fe591263ffcce5d36ed42b007152601e01274673521fdce",
+      "bytes": 14232
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
+      "sha256": "4ba3a47c86c8adac5f3b79970bbeed0192a1bd18f743e163d6ad0f08a931c408",
+      "bytes": 16132
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts",
+      "sha256": "71673ef4a4653b96544d3f142d88c88c10140c1ef9e589abfc6bafeb5df2ae89",
+      "bytes": 21410
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+      "sha256": "7c5f571be1ae0404b6425725a4fa2dba61847d629405b32184f23574ef66a798",
+      "bytes": 3972
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "sha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622",
+      "bytes": 65788
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestPolicy.ts",
+      "sha256": "37934e113cc5b397bac5bc7ee06149a7c700de3635594c19f9df9b7261e4fa4e",
+      "bytes": 10122
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestPrimitives.ts",
+      "sha256": "fef3727e7c6fa9b85990aa91272cc89469179418d8a4d53ff49ba03398015ded",
+      "bytes": 2380
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts",
+      "sha256": "5a07b4be57a8b5913c5ce04a6d31877ac55d31badeab36847a8abaa95b3a57b5",
+      "bytes": 20491
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestStore.ts",
+      "sha256": "d401970e0846c157f88e1e368b59fe42ded33a1951923f18a19c88dc38ac9e28",
+      "bytes": 8079
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "sha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f",
+      "bytes": 53885
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts",
+      "sha256": "88527acae18cd1b957695189496dfb13e29b94857b165afca3f6f931b2cd553b",
+      "bytes": 12328
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+      "sha256": "751fed94e73e196220f83b122c188b8ac2004e3ffed0dd076fefab5fcbaeee07",
+      "bytes": 49366
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstPolicy.ts",
+      "sha256": "33ddbafa6e66b0f5561d3365a94ceebbd0a94552b1455472e6a3daaf41c42606",
+      "bytes": 7333
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstProject.ts",
+      "sha256": "2a39e9754dcb2c2121452267a4b3108983213126c96d5e96dda9f3c871be0ff8",
+      "bytes": 2918
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+      "sha256": "30d0b3d533bce5a8bcb684f7d4f4379685c3b890c00a60c7bf7d68a7b9f55618",
+      "bytes": 18762
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstStore.ts",
+      "sha256": "700365f01457af5be9b1c04aefd2602e34ded7431fa69fcbd2b7d616208e48ae",
+      "bytes": 3655
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/WorkspaceWalk.ts",
+      "sha256": "aa38531b467dc245b4f83515dcf7985f39e4f5fa0055c2ca6d536f4512e7ba7c",
+      "bytes": 5449
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "sha256": "6eaa37b0bc6a9bdc6bbe68962aa935be6b4c00e868921227f0680b879f293fb7",
+      "bytes": 36006
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.service.ts",
+      "sha256": "2435d37642107d15eba2eb0cd5695ec3897c5b9075d4f799496b44fd4c620565",
+      "bytes": 18301
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.command.ts",
+      "sha256": "f4ab316b5005f13b7fe92503ff061b336868616486c94c55a43fd3298566d2e5",
+      "bytes": 11097
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.diff.ts",
+      "sha256": "18c6b0ea6ff5235939dd8e51729dfbc36c01351caa6a490a1fd0e70b77854ac7",
+      "bytes": 10613
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.errors.ts",
+      "sha256": "bdec05405c5e769456c37b5ffd4ff4c79fb0bbf18a0b1e1d6e09ad266f1658da",
+      "bytes": 8539
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
+      "sha256": "ebb3443e78291e47718a595a5587080ed6fd419d42f0cef6d5eb92f1d7f72657",
+      "bytes": 11876
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
+      "sha256": "e4e4771f9f5fa9cebe1b700299c1a41b424ae3827089a1dccf10d80c8e65a486",
+      "bytes": 28803
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.service.ts",
+      "sha256": "b0cd5c92fbb136f854c57a1e8eee16ad57201102eb04f37f874934339cb0a66f",
+      "bytes": 4350
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.paths.ts",
+      "sha256": "63e2f3d1eb8594530cb0afa340b992dbe190f27b839df982bb6d7afe769930c7",
+      "bytes": 8406
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
+      "sha256": "57f544e9faf41b5ea117898f084f94136404ca197d60c828d2afc80b5733e479",
+      "bytes": 8698
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.report.schemas.ts",
+      "sha256": "fa2ad373b77c58a071f97b05beb97d5d9838757810b307d1557be62cf16a1ff8",
+      "bytes": 9963
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.schemas.ts",
+      "sha256": "61e375544c0f8d3cfc99c4a731b2cdcd2c53cadd2a200d6196960770a747a6a5",
+      "bytes": 1081
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.seed.ts",
+      "sha256": "a440e570fe252fb9062856227b2cf8c9ac8688013a410ef059351f275b3f10b4",
+      "bytes": 15295
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.service.ts",
+      "sha256": "6327b13aead3cfd55dd276c6c4b93d5183efd694e8226b274e4cde542001f17e",
+      "bytes": 17362
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/index.ts",
+      "sha256": "3a4068430de2557842fe0a14c83d3e9c6161d83fae93900da0f39eb4c265f0f7",
+      "bytes": 973
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts",
+      "sha256": "699b574ff94f33d1c9bf5dae4e413d31ed9485df98b3a88f74b941f212389f2d",
+      "bytes": 7634
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Purge/index.ts",
+      "sha256": "ef7c1ada7b456de26517361e51780e541c680b9c76eaeffe976c620b1491db27",
+      "bytes": 200
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/CitedArtifactExistsGate.ts",
+      "sha256": "acdac235376fa6b1a531a56748eb4c2eb415316de53c527d24fed002b522205e",
+      "bytes": 9577
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Control.ts",
+      "sha256": "e0f2ee504bdd78a4be9b946dab0eecfb51da64ba1b2bd39f02ad67f366f56a76",
+      "bytes": 4993
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Doctor.ts",
+      "sha256": "358cdcbd6f3a0ce3115113899f59a782a49de5f2016303400d2a82f9ace11a91",
+      "bytes": 9435
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Extract.ts",
+      "sha256": "9ce92156d3af4a19fab12cd6ac6aca1ddddfb442b5f04b86c64120cb52e01c91",
+      "bytes": 33749
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts",
+      "sha256": "591bbfe0b1e07047eb72c530dae971f4e71d5b8372756d4ff3535b24f655fa7c",
+      "bytes": 16343
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts",
+      "sha256": "cb32aed9802d77f4cf7eebe505e3900dd029f95b0a29011bba5d67dca1ec7df8",
+      "bytes": 18459
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgeContract.ts",
+      "sha256": "c9d35f68a0998c19aaad70e62fac7b0f07ca2b44d34bb5a68c2c433d13862677",
+      "bytes": 27827
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgeIngest.ts",
+      "sha256": "fbb5f616c3b52878289a5cefde0040cd6f50e493f56377613b763cb8a40ec2bd",
+      "bytes": 8202
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgeLint.ts",
+      "sha256": "be76888d13ebb89e773568a3e56560ce19a06e3cc26e4008cd60e2c258157e34",
+      "bytes": 4068
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts",
+      "sha256": "cd0213c6a44cb204aa75f8bcd33f083b1b64edf198160847d316d86c05d5e721",
+      "bytes": 33089
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/JudgeSkill.ts",
+      "sha256": "8dcefc95995ca6d7b9b9dd6ea8c86e028b16c4bb4f4722d47d7e7c0dee7d4a36",
+      "bytes": 2919
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.command.ts",
+      "sha256": "b57cd16374a293c7d9de5f92506d600c8dff43fe9e5e0014543d347228ef5443",
+      "bytes": 12432
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.errors.ts",
+      "sha256": "871ab109d72b6194048f97208fe8d703e045d1a9e8ba7e669802c32082a27cc4",
+      "bytes": 1530
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.render.ts",
+      "sha256": "1a51a63ba8467cba74027a9d693a26b38b9a4a4769c7ba5cb0557da116245200",
+      "bytes": 12574
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.schemas.ts",
+      "sha256": "3bbee92a16ff49305af32915882506ed7ca99a293d35e7d8a92d5acef82be79f",
+      "bytes": 13310
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts",
+      "sha256": "2407f8f382aab8cc89fed18b3b98fbd5fc69c0a830694ba2d7b0128f00c80c6e",
+      "bytes": 25689
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/QaJudgeGateId.ts",
+      "sha256": "d73c47aaf4b4b047fb939f857fdbdee70fc59a2f119ab64e24b9ebab88567943",
+      "bytes": 1105
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Record.ts",
+      "sha256": "e41c2ba8907d054afc69d7affe7bebb38d7426562c367aab0651cf048cd06646",
+      "bytes": 19107
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Report.ts",
+      "sha256": "2ece36f12fcc44eac315d6ae80d437591143c760603d0133f8b6b52e0c0c67d3",
+      "bytes": 2343
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/index.ts",
+      "sha256": "df8540b68af621a7749edfb8b939d6cd14efcd2814fac35c2cc991ed2f4aa183",
+      "bytes": 2606
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
+      "sha256": "749b7be435f707ecbe0c653df7160ff09309dcb0b8a2f99b5c77e2c26b9ababf",
+      "bytes": 20911
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "sha256": "201e8e1a463d3271c55eecf8abb2042214811f5ebc7c873b83e80cc017401297",
+      "bytes": 23832
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+      "sha256": "f3fe833598f8dce20c9ff69dcfca71d7b2900c11a23faf07e2a82ccb53c29af9",
+      "bytes": 32483
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "sha256": "042868a1cac5ef3907b401448e47e3123df3c13a5ccd5f886265b2500b3c53c3",
+      "bytes": 86878
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "e405141f8b7034129254c0eeed1330071d632d771e891cd22c4919f72315829a",
+      "bytes": 159552
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+      "sha256": "81eb50db5ce30c13296fce13e0a0f8815b9de8082f49619b1a66c3ea996eb907",
+      "bytes": 10764
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.osv-ignore.ts",
+      "sha256": "2fb0b94c3ea05a928bab78bcf94dd3d392ddc32f1abca93bd0f00abb5958113a",
+      "bytes": 5570
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
+      "sha256": "80b71abe584c2930f1f478f3333ebefa7eda6216c9509d993b95161be6778e2b",
+      "bytes": 3656
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.render.ts",
+      "sha256": "113a68555a0a996f5867e9cbb78eed2ead138c724dbd9deaef72b9972bffee7b",
+      "bytes": 4109
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "sha256": "d373db7522028fb0a12567af96ad1187336e4661bdaf1e4db26f75617f6a129d",
+      "bytes": 40566
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "56951ce1a99404c4a607a898f6ecb8e208c8d42442c5f8f6feda444496d1b5cf",
+      "bytes": 152794
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/index.ts",
+      "sha256": "3902f6a6eb22127dc2b1d12cd23fb83f9b49c8f6413b7cb3d86216ea767455a1",
+      "bytes": 1355
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sha256": "049ca3c529230d959ca40bfb967d0d334fe499a8f6dbc029739ec2c3808b9a64",
+      "bytes": 160214
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "sha256": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f",
+      "bytes": 51037
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowCiContract.ts",
+      "sha256": "584de738a7e860b5fab9d62444d6104a857c9655ebee728e9c507563bb984cf2",
+      "bytes": 11664
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts",
+      "sha256": "329ff28e344ccbd2e0b38abbeeb62c9a57112a5b71f8da6603554731ce9cf96e",
+      "bytes": 11382
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
+      "sha256": "fdaf65936dd784880d70de3287ad60e1d054c8cd624f342e36683370f8292f9d",
+      "bytes": 17905
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "7f2323746794e3866574793a7796e9ec7dce650f249a9b91290c617fe1352319",
+      "bytes": 31253
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522",
+      "bytes": 65483
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrate.schemas.ts",
+      "sha256": "b55b018ee003ee03a872db185240a52856b190912a723cf1588d306193e5970f",
+      "bytes": 16667
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "sha256": "850f85250078180c73e6497f410744714b331d51797410b7a9d7d3486f804297",
+      "bytes": 34294
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateData.ts",
+      "sha256": "43a045bdfbe70a626ce4389e2949fd882eb75e935b72f887c4cc0f2fd27723b4",
+      "bytes": 6954
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
+      "sha256": "e130371bf9b97d9885c3d017f832bca61c6b32f5d925cff35ef562d551581ff8",
+      "bytes": 17805
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "sha256": "335d8d73d6a4987c91a1e9f89af29b2d9459bb8c1d1aa17ea617cd3f857a051c",
+      "bytes": 33041
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts",
+      "sha256": "01fffcba03d5a964a38d377c5cf4ad53101b3055e432f84651a87ebcd2be96fa",
+      "bytes": 24079
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "sha256": "c0e8c8aa4b73b0be2dd9a03a35c2f00de5a1fd9407c1d27af7d9f15e7a665159",
+      "bytes": 26767
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "sha256": "0ea11d49552d7b868617869892990c445f85bd702f3ab31fa256e74673ec16fb",
+      "bytes": 19356
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "aed5e7fb9a679f3aa2d25df3268a764cdcce5cafa2b0aeaa125ce531be3105ee",
+      "bytes": 12749
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "sha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9",
+      "bytes": 32478
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      "sha256": "339bdce860541101108e0431dad7429453f5f58750f3b072cc450e3af1074b34",
+      "bytes": 27019
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+      "sha256": "890dc265860033774361bef6f2e47610b3925b01edc15a99f2c7e8cb07bc6e71",
+      "bytes": 1125
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "sha256": "e0dbc5b24304edc9713e9e17e07adad0d6ff3aafb27d18ecc2b00c8070fa4873",
+      "bytes": 18951
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+      "sha256": "78b081515c6d0ce69696dec492d76abc69817527d007df8819d542af449af813",
+      "bytes": 21371
+    }
+  ],
+  "inputHashes": [
+    {
+      "file": "AGENTS.md",
+      "sha256": "e72d3febf2eea6ef6cbd29300ebde44775560d4237506bb27492a0ac407ca9a9"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "a044e9df1564289cd85b79b38ab72f7b9bb3f7811f3cee8ea1bbdb963e4e0d7b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "sha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "sha256": "1622d3aed9308b58062c0c22aad704441935570733d056e4afe15d591f52c2e4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+      "sha256": "30d0b3d533bce5a8bcb684f7d4f4379685c3b890c00a60c7bf7d68a7b9f55618"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "56951ce1a99404c4a607a898f6ecb8e208c8d42442c5f8f6feda444496d1b5cf"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "sha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "sha256": "d373db7522028fb0a12567af96ad1187336e4661bdaf1e4db26f75617f6a129d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "e405141f8b7034129254c0eeed1330071d632d771e891cd22c4919f72315829a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "aed5e7fb9a679f3aa2d25df3268a764cdcce5cafa2b0aeaa125ce531be3105ee"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sha256": "049ca3c529230d959ca40bfb967d0d334fe499a8f6dbc029739ec2c3808b9a64"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "sha256": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+      "sha256": "751fed94e73e196220f83b122c188b8ac2004e3ffed0dd076fefab5fcbaeee07"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "sha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/test/Quality.test-kit.ts",
+      "sha256": "5f1b6dad7ae20d94f7002db5834bee869019d933fe8bb48cc747299e2cf2dc81"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "sha256": "d6a7af2d4cc4a52be6023025e822d52fda331fb5c8a032701be9cb0d46749982"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "sha256": "df8187797ed12d9ceca4c847964ea260517ed882a370ec89dae0d387e9347e96"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+      "sha256": "bd3ab1dc70d36c456623c87134c7b29434a46911bb8ad835ff6d487e10d989d2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-first.test.ts",
+      "sha256": "d15aea184ab8e5b27ab61c535c52e080f53e3dbddd8a8e94210385fd887d04dc"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "sha256": "177dee33f52d6f79d4c6b074ed8cfe2fe2d3fe20296d2beb21c4c08898369db2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "sha256": "4ebd8a5d46827a86dcf181b75efeff48e33d78e866919c9d1c31bc1587e7dccd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "sha256": "bd66073d471b1e761bee5013cbf8847438e0d685668a1172fb290cd8b28b147b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "sha256": "9ee375bd58f0226d20339c3fc0d6a053acfd47b5e520c1ff954777b3a6833bd1"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "sha256": "baafff158d39672af2113e26404994e6ec270b32edf1dd826e9d879afcc401cc"
+    },
+    {
+      "file": "goals/turborepo-task-qualification/research/refresh-root-quality-plans.ts",
+      "sha256": "6d7702b39adb605bc7e3b4b4f5622b2fc268f726e7635ad14cc619ebaec8a3cc"
+    },
+    {
+      "file": "goals/boolean-creep/designs/package-verify-step-outcome.md",
+      "sha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "sha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+      "sha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f"
+    },
+    {
+      "file": "goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+      "sha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee"
+    },
+    {
+      "file": "goals/boolean-creep/designs/effect-import-source-transform-phase.md",
+      "sha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1"
+    },
+    {
+      "file": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+      "sha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "0311430f93ee31517f8802b76a1f954fe814d2d2b6ea26fada3bdfc64003bbdf"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+      "sha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+      "sha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee"
+    },
+    {
+      "file": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+      "sha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2"
+    },
+    {
+      "file": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+      "sha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-anchor-audit/inventory-proposals.json",
+      "sha256": "1e3e6c68867865c8e7ee0eadb5c84eaffbbf20b94664b38cfa7acd2f078d2231"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-anchor-audit/owner-reads.json",
+      "sha256": "ff98a43c3ac833dd55bca38606d8dc37e40af2f735ebb8fdd7e38257a34e47c2"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-anchor-audit/source-bindings.json",
+      "sha256": "a8c27703dc160669b73fa7c354018f1c69d706efa025111fcff84d5c67dfd1d9"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-anchor-audit/disposition.json",
+      "sha256": "c7859decc5b151b0e338fea2dd49c6a17f6042993e705ce578d9b36867222844"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-citations/inventory-proposals.json",
+      "sha256": "2b6dc20e80b684efdfb39e773ce393ea84b3696aef24b184ff90f99dc113c86c"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-citations/owner-reads.json",
+      "sha256": "de969fd69756984372cc9466ced0a304e0b882fd232025595a20a04339aa9c07"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-citations/disposition.json",
+      "sha256": "3c03b11ac2fbc9912776b78ae0102563a5d7b492d4bcc1bf150d4af6405b6365"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "b0ae87bac4885ccaa516181855f52aeb3b1d7e5190873a8e271836a4acc10c94"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "48966e533677827092e3762f9c67601d3e4a37e3346915e8b30b056ab92b0eee"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/proposals.json",
+      "sha256": "adf30e0a8032324cc9fdfec3fe55ed65262d6bbbcca34f5b0f3169181e9b6887"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-reconciliation/parent-progress.json",
+      "sha256": "9b5f08227589fd767863386d44a9eb9b4250606a171df9818cb363a5074a6641"
+    }
+  ],
+  "disposition": "Existing qualification retained; current source/test appendices proposed for all12 existing Q designs; two parent payload supplements accepted",
+  "unresolvedFindings": [],
+  "findingCount": 0,
+  "completed": true,
+  "blanketP3Approval": false,
+  "dryCredit": false,
+  "implementation": false,
+  "canonicalEdits": false,
+  "notes": [
+    "29 citation proposals independently checked as integrated with unchanged semantic fields across all62 seeds.",
+    "Two new owner approvals are separate and excluded from this12-owner review.",
+    "Historical designs are not relabeled as fresh P3 reviews.",
+    "Crypto preservation supplements and current locations are necessary source-forward documentation; parent must integrate proposed exact design bytes."
+  ],
+  "designProposals": [
+    {
+      "id": "package-verify-step-outcome",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/package-verify-step-outcome.md",
+      "originalFile": "goals/boolean-creep/designs/package-verify-step-outcome.md",
+      "originalSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+      "baseFile": "goals/boolean-creep/designs/package-verify-step-outcome.md",
+      "baseSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+      "sha256": "792f7e5b6a07b66a429f8a83dc08b0e899fb161eba877f63ae1815e4078e5fda",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Complete source byte-identical to its authoritative R37 locator receipt. Retain 4/3 and the full Option exit-code domain, including executed success/failure with None; do not narrow from Some production writers.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "r3-tooling-ecosystem-polarity-specifier-call",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "originalFile": "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "originalSha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544",
+      "baseFile": "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "baseSha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544",
+      "sha256": "decac8f470410f1f1a03d30e422e215e8653809edcdbf1ebec126a8b6d409117",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Complete source byte-identical to the design baseline. Retain syntactic import/require/other classification, including shadowed require; no semantic binding resolution may be added.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "r3-tooling-schema-first-fn-eligibility",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r3-tooling-schema-first-fn-eligibility.md",
+      "originalFile": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+      "originalSha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f",
+      "baseFile": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+      "baseSha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f",
+      "sha256": "799a5f744f5919c9f3766bd4bb50711f9955f69f269fd711dc8f4afaa00bb617",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Only earlier const-assertion iteration changed; appendFunctionEntries body is unchanged and moves one line. Current declaration225, selected locals238-241, reads243/246. Retain source-signal gating plus local TSX exclusion, full finding payloads and detector order.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-import-rules-summary-operation.md",
+      "originalFile": "goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+      "originalSha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+      "baseFile": "goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+      "baseSha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+      "sha256": "fdd3da887ddb88940f7788f1b739b009bc10d4fb9e87f8ef2ecb31c4acfc86f0",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Complete owner source byte-identical to the baseline. Retain successful-summary 4/3, independent strictFailure, all payloads/defaults and encoded property order. Raw options and pre-summary conflict diagnostics remain unrestricted request contracts.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "effect-import-source-transform-phase",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-import-source-transform-phase.md",
+      "originalFile": "goals/boolean-creep/designs/effect-import-source-transform-phase.md",
+      "originalSha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1",
+      "baseFile": "goals/boolean-creep/designs/effect-import-source-transform-phase.md",
+      "baseSha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1",
+      "sha256": "f5626ca8d7ec14bd317322739603d45ab6d301ae1e527b121aa4cc49ce9521b6",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Complete source byte-identical to baseline. Retain 4/3: clean, review-only, rewritten; rewrite-plus-review remains rewritten. Fenced replacement uses rewritten, aggregate affected includes reviews. No raw-option migration.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "package-inventory-docgen-coverage",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/package-inventory-docgen-coverage.md",
+      "originalFile": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+      "originalSha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288",
+      "baseFile": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+      "baseSha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288",
+      "sha256": "0a53ecad8e485238b23c4b86913973b2a09ee63e86bbbb6f7231bf1d0e016dd0",
+      "cardinality": {
+        "representable": 16,
+        "legal": 10
+      },
+      "rationale": "Complete source byte-identical to authoritative R38 source. Retain 16/10, FFFF missing-package versus FFFT missing-config and all eight configured states, exact JSONC projection, full payloads and same-scan mirror write order.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "originalFile": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "originalSha256": "0311430f93ee31517f8802b76a1f954fe814d2d2b6ea26fada3bdfc64003bbdf",
+      "baseFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "baseSha256": "b0ae87bac4885ccaa516181855f52aeb3b1d7e5190873a8e271836a4acc10c94",
+      "sha256": "8f268b05feace1adb8df4503e5099bf5c9f5b8ea996d5a2960dcb3a08fdb6b6a",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Retain 4/3 pre-execution disposition; an active session can miss, and shadow still executes. Retain complete session/lane payloads. Parent payload supplement is accepted: inputPackages default [] for reused rows, full executed package scope, and preparation configuration-error wrapper. LaneProofReuse now uses Effect Crypto: index identity/virtual-tree failure remains None fallback; command/input/environment digest failures surface typed errors; staging identity failure is caught by the existing nonfatal persistence warning. Preserve Crypto requirements, sequential identity effects and source failure boundaries; do not broaden all preparation errors into cache misses.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r28-cli-quality-coverage-resolved-operation.md",
+      "originalFile": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+      "originalSha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d",
+      "baseFile": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+      "baseSha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d",
+      "sha256": "b0055c7fcebbace1e6bfbae6e7f3c5deb52f570c195d198e5aee093be4a074c6",
+      "cardinality": {
+        "representable": 16,
+        "legal": 9
+      },
+      "rationale": "Retain 16/9 successful resolved domain: replaceAll implies writeBaseline; skip implies scoped. Scoped replacement and noop replacement remain supported. Raw parser/step adapters remain permissive. Preserve absent versus present-empty topology arrays, report-only rejection before noop, cleanup after noop guard and before execution, full/sharded dispatch, exact diagnostics, cache-runtime wrapping and current Crypto requirements.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r28-cli-quality-test-lane-resolved-selection.md",
+      "originalFile": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+      "originalSha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e",
+      "baseFile": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+      "baseSha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e",
+      "sha256": "7f9da28499c8b0dcd4b4c6821f194b4cc5dd26f79423a9a001d70c4ad81b6559",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Retain normalized 4/3 and raw independent false/false accumulator. Strip only one leading delimiter; consume exact selector tokens even after retained delimiters; preserve every other token in order. Preserve unit/parallel/serial failure accumulation versus aborting Effect failures and SQL acquisition/release. Keep diagnostic writer projected old JSON, current cache-runtime wrapper and Crypto requirements.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "originalFile": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "originalSha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee",
+      "baseFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "baseSha256": "48966e533677827092e3762f9c67601d3e4a37e3346915e8b30b056ab92b0eee",
+      "sha256": "19258f2b483ee130706de969b444424c352a160f4bb655a0ae745a11fc37ec80",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "rationale": "Retain 4/3 completed owner and full Option laneRun/session/failure payloads. Parent supplement preserves nested inputPackages/defaults and preparation mapping. Preserve Crypto-backed preparation/persistence distinctions described for the R27 companion, and fold order: reused attribution, optional journal, failures, stop latch, proof attempt. An imprecise failed ran contribution cannot persist success. Reused and stopping contributions stay distinct from ran; collect-all scheduling retains its policy.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "effect-vitest-function-reachability",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-vitest-function-reachability.md",
+      "originalFile": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+      "originalSha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2",
+      "baseFile": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+      "baseSha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2",
+      "sha256": "35f546729afb46826250f3bb5fd63701211148f2bb6dd4f4050647f5dbb5e20c",
+      "cardinality": {
+        "representable": 32,
+        "legal": 24
+      },
+      "rationale": "Complete Syntax source byte-identical to f97a89bd design binding. Retain 32/24 and monotone join: testClock implies effect, not equality. plain/outside/uncertain remain independent. Current detector boundary is Effect-based with Crypto requirement and occurrence-error mapping; preserve current stable-ID anchoring and ordered findings while migrating the graph.",
+      "unresolvedFindings": []
+    },
+    {
+      "id": "effect-vitest-reachable-helper-flags",
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-vitest-reachable-helper-flags.md",
+      "originalFile": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+      "originalSha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3",
+      "baseFile": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+      "baseSha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3",
+      "sha256": "d4ce0985fde4866fdda40902b04150fa35ec830dcefffd7c13e17ce74cc655b3",
+      "cardinality": {
+        "representable": 16,
+        "legal": 10
+      },
+      "rationale": "Complete Syntax source byte-identical to f97a89bd design binding. Retain 16/10 present-result domain, five nonempty modes times independent shared, callback identity and None for no reachable test. Current Effect/Crypto detector boundary and its error behavior remain supported; no synchronous scanner assumption.",
+      "unresolvedFindings": []
+    }
+  ],
+  "outputs": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/design-proposals.json",
+      "sha256": "597e6413c4c7ba5330eb827c5e442c7f4e1300209b4752ab80c5df0cf03f0a20"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-import-rules-summary-operation.md",
+      "sha256": "fdd3da887ddb88940f7788f1b739b009bc10d4fb9e87f8ef2ecb31c4acfc86f0"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-import-source-transform-phase.md",
+      "sha256": "f5626ca8d7ec14bd317322739603d45ab6d301ae1e527b121aa4cc49ce9521b6"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-vitest-function-reachability.md",
+      "sha256": "35f546729afb46826250f3bb5fd63701211148f2bb6dd4f4050647f5dbb5e20c"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-vitest-reachable-helper-flags.md",
+      "sha256": "d4ce0985fde4866fdda40902b04150fa35ec830dcefffd7c13e17ce74cc655b3"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/package-inventory-docgen-coverage.md",
+      "sha256": "0a53ecad8e485238b23c4b86913973b2a09ee63e86bbbb6f7231bf1d0e016dd0"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/package-verify-step-outcome.md",
+      "sha256": "792f7e5b6a07b66a429f8a83dc08b0e899fb161eba877f63ae1815e4078e5fda"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "8f268b05feace1adb8df4503e5099bf5c9f5b8ea996d5a2960dcb3a08fdb6b6a"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r28-cli-quality-coverage-resolved-operation.md",
+      "sha256": "b0055c7fcebbace1e6bfbae6e7f3c5deb52f570c195d198e5aee093be4a074c6"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r28-cli-quality-test-lane-resolved-selection.md",
+      "sha256": "7f9da28499c8b0dcd4b4c6821f194b4cc5dd26f79423a9a001d70c4ad81b6559"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "sha256": "decac8f470410f1f1a03d30e422e215e8653809edcdbf1ebec126a8b6d409117"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r3-tooling-schema-first-fn-eligibility.md",
+      "sha256": "799a5f744f5919c9f3766bd4bb50711f9955f69f269fd711dc8f4afaa00bb617"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "19258f2b483ee130706de969b444424c352a160f4bb655a0ae745a11fc37ec80"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/review.md",
+      "sha256": "f6839db823cf2258d2a18d041554bd484ab3738b676f7dfd2b506e188c1c6692"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/seed-ledger.json",
+      "sha256": "776b675509bb3453d7ed8ad5e3a5a5f09f0ca6d295d03dd1387ade9fff8044a3"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/source-location-maps.json",
+      "sha256": "d636c0902a8cef6c167bf84e8d8052428bed0ffab78ed3d99aea704c4d1280ae"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/symbol-locations.json",
+      "sha256": "46ca2b93a08d949deac72dab666c19975b190f51681c432fcac6349d49613bc8"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/test-locations.json",
+      "sha256": "77a063a3adf820956cc4e2a03bec209e443c77b0e45713cb1d7f8d75bf04fe79"
+    }
+  ],
+  "observedHeadAtCompletion": "ec0cce9db615310e15da1bb659bc901d490f5ab6",
+  "remainingIntegrationItems": [
+    "Integrate all12 exact design replacements in design-proposals.json; parent handles original archival, sanitization and validators."
+  ]
+}

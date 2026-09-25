@@ -1,0 +1,32 @@
+{
+  "kind": "qualification-dependency-exclusions/v1",
+  "status": "package-verified-publication-pending",
+  "sourceBase": "45edfeb659da33293e39019fe4c0421912ef2c76",
+  "turboVersion": "2.11.3",
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "nativePlanSha256": "19b237878730edf5b1ad7e00c819e6b91a4babf9dea4f861c1fc69ce08c70627",
+  "checks": {
+    "exactFourTaskSelection": true,
+    "allTasksCacheDisabled": true,
+    "allThreeIdentityDependencyEdgesPreserved": true,
+    "governanceAuditZeroFindings": true
+  },
+  "excludedComputations": [
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "evidenceLimit": "Native selection and governed exclusion only; no runtime comparison or qualification.",
+  "packageVerification": {
+    "@beep/fc-runs": {
+      "auditSeconds": 4.7,
+      "docgenSeconds": 1.7,
+      "result": "pass-after-format-repair"
+    },
+    "@beep/test-runner": {
+      "auditSeconds": 9.1,
+      "docgenSeconds": 2.1,
+      "result": "pass"
+    }
+  }
+}

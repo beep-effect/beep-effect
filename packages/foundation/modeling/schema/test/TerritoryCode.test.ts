@@ -2,7 +2,8 @@ import { ContinentCode, ContinentCodeFromName, ContinentName, ContinentNameFromC
 import { CountryCode, CountryCodeFromName, CountryNameFromCode } from "@beep/schema/CountryCode";
 import { CountryName } from "@beep/schema/CountryName";
 import { TerritoryCode, TerritoryCodeFromName, TerritoryName, TerritoryNameFromCode } from "@beep/schema/TerritoryCode";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 

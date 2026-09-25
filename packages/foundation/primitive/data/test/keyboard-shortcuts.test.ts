@@ -13,8 +13,10 @@ import {
   MacOSKeyboardShortcutDataValues,
   WindowsKeyboardShortcutDataValues,
 } from "@beep/data/KeyboardShortcuts";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as Str from "effect/String";
 
@@ -89,7 +91,7 @@ describe("KeyboardShortcuts", () => {
     for (const entry of KeyboardShortcutDataValues) {
       for (const shortcut of entry.shortcuts) {
         const key = `${entry.platform}:${entry.scope}:${entry.name}:${shortcut.value}`;
-        expect(seen.has(key)).toBe(false);
+        assertFalse(seen.has(key), `Duplicate shortcut: ${key}`);
         seen.add(key);
       }
     }

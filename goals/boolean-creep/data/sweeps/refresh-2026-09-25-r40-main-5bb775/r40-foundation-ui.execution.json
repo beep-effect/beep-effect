@@ -1,0 +1,22 @@
+{
+  "lane": "r40-foundation-ui",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T10:42:19.371601+00:00",
+  "finished": "2026-09-25T10:47:27.471969+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-ui.jsonl`. Confirmed 0, disqualified 0. The validator passed on that empty file.\n\nEvery assigned root was covered (216 non-test source files under brand, dock, dock-react, editor, and ui). The brand root has no boolean members. The rechecked seeds still match their owners and classifications, so nothing new was appended.\n\nNo unresolved source question. `measureStrip`'s `firstMeasurement` and `TodoItem`'s `hasDescription` sit beside existing clusters but are not part of those implications. `NotificationAction` itself is a single optional `executed`; the three action locals remain at the render site.",
+  "transcriptSha256": "73d3ddd948211bfbc31a0982e53b540f8405a87175479896969d081ea6519986",
+  "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a",
+  "seedSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

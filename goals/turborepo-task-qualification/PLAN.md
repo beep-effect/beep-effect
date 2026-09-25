@@ -1540,3 +1540,15 @@ See `research/descriptor-capture-2026-09-22.json` and
 `research/ring-attribution-2026-09-22.json` for retained digests and limitations.
 Neither observation establishes complete semantic inputs or signed replay.
 Current stable and canary matrices remain pending; no tuple is qualified.
+
+
+### Expanded pilot dependency exclusions — 2026-09-25
+
+The new dependency-exclusions lane starts from the main-integrated repair head
+`45edfeb659da`. It installs locked Turbo 2.11.3, extends the reviewed pilot
+scope to fc-runs/test-runner lint, and records both tuples as excluded. The
+canonical native plan retains all four tasks and all three identity dependency
+edges with caching disabled. This supplies fresh-execution prerequisites, not
+qualification. Full audit and docgen verification passed for both touched packages; see
+`research/dependency-lint-exclusion-verification.json`. Signed evidence and the
+remaining goal acceptance criteria remain open.

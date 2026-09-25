@@ -1,6 +1,8 @@
 import { FileDiff } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 
 const decodeInfo = S.decodeUnknownEffect(FileDiff.Info);
@@ -55,7 +57,7 @@ describe("FileDiff.Info", () => {
         })
       );
 
-      expect(Exit.isFailure(decoded)).toBe(true);
+      pipe(decoded, Exit.isFailure, assertTrue);
     })
   );
 
@@ -79,8 +81,8 @@ describe("FileDiff.Info", () => {
         })
       );
 
-      expect(Exit.isFailure(negative)).toBe(true);
-      expect(Exit.isFailure(decimal)).toBe(true);
+      pipe(negative, Exit.isFailure, assertTrue);
+      pipe(decimal, Exit.isFailure, assertTrue);
     })
   );
 });

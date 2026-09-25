@@ -1,6 +1,8 @@
 import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 
 describe("Json", () => {
   it.effect(
@@ -26,7 +28,7 @@ describe("Json", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(decodeJsonString("{"));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         // beta.103 formatters no longer leak the underlying parser text, so the
         // failure surfaces the static JSON-string decode message instead.

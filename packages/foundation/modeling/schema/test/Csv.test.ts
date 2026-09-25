@@ -1,8 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity";
 import { CSV } from "@beep/schema/Csv";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -216,7 +218,7 @@ describe("CSV", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(S.decodeEffect(CSV(UserRow))("id,id,last_name,address\n1,2,Lovelace,London"));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
         expect(rendered).toContain("Duplicate headers found [id]");
@@ -231,7 +233,7 @@ describe("CSV", () => {
         S.decodeEffect(CSV(UserRow))("id,first_name,address,unexpected\n1,Ada,London,nope")
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
         expect(rendered).toContain("CSV header mismatch");
@@ -249,14 +251,14 @@ describe("CSV", () => {
         S.decodeEffect(CSV(UserRow))("id,first_name,last_name,address,unexpected\n1,Ada,Lovelace,London,nope")
       );
 
-      expect(Exit.isFailure(missingOnly)).toBe(true);
+      pipe(missingOnly, Exit.isFailure, assertTrue);
       if (Exit.isFailure(missingOnly)) {
         const rendered = Cause.pretty(missingOnly.cause);
         expect(rendered).toContain("CSV header mismatch");
         expect(rendered).toContain("missing: address");
       }
 
-      expect(Exit.isFailure(unexpectedOnly)).toBe(true);
+      pipe(unexpectedOnly, Exit.isFailure, assertTrue);
       if (Exit.isFailure(unexpectedOnly)) {
         const rendered = Cause.pretty(unexpectedOnly.cause);
         expect(rendered).toContain("CSV header mismatch");
@@ -272,7 +274,7 @@ describe("CSV", () => {
         S.decodeEffect(CSV(UserRow, { strictColumnHandling: true }))("id,first_name,last_name,address\n1,Ada,Lovelace")
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
         expect(rendered).toContain("Column header mismatch expected: 4 columns got: 3");
@@ -287,7 +289,7 @@ describe("CSV", () => {
         S.decodeEffect(CSV(UserRow))("id,first_name,last_name,address\n1,Ada,Lovelace,London,extra")
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
         expect(rendered).toContain("Column header mismatch expected: 4 columns got: 5");
@@ -300,7 +302,7 @@ describe("CSV", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(S.decodeEffect(CSV(InvalidNumberRow))("id,name\n1,Ada"));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
         expect(rendered).toContain("Expected number");
@@ -315,7 +317,7 @@ describe("CSV", () => {
       const rows = [InvalidNumberRow.make({ id: 1, name: "Ada" })];
       const result = yield* Effect.exit(S.encodeEffect(csv)(rows));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
         expect(rendered).toContain("Encoded CSV field 'id' must be a string-compatible value.");

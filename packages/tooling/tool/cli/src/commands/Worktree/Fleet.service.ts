@@ -405,6 +405,14 @@ export const buildContestedIndex = (
  */
 export interface FleetMirrorServiceShape {
   /**
+   * Enumerate every checkout path sharing the origin (each clone plus its
+   * linked worktrees), sorted and deduplicated, without classifying liveness,
+   * materializing the epoch target, or predicting conflicts.
+   *
+   * @since 0.0.0
+   */
+  readonly listCheckouts: (options?: FleetScanOptions) => Effect.Effect<ReadonlyArray<string>, WorktreeCommandError>;
+  /**
    * Derive one read-only fleet snapshot: enumerate checkouts sharing the
    * origin, classify liveness, materialize the epoch target into the scanner
    * object database, predict conflicts for live checkouts, and evaluate
@@ -1246,15 +1254,17 @@ const homeDirectory = (): O.Option<string> => configStringOptionSync("HOME");
 const cacheDirectory = (homeDir: O.Option<string>): O.Option<string> =>
   O.orElse(configStringOptionSync("XDG_CACHE_HOME"), () => O.map(homeDir, (home) => `${home}/.cache`));
 
-const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
-  options: FleetScanOptions
-): Effect.fn.Return<FleetSnapshot, WorktreeCommandError, FleetMirrorServiceRequirements> {
-  const path = yield* Path.Path;
-  const nowMillis = yield* Clock.currentTimeMillis;
-  const scannedAt = DateTime.formatIso(yield* DateTime.now);
-  const windowSeconds = options.livenessWindowSeconds ?? FLEET_LIVENESS_WINDOW_SECONDS;
-  const targetRef = options.targetRef ?? "main";
+type FleetScope = {
+  readonly fleetRoot: string;
+  readonly normalizedOrigin: string;
+  readonly originUrl: string;
+};
 
+// The origin and fleet root every fleet enumeration is scoped to, resolved from the invoking checkout.
+const resolveFleetScope = Effect.fn("Fleet.resolveFleetScope")(function* (
+  options: FleetScanOptions
+): Effect.fn.Return<FleetScope, WorktreeCommandError, FleetMirrorServiceRequirements> {
+  const path = yield* Path.Path;
   const currentRoot = yield* findRepoRoot(options.startFrom).pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
   );
@@ -1280,6 +1290,26 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
         )
       ),
   });
+  return { fleetRoot, normalizedOrigin, originUrl };
+});
+
+const listFleetCheckouts = Effect.fn("Fleet.listFleetCheckouts")(function* (
+  options: FleetScanOptions
+): Effect.fn.Return<ReadonlyArray<string>, WorktreeCommandError, FleetMirrorServiceRequirements> {
+  const { fleetRoot, normalizedOrigin } = yield* resolveFleetScope(options);
+  const { stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);
+  return A.map(stubs, (stub) => stub.path);
+});
+
+const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
+  options: FleetScanOptions
+): Effect.fn.Return<FleetSnapshot, WorktreeCommandError, FleetMirrorServiceRequirements> {
+  const path = yield* Path.Path;
+  const nowMillis = yield* Clock.currentTimeMillis;
+  const scannedAt = DateTime.formatIso(yield* DateTime.now);
+  const windowSeconds = options.livenessWindowSeconds ?? FLEET_LIVENESS_WINDOW_SECONDS;
+  const targetRef = options.targetRef ?? "main";
+  const { fleetRoot, normalizedOrigin, originUrl } = yield* resolveFleetScope(options);
 
   const homeDir = O.orElse(O.fromUndefinedOr(options.homeDir), () => homeDirectory());
   const scannerDir = pipe(
@@ -1326,6 +1356,9 @@ const makeFleetMirrorService = Effect.fn("FleetMirrorService.make")(function* ()
   return FleetMirrorService.of({
     scan: Effect.fn("FleetMirrorService.scan")((options) =>
       scanFleet(options ?? FleetScanOptions.make({})).pipe(Effect.provide(runtimeContext))
+    ),
+    listCheckouts: Effect.fn("FleetMirrorService.listCheckouts")((options) =>
+      listFleetCheckouts(options ?? FleetScanOptions.make({})).pipe(Effect.provide(runtimeContext))
     ),
   });
 });
