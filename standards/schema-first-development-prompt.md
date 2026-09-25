@@ -61,9 +61,9 @@ Read and apply authority in this order:
 6. The currently installed or vendored Effect source.
 
 Never write a nontrivial Effect or Schema API from memory. Locate the current
-vendored checkout instead of assuming that it is named `.repos/effect-v4`.
+reference checkout at `.repos/effect` (Effect `main` is v4).
 Search for `SCHEMA.md`, `Schema.ts`, or the relevant specialized module under
-the live `.repos/effect*` tree. Trust current symbols and signatures, not stale
+that tree. Trust current symbols and signatures, not stale
 line anchors.
 
 Before introducing a helper, schema, model, utility, or public export, search
