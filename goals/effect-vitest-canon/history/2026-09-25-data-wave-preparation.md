@@ -31,3 +31,11 @@ All 15 cheap gates passed. The utils parent and main were integrated before
 publication with unchanged timing inputs. Retarget to main after utils merges;
 Benjamin must merge utils before data. Final ledger references, hosted checks
 and review closure remain outstanding.
+
+## Publication checkpoint
+
+PR #1247 is stacked on the utils branch for a data-only review diff. Both
+saved actionable data rows cite implementation commit
+`6ebd80b9efdbbbd73b75c2d05777230e85af18d7`. Retain every no-findings row.
+The stack must be retargeted to main after utils PR #1245 merges; hosted
+checks and review closure remain outstanding. No merge is authorized.
