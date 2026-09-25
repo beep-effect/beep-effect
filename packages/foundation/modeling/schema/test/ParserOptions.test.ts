@@ -1,7 +1,8 @@
 import { ParserOptions, ParserOptionsError } from "@beep/schema/ParserOptions";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeParserOptionsEffect = S.decodeEffect(ParserOptions);
@@ -14,15 +15,15 @@ describe("ParserOptions", () => {
     expect(options.objectMode).toBe(true);
     expect(options.delimiter).toBe(",");
     expect(options.ignoreEmpty).toBe(false);
-    expect(options.quote).toEqual(O.some('"'));
-    expect(options.escape).toEqual(O.none());
-    expect(options.escapeChar).toEqual(O.some('"'));
-    expect(options.comment).toEqual(O.none());
+    assertSome(options.quote, '"');
+    assertNone(options.escape);
+    assertSome(options.escapeChar, '"');
+    assertNone(options.comment);
     expect(options.supportsComments).toBe(false);
     expect(options.ltrim).toBe(false);
     expect(options.rtrim).toBe(false);
     expect(options.trim).toBe(false);
-    expect(options.headers).toEqual(O.none());
+    assertNone(options.headers);
     expect(options.renameHeaders).toBe(false);
     expect(options.strictColumnHandling).toBe(false);
     expect(options.discardUnmappedColumns).toBe(false);
@@ -47,10 +48,10 @@ describe("ParserOptions", () => {
       rtrim: true,
     });
 
-    expect(options.comment).toEqual(O.some("#"));
+    assertSome(options.comment, "#");
     expect(options.supportsComments).toBe(true);
     expect(options.escapedDelimiter).toBe("\\|");
-    expect(options.escapeChar).toEqual(O.some("\\"));
+    assertSome(options.escapeChar, "\\");
     expect(options.limitRows).toBe(true);
     expect(options.rtrim).toBe(true);
     expect(options.NEXT_TOKEN_REGEXP.test("|")).toBe(true);
@@ -67,8 +68,8 @@ describe("ParserOptions", () => {
 
       expect(options).toBeInstanceOf(ParserOptions);
       expect(options.delimiter).toBe(";");
-      expect(options.headers).toEqual(O.some(true));
-      expect(options.escapeChar).toEqual(O.none());
+      assertSome(options.headers, true);
+      assertNone(options.escapeChar);
     })
   );
 

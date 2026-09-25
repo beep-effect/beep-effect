@@ -1,7 +1,9 @@
 import { fcRuns } from "@beep/fc-runs";
 import { Int64, Int64FromString, isInt64 } from "@beep/schema/Int";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -33,8 +35,8 @@ describe("Int64", () => {
       const belowMinimum = yield* Effect.exit(decodeUnknownInt64(int64Minimum - BigInt(1)));
       const aboveMaximum = yield* Effect.exit(decodeUnknownInt64(int64Maximum + BigInt(1)));
 
-      expect(Exit.isFailure(belowMinimum)).toBe(true);
-      expect(Exit.isFailure(aboveMaximum)).toBe(true);
+      pipe(belowMinimum, Exit.isFailure, assertTrue);
+      pipe(aboveMaximum, Exit.isFailure, assertTrue);
     })
   );
 
@@ -43,7 +45,7 @@ describe("Int64", () => {
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.exit(decodeUnknownInt64(Number.MAX_SAFE_INTEGER));
 
-      expect(Exit.isFailure(decoded)).toBe(true);
+      pipe(decoded, Exit.isFailure, assertTrue);
     })
   );
 
@@ -51,27 +53,22 @@ describe("Int64", () => {
     "exposes the reusable signed int64 refinement",
     Effect.fnUntraced(function* () {
       expect(yield* decodeSignedInt64(int64Maximum)).toBe(int64Maximum);
-      expect(Exit.isFailure(yield* Effect.exit(decodeSignedInt64(int64Maximum + BigInt(1))))).toBe(true);
+      pipe(yield* Effect.exit(decodeSignedInt64(int64Maximum + BigInt(1))), Exit.isFailure, assertTrue);
     })
   );
 
-  it("derives schema arbitrary values inside the signed 64-bit range", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Int64Arbitrary]),
-          ([value]) => {
-            expect(isInt642(value)).toBe(true);
-            expect(value >= int64Minimum).toBe(true);
-            expect(value <= int64Maximum).toBe(true);
+  it.effect.prop(
+    "derives schema arbitrary values inside the signed 64-bit range",
+    [Int64Arbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      expect(isInt642(value)).toBe(true);
+      expect(value >= int64Minimum).toBe(true);
+      expect(value <= int64Maximum).toBe(true);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("Int64FromString", () => {
@@ -100,9 +97,9 @@ describe("Int64FromString", () => {
       const belowMinimum = yield* Effect.exit(decodeUnknownInt64FromString("-9223372036854775809"));
       const aboveMaximum = yield* Effect.exit(decodeUnknownInt64FromString("9223372036854775808"));
 
-      expect(Exit.isFailure(decimal)).toBe(true);
-      expect(Exit.isFailure(belowMinimum)).toBe(true);
-      expect(Exit.isFailure(aboveMaximum)).toBe(true);
+      pipe(decimal, Exit.isFailure, assertTrue);
+      pipe(belowMinimum, Exit.isFailure, assertTrue);
+      pipe(aboveMaximum, Exit.isFailure, assertTrue);
     })
   );
 });

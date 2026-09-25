@@ -1,7 +1,11 @@
 import { destructiveTransform } from "@beep/schema/Transformations";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 describe("destructiveTransform", () => {
@@ -19,10 +23,10 @@ describe("destructiveTransform", () => {
     Effect.fnUntraced(function* () {
       const schema = destructiveTransform(S.String, (value) => value.length);
 
-      const failure1 = yield* Effect.result(S.decodeEffect(schema)(1));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected string");
+      const failure1 = yield* Effect.exit(S.decodeEffect(schema)(1));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain("Expected string");
       }
     })
   );
@@ -34,10 +38,12 @@ describe("destructiveTransform", () => {
         throw new Error("boom");
       });
 
-      const failure2 = yield* Effect.result(S.decodeEffect(schema)("beep"));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain("Error applying transformation");
+      const failure2 = yield* Effect.exit(S.decodeEffect(schema)("beep"));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Error applying transformation"
+        );
       }
     })
   );

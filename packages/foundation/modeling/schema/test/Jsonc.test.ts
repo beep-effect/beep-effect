@@ -1,7 +1,9 @@
 import { $SchemaId } from "@beep/identity";
 import { decodeJsoncTextAs, JsoncTextToUnknown } from "@beep/schema/Jsonc";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 
 const decodeJsoncTextToUnknown = S.decodeEffect(JsoncTextToUnknown);
@@ -40,7 +42,7 @@ describe("Jsonc", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(decodeJsoncTextToUnknown(`{ "name": }`));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 
@@ -59,7 +61,7 @@ describe("Jsonc", () => {
         })
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 

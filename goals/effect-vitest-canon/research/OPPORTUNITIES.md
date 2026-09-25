@@ -2196,3 +2196,57 @@ Full utils package verification also passes (audit and docgen). The shared
 coverage optimization needs package-level isolation qualification for tests that
 change runtime globals or depend on fresh module state. Wink independently
 reproduces 12 failures; its isolation experiment remains separate evidence.
+
+### 2026-09-25 — PR lookup hides GraphQL rate-limit attribution
+
+During PR #1245 closeout, `bun run beep yeet closeout --summary
+--require-review-comments 0` reported that the branch had no open PR. REST
+confirmed the exact-head PR was open; a direct GraphQL review-thread read returned
+`graphql_rate_limit`. Existing resolution evidence plus the REST review-comment
+list confirmed no new follow-up, and exact-head checks were green before the
+ready-for-heavy label was applied. Distinguishing API quota exhaustion from an
+absent PR would prevent unnecessary local-proof fallbacks and duplicate PR work.
+
+### 2026-09-25 — Schema adoption reproduces pending runner context prerequisite
+
+After all 78 schema files adopted instrumented it, isolated Node and Bun unit runs
+passed 725 tests. Package-only coverage with `--fileParallelism=true --maxWorkers=1`
+failed 60 tests with TestContextUnavailable. The branch predates PR #1241's
+per-suite registration fix. Keep this failure explicit, integrate the prerequisite
+after its authorized merge, and rerun this exact mode before wave completion.
+A prerequisite integration gate before shared-worker coverage would prevent
+confusing passing isolated tests with successful cross-file context ownership.
+
+## Schema-first inventory location drift during Wave C
+
+While running `bun run beep yeet verify --tier cheap-gates`, five pre-existing
+SFV4-arbitrary-tests advisories became both stale and untracked after test imports
+shifted their line numbers (CurrencyCode, Fn, TerritoryCode, Transformations,
+Unknown). Package audit did not exercise this root inventory gate. Preserve
+existing dispositions while refreshing locations, and compare the generated
+inventory structurally before accepting it. Stable finding identities independent
+of import offsets would avoid this bookkeeping failure.
+
+The generated `lint schema-first --write` result also dropped five unrelated
+Models exceptions and replaced the five moved exceptions with advisory status.
+That output was not accepted wholesale. Only the five regenerated line numbers
+were applied to the original inventory; every original reason and status was
+retained. A generator that preserves reviewed dispositions across location-only
+changes would prevent this manual reconciliation.
+
+## PR 1252 external reviewer unavailable
+
+The `openclaw/pr-review` check failed before publishing any advisory review.
+Its check-run output reports `402 Payment Required: Grok Build usage balance
+exhausted`. There are no inline review findings to repair from this attempt.
+Keep this separate from code failures and do not claim review closure; the
+external reviewer needs available quota before a retry can produce evidence.
+Vercel deployment failures separately report the daily deployment rate limit.
+
+## Schema runner-context reproduction resolved after prerequisite merge
+
+After PR #1241 landed, merge `654e80230f` incorporated the runner fix. The same
+schema package-only shared-worker coverage command now passes 725 tests across
+78 files, exit 0, with no TestContextUnavailable failures. The prior 60 failures
+remain documented above as pre-integration evidence. The integration receipt is
+`history/2026-09-25-schema-runner-integration.md`.

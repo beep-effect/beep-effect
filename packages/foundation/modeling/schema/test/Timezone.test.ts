@@ -1,7 +1,9 @@
 import { Timezone } from "@beep/schema/Timezone";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeTimezoneEffect = S.decodeEffect(Timezone);
@@ -20,8 +22,8 @@ describe("Timezone", () => {
   it.effect(
     "rejects unknown timezone names",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownTimezoneEffect("Mars/Base"));
-      expect(Result.isFailure(failure1)).toBe(true);
+      const failure1 = yield* Effect.exit(decodeUnknownTimezoneEffect("Mars/Base"));
+      pipe(failure1, Exit.hasFails, assertTrue);
     })
   );
 });
