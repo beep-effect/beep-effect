@@ -1,11 +1,11 @@
 {
   "schemaVersion": "effect-vitest-p1-timing-context/v1",
   "package": "@beep/obs",
-  "headBefore": "dc3497d6e0e84e7c45be58489e44d96937f159a9",
-  "headAfter": "dc3497d6e0e84e7c45be58489e44d96937f159a9",
+  "headBefore": "3cd5f90e82e41513a5a0daa72923c880c82a3ac1",
+  "headAfter": "3cd5f90e82e41513a5a0daa72923c880c82a3ac1",
   "sourceManifestSha256": "7c50870e7559c9076b22a345e7f360c25ae10e3f488975dbd9912ba67b1ecbed",
-  "rawReporterSha256": "658fa6bc47d78566db9450a6781664999e319cab11ce6ffa12f33a96b556bbec",
-  "rawLogSha256": "3e111328758d676d6b376505f2ae68ae2652072304dd42b89ce87f10ab5b7479",
+  "rawReporterSha256": "fb16cfbf6b55a05af8d06dceae601edb41c01f5aaeba544e25d59b310203cfb8",
+  "rawLogSha256": "059e80d5cb4138bfe5e82e52d3596df5b4b1b12bb7527aa84caccd734d8e828a",
   "sourceDrift": [],
   "runtime": {
     "node": "v24.20.0",
@@ -19,16 +19,16 @@
     "--reporter=json",
     "--outputFile=<private absolute raw report>"
   ],
-  "wholeCommandSeconds": 4.255486837999342,
+  "wholeCommandSeconds": 4.505971241000225,
   "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
   "workerSettings": "../../worker-settings.json",
-  "sampleCount": 18,
-  "maxLoad1": 9.08154296875,
-  "minimumMemAvailableGiB": 48.236778259277344,
+  "sampleCount": 19,
+  "maxLoad1": 17.96142578125,
+  "minimumMemAvailableGiB": 69.11087417602539,
   "maxPressureAvg10": {
-    "cpu": 0.25,
-    "memory": 0.07,
-    "io": 0.53
+    "cpu": 0.34,
+    "memory": 0.0,
+    "io": 0.36
   },
   "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512258               512258               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512258               512258               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
   "nice": -4,
