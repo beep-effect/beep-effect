@@ -2,8 +2,8 @@
 
 ## Objective
 
-One consolidated reference folder, `~/YeeBois/references/effect/`, holds the upstream Effect
-clones agents read as truth (`effect`, `effect-tsgo`), indexed by graft in **workspace mode** and
+One consolidated reference folder, selected by `rootDefault` or `BEEP_REFERENCES_ROOT`, holds
+the upstream Effect clones agents read as truth (`effect`, `effect-tsgo`), indexed by graft in **workspace mode** and
 refreshed nightly with a `claude-opus-5` deep tier. Every beep-effect checkout, including every
 fleet worktree, reaches it through three stable links: `.repos/effect` (child), `.repos/effect-tsgo`
 (child), and `.repos/effect-workspace` (federated parent). Membership is a checked-in manifest;
@@ -68,6 +68,10 @@ within these constraints.
   `linkInto(checkoutRoot, root)` (create or repair the three links; the step `beep worktree new`
   calls), `renderTimerUnits(home, root, calendar, bunPath)`.
 
+Operational shell path parameters (`refs_root`, `refs_old_effect`, `refs_old_tsgo`,
+`refs_linked_worktree`, and `refs_projects`) are defined in `PLAN.md` before the slices.
+They name the same locations recorded by R1, R6, and the frozen fleet census.
+
 ## Target Surfaces
 
 - `scripts/references.json` (new) and `scripts/setup-effect-ref.sh` (rewritten as the manifest-
@@ -89,8 +93,8 @@ within these constraints.
 - `.claude/settings.json` permissions: `Bash(bun run beep refs plan:*)`,
   `Bash(bun run beep refs install-timer --refresh:*)` allowed; `refresh` and a fresh
   `install-timer` denied for agents, mirroring the graft deep policy.
-- Operator move (P1 S4, executed by the session, not a Codex lane): `~/YeeBois/dev/effect` and
-  `~/YeeBois/dev/effect-tsgo` → `~/YeeBois/references/effect/`; `git worktree repair`;
+- Operator move (P1 S4, executed by the session, not a Codex lane): `"$refs_old_effect"` and
+  `"$refs_old_tsgo"` → `$refs_root/`; `git worktree repair`;
   `.git/info/exclude` entries; prune the stale 2026-09-12 extract/fingerprint pair; `graft build`
   at the parent; fleet relink; timer install and single start (R1, R3, R7, R10).
 
@@ -119,14 +123,14 @@ within these constraints.
       `effect` (deep) and `effect-tsgo` (deep).
 - [ ] `bash scripts/setup-effect-ref.sh <checkout>` is idempotent and produces `.repos/effect`,
       `.repos/effect-tsgo`, `.repos/effect-workspace` pointing under `$BEEP_REFERENCES_ROOT`
-      (default `~/YeeBois/references/effect`).
+      (default: the `rootDefault` value specified above).
 - [ ] `bun run beep worktree new <name>` creates the three links in the new worktree and lists
       them in its summary.
 - [ ] `bun run beep refs plan` prints the clone/link/build plan without writing;
       `bun run beep refs install-timer` renders `beep-refs-refresh.{service,timer}` for
       `*-*-* 03:30:00`; `--refresh` re-renders an installed unit; `--uninstall` removes both.
-- [ ] `~/YeeBois/references/effect/graft/workspace.json` exists with children `effect`,
-      `effect-tsgo`; `graft check ~/YeeBois/references/effect` passes; a federated
+- [ ] `"$refs_root/graft/workspace.json"` exists with children `effect`,
+      `effect-tsgo`; `graft check "$refs_root"` passes; a federated
       `graft ask "Effect.fn vs fnUntraced" .repos/effect-workspace` returns `[effect/]`-labeled hits
       from a beep checkout.
 - [ ] Fleet census after relink shows zero `missing` for live checkouts.
@@ -150,21 +154,21 @@ within these constraints.
 | Whitespace | `git diff --check -- goals/effect-reference-workspace` | Passes |
 | CLI package | `bun run beep quality package-verify @beep/repo-cli --quick` | Green |
 | Provisioner + worktree tests | `bun run --cwd packages/tooling/tool/cli test -- test/setup-effect-ref.test.ts test/worktree-fleet.test.ts test/refs-*.test.ts` | Green |
-| Workspace index | `test -f ~/YeeBois/references/effect/graft/workspace.json && graft check ~/YeeBois/references/effect` | Passes |
+| Workspace index | `test -f "$refs_root/graft/workspace.json" && graft check "$refs_root"` | Passes |
 | Federated query | `graft ask "Effect.fn vs fnUntraced" .repos/effect-workspace` from a beep checkout | Hits labeled `[effect/]` |
 | Narrowed query | `graft ask "Schema.Class extend" .repos/effect` | Hits from `packages/effect/src/Schema.ts` |
 | Fleet links | census loop in `PLAN.md` P2 | 0 `missing` |
 | New worktree links | `bun run beep worktree new refs-link-probe` then `readlink .repos/effect-workspace` in it; remove the probe with `beep worktree remove` | Link present |
 | Timer | `systemctl --user list-timers \| grep beep-refs-refresh` | Enabled, next run 03:30 |
 | Seed run | `journalctl --user -u beep-refs-refresh -n 80`; status file present | Exit 0 or a reported partial tier |
-| Upstream hygiene | `for m in effect effect-tsgo; do git -C ~/YeeBois/references/effect/$m status --porcelain; done` | Empty |
+| Upstream hygiene | `for m in effect effect-tsgo; do git -C "$refs_root/$m" status --porcelain; done` | Empty |
 | Stale-path sweep | `rg -n "YeeBois/dev/effect\|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` | No matches (exit 1) |
 
 ## Stop Conditions
 
 - A reference member is dirty, on a non-`main` branch, or has uncommitted work in a linked
   worktree at move time: stop and report; the operator decides.
-- `git worktree repair` cannot re-attach `~/YeeBois/dev/effect-worktrees/docgen-enforce-examples`.
+- `git worktree repair` cannot re-attach `"$refs_linked_worktree"`.
 - CLIProxyAPI returns `503 auth_unavailable` or `/v1/models` omits `claude-opus-5`: install the
   timer but do not start the seed; report.
 - `$HOME/.config/beep-graft/env` is missing or `mise trust --show` is not clean (the unit would
@@ -178,7 +182,7 @@ within these constraints.
 | File | Change |
 | --- | --- |
 | `~/.claude/rules/effect-coding-standards.md` | Replace the `effect-smol` / `.repos/effect-v4` sentence with `.repos/effect` (effect `main` is v4) and mention `.repos/effect-workspace` for graft. |
-| Claude memory pointers naming `~/YeeBois/dev/effect` | Update to `~/YeeBois/references/effect/effect` after the move. |
+| Claude memory pointers naming `"$refs_old_effect"` | Update to `"$refs_root/effect"` after the move. |
 | `~/.config/beep-graft/env` | None; reused as-is. If a separate env is ever wanted, copy it to `~/.config/beep-refs/env` and re-run `install-timer --env-file`. |
 
 ## Exception Ledger
