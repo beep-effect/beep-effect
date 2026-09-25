@@ -5,6 +5,8 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
+      // Model initialization must not reuse mutated module state across test files.
+      isolate: true,
       testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 20_000,
     },
   })

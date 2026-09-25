@@ -74,7 +74,7 @@
       "id": "P3",
       "name": "Yeet: PR to mergeable",
       "status": "in-progress",
-      "exit": "Final Yeet proof plus hosted merge-ready result required; leave PR open."
+      "exit": "Approved three-package coverage exceptions and packet closeout in a follow-up to merged PR #1224; final local proof and hosted merge-ready required; leave follow-up open."
     },
     {
       "id": "P4",
