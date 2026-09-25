@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "knowledge-freshness-audit",
+    "title": "Repository freshness audit",
+    "status": "paused",
+    "created": "2026-09-24",
+    "updated": "2026-09-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/knowledge-freshness-audit",
+  "lifecycle": "paused",
+  "mission": "Audit repository claims against explicit authority and evidence, reconcile customized upstream skills, and verify targeted repairs.",
+  "statusNote": "Authored-but-not-started linked campaign. P0 delivers the planning PR; explicit operator activation opens P1 reporting. Audited-content mutation follows the corresponding report and false-positive review. Planning PR readiness is not audit completion.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "The audit is not achieved until required inventory, extraction, evidence, repair, and regression obligations are verified and its delivery PRs reach exact-head mergeable through Yeet. The initial docs-only packet PR leaves this campaign paused.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/knowledge-freshness-audit/README.md",
+    "goals/knowledge-freshness-audit/SPEC.md",
+    "goals/knowledge-freshness-audit/PLAN.md",
+    "goals/knowledge-freshness-audit/GOAL.md",
+    "goals/knowledge-freshness-audit/research/SOURCES.md",
+    "goals/knowledge-freshness-audit/research/decisions.md",
+    "goals/knowledge-freshness-audit/research/evidence-contract.md",
+    "goals/knowledge-freshness-audit/research/jev-evaluation.md",
+    "goals/knowledge-freshness-audit/research/acceptance-matrix.md",
+    "goals/knowledge-surface-automation/SPEC.md",
+    "goals/knowledge-surface-automation/research/p2-grill-decisions.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/surface-census.md",
+    "research/existing-capabilities.md",
+    "research/decisions.md",
+    "research/evidence-contract.md",
+    "research/jev-evaluation.md",
+    "research/adhd.md",
+    "research/acceptance-matrix.md",
+    "research/OPPORTUNITIES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/knowledge-freshness-audit/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Planning packet: research, review, and docs-only PR to mergeable",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Inventory and report-first extraction/evidence tooling",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Claim verification and optional bounded Jev evaluation",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Skill reconciliation and targeted repairs",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Final-tree coverage and precise regression gates",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Audit PR closeout, reflection, and lifecycle",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/knowledge-freshness-audit/GOAL.md)\" -le 4000",
+    "jq . goals/knowledge-freshness-audit/ops/manifest.json",
+    "git diff --check -- goals/knowledge-freshness-audit goals/knowledge-surface-automation/README.md",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check",
+    "bun run beep explore --check",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep yeet verify"
+  ],
+  "stopConditions": [
+    "Audit execution has not been explicitly activated; P0 packet delivery remains authorized.",
+    "Required authority is materially contradictory; stop the dependent repair and continue independent work.",
+    "The proposed change exceeds claims-plus-targeted-fixes scope or would reopen inherited ratified doctrine.",
+    "Audited-content mutation lacks its corresponding report and recorded false-positive review.",
+    "Skill ancestry or adaptation purpose cannot support safe replacement.",
+    "A request cannot be bounded within the remaining $5 Jev pilot budget, or needs unnamed credentials/cost.",
+    "The same blocker repeats after reasonable investigation; report it without hiding unresolved obligations."
+  ]
+}

@@ -59,6 +59,12 @@ own docs-only PR per the ratified process.
 
 ## Notes
 
+Linked campaign: [Repository freshness audit](../knowledge-freshness-audit/README.md)
+adds a paused, report-first campaign for semantic claim coverage, evidence-backed
+remediation, and a bounded Jev evaluation. It inherits this initiative's ratified
+decisions; the broader graph, bootstrap, warehouse, and scheduling roadmap remains
+owned here. Its initial planning PR does not activate or complete the audit.
+
 Research input: [`research/2026-08-13-compound-engineering-capture.md`](./research/2026-08-13-compound-engineering-capture.md)
 preserves the folded always-on compounding vision behind the friction-ledger,
 buzz-channel, and reflection-skill direction.
