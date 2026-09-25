@@ -14,9 +14,10 @@ import {
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
 import { provideScopedLayer } from "@beep/test-utils";
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Config, Effect, Stream } from "effect";
+import { Config, Effect, FileSystem, Path, Stream } from "effect";
+import { constFalse } from "effect/Function";
 import { ChildProcess } from "effect/unstable/process";
 import { fixture, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
@@ -381,6 +382,23 @@ describe("worktree reference linking", () => {
   );
 });
 
+// `src/bin.ts` is a Bun-only entry point, so the CLI child must run under Bun
+// even when the suite runs on Node. `process.versions.bun` is the runtime
+// probe because vitest.setup.ts installs a `Bun` global shim under Node. The
+// real executable comes from the ambient PATH (POSIX `:`-separated, like the
+// child PATH below), never the fixture bin whose `bun` stub no-ops the nested
+// install.
+const resolveBunExecutable = Effect.fn("WorktreeFleetTest.resolveBunExecutable")(function* (ambientPath: string) {
+  if (process.versions.bun !== undefined) return process.execPath;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const found = yield* Effect.findFirst(
+    A.map(A.filter(Str.split(ambientPath, ":"), Str.isNonEmpty), (directory) => path.join(directory, "bun")),
+    (candidate) => fs.exists(candidate).pipe(Effect.orElseSucceed(constFalse))
+  );
+  return yield* Effect.fromOption(found, () => `no bun executable on the ambient PATH: ${ambientPath}`);
+});
+
 it.effect(
   "worktree new calls reference linking after copying files and prints its links",
   Effect.fnUntraced(function* () {
@@ -401,7 +419,7 @@ esac
     yield* writeExecutable(f.path.join(f.bin, "bun"), "#!/bin/sh\nexit 0\n");
     const cli = yield* f.path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
     const ambientPath = yield* Config.String("PATH");
-    const bun = process.execPath;
+    const bun = yield* resolveBunExecutable(ambientPath);
     const handle = yield* ChildProcess.make(bun, [cli, "worktree", "new", "topic"], {
       cwd: f.owner,
       env: { HOME: f.home, PATH: `${f.bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: f.root },
