@@ -25,6 +25,10 @@
   (added guidance: "make the fixture tsconfig self-contained", "Add a minimal
   fixture-local Biome config"); run log line
   `[6/6 EVALUATE] ACCEPT (new best) soft=0.9583 > prev best 0.5015`.
+- **Update (step 2, same run):** step 2 accepted at 1.0000 with an edit that quotes a corpus
+  task's phrasing into the skill; the run was stopped there because the strict-greater gate
+  cannot accept anything on a saturated set. Skill size grew 6,233 -> 9,070 chars in two
+  edits. Full reading in `history/p2-rerun/FINDINGS.md`.
 - **Proposal:** (1) Make the scorer's fixture copy self-contained by
   construction: carry the tsconfig base it extends, the lib set Effect's `.d.ts`
   needs (`Disposable`/`AsyncDisposable`), node types, and a fixture-local Biome
