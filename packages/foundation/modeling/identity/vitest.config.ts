@@ -5,7 +5,10 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Package-specific overrides
+      // Tests here depend on per-file module state (runtime error singletons, property
+      // instrumentation, the wink engine); keep every file in its own worker even under coverage
+      // (vitest.shared.ts shares the graph there by default).
+      isolate: true,
     },
   })
 );
