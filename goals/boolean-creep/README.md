@@ -2,21 +2,19 @@
 
 ## Status
 
-R33 is finalized complete/wet on 2026-09-25. All 27 primary lanes completed on
-unchanged source and main; the separate supplemental audit covers the two
-ontology seed files omitted by the primary lane. The 50 raw records reconcile
-to one new qualified owner, ClipScan, and a corrected OBS E3 design.
+R34 was interrupted after 21 of 27 lane receipts. The workstation recovery
+found changed frozen inputs, so R34 receives no completed-round or dry credit.
+The preserved findings were revalidated against the updated checkout: 45
+input and artifact bindings matched. Sixteen out-of-scope rows were archived,
+including two qualifications; three descriptor kinds and one locator were
+corrected. The inventory now has 731 rows: 121 qualified and 610 disqualified,
+with zero applied. Historical rows and both withdrawn designs are retained.
+See `data/r34-partial-integration-2026-09-25.json`.
 
-The inventory has 747 rows: 123 qualified and 624 disqualified, with zero
-applied. Complete-owner audits withdrew 51 records outside the Boolean recall
-net, including 19 prior qualifications. The unsupported image-orientation
-design is archived and its observation pair is retained as D1. Historical
-rows and designs remain available. See `data/r33-parent-integration-2026-09-25.json`
-and the R33 round verdict.
-
-The current dry streak remains zero. Two current-source dry rounds,
-replacement independent P3 review, packet ratification merged by Benjamin,
-implementation, and final exact-main closure remain required.
+PR #1223 merged the R33 checkpoint. The dry streak remains zero. A fresh
+current-source census, two consecutive dry rounds, independent P3 review,
+Benjamin's ratification merge, implementation, and final exact-main closure
+remain required.
 
 Lifecycle: `active`
 

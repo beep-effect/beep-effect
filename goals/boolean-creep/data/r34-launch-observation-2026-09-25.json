@@ -1,0 +1,23 @@
+{
+  "kind": "boolean-creep-r34-launch-observation/v1",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "service": "agent-run-boolean-creep-r34-20260925-339da1.service",
+  "durableServiceObservedRunning": true,
+  "admissionSha256": "18d374321220bdca84bfcda4b4b85d1a1d418398584fc7f068500adcf6435d0d",
+  "createdInputsVerified": true,
+  "files": 3181,
+  "lanes": 27,
+  "qualifiedDesigns": 123,
+  "inventoryRecords": 747,
+  "reviewedLauncher": {
+    "controllerSha256": "4ae05451a96bab7ac50440595f3aee15775c6c09320947685fd6db9e88c52a7d",
+    "launcherSha256": "30c4a83889e46d5547403fd979cdb928ccca85b2bd10a6e726bc4457b8501928",
+    "pinsSha256": "ca40e0b3ea2316157c2a3a319cfb600889b398c8453e9fac6341e152ad074ad2",
+    "reviewSha256": "87fbf93f0c19b19cfe8e697f1a798398c114d651dea6cfff933273f2eb0c3b16"
+  },
+  "newPromptClarification": "Actual Boolean members counted in complete coexisting owner; independent axes preserved for minimal E3 clusters; generated HTML excluded; all included non-TypeScript paths inspected.",
+  "terminalObserved": false,
+  "dryRoundCredit": false,
+  "independentP3Approval": false
+}

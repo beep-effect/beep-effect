@@ -1,5 +1,21 @@
 # PLAN — Boolean-Creep Eradication
 
+## R34 interruption and partial reconciliation, 2026-09-25
+
+R34 was interrupted after 21 of 27 lane receipts. The workstation recovery
+found changed frozen inputs, so R34 receives no completed-round or dry credit.
+The preserved findings were revalidated against the updated checkout: 45
+input and artifact bindings matched. Sixteen out-of-scope rows were archived,
+including two qualifications; three descriptor kinds and one locator were
+corrected. The inventory now has 731 rows: 121 qualified and 610 disqualified,
+with zero applied. Historical rows and both withdrawn designs are retained.
+See `data/r34-partial-integration-2026-09-25.json`.
+
+PR #1223 merged the R33 checkpoint. The dry streak remains zero. A fresh
+current-source census, two consecutive dry rounds, independent P3 review,
+Benjamin's ratification merge, implementation, and final exact-main closure
+remain required.
+
 ## R33 reconciliation, 2026-09-25
 
 R33 is finalized complete/wet on 2026-09-25. All 27 primary lanes completed on

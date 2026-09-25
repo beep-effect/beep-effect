@@ -1,0 +1,17 @@
+{
+  "scope": "Formatting changes only. Original snapshots preserve frozen launch and execution bindings. No completed-round or dry credit.",
+  "changed": [
+    {
+      "file": "goals/boolean-creep/data/r34-owner-reviews/r34-drivers-a-f-scope-scope-dispositions.json",
+      "originalSnapshot": "goals/boolean-creep/history/2026-09-25-r34-publication-format/data/r34-owner-reviews/r34-drivers-a-f-scope-scope-dispositions.json.txt",
+      "originalSha256": "fdda91d0c805c3f24e120cedb221a8042e64624bf137bbbbf12822f8a008c702",
+      "formattedSha256": "6350adc5a34f3e497bb6e1574ebed51c749967043e17b15b47c11a8ff8be1f19"
+    },
+    {
+      "file": "goals/boolean-creep/data/r34-partial-integration-2026-09-25.json",
+      "originalSnapshot": "goals/boolean-creep/history/2026-09-25-r34-publication-format/data/r34-partial-integration-2026-09-25.json.txt",
+      "originalSha256": "3a5c2dc8f995485cf146fef10674bee2a5bb112d8fb846a3eade54b34779be1f",
+      "formattedSha256": "de0ac14b79a30fb9ecbb9917f4b5433e88b6faf59eb4e2d781e44ceb94eba56a"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "r34-created-input-verification",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "admissionSha256": "18d374321220bdca84bfcda4b4b85d1a1d418398584fc7f068500adcf6435d0d",
+  "seedSha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "inventorySha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "laneMapSha256": "23122c94cece5f12302329e9ba0e9e8f1e73b57eb21fb8a022cb636c5e96deae",
+  "laneMapValuesMatchApprovedPlan": true,
+  "laneMapFormatterStable": true,
+  "runnerSha256": "d8db401443b10416f1050ee73177d43d17c459a516226969361b40537a1ca0f7",
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "includedFilesVerified": 3181,
+  "selectedDesignsVerified": 123,
+  "logicalIndexUnchanged": true,
+  "controllerRunningAtVerification": true,
+  "independentP3Approval": false,
+  "dryRoundCredit": false
+}
