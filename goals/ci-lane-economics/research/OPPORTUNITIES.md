@@ -1016,4 +1016,6 @@ evidence, what would have prevented it). Redact for the public repo.
   census time in `GOAL.md` at retarget time (done in this lane), and a
   `--window` guard in `beep ci lane-timings` that refuses an `--until` in the
   future or a span shorter than seven days unless `--preview` is passed, so
-  a partial run can never be mistaken for an admission.
+  a partial run can never be mistaken for an admission. Both guards ship in
+  #1219 after review: the pinned bounds, and the `--preview` flag whose
+  banner marks every partial read as one.

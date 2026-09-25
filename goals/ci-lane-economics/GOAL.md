@@ -27,7 +27,9 @@ move without a new signed decision.
 Window 3 is the first complete half-open UTC week that starts after the last
 merge: `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`. Do not census it
 before 2026-09-30T00:00Z; a run over a partial window is a preview and never
-an admission. Census it with exactly:
+an admission. The command enforces that: `--window` refuses an `--until` in
+the future or a span under seven days unless `--preview` is passed, and
+preview output carries a banner that never admits. Census it with exactly:
 
 ```sh
 bun run beep ci lane-timings --window --workflow check.yml --event all --since 2026-09-23T00:00:00Z --until 2026-09-30T00:00:00Z --markdown

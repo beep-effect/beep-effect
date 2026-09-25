@@ -25,7 +25,9 @@ Status: `active`
   each, 19 cold at or above 240 s): `repo-cli-1` cold p50 676 s, max 717 s;
   `repo-cli-2` cold p50 644 s, max 696 s, both under the 756–814 s
   projection with 32 s of hash skew; `unit-a`/`unit-b` cold p50 619 s/605 s.
-  A preview is not an admission: the verdict is the full-week census only.
+  A preview is not an admission: the verdict is the full-week census only,
+  and the `--preview` guard that enforces that in `beep ci lane-timings`
+  landed in #1219.
 
 - Repair decision (2026-09-22): `research/repair-decision-2.md` keeps
   `Test Unit` on free hosted runners and splits the `repo-cli` shard through an
