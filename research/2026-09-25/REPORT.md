@@ -77,4 +77,4 @@ Skills / governance research spike: **HEXIS** (FSM compile), **DoW / Persistent 
 
 ## Watchlist patch note (publisher)
 
-See `WATCHLIST_PATCH.md` + `LEDGER_PATCH.md` sidecars. **Update** w-zero-canary → canary.13 (HOLD broken) and w-zero-head → 20260925 tip; keep/refresh Effect #8336 / rc.117 and standing HOLDs with Sep 25 evidence dates; **add** consolidated Legora cluster + Everlaw Adoption Report + HEXIS / DoW / Approval Laundering / Progressive Skill Discovery / ARGUS (arXiv ids); draft until human merge of `research/2026-09-25`.
+Ledger edits are inlined in `research/ledger/WATCHLIST.md` and `research/ledger/stamp.json` (draft until human merge of `research/2026-09-25`). **Update** w-zero-canary → canary.13 (HOLD broken) and w-zero-head → 20260925 tip; keep/refresh Effect #8336 / rc.117 and standing HOLDs with Sep 25 evidence dates; **add** consolidated Legora cluster + Everlaw Adoption Report + HEXIS / DoW / Approval Laundering / Progressive Skill Discovery / ARGUS (arXiv ids), plus HttpApi QUERY docs (#8292). Retired rows stay retired.

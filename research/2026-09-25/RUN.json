@@ -46,7 +46,7 @@
     "x": "blocked-client-not-enrolled",
     "verify": "none (no Sol/Luna seat in this harness)",
     "writer": "grok-bot-blinded",
-    "publisher": "deferred-not-called"
+    "publisher": "cursor-cloud-agent"
   },
   "frictions": [
     {
