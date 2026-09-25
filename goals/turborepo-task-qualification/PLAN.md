@@ -1691,3 +1691,22 @@ input digests match. No host files were removed and no lint body executed.
 This establishes generated-file sensitivity, not semantic irrelevance or a
 justification for exclusions. Frozen pilot evidence retains its recorded
 filesystem/source identity; no tuple is qualified by this refresh.
+
+### Generated-input execution controls and proof-reuse review — 2026-09-25
+
+Six fresh identity-lint executions at `338901fa4d` compare visible and masked
+utils generated directories for valid and malformed source. The valid cases
+exit zero with matching raw streams; malformed cases exit one with matching
+raw streams. Read-only namespace overlays preserve host files. Tool binaries,
+root configuration, lockfile, launcher and identity files match their pre/post
+hashes. See [the controls](./research/generated-input-lint-controls.json).
+This is bounded wrapper execution, not Turbo dependency execution, replay,
+syscall completeness or justification for changing input exclusions.
+
+The saved five-file proof-reuse delta review was revalidated after main:
+source bytes are unchanged, nine Turbo-digest tests and seven docgen-manifest
+tests passed. The earlier filtered run passed 23 tests and skipped 239.
+[The review](./research/proof-reuse-delta-review.json) distinguishes SHA256
+serialization from Crypto service/error propagation, temporary index/staging
+writes, and metadata-only package scope. It is accepted as review 28, with all
+13 broader obligations retained. No tuple is qualified by these results.

@@ -1,0 +1,139 @@
+{
+  "head": "338901fa4d45c06c1b351013d68f517cbdb53d7b",
+  "authority": "bounded fresh process controls, not cache replay",
+  "tools": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "sourceBindings": {
+    "packages/foundation/modeling/identity/CHANGELOG.md": "0bdc52a4b95c1e89b45ba50f52921e549b99ecdbc9dc22477bd0d075a0b87d21",
+    "packages/foundation/modeling/identity/LICENSE": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b",
+    "packages/foundation/modeling/identity/README.md": "a7bdc388d532c2bc2279d5aa9b330d7e7537c60d48d4b426b54d11f98fb8b926",
+    "packages/foundation/modeling/identity/docgen.json": "15fda5237078fbc94c677e476c40201bbebc4c10b276794cec766480b1fb18ef",
+    "packages/foundation/modeling/identity/package.json": "46a43fbeb72f2a35f36ad79d2cf87f8fbd34418b9efa33b63e316760ffb2ecf5",
+    "packages/foundation/modeling/identity/src/Curie.ts": "260e8f9c3f8772b87a347e5f9c0c5919e73ffc3f69b1e55b47d387f5c92ff73c",
+    "packages/foundation/modeling/identity/src/Fibered.ts": "388817acc0eef963bc3442d02a6bf4cf397f80ae8e264a1f88185d5dc702471c",
+    "packages/foundation/modeling/identity/src/Id.ts": "2882e2c41b1c4912724d4074eced0c544ca644c99b4866b535ca7dd073430348",
+    "packages/foundation/modeling/identity/src/IdentityRegistry.ts": "eaa2ff391ba6acc06b709348707acba84d59baf992e9d391df45a232930b558e",
+    "packages/foundation/modeling/identity/src/PnLocal.ts": "4c7e8c688051a66c1b44b0cceb20c4ee6936dbdd23ee33e90f16b2524f2bae72",
+    "packages/foundation/modeling/identity/src/Vocab.ts": "bd494a2fd47635f0d00987326a1d4f50919714f077b1520352c4e81fc51f7094",
+    "packages/foundation/modeling/identity/src/index.ts": "99b8275ca8418b415da062990d5c14aacd4a658b9ddbecc67739c4e685a1e8c3",
+    "packages/foundation/modeling/identity/src/packages.ts": "74cefc595762207772dd33a694b2631784c14b30137f9727ae2cd4f6d7262535",
+    "packages/foundation/modeling/identity/test/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "packages/foundation/modeling/identity/test/AnnoteError.test.ts": "a2091cf043af0b0d0cabd71a8c4da375f3f9d448045b2b203ac40ffd77862138",
+    "packages/foundation/modeling/identity/test/Curie.test.ts": "be0d717eb9b5651579edf7469aee4549fc2439f684d45a920ffa6b95ce11e993",
+    "packages/foundation/modeling/identity/test/Fibered.test.ts": "d4bda101a8cf0de034239aee936716a7421cb26b4b4bce6db2932d52d2b707f2",
+    "packages/foundation/modeling/identity/test/Identity.test.ts": "781725fa356f008e3ca25bbd6460ad1f14f94dc43f45798ecc4b4dfcc25e6269",
+    "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts": "7cc9b6f192b4e374332978870cf3f813737071061bcb40ef21d7b331f7fe84c5",
+    "packages/foundation/modeling/identity/test/IriBinding.test.ts": "35727d9848d385e57fc125ccbf5701777f82a88115d93c37985320dcb5937792",
+    "packages/foundation/modeling/identity/test/OntologyEntrypoints.test.ts": "55153c30a5995f991c173000a2d26b5bb00a0dab262feae95c37b743b5593b6e",
+    "packages/foundation/modeling/identity/test/PnLocal.test.ts": "f883f02bc6b358444e2e3a3959edd7a326ff45fee9b5ef3e30367c36faf0653d",
+    "packages/foundation/modeling/identity/test/TaggedError.equivalence.test.ts": "e1065179d1f6a8f47f6736e17b76bbb2260760c5a16eb4e3ddcf15f4de57ecef",
+    "packages/foundation/modeling/identity/test/TemplateGuards.test.ts": "adea22e6206b66286f5357c35938422548fb8c8f16a3b4dadbb0b8a7479f7db1",
+    "packages/foundation/modeling/identity/test/Vocab.test.ts": "cf8b3fe8cb8359a9262da10e43abc3d374c6c151ed638a03c02208aeda5920cd",
+    "packages/foundation/modeling/identity/test/shape-stable.test.ts": "4c6c84a4e79aa7267da7e47c9bc3df8503416339f776f34ad3b572601366128b",
+    "packages/foundation/modeling/identity/tsconfig.check.json": "e6ae8bf3fa10408e072fa153355231da16350d5bafaaca4fa50e9d32d3728463",
+    "packages/foundation/modeling/identity/tsconfig.json": "091ecfd0812379700335605a0f17169fea0d4e51a15fbf7132d869a12d1fcbdd",
+    "packages/foundation/modeling/identity/tsconfig.test.json": "edf5553d2a4003e81172bc66d3cbf7df10a551350ee6c0a7063d0c00aebfda49",
+    "packages/foundation/modeling/identity/turbo.json": "6a5fc167e62c8d8ed8bb3099675b6bb54a4beb5ee662310bbc9e62dd3efbd8bf",
+    "packages/foundation/modeling/identity/vitest.config.ts": "d2711666695d05f982dd7989cc3b524c517d4663e9ee2662e02a3803f4d2df73",
+    "biome.jsonc": "e4e0b1144a84786e65443af3ddbf7be34945395b1eaea247ddb1f66cdd3a5dc3",
+    "biome.identity.jsonc": "d4eae56d66a1baafd84dfad7a4ed2534de673cb393dae6f5d9294de7c7bf4d05",
+    "package.json": "a786b5b77f17f786f5988ccade2d48c49d0c8f8f46d332a8b5f4c8e441a5951f",
+    "bun.lock": "e59a1a3e0913d04f56a1166adc5ad5fa8bdb0d004da3f016d32f3e7e6ce207aa",
+    ".gitignore": "6887ccf249b0cc29b9c0ee9c8e4361046441e3df3603193cd62c5ff12d984b17",
+    ".bun-version": "b99b4c7cdf236f59bc9f65d963deaecae3b16a7dad87939cacb9057f7664daee",
+    ".nvmrc": "68ca3fba3b7e864770cb61aeb306d4bd4354b68ab4dd38450860c5d823e42a53",
+    "node_modules/@biomejs/biome/bin/biome": "7ffb4d217e5ddefcc19ca6afe76bb982f5eb36c9a124448105195fbcfc84bd77",
+    "node_modules/@biomejs/biome/package.json": "af3d8addc924ddbf18457d320e240cba41a360d462df64bad3f0c615cc413069"
+  },
+  "cases": [
+    {
+      "case": "valid-visible",
+      "masked": false,
+      "invalidSource": false,
+      "exit": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 53,
+      "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "case": "valid-masked",
+      "masked": true,
+      "invalidSource": false,
+      "exit": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 53,
+      "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "case": "valid-visible-repeat",
+      "masked": false,
+      "invalidSource": false,
+      "exit": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 53,
+      "stderrSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "case": "invalid-visible",
+      "masked": false,
+      "invalidSource": true,
+      "exit": 1,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 138,
+      "stderrSha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+    },
+    {
+      "case": "invalid-masked",
+      "masked": true,
+      "invalidSource": true,
+      "exit": 1,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 138,
+      "stderrSha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+    },
+    {
+      "case": "invalid-visible-repeat",
+      "masked": false,
+      "invalidSource": true,
+      "exit": 1,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 138,
+      "stderrSha256": "376d8fd73fce8c4404fa85bb984bac6c18d4a49720648991de6a6f828a28cc72"
+    }
+  ],
+  "environment": {
+    "network": "isolated",
+    "filesystem": "host read-only, private temporary /tmp; two generated dirs and invalid source overlaid only inside namespace",
+    "CI": "true",
+    "HOME": "/tmp",
+    "LC_ALL": "C",
+    "TZ": "UTC"
+  },
+  "limits": [
+    "Runs the identity lint wrapper only, not its Turbo dependency tasks.",
+    "No Turbo client, cache lookup, signature verification, syscall trace or broad semantic closure is claimed.",
+    "Matching observed exits and raw streams covers only these valid and malformed source cases."
+  ],
+  "retention": {
+    "fileCount": 65,
+    "archiveManifestSha256": "2fe7f70695da6d13a1cad7fd36057a9f3436c5f2ce3a25d86e8f89e409b59135"
+  }
+}

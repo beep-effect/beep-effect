@@ -1,0 +1,82 @@
+{
+  "authority": "source-diff-review-with-scoped-tests",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "338901fa4d45c06c1b351013d68f517cbdb53d7b",
+  "sourcesUnchangedSince": "e1b5f5841e7f813fe4c8d4c6aa9720dc2b687156",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "aed5e7fb9a679f3aa2d25df3268a764cdcce5cafa2b0aeaa125ce531be3105ee",
+      "review": [
+        "Replaces Node hashing/randomUUID with Effect Crypto. SHA256 text serialization still includes the command, virtual Git tree, head/base commits and the execution environment profile.",
+        "Ambient Bun.env is hashed when useLocalEnv or the Turbo environment rule extends ambient input. Temporary Git index and staging filenames use random UUIDs; tracked proof persistence writes a temporary file then renames it. These filesystem effects are not pure computation."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+      "sha256": "78b081515c6d0ce69696dec492d76abc69817527d007df8819d542af449af813",
+      "review": [
+        "Replaces Node SHA256 with Effect Crypto and synchronous ledger encoding with Effect encoding; error/service boundaries change. Digest text still sorts taskId=hash rows.",
+        "Adds sorted unique package names excluding the root // node. Package scope is observation metadata, not a new reuse-key component.",
+        "Summary acceptance still checks task success/hit and ledger completeness. This review does not promote a cache hit into fresh hosted proof."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "sha256": "e0dbc5b24304edc9713e9e17e07adad0d6ff3aafb27d18ecc2b00c8070fa4873",
+      "review": [
+        "The reviewed delta adds Crypto service requirements to command capture and the runner. Native query/dry-run interpretation still consumes Git base/head and local filesystem/task state."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      "sha256": "339bdce860541101108e0431dad7429453f5f58750f3b072cc450e3af1074b34",
+      "review": [
+        "The reviewed delta adds Crypto service requirements to topo-sort subprocess capture; it does not remove process or filesystem dependencies."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+      "sha256": "08ba428406df312d4f7992b470c8bed56a3660b90e536469d277cd69086e9b8b",
+      "review": [
+        "Replaces Node hashing with the shared SHA256 service, yielding typed DocgenError on digest failure. Input/output file text and fingerprint JSON remain hashed with tool version.",
+        "Reads package config, declared input/output glob sets and existing manifest state; writing a manifest is a filesystem effect. Manifest freshness is scoped to those inputs and does not prove whole-repository runtime behavior."
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "suite": "turbo-lane-digest.test.ts",
+      "head": "338901fa4d45c06c1b351013d68f517cbdb53d7b",
+      "passed": 9,
+      "exit": 0
+    },
+    {
+      "suite": "ProofManifest.test.ts",
+      "head": "338901fa4d45c06c1b351013d68f517cbdb53d7b",
+      "passed": 7,
+      "exit": 0
+    },
+    {
+      "suite": "quality-tasks.test.ts and turbo-lane-digest.test.ts filtered selection",
+      "head": "e1b5f5841e7f813fe4c8d4c6aa9720dc2b687156",
+      "passed": 23,
+      "skipped": 239,
+      "exit": 0
+    }
+  ],
+  "remaining": [
+    "Focused contracts are not full local/hosted proof.",
+    "No cache qualification, complete service-input closure or signed remote evidence is established."
+  ],
+  "retention": {
+    "fileCount": 65,
+    "archiveManifestSha256": "2fe7f70695da6d13a1cad7fd36057a9f3436c5f2ce3a25d86e8f89e409b59135"
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 28,
+    "unresolved": 13
+  }
+}
