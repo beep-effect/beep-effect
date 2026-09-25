@@ -1,0 +1,22 @@
+{
+  "lane": "r39-cli-commands-r-z",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T09:01:15.979222+00:00",
+  "finished": "2026-09-25T09:04:41.429492+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-r-z.jsonl`. It contains 0 confirmed and 0 disqualified records, and the validator accepted it.\n\nEvery assigned root was covered: `Research`, `Root.ts`, `Runners`, `Skills`, `SyncDataToTs`, `TopoSort`, `TsconfigSync`, `VersionSync`, and `Worktree` (93 non-test source files). All 34 seeded owners are still present with the same members and classifications, so nothing was rewritten.\n\nThe declaration lines have drifted for `BakeCheckReport` (343), `BakeCliOptions` (94), `PorcelainAccumulator` (608), `WorktreeDoctorEntry` (237), `ResearchRepoCardOptions` (311), `WorkspaceDescriptor` (972), `buildBunReport` (553), `CheckoutEntryFacts` (937), and `runGitProbe` (488). `WorktreeRemovalRequest.exemptInvokerSession` is an independent optional third boolean and was not folded into `worktree-removal-mode`.",
+  "transcriptSha256": "12f95b86e53c855f26466540c306e059966ddef9a8e703fe69ea1dcabf469a65",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

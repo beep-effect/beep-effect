@@ -4,11 +4,11 @@
  import { readGraph, wiringPath } from "./write.js";
  import { readFingerprint } from "./fingerprint.js";
  import { readSourceFile } from "../util/source.js";
-+import { readDeepIgnore } from "../util/deep-ignore.js";
++import { deepIgnoreHash, readDeepIgnore } from "../util/deep-ignore.js";
  // async: the breadth tier's WASM grammars load asynchronously and must be warmed
  // before the (synchronous) re-extraction below, exactly as buildGraph does — else
  // breadth-tier files (.rs, …) would re-extract as empty here and read as `removed`
-@@ -107,15 +108,20 @@
+@@ -107,15 +108,25 @@
      }
      const committedById = new Map(committed.nodes.map((n) => [n.id, n]));
      result.nodes = committedById.size;
@@ -16,6 +16,11 @@
 +    // current `.graftignore`. A node still `excluded` after its rule was removed
 +    // is owed a summary (reported pending); a stale node now ignored is not.
 +    const ignore = readDeepIgnore(root);
++    // Rules that changed since the graph was built are structural drift: a plain
++    // `graft build` re-evaluates them, and until then `ready` nodes a new rule
++    // excludes (or excluded nodes a removed rule frees) are not visible above.
++    if ((deepIgnoreHash(root) ?? null) !== (readFingerprint(outDir)?.deepIgnore ?? null))
++        result.changed.push(".graftignore");
      for (const [id, node] of committedById) {
          const now = current.get(id);
          if (now === undefined)

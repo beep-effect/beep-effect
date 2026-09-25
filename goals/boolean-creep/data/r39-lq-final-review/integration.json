@@ -1,0 +1,74 @@
+{
+  "kind": "r39-lq-design-integration/v1",
+  "privateReviewSha256": "439bf448809b9ec39ada34eee5b1813e8d1a2a6505c26615c8ad73406c064a8e",
+  "publicReviewSha256": "6d9bd1e40b76b71a3ca553966edb7ee6ded51de1fd9be0acbee22a3e5dd8bc1f",
+  "designs": [
+    {
+      "id": "package-verify-step-outcome",
+      "beforeSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+      "afterSha256": "792f7e5b6a07b66a429f8a83dc08b0e899fb161eba877f63ae1815e4078e5fda"
+    },
+    {
+      "id": "r3-tooling-ecosystem-polarity-specifier-call",
+      "beforeSha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544",
+      "afterSha256": "decac8f470410f1f1a03d30e422e215e8653809edcdbf1ebec126a8b6d409117"
+    },
+    {
+      "id": "r3-tooling-schema-first-fn-eligibility",
+      "beforeSha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f",
+      "afterSha256": "799a5f744f5919c9f3766bd4bb50711f9955f69f269fd711dc8f4afaa00bb617"
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "beforeSha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+      "afterSha256": "fdd3da887ddb88940f7788f1b739b009bc10d4fb9e87f8ef2ecb31c4acfc86f0"
+    },
+    {
+      "id": "effect-import-source-transform-phase",
+      "beforeSha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1",
+      "afterSha256": "f5626ca8d7ec14bd317322739603d45ab6d301ae1e527b121aa4cc49ce9521b6"
+    },
+    {
+      "id": "package-inventory-docgen-coverage",
+      "beforeSha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288",
+      "afterSha256": "0a53ecad8e485238b23c4b86913973b2a09ee63e86bbbb6f7231bf1d0e016dd0"
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "beforeSha256": "0311430f93ee31517f8802b76a1f954fe814d2d2b6ea26fada3bdfc64003bbdf",
+      "afterSha256": "8f268b05feace1adb8df4503e5099bf5c9f5b8ea996d5a2960dcb3a08fdb6b6a"
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "beforeSha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d",
+      "afterSha256": "b0055c7fcebbace1e6bfbae6e7f3c5deb52f570c195d198e5aee093be4a074c6"
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "beforeSha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e",
+      "afterSha256": "7f9da28499c8b0dcd4b4c6821f194b4cc5dd26f79423a9a001d70c4ad81b6559"
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "beforeSha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee",
+      "afterSha256": "19258f2b483ee130706de969b444424c352a160f4bb655a0ae745a11fc37ec80"
+    },
+    {
+      "id": "effect-vitest-function-reachability",
+      "beforeSha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2",
+      "afterSha256": "35f546729afb46826250f3bb5fd63701211148f2bb6dd4f4050647f5dbb5e20c"
+    },
+    {
+      "id": "effect-vitest-reachable-helper-flags",
+      "beforeSha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3",
+      "afterSha256": "d4ce0985fde4866fdda40902b04150fa35ec830dcefffd7c13e17ce74cc655b3"
+    }
+  ],
+  "originalSeeds": 62,
+  "qualifiedSeeds": 12,
+  "sourceFiles": 115,
+  "findings": 0,
+  "implementation": false,
+  "blanketP3Approval": false,
+  "dryCredit": false
+}

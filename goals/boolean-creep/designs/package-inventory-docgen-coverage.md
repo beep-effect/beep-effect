@@ -226,3 +226,43 @@ leaking a tag into JSONC, or breaking new mirror byte identity/order. Land both
 constructors, typed decoded/encoded separation, exported builder migration and
 one exact legacy projection atomically. Upstream's mirror addition is preserved
 behavior, not campaign implementation credit. Independent P3 remains pending.
+
+
+## R39 source and test reconciliation (authoritative current map)
+
+Bound to HEAD `220d9426dad4b708807b6297cb71d75449288749`. This appendix supersedes older numeric
+locations for the files listed here; it preserves earlier design semantics and
+immutable historical evidence. It grants no blanket P3, implementation or dry credit.
+
+Complete source byte-identical to authoritative R38 source. Retain 16/10, FFFF missing-package versus FFFT missing-config and all eight configured states, exact JSONC projection, full payloads and same-scan mirror write order.
+
+### Current named test locations
+
+- `packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:178` — recognizes annotations without accepting field metadata or empty annotations
+- `packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:212` — writes the JSDoc inventory to explicit artifact paths
+- `packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:246` — mirrors the JSDoc inventory into the CI output paths from the same scan
+- `packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:274` — excludes lab workspaces from the JSDoc inventory while both writers still emit
+- `packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:303` — summarizes Turbo affected query output with banner text
+- `packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:338` — summarizes Turbo dry-run output by task and cache status
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:177` — ignores JSDoc-looking tags inside fenced example source
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:193` — preserves outer legacy tags after a complete nested JSDoc example
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:214` — keeps delimiter-prefixed source inside the active fence
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:234` — checks sectionless prose, loose fences, and empty titled examples
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:301` — exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:378` — filters phantom package names parsed from topo-sort dependency section headers (R3-J2)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:426` — parses real workspace package names from topo-sort output in topological order (R3-J2)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:502` — strips multi-line import statements before flagging type assertions while real assertions outside imports still fire (R3-J3)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:586` — consolidates a documented-first-signature function-overload group into a single resolved entry (R19)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:643` — consolidates a fully undocumented function-overload group into a single open entry (R19)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:706` — still flags a malformed doc block on a non-anchor overload signature (R19)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:767` — attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:841` — reads leading-comment JSDoc on destructured BindingElement exports (R24)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:907` — strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:986` — scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:1064` — does not treat string-literal /** as a JSDoc comment opener
+- `packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:1079` — flags Effect and discovered foundation roots in examples without banning other workspace roots
+
+The private review also supplies source-location-maps.json with exact unchanged
+line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
+Use named sites for implementation; never apply a uniform offset across changed code.
+No tests were executed for this read-only reconciliation.

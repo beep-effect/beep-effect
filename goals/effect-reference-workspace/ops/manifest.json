@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/effect-reference-workspace",
   "lifecycle": "active",
-  "mission": "Consolidate the Effect reference clones into ~/YeeBois/references/effect as a graft workspace with a nightly claude-opus-5 deep tier, reachable from every beep checkout via manifest-provisioned .repos links.",
+  "mission": "Consolidate the Effect reference clones into the manifest-configured reference root as a graft workspace with a nightly claude-opus-5 deep tier, reachable from every beep checkout via manifest-provisioned .repos links.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

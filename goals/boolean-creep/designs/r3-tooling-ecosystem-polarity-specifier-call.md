@@ -99,3 +99,24 @@ This P2 refresh executed no parser, lint, package test or implementation.
 Land in Tier 1E. Both supported call kinds intentionally share extraction; the
 literal exists to make the impossible pair unrepresentable, not to fork their
 behavior or broaden the lint's source-edge policy.
+
+
+## R39 source and test reconciliation (authoritative current map)
+
+Bound to HEAD `220d9426dad4b708807b6297cb71d75449288749`. This appendix supersedes older numeric
+locations for the files listed here; it preserves earlier design semantics and
+immutable historical evidence. It grants no blanket P3, implementation or dry credit.
+
+Complete source byte-identical to the design baseline. Retain syntactic import/require/other classification, including shadowed require; no semantic binding resolution may be added.
+
+### Current named test locations
+
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:44` — finds static and interpolated @beep source edges
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:78` — rejects runtime manifest edges and bundled dependency fields
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:106` — ignores devDependencies, tests, and unrelated changed files
+- `packages/tooling/tool/cli/test/ecosystem-polarity.test.ts:128` — expands a member src or manifest change to the member's full check
+
+The private review also supplies source-location-maps.json with exact unchanged
+line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
+Use named sites for implementation; never apply a uniform offset across changed code.
+No tests were executed for this read-only reconciliation.

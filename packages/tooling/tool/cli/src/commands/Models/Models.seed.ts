@@ -6,9 +6,9 @@
  * The seed is the census made executable: every binding is a routing concept
  * the surface census named, and every target is a file the repo census or the
  * `$HOME` sweep found holding a model id. It encodes the effort the *operator*
- * ratified — `medium` for `codex.heavy` — which is why the very first `check`
- * run is expected to report the `xhigh` and `high` copies as `stale` rather
- * than silently adopting them.
+ * ratified — `medium` for `codex.heavy` and `codex.plan` — which is why the
+ * very first `check` run is expected to report the `xhigh` and `high` copies
+ * as `stale` rather than silently adopting them.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -170,7 +170,7 @@ const seedBindings: ReadonlyArray<ModelBinding> = [
   binding("codex.heavy", "codex-plugin", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
   binding("codex.heavy", "proxy-workflow", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
   binding("codex.heavy", "jetbrains-codex", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
-  binding("codex.plan", "codex-cli", "gpt-6-astra", O.some("xhigh")),
+  binding("codex.plan", "codex-cli", "gpt-6-astra", O.some("medium")),
   binding("child.lightweight", "proxy-workflow", "gpt-5.6-luna", O.none()),
   binding("research.web", "grok-cli", "grok-4.6", O.some("xhigh"), ["grok-4.5"]),
   binding("research.web", "proxy-workflow", "grok-4.6", O.none(), ["grok-4.5"]),

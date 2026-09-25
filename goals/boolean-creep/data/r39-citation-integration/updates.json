@@ -1,0 +1,1724 @@
+[
+  {
+    "id": "r30-tooling-library-support-temp-directory-scoped-remove-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-tooling-library-support-temp-directory-scoped-remove-options",
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "line": 2448,
+      "symbol": "makeTempDirectoryScoped",
+      "kind": "object-literal",
+      "members": ["recursive", "force"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Current Effect FileSystem remove options at :2440 inside makeTempDirectoryScoped (same tuple at makeTempFileScoped :2502). Complete instantiated bag is recursive:true and force:true. Independent SDK knobs (recursive directory delete versus ignore-NotFound); no exclusivity in remove() readers. D2 Effect FileSystem RemoveOptions boundary."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-tooling-library-support-temp-directory-scoped-remove-options",
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "line": 2448,
+      "symbol": "makeTempDirectoryScoped",
+      "kind": "object-literal",
+      "members": ["recursive", "force"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Current Effect FileSystem remove options at :2448 inside makeTempDirectoryScoped (same tuple at makeTempFileScoped :2510-2513). Complete instantiated bag is recursive:true and force:true. Independent SDK knobs (recursive directory delete versus ignore-NotFound); no exclusivity in remove() readers. D2 Effect FileSystem RemoveOptions boundary."
+      }
+    },
+    "reason": "Correct stale source citations; owner, members, status and semantics unchanged."
+  },
+  {
+    "id": "r30-tooling-library-support-watch-subscription",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-tooling-library-support-watch-subscription",
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "line": 229,
+      "symbol": "WatchSubscription",
+      "kind": "interface",
+      "members": ["directory", "recursive"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Current source at cecfb9f8: independently observed inode kind versus caller WatchOptions.recursive. Writer :3047 stores recursive even on files; includesWatchPath only uses recursive behind directory&&, so file+recursive is stored and ignored rather than an illegal combined state."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-tooling-library-support-watch-subscription",
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "line": 229,
+      "symbol": "WatchSubscription",
+      "kind": "interface",
+      "members": ["directory", "recursive"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Current source: independently observed inode kind versus caller WatchOptions.recursive. Writer :3067-3074 stores recursive even on files; includesWatchPath at :453-456 only uses recursive behind directory&&, so file+recursive is stored and ignored rather than an illegal combined state."
+      }
+    },
+    "reason": "Correct stale source citations; owner, members, status and semantics unchanged."
+  },
+  {
+    "id": "yeet-run-options-flags",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "yeet-run-options-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "line": 376,
+      "symbol": "YeetRunOptions",
+      "kind": "schema-struct",
+      "members": [
+        "allowStaleBase",
+        "amend",
+        "ciParity",
+        "collectAll",
+        "fast",
+        "json",
+        "merged",
+        "monitor",
+        "noEdit",
+        "plan",
+        "pr",
+        "pushOnly",
+        "remote",
+        "retriggerGreptile",
+        "reuseVerified",
+        "stagedOnly",
+        "summary",
+        "startPrEarly"
+      ],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named runtime request options, not validated operation state: Yeet.schemas.ts:330/411 defines handler input; Yeet.command.ts:505-539 forwards selections including ciParity; Handler.ts:1958-1969 accepts the request and reports ordered YeetCommandError diagnostics before planning/execution. Same-mode ciParity+merged and publish modifier conflicts are intentionally diagnosed (Guards.ts:140-287; yeet-merged-preview.test.ts:203-214; yeet.test.ts:3756-3781), not silently discarded. D1 concerns independently expressible requests, including refusal outcomes, not universal successful-operation legality. Post-validation helpers reuse the request; no stored options phase or exclusive-write lifecycle was found."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "yeet-run-options-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "line": 376,
+      "symbol": "YeetRunOptions",
+      "kind": "schema-struct",
+      "members": [
+        "allowStaleBase",
+        "amend",
+        "ciParity",
+        "collectAll",
+        "fast",
+        "json",
+        "merged",
+        "monitor",
+        "noEdit",
+        "plan",
+        "pr",
+        "pushOnly",
+        "remote",
+        "retriggerGreptile",
+        "reuseVerified",
+        "stagedOnly",
+        "summary",
+        "startPrEarly"
+      ],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named runtime request options, not validated operation state: Yeet.schemas.ts:376-413 defines handler input and Yeet.command.ts:621-658 forwards selections including ciParity. Guards.ts:30-109 enumerates ordered option refusals; validateOptionGuards at :111-118 returns the first matching YeetCommandError. The ciParity mode/tier/merged refusals are at :49-55. Conflicting selections remain intentionally expressible requests with diagnostic outcomes, not silently discarded inputs. D1 does not assert universal successful-operation legality. Post-validation helpers reuse the request; no stored options phase or exclusive-write lifecycle was found."
+      }
+    },
+    "reason": "Refresh stale explanatory citations; preserve request-boundary D1 ruling."
+  },
+  {
+    "id": "r3-tooling-bun-report-drift-flags",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r3-tooling-bun-report-drift-flags",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+      "line": 556,
+      "symbol": "buildBunReport",
+      "kind": "sibling-state",
+      "members": ["hasDrift", "hasInternalMismatch"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+            "line": 544
+          },
+          "note": "hasInternalMismatch (557) is bunVersionFile !== packageManagerField. The first two required comparisons (544-545) pin both full strings to one target via requiredBunVersionDrift (504-513), which returns None only on exact equality. Unequal pins therefore yield at least one drift item, including non-semver strings. FT is impossible."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+            "line": 556
+          },
+          "note": "Explicit fixtures: unequal pins at test/version-sync-effect.test.ts:264-276 and 278-291 are TT; equal pins with Vercel/archive items at 294-312 are TF; clean resolve at 357 is FF."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "Retain BunVersionState Option payloads and empty-string pin defaults (325-344). Optional Vercel/archive items can produce TF when pins match. Status still ORs the pair (560). R28 independent source correction reconciled; complete P2 design at designs/r3-tooling-bun-report-drift-flags.md. Independent P3 design review pending; no implementation or review approval implied."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r3-tooling-bun-report-drift-flags",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+      "line": 553,
+      "symbol": "buildBunReport",
+      "kind": "sibling-state",
+      "members": ["hasDrift", "hasInternalMismatch"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+            "line": 541
+          },
+          "note": "hasInternalMismatch (554) is bunVersionFile !== packageManagerField. The first two required comparisons (541-542) pin both full strings to one target via requiredBunVersionDrift (501-510), which returns None only on exact equality. Unequal pins therefore yield at least one drift item, including non-semver strings. FT is impossible."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+            "line": 553
+          },
+          "note": "Explicit fixtures: unequal pins at test/version-sync-effect.test.ts:390-418 are TT; equal pins with Vercel/archive items at :420-442 are TF; clean post-update report at :483 is FF."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "Retain BunVersionState Option payloads and empty-string pin defaults (322-341). Optional Vercel/archive items can produce TF when pins match. Status still ORs the pair (557). R28 independent source correction reconciled; complete P2 design at designs/r3-tooling-bun-report-drift-flags.md. Independent P3 design review pending; no implementation or review approval implied."
+    },
+    "reason": "Refresh current owner/evidence location; preserve classification and contract."
+  },
+  {
+    "id": "r28-cli-commands-r-z-checkout-entry-facts-detached-branch",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-commands-r-z-checkout-entry-facts-detached-branch",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "line": 932,
+      "symbol": "CheckoutEntryFacts",
+      "kind": "type-literal",
+      "members": ["detached", "branch"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Separate Git-enumeration owner from FleetCheckout and WorktreeListEntry at Fleet.service.ts:930-940. detached is boolean|null; branch/head are string|null. entryFacts copies porcelain or ABSENT_ENTRY_FACTS all-null. Incoming cloneStubs at 548-552 also retains the clone with entry:null when NUL parsing fails, reaching the existing unavailable state; keep full strings and explicit nulls."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-commands-r-z-checkout-entry-facts-detached-branch",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "line": 935,
+      "symbol": "CheckoutEntryFacts",
+      "kind": "type-literal",
+      "members": ["detached", "branch"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Separate Git-enumeration owner from FleetCheckout and WorktreeListEntry at Fleet.service.ts:935-945. detached is boolean|null; branch/head are string|null. entryFacts copies porcelain or ABSENT_ENTRY_FACTS all-null. Incoming cloneStubs at 548-552 also retains the clone with entry:null when NUL parsing fails, reaching the existing unavailable state; keep full strings and explicit nulls."
+      }
+    },
+    "reason": "Refresh current owner/evidence location; preserve classification and contract."
+  },
+  {
+    "id": "r28-cli-commands-r-z-run-git-probe-spawn-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-commands-r-z-run-git-probe-spawn-options",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "line": 483,
+      "symbol": "runGitProbe",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Actual runCapturedStreams argument at Fleet.service.ts:479-488 sets extendEnv true and trim false. RunCapturedStreamsOptions (internal/process/StepExec.ts:1059-1066) joins SpawnFields.extendEnv (439) with app-owned optional trim; 1131-1132 trims only when trim===true. trim is not a ChildProcessSpawner field. Environment inheritance and capture whitespace are independent."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-commands-r-z-run-git-probe-spawn-options",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "line": 484,
+      "symbol": "runGitProbe",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Actual runCapturedStreams argument at Fleet.service.ts:484-493 sets extendEnv true and trim false. RunCapturedStreamsOptions (internal/process/StepExec.ts:1059-1066) joins SpawnFields.extendEnv (439) with app-owned optional trim; 1131-1132 trims only when trim===true. trim is not a ChildProcessSpawner field. Environment inheritance and capture whitespace are independent."
+      }
+    },
+    "reason": "Refresh current owner/evidence location; preserve classification and contract."
+  },
+  {
+    "id": "knowledge-ref-candidate",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "knowledge-ref-candidate",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "line": 2326,
+      "symbol": "RefCandidate",
+      "kind": "type-literal",
+      "members": [
+        "kind",
+        "patternContext",
+        "pairingAmbiguous",
+        "ungoverned",
+        "anchor",
+        "token",
+        "slug",
+        "normalized"
+      ],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E3",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+            "line": 2648
+          },
+          "note": "Repo candidates carry normalized Some exactly when ungoverned=false; host and goal carry normalized None. Goal slug Some exactly when pairingAmbiguous=false at2690. Kind-specific producers prevent pairingAmbiguous and ungoverned both true."
+        },
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+            "line": 2952
+          },
+          "note": "Reader selects repo normalized first, then goal slug, otherwise not-applicable. Writers ensure those resolution payloads cannot coexist; host-only anchor/token forwarded to classifier at2958."
+        }
+      ],
+      "cardinality": {
+        "representable": 512,
+        "legal": 10
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "tagged-union",
+      "tier": 1,
+      "notes": "Private extracted occurrence carrier. Four declared kinds including reserved upstream times three Boolean bits times four Option presence bits =512; only five writer shapes times independent patternContext =10. Nested KnowledgeRef is already a union and excluded from this presence abstraction. Replaces stale D1; ClassificationInput is a separate broader public owner. No P3 credit."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "knowledge-ref-candidate",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "line": 2326,
+      "symbol": "RefCandidate",
+      "kind": "type-literal",
+      "members": [
+        "kind",
+        "patternContext",
+        "pairingAmbiguous",
+        "ungoverned",
+        "anchor",
+        "token",
+        "slug",
+        "normalized"
+      ],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E3",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+            "line": 2713
+          },
+          "note": "Repo candidates carry normalized Some exactly when ungoverned=false at2713; host and goal carry normalized None. Goal slug Some exactly when pairingAmbiguous=false at2755. Kind-specific producers prevent pairingAmbiguous and ungoverned both true."
+        },
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+            "line": 3018
+          },
+          "note": "Reader selects repo normalized first, then goal slug, otherwise not-applicable at3018-3021. Writers ensure those resolution payloads cannot coexist; host-only anchor/token forwarded to classifier at3027-3028."
+        }
+      ],
+      "cardinality": {
+        "representable": 512,
+        "legal": 10
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "tagged-union",
+      "tier": 1,
+      "notes": "Private extracted occurrence carrier. Four declared kinds including reserved upstream times three Boolean bits times four Option presence bits =512; only five writer shapes times independent patternContext =10. Nested KnowledgeRef is already a union and excluded from this presence abstraction. Replaces stale D1; ClassificationInput is a separate broader public owner. No P3 credit."
+    }
+  },
+  {
+    "id": "knowledge-ref-classification-input",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "knowledge-ref-classification-input",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "line": 1920,
+      "symbol": "KnowledgeRefClassificationInput",
+      "kind": "type-literal",
+      "members": ["kind", "pairingAmbiguous", "ungoverned"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+            "line": 1961
+          },
+          "note": "Global pairing-first then ungoverned checks dispatch over an unconstrained bag; the ratified kind-specific state is replaced by member-scoped grammar dispatch. Pattern context, host Option fallbacks and all resolution statuses remain independent."
+        }
+      ],
+      "cardinality": {
+        "representable": 16,
+        "legal": 6
+      },
+      "storage": "stored",
+      "exposure": "internal",
+      "targetShape": "tagged-union",
+      "tier": 1,
+      "notes": "Exported in-process TypeScript carrier, not an encoded report. Projection kind(4) \u00d7 pairingAmbiguous(2) \u00d7 ungoverned(2); six legal tuples under 2026-09-22 owner ruling. Independent surface, resolutionStatus, patternContext and anchor/token payloads retained on every kind. Presence-only full abstraction 1280/480 is not concrete-object cardinality. P2 at f5e1d4c64f37e0a8c42e217eee5f06841220c161; P3 and implementation pending."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "knowledge-ref-classification-input",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "line": 1920,
+      "symbol": "KnowledgeRefClassificationInput",
+      "kind": "type-literal",
+      "members": ["kind", "pairingAmbiguous", "ungoverned"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+            "line": 2026
+          },
+          "note": "Global pairing-first then ungoverned checks dispatch over an unconstrained bag; the ratified kind-specific state is replaced by member-scoped grammar dispatch. Pattern context, host Option fallbacks and all resolution statuses remain independent."
+        }
+      ],
+      "cardinality": {
+        "representable": 16,
+        "legal": 6
+      },
+      "storage": "stored",
+      "exposure": "internal",
+      "targetShape": "tagged-union",
+      "tier": 1,
+      "notes": "Exported in-process TypeScript carrier, not an encoded report. Projection kind(4) \u00d7 pairingAmbiguous(2) \u00d7 ungoverned(2); six legal tuples under 2026-09-22 owner ruling. Independent surface, resolutionStatus, patternContext and anchor/token payloads retained on every kind. Presence-only full abstraction 1280/480 is not concrete-object cardinality. P2 at f5e1d4c64f37e0a8c42e217eee5f06841220c161; P3 and implementation pending."
+    }
+  },
+  {
+    "id": "r29-cli-commands-d-k-knowledge-tsmorph-project-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-d-k-knowledge-tsmorph-project-options",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
+      "line": 599,
+      "symbol": "buildStaticCommandTree.project",
+      "kind": "object-literal",
+      "members": ["skipAddingFilesFromTsConfig", "skipLoadingLibFiles"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Instantiated ts-morph Project options at 599-608; skipAddingFilesFromTsConfig and skipLoadingLibFiles are independent optional ProjectOptions on the ts-morph SDK."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-d-k-knowledge-tsmorph-project-options",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
+      "line": 621,
+      "symbol": "buildStaticCommandTree.project",
+      "kind": "object-literal",
+      "members": ["skipAddingFilesFromTsConfig", "skipLoadingLibFiles"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Instantiated ts-morph Project options at621-630; skipAddingFilesFromTsConfig and skipLoadingLibFiles at628-629 remain independent optional ProjectOptions on the ts-morph SDK."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-d-k-knowledge-tar-extract-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-d-k-knowledge-tar-extract-options",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "line": 1449,
+      "symbol": "extractTar",
+      "kind": "object-literal",
+      "members": ["strict", "preservePaths", "unlink"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Instantiated node-tar extract options at 1449-1456; strict, preservePaths, and unlink are independent flags on the tar SDK ExtractOptions contract."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-d-k-knowledge-tar-extract-options",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "line": 1451,
+      "symbol": "extractTar",
+      "kind": "object-literal",
+      "members": ["strict", "preservePaths", "unlink"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Instantiated node-tar extract options at1451-1458; strict, preservePaths, and unlink at1454-1456 are independent flags on the tar SDK ExtractOptions contract."
+      }
+    }
+  },
+  {
+    "id": "full-case-citation-flags",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "full-case-citation-flags",
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 279,
+      "symbol": "FullCaseCitation",
+      "kind": "schema-struct",
+      "members": ["unpublished", "hasBlankPage", "inFootnote"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent parse observations: unpublished marks the NY unpublished-disposition suffix, hasBlankPage marks a blank page placeholder, and inherited inFootnote is a None/false/true detection result. Their contracts describe distinct observations; the existing full-case fixture writes unpublished and hasBlankPage true together. Footnote detection is optional for every citation kind. This compositional independence conclusion is source-backed, not a claim of an executed twelve-row fixture matrix. The separate blank-page/page coherence qualification is retained."
+      },
+      "notes": "Expanded seed members to include inherited inFootnote; D1 classification unchanged."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "full-case-citation-flags",
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "line": 270,
+      "symbol": "FullCaseCitation",
+      "kind": "schema-struct",
+      "members": ["unpublished", "hasBlankPage", "inFootnote"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent parse observations: unpublished marks the NY unpublished-disposition suffix, hasBlankPage marks a blank page placeholder, and inherited inFootnote is a None/false/true detection result. Their contracts describe distinct observations; the existing full-case fixture writes unpublished and hasBlankPage true together. Footnote detection is optional for every citation kind. This compositional independence conclusion is source-backed, not a claim of an executed twelve-row fixture matrix. The separate blank-page/page coherence qualification is retained."
+      },
+      "notes": "Expanded seed members to include inherited inFootnote; D1 classification unchanged."
+    }
+  },
+  {
+    "id": "constitutional-citation-preamble-in-footnote",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "constitutional-citation-preamble-in-footnote",
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "line": 53,
+      "symbol": "ConstitutionalCitation",
+      "kind": "schema-struct",
+      "members": ["preamble", "inFootnote"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Full owner at ConstitutionalCitation.model.ts:53-55 spreads CitationBase.fields; preamble at 78-84 and inherited inFootnote at CitationBase.model.ts:132-137 are independent Option<Boolean> facts. Preamble identifies the cited constitutional component; inFootnote identifies the source-document placement and is only populated when footnote detection is enabled. Their None/Some(false)/Some(true) axes have nine contract-composed combinations. Holding article and amendment absent witnesses every pair without deciding the separate Some(false)-with-locator ambiguity. The sparse public constructor at ConstitutionalCitation.model.ts:33-45 supports incomplete locator records; explicit false is retained separately from omission by the existing codecs. This is a source-contract independence conclusion, not nine executed fixtures and not an inference from missing producers. The broader preamble/article/amendment owner remains held for qualification correction; this pair does not settle that constraint."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "constitutional-citation-preamble-in-footnote",
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "line": 53,
+      "symbol": "ConstitutionalCitation",
+      "kind": "schema-struct",
+      "members": ["preamble", "inFootnote"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Full owner at ConstitutionalCitation.model.ts:53-55 spreads CitationBase.fields; preamble at 78-84 and inherited inFootnote at CitationBase.model.ts:132-137 are independent Option<Boolean> facts. Preamble identifies the cited constitutional component; inFootnote identifies the source-document placement and is only populated when footnote detection is enabled. Their None/Some(false)/Some(true) axes have nine contract-composed combinations. Holding article and amendment absent witnesses every pair. The 2026-09-24 owner ruling separately permits Some(false) with either locator. The sparse public constructor at ConstitutionalCitation.model.ts:33-45 supports incomplete locator records; explicit false is retained separately from omission by the existing codecs. This is a source-contract independence conclusion, not nine executed fixtures and not an inference from missing producers. The broader preamble/article/amendment contract hold was resolved on 2026-09-24; its nonAdmittedSourceFinding disposition is recorded in data/constitutional-owner-disposition-2026-09-24.md because static exclusion alone supplies no E1-E4 source evidence. This independent pair does not change that disposition."
+      }
+    }
+  },
+  {
+    "id": "step-exec-run-captured-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "step-exec-run-captured-options",
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "line": 954,
+      "symbol": "RunCapturedOptions",
+      "kind": "type-literal",
+      "members": ["extendEnv", "trim", "tee"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "RunCapturedOptions intersects SpawnFields, inheriting optional extendEnv at 439 beside optional trim/tee at 890-891. Three independent repo capture controls: environment inheritance, output whitespace normalization, live tee. Absence/false/true remain distinct; trim applies only at ===true (1044). Not ChildProcessSpawner SDK fields."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "step-exec-run-captured-options",
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "line": 954,
+      "symbol": "RunCapturedOptions",
+      "kind": "type-literal",
+      "members": ["extendEnv", "trim", "tee"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "RunCapturedOptions intersects SpawnFields, inheriting optional extendEnv at444 beside optional trim/tee at960-961. Three independent repo capture controls: environment inheritance, output whitespace normalization, live tee. Absence/false/true remain distinct; trim applies only at ===true (settleCapturedStep831). Not ChildProcessSpawner SDK fields."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-internal-root-run-captured-streams-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-internal-root-run-captured-streams-options",
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "line": 1127,
+      "symbol": "RunCapturedStreamsOptions",
+      "kind": "type-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named streams-capture type intersects SpawnFields, inheriting optional extendEnv at 439 beside optional trim at 1065. Environment inheritance and stdout/stderr whitespace normalization are independent; trim applies only at ===true (1131-1132). Callers write both-true (GitExec structuredCapture 348-354), extendEnv-only (writeGitArchive 634-639), and trim-only or omitted. Not ChildProcessSpawner SDK fields. Distinct from seeded RunCapturedOptions which also carries tee."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-internal-root-run-captured-streams-options",
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "line": 1127,
+      "symbol": "RunCapturedStreamsOptions",
+      "kind": "type-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named streams-capture type intersects SpawnFields, inheriting optional extendEnv at444 beside optional trim at1133. Environment inheritance and stdout/stderr whitespace normalization are independent; trim applies only at ===true (1199-1200). Callers write both-true (GitExec structuredCapture 348-354), extendEnv-only (writeGitArchive 634-639), and trim-only or omitted. Not ChildProcessSpawner SDK fields. Distinct from seeded RunCapturedOptions which also carries tee."
+      }
+    }
+  },
+  {
+    "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "line": 930,
+      "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
+      "kind": "object-literal",
+      "members": ["force", "recursive"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Actual Effect FileSystem.remove options bag for fallow sibling extras after the candidate directory is gone. Distinct instantiated object from the candidate.path bag at 910. recursive and force are independent SDK knobs set true/true; omitted SDK fields stay omitted."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "line": 930,
+      "symbol": "removeDirectoryCandidate: fs.remove(extra) options",
+      "kind": "object-literal",
+      "members": ["force", "recursive"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Actual Effect FileSystem.remove options bag for fallow sibling extras after the candidate directory is gone. Distinct instantiated object from the candidate.path bag at923. recursive and force are independent SDK knobs set true/true; omitted SDK fields stay omitted."
+      }
+    }
+  },
+  {
+    "id": "laws-effect-imports-command-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "laws-effect-imports-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "line": 40,
+      "symbol": "EffectImportsCommandOptions",
+      "kind": "schema-struct",
+      "members": [
+        "write",
+        "check",
+        "candidate",
+        "enforceDocumentation",
+        "json"
+      ],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Whole instantiated raw request schema at Laws.command.ts38-71, not a Flag descriptor. All five Boolean options retain independent false constructor/decoding defaults. The make at265-275 precedes exact candidate/write rejection276-278 and candidate-scope rejection279-282; effect-imports.test.ts146-162 intentionally submits rejected requests. Combined-true is a supported diagnostic request, not a successful operation. Preserve mode code/jsdoc/markdown, include/exclude/includePrefix defaults and human/JSON behavior. Absorbs the command leftover D1 row; summary-only operation migration remains separately qualified."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "laws-effect-imports-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "line": 44,
+      "symbol": "EffectImportsCommandOptions",
+      "kind": "schema-struct",
+      "members": [
+        "write",
+        "check",
+        "candidate",
+        "enforceDocumentation",
+        "json"
+      ],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Whole instantiated raw request schema at Laws.command.ts38-71, not a Flag descriptor. All five Boolean options retain independent false constructor/decoding defaults. The make at265-275 precedes exact candidate/write rejection276-278 and candidate-scope rejection279-282; effect-imports.test.ts146-162 intentionally submits rejected requests. Combined-true is a supported diagnostic request, not a successful operation. Preserve mode code/jsdoc/markdown, include/exclude/includePrefix defaults and human/JSON behavior. Absorbs the command leftover D1 row; summary-only operation migration remains separately qualified."
+      }
+    }
+  },
+  {
+    "id": "laws-terse-effect-command-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "laws-terse-effect-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "line": 85,
+      "symbol": "TerseEffectCommandOptions",
+      "kind": "schema-struct",
+      "members": ["write", "check", "advisory"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named CLI schema supports all eight flag triples. The command constructs it at 380, forwards write at 383, and intentionally normalizes strictCheck to check && !advisory at 384. Advisory plus check is supported softening, including when write is also true."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "laws-terse-effect-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "line": 91,
+      "symbol": "TerseEffectCommandOptions",
+      "kind": "schema-struct",
+      "members": ["write", "check", "advisory"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Named CLI schema supports all eight flag triples. The command constructs it at 380, forwards write at 383, and intentionally normalizes strictCheck to check && !advisory at 384. Advisory plus check is supported softening, including when write is also true."
+      }
+    }
+  },
+  {
+    "id": "quality-test-lane-selection",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "quality-test-lane-selection",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 233,
+      "symbol": "TestLaneSelectionState",
+      "kind": "type-literal",
+      "members": ["unit", "integration"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. TestLaneSelectionState233-237 is the accumulation owner. Initial265-269 is false/false; reducer309-323 independently enables each flag before the final none-selected default. All four accumulation states remain legal; resolved selection has separate ownership."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "quality-test-lane-selection",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 239,
+      "symbol": "TestLaneSelectionState",
+      "kind": "type-literal",
+      "members": ["unit", "integration"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. TestLaneSelectionState233-237 is the accumulation owner. Initial265-269 is false/false; reducer309-323 independently enables each flag before the final none-selected default. All four accumulation states remain legal; resolved selection has separate ownership."
+      }
+    }
+  },
+  {
+    "id": "fallow-command-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "fallow-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "line": 371,
+      "symbol": "FallowCommandOptions",
+      "kind": "type-literal",
+      "members": ["advisory", "check", "quiet"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent Fallow CLI toggles."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "fallow-command-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "line": 376,
+      "symbol": "FallowCommandOptions",
+      "kind": "type-literal",
+      "members": ["advisory", "check", "quiet"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent Fallow CLI toggles."
+      }
+    }
+  },
+  {
+    "id": "jsdoc-ratchet-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "jsdoc-ratchet-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "line": 673,
+      "symbol": "RunJSDocRatchetOptions",
+      "kind": "schema-struct",
+      "members": ["writeBaseline", "includeGenerated"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Actual RunJSDocRatchetOptions schema669-680: writeBaseline is Boolean and includeGenerated is optionalKey(Boolean), so absent/false/true must remain distinct at the request boundary. Both write modes independently support those three shapes; reader default706 maps omission to false without changing encoded omission. Preserve baselinePath, inventoryPath and all output/error behavior."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "jsdoc-ratchet-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "line": 674,
+      "symbol": "RunJSDocRatchetOptions",
+      "kind": "schema-struct",
+      "members": ["writeBaseline", "includeGenerated"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Actual RunJSDocRatchetOptions schema669-680: writeBaseline is Boolean and includeGenerated is optionalKey(Boolean), so absent/false/true must remain distinct at the request boundary. Both write modes independently support those three shapes; reader default706 maps omission to false without changing encoded omission. Preserve baselinePath, inventoryPath and all output/error behavior."
+      }
+    }
+  },
+  {
+    "id": "r3-tooling-jsdoc-tsdoc-tag-presence",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r3-tooling-jsdoc-tsdoc-tag-presence",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "line": 1372,
+      "symbol": "analyzeRootPolicy",
+      "kind": "sibling-state",
+      "members": ["hasDefinition", "hasSupport"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Actual two locals inside analyzeRootPolicy customTags callback at1370-1371 independently observe tagDefinitions and supportForTags. Return carries tagName, both booleans, status and missing array; neither/either/both are supported. Preserve exact diagnostics and JSONC output. Correct synthetic .customTags symbol to actual enclosing owner."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r3-tooling-jsdoc-tsdoc-tag-presence",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "line": 1408,
+      "symbol": "analyzeRootPolicy",
+      "kind": "sibling-state",
+      "members": ["hasDefinition", "hasSupport"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Actual two locals inside analyzeRootPolicy customTags callback at1370-1371 independently observe tagDefinitions and supportForTags. Return carries tagName, both booleans, status and missing array; neither/either/both are supported. Preserve exact diagnostics and JSONC output. Correct synthetic .customTags symbol to actual enclosing owner."
+      }
+    }
+  },
+  {
+    "id": "r3-tooling-fn-schema-inline-contracts",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r3-tooling-fn-schema-inline-contracts",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+      "line": 699,
+      "symbol": "fnSchemaEntryFromFunctionLike",
+      "kind": "sibling-state",
+      "members": [
+        "hasInlineParameterTypeLiteral",
+        "hasInlineReturnTypeLiteral"
+      ],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent presence of inline parameter and return type literals; combined true is legal and the shared advisory only needs their disjunction."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r3-tooling-fn-schema-inline-contracts",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+      "line": 701,
+      "symbol": "fnSchemaEntryFromFunctionLike",
+      "kind": "sibling-state",
+      "members": [
+        "hasInlineParameterTypeLiteral",
+        "hasInlineReturnTypeLiteral"
+      ],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Independent presence of inline parameter and return type literals; combined true is legal and the shared advisory only needs their disjunction."
+      }
+    }
+  },
+  {
+    "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 250,
+      "symbol": "CoverageTaskOptions",
+      "kind": "type-literal",
+      "members": ["replaceAll", "scoped"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Mixed/raw CoverageTaskOptions250-258 is independently produced at638-648. coverageStepForTesting3416-3421 accepts that raw parser result without resolver admission. All four raw pairs are representable legitimate request/planning facts. Qualified resolved-operation owner separately owns execution restrictions."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 256,
+      "symbol": "CoverageTaskOptions",
+      "kind": "type-literal",
+      "members": ["replaceAll", "scoped"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Mixed/raw CoverageTaskOptions250-258 is independently produced at638-648. coverageStepForTesting3416-3421 accepts that raw parser result without resolver admission. All four raw pairs are representable legitimate request/planning facts. Qualified resolved-operation owner separately owns execution restrictions."
+      }
+    }
+  },
+  {
+    "id": "coverage-baseline-write-mode",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "coverage-baseline-write-mode",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 250,
+      "symbol": "CoverageTaskOptions",
+      "kind": "type-literal",
+      "members": ["replaceAll", "writeBaseline"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Mixed/raw CoverageTaskOptions250-258 samples replaceAll and writeBaseline separately at638-648; coverageStepForTesting3416-3421 uses the raw shape. All four request/planning pairs remain valid inputs. Do not transfer resolved-operation invariants onto this raw owner."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "coverage-baseline-write-mode",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 256,
+      "symbol": "CoverageTaskOptions",
+      "kind": "type-literal",
+      "members": ["replaceAll", "writeBaseline"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Mixed/raw CoverageTaskOptions250-258 samples replaceAll and writeBaseline separately at638-648; coverageStepForTesting3416-3421 uses the raw shape. All four request/planning pairs remain valid inputs. Do not transfer resolved-operation invariants onto this raw owner."
+      }
+    }
+  },
+  {
+    "id": "coverage-baseline-write-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "coverage-baseline-write-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "line": 1450,
+      "symbol": "CoverageBaselineWriteOptions",
+      "kind": "schema-struct",
+      "members": ["carryUnmeasured", "replaceAll"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Current source cecfb9f8 exposes independent baseline-plan controls. replaceAll chooses which measured rows are adopted; carryUnmeasured determines treatment of unmeasured committed rows and dependent-owner adoption. planCoverageBaselineWrite :1531\u20131593 reads these separately and permits all four pairs. quality-tasks.test.ts supplies false/default-false :6496, true/default-false :6597, false/true :6643 and true/true :6792. The true/true fixture preserves the unmeasured row while replacing the measured row. Do not infer an exclusion from the former CLI scoped-replacement restriction. Added by the resumed bounded source audit; not a new census-round result."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "coverage-baseline-write-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "line": 1452,
+      "symbol": "CoverageBaselineWriteOptions",
+      "kind": "schema-struct",
+      "members": ["carryUnmeasured", "replaceAll"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Current source cecfb9f8 exposes independent baseline-plan controls. replaceAll chooses which measured rows are adopted; carryUnmeasured determines treatment of unmeasured committed rows and dependent-owner adoption. planCoverageBaselineWrite :1531\u20131593 reads these separately and permits all four pairs. quality-tasks.test.ts supplies false/default-false :6496, true/default-false :6597, false/true :6643 and true/true :6792. The true/true fixture preserves the unmeasured row while replacing the measured row. Do not infer an exclusion from the former CLI scoped-replacement restriction. Added by the resumed bounded source audit; not a new census-round result."
+      }
+    }
+  },
+  {
+    "id": "models-catalog-availability",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "models-catalog-availability",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "line": 868,
+      "symbol": "CatalogAvailability",
+      "kind": "schema-struct",
+      "members": ["proxy", "codexCli", "grokCli", "cursor"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Per-surface routability. The schema example constructs a mixed tuple, and Models.diff.ts sets proxy, codexCli, grokCli, and cursor from separate catalog merges. Any subset is a supported workstation availability."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "models-catalog-availability",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "line": 921,
+      "symbol": "CatalogAvailability",
+      "kind": "schema-struct",
+      "members": ["proxy", "codexCli", "grokCli", "cursor"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Per-surface routability. The schema example constructs a mixed tuple, and Models.diff.ts sets proxy, codexCli, grokCli, and cursor from separate catalog merges. Any subset is a supported workstation availability."
+      }
+    }
+  },
+  {
+    "id": "grok-model-info-flags",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "grok-model-info-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "line": 706,
+      "symbol": "GrokModelInfo",
+      "kind": "schema-struct",
+      "members": ["hidden", "supported_in_api", "supports_reasoning_effort"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Optional fields of the Grok CLI model-cache info block. This schema reads that external cache and drops unread credential keys; the three flags are upstream observations, not a repo-owned state machine."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "grok-model-info-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "line": 753,
+      "symbol": "GrokModelInfo",
+      "kind": "schema-struct",
+      "members": ["hidden", "supported_in_api", "supports_reasoning_effort"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Optional fields of the Grok CLI model-cache info block. This schema reads that external cache and drops unread credential keys; the three flags are upstream observations, not a repo-owned state machine."
+      }
+    }
+  },
+  {
+    "id": "r33-cli-commands-l-q-models-locator-xml-parser-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r33-cli-commands-l-q-models-locator-xml-parser-options",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
+      "line": 171,
+      "symbol": "xmlParser",
+      "kind": "object-literal",
+      "members": ["ignoreAttributes", "parseAttributeValue", "processEntities"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "fast-xml-parser XMLParser option object. ignoreAttributes, parseAttributeValue, and processEntities are independent library toggles copied onto the driver boundary, not a repo-owned phase."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r33-cli-commands-l-q-models-locator-xml-parser-options",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
+      "line": 186,
+      "symbol": "xmlParser",
+      "kind": "object-literal",
+      "members": ["ignoreAttributes", "parseAttributeValue", "processEntities"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "fast-xml-parser XMLParser option object. ignoreAttributes, parseAttributeValue, and processEntities are independent library toggles copied onto the driver boundary, not a repo-owned phase."
+      }
+    }
+  },
+  {
+    "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2820,
+      "symbol": "runTsgoSmokeCheck.compilerOptions",
+      "kind": "object-literal",
+      "members": ["composite", "incremental", "noEmit"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Verified the same owner on merged main d68f1a; locator moved from 2809 to 2820. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Actual nested compilerOptions JSON object at Quality.command.ts:2653-2657 contains composite/incremental/noEmit for the external TypeScript configuration contract. This fixed smoke profile does not authorize an internal state refactor; required include/exclude arrays are not Boolean or presence axes. The synthetic test-tsgo template is a distinct owner."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 3096,
+      "symbol": "runTsgoSmokeCheck.compilerOptions",
+      "kind": "object-literal",
+      "members": ["composite", "incremental", "noEmit"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 3096-3100; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Verified the same owner on merged main d68f1a; locator moved from 2809 to 2820. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Actual nested compilerOptions JSON object at Quality.command.ts:2653-2657 contains composite/incremental/noEmit for the external TypeScript configuration contract. This fixed smoke profile does not authorize an internal state refactor; required include/exclude arrays are not Boolean or presence axes. The synthetic test-tsgo template is a distinct owner."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 1284,
+      "symbol": "readGithubChecksFallowFeatureMatrix.parseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated jsonc-parser parse() options at Quality.command.ts:1234-1237 inside readGithubChecksFallowFeatureMatrix. Mirrors the external JSONC parser contract for the fallow feature-matrix file."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 1407,
+      "symbol": "readGithubChecksFallowFeatureMatrix.parseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 1407-1410; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated jsonc-parser parse() options at Quality.command.ts:1234-1237 inside readGithubChecksFallowFeatureMatrix. Mirrors the external JSONC parser contract for the fallow feature-matrix file."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2494,
+      "symbol": "runTsgoRulesCheck.baseTsconfigParseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Verified the same owner on merged main d68f1a; locator moved from 2483 to 2494. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated jsonc-parser options for tsconfig.base.json at2397-2400. External ParseOptions controls; the separate root tsconfig object at2406 is a distinct census owner."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2768,
+      "symbol": "runTsgoRulesCheck.baseTsconfigParseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 2768-2771; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Verified the same owner on merged main d68f1a; locator moved from 2483 to 2494. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated jsonc-parser options for tsconfig.base.json at2397-2400. External ParseOptions controls; the separate root tsconfig object at2406 is a distinct census owner."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2511,
+      "symbol": "runTsgoRulesCheck.generatedVitestAliasesParseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Verified the same owner on merged main d68f1a; locator moved from 2500 to 2511. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated jsonc-parser parse() options at Quality.command.ts:2414-2417 for vitest.aliases.generated.json with the strict JSON profile (allowTrailingComma false, disallowComments true). Distinct from the JSONC tsconfig bags in the same function; still the external parser contract."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2785,
+      "symbol": "runTsgoRulesCheck.generatedVitestAliasesParseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 2785-2788; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Verified the same owner on merged main d68f1a; locator moved from 2500 to 2511. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated jsonc-parser parse() options at Quality.command.ts:2414-2417 for vitest.aliases.generated.json with the strict JSON profile (allowTrailingComma false, disallowComments true). Distinct from the JSONC tsconfig bags in the same function; still the external parser contract."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2752,
+      "symbol": "runTestTsgoChecksAt.tempDirRemoveOptions",
+      "kind": "object-literal",
+      "members": ["recursive", "force"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Verified the same owner on merged main d68f1a; locator moved from 2741 to 2752. Prior source-bound exclusion reasoning follows: Same temporary-directory cleanup now lives in the extracted runTestTsgoChecksAt owner. Its actual FileSystem.remove options at Quality.command.ts:2741 retain recursive true and force true inside Effect.ensuring. The caller first resolves uncovered test groups; no groups return before execution. External filesystem controls remain a D2 census owner. Preserve cleanup on all execution outcomes."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 3028,
+      "symbol": "runTestTsgoChecksAt.tempDirRemoveOptions",
+      "kind": "object-literal",
+      "members": ["recursive", "force"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 3028-3028; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Verified the same owner on merged main d68f1a; locator moved from 2741 to 2752. Prior source-bound exclusion reasoning follows: Same temporary-directory cleanup now lives in the extracted runTestTsgoChecksAt owner. Its actual FileSystem.remove options at Quality.command.ts:2741 retain recursive true and force true inside Effect.ensuring. The caller first resolves uncovered test groups; no groups return before execution. External filesystem controls remain a D2 census owner. Preserve cleanup on all execution outcomes."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-collect-output-capture-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-collect-output-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 700,
+      "symbol": "collectOutput.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated runCaptured options at Quality.command.ts:654-662. extendEnv and trim are independent capture knobs on the repo-owned spawn/capture bag; both-true is one supported combo, not a masked union."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-collect-output-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 823,
+      "symbol": "collectOutput.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 823-831; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated runCaptured options at Quality.command.ts:654-662. extendEnv and trim are independent capture knobs on the repo-owned spawn/capture bag; both-true is one supported combo, not a masked union."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 1805,
+      "symbol": "runTestTsgoTurboTasks.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated runCaptured options at Quality.command.ts:1720-1733. extendEnv and trim remain independently choosable capture flags for the test-tsgo Turbo spawn; not exclusive."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 1925,
+      "symbol": "runTestTsgoTurboTasks.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 1925-1938; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated runCaptured options at Quality.command.ts:1720-1733. extendEnv and trim remain independently choosable capture flags for the test-tsgo Turbo spawn; not exclusive."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 2400,
+      "symbol": "collectResolvedStepOutput.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Actual runCaptured bag2400-2419 preserves independently computed extendEnv and trim=true after cache-runtime routing. StepExec spawnFields710-717 and settleCapturedStep823 consume independent axes; no relation rejects mixed pairs."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 2446,
+      "symbol": "collectResolvedStepOutput.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 2446-2464; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Actual runCaptured bag2400-2419 preserves independently computed extendEnv and trim=true after cache-runtime routing. StepExec spawnFields710-717 and settleCapturedStep823 consume independent axes; no relation rejects mixed pairs."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 1403,
+      "symbol": "runStepCapturedForQuarantine.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "tee"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Actual runCaptured bag1403-1415 has independently computed extendEnv and tee=true. StepExec spawnFields710-717 handles env inheritance while foldDecodedText908-938 handles tee. Separate optional controls permit all Boolean pairs; cache routing does not correlate them."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 1409,
+      "symbol": "runStepCapturedForQuarantine.captureOptions",
+      "kind": "object-literal",
+      "members": ["extendEnv", "tee"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 1409-1421; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Source-bound reconciliation at main0be1f13d62fa00cb65e34ff69ec99043380f8d81. Actual runCaptured bag1403-1415 has independently computed extendEnv and tee=true. StepExec spawnFields710-717 handles env inheritance while foldDecodedText908-938 handles tee. Separate optional controls permit all Boolean pairs; cache routing does not correlate them."
+      }
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2503,
+      "symbol": "runTsgoRulesCheck.rootTsconfigParseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Verified the same owner on merged main d68f1a; locator moved from 2492 to 2503. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Distinct instantiated jsonc-parser options at Quality.command.ts2406-2409 for the root tsconfig. allowTrailingComma and disallowComments mirror the external ParseOptions contract."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2777,
+      "symbol": "runTsgoRulesCheck.rootTsconfigParseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 2777-2780; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Verified the same owner on merged main d68f1a; locator moved from 2492 to 2503. Prior source-bound exclusion reasoning follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Distinct instantiated jsonc-parser options at Quality.command.ts2406-2409 for the root tsconfig. allowTrailingComma and disallowComments mirror the external ParseOptions contract."
+      }
+    }
+  },
+  {
+    "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2381,
+      "symbol": "collectWorkspaceTsconfigProfileDiagnostics.parseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Verified the same owner on merged main d68f1a; locator moved from 2370 to 2381. Prior source-bound exclusion reasoning follows: Inline jsonc-parser parse() options at Quality.command.ts:2370 inside collectWorkspaceTsconfigProfileDiagnostics. allowTrailingComma and disallowComments mirror the external ParseOptions contract; distinct from the runTsgoRulesCheck tsconfig and alias bags."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "line": 2624,
+      "symbol": "collectWorkspaceTsconfigProfileDiagnostics.parseOptions",
+      "kind": "object-literal",
+      "members": ["allowTrailingComma", "disallowComments"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 exact-source citation refresh: complete instantiated owner at 2624-2624; selected Boolean members unchanged. Prior adjudication and historical source citations follow: Verified the same owner on merged main d68f1a; locator moved from 2370 to 2381. Prior source-bound exclusion reasoning follows: Inline jsonc-parser parse() options at Quality.command.ts:2370 inside collectWorkspaceTsconfigProfileDiagnostics. allowTrailingComma and disallowComments mirror the external ParseOptions contract; distinct from the runTsgoRulesCheck tsconfig and alias bags."
+      }
+    }
+  },
+  {
+    "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 1995,
+      "symbol": "runGithubCheckLane",
+      "kind": "sibling-state",
+      "members": ["reusable", "activeReuse"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 1996
+          },
+          "note": "The pair moved into runGithubCheckLane. activeReuse is reusable && O.exists(session, prepared => prepared.mode === active); active reuse therefore implies a reusable proof."
+        },
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 1997
+          },
+          "note": "Hit logging at 1997\u20131998 and reused return at 2000\u20132018 distinguish miss, shadow hit and active reuse. Miss/shadow execute at 2019; only active reuse bypasses the command. The real marker fixture at quality-tasks.test.ts:1909\u20131939 covers all three."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "Current P2 refresh at 0be1f13d62fa00cb65e34ff69ec99043380f8d81. Actual coexisting derived Booleans remain 4/3. Preserve concurrent lane execution, serial wave-order journals and proof writes, next-chunk fail-fast, all outcome Options including commandText, seven-field v2 proof identity, full applicable ambient hashes and volatile nonreuse. Separate R30 outcome owner receives no duplicate guard credit. No implementation or independent P3 approval."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 2038,
+      "symbol": "runGithubCheckLane",
+      "kind": "sibling-state",
+      "members": ["reusable", "activeReuse"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 2039
+          },
+          "note": "activeReuse at2039 is reusable && present active session, so active reuse requires the reusable proof derived at2038."
+        },
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 2040
+          },
+          "note": "Hit logging2040-2042 and active-reuse branch2043-2059 distinguish miss, shadow hit and active reuse; miss/shadow execute2062 onward. Historical fixture citations remain in the source-bound design pending its current-location appendix."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "Current P2 refresh at 0be1f13d62fa00cb65e34ff69ec99043380f8d81. Actual coexisting derived Booleans remain 4/3. Preserve concurrent lane execution, serial wave-order journals and proof writes, next-chunk fail-fast, all outcome Options including commandText, seven-field v2 proof identity, full applicable ambient hashes and volatile nonreuse. Separate R30 outcome owner receives no duplicate guard credit. No implementation or independent P3 approval."
+    }
+  },
+  {
+    "id": "r28-cli-quality-coverage-resolved-operation",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 927,
+      "symbol": "resolveCoverageTaskOptions",
+      "kind": "object-literal",
+      "members": ["replaceAll", "scoped", "skip", "writeBaseline"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 864
+          },
+          "note": "Successful resolution rejects replaceAll without writeBaseline at864-868. Scoped replacement is explicitly supported at861-863 and test/quality-tasks.test.ts3844-3875; no replacement-versus-scope exclusion remains."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 937
+          },
+          "note": "Only skip-true successful result937-946 is scoped and preserves replacement/writing intent; full/nonaffected results keep skip=false. The complete producer relation admits nine outcomes."
+        },
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 3509
+          },
+          "note": "Report-only eligibility3509 precedes noop3515, cleanup3520, execution3521-3524 and write/compare3527-3534. Operation must retain all nine outcomes and preserve new cache-runtime execution wrappers."
+        }
+      ],
+      "cardinality": {
+        "representable": 16,
+        "legal": 9
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "P2 refreshed against 0be1f13d62fa00cb65e34ff69ec99043380f8d81. 16/9 finite flag projection: replaceAll implies writeBaseline; skip implies scoped. Preserve scoped/noop replacement, complete required args/expected owner arrays and optional topology absent versus empty. Raw request parser and pure helper remain broad; only successful resolved carrier becomes nine-operation LiteralKit with schema-first payload class. Preserve report-only-before-noop, full/selected executor topology, raw validation diagnostics, baseline carry behavior and current cache runtime wrapper. Existing baseline-write-mode remains superseded. Independent replacement P3 pending; no implementation credit."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 933,
+      "symbol": "resolveCoverageTaskOptions",
+      "kind": "object-literal",
+      "members": ["replaceAll", "scoped", "skip", "writeBaseline"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 870
+          },
+          "note": "Successful resolution rejects replaceAll without writeBaseline at870-874. Scoped replacement remains explicitly supported at867-869."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 944
+          },
+          "note": "Noop result944-951 sets scoped and skip true while preserving replacement and writing intent. Selected result933-940 sets scoped true and skip false. Other producers must remain included in the complete nine-outcome design."
+        },
+        {
+          "class": "E2",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 3556
+          },
+          "note": "Report-only validation3556-3560 precedes noop3562-3565, cleanup3567, execution3568-3572 and write/compare3574-3581. Preserve cache runtime wrappers and all nine resolved outcomes."
+        }
+      ],
+      "cardinality": {
+        "representable": 16,
+        "legal": 9
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "P2 refreshed against 0be1f13d62fa00cb65e34ff69ec99043380f8d81. 16/9 finite flag projection: replaceAll implies writeBaseline; skip implies scoped. Preserve scoped/noop replacement, complete required args/expected owner arrays and optional topology absent versus empty. Raw request parser and pure helper remain broad; only successful resolved carrier becomes nine-operation LiteralKit with schema-first payload class. Preserve report-only-before-noop, full/selected executor topology, raw validation diagnostics, baseline carry behavior and current cache runtime wrapper. Existing baseline-write-mode remains superseded. Independent replacement P3 pending; no implementation credit."
+    }
+  },
+  {
+    "id": "r28-cli-quality-test-lane-resolved-selection",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 319,
+      "symbol": "parseTestLaneSelection",
+      "kind": "object-literal",
+      "members": ["unit", "integration"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 317
+          },
+          "note": "hasLane is selected.unit || selected.integration; returned fields319\u2013320 default both to true when neither raw selector was present. The resolved pair cannot be false/false."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 312
+          },
+          "note": "Independent raw --unit and --integration selectors produce unit-only, integration-only and both; no selector also resolves to both. Raw false/false remains legitimate before normalization."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "P2 source refresh at0be1f13d62fa00cb65e34ff69ec99043380f8d81: actual returned object318\u2013322, full ordered args; raw TestLaneSelectionState233\u2013237/265\u2013269 remains D1. Migrate exported testing alias341 and runtime3573\u20133619 atomically. Preserve empty static plans, current cache runtime wrapping and identity rejection, SQL resource lifetime and failure distinctions. Newly inventoried goal diagnostic writer serializes selections: preserve its existing encoded pair only at that actual observation boundary. No P3, implementation or dry-round credit."
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "line": 324,
+      "symbol": "parseTestLaneSelection",
+      "kind": "object-literal",
+      "members": ["unit", "integration"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 323
+          },
+          "note": "hasLane323 is selected.unit || selected.integration; returned fields325-326 default both true when neither selector was present. Resolved false/false remains impossible."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+            "line": 318
+          },
+          "note": "Reducer318-320 independently accumulates raw unit/integration selectors; none and both resolve to both while individual selections remain supported."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "targetShape": "literalkit",
+      "tier": 1,
+      "notes": "P2 source refresh at0be1f13d62fa00cb65e34ff69ec99043380f8d81: actual returned object318\u2013322, full ordered args; raw TestLaneSelectionState233\u2013237/265\u2013269 remains D1. Migrate exported testing alias341 and runtime3573\u20133619 atomically. Preserve empty static plans, current cache runtime wrapping and identity rejection, SQL resource lifetime and failure distinctions. Newly inventoried goal diagnostic writer serializes selections: preserve its existing encoded pair only at that actual observation boundary. No P3, implementation or dry-round credit."
+    }
+  },
+  {
+    "id": "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "line": 109,
+      "symbol": "PRE_PUSH_CI_LANE_PLAN",
+      "kind": "object-literal",
+      "members": ["affected", "onMainBranch"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated CiLocalStepPlan at GithubChecks.ts:104-108. affected selects Turbo/docgen/doctest argv; onMainBranch only gates repo-sanity --changeset-status. Readers consume the axes independently and all four combinations remain legal on the plan type; this object is the PR-shaped pair, not an exclusive phase."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "line": 128,
+      "symbol": "PRE_PUSH_CI_LANE_PLAN",
+      "kind": "object-literal",
+      "members": ["affected", "onMainBranch"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "R39 current owner at128-132; member set and classification retained. Historical adjudication follows: Main bed30 source refresh: the actual owner and selected members retain their meaning at the updated record locator. Supporting numeric citations in the following prior adjudication refer to immutable main 3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee. Instantiated CiLocalStepPlan at GithubChecks.ts:104-108. affected selects Turbo/docgen/doctest argv; onMainBranch only gates repo-sanity --changeset-status. Readers consume the axes independently and all four combinations remain legal on the plan type; this object is the PR-shaped pair, not an exclusive phase."
+      }
+    }
+  },
+  {
+    "id": "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "line": 1315,
+      "symbol": "collectAuditDiffFallbackOutput.tempDirRemoveOptions",
+      "kind": "object-literal",
+      "members": ["recursive", "force"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "Instantiated FileSystem.remove options at FallowQuality.command.ts:1315 in collectAuditDiffFallbackOutput's acquireUseRelease cleanup. External filesystem controls, not a locally owned exclusive phase."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "line": 1320,
+      "symbol": "collectAuditDiffFallbackOutput.tempDirRemoveOptions",
+      "kind": "object-literal",
+      "members": ["recursive", "force"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "R39 current owner at1320-1320; member set and classification retained. Historical adjudication follows: Instantiated FileSystem.remove options at FallowQuality.command.ts:1315 in collectAuditDiffFallbackOutput's acquireUseRelease cleanup. External filesystem controls, not a locally owned exclusive phase."
+      }
+    }
+  }
+]

@@ -223,3 +223,94 @@ step helper through runtime validation or infer that all possible raw tuples
 are legal resolved states. Noop replacement retains intent even without IO.
 Revalidate exact source, callers and tests before P3 or implementation if main
 moves again. This design supplies no independent review, dry-round or gate credit.
+
+
+## R39 source and test reconciliation (authoritative current map)
+
+Bound to HEAD `220d9426dad4b708807b6297cb71d75449288749`. This appendix supersedes older numeric
+locations for the files listed here; it preserves earlier design semantics and
+immutable historical evidence. It grants no blanket P3, implementation or dry credit.
+
+Retain 16/9 successful resolved domain: replaceAll implies writeBaseline; skip implies scoped. Scoped replacement and noop replacement remain supported. Raw parser/step adapters remain permissive. Preserve absent versus present-empty topology arrays, report-only rejection before noop, cleanup after noop guard and before execution, full/sharded dispatch, exact diagnostics, cache-runtime wrapping and current Crypto requirements.
+
+Current Tasks.ts landmarks: raw test state239, parser315-329, normalized writes324-326, alias347; coverage carrier256-264, raw parser644-654, nonaffected resolver685-699, resolver862-955, selected/noop writers933-951, validator975-977, coverage step2543, selected adapter3396, raw step adapter3457, selected executor3535, root coverage3551, root test3620, root dispatch3669. Proof outcome2021-2028, session preparation2035-2037, phase locals2038-2039, reuse2044-2059, executed outcome2070-2079, persistence2082-2102, wave2116, ordered fold2141-2152, wave collector2210, public runner2381 and test alias3895. These are symbol/branch anchors, not a uniform offset.
+
+Tests retain their existing Effect-based harness and NodeCrypto layer. In quality-tasks.test.ts, legacy lane/report inputPackages decoding is1241-1274; crypto failure distinctions are2014-2050; concurrent ordered journaling2520 and next-chunk stop2576. Coverage scoped replacement fixture is near3902; normalized selection fixtures7846/7855; SQL fixtures7097/7142/7165. Existing tests are supporting inventory, not execution evidence for this migration. Complete test-name locations follow.
+
+### Current named test locations
+
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:1510` — rebuilds an unscoped lane report from an unscoped artifact
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2776` — falls back to diff-scoped audit when Fallow cannot create the base worktree
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:2819` — includes untracked files in the diff-scoped audit input
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3105` — plans package-owned tsgo tasks without filesystem-dependent coverage
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3266` — leaves test and coverage without a static root plan
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3634` — runs combined root coverage tasks in ratchet mode
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3663` — resolves Turbo selector sets and their matching worker topology
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3720` — ends every coverage producer's argv with one Vitest topology
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3764` — builds the coverage invocation as the ratchet gate by default
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3795` — reduces coverage children to the pull-request Turbo posture whatever the host carries
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3816` — never hands a coverage turbo run a generated remote cache argument
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3837` — preserves existing Node options when disabling experimental Web Storage for coverage
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3848` — honors an explicit fast-check seed for exploratory coverage runs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3859` — keeps report-only coverage reserved for baseline regeneration and strips writer controls
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3892` — rejects replace-all without baseline writing and accepts it on a scoped write
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3924` — resolves exact explicit baseline filters into verifier-equivalent shard owners
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3940` — rejects scoped baseline selectors that are not exact coverage owners
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3955` — compares coverage snapshots with fail-on-drop and warning-only new package semantics
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3995` — decodes per-file summary entries into stable repo-relative baseline paths
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4098` — bounds coverage-summary decode diagnostics while retaining the typed parse cause
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4125` — rejects internally inconsistent Vitest coverage summary counts
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4157` — rejects current coverage baselines without per-file provenance
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4270` — keeps every committed coverage package on schema v2 with file provenance
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4312` — refuses scoped v1 writes and migrates a full regeneration to schema v2
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4512` — only fails missing baseline-package summaries for unscoped coverage runs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4521` — excludes the coverage baseline artifact only from writer change-set planning
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4531` — keeps rendered coverage diagnostics free of terminal control characters
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4607` — requires every workspace package to have coverage or a named exemption
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4617` — fails when an exact selected coverage owner omits its summary
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4627` — selects only directly changed coverage owners for an affected coverage run
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4673` — selects every transitive coverage-bearing dependent of a changed owner's source
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4681` — keeps a test-only change scoped to its own owner
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4697` — lets a package without a coverage task seed its coverage-bearing dependents
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4707` — walks through lab and coverage-less dependents without selecting them, and never seeds from a lab
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4836` — falls back to a full run when a repository fixture's configured owner cannot measure coverage
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4855` — treats the ciops extraction tree as coverage-inert
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4870` — rejects a registered fixture consumer in labs even with a coverage script
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4883` — registers only coverage-executed drizzle fixture consumers
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:4959` — uses verifier-equivalent shards for narrow baseline writes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5010` — uses the same shard topology for wide local ratchets and baseline writes
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5149` — pins comparison reads to TURBO_SCM_BASE instead of the branch baseline
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5224` — reads the workspace baseline when TURBO_SCM_BASE is absent
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5253` — fails clearly when the configured comparison baseline cannot be read
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5567` — keeps the base floor when a global coverage input changed
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5848` — resolves an affected run from a dirty row-only baseline edit against the workspace
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5905` — selects the packages named by a row-only baseline edit instead of the full workspace
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:5959` — treats standards documentation as coverage-inert but keeps policy inputs global
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6084` — falls back to full coverage for global, unknown, manifest, or shared test-kit inputs
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6116` — skips affected coverage for docs-only and packages without a coverage task
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6130` — assigns every full-run coverage owner to exactly one stable weighted shard
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6185` — preserves caller Turbo flags while overriding full-coverage shard controls
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6246` — uses the hosted shard worker shape for full baseline regeneration
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6276` — separates a percentage drop caused by deleting covered code from one caused by losing coverage
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6323` — detects coverage lost in one file when deleting unrelated uncovered code offsets package totals
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6386` — detects a surviving file's coverage loss when uncovered counts rise
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6562` — fails closed when a covered baseline path disappears despite improving package totals
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6598` — fails closed when a removed path and package drop could hide offset coverage loss
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6683` — splits selected baseline rows into replaced, held, added, and pruned dispositions
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6734` — holds every existing measured row for a no-op baseline change set
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6811` — removes the coverage output directory of every workspace package that declares a coverage script
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6869` — holds a measured package a scoped write never changed and carries every unmeasured row
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6923` — adopts dependents on a scoped write only, keeping the unscoped writer on direct owners
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6961` — names the adopted packages a scoped filter run never measured
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:6991` — carries nothing on an unscoped write, which prunes unmeasured rows instead
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7013` — stays quiet when a scoped write measured every package it adopts
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7041` — adopts every measured package when a scoped write passes replace-all
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7058` — says so loudly when a scoped write held every package it measured
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7074` — names the live baseline entries an unscoped replacement would delete
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7653` — ends lint and scoped coverage argvs with the labs exclude
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7676` — keeps the labs exclude ahead of the coverage vitest passthrough and inside every shard
+
+The private review also supplies source-location-maps.json with exact unchanged
+line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
+Use named sites for implementation; never apply a uniform offset across changed code.
+No tests were executed for this read-only reconciliation.

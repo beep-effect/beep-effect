@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: `~/YeeBois/references/effect/` holds `effect` and `effect-tsgo`,
+Outcome: the configured reference root holds `effect` and `effect-tsgo`,
 indexed by graft in workspace mode with a nightly `claude-opus-5` deep refresh,
 and every beep checkout (clones and worktrees) reaches it through
 `.repos/effect`, `.repos/effect-tsgo`, and `.repos/effect-workspace`, provisioned
@@ -62,7 +62,7 @@ Acceptance:
       passes, `graft ask` via `.repos/effect-workspace` returns `[effect/]`
       hits, fleet census shows zero missing links, no member `.gitignore`
       changed.
-- [ ] R13 sweep done; no live file names `YeeBois/dev/effect`.
+- [ ] R13 sweep done; the stale-path scan in `SPEC.md` has no matches.
 - [ ] `SPEC.md` acceptance criteria are satisfied; no unrelated refactors or
       formatting churn.
 
