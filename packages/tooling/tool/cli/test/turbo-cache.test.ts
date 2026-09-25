@@ -21,6 +21,7 @@ import {
   turboCachePullRequestPosture,
   turboCacheValueSourceFor,
 } from "@beep/repo-cli/test/SharedInternals";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
@@ -282,6 +283,10 @@ describe("shared turbo cache directory", () => {
   it("survives the coverage local-only rewrite", () => {
     const plan = resolveTurboCachePlan(withHome(completeEnvironment), { args: [], ci: false });
     expect(localOnlyTurboCacheArgs(turboCachePlanArgs(plan))).toEqual([LOCAL_ONLY_ARG, SHARED_DIR_ARG]);
+  });
+
+  it("decodes every generated plan back to itself", () => {
+    assertSchemaArbitraryDecodesToSelf(TurboCachePlan);
   });
 
   it.effect("round-trips a plan that carries the directory", () =>
