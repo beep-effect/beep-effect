@@ -98,3 +98,14 @@
   the command-line `--isolate` flag makes all three package coverage runs pass.
   A three-config isolation proposal is prepared separately from the scoped
   Models changes; do not refresh coverage thresholds to hide the failures.
+- A subsequent `yeet publish --start-pr-early --monitor --pr --detach` pushed
+  successfully but exited 130 while waiting for local proof admission. The job
+  recorded `unrecorded-failure`, with no cancellation request. Its canonical
+  waiter confirmed termination; full verification was resubmitted on the
+  published head. Persisting signal provenance would make the interruption
+  attributable instead of leaving only the generic termination receipt.
+- The merged acceptance PR required a fresh follow-up worktree. Its initial
+  `quality package-verify @beep/wink --quick` failed with TS6305 because dependency
+  declaration outputs had not been built. This is worktree bootstrap state, not
+  an isolation-config regression. Build the affected dependency graph before
+  quick checks in a fresh checkout; retain the original failed log for attribution.
