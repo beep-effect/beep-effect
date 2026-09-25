@@ -1764,3 +1764,19 @@ Review 31 is accepted with all 13 broader obligations retained. Machine/user/
 runtime-root inputs remain explicit for coordinator paths; version-pin files
 are not measurements of installed binaries. Full ledger enforcement, transitive
 input closure and signed remote evidence are not established by these controls.
+
+### Ledger policy and shadow report boundary — 2026-09-25
+
+Review 32 covers ledger lookup/batching and selected shadow-record/report paths.
+All 37 ledger/shadow tests passed. Four synthetic controls establish that the
+default report can say enforcement-ready with 200 undeclared-input misses on
+10 branches, including with malformed history; merged-preview-only rows and
+199 attempts do not meet that bar. The report flag therefore cannot substitute
+for this packet's qualified tuple evidence. See
+[the bounded receipt](./research/proof-ledger-shadow-review.json).
+
+The attachment retains 968 source bindings, six artifacts and all 13 unresolved
+obligations. No cache setting, tuple lifecycle or Yeet proof ownership changed.
+Full semantic closure, downstream enforcement review and signed sibling receipts
+remain required. The latest published-head proof ended at the existing
+Effect/Vitest and schema-policy failures; it is not a green full proof.
