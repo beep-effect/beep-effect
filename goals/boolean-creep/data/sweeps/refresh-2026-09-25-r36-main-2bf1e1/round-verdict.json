@@ -1,0 +1,80 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r36-main-2bf1e1",
+  "roundNumber": 36,
+  "finalizedAt": "2026-09-25T07:20:10.551859+00:00",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMainSha": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "newQualifiedIds": [
+    "r36-epistemic-ontology-document-toolbar-input",
+    "r36-cli-commands-a-c-cache-task-selection-pending"
+  ],
+  "newQualifiedCount": 2,
+  "changedQualifiedIds": [],
+  "withdrawnQualifiedIds": [
+    "r2-foundation-graph-validation-result",
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin",
+    "worktree-fleet-epoch-target"
+  ],
+  "withdrawnDisqualifiedIds": [
+    "ai-provider-cli-claude-auth-status-payload",
+    "r2-apps-renderer-react-grab-gate",
+    "r25-shared-documents-dms-mirror-probe-probed-at",
+    "r25-shared-documents-vault-sync-status-probed-at",
+    "r3-apps-ontology-menu-aria-hidden",
+    "r3-apps-smoke-mkdir-recursive"
+  ],
+  "records": 727,
+  "qualified": 113,
+  "disqualified": 614,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/execution-summary.json",
+      "sha256": "b9f7ad7ba3c15ab86064ceaf34748313a784d741023ce7ce6c3a2149eb134cc1"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/execution-audit.json",
+      "sha256": "410cd5caee0f49182a9e3040486d311984f876525e1950f78e51f4e920c6bd0a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/lane-map.json",
+      "sha256": "33497f0f14c6ed882b292edf827000f0853fab867b675f9eb3cd0e8a894dc83c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/source-sha.txt",
+      "sha256": "1130082b13de7b6ad8c86c5e9b85b0394fb2a153c88c269552dc1fa56c65baff"
+    },
+    {
+      "file": "goals/boolean-creep/data/r36-parent-integration-2026-09-25.json",
+      "sha256": "d38c3c5d6cf263f501d72fde5ea0ab5137fd31904909a5d7c56b718b6f0072cc"
+    },
+    {
+      "file": "goals/boolean-creep/data/r36-owner-reviews/artifact-index.json",
+      "sha256": "7e42cc627db32f150b3473407d3e66a7a418feead3ed4325ea3d2d2a1202d45d"
+    },
+    {
+      "file": "goals/boolean-creep/data/r36-reconciliation-progress-2026-09-25.json",
+      "sha256": "b0e23fb44b455dbba70cb1b306bf1c2366dbdedc7651cdfffc40e97909b3bd35"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r36-final-reconciled.jsonl",
+      "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+    }
+  ]
+}

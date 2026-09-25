@@ -1,0 +1,85 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r34-main-339da1",
+  "roundNumber": 34,
+  "finalizedAt": "2026-09-25T06:06:11.555926+00:00",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "complete": false,
+  "sourceStable": false,
+  "disposition": "finalized-source-invalid",
+  "executionExitCode": 1,
+  "executionExitCodeMeaning": "Aggregate invalid-round result; interrupted controller exit unknown.",
+  "reconciliationComplete": true,
+  "reconciliationScope": "Preserved artifacts and partial findings only. Six lanes have no completion receipts; no full coverage claim.",
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 21,
+  "newQualifiedIds": [],
+  "newQualifiedCount": 0,
+  "changedQualifiedIds": [],
+  "withdrawnQualifiedIds": [
+    "cosmos-backend-selection-webgl2",
+    "r2-domains-ontology-graph-worker-requeue-latches"
+  ],
+  "withdrawnDisqualifiedIds": [
+    "dms-mirror-unavailable-retryable",
+    "firecrawl-agent-response-shape",
+    "firecrawl-agent-status-shape",
+    "firecrawl-browser-create-shape",
+    "firecrawl-browser-delete-shape",
+    "firecrawl-browser-list-shape",
+    "chat-timeline-refresh-latch",
+    "r25-drivers-a-f-firecrawl-error-options-retryable",
+    "r25-drivers-a-f-firecrawl-error-options-input-retryable",
+    "r25-drivers-a-f-firecrawl-error-retryable",
+    "r25-drivers-a-f-box-entitlements-paid-seats",
+    "r26-drivers-a-f-firecrawl-sdk-agent-request",
+    "r26-drivers-a-f-browser-session-shape",
+    "r26-drivers-a-f-queue-status-shape"
+  ],
+  "records": 731,
+  "qualified": 121,
+  "disqualified": 610,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/execution-summary.json",
+      "sha256": "3c34506d79f68cb681cd3aab9bd4c0df52c3f320c7fbe22ca134edf292d20b6a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/execution-audit.json",
+      "sha256": "93d00296c7801fdf7b1861b74c1b9c9c915d3277370868693550491707424f38"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/lane-map.json",
+      "sha256": "23122c94cece5f12302329e9ba0e9e8f1e73b57eb21fb8a022cb636c5e96deae"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/source-sha.txt",
+      "sha256": "f890b482e6f367ec4b0913d9aa0161a3dd8cf847e23e4b1c09b5d5a51353242d"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/interruption-observation.json",
+      "sha256": "bb4c5a10e7fec5b83624f31b3ddfe5f757c2530599d1a01ef6585129ef6b5c1c"
+    },
+    {
+      "file": "goals/boolean-creep/data/r34-partial-integration-2026-09-25.json",
+      "sha256": "de0ac14b79a30fb9ecbb9917f4b5433e88b6faf59eb4e2d781e44ceb94eba56a"
+    },
+    {
+      "file": "goals/boolean-creep/data/r34-publication-format-2026-09-25.json",
+      "sha256": "526e85101bf5b637cc89ca1a9048536c5b9a4012c814bcc7c9a926046c76aa8b"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r34-partial-reconciled.jsonl",
+      "sha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4"
+    }
+  ]
+}

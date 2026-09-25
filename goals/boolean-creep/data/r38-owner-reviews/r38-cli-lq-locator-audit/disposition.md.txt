@@ -1,0 +1,9 @@
+# R38 L-Q locator audit
+
+One genuine stale canonical row/design citation set: package-inventory-docgen-coverage. Propose first-field anchor1350 (object starts1349), evidence1310 and1373; refresh type161, builder1593 and mirror1705–1706 notes. Full replacement design retains existing text with an authoritative current module location map. Complete object has four actual Booleans and retains16/10: missing-packageFFFF, missing-configFFFT, configuredT plus eight combinations. No qualification/cardinality/compatibility change.
+
+Other footer claims are field-versus-declaration distinctions, not drift: PackageVerifyStepResult class152 versus Boolean156, constructor636 versus skipped639 and constructor651 versus skipped654. GithubCheckLaneOutcome type2021 versus reused2026. EffectImportRulesSummary class241 and constructors1629/1794 versus copied write fields1632/1797. Canonical rows already use those exact declarations/constructors; retain them and their designs unchanged.
+
+All four audited source files are byte-identical to R37 frozenHEAD84058d64 and currentHEAD/main. PackageVerify and Tasks also exactly match R37 independent receipt hashes. The docgen defect was an older citation debt, not a new source movement since R37. Its body after original772 has shifted36lines relative to bed30c6; full relevant source comparison supports the precise map. No further broad discovery or unrelated design changes.
+
+Exact inputs and outputs are bound in JSON. Primary R38 transcript matches terminal execution receipt. No tracked edits/ref moves, unresolved owner questions, census deltas, P3 or dry credit.

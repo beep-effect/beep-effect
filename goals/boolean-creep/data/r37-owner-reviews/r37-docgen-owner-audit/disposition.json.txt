@@ -1,0 +1,150 @@
+{
+  "kind": "r37-docgen-complete-owner-audit/v1",
+  "sourceHead": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "withdraw-two-oneBoolean-owners-admit-one-distinct-D1-correct-one-locator",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
+      "sha256": "82bf3a01d28acb09f53b9c5dc3355b742eb96f232c392681ac2204587b319c0e",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts",
+      "sha256": "865708cb04238a53da299299217a45baff39cc622ca72b21420c3c13b8f56eb1",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.scope.ts",
+      "sha256": "d7eeed37b99368b54768247362602fc33107f97a296b44bf714e8076ee4bdd58",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+      "sha256": "e6105508b649900fbcf0d161454dbb6cf96e08431f1281e2479386f8b1d5d69a",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
+      "sha256": "82bf3a01d28acb09f53b9c5dc3355b742eb96f232c392681ac2204587b319c0e"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts",
+      "sha256": "865708cb04238a53da299299217a45baff39cc622ca72b21420c3c13b8f56eb1"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.scope.ts",
+      "sha256": "d7eeed37b99368b54768247362602fc33107f97a296b44bf714e8076ee4bdd58"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+      "sha256": "e6105508b649900fbcf0d161454dbb6cf96e08431f1281e2479386f8b1d5d69a"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-d-k.jsonl",
+      "sha256": "f825917da66a2417f36e412097d8e2d46fa123624d97e0af1989e596ea05d5ec"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-d-k.execution.json",
+      "sha256": "6726a152a7202b0c642bae580f85997a888944733f263da97d7fdee1ee2c828b"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-d-k.ndjson",
+      "sha256": "c495d2c8aa587ace18d14fcbab346bfe61b9ffc79a1e021bd534a29be04bb38a"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+      "sha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md",
+      "sha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb"
+    }
+  ],
+  "withdrawIds": [
+    "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+    "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source"
+  ],
+  "designArchives": [
+    "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+    "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md"
+  ],
+  "designReferences": [
+    "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+    "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md"
+  ],
+  "newIds": [
+    "r37-cli-commands-d-k-worker-eval-source-quality-targets"
+  ],
+  "metadataIds": [
+    "r26-cli-commands-d-k-goals-index-command-mode"
+  ],
+  "retainedMetadata": [
+    "r26-cli-commands-d-k-docgen-quality-command-scope"
+  ],
+  "delta": {
+    "rows": -1,
+    "qualified": -2,
+    "disqualified": 1,
+    "designs": -2
+  },
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "file": "withdrawn-rows.jsonl",
+      "sha256": "132b038698c189b7f53dd42e306ac8fe942477cf893aa61831ced7148dbfc125"
+    },
+    {
+      "file": "r28-cli-commands-d-k-docgen-quality-worker-eval-source.archived-design.md",
+      "sha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac"
+    },
+    {
+      "file": "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.archived-design.md",
+      "sha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb"
+    },
+    {
+      "file": "proposed-new-rows.jsonl",
+      "sha256": "e797bc722c5822be6176ccb785ff6c0a462a508c4234d326ce7289f24fefd2aa"
+    },
+    {
+      "file": "proposed-metadata-rows.jsonl",
+      "sha256": "061f79842737fc8a7e867affeb251936b9c27dc46b7616dfa885127e54825eed"
+    },
+    {
+      "file": "design-archive-list.json",
+      "sha256": "4b57b85e19ba731f94a96338bc4db32db833f405557776b5aef303cafd325418"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "11cbb0650e55aab270281a4b5c9d009258ae0e2001034bb083e1b8dfe906e5fa"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "worktree-process-cwd-reading",
+    "file": "goals/boolean-creep/designs/worktree-process-cwd-reading.md",
+    "sha256": "07bc173a35de3324ab16386c2e923b631658ce23528ad5e1f9310d3922492cc6"
+  },
+  {
+    "id": "worktree-branch-diff-reading",
+    "file": "goals/boolean-creep/designs/worktree-branch-diff-reading.md",
+    "sha256": "ab1b08a9e27c57d68c146e7d0c87d91a6cb840e30c17c7fdbc29d6ac1eba785e"
+  },
+  {
+    "id": "worktree-policy-reading",
+    "file": "goals/boolean-creep/designs/worktree-policy-reading.md",
+    "sha256": "5edba3e00bb7a23d1752427f72008eafc62e2aeffc98df4e602a6235e603088f"
+  },
+  {
+    "id": "worktree-idle-reading",
+    "file": "goals/boolean-creep/designs/worktree-idle-reading.md",
+    "sha256": "36b1074aaadc0212617ddaa417179fdac374c3a45d29c1a0abd044d5ae718b77"
+  }
+]

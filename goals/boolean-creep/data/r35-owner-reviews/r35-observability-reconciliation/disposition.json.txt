@@ -1,0 +1,119 @@
+{
+  "kind": "r35-observability-owner-disposition/v1",
+  "createdAt": "2026-09-25T06:31:38.184149+00:00",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "scope": "Three observability footer claims only; complete owner and alias audit",
+  "inputSha256": {
+    "packages/tooling/library/ai-metrics/src/config-snapshot.ts": "0057374003fceeb5e829a70be77dfb9356c7490f9bc49e22f20e9152f6eba3ba",
+    "packages/tooling/library/ai-metrics/src/identity-registry.ts": "447f65d89bcfbaa40161b3bdcde38000a1509b0410e323161b56085677a4529f",
+    "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "goals/boolean-creep/data/inventory.jsonl": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-tooling-library-observability.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-tooling-library-observability.execution.json": "20999d66b60c76b7a67fa8fa2d1bb7be144565ffa274bc46b1c1eb43469f04dc",
+    "goals/boolean-creep/designs/ai-metrics-config-snapshot-bounds.md": "6ab40f465a8b45df06ab00fa96ea21ea60e7251101799282135fc2ff2515d8e7",
+    "goals/boolean-creep/designs/ai-metrics-canonical-root-kind.md": "8b044426ecadf4a9ad602a066dd0439991b7667f3079635711d8b1bd193f5573",
+    "goals/boolean-creep/designs/r27-tooling-library-observability-config-snapshots-dataset-presence.md": "f7ae29d4ff81796dd0dc6fa9bfa6f36826ff962f122eccea21653590762ac4ee"
+  },
+  "dispositions": [
+    {
+      "id": "ai-metrics-config-snapshot-bounds",
+      "disposition": "withdraw-outside-recall",
+      "owner": "AiMetricsConfigSnapshotBoundsReport",
+      "source": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "lines": [
+        282,
+        301
+      ],
+      "booleanMembers": [
+        "truncated"
+      ],
+      "otherMembers": {
+        "budget": "AiMetricsConfigSnapshotBudget object; four finite numbers at192-216",
+        "excludedNestedRootPaths": "Array<string>",
+        "skippedOversizeFileCount": "Natural",
+        "totalBytes": "Natural",
+        "truncationReason": "Option of literal reason"
+      },
+      "proof": "Complete S.Class fields have no inherited field spread; truncated is the sole Boolean. Option presence and nested budget are not sibling Booleans. Empty constructor303-309 and final constructor991-998 expose the real flag/payload relation, but do not create another eligible member. Parent result nesting does not merge owner fields."
+    },
+    {
+      "id": "ai-metrics-canonical-root-kind",
+      "disposition": "withdraw-outside-recall",
+      "owner": "AiMetricsCanonicalRoot",
+      "source": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "lines": [
+        112,
+        128
+      ],
+      "booleanMembers": [
+        "excludedFromParentSnapshot"
+      ],
+      "otherMembers": {
+        "cloneIdHash": "String",
+        "firstSeenAtEpochMillis": "Finite",
+        "kind": "AiMetricsRootKind two-value LiteralKit at63",
+        "lastSeenAtEpochMillis": "Finite",
+        "parentRootId": "optional String",
+        "repositoryIdHash": "String",
+        "revision": "optional String",
+        "rootId": "String",
+        "worktreeIdHash": "String"
+      },
+      "proof": "Complete S.Class fields contain only one Boolean and no field-spread inheritance. makeAiMetricsCanonicalRoot597-613 derives the flag and optional parent from kind; isLinkedWorktree is a constructor local alias, not a second schema field. withFirstSeen copies the same owner and changes only timestamp. Literal alternatives/parent presence do not supply Boolean recall."
+    },
+    {
+      "id": "r27-tooling-library-observability-config-snapshots-dataset-presence",
+      "disposition": "withdraw-outside-recall",
+      "owner": "configSnapshotsDataset output object arms",
+      "source": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+      "lines": [
+        3418,
+        3444
+      ],
+      "booleanMembers": [
+        "configSnapshotPresent"
+      ],
+      "otherMembers": {
+        "archiveObjectCount": "Finite copied from forwarder",
+        "configSnapshotId": "String copied from forwarder",
+        "ingestRunId": "String copied from forwarder",
+        "turnCount": "Finite copied from forwarder"
+      },
+      "proof": "None arm3431 has only the false flag; Some arm3432-3438 has the true flag plus four non-Boolean payloads. ForwarderSummary759-775 confirms numeric/string types. DatasetExample1534-1547 and datasetExample3332-3351 wrap/forward this output without adding Boolean members; DatasetSpec1579-1591 and datasetSpec3353-3367 add descriptions/arrays/literal/string only. Generic Record<string,unknown> acceptance does not invent actual Boolean siblings or flatten nested examples."
+    }
+  ],
+  "withdrawIds": [
+    "ai-metrics-config-snapshot-bounds",
+    "ai-metrics-canonical-root-kind",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence"
+  ],
+  "retainedIds": [],
+  "newQualifiedIds": [],
+  "changedQualifiedIds": [],
+  "designActions": {
+    "archiveIds": [
+      "ai-metrics-config-snapshot-bounds",
+      "ai-metrics-canonical-root-kind",
+      "r27-tooling-library-observability-config-snapshots-dataset-presence"
+    ],
+    "dependentQualifiedDesignChanges": [],
+    "dependencySearch": "Exact IDs, owner names and descriptive configuration-snapshot dataset phrases searched across all goals/boolean-creep/designs/*.md. Matches only within the three own designs. Shared source-file sequencing comments do not require these migrations."
+  },
+  "proposedInventoryDelta": {
+    "records": -3,
+    "qualified": -3
+  },
+  "noD1Replacement": true,
+  "reason": "Out-of-net owners are archived/removed, not misrepresented as D1 independence. Minimal E3 remains eligible when a complete actual owner has at least two Booleans; none of these owners does. No source rewrite or compatibility restriction is authorized by withdrawal.",
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationCredit": false,
+  "trackedEdits": false,
+  "refsChanged": false,
+  "proposalSha256": {
+    "withdrawn-rows.jsonl": "2cda6e4eb4d311a3285285256a1baa5b116c6ab95b5c995b952785287105120a"
+  }
+}

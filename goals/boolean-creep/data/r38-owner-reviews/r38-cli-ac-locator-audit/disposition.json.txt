@@ -1,0 +1,293 @@
+{
+  "kind": "r38-cli-ac-locator-audit/v1",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "metadata-only28-replacements-preserve-all-statuses",
+  "rawRecordsReviewed": 28,
+  "rawDispositionCounts": {
+    "replace": 26,
+    "retain": 2
+  },
+  "replacementCount": 28,
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sha256": "f7807d0240ec0665e5e6dfbc05220a68f28035d440bc99639bd1fc976abbd640",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "sha256": "c7da9015cf03c88ebf6735fc6b4f18e5767b5b9303fb85daada75c20de81fdd2",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalLawLanes.ts",
+      "sha256": "98f29bea5c778be46945501292a573db3b96adb74c3290c3e9031cf9004341ec",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "sha256": "7eb27cf8dd0105fb0ca77230ac639a8f8568fd60604747bb024f8cb449aa59ea",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "786b1a39528da31f68a5ec4d0580c2d903e1af19d52313f14af208feab58e00a",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "6b29c91b19b0637e9e221c360a62c53fda3ba2152fffe2d256e96384af39f664",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "sha256": "96be51862e4fa4c01ca9f54eb2ec33d264591f6fddc759833071aaaca516dd87",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "sha256": "b41602afd2abd5da4224db88b28377993e9d3950ea9fb36033538909d25ab711",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "sha256": "4d337de7e88de0254e00b9aafe37c653978b901aa445e01f8a65a067c7994cb9",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+      "sha256": "229ec77ebf38ab3ca53619992e2f8d5cf5ae0b11220e8efd514f95e89a3ba834",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts",
+      "sha256": "9472f35e41a3201a237d1f7f95761b159112d4bf5c18368e9daceeac8418c7f4",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "sha256": "9a0168e82fac4a588cfc9364e2ef4f3351729987962aa549cf1e6c91d1c7c388",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "sha256": "4ac6172b29f33604dcf9c82f307af251fe831d7442c9932ea3cc5ff9564c46ec",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "84058d6470137e35f108d13c7dba52129db9a301": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sha256": "f7807d0240ec0665e5e6dfbc05220a68f28035d440bc99639bd1fc976abbd640"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "sha256": "c7da9015cf03c88ebf6735fc6b4f18e5767b5b9303fb85daada75c20de81fdd2"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalLawLanes.ts",
+      "sha256": "98f29bea5c778be46945501292a573db3b96adb74c3290c3e9031cf9004341ec"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "sha256": "7eb27cf8dd0105fb0ca77230ac639a8f8568fd60604747bb024f8cb449aa59ea"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "786b1a39528da31f68a5ec4d0580c2d903e1af19d52313f14af208feab58e00a"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "6b29c91b19b0637e9e221c360a62c53fda3ba2152fffe2d256e96384af39f664"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "sha256": "96be51862e4fa4c01ca9f54eb2ec33d264591f6fddc759833071aaaca516dd87"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "sha256": "b41602afd2abd5da4224db88b28377993e9d3950ea9fb36033538909d25ab711"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "sha256": "4d337de7e88de0254e00b9aafe37c653978b901aa445e01f8a65a067c7994cb9"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+      "sha256": "229ec77ebf38ab3ca53619992e2f8d5cf5ae0b11220e8efd514f95e89a3ba834"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts",
+      "sha256": "9472f35e41a3201a237d1f7f95761b159112d4bf5c18368e9daceeac8418c7f4"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "sha256": "9a0168e82fac4a588cfc9364e2ef4f3351729987962aa549cf1e6c91d1c7c388"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "sha256": "4ac6172b29f33604dcf9c82f307af251fe831d7442c9932ea3cc5ff9564c46ec"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/corpus-pst-terminal.md",
+      "sha256": "37fd0dded32871ecfd7f0df714b8dbc119c1242270b64a7e604844e428f6cf9c"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/corpus-legacy-word-terminal.md",
+      "sha256": "0a3fd27786bbb8b0734bea77bc5376258a233b514004dc2317a0a7dce41691ac"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/cache-pilot-non-execution.md",
+      "sha256": "e57eed531719ccd32066ed2851e1ebef82ee1b7b688dc1ad814e2fb94ff75b09"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-a-c.ndjson",
+      "sha256": "475cc771734adf8496d3208dbf2bb507b993d32a1a75abd2fe1acf187a35c9da"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-a-c.execution.json",
+      "sha256": "dbc2c33e1cae5a27236b45489291d025426c22fc9db3745bfc55d81c9a54ae44"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-a-c.jsonl",
+      "sha256": "c21179e2882b66377c90dd936a6be5d8b127c7dcf3d1b5d1864bc46f76d87221"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r37-cli-ac-parent-audit/disposition.json",
+      "sha256": "e6873fe724a278664ae083cd7ca6f8a618537989ededef17f9e09adcf8e7e7f1"
+    }
+  ],
+  "designReplacementIds": [
+    "corpus-pst-terminal",
+    "corpus-legacy-word-terminal",
+    "cache-pilot-non-execution"
+  ],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "trackedEdits": false,
+  "outputs": [
+    {
+      "file": "original-rows.jsonl",
+      "sha256": "fa34e71fc2979fafb146a8e0de9c7567612e63edf3ddfdf3b581ab754b0bdc8c"
+    },
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "60a1474b6bc052168edce954b24b1cc109a2e03db8066024fa5aff73b9f6810d"
+    },
+    {
+      "file": "raw-dispositions.json",
+      "sha256": "a2eb498508724282e6b187b5b2b5418a4db314910a1f975430ab44dc262ee0ea"
+    },
+    {
+      "file": "corpus-pst-terminal.original.md",
+      "sha256": "37fd0dded32871ecfd7f0df714b8dbc119c1242270b64a7e604844e428f6cf9c"
+    },
+    {
+      "file": "corpus-pst-terminal.replacement.md",
+      "sha256": "1fc91b92fafa0020da7af0d004255a9bb1aae9c40526e14b4e418579883f8a5c"
+    },
+    {
+      "file": "corpus-legacy-word-terminal.original.md",
+      "sha256": "0a3fd27786bbb8b0734bea77bc5376258a233b514004dc2317a0a7dce41691ac"
+    },
+    {
+      "file": "corpus-legacy-word-terminal.replacement.md",
+      "sha256": "55d620d86bd1f118b8e27fb7858ddbadc14b184ed2d0b6e9571ed2c2dbc218b4"
+    },
+    {
+      "file": "cache-pilot-non-execution.original.md",
+      "sha256": "e57eed531719ccd32066ed2851e1ebef82ee1b7b688dc1ad814e2fb94ff75b09"
+    },
+    {
+      "file": "cache-pilot-non-execution.replacement.md",
+      "sha256": "45c529a7cde82f9bbb22fefe6eaa058df264f448ad797a80e6f1ac32b8037b3b"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "3c2afab2838052de5455df2f10336dc0030d8159b3ee1f41954cdb6dae6cba58"
+    }
+  ]
+}

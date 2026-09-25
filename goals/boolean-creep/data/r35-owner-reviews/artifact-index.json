@@ -1,0 +1,114 @@
+[
+  {
+    "ownerAudit": "r35-ui-reconciliation",
+    "originalFile": "r35-ui-reconciliation/disposition.json",
+    "originalSha256": "aad3e4e38ba0b9e3efd8450541611161561a3daafdefa1effbb1e423181e4708",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-ui-reconciliation/disposition.json.txt",
+    "publishedSha256": "aad3e4e38ba0b9e3efd8450541611161561a3daafdefa1effbb1e423181e4708"
+  },
+  {
+    "ownerAudit": "r35-ui-reconciliation",
+    "originalFile": "r35-ui-reconciliation/disposition.md",
+    "originalSha256": "f4fd0d37901674a85ee1b5b15d2c8c3026fe3b25c8e8d309ebf7fc88bf5abd59",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-ui-reconciliation/disposition.md.txt",
+    "publishedSha256": "f4fd0d37901674a85ee1b5b15d2c8c3026fe3b25c8e8d309ebf7fc88bf5abd59"
+  },
+  {
+    "ownerAudit": "r35-ui-reconciliation",
+    "originalFile": "r35-ui-reconciliation/proposed-inventory-updates.jsonl",
+    "originalSha256": "bad387a77ed0d819c42ec7fe081828a47f02a875730420227cbdf50e10c15843",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-ui-reconciliation/proposed-inventory-updates.jsonl.txt",
+    "publishedSha256": "bad387a77ed0d819c42ec7fe081828a47f02a875730420227cbdf50e10c15843"
+  },
+  {
+    "ownerAudit": "r35-ui-reconciliation",
+    "originalFile": "r35-ui-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "9cceacd252ecdf202e3b445cdaa9aff11f26a45b969756d4112890ebbb655c4a",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-ui-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "9cceacd252ecdf202e3b445cdaa9aff11f26a45b969756d4112890ebbb655c4a"
+  },
+  {
+    "ownerAudit": "r35-observability-reconciliation",
+    "originalFile": "r35-observability-reconciliation/disposition.json",
+    "originalSha256": "b64c626945618eecfac9ff2f26fe44fdfdd509d29a42dd714cc7c1986536e942",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-observability-reconciliation/disposition.json.txt",
+    "publishedSha256": "b64c626945618eecfac9ff2f26fe44fdfdd509d29a42dd714cc7c1986536e942"
+  },
+  {
+    "ownerAudit": "r35-observability-reconciliation",
+    "originalFile": "r35-observability-reconciliation/disposition.md",
+    "originalSha256": "ce9f5ec1fae631265fb6390286e2d98cf18497112ba45ad509e7ace984b38ee4",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-observability-reconciliation/disposition.md.txt",
+    "publishedSha256": "ce9f5ec1fae631265fb6390286e2d98cf18497112ba45ad509e7ace984b38ee4"
+  },
+  {
+    "ownerAudit": "r35-observability-reconciliation",
+    "originalFile": "r35-observability-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "2cda6e4eb4d311a3285285256a1baa5b116c6ab95b5c995b952785287105120a",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-observability-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "2cda6e4eb4d311a3285285256a1baa5b116c6ab95b5c995b952785287105120a"
+  },
+  {
+    "ownerAudit": "r35-cli-first-reconciliation",
+    "originalFile": "r35-cli-first-reconciliation/disposition.json",
+    "originalSha256": "fc6a8a3998063e141b8963ce1358f08dc9ebb65285bc44faed365ca5294e3d3b",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-cli-first-reconciliation/disposition.json.txt",
+    "publishedSha256": "fc6a8a3998063e141b8963ce1358f08dc9ebb65285bc44faed365ca5294e3d3b"
+  },
+  {
+    "ownerAudit": "r35-cli-first-reconciliation",
+    "originalFile": "r35-cli-first-reconciliation/disposition.md",
+    "originalSha256": "eece98f02dc4961f7bff9cd8636df41e0a5fc4957950dc2b9980af96271695f8",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-cli-first-reconciliation/disposition.md.txt",
+    "publishedSha256": "eece98f02dc4961f7bff9cd8636df41e0a5fc4957950dc2b9980af96271695f8"
+  },
+  {
+    "ownerAudit": "r35-cli-first-reconciliation",
+    "originalFile": "r35-cli-first-reconciliation/proposed-inventory-additions.jsonl",
+    "originalSha256": "743ba550e1baa12b3c3216bb1db8eedea35e54feaa7cb9488f923ee508843846",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-cli-first-reconciliation/proposed-inventory-additions.jsonl.txt",
+    "publishedSha256": "743ba550e1baa12b3c3216bb1db8eedea35e54feaa7cb9488f923ee508843846"
+  },
+  {
+    "ownerAudit": "r35-cli-first-reconciliation",
+    "originalFile": "r35-cli-first-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "eec2ea161720d7db0378e96c98036d27a8f01fab340d573d0cacfcc3322f2bf9",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-cli-first-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "eec2ea161720d7db0378e96c98036d27a8f01fab340d573d0cacfcc3322f2bf9"
+  },
+  {
+    "ownerAudit": "r35-yeet-reconciliation",
+    "originalFile": "r35-yeet-reconciliation/disposition.json",
+    "originalSha256": "4e69feb09b63c1657e8045e05699d272b00c044b2aed00b62a4d10357045ef2f",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-yeet-reconciliation/disposition.json.txt",
+    "publishedSha256": "4e69feb09b63c1657e8045e05699d272b00c044b2aed00b62a4d10357045ef2f"
+  },
+  {
+    "ownerAudit": "r35-yeet-reconciliation",
+    "originalFile": "r35-yeet-reconciliation/disposition.md",
+    "originalSha256": "a59fb9748cd274ca14a6b433c44a6515ef45c81692f80d6f3b448548497de32c",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-yeet-reconciliation/disposition.md.txt",
+    "publishedSha256": "a59fb9748cd274ca14a6b433c44a6515ef45c81692f80d6f3b448548497de32c"
+  },
+  {
+    "ownerAudit": "r35-yeet-reconciliation",
+    "originalFile": "r35-yeet-reconciliation/locator-changes.json",
+    "originalSha256": "1f57f352c67490cdd11a89f31fb440a3d678d1d11cedaf3ac4a8086f3e90101b",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-yeet-reconciliation/locator-changes.json.txt",
+    "publishedSha256": "1f57f352c67490cdd11a89f31fb440a3d678d1d11cedaf3ac4a8086f3e90101b"
+  },
+  {
+    "ownerAudit": "r35-yeet-reconciliation",
+    "originalFile": "r35-yeet-reconciliation/proposed-inventory-additions.jsonl",
+    "originalSha256": "393d3f69d0851248ba90b187f8419e8fe35b798eb1517a55030f1392fab4706b",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-yeet-reconciliation/proposed-inventory-additions.jsonl.txt",
+    "publishedSha256": "393d3f69d0851248ba90b187f8419e8fe35b798eb1517a55030f1392fab4706b"
+  },
+  {
+    "ownerAudit": "r35-yeet-reconciliation",
+    "originalFile": "r35-yeet-reconciliation/proposed-inventory-updates.jsonl",
+    "originalSha256": "f66494c6a4249d6446c38aa93d5a19d48c5c17a2ac3bce42beb6cfbcd84804bc",
+    "publishedFile": "goals/boolean-creep/data/r35-owner-reviews/r35-yeet-reconciliation/proposed-inventory-updates.jsonl.txt",
+    "publishedSha256": "f66494c6a4249d6446c38aa93d5a19d48c5c17a2ac3bce42beb6cfbcd84804bc"
+  }
+]
