@@ -1,7 +1,9 @@
 import { $SchemaId } from "@beep/identity";
 import { decodeTomlTextAs, TomlTextToUnknown } from "@beep/schema/Toml";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 
 const decodeTomlTextToUnknown = S.decodeEffect(TomlTextToUnknown);
@@ -52,7 +54,7 @@ port = 5432
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(decodeTomlTextToUnknown("invalid = = ="));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 
@@ -71,7 +73,7 @@ port = 5432
         })
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 

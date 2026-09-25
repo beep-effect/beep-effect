@@ -26,7 +26,8 @@ import {
   ReferrerPolicyError,
   XssProtectionError,
 } from "@beep/schema/SecureHeaderError";
-import { describe, expect, it, vi } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect, identity } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -38,12 +39,13 @@ const expectDeclaredEquivalence = <Schema extends S.Top>(
   schema: Schema,
   first: Schema["Type"],
   second: Schema["Type"],
-  different: Schema["Type"]
+  different: Schema["Type"],
+  caseName: string
 ): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(first, second)).toBe(true);
-  expect(same(first, different)).toBe(false);
+  expect(same(first, second), `${caseName}: equivalent declared fields`).toBe(true);
+  expect(same(first, different), `${caseName}: different declared fields`).toBe(false);
 };
 
 const capture = (evaluate: () => unknown): unknown =>
@@ -58,31 +60,35 @@ const makePrivateError = (schema: S.Top, fields: Readonly<Record<string, unknown
   return P.isFunction(make) ? Reflect.apply(make, schema, [fields]) : fields;
 };
 
-describe("@beep/schema tagged-error declared equivalence", () => {
+describe("@beep/schema tagged-error declared equivalence", { concurrent: false }, () => {
   it("compares CSV, LiteralKit, and MappedLiteralKit errors by declared fields", () => {
     expectDeclaredEquivalence(
       CsvError,
       CsvError.make({ message: "Invalid CSV", offset: 4 }),
       CsvError.make({ message: "Invalid CSV", offset: 4 }),
-      CsvError.make({ message: "Invalid CSV", offset: 5 })
+      CsvError.make({ message: "Invalid CSV", offset: 5 }),
+      "CsvError"
     );
     expectDeclaredEquivalence(
       LiteralNotInSetError,
       LiteralNotInSetError.make({ input: ["blocked"], literals: ["ready"] }),
       LiteralNotInSetError.make({ input: ["blocked"], literals: ["ready"] }),
-      LiteralNotInSetError.make({ input: ["missing"], literals: ["ready"] })
+      LiteralNotInSetError.make({ input: ["missing"], literals: ["ready"] }),
+      "LiteralNotInSetError"
     );
     expectDeclaredEquivalence(
       LiteralKitKeyCollisionError,
       LiteralKitKeyCollisionError.make({ existing: "one", incoming: 1, key: "number1" }),
       LiteralKitKeyCollisionError.make({ existing: "one", incoming: 1, key: "number1" }),
-      LiteralKitKeyCollisionError.make({ existing: "one", incoming: 2, key: "number1" })
+      LiteralKitKeyCollisionError.make({ existing: "one", incoming: 2, key: "number1" }),
+      "LiteralKitKeyCollisionError"
     );
     expectDeclaredEquivalence(
       LiteralKitEnumMappingDuplicateLiteralError,
       LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 2 }),
       LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 2 }),
-      LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 3 })
+      LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 3 }),
+      "LiteralKitEnumMappingDuplicateLiteralError"
     );
     expectDeclaredEquivalence(
       LiteralKitEnumMappingCoverageError,
@@ -103,19 +109,22 @@ describe("@beep/schema tagged-error declared equivalence", () => {
         mappingLiterals: ["read", "write"],
         missing: [],
         unexpected: [],
-      })
+      }),
+      "LiteralKitEnumMappingCoverageError"
     );
     expectDeclaredEquivalence(
       LiteralKitTaggedUnionLiteralError,
       LiteralKitTaggedUnionLiteralError.make({ literal: BigInt(1) }),
       LiteralKitTaggedUnionLiteralError.make({ literal: BigInt(1) }),
-      LiteralKitTaggedUnionLiteralError.make({ literal: BigInt(2) })
+      LiteralKitTaggedUnionLiteralError.make({ literal: BigInt(2) }),
+      "LiteralKitTaggedUnionLiteralError"
     );
     expectDeclaredEquivalence(
       MappedLiteralDuplicateError,
       MappedLiteralDuplicateError.make({ firstIndex: 0, literal: "200", secondIndex: 1, side: "to" }),
       MappedLiteralDuplicateError.make({ firstIndex: 0, literal: "200", secondIndex: 1, side: "to" }),
-      MappedLiteralDuplicateError.make({ firstIndex: 0, literal: "200", secondIndex: 2, side: "to" })
+      MappedLiteralDuplicateError.make({ firstIndex: 0, literal: "200", secondIndex: 2, side: "to" }),
+      "MappedLiteralDuplicateError"
     );
   });
 
@@ -124,7 +133,8 @@ describe("@beep/schema tagged-error declared equivalence", () => {
       ParserOptionsError,
       ParserOptionsError.make({ cause: O.some({ side: "left" }), message: "Invalid delimiter" }),
       ParserOptionsError.make({ cause: O.some({ side: "right" }), message: "Invalid delimiter" }),
-      ParserOptionsError.make({ cause: O.none(), message: "Invalid quote" })
+      ParserOptionsError.make({ cause: O.none(), message: "Invalid quote" }),
+      "ParserOptionsError"
     );
     expectDeclaredEquivalence(
       BlockedHostError,
@@ -145,7 +155,8 @@ describe("@beep/schema tagged-error declared equivalence", () => {
         host: "169.254.169.254",
         message: "Blocked host",
         url: O.none(),
-      })
+      }),
+      "BlockedHostError"
     );
   });
 
@@ -154,85 +165,99 @@ describe("@beep/schema tagged-error declared equivalence", () => {
       CspError,
       CspError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       CspError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      CspError.make({ cause: O.none(), message: "different" })
+      CspError.make({ cause: O.none(), message: "different" }),
+      "CspError"
     );
     expectDeclaredEquivalence(
       ForceHttpsRedirectError,
       ForceHttpsRedirectError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       ForceHttpsRedirectError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      ForceHttpsRedirectError.make({ cause: O.none(), message: "different" })
+      ForceHttpsRedirectError.make({ cause: O.none(), message: "different" }),
+      "ForceHttpsRedirectError"
     );
     expectDeclaredEquivalence(
       XssProtectionError,
       XssProtectionError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       XssProtectionError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      XssProtectionError.make({ cause: O.none(), message: "different" })
+      XssProtectionError.make({ cause: O.none(), message: "different" }),
+      "XssProtectionError"
     );
     expectDeclaredEquivalence(
       ReferrerPolicyError,
       ReferrerPolicyError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       ReferrerPolicyError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      ReferrerPolicyError.make({ cause: O.none(), message: "different" })
+      ReferrerPolicyError.make({ cause: O.none(), message: "different" }),
+      "ReferrerPolicyError"
     );
     expectDeclaredEquivalence(
       NoSniffError,
       NoSniffError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       NoSniffError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      NoSniffError.make({ cause: O.none(), message: "different" })
+      NoSniffError.make({ cause: O.none(), message: "different" }),
+      "NoSniffError"
     );
     expectDeclaredEquivalence(
       NoOpenError,
       NoOpenError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       NoOpenError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      NoOpenError.make({ cause: O.none(), message: "different" })
+      NoOpenError.make({ cause: O.none(), message: "different" }),
+      "NoOpenError"
     );
     expectDeclaredEquivalence(
       FrameGuardError,
       FrameGuardError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       FrameGuardError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      FrameGuardError.make({ cause: O.none(), message: "different" })
+      FrameGuardError.make({ cause: O.none(), message: "different" }),
+      "FrameGuardError"
     );
     expectDeclaredEquivalence(
       ExpectCtError,
       ExpectCtError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       ExpectCtError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      ExpectCtError.make({ cause: O.none(), message: "different" })
+      ExpectCtError.make({ cause: O.none(), message: "different" }),
+      "ExpectCtError"
     );
     expectDeclaredEquivalence(
       PermissionsPolicyError,
       PermissionsPolicyError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       PermissionsPolicyError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      PermissionsPolicyError.make({ cause: O.none(), message: "different" })
+      PermissionsPolicyError.make({ cause: O.none(), message: "different" }),
+      "PermissionsPolicyError"
     );
     expectDeclaredEquivalence(
       CrossOriginOpenerPolicyError,
       CrossOriginOpenerPolicyError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       CrossOriginOpenerPolicyError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      CrossOriginOpenerPolicyError.make({ cause: O.none(), message: "different" })
+      CrossOriginOpenerPolicyError.make({ cause: O.none(), message: "different" }),
+      "CrossOriginOpenerPolicyError"
     );
     expectDeclaredEquivalence(
       CrossOriginEmbedderPolicyError,
       CrossOriginEmbedderPolicyError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       CrossOriginEmbedderPolicyError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      CrossOriginEmbedderPolicyError.make({ cause: O.none(), message: "different" })
+      CrossOriginEmbedderPolicyError.make({ cause: O.none(), message: "different" }),
+      "CrossOriginEmbedderPolicyError"
     );
     expectDeclaredEquivalence(
       CrossOriginResourcePolicyError,
       CrossOriginResourcePolicyError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       CrossOriginResourcePolicyError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      CrossOriginResourcePolicyError.make({ cause: O.none(), message: "different" })
+      CrossOriginResourcePolicyError.make({ cause: O.none(), message: "different" }),
+      "CrossOriginResourcePolicyError"
     );
     expectDeclaredEquivalence(
       PermittedCrossDomainPoliciesError,
       PermittedCrossDomainPoliciesError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       PermittedCrossDomainPoliciesError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      PermittedCrossDomainPoliciesError.make({ cause: O.none(), message: "different" })
+      PermittedCrossDomainPoliciesError.make({ cause: O.none(), message: "different" }),
+      "PermittedCrossDomainPoliciesError"
     );
     expectDeclaredEquivalence(
       CoreError,
       CoreError.make({ cause: O.some({ side: "left" }), message: "invalid" }),
       CoreError.make({ cause: O.some({ side: "right" }), message: "invalid" }),
-      CoreError.make({ cause: O.none(), message: "different" })
+      CoreError.make({ cause: O.none(), message: "different" }),
+      "CoreError"
     );
   });
 
@@ -260,6 +285,8 @@ describe("@beep/schema tagged-error declared equivalence", () => {
     const restore = Effect.sync(() => {
       if (P.isNotUndefined(descriptor)) {
         Reflect.defineProperty(globalThis, "Float16Array", descriptor);
+      } else {
+        Reflect.deleteProperty(globalThis, "Float16Array");
       }
       vi.resetModules();
     });

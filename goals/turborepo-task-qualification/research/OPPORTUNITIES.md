@@ -1782,3 +1782,13 @@ the new link resolves to the same file. Twenty focused tests passed, including a
 assertion for link retargeting; full package verification and the native
 qualification matrix remain separate pending gates. A fixture containing the
 packages' real symlink topology would have exposed this before the runtime run.
+
+### Pilot diagnostic test complexity (PR #1250)
+
+- Work: publish bounded initial-pilot divergence diagnostics.
+- Evidence: hosted Fallow audit flagged `writeObservation` in
+  `cache-pilot-orchestration.test.ts` at cognitive complexity 10 against limit 8.
+  Package audit and focused tests had passed without catching this gate.
+- Remediation: replace nested fault-selection conditionals with Effect Match;
+  retain all negative cases and rerun the exact Fallow checks.
+- Prevention: run the changed-function Fallow check before early publication.

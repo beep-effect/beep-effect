@@ -1,8 +1,12 @@
 import { fcRuns } from "@beep/fc-runs";
 import { RegExpFromStr, RegExpStr } from "@beep/schema/RegExp";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -25,15 +29,19 @@ describe("RegExpStr", () => {
   it.effect(
     "rejects invalid pattern strings",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownRegExpStrEffect("("));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected a valid regular expression pattern string");
+      const failure1 = yield* Effect.exit(decodeUnknownRegExpStrEffect("("));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected a valid regular expression pattern string"
+        );
       }
-      const failure2 = yield* Effect.result(decodeUnknownRegExpStrEffect("["));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain("Expected a valid regular expression pattern string");
+      const failure2 = yield* Effect.exit(decodeUnknownRegExpStrEffect("["));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected a valid regular expression pattern string"
+        );
       }
     })
   );
@@ -68,10 +76,12 @@ describe("RegExpFromStr", () => {
   it.effect(
     "preserves source schema validation failures",
     Effect.fnUntraced(function* () {
-      const failure3 = yield* Effect.result(decodeUnknownRegExpFromStrEffect("("));
-      expect(Result.isFailure(failure3)).toBe(true);
-      if (Result.isFailure(failure3)) {
-        expect(failure3.failure.message).toContain("Expected a valid regular expression pattern string");
+      const failure3 = yield* Effect.exit(decodeUnknownRegExpFromStrEffect("("));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure3)) {
+        expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected a valid regular expression pattern string"
+        );
       }
     })
   );
@@ -79,10 +89,12 @@ describe("RegExpFromStr", () => {
   it.effect(
     "rejects non-string unknown input with the source schema error",
     Effect.fnUntraced(function* () {
-      const failure4 = yield* Effect.result(decodeUnknownRegExpFromStrEffect(1));
-      expect(Result.isFailure(failure4)).toBe(true);
-      if (Result.isFailure(failure4)) {
-        expect(failure4.failure.message).toContain("Expected @beep/schema/RegExp/RegExpStr");
+      const failure4 = yield* Effect.exit(decodeUnknownRegExpFromStrEffect(1));
+      pipe(failure4, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure4)) {
+        expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected @beep/schema/RegExp/RegExpStr"
+        );
       }
     })
   );
@@ -90,10 +102,10 @@ describe("RegExpFromStr", () => {
   it.effect(
     "forbids encoding RegExp values back to the original pattern string",
     Effect.fnUntraced(function* () {
-      const failure5 = yield* Effect.result(encodeRegExpFromStrEffect(/abc/));
-      expect(Result.isFailure(failure5)).toBe(true);
-      if (Result.isFailure(failure5)) {
-        expect(failure5.failure.message).toContain(
+      const failure5 = yield* Effect.exit(encodeRegExpFromStrEffect(/abc/));
+      pipe(failure5, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure5)) {
+        expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Encoding RegExpFromStr back to the original pattern string is not supported"
         );
       }

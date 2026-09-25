@@ -11,8 +11,9 @@ import {
   OfficialMimeTypeDataTypeValues,
   OfficialMimeTypeDataUpdated,
 } from "@beep/data/MimeTypes";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Struct } from "effect";
 import * as Str from "effect/String";
 
@@ -74,10 +75,11 @@ describe("getTypes", () => {
 
   it("prefers iana source over apache for shared extensions", () => {
     const types = getTypes();
-    // iana > apache in preference ordering
-    // "xml" appears in both application/xml (iana) and text/xml (iana)
-    // but application/xml should win because of the source preference tie-breaking
-    // that favors non-application types only if source priority is higher
+    expect(mimeTypes["application/vnd.ms-pki.stl"].source).toBe("apache");
+    expect(mimeTypes["application/vnd.ms-pki.stl"].extensions).toContain("stl");
+    expect(mimeTypes["model/stl"].source).toBe("iana");
+    expect(mimeTypes["model/stl"].extensions).toContain("stl");
+    expect(types.stl).toBe("model/stl");
     expect(types.xml).toBeDefined();
   });
 

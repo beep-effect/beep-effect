@@ -1,8 +1,10 @@
 import { $SchemaId } from "@beep/identity";
 import { makeParseYaml, makeParseYamlForSchema } from "@beep/schema/test/Yaml";
 import { decodeYamlTextAs, parseYaml, YamlTextToUnknown } from "@beep/schema/Yaml";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import * as yaml from "yaml";
 
@@ -63,7 +65,7 @@ describe("Yaml", () => {
     const parseWithoutBun = makeParseYamlForSchema({}, () => yaml);
     const result = parseWithoutBun("name: [Ada");
 
-    expect(Result.isFailure(result)).toBe(true);
+    pipe(result, Result.isFailure, assertTrue);
     if (Result.isFailure(result)) {
       expect(result.failure.join("; ")).toContain("Flow sequence in block collection");
     }
@@ -85,7 +87,7 @@ describe("Yaml", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(decodeYamlTextToUnknown("name: [Ada"));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 
@@ -103,7 +105,7 @@ describe("Yaml", () => {
         })
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 

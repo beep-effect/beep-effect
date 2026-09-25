@@ -38,7 +38,7 @@
             worktree_name="$(basename "$repo_root")"
             # Quiet under direnv: any output during zsh init trips Powerlevel10k's instant-prompt warning.
             [ -z "''${DIRENV_IN_ENVRC:-}" ] && echo "beep-effect dev shell loaded for $worktree_name"
-            # Global bun installs (portless, vercel) live here; bun's cache dir is set in bunfig.toml.
+            # Global bun installs (portless, vercel) live here and are exposed on PATH. bun's cache dir is set in bunfig.toml.
             export BUN_INSTALL="$HOME/.bun"
             export PATH="$BUN_INSTALL/bin:$PATH"
           '';
