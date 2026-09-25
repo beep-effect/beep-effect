@@ -3,10 +3,20 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "inputs": ["$TURBO_EXTENDS$", "$TURBO_ROOT$/turbo.json"]
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
+        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json"
+      ]
     },
     "test:property": {
-      "inputs": ["$TURBO_EXTENDS$", "$TURBO_ROOT$/turbo.json"]
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
+        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json"
+      ]
     }
   }
 }

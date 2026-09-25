@@ -681,6 +681,44 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
 ];
 
 /**
+ * Assemble the full-tier pre-push lane set in declaration order.
+ *
+ * **Details**
+ *
+ * The declaration order is the changeset-status lanes the caller passes (empty
+ * on `main`), then repo-sanity, quality, promoted Fallow and the external
+ * diagnostic lanes. The plan and the gate-order fixtures share this one
+ * spelling; execution order comes from the gate-order seed.
+ *
+ * **Example** (Count the non-main pre-push lanes)
+ *
+ * ```ts
+ * import { githubCheckChangesetStatusLane, githubCheckPrePushLanes } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(githubCheckPrePushLanes("/repo", [githubCheckChangesetStatusLane("/repo")]).length) // 32
+ * ```
+ *
+ * @param repoRoot - Repository root path used as every subprocess working directory.
+ * @param changesetStatusLanes - Changeset-status lanes for the branch; empty on `main`.
+ * @returns The pre-push lane specifications in declaration order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const githubCheckPrePushLanes: {
+  (changesetStatusLanes: ReadonlyArray<GithubCheckLaneSpec>): (repoRoot: string) => ReadonlyArray<GithubCheckLaneSpec>;
+  (repoRoot: string, changesetStatusLanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<GithubCheckLaneSpec>;
+} = dual(
+  2,
+  (repoRoot: string, changesetStatusLanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<GithubCheckLaneSpec> => [
+    ...changesetStatusLanes,
+    ...githubCheckRepoSanityLanes(repoRoot),
+    ...githubCheckQualityLanes(repoRoot),
+    ...githubCheckFallowLanes(repoRoot),
+    ...githubCheckPrePushExternalLanes(repoRoot),
+  ]
+);
+
+/**
  * Build the deterministic cheap-gate tier that precedes local full proofs.
  *
  * **Details**

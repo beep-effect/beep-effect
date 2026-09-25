@@ -3,6 +3,8 @@ import {
   FallowReportOk,
   FallowReportPayload,
   FindingAttributionSummary,
+  githubCheckChangesetStatusLane,
+  githubCheckPrePushLanes,
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
 } from "@beep/repo-cli/test/Quality";
@@ -42,6 +44,7 @@ import {
   collectDiffFingerprintForTesting,
   collectPublishIntent,
   commandTextForStep,
+  DEFAULT_GATE_ORDER_SEED,
   decodeTurboPlanTasksFromQueryJsonForTesting,
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
@@ -71,6 +74,7 @@ import {
   loadVerifiedStateForTesting,
   normalizeYeetMonitorIssueCommentForTesting,
   normalizeYeetMonitorReviewCommentForTesting,
+  orderWaveLanes,
   overlappingBasePathsForTesting,
   PrCloseoutOptions,
   PrCloseoutReport,
@@ -798,7 +802,8 @@ describe("yeet planner", () => {
         A.dedupe
       )
     ).toEqual(["readonly", "write"]);
-    expect(A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds)).toEqual([
+    const prePushLaneIds = A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds);
+    expect(prePushLaneIds).toEqual([
       "fallow:audit",
       "fallow:dead-code",
       "fallow:health",
@@ -818,6 +823,7 @@ describe("yeet planner", () => {
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
       "repo-sanity:config-typecheck",
+      "quality:cache-policy",
       "quality:build",
       "quality:desktop-ipc",
       "quality:jsdoc-ratchet",
@@ -830,8 +836,18 @@ describe("yeet planner", () => {
       "quality:test-unit",
       "quality:storybook",
       "quality:coverage",
-      "quality:cache-policy",
     ]);
+    // Plan half of the gate-order handoff fixture 5 (TTC ruling 78): the rendered plan and
+    // the committed handoff both come from the same pure orderWaveLanes over the same lanes.
+    expect(prePushLaneIds).toEqual(
+      A.map(
+        orderWaveLanes(
+          DEFAULT_GATE_ORDER_SEED,
+          githubCheckPrePushLanes(context.repoRoot, [githubCheckChangesetStatusLane(context.repoRoot)])
+        ),
+        (lane) => lane.id
+      )
+    );
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
       expect.objectContaining({
         id: "preflight",
