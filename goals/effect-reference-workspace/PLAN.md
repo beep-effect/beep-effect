@@ -67,7 +67,7 @@ spent only by the graft deep pass. Prepend the mise bun to PATH in every lane th
    `.claude/settings.json` permissions per `SPEC.md`. Tests for schema decoding, refresh planning
    (dirty/off-branch skips), unit rendering, and the worktree step.
 3. **S3 Docs sweep** (Codex lane, R13). Files listed in `SPEC.md` Target Surfaces. Prose says the
-   reference workspace lives at `"$refs_root"` (provisioned by
+   reference workspace lives at the manifest-configured reference root (provisioned by
    `scripts/setup-effect-ref.sh` from `scripts/references.json`), `.repos/effect` is the Effect
    child, `.repos/effect-workspace` is the graft target. Add the routing line to the AGENTS.md
    graft block. Cross-link `docs/runbooks/graft-local-recovery.md` and
