@@ -9,16 +9,26 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Runtime } from "effect";
+import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { DEFAULT_YEET_PACKET_DIR } from "./Planner.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
 
 /**
  * Schema version of the economics report document (ruling 73).
+ *
+ * **Example** (Tell an economics document from an A1 one)
+ *
+ * ```ts
+ * import { YEET_ECONOMICS_SCHEMA_VERSION } from "@beep/repo-cli/test/Yeet"
+ *
+ * const isEconomicsDocument = (schemaVersion: string) => schemaVersion === YEET_ECONOMICS_SCHEMA_VERSION
+ * console.log(isEconomicsDocument("verification-economics/v1")) // false
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -27,6 +37,14 @@ export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v1";
 
 /**
  * The percentile estimator every economics percentile uses (ruling 75).
+ *
+ * **Example** (Label a percentile with its estimator)
+ *
+ * ```ts
+ * import { YEET_ECONOMICS_PERCENTILE_ESTIMATOR } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(`p50 by ${YEET_ECONOMICS_PERCENTILE_ESTIMATOR}`) // "p50 by nearest-rank ceil(p*n)-1"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -37,16 +55,43 @@ export const YEET_ECONOMICS_PERCENTILE_ESTIMATOR = "nearest-rank ceil(p*n)-1";
  * The rounding every economics millisecond figure uses (ruling 75): half
  * rounds up, not to even as the A1 script's `round` does.
  *
+ * **Example** (Round a half millisecond up)
+ *
+ * ```ts
+ * import { YEET_ECONOMICS_ROUNDING } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_ECONOMICS_ROUNDING, Math.round(2.5)) // "Math.round" 3
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
 export const YEET_ECONOMICS_ROUNDING = "Math.round";
+
+/**
+ * How every first-failure offset is measured (ruling 74), under the A1
+ * script's `offsetMethod` field name.
+ *
+ * **Example** (State the offset method beside a percentile)
+ *
+ * ```ts
+ * import { YEET_ECONOMICS_OFFSET_METHOD } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_ECONOMICS_OFFSET_METHOD.endsWith("inter-lane overhead is absent")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_ECONOMICS_OFFSET_METHOD =
+  "sum the duration-bearing wrappers before the failing lane's parent wrapper and that wrapper's inner lanes before it (a failing wrapper: the wrappers before it); inter-lane overhead is absent";
 
 // Plain non-negative integer counts: the report is derived, never decoded from
 // operator input, so an unbranded count keeps the fold free of brand casts.
 const EconomicsCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const OptionalMs = S.OptionFromNullOr(S.Int);
 const OptionalString = S.OptionFromNullOr(S.String);
+const AbsentByDefault = OptionalString.pipe(S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * One key of a count mix and how many observations carried it.
@@ -164,8 +209,10 @@ export class EconomicsLaneRow extends S.Class<EconomicsLaneRow>($I`EconomicsLane
  *
  * **Details**
  *
- * `attemptElapsedMs` sums every attempt's elapsed time (a missing value counts
- * as zero); `accountedPct` is the population's lane time as a percentage of it.
+ * `attemptElapsedMs` sums the elapsed time of the attempts that contributed at
+ * least one observation to this population (a missing value counts as zero),
+ * so an attempt with no lane of this population never dilutes it;
+ * `accountedPct` is the population's lane time as a percentage of it.
  *
  * **Example** (An empty population)
  *
@@ -268,22 +315,29 @@ export class EconomicsAttempts extends S.Class<EconomicsAttempts>($I`EconomicsAt
  *
  * **Details**
  *
- * The walk covers one population: the inner lanes when any inner lane failed,
- * otherwise the wrappers. The first failed lane with a duration ends the walk;
- * its start offset is the sum of the non-negative durations before it and its
- * completion offset adds its own duration. `receiptProxyMix` classifies every
- * red attempt with the A1 script's seven proxy classes.
+ * The failing lane is the first failed inner lane that carries a duration,
+ * else the first failed wrapper that carries one; an attempt with neither is
+ * not reconstructable. The start offset sums the non-negative durations of
+ * the wrappers before the failing lane's parent wrapper (its `parentLaneId`,
+ * else the first failed timed wrapper; every wrapper when neither is found)
+ * and of that wrapper's inner lanes before the failing one; a failing wrapper
+ * counts only the wrappers before it. The completion offset adds the failing
+ * lane's own duration. `offsetMethod` states this one definition.
+ * `actionableLaneMix` names the first failed inner lane, else the failed step,
+ * else the first failed lane, else `unlocated`; `receiptProxyMix` classifies
+ * every red attempt with the A1 script's seven proxy classes.
  *
  * **Example** (No red attempts)
  *
  * ```ts
- * import { EconomicsFirstFailure } from "@beep/repo-cli/test/Yeet"
+ * import { EconomicsFirstFailure, YEET_ECONOMICS_OFFSET_METHOD } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
  * const firstFailure = EconomicsFirstFailure.make({
  *   redAttempts: 0,
  *   attemptsWithReconstructableOuterFailure: 0,
  *   attemptsWithoutReconstructableOuterFailure: 0,
+ *   offsetMethod: YEET_ECONOMICS_OFFSET_METHOD,
  *   startOffsetP50Ms: O.none(),
  *   startOffsetP95Ms: O.none(),
  *   completionOffsetP50Ms: O.none(),
@@ -302,6 +356,7 @@ export class EconomicsFirstFailure extends S.Class<EconomicsFirstFailure>($I`Eco
     redAttempts: EconomicsCount,
     attemptsWithReconstructableOuterFailure: EconomicsCount,
     attemptsWithoutReconstructableOuterFailure: EconomicsCount,
+    offsetMethod: S.Literal(YEET_ECONOMICS_OFFSET_METHOD),
     startOffsetP50Ms: OptionalMs,
     startOffsetP95Ms: OptionalMs,
     completionOffsetP50Ms: OptionalMs,
@@ -324,7 +379,10 @@ export class EconomicsFirstFailure extends S.Class<EconomicsFirstFailure>($I`Eco
  * episodes this cut keeps. The censoring counts are shared by both cuts: a
  * left-censored episode started at or before its journal's compaction cutoff,
  * a right-censored streak was still red at the end of its journal.
- * `closedEpisodesOver24hExcluded` is set on the 24-hour cut only.
+ * `rightCensoredObservedSpanMinutes` is the observed lower bound of the open
+ * streaks: for each, its last member's end (else start) minus its first
+ * red's start, summed. `closedEpisodesOver24hExcluded` is set on the 24-hour
+ * cut only.
  *
  * **Example** (An empty summary)
  *
@@ -343,6 +401,7 @@ export class EconomicsFirstFailure extends S.Class<EconomicsFirstFailure>($I`Eco
  *   leftCensoredObservedAttempts: 0,
  *   rightCensoredStreaks: 0,
  *   rightCensoredRedAttempts: 0,
+ *   rightCensoredObservedSpanMinutes: 0,
  *   closedEpisodesOver24hExcluded: O.none(),
  * })
  * console.log(summary.closedEpisodes) // 0
@@ -363,11 +422,12 @@ export class EconomicsEpisodeSummary extends S.Class<EconomicsEpisodeSummary>($I
     leftCensoredObservedAttempts: EconomicsCount,
     rightCensoredStreaks: EconomicsCount,
     rightCensoredRedAttempts: EconomicsCount,
+    rightCensoredObservedSpanMinutes: S.Finite,
     closedEpisodesOver24hExcluded: S.OptionFromNullOr(EconomicsCount),
   },
   $I.annote("EconomicsEpisodeSummary", {
     description:
-      "Closed red-to-green episode count, span percentiles and minute totals for one cut, plus the shared censoring counts.",
+      "Closed red-to-green episode count, span percentiles and minute totals for one cut, plus the shared censoring counts and the open streaks' observed lower bound.",
   })
 ) {}
 
@@ -392,6 +452,7 @@ export class EconomicsEpisodeSummary extends S.Class<EconomicsEpisodeSummary>($I
  *     leftCensoredObservedAttempts: 0,
  *     rightCensoredStreaks: 0,
  *     rightCensoredRedAttempts: 0,
+ *     rightCensoredObservedSpanMinutes: 0,
  *     closedEpisodesOver24hExcluded: O.none(),
  *   })
  * const redToGreen = EconomicsRedToGreen.make({ comparable24h: summary("comparable24h"), uncut: summary("uncut") })
@@ -437,7 +498,7 @@ export class EconomicsTerminations extends S.Class<EconomicsTerminations>($I`Eco
 ) {}
 
 /**
- * Whether the unchanged-fingerprint metric could be measured.
+ * Whether the unchanged-fingerprint proxy for M4 could be measured.
  *
  * **Example** (Recognise a measured metric)
  *
@@ -452,12 +513,13 @@ export class EconomicsTerminations extends S.Class<EconomicsTerminations>($I`Eco
  */
 export const EconomicsFingerprintClassification = LiteralKit(["measured", "unmeasurable"]).pipe(
   $I.annoteSchema("EconomicsFingerprintClassification", {
-    description: "M4 is measured when at least one attempt carries a diff fingerprint, otherwise unmeasurable.",
+    description:
+      "The M4 fingerprint-repeat proxy is measured when at least one attempt carries a diff fingerprint, otherwise unmeasurable.",
   })
 );
 
 /**
- * Whether the unchanged-fingerprint metric could be measured.
+ * Whether the unchanged-fingerprint proxy for M4 could be measured.
  *
  * @category models
  * @since 0.0.0
@@ -465,7 +527,18 @@ export const EconomicsFingerprintClassification = LiteralKit(["measured", "unmea
 export type EconomicsFingerprintClassification = typeof EconomicsFingerprintClassification.Type;
 
 /**
- * Red attempts whose next attempt went green on the same diff fingerprint (M4).
+ * The fingerprint-repeat proxy for M4: verdict-bearing red attempts whose
+ * next comparable attempt went green on the same diff fingerprint.
+ *
+ * **Details**
+ *
+ * Pairs are consecutive attempts of the comparable sequence red-to-green uses
+ * (modes verify, repair or publish, lock bounces excluded) within one run.
+ * The red side must carry a verdict, so an interrupted or reconciled
+ * termination never counts. `byActionableLane` and `byReceiptProxy` key each
+ * pair's red attempt as the first-failure section does, so the false-red gate
+ * classes can be read. SPEC M4 also joins ack resolution kinds; that join is
+ * not on this surface.
  *
  * **Example** (Nothing carried a fingerprint)
  *
@@ -476,6 +549,8 @@ export type EconomicsFingerprintClassification = typeof EconomicsFingerprintClas
  *   classification: "unmeasurable",
  *   attemptsWithFingerprint: 0,
  *   failedUnchangedFingerprintThenGreen: 0,
+ *   byActionableLane: [],
+ *   byReceiptProxy: [],
  * })
  * console.log(m4.classification) // "unmeasurable"
  * ```
@@ -490,10 +565,12 @@ export class EconomicsUnchangedFingerprint extends S.Class<EconomicsUnchangedFin
     classification: EconomicsFingerprintClassification,
     attemptsWithFingerprint: EconomicsCount,
     failedUnchangedFingerprintThenGreen: EconomicsCount,
+    byActionableLane: S.Array(EconomicsCountRow),
+    byReceiptProxy: S.Array(EconomicsCountRow),
   },
   $I.annote("EconomicsUnchangedFingerprint", {
     description:
-      "Within one run, red attempts whose next attempt is green with the same diff fingerprint, and how many attempts carry one.",
+      "Fingerprint-repeat proxy for M4: within one run's comparable sequence, verdict-bearing red attempts whose next attempt is green on the same diff fingerprint, keyed by actionable lane and receipt proxy; the ack-resolution join is not on this surface.",
   })
 ) {}
 
@@ -506,6 +583,8 @@ export class EconomicsUnchangedFingerprint extends S.Class<EconomicsUnchangedFin
  * `journalsObserved` and `unreadableJournals` are 0 or 1 per journal. `starts`
  * counts distinct started attempts, `startsWithoutFinish` those without a
  * terminal row, and `verdictsWithoutStart` terminal rows without a start.
+ * `inFlightStartsExcluded` counts the caller's own running attempt, whose
+ * start row was dropped before folding; it defaults to 0.
  *
  * **Example** (A clean journal)
  *
@@ -544,10 +623,11 @@ export class EconomicsJournalDiagnostics extends S.Class<EconomicsJournalDiagnos
     starts: EconomicsCount,
     startsWithoutFinish: EconomicsCount,
     verdictsWithoutStart: EconomicsCount,
+    inFlightStartsExcluded: EconomicsCount.pipe(S.withConstructorDefault(Effect.succeed(0))),
   },
   $I.annote("EconomicsJournalDiagnostics", {
     description:
-      "Per-journal loader counts: readability, invalid and duplicate rows, orphan verdicts, and start joins.",
+      "Per-journal loader counts: readability, invalid and duplicate rows, orphan verdicts, start joins, and the caller's in-flight start dropped before folding.",
   })
 ) {}
 
@@ -769,6 +849,12 @@ export const YeetEconomicsReportJson = JsonStringCodec(YeetEconomicsReport);
 /**
  * Parsed `yeet economics` flags.
  *
+ * **Details**
+ *
+ * `packetDir` is the Yeet packet directory whose `runs` directory holds the
+ * journals, resolved against each checkout root unless absolute; it defaults
+ * to `.beep/yeet`.
+ *
  * **Example** (Ask for the fleet as JSON)
  *
  * ```ts
@@ -787,9 +873,11 @@ export class YeetEconomicsOptions extends S.Class<YeetEconomicsOptions>($I`YeetE
     json: S.Boolean,
     branch: OptionalString,
     fleet: S.Boolean,
+    packetDir: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_YEET_PACKET_DIR))),
   },
   $I.annote("YeetEconomicsOptions", {
-    description: "Parsed `yeet economics` flags: JSON output, an optional branch narrowing, and the sibling fleet.",
+    description:
+      "Parsed `yeet economics` flags: JSON output, an optional branch narrowing, the sibling fleet, and the packet directory.",
   })
 ) {}
 
@@ -801,6 +889,8 @@ export class YeetEconomicsOptions extends S.Class<YeetEconomicsOptions>($I`YeetE
  * `population` is `inner` when the lane carries `parentLaneId`; a lane from a
  * verdict written before that field existed is a `wrapper` when its id starts
  * with one of the wrapper phase prefixes, and `inner` otherwise (ruling 74).
+ * `parentLaneId` names the wrapper that ran an inner lane and defaults to
+ * none.
  *
  * **Example** (An inner lane that failed)
  *
@@ -832,9 +922,11 @@ export class EconomicsLane extends S.Class<EconomicsLane>($I`EconomicsLane`)(
     durationMs: S.OptionFromNullOr(S.Finite),
     repairCommand: OptionalString,
     population: EconomicsLaneKind,
+    parentLaneId: AbsentByDefault,
   },
   $I.annote("EconomicsLane", {
-    description: "A verdict lane's identity, status, duration, repair command, and wrapper/inner population.",
+    description:
+      "A verdict lane's identity, status, duration, repair command, wrapper/inner population, and parent wrapper.",
   })
 ) {}
 
@@ -847,7 +939,10 @@ export class EconomicsLane extends S.Class<EconomicsLane>($I`EconomicsLane`)(
  * verdict's `endedAt`, then its `createdAt`, then the terminal row's
  * `recordedAt`; `elapsedMs` from the verdict, else `endedAt − startedAt`. A
  * terminated attempt has no verdict, so its `outcome` is none (red) and it
- * has no lanes.
+ * has no lanes. A termination the reconciler wrote later
+ * (`legacy-unowned-start`, `owner-dead`, `stale-unverifiable-owner`) is
+ * stamped when the reconciler ran, not when the attempt died, so its
+ * `elapsedMs` is none; its `endedAt` still orders it.
  *
  * **Example** (A green verify attempt)
  *
@@ -961,6 +1056,14 @@ export class EconomicsJournal extends S.Class<EconomicsJournal>($I`EconomicsJour
  * What {@link YeetEconomicsReport} journals to read: the checkout root, an
  * optional branch narrowing, and whether to add the sibling fleet.
  *
+ * **Details**
+ *
+ * `packetDir` (default `.beep/yeet`) is resolved against each checkout root
+ * unless absolute, and its `runs` directory is read. `inFlightAttemptId`
+ * (default none) is an attempt the caller is still running: its start row is
+ * dropped before folding when it has no terminal row, and counted in
+ * `inFlightStartsExcluded`.
+ *
  * **Example** (Request one branch's run)
  *
  * ```ts
@@ -979,29 +1082,71 @@ export class EconomicsScopeRequest extends S.Class<EconomicsScopeRequest>($I`Eco
     repoRoot: S.String,
     branch: OptionalString,
     fleet: S.Boolean,
+    packetDir: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_YEET_PACKET_DIR))),
+    inFlightAttemptId: AbsentByDefault,
   },
   $I.annote("EconomicsScopeRequest", {
     description:
-      "Checkout root, optional branch narrowing, and fleet flag the economics source resolves journals from.",
+      "Checkout root, optional branch narrowing, fleet flag, packet directory, and the caller's in-flight attempt the economics source resolves journals from.",
   })
 ) {}
 
 /**
- * Raised when an economics scope resolves to no checkout: the checkout has no
- * `.beep/yeet/runs` and the fleet was not requested.
+ * Why an economics read or run failed.
  *
  * **Details**
  *
- * `yeet economics` turns this into an empty report; the closeout summary
- * turns it into one log line. A bad journal never raises it.
+ * - `no-runs-directory`: a non-fleet scope has no `<packetDir>/runs`.
+ * - `run-id`: deriving a branch's run id failed.
+ * - `repo-root`: the working directory is not inside a git checkout.
+ * - `encode`: the JSON encoding of the report failed.
+ *
+ * **Example** (Recognise the empty-scope cause)
+ *
+ * ```ts
+ * import { YeetEconomicsErrorReason } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetEconomicsErrorReason.is["no-runs-directory"]("no-runs-directory")) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const YeetEconomicsErrorReason = LiteralKit(["no-runs-directory", "run-id", "repo-root", "encode"]).pipe(
+  $I.annoteSchema("YeetEconomicsErrorReason", {
+    description:
+      "Economics failure cause: no runs directory in a non-fleet scope, run-id derivation, repo-root lookup, or report encoding.",
+  })
+);
+
+/**
+ * Why an economics read or run failed.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type YeetEconomicsErrorReason = typeof YeetEconomicsErrorReason.Type;
+
+/**
+ * Raised by the economics source and runner; `reason` names the cause.
+ *
+ * **Details**
+ *
+ * The causes are a non-fleet scope with no `<packetDir>/runs`
+ * (`no-runs-directory`), a failed branch run-id derivation (`run-id`), a
+ * working directory outside a git checkout (`repo-root`), and a failed JSON
+ * encoding of the report (`encode`). `yeet economics` turns only
+ * `no-runs-directory` into an empty report, as `proof-report` does for an
+ * empty ledger; every other cause fails the command. The closeout summary
+ * turns any cause into one log line. A bad journal never raises it.
  *
  * **Example** (Construct the error)
  *
  * ```ts
  * import { YeetEconomicsError } from "@beep/repo-cli/test/Yeet"
  *
- * const error = YeetEconomicsError.make({ message: "no .beep/yeet/runs under /repo" })
- * console.log(error._tag) // "YeetEconomicsError"
+ * const error = YeetEconomicsError.make({ reason: "no-runs-directory", message: "no .beep/yeet/runs under /repo" })
+ * console.log(error.reason) // "no-runs-directory"
  * ```
  *
  * @category errors
@@ -1010,11 +1155,13 @@ export class EconomicsScopeRequest extends S.Class<EconomicsScopeRequest>($I`Eco
 export class YeetEconomicsError extends S.TaggedError<YeetEconomicsError>($I`YeetEconomicsError`)(
   "YeetEconomicsError",
   {
+    reason: YeetEconomicsErrorReason,
     message: S.String,
     cause: S.optionalKey(S.Defect({ includeStack: true })),
   },
   $I.annoteError<YeetEconomicsError>("YeetEconomicsError", {
-    description: "An economics scope resolved to no checkout with attempt journals.",
+    description:
+      "Economics failure: a non-fleet scope with no runs directory, a failed run-id derivation, no repo root, or a failed report encoding; only the first becomes an empty report.",
   })
 ) {
   override readonly [Runtime.errorExitCode] = 1;

@@ -7,13 +7,17 @@ below are proposed by the orchestrator; the merge of the PR that lands them is t
 rulings 68–70. The read-only port brief that grounds every claim here is session-scoped; its
 findings that matter are restated in §0.
 
+Amended in review round 1 of #1239 before the lock: rulings 73, 74 and 75.
+
 ## 0. What the A1 script cannot be as a checkout command (findings)
 
 1. **Post-A5 verdicts list wrapper lanes and inner lanes together**, both with `durationMs`
-   (`Verdict.ts` `laneFromQualityTaskRun` forces phase `"full"`). The script's lane sums, episode
-   lane minutes and first-failure offsets therefore count the same wall time twice on any journal
-   written after A5. The A1 baseline predates A5 and is unaffected; the A3 surface must not inherit
-   the defect.
+   (`Verdict.ts` `laneFromQualityTaskRun` forces phase `"full"`). The script's lane sums
+   (`lane_metrics`) and episode lane minutes (`laneDurationMs`) therefore count the same wall time
+   twice on any journal written after A5. Its first-failure walk does not: it stops at the first
+   failed lane that has a duration, and `buildYeetVerdict` lists every executed wrapper before any
+   inner lane, so on the fleet it always stops at the failed wrapper. The A1 baseline predates A5 and
+   is unaffected; the A3 surface must not inherit the defect.
 2. **The script's inner-lane → GitHub-context map is stale** (`pre-push:*`; current ids are
    `quality:<CiLaneId>` per `GithubChecks.ts`, authoritative names in `CI_LANE_DESCRIPTORS`).
 3. **Live-journal discovery misses `$HOME/YeeBois/projects/beep-effectN-worktrees/*`**, where every
@@ -28,14 +32,20 @@ findings that matter are restated in §0.
 
 ## Proposed ruling 73 (A3-1) — `yeet economics` is a checkout report over live attempt journals
 
-`bun run beep yeet economics [--json] [--branch <name>] [--fleet]`.
+`bun run beep yeet economics [--json] [--branch <name>] [--fleet] [--packet-dir <dir>]`.
 
-- **Default scope**: every `.beep/yeet/runs/<runId>/attempts.ndjson` of the current checkout, plus
-  an orphan `verdict.json` beside a journal that has no terminal row for that attempt. `--branch`
+- **Default scope**: every `<packetDir>/runs/<runId>/attempts.ndjson` of the current checkout
+  (`--packet-dir`, default `.beep/yeet`, resolved against each checkout unless absolute), plus an
+  orphan `verdict.json` beside a journal that has no terminal row for that attempt. `--branch`
   narrows to that branch's run directory (`repoRunArtifactId(branch)`). `--fleet` adds every sibling
-  checkout under the projects root (the clone's parent): directories named `beep-effect*` and the
-  lanes under `beep-effect-worktrees/*` and `beep-effect*-worktrees/*`, each labelled by its path
-  relative to the projects root. Checkouts without `.beep/yeet/runs` are skipped, not errors.
+  checkout under the projects root, the parent of the clone. The clone comes from the checkout's git
+  metadata without spawning git: a `.git` directory makes the checkout its own clone, and a `.git`
+  file's `gitdir:` line names `<clone>/.git/worktrees/<name>`. Only when `.git` is unreadable does
+  the directory name decide (a lane under `<clone>-worktrees/` sits one level deeper than a clone).
+  The fleet is the directories named `beep-effect*`, the lanes under `beep-effect-worktrees/*` and
+  `beep-effect*-worktrees/*`, and the lanes under every clone's `.claude/worktrees/*`, each labelled
+  by its path relative to the projects root. Symlinked candidates are skipped. Checkouts without
+  `<packetDir>/runs` are skipped, not errors.
 - **Document**: `YeetEconomicsReport`, an `S.Class`, `schemaVersion: "yeet-economics/v1"`;
   `--json` prints it through a `JsonStringCodec`. Field names shared with
   `verification-economics/v1` keep the Python spelling (`p50Ms`, `closedEpisodes`,
@@ -55,12 +65,19 @@ findings that matter are restated in §0.
   this lands, a lane is a **wrapper** when its id starts with one of `full:`, `feedback:`,
   `prepare:`, `publish:`, `monitor:`, `closeout:`, `advisory:`, `commit:`; every other lane is inner.
 - Each population has its own denominator: share percentages, totals and the accounted-time
-  percentage are computed within the population. The two are never summed.
-- First-failure offsets walk one population: the actionable lane is the first failed inner lane in
-  verdict order, and its start offset is the sum of the non-negative durations of the inner lanes
-  before it; when no inner lane failed, the walk is over wrappers instead. Completion offset =
-  start offset + the failing lane's duration. Attempts with no failed lane carrying a duration are
-  `notReconstructable`.
+  percentage are computed within the population, whose attempt time is the elapsed time of the
+  attempts that contributed at least one observation to it. The two are never summed.
+- First-failure offsets (M2) have one definition for every attempt, stated by the constant
+  `firstFailure.offsetMethod`. The failing lane is the first failed **inner** lane that carries a
+  duration; if none, the first failed **wrapper** that carries a duration; if none, the attempt is
+  `notReconstructable`. Start offset = the non-negative durations of every wrapper that precedes
+  the failing lane's parent wrapper in verdict order (the parent is `parentLaneId`; for a legacy
+  verdict without it, the first failed timed wrapper; when no parent is found, every wrapper
+  precedes) plus the durations of that wrapper's inner lanes that precede the failing inner lane.
+  When the failing lane is itself a wrapper, the start offset is the wrappers before it. Completion
+  offset = start offset + the failing lane's duration. The actionable lane order is unchanged: the
+  first failed inner lane, else `failedStepId`, else the first failed lane of either population,
+  else `unlocated`.
 
 ## Proposed ruling 75 (A3-3) — metric definitions carried by the surface
 
@@ -74,10 +91,18 @@ findings that matter are restated in §0.
   with span ≤ 86 400 000 ms; `uncut` keeps all closed episodes. **Left-censored** (ruling 18): the
   journal has a compaction cutoff (`terminalEvictionCutoffRecordedAt`, else
   `oldestEvictedRecordedAt`) and `start ≤ cutoff`. **Right-censored**: a streak still open at the
-  end, reported with its observed lower bound. Each summary: `closedEpisodes`, `p50Ms`, `p95Ms`,
-  `totalEpisodeSpanMinutes`, `measuredAttemptMachineMinutes`, `leftCensoredEpisodesExcluded`,
-  `leftCensoredObservedAttempts`, `rightCensoredStreaks`, `rightCensoredRedAttempts`, and for
-  `comparable24h` also `closedEpisodesOver24hExcluded`.
+  end, reported with its observed lower bound `rightCensoredObservedSpanMinutes` (summed over open
+  streaks: the last member's `endedAt`, else `startedAt`, minus the first red's `startedAt`). Each
+  summary: `closedEpisodes`, `p50Ms`, `p95Ms`, `totalEpisodeSpanMinutes`,
+  `measuredAttemptMachineMinutes`, `leftCensoredEpisodesExcluded`, `leftCensoredObservedAttempts`,
+  `rightCensoredStreaks`, `rightCensoredRedAttempts`, `rightCensoredObservedSpanMinutes`, and for
+  `comparable24h` also `closedEpisodesOver24hExcluded`. **Elapsed**: a terminated row whose reason
+  the journal reconciler stamps at sweep time (`legacy-unowned-start`, `owner-dead`,
+  `stale-unverifiable-owner`) has `elapsedMs = None`, so its `recordedAt` ends no duration (episode
+  machine minutes, `attemptElapsedMs`); it still orders the attempt, keeps it red and bounds a
+  right-censored streak. Rows written when the attempt dies (`interrupted`, `signal`, `oom-killed`,
+  `timeout`, `cancelled`, `lease-eviction`, `queued-submitter-death`, `unrecorded-failure`, …) keep
+  the `endedAt − startedAt` fallback.
 - **M2** `firstFailure.completionOffsetP50Ms` per ruling 74, plus `startOffsetP50Ms`, both P95s,
   `redAttempts`, `attemptsWithReconstructableOuterFailure`,
   `attemptsWithoutReconstructableOuterFailure`, `actionableLaneMix` and `receiptProxyMix` (the
@@ -85,11 +110,17 @@ findings that matter are restated in §0.
   `native-compiler-flake`, `stale-workspace-or-projection`, `base-churn`,
   `scheduler-or-submitter`, `semantic-delta-path`, `unclassified`, matched on the lowercased
   concatenation of message, every lane's `repairCommand`, and `failedStepId`).
-- **M4** `unchangedFingerprint`: within one `(checkout, runId)`, `failedUnchangedFingerprintThenGreen`
-  counts red attempts whose next attempt is green with the same `diffFingerprint`;
-  `attemptsWithFingerprint` counts attempts carrying one; `classification` is `measured` when at
-  least one attempt carries a fingerprint, else `unmeasurable`. The A1 script still hardcodes
-  `unmeasurable`; the packet records that the close re-run inherits it.
+- **M4** `unchangedFingerprint` is the fingerprint-repeat proxy for M4: within one
+  `(checkout, runId)`, `failedUnchangedFingerprintThenGreen` pairs consecutive attempts of the
+  comparable sequence M1 walks (mode `verify | repair | publish`, not a lock bounce) and counts the
+  pairs whose red side carries a verdict (`outcome` is present, so a terminated row never counts)
+  and whose next attempt is green with the same `diffFingerprint`. `byActionableLane` and
+  `byReceiptProxy` key each counted red attempt by its actionable lane and receipt-proxy class, as
+  M2 computes them, so completion gate 3's classes can be read. `attemptsWithFingerprint` counts
+  attempts carrying one; `classification` is `measured` when at least one attempt carries a
+  fingerprint, else `unmeasurable`. SPEC M4's join with ack resolution kinds is not on this
+  surface. The A1 script still hardcodes `unmeasurable`; the packet records that the close re-run
+  inherits it.
 - **M5** `terminations`: `starts`, `startsWithoutFinish` (starts minus terminal rows), and
   `reasonMix` over `YeetAttemptTerminationReason` (the 16 values), sorted by count then reason.
 - **M3** is not on this surface (it needs the hosted join); recorded as the A1 close re-run's job.
@@ -112,10 +143,12 @@ LaneRow             { id, label, phase: S.String, attempts, executions: S.Int,
                       statusMix: ReadonlyArray<CountRow> }       // over this row's observations
 LanePopulation      { rows: ReadonlyArray<LaneRow>,              // total desc, then id, label
                       executions: S.Int, totalDurationMs: S.Int,
-                      attemptElapsedMs: S.Int, accountedPct: S.OptionFromNullOr(S.Number) }
+                      attemptElapsedMs: S.Int,                   // attempts with >= 1 observation here
+                      accountedPct: S.OptionFromNullOr(S.Number) }
 AttemptMix          { outcomeMix, modeMix, failureKindMix: ReadonlyArray<CountRow> }
 FirstFailure        { redAttempts, attemptsWithReconstructableOuterFailure,
                       attemptsWithoutReconstructableOuterFailure: S.Int,
+                      offsetMethod: S.Literal(<ruling 74 walk>),
                       startOffsetP50Ms, startOffsetP95Ms, completionOffsetP50Ms,
                       completionOffsetP95Ms: S.OptionFromNullOr(S.Int),
                       actionableLaneMix, receiptProxyMix: ReadonlyArray<CountRow> }
@@ -123,16 +156,19 @@ EpisodeSummary      { label: S.String, closedEpisodes: S.Int, p50Ms, p95Ms: S.Op
                       totalEpisodeSpanMinutes, measuredAttemptMachineMinutes: S.Number,
                       leftCensoredEpisodesExcluded, leftCensoredObservedAttempts,
                       rightCensoredStreaks, rightCensoredRedAttempts: S.Int,
+                      rightCensoredObservedSpanMinutes: S.Number,   // 2 dp
                       closedEpisodesOver24hExcluded: S.OptionFromNullOr(S.Int) }
 RedToGreen          { comparable24h: EpisodeSummary, uncut: EpisodeSummary }
 Terminations        { starts, startsWithoutFinish: S.Int, reasonMix: ReadonlyArray<CountRow> }
-UnchangedFingerprint{ classification: LiteralKit("measured","unmeasurable"),
-                      attemptsWithFingerprint, failedUnchangedFingerprintThenGreen: S.Int }
+UnchangedFingerprint{ classification: LiteralKit("measured","unmeasurable"),  // M4 proxy, no ack join
+                      attemptsWithFingerprint, failedUnchangedFingerprintThenGreen: S.Int,
+                      byActionableLane, byReceiptProxy: ReadonlyArray<CountRow> }
 Diagnostics         { journalsObserved, unreadableJournals, invalidRows, compactionReceipts,
                       leftCensoredJournals, duplicateStartedRowsDeduplicated,
                       duplicateFinishedRowsDeduplicated, orphanVerdictFilesAdded,
                       unkeyedVerdictFiles, starts, finishedAttempts, startsWithoutFinish,
-                      verdictsWithoutStart, verdictV2Attempts, verdictOtherAttempts: S.Int }
+                      verdictsWithoutStart, inFlightStartsExcluded, verdictV2Attempts,
+                      verdictOtherAttempts: S.Int }
 DataQuality         { attemptWindowStartUtc, attemptWindowEndUtc: S.OptionFromNullOr(S.String),
                       diagnostics: Diagnostics,
                       percentileEstimator: S.Literal("nearest-rank ceil(p*n)-1"),
@@ -146,14 +182,16 @@ YeetEconomicsReport { schemaVersion: S.Literal("yeet-economics/v1"), scope: Econ
                       terminations: Terminations, unchangedFingerprint: UnchangedFingerprint,
                       dataQuality: DataQuality }
 YeetEconomicsReportJson = JsonStringCodec(YeetEconomicsReport)
-YeetEconomicsOptions { json: S.Boolean, branch: S.OptionFromNullOr(S.String), fleet: S.Boolean }
+YeetEconomicsOptions { json: S.Boolean, branch: S.OptionFromNullOr(S.String), fleet: S.Boolean,
+                       packetDir: S.String /* default .beep/yeet */ }
 ```
 
 Input side (the normalized attempt the fold consumes; also `S.Class`, exported for fixtures):
 
 ```
 EconomicsLane       { id, label, phase, status: YeetLaneStatus, durationMs: Option<number>,
-                      repairCommand: Option<string>, population: LiteralKit("wrapper","inner") }
+                      repairCommand: Option<string>, population: LiteralKit("wrapper","inner"),
+                      parentLaneId: Option<string> /* default None */ }
 EconomicsAttempt    { checkout, runId, attemptId: S.String, branch: S.String,
                       mode: Option<string>, outcome: Option<YeetOutcome>,
                       failureKind: Option<YeetFailureKind>, failedStepId: Option<string>,
@@ -171,9 +209,12 @@ the full `YeetAttemptJournalEvent` (which would silently drop rows the Python co
 Rows that fail the projection count as `invalidRows`. Resolution order per attempt follows the A1
 loader: live terminal row wins over an orphan verdict; `startedAt` from the verdict then the start
 row; `endedAt` from the verdict's `endedAt`, then `createdAt`, then the row's `recordedAt`;
-`elapsedMs` from the verdict, else `endedAt − startedAt`; facts from the terminal row then the start
-row; `branch` from the verdict, then the start row, then the runId; a terminated row has no verdict
-so its `outcome` is `None` (red) and no lanes.
+`elapsedMs` from the verdict, else `endedAt − startedAt`, except that a terminated row whose reason
+the reconciler stamps at sweep time (`legacy-unowned-start`, `owner-dead`,
+`stale-unverifiable-owner`) has `elapsedMs = None` and its `recordedAt` ends no duration, while
+still ordering the attempt and bounding a right-censored streak (ruling 75); facts from the terminal
+row then the start row; `branch` from the verdict, then the start row, then the runId; a terminated
+row has no verdict so its `outcome` is `None` (red) and no lanes.
 
 ## 2. Service contract — `Context.Service`
 
@@ -186,12 +227,22 @@ class YeetEconomicsSource extends Context.Service<YeetEconomicsSource, {
 }
 ```
 
-- `EconomicsScopeRequest { repoRoot: string, branch: Option<string>, fleet: boolean }`.
+- `EconomicsScopeRequest { repoRoot: string, branch: Option<string>, fleet: boolean,
+  packetDir: string (default .beep/yeet), inFlightAttemptId: Option<string> (default None) }`.
+  `inFlightAttemptId` is an attempt the caller is still running: its start row is dropped before
+  folding when it has no terminal row, and counted in `inFlightStartsExcluded`.
 - Reads never fail the report for a bad journal: an unreadable file counts in
-  `unreadableJournals`; a malformed line counts in `invalidRows`. `YeetEconomicsError`
-  (`S.TaggedError`) is raised only when the scope resolves to no checkout (no `.beep/yeet/runs` and
-  not `--fleet`) — the command then prints an empty report rather than failing, mirroring
-  `proof-report` on an empty ledger.
+  `unreadableJournals`; a line that fails the row projection counts in `invalidRows`. The one
+  exemption is the journal's own torn-tail rule (`AttemptTerminationJournal.ts`): invalid JSON on an
+  unterminated last line is an append still in flight and is not counted; a complete JSON row there
+  that fails the projection is still an invalid row. Stray files and symlinks under `runs/` are
+  skipped without a count; a guard refusal counts a file as unreadable only when the file itself
+  exists.
+- `YeetEconomicsError` (`S.TaggedError`) carries a `reason` (`LiteralKit`): `no-runs-directory` (a
+  non-fleet scope has no `<packetDir>/runs`), `run-id` (a branch's run id cannot be derived),
+  `repo-root` (the working directory is not in a checkout), `encode` (the report's JSON encoding
+  failed). The command turns only `no-runs-directory` into an empty report, mirroring
+  `proof-report` on an empty ledger; every other cause fails it.
 - Pure fold: `buildYeetEconomicsReport(journals, scope, now): YeetEconomicsReport` (no effects; the
   fixture surface). `renderYeetEconomicsReport(report): string` (plain text, the `proof-report`
   style). `renderYeetEconomicsCloseoutSummary(report): ReadonlyArray<string>` (at most five lines:
@@ -204,8 +255,12 @@ class YeetEconomicsSource extends Context.Service<YeetEconomicsSource, {
   `commands/Yeet/Yeet.command.ts` beside `proof-report`, exports through the Yeet test barrel
   (`cli/test/Yeet.test-kit.ts`) so tests import `@beep/repo-cli/test/Yeet`.
 - Closeout: in `Handler.ts` `runCloseoutMode`, after `writePrCloseoutReport` and before
-  `printOperatorStatusSummary`, print the closeout summary for the current branch; any failure of
-  that read is one `[yeet] economics: <reason>` line and never fails the closeout.
+  `printOperatorStatusSummary`, print the closeout summary for the current branch through
+  `printYeetEconomicsCloseoutSummary(repoRoot, branch, packetDir, inFlightAttemptId)`, reading
+  `context.packetDir` and passing the closeout's own attempt id (journaled as started before the
+  closeout runs) as in flight, so the terminations line reads ` (1 in flight)` instead of a phantom
+  death; any failure of that read is one `[yeet] economics: <reason>` line and never fails the
+  closeout.
 
 ## 3. Must-have fixtures (`test/yeet-economics.test.ts`, effect-vitest, temp roots)
 
@@ -216,14 +271,17 @@ class YeetEconomicsSource extends Context.Service<YeetEconomicsSource, {
 2. Populations: a post-A5 verdict with `parentLaneId` splits inner from wrapper; a legacy verdict
    splits by prefix; shares sum to 100 within each population and nothing is double-counted (the
    totals of the two populations differ from the Python's single sum on the same fixture).
-3. First failure: offset walks the inner population only; falls back to wrappers when no inner lane
-   failed; `notReconstructable` when no failed lane has a duration; each receipt-proxy class matched
-   once by its own sentinel and `unclassified` otherwise.
+3. First failure: an inner failure's offset adds the wrappers before its parent and its earlier
+   siblings (post-A5 by `parentLaneId`, legacy by the first failed timed wrapper); falls back to the
+   failed timed wrapper when no failed inner lane has a duration; `notReconstructable` when no failed
+   lane has a duration; each receipt-proxy class matched by its own sentinel and `unclassified`
+   otherwise.
 4. Red-to-green: red,red,green → one closed episode with the exact span; a leading green closes
    nothing; lock bounce excluded from `comparable`; an episode over 24 h is in `uncut` and excluded
    from `comparable24h`; `start ≤ cutoff` is left-censored; an open streak is right-censored; a
    terminated row is red; episodes never span two runIds.
-5. M4: red then green with the same fingerprint counts once; a different fingerprint does not;
+5. M4: a verdict red then green with the same fingerprint counts once, under its actionable lane and
+   proxy class; a different fingerprint, an interrupted red and a closeout pair do not;
    `unmeasurable` when nothing carries a fingerprint.
 6. M5: `reasonMix` sorted by count then reason; `startsWithoutFinish` equals starts minus terminals.
 7. Document: `YeetEconomicsReportJson` round-trips; `schemaVersion` is the literal; a report over

@@ -33,7 +33,7 @@ import {
   pipe,
 } from "effect";
 import * as A from "effect/Array";
-import { dual, identity } from "effect/Function";
+import { constTrue, dual, identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Num from "effect/Number";
@@ -47,6 +47,7 @@ import { YeetAttemptTerminationReason } from "../../../internal/repo-run/Attempt
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { nearestRank } from "../../../internal/stats/NearestRank.ts";
+import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
 import {
   EconomicsAttempt,
   EconomicsAttemptMix,
@@ -68,10 +69,12 @@ import {
   EconomicsScopeRequest,
   EconomicsTerminations,
   EconomicsUnchangedFingerprint,
+  YEET_ECONOMICS_OFFSET_METHOD,
   YEET_ECONOMICS_PERCENTILE_ESTIMATOR,
   YEET_ECONOMICS_ROUNDING,
   YEET_ECONOMICS_SCHEMA_VERSION,
   YeetEconomicsError,
+  YeetEconomicsErrorReason,
   YeetEconomicsOptions,
   YeetEconomicsReport,
   YeetEconomicsReportJson,
@@ -82,11 +85,13 @@ import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Economics");
 
-const RUNS_PATH = [".beep", "yeet", "runs"] as const;
+const RUNS_DIRECTORY_NAME = "runs";
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 const VERDICT_FILE_NAME = "verdict.json";
 const CHECKOUT_PREFIX = "beep-effect";
-const WORKTREES_SUFFIX = "-worktrees";
+const GIT_METADATA_NAME = ".git";
+const GIT_WORKTREES_DIRECTORY_NAME = "worktrees";
+const GITDIR_PREFIX = "gitdir:";
 const FLEET_READ_CONCURRENCY = 8;
 const COMPARABLE_EPISODE_CUT = Duration.hours(24);
 const UNKNOWN_KEY = "unknown";
@@ -131,6 +136,19 @@ const EconomicsReceiptProxyClass = LiteralKit([
     description: "The A1 script's receipt-proxy classes for a red attempt, in match order.",
   })
 );
+
+// Ruling 75: the termination reasons `reconcileJournalLocked` stamps with its
+// own clock when it sweeps an unfinished start, so their `recordedAt` is the
+// sweep, not the moment the attempt died.
+const EconomicsReconcilerStampedReason = LiteralKit(
+  YeetAttemptTerminationReason.pickOptions(["legacy-unowned-start", "owner-dead", "stale-unverifiable-owner"])
+).pipe(
+  $I.annoteSchema("EconomicsReconcilerStampedReason", {
+    description:
+      "Termination reasons written by the journal reconciler at sweep time rather than at the attempt's death.",
+  })
+);
+const isReconcilerStampedReason = S.is(EconomicsReconcilerStampedReason);
 
 // Match order and patterns of the A1 script's `classify_receipt_proxy`, over the
 // lowercased message, repair commands and failed step id.
@@ -249,6 +267,7 @@ type EconomicsJournalRow = typeof EconomicsJournalRow.Type;
 
 const EconomicsJournalRowJson = JsonStringCodec(EconomicsJournalRow);
 const EconomicsVerdictRowJson = JsonStringCodec(EconomicsVerdictRow);
+const JsonRecordJson = JsonStringCodec(S.Unknown);
 
 // ---------------------------------------------------------------------------
 // Timestamps and rounding
@@ -348,14 +367,15 @@ interface DecodedJournalText {
   readonly rows: ReadonlyArray<EconomicsJournalRow>;
 }
 
-// An unterminated last line that does not decode is an append still in flight,
-// not an invalid row.
+// The journal's own torn-tail rule (`AttemptTerminationJournal`): only invalid
+// JSON on an unterminated last line is an append still in flight and is not
+// counted. A complete JSON row that fails the projection is an invalid row.
 const decodeJournalText = (text: string): DecodedJournalText => {
-  const decoded = A.map(A.filter(Str.split(text, "\n"), flow(Str.trim, Str.isNonEmpty)), (line) =>
-    EconomicsJournalRowJson.decodeOption(line)
-  );
+  const lines = A.filter(Str.split(text, "\n"), flow(Str.trim, Str.isNonEmpty));
+  const decoded = A.map(lines, (line) => EconomicsJournalRowJson.decodeOption(line));
   const rows = A.getSomes(decoded);
-  const tornTail = !Str.endsWith("\n")(text) && O.exists(A.last(decoded), O.isNone);
+  const tornTail =
+    !Str.endsWith("\n")(text) && O.exists(A.last(lines), (line) => O.isNone(JsonRecordJson.decodeOption(line)));
   return { rows, invalidRows: A.length(decoded) - A.length(rows) - countIf(tornTail) };
 };
 
@@ -379,6 +399,7 @@ const economicsLanes = (lanes: ReadonlyArray<EconomicsVerdictLaneRow>): Readonly
       population: isWrapperLane(lane, verdictMarksParents)
         ? EconomicsLaneKind.Enum.wrapper
         : EconomicsLaneKind.Enum.inner,
+      parentLaneId: lane.parentLaneId,
     })
   );
 };
@@ -388,7 +409,9 @@ const elapsedBetween = (startedAt: O.Option<string>, endedAt: O.Option<string>):
 
 // Resolution order of the A1 loader: the verdict wins, then the start row; the
 // terminal row's facts win over the start row's; a terminated row has no
-// verdict, so its outcome is none (red) and it has no lanes.
+// verdict, so its outcome is none (red) and it has no lanes. A reconciler-
+// stamped termination still orders by its `recordedAt` but measures no
+// elapsed time (ruling 75).
 const attemptFromTerminal = (
   journal: { readonly checkout: string; readonly runId: string },
   attemptId: string,
@@ -407,6 +430,7 @@ const attemptFromTerminal = (
     O.orElse(() => fromVerdict((verdict) => verdict.createdAt)),
     O.orElse(() => terminal.recordedAt)
   );
+  const measuredEnd = O.filter(endedAt, () => !O.exists(terminal.reason, isReconcilerStampedReason));
   return EconomicsAttempt.make({
     checkout: journal.checkout,
     runId: journal.runId,
@@ -431,7 +455,7 @@ const attemptFromTerminal = (
     endedAt,
     elapsedMs: O.orElse(
       fromVerdict((verdict) => verdict.elapsedMs),
-      () => elapsedBetween(startedAt, endedAt)
+      () => elapsedBetween(startedAt, measuredEnd)
     ),
     diffFingerprint: O.orElse(terminal.diffFingerprint, () => fromStart((started) => started.diffFingerprint)),
     terminationReason: terminal.reason,
@@ -482,9 +506,14 @@ const applyOrphanVerdict = (
   );
 };
 
+interface RunIdentity {
+  readonly checkout: string;
+  readonly runId: string;
+}
+
 const foldRunJournal = (
-  checkout: string,
-  runId: string,
+  run: RunIdentity,
+  inFlightAttemptId: O.Option<string>,
   journalRead: ContainedFileRead,
   verdictRead: ContainedFileRead
 ): EconomicsJournal => {
@@ -496,16 +525,26 @@ const foldRunJournal = (
   );
   const fold = A.reduce(decoded.rows, emptyJournalFold, stepJournalFold);
   const orphan = applyOrphanVerdict(fold.terminals, verdictRead);
-  const startIds = fold.starts.pipe(HashMap.keys, HashSet.fromIterable);
+  // The caller's own running attempt (a closeout reading its branch) has a
+  // start and no terminal row yet; it is dropped, not counted as a death.
+  const inFlight = O.filter(
+    inFlightAttemptId,
+    (attemptId) => HashMap.has(fold.starts, attemptId) && !HashMap.has(orphan.terminals, attemptId)
+  );
+  const starts = inFlight.pipe(
+    O.map((attemptId) => HashMap.remove(fold.starts, attemptId)),
+    O.getOrElse(() => fold.starts)
+  );
+  const startIds = starts.pipe(HashMap.keys, HashSet.fromIterable);
   const terminalIds = orphan.terminals.pipe(HashMap.keys, HashSet.fromIterable);
   const journalReadable = O.isSome(journalRead.contents);
-  const journal = { checkout, runId };
+  const inFlightExcluded = O.isSome(inFlight);
   return EconomicsJournal.make({
-    checkout,
-    runId,
+    checkout: run.checkout,
+    runId: run.runId,
     cutoff: O.flatMap(fold.cutoffMs, formatMillis),
     attempts: A.map(HashMap.toEntries(orphan.terminals), ([attemptId, terminal]) =>
-      attemptFromTerminal(journal, attemptId, terminal, HashMap.get(fold.starts, attemptId))
+      attemptFromTerminal(run, attemptId, terminal, HashMap.get(starts, attemptId))
     ),
     diagnostics: EconomicsJournalDiagnostics.make({
       journalsObserved: countIf(journalReadable),
@@ -519,6 +558,7 @@ const foldRunJournal = (
       starts: HashSet.size(startIds),
       startsWithoutFinish: HashSet.size(HashSet.difference(startIds, terminalIds)),
       verdictsWithoutStart: HashSet.size(HashSet.difference(terminalIds, startIds)),
+      inFlightStartsExcluded: countIf(inFlightExcluded),
     }),
   });
 };
@@ -529,17 +569,30 @@ const foldRunJournal = (
 
 interface EconomicsCheckout {
   readonly label: string;
-  readonly root: string;
+  readonly runsDirectory: string;
 }
 
 const checkoutOrder = Order.mapInput(Order.String, (checkout: EconomicsCheckout) => checkout.label);
 
-// The projects root is the clone's parent: a lane under `<clone>-worktrees/`
-// sits one level deeper than a clone.
-const projectsRootOf = (path: Path.Path, repoRoot: string): string => {
-  const parent = path.dirname(repoRoot);
-  return Str.endsWith(WORKTREES_SUFFIX)(path.basename(parent)) ? path.dirname(parent) : parent;
-};
+// No-follow directory test: a symlink is never a directory here, so a
+// symlinked checkout or run directory is skipped rather than read through.
+const isRealDirectory = Effect.fnUntraced(function* (entry: string) {
+  const fs = yield* FileSystem.FileSystem;
+  if (O.isSome(yield* fs.readLink(entry).pipe(Effect.option))) {
+    return false;
+  }
+  return O.exists(yield* fs.stat(entry).pipe(Effect.option), (info) => Str.Equivalence(info.type, "Directory"));
+});
+
+// Whether the entry itself exists, a dangling symlink included.
+const existsNoFollow = Effect.fnUntraced(function* (entry: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readLink(entry).pipe(
+    Effect.as(true),
+    Effect.catch(() => fs.exists(entry)),
+    Effect.orElseSucceed(thunkFalse)
+  );
+});
 
 const listDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -547,25 +600,86 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
   return A.sort(entries, Order.String);
 });
 
-const hasRunsDirectory = Effect.fnUntraced(function* (root: string) {
+// The names under `directory` that `keep` accepts and that are real
+// directories; stray files and symlinks are skipped without being counted.
+const realDirectoryNames = Effect.fnUntraced(function* (directory: string, keep: (name: string) => boolean) {
+  const path = yield* Path.Path;
+  return yield* Effect.filter(A.filter(yield* listDirectory(directory), keep), (name) =>
+    isRealDirectory(path.join(directory, name))
+  );
+});
+
+// A linked worktree's `.git` file holds `gitdir: <clone>/.git/worktrees/<name>`.
+const gitDirOfGitFile = (path: Path.Path, checkout: string, content: string): O.Option<string> =>
+  pipe(
+    A.findFirst(A.map(Str.split(content, "\n"), Str.trim), Str.startsWith(GITDIR_PREFIX)),
+    O.map(flow(Str.slice(Str.length(GITDIR_PREFIX)), Str.trim)),
+    O.filter(Str.isNonEmpty),
+    O.map((target) => path.resolve(checkout, target))
+  );
+
+const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
+  const worktrees = path.dirname(gitDir);
+  const metadata = path.dirname(worktrees);
+  return O.liftPredicate(
+    path.dirname(metadata),
+    () =>
+      Str.Equivalence(path.basename(worktrees), GIT_WORKTREES_DIRECTORY_NAME) &&
+      Str.Equivalence(path.basename(metadata), GIT_METADATA_NAME)
+  );
+};
+
+// The clone that owns a checkout, read from its git metadata without spawning
+// git: a `.git` directory makes the checkout its own clone, a `.git` file
+// names the clone's `.git/worktrees/<name>`. None when `.git` is unreadable.
+const cloneRootOf = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return yield* fs.exists(path.join(root, ...RUNS_PATH)).pipe(Effect.orElseSucceed(thunkFalse));
+  const gitPath = path.join(checkout, GIT_METADATA_NAME);
+  const kind = O.map(yield* fs.stat(gitPath).pipe(Effect.option), (info) => info.type);
+  if (O.contains(kind, "Directory")) {
+    return O.some(checkout);
+  }
+  const content = O.contains(kind, "File") ? yield* fs.readFileString(gitPath).pipe(Effect.option) : O.none<string>();
+  return pipe(
+    content,
+    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
+    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
+  );
+});
+
+// The projects root is the clone's parent (ruling 73). Only when `.git` is
+// unreadable does the directory name decide: a lane under `<clone>-worktrees/`
+// sits one level deeper than a clone.
+const projectsRootOf = Effect.fnUntraced(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  const parent = path.dirname(repoRoot);
+  return O.getOrElse(
+    O.map(yield* cloneRootOf(repoRoot), (clone) => path.dirname(clone)),
+    () => (Str.endsWith(WORKTREES_ROOT_SUFFIX)(path.basename(parent)) ? path.dirname(parent) : parent)
+  );
+});
+
+const hasRunsDirectory = Effect.fnUntraced(function* (runsDirectory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.exists(runsDirectory).pipe(Effect.orElseSucceed(thunkFalse));
 });
 
 // `--fleet` candidates (ruling 73): every `beep-effect*` directory under the
-// projects root, and every lane inside a `beep-effect*-worktrees` directory.
+// projects root, every lane inside a `beep-effect*-worktrees` directory, and
+// every lane under a clone's `.claude/worktrees`. Symlinks are never followed.
 const fleetCandidates = Effect.fnUntraced(function* (projectsRoot: string) {
   const path = yield* Path.Path;
-  const names = A.filter(yield* listDirectory(projectsRoot), Str.startsWith(CHECKOUT_PREFIX));
+  const names = yield* realDirectoryNames(projectsRoot, Str.startsWith(CHECKOUT_PREFIX));
   const nested = yield* Effect.forEach(names, (name) => {
     const directory = path.join(projectsRoot, name);
-    return Str.endsWith(WORKTREES_SUFFIX)(name)
-      ? Effect.map(
-          listDirectory(directory),
-          A.map((lane) => path.join(directory, lane))
-        )
-      : Effect.succeed(A.of(directory));
+    const isWorktreesRoot = Str.endsWith(WORKTREES_ROOT_SUFFIX)(name);
+    const lanesRoot = isWorktreesRoot ? directory : path.join(directory, CLAUDE_WORKTREES_RELATIVE_ROOT);
+    const lanes = Effect.map(
+      realDirectoryNames(lanesRoot, constTrue),
+      A.map((lane) => path.join(lanesRoot, lane))
+    );
+    return isWorktreesRoot ? lanes : Effect.map(lanes, A.prepend(directory));
   });
   return A.flatten(nested);
 });
@@ -573,45 +687,69 @@ const fleetCandidates = Effect.fnUntraced(function* (projectsRoot: string) {
 const resolveCheckouts = Effect.fnUntraced(function* (request: EconomicsScopeRequest) {
   const path = yield* Path.Path;
   const repoRoot = path.resolve(request.repoRoot);
-  const projectsRoot = projectsRootOf(path, repoRoot);
-  const candidates = request.fleet ? A.dedupe(A.prepend(yield* fleetCandidates(projectsRoot), repoRoot)) : [repoRoot];
-  const roots = yield* Effect.filter(candidates, hasRunsDirectory);
-  if (!request.fleet && A.isReadonlyArrayEmpty(roots)) {
-    return yield* YeetEconomicsError.make({ message: `no ${A.join(RUNS_PATH, "/")} under ${repoRoot}` });
-  }
-  return A.sort(
-    A.map(roots, (root) => ({ label: path.relative(projectsRoot, root), root })),
-    checkoutOrder
+  const projectsRoot = yield* projectsRootOf(repoRoot);
+  const roots = request.fleet ? A.dedupe(A.prepend(yield* fleetCandidates(projectsRoot), repoRoot)) : A.of(repoRoot);
+  // The packet dir resolves against each checkout unless absolute; checkouts
+  // that resolve to the same runs directory are read once.
+  const checkouts = A.dedupeWith(
+    A.map(
+      roots,
+      (root): EconomicsCheckout => ({
+        label: path.relative(projectsRoot, root),
+        runsDirectory: path.resolve(root, request.packetDir, RUNS_DIRECTORY_NAME),
+      })
+    ),
+    (self, that) => Str.Equivalence(self.runsDirectory, that.runsDirectory)
   );
+  const withRuns = yield* Effect.filter(checkouts, (checkout) => hasRunsDirectory(checkout.runsDirectory));
+  if (!request.fleet && A.isReadonlyArrayEmpty(withRuns)) {
+    return yield* YeetEconomicsError.make({
+      reason: "no-runs-directory",
+      message: `no ${A.join([request.packetDir, RUNS_DIRECTORY_NAME], "/")} under ${repoRoot}`,
+    });
+  }
+  return A.sort(withRuns, checkoutOrder);
 });
 
-// A symlinked or otherwise unreadable entry reads as present without contents,
-// so it counts as unreadable rather than failing the report.
+// A guard refusal (a symlinked file or directory component) reads as present
+// without contents only when the entry itself exists: a refused journal counts
+// as unreadable, and a missing verdict counts as nothing.
 const readRunFile = (
-  checkoutRoot: string,
+  runsDirectory: string,
   target: string
 ): Effect.Effect<ContainedFileRead, never, FileSystem.FileSystem | Path.Path> =>
-  readContainedFileStringNoFollow(checkoutRoot, target).pipe(
-    Effect.orElseSucceed(() => ContainedFileRead.make({ exists: true, contents: O.none() }))
+  readContainedFileStringNoFollow(runsDirectory, target).pipe(
+    Effect.catchTag("FsGuardError", () =>
+      Effect.map(existsNoFollow(target), (exists) => ContainedFileRead.make({ exists, contents: O.none() }))
+    )
   );
 
-const readRunJournal = Effect.fnUntraced(function* (checkout: EconomicsCheckout, runId: string) {
+const readRunJournal = Effect.fnUntraced(function* (
+  checkout: EconomicsCheckout,
+  runId: string,
+  inFlightAttemptId: O.Option<string>
+) {
   const path = yield* Path.Path;
-  const runDirectory = path.join(checkout.root, ...RUNS_PATH, runId);
-  const journalRead = yield* readRunFile(checkout.root, path.join(runDirectory, JOURNAL_FILE_NAME));
-  const verdictRead = yield* readRunFile(checkout.root, path.join(runDirectory, VERDICT_FILE_NAME));
+  const runDirectory = path.join(checkout.runsDirectory, runId);
+  const journalRead = yield* readRunFile(checkout.runsDirectory, path.join(runDirectory, JOURNAL_FILE_NAME));
+  const verdictRead = yield* readRunFile(checkout.runsDirectory, path.join(runDirectory, VERDICT_FILE_NAME));
   return journalRead.exists || verdictRead.exists
-    ? O.some(foldRunJournal(checkout.label, runId, journalRead, verdictRead))
+    ? O.some(foldRunJournal({ checkout: checkout.label, runId }, inFlightAttemptId, journalRead, verdictRead))
     : O.none<EconomicsJournal>();
 });
 
-const readCheckoutJournals = Effect.fnUntraced(function* (checkout: EconomicsCheckout, runId: O.Option<string>) {
-  const path = yield* Path.Path;
-  const runIds = yield* O.match(runId, {
-    onNone: () => listDirectory(path.join(checkout.root, ...RUNS_PATH)),
-    onSome: (id) => Effect.succeed(A.of(id)),
-  });
-  return A.getSomes(yield* Effect.forEach(runIds, (id) => readRunJournal(checkout, id)));
+// Every real run directory, or only the branch's; a stray file or a symlink
+// under `runs/` is skipped without a diagnostic.
+const readCheckoutJournals = Effect.fnUntraced(function* (
+  checkout: EconomicsCheckout,
+  runId: O.Option<string>,
+  inFlightAttemptId: O.Option<string>
+) {
+  const runIds = yield* realDirectoryNames(
+    checkout.runsDirectory,
+    (name) => O.isNone(runId) || O.contains(runId, name)
+  );
+  return A.getSomes(yield* Effect.forEach(runIds, (id) => readRunJournal(checkout, id, inFlightAttemptId)));
 });
 
 const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
@@ -623,11 +761,15 @@ const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
 > {
   const checkouts = yield* resolveCheckouts(request);
   const runId = yield* Effect.transposeOption(O.map(request.branch, repoRunArtifactId)).pipe(
-    Effect.mapError((cause) => YeetEconomicsError.make({ message: "Failed to derive the branch run id.", cause }))
+    Effect.mapError((cause) =>
+      YeetEconomicsError.make({ reason: "run-id", message: "Failed to derive the branch run id.", cause })
+    )
   );
-  const nested = yield* Effect.forEach(checkouts, (checkout) => readCheckoutJournals(checkout, runId), {
-    concurrency: FLEET_READ_CONCURRENCY,
-  });
+  const nested = yield* Effect.forEach(
+    checkouts,
+    (checkout) => readCheckoutJournals(checkout, runId, request.inFlightAttemptId),
+    { concurrency: FLEET_READ_CONCURRENCY }
+  );
   return A.flatten(nested);
 });
 
@@ -666,13 +808,22 @@ const makeYeetEconomicsSource: Effect.Effect<
  *
  * **Details**
  *
- * The default scope is every `.beep/yeet/runs/<runId>/attempts.ndjson` of the
- * checkout plus orphan `verdict.json` files; a branch narrows to that branch's
- * run directory, and the fleet adds every sibling `beep-effect*` checkout and
- * `beep-effect*-worktrees/*` lane under the projects root, each labelled by
- * its path relative to that root. A bad journal never fails the read: an
- * unreadable file and a malformed line are counted. `read` fails only when a
- * non-fleet scope has no `.beep/yeet/runs`.
+ * The default scope is every `<packetDir>/runs/<runId>/attempts.ndjson` of the
+ * checkout (`packetDir` defaults to `.beep/yeet`) plus orphan `verdict.json`
+ * files; a branch narrows to that branch's run directory. The fleet adds every
+ * sibling `beep-effect*` checkout, `beep-effect*-worktrees/*` lane and
+ * `<clone>/.claude/worktrees/*` lane under the projects root, the parent of
+ * the clone named by the checkout's `.git` metadata, each labelled by its path
+ * relative to that root. Symlinked checkouts and run directories and stray
+ * files under `runs/` are skipped without being counted.
+ *
+ * A bad journal never fails the read: an unreadable file counts in
+ * `unreadableJournals` and a line that fails the row projection counts in
+ * `invalidRows`. The one exemption is the journal's torn-tail rule: invalid
+ * JSON on an unterminated last line is an append still in flight and is not
+ * counted. `read` fails with reason `no-runs-directory` when a non-fleet scope
+ * has no `<packetDir>/runs`, and with `run-id` when a branch's run id cannot
+ * be derived.
  *
  * **Example** (Read the current checkout)
  *
@@ -786,7 +937,13 @@ const lanePopulation = (
     )
   );
   const totalMs = sumOf(observations, (observation) => observation.durationMs);
-  const elapsedMs = sumOf(attempts, (attempt) => O.getOrElse(attempt.elapsedMs, thunk0));
+  // The denominator is the elapsed time of the attempts that contributed at
+  // least one observation to this population, never of every attempt.
+  const contributing = HashSet.fromIterable(A.map(observations, (observation) => observation.attemptKey));
+  const elapsedMs = sumOf(
+    A.filter(attempts, (attempt) => HashSet.has(contributing, attemptKey(attempt))),
+    (attempt) => O.getOrElse(attempt.elapsedMs, thunk0)
+  );
   return EconomicsLanePopulation.make({
     rows: A.sort(
       A.map(R.values(A.groupBy(observations, laneIdentity)), (group) => laneRow(group, totalMs)),
@@ -808,19 +965,49 @@ interface FailureOffsets {
   readonly startOffsetMs: number;
 }
 
-// Ruling 74: walk the inner lanes when any failed, otherwise the wrappers; the
-// first failed lane with a duration ends the walk.
+interface FailingLane {
+  readonly lane: EconomicsLane;
+  readonly precedingMs: number;
+}
+
+const nonNegativeDurationMs = (lanes: ReadonlyArray<EconomicsLane>): number =>
+  Num.sumAll(A.filter(A.getSomes(A.map(lanes, (lane) => lane.durationMs)), Num.isGreaterThanOrEqualTo(0)));
+
+const parentEquivalence = O.makeEquivalence(Str.Equivalence);
+
+// Ruling 74: the failing lane is the first failed inner lane with a duration,
+// else the first failed wrapper with one. An inner lane starts after the
+// wrappers before its parent wrapper (`parentLaneId`; for a legacy verdict, the
+// first failed timed wrapper; every wrapper when none is found) and after that
+// wrapper's inner lanes before it. A failing wrapper starts after the wrappers
+// before it.
 const failureOffsets = (attempt: EconomicsAttempt): O.Option<FailureOffsets> => {
+  const wrappers = A.filter(attempt.lanes, P.not(isInnerLane));
   const inner = A.filter(attempt.lanes, isInnerLane);
-  const population = A.some(inner, isFailedLane) ? inner : A.filter(attempt.lanes, P.not(isInnerLane));
-  const [before, rest] = A.span(population, P.not(isTimedFailure));
-  const startOffsetMs = Num.sumAll(
-    A.filter(A.getSomes(A.map(before, (lane) => lane.durationMs)), Num.isGreaterThanOrEqualTo(0))
-  );
+  const legacyParent = O.map(A.findFirst(wrappers, isTimedFailure), (lane) => lane.id);
+  const parentOf = (lane: EconomicsLane): O.Option<string> => O.orElse(lane.parentLaneId, () => legacyParent);
+  const [innerBefore, innerFrom] = A.span(inner, P.not(isTimedFailure));
+  const [wrappersBefore, wrappersFrom] = A.span(wrappers, P.not(isTimedFailure));
   return pipe(
-    A.head(rest),
-    O.flatMap((lane) => lane.durationMs),
-    O.map((durationMs) => ({ startOffsetMs, completionOffsetMs: startOffsetMs + durationMs }))
+    A.head(innerFrom),
+    O.map((lane): FailingLane => {
+      const parent = parentOf(lane);
+      return {
+        lane,
+        precedingMs:
+          nonNegativeDurationMs(A.takeWhile(wrappers, (wrapper) => !O.contains(parent, wrapper.id))) +
+          nonNegativeDurationMs(A.filter(innerBefore, (sibling) => parentEquivalence(parentOf(sibling), parent))),
+      };
+    }),
+    O.orElse(() =>
+      O.map(A.head(wrappersFrom), (lane): FailingLane => ({ lane, precedingMs: nonNegativeDurationMs(wrappersBefore) }))
+    ),
+    O.flatMap(({ lane, precedingMs }) =>
+      O.map(lane.durationMs, (durationMs) => ({
+        startOffsetMs: precedingMs,
+        completionOffsetMs: precedingMs + durationMs,
+      }))
+    )
   );
 };
 
@@ -863,6 +1050,7 @@ const firstFailure = (attempts: ReadonlyArray<EconomicsAttempt>): EconomicsFirst
     redAttempts: A.length(red),
     attemptsWithReconstructableOuterFailure: A.length(offsets),
     attemptsWithoutReconstructableOuterFailure: A.length(red) - A.length(offsets),
+    offsetMethod: YEET_ECONOMICS_OFFSET_METHOD,
     startOffsetP50Ms: roundedRank(starts, 0.5),
     startOffsetP95Ms: roundedRank(starts, 0.95),
     completionOffsetP50Ms: roundedRank(completions, 0.5),
@@ -895,6 +1083,12 @@ const timedAttempts = (journal: EconomicsJournal): ReadonlyArray<TimedAttempt> =
     timedAttemptOrder
   );
 
+// Ruling 75: the comparable sequence of one run, which red-to-green and the
+// M4 proxy both walk: attempts with a start, in order, whose mode is
+// comparable and that are not lock bounces.
+const comparableSequence = (journal: EconomicsJournal): ReadonlyArray<TimedAttempt> =>
+  A.filter(timedAttempts(journal), (timed) => O.isSome(timed.startedMs) && isComparable(timed.attempt));
+
 interface Episode {
   readonly attempts: number;
   readonly leftCensored: boolean;
@@ -918,18 +1112,22 @@ const startMillis = (timed: TimedAttempt): number => O.getOrElse(timed.startedMs
 const machineMillis = (members: ReadonlyArray<TimedAttempt>): number =>
   sumOf(members, (timed) => O.getOrElse(timed.attempt.elapsedMs, thunk0));
 
+interface OpenStreak {
+  readonly attempts: number;
+  readonly observedSpanMs: number;
+}
+
 interface JournalEpisodes {
   readonly closed: ReadonlyArray<Episode>;
-  readonly openStreak: O.Option<number>;
+  readonly openStreak: O.Option<OpenStreak>;
 }
 
 // Ruling 75: a red attempt joins the streak, a green one closes it; a green with
 // no streak closes nothing. Episodes never span two runs.
 const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   const cutoffMs = O.flatMap(journal.cutoff, parseMillis);
-  const rows = A.filter(timedAttempts(journal), (timed) => O.isSome(timed.startedMs) && isComparable(timed.attempt));
   const walk = A.reduce(
-    rows,
+    comparableSequence(journal),
     emptyEpisodeWalk,
     (state: EpisodeWalk, timed: TimedAttempt): EpisodeWalk =>
       isRed(timed.attempt)
@@ -953,7 +1151,16 @@ const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   );
   return {
     closed: walk.episodes,
-    openStreak: A.isReadonlyArrayNonEmpty(walk.streak) ? O.some(A.length(walk.streak)) : O.none(),
+    // A streak still red at the end is right-censored; its observed lower
+    // bound runs from the first red's start to the last member's end.
+    openStreak: A.match(walk.streak, {
+      onEmpty: O.none,
+      onNonEmpty: (streak) =>
+        O.some({
+          attempts: A.length(streak),
+          observedSpanMs: Math.max(0, endMillis(A.lastNonEmpty(streak)) - startMillis(A.headNonEmpty(streak))),
+        }),
+    }),
   };
 };
 
@@ -961,7 +1168,7 @@ const episodeSummary = (
   label: string,
   kept: ReadonlyArray<Episode>,
   leftCensored: ReadonlyArray<Episode>,
-  openStreaks: ReadonlyArray<number>,
+  openStreaks: ReadonlyArray<OpenStreak>,
   over24hExcluded: O.Option<number>
 ): EconomicsEpisodeSummary => {
   const spans = A.map(kept, (episode) => episode.spanMs);
@@ -975,7 +1182,8 @@ const episodeSummary = (
     leftCensoredEpisodesExcluded: A.length(leftCensored),
     leftCensoredObservedAttempts: sumOf(leftCensored, (episode) => episode.attempts),
     rightCensoredStreaks: A.length(openStreaks),
-    rightCensoredRedAttempts: Num.sumAll(openStreaks),
+    rightCensoredRedAttempts: sumOf(openStreaks, (streak) => streak.attempts),
+    rightCensoredObservedSpanMinutes: minutesOf(sumOf(openStreaks, (streak) => streak.observedSpanMs)),
     closedEpisodesOver24hExcluded: over24hExcluded,
   });
 };
@@ -1011,26 +1219,35 @@ const sameFingerprint = (red: EconomicsAttempt, green: EconomicsAttempt): boolea
     O.exists(green.diffFingerprint, (next) => Str.Equivalence(fingerprint, next))
   );
 
-// M4 (ruling 75): within one run, a red attempt whose next attempt is green on
-// the same diff fingerprint.
+// A red attempt that carries a verdict; a terminated row has no outcome.
+const hasRedVerdict = (attempt: EconomicsAttempt): boolean => O.exists(attempt.outcome, P.not(YeetOutcome.is.success));
+
+// The M4 fingerprint-repeat proxy (ruling 75): the red side of each pair of
+// consecutive comparable attempts where a verdict-bearing red is followed by a
+// green on the same diff fingerprint.
+const fingerprintRepeats = (journal: EconomicsJournal): ReadonlyArray<EconomicsAttempt> => {
+  const ordered = A.map(comparableSequence(journal), (timed) => timed.attempt);
+  return A.map(
+    A.filter(
+      A.zip(ordered, A.drop(ordered, 1)),
+      ([current, next]) => hasRedVerdict(current) && isGreen(next) && sameFingerprint(current, next)
+    ),
+    ([current]) => current
+  );
+};
+
 const unchangedFingerprint = (
   journals: ReadonlyArray<EconomicsJournal>,
   attempts: ReadonlyArray<EconomicsAttempt>
 ): EconomicsUnchangedFingerprint => {
   const attemptsWithFingerprint = A.length(A.filter(attempts, (attempt) => O.isSome(attempt.diffFingerprint)));
-  const thenGreen = sumOf(journals, (journal) => {
-    const ordered = A.map(timedAttempts(journal), (timed) => timed.attempt);
-    return A.length(
-      A.filter(
-        A.zip(ordered, A.drop(ordered, 1)),
-        ([current, next]) => isRed(current) && isGreen(next) && sameFingerprint(current, next)
-      )
-    );
-  });
+  const repeats = A.flatMap(journals, fingerprintRepeats);
   return EconomicsUnchangedFingerprint.make({
     classification: attemptsWithFingerprint > 0 ? "measured" : "unmeasurable",
     attemptsWithFingerprint,
-    failedUnchangedFingerprintThenGreen: thenGreen,
+    failedUnchangedFingerprintThenGreen: A.length(repeats),
+    byActionableLane: countMix(A.map(repeats, actionableLane)),
+    byReceiptProxy: countMix(A.map(repeats, receiptProxyClass)),
   });
 };
 
@@ -1076,6 +1293,7 @@ const dataQuality = (
       starts: total((diagnostics) => diagnostics.starts),
       startsWithoutFinish: total((diagnostics) => diagnostics.startsWithoutFinish),
       verdictsWithoutStart: total((diagnostics) => diagnostics.verdictsWithoutStart),
+      inFlightStartsExcluded: total((diagnostics) => diagnostics.inFlightStartsExcluded),
       leftCensoredJournals: A.length(A.filter(journals, (journal) => O.isSome(journal.cutoff))),
       finishedAttempts: A.length(attempts),
       verdictV2Attempts,
@@ -1212,6 +1430,8 @@ const renderEpisodes = (title: string, summary: EconomicsEpisodeSummary): string
 
 const totalCount = (rows: ReadonlyArray<EconomicsCountRow>): number => sumOf(rows, (row) => row.count);
 
+const inFlightNote = (excluded: number): string => (excluded > 0 ? ` (${excluded} in flight)` : "");
+
 const scopeLine = (report: YeetEconomicsReport): string =>
   `yeet economics (${report.schemaVersion}) — ${report.scope.kind}${O.getOrElse(
     O.map(report.scope.branch, (branch) => ` ${branch}`),
@@ -1240,11 +1460,17 @@ const scopeLine = (report: YeetEconomicsReport): string =>
  *
  * @param report - The folded economics report.
  * @returns The multi-line terminal rendering.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string => {
-  const { attempts, firstFailure: failure, redToGreen: episodes, dataQuality: quality } = report;
+  const {
+    attempts,
+    firstFailure: failure,
+    redToGreen: episodes,
+    unchangedFingerprint: fingerprint,
+    dataQuality: quality,
+  } = report;
   const diagnostics = quality.diagnostics;
   return A.join(
     [
@@ -1259,9 +1485,10 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
       `  receipt proxies: ${formatMix(failure.receiptProxyMix)}`,
       renderEpisodes("red to green (M1) comparable24h", episodes.comparable24h),
       renderEpisodes("red to green (M1) uncut", episodes.uncut),
-      `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red attempt(s))`,
+      `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red attempt(s), observed at least ${episodes.uncut.rightCensoredObservedSpanMinutes} min)`,
       `terminations (M5): ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons: ${formatMix(report.terminations.reasonMix)}`,
-      `unchanged fingerprint (M4): ${report.unchangedFingerprint.classification}; ${report.unchangedFingerprint.attemptsWithFingerprint} attempt(s) carry a fingerprint; ${report.unchangedFingerprint.failedUnchangedFingerprintThenGreen} red then green on the same fingerprint`,
+      `unchanged fingerprint (M4 fingerprint-repeat proxy; the ack-resolution join is not on this surface): ${fingerprint.classification}; ${fingerprint.attemptsWithFingerprint} attempt(s) carry a fingerprint; ${fingerprint.failedUnchangedFingerprintThenGreen} verdict red then green on the same fingerprint`,
+      `  by actionable lane: ${formatMix(fingerprint.byActionableLane, TOP_LANE_ROWS)}; by receipt proxy: ${formatMix(fingerprint.byReceiptProxy)}`,
       `data quality: window ${O.getOrElse(quality.attemptWindowStartUtc, () => "n/a")} .. ${O.getOrElse(quality.attemptWindowEndUtc, () => "n/a")}; journals ${diagnostics.journalsObserved} read, ${diagnostics.unreadableJournals} unreadable; invalid rows ${diagnostics.invalidRows}; compaction receipts ${diagnostics.compactionReceipts} (${diagnostics.leftCensoredJournals} left-censored journal(s))`,
       `  duplicates ${diagnostics.duplicateStartedRowsDeduplicated} start / ${diagnostics.duplicateFinishedRowsDeduplicated} terminal; orphan verdicts ${diagnostics.orphanVerdictFilesAdded} added, ${diagnostics.unkeyedVerdictFiles} unkeyed; verdicts without start ${diagnostics.verdictsWithoutStart}; verdicts v2 ${diagnostics.verdictV2Attempts}, other ${diagnostics.verdictOtherAttempts}`,
       `  estimator: ${quality.percentileEstimator}, rounding ${quality.rounding}`,
@@ -1278,7 +1505,9 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
  *
  * The lines cover attempts and outcomes, the comparable closed-episode span
  * p50, the first-failure completion offset p50, the top wrapper lane by
- * minutes, and terminations. An empty report still renders every line.
+ * minutes, and terminations. An empty report still renders every line. The
+ * terminations line ends ` (N in flight)` when the caller's own running
+ * attempt was dropped from the starts.
  *
  * **Example** (Summarize an empty report)
  *
@@ -1303,7 +1532,7 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
  *
  * @param report - The folded economics report for one branch.
  * @returns Up to five summary lines, each starting with `economics:`.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderYeetEconomicsCloseoutSummary = (report: YeetEconomicsReport): ReadonlyArray<string> => [
@@ -1315,7 +1544,7 @@ export const renderYeetEconomicsCloseoutSummary = (report: YeetEconomicsReport):
     onSome: (row) =>
       `economics: top wrapper lane ${laneName(row)} ${formatDurationMs(row.totalDurationMs)} (${formatPercent(row.sharePct)} of wrapper time)`,
   }),
-  `economics: terminations ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons ${formatMix(report.terminations.reasonMix)}`,
+  `economics: terminations ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons ${formatMix(report.terminations.reasonMix)}${inFlightNote(report.dataQuality.diagnostics.inFlightStartsExcluded)}`,
 ];
 
 // ---------------------------------------------------------------------------
@@ -1343,16 +1572,23 @@ const reportFor = Effect.fnUntraced(function* (
 });
 
 const locateRepoRoot: Effect.Effect<string, YeetEconomicsError, FileSystem.FileSystem> = findRepoRoot().pipe(
-  Effect.mapError((cause) => YeetEconomicsError.make({ message: "Failed to locate repo root.", cause }))
+  Effect.mapError((cause) =>
+    YeetEconomicsError.make({ reason: "repo-root", message: "Failed to locate repo root.", cause })
+  )
 );
+
+const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
+  YeetEconomicsErrorReason.is["no-runs-directory"](error.reason);
 
 /**
  * Run one `yeet economics` pass: read the scope, fold, print text or JSON.
  *
  * **Details**
  *
- * A checkout with no `.beep/yeet/runs` prints an empty report rather than
- * failing, as `proof-report` does for an empty ledger.
+ * A checkout with no `<packetDir>/runs` prints an empty report rather than
+ * failing, as `proof-report` does for an empty ledger. Every other
+ * {@link YeetEconomicsError} cause (a failed run-id derivation, no repo root,
+ * a failed encoding) fails the run.
  *
  * **Example** (Build the runner effect)
  *
@@ -1380,14 +1616,17 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
     repoRoot: yield* repoRoot,
     branch: options.branch,
     fleet: options.fleet,
+    packetDir: options.packetDir,
   });
   const journals = yield* source
     .read(request)
-    .pipe(Effect.catchTag("YeetEconomicsError", () => Effect.succeed(A.empty<EconomicsJournal>())));
+    .pipe(Effect.catchIf(isNoRunsDirectory, () => Effect.succeed(A.empty<EconomicsJournal>())));
   const report = yield* reportFor(request, journals);
   if (options.json) {
     const json = yield* YeetEconomicsReportJson.encode(report).pipe(
-      Effect.mapError((cause) => YeetEconomicsError.make({ message: "Failed to encode the economics report.", cause }))
+      Effect.mapError((cause) =>
+        YeetEconomicsError.make({ reason: "encode", message: "Failed to encode the economics report.", cause })
+      )
     );
     yield* Console.log(json);
     return;
@@ -1428,31 +1667,46 @@ const firstLine = (text: string): string => A.headNonEmpty(Str.split(text, "\n")
  *
  * **Details**
  *
- * Every line is prefixed `[yeet] `. A source failure or a defect in the fold
- * becomes one `[yeet] economics: <reason>` line, so the closeout that calls
- * this cannot fail because of it.
+ * Every line is prefixed `[yeet] `. The closeout journals its own
+ * `attempt-started` row before it runs, so it passes its attempt id as
+ * `inFlightAttemptId`: that start is dropped before folding and the
+ * terminations line ends ` (1 in flight)`. A source failure or a defect in
+ * the fold becomes one `[yeet] economics: <reason>` line, so the closeout that
+ * calls this cannot fail because of it.
  *
  * **Example** (Build the summary effect)
  *
  * ```ts
  * import { printYeetEconomicsCloseoutSummary } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Effect.isEffect(printYeetEconomicsCloseoutSummary("/repo", "main"))) // true
+ * const summary = printYeetEconomicsCloseoutSummary("/repo", "main", ".beep/yeet", O.some("attempt-1"))
+ * console.log(Effect.isEffect(summary)) // true
  * ```
  *
  * @param repoRoot - The checkout whose journals to read.
  * @param branch - The branch whose run directory to read.
+ * @param packetDir - The Yeet packet directory holding `runs`, relative to `repoRoot` unless absolute.
+ * @param inFlightAttemptId - The caller's own running attempt, dropped from the starts.
  * @returns Void once the summary or its failure line was printed.
  * @category services
  * @since 0.0.0
  */
 export const printYeetEconomicsCloseoutSummary = Effect.fn("Yeet.printEconomicsCloseoutSummary")(function* (
   repoRoot: string,
-  branch: string
+  branch: string,
+  packetDir: string,
+  inFlightAttemptId: O.Option<string>
 ): Effect.fn.Return<void, never, YeetEconomicsSource> {
   const source = yield* YeetEconomicsSource;
-  const request = EconomicsScopeRequest.make({ repoRoot, branch: O.some(branch), fleet: false });
+  const request = EconomicsScopeRequest.make({
+    repoRoot,
+    branch: O.some(branch),
+    fleet: false,
+    packetDir,
+    inFlightAttemptId,
+  });
   const lines = yield* source.read(request).pipe(
     Effect.flatMap((journals) => reportFor(request, journals)),
     Effect.map(renderYeetEconomicsCloseoutSummary),

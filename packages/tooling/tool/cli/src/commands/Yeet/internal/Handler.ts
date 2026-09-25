@@ -1468,7 +1468,8 @@ export const writePrCloseoutReportForTesting = writePrCloseoutReport;
 
 const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   context: RepoRunContext,
-  options: YeetRunOptions
+  options: YeetRunOptions,
+  attemptId: YeetAttemptId
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -1490,8 +1491,9 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   const reportPath = yield* writePrCloseoutReport(context, report);
   yield* Console.log(`[yeet] PR closeout report written to ${reportPath}`);
   // Where the branch's minutes went (A3); a failed read is one log line and
-  // never fails the closeout.
-  yield* printYeetEconomicsCloseoutSummary(context.repoRoot, context.branch).pipe(
+  // never fails the closeout. This closeout's own start is already journaled,
+  // so it is passed as in flight rather than counted as a death.
+  yield* printYeetEconomicsCloseoutSummary(context.repoRoot, context.branch, context.packetDir, O.some(attemptId)).pipe(
     Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make)
   );
   // The closeout is the read-first surface an agent runs after a gap, so it is
@@ -1992,7 +1994,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
           attempt
         ),
       monitor: () => runMonitorMode(plan.context, monitorSteps, recorder, extras),
-      closeout: () => runCloseoutMode(plan.context, options),
+      closeout: () => runCloseoutMode(plan.context, options, attempt.attemptId),
       status: () => runStatusMode(plan.context, options),
       "pre-push-hook": () => runPrePushHookMode(plan.context),
     });

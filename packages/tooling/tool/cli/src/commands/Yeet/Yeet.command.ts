@@ -1173,9 +1173,10 @@ const yeetEconomicsCommand = Command.make(
     fleet: Flag.Boolean("fleet").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
-        "Add every sibling beep-effect* checkout and beep-effect*-worktrees lane under the projects root"
+        "Add every sibling beep-effect* checkout, beep-effect*-worktrees lane, and clone .claude/worktrees lane under the projects root"
       )
     ),
+    packetDir: packetDirFlag,
   },
   runYeetEconomicsCommand
 ).pipe(

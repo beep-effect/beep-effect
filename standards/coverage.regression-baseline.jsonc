@@ -26746,10 +26746,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts": {
-          "lines": 99.21,
-          "statements": 99.31,
+          "lines": 99.33,
+          "statements": 99.42,
           "branches": 100,
-          "functions": 98.74,
+          "functions": 98.93,
           "uncovered": {
             "lines": 3,
             "statements": 3,
