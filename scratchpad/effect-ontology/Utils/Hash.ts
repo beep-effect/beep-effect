@@ -13,7 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Effect } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { dual2, dual3 } from "./Dual.ts";
@@ -76,7 +76,7 @@ export const sha256 = Effect.fn("Hash.sha256")(function* (input: string) {
   const digest = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(input))
     .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256", cause })));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 /**
@@ -301,7 +301,7 @@ export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: Buffe
   const digest = yield* crypto
     .digest("SHA-256", input)
     .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256-bytes", cause })));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 /**

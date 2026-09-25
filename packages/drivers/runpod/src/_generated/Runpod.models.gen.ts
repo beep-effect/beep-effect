@@ -547,8 +547,8 @@ export const Pod = S.StructWithRest(
         description:
           "A user-defined name for the created Pod. The name does not need to be unique.",
       }).check(
-        S.isMaxLength(191).annotate({
-          expected: "a value with a length of at most 191",
+        S.isMaxCodePoints(191).annotate({
+          expected: "a string with at most 191 code points",
         }),
       ),
     ),
@@ -1332,8 +1332,8 @@ export const EndpointCreateInput = S.StructWithRest(
         description:
           "A user-defined name for the created Serverless endpoint. The name does not need to be unique.",
       }).check(
-        S.isMaxLength(191).annotate({
-          expected: "a value with a length of at most 191",
+        S.isMaxCodePoints(191).annotate({
+          expected: "a string with at most 191 code points",
         }),
       ),
     ),
@@ -1654,8 +1654,8 @@ export const EndpointUpdateInput = S.StructWithRest(
         description:
           "A user-defined name for the created Serverless endpoint. The name does not need to be unique.",
       }).check(
-        S.isMaxLength(191).annotate({
-          expected: "a value with a length of at most 191",
+        S.isMaxCodePoints(191).annotate({
+          expected: "a string with at most 191 code points",
         }),
       ),
     ),
@@ -2565,8 +2565,8 @@ export const PodCreateInput = S.StructWithRest(
           "A user-defined name for the created Pod. The name does not need to be unique.",
         default: "my pod",
       }).check(
-        S.isMaxLength(191).annotate({
-          expected: "a value with a length of at most 191",
+        S.isMaxCodePoints(191).annotate({
+          expected: "a string with at most 191 code points",
         }),
       ),
     ),
@@ -2668,8 +2668,8 @@ export const PodUpdateInPlaceInput = S.StructWithRest(
           "A user-defined name for the created Pod. The name does not need to be unique.",
         default: "my pod",
       }).check(
-        S.isMaxLength(191).annotate({
-          expected: "a value with a length of at most 191",
+        S.isMaxCodePoints(191).annotate({
+          expected: "a string with at most 191 code points",
         }),
       ),
     ),
@@ -2765,8 +2765,8 @@ export const PodUpdateInput = S.StructWithRest(
           "A user-defined name for the created Pod. The name does not need to be unique.",
         default: "my pod",
       }).check(
-        S.isMaxLength(191).annotate({
-          expected: "a value with a length of at most 191",
+        S.isMaxCodePoints(191).annotate({
+          expected: "a string with at most 191 code points",
         }),
       ),
     ),

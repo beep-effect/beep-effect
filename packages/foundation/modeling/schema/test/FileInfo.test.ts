@@ -2,12 +2,12 @@ import { fcRuns } from "@beep/fc-runs";
 import { FileInfo, FileInfoType } from "@beep/schema/FileInfo";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as ByteSize from "effect/ByteSize";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileSystem } from "effect";
 
 const decodeFileInfoEffect = S.decodeEffect(FileInfo);

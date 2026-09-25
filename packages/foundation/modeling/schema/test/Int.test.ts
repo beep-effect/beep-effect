@@ -2,8 +2,8 @@ import { fcRuns } from "@beep/fc-runs";
 import { Int64, Int64FromString, isInt64 } from "@beep/schema/Int";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeInt64 = S.decodeEffect(Int64);
 const decodeUnknownInt64 = S.decodeUnknownEffect(Int64);

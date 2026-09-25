@@ -100,7 +100,7 @@ import {
 } from "./Sweep.schemas.ts";
 import type { FileSystem } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Sweep");
 

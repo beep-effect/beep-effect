@@ -25,10 +25,10 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeExtensionKeyOption = S.decodeOption(ExtensionKey);
 

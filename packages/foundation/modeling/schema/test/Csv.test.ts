@@ -3,10 +3,10 @@ import { $SchemaId } from "@beep/identity";
 import { CSV } from "@beep/schema/Csv";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $SchemaId.create("csv_test");
 

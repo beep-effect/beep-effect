@@ -8,9 +8,9 @@
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import * as Rpc from "effect/unstable/rpc/Rpc";
-import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 
 const $I = $ProfessionalDesktopId.create("intake/VaultDirectoryPicker.rpc");
 

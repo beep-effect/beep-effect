@@ -10,11 +10,11 @@ import {
   $WorkspaceDomainId,
 } from "@beep/identity/packages";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeBaseIdentityInputOption = S.decodeOption(BaseIdentityInput);

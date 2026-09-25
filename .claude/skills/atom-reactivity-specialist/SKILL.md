@@ -5,7 +5,7 @@ description: >
   Use when building React components, managing client/server state, creating
   atoms, wiring frontend services via Atom.runtime, replacing React hooks,
   implementing mutations with reactivity key invalidation, or reviewing
-  frontend code for Atom compliance. Covers effect/unstable/reactivity and
+  frontend code for Atom compliance. Covers effect/reactivity and
   @effect/atom-react.
 version: 0.1.0
 status: active
@@ -96,7 +96,7 @@ Is this state...
 
 ## Source References
 
-- `.repos/effect/packages/effect/src/unstable/reactivity/{Atom,Reactivity,AtomRpc,AsyncResult}.ts`
+- `.repos/effect/packages/effect/src/reactivity/{Atom,Reactivity,AtomRpc,AsyncResult}.ts`
 - `node_modules/@effect/atom-react/src/{Hooks,RegistryContext,ScopedAtom,ReactHydration}.ts`
 
 ## Verification

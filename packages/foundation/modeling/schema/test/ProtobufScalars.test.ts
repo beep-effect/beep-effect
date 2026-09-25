@@ -12,9 +12,9 @@ import { Uint32 } from "@beep/schema/Uint32";
 import { Uint64 } from "@beep/schema/Uint64";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownBytes = S.decodeUnknownEffect(Bytes);
 const decodeUnknownDouble = S.decodeUnknownEffect(Double);

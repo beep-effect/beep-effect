@@ -6,8 +6,8 @@
  */
 
 import { Effect } from "effect";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
-import { Command, Flag } from "effect/unstable/cli";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
@@ -367,7 +367,7 @@ export const getsomesStructEntryFromCallExpression: {
  *
  * ```ts
  * import { lintSchemaFirstCommand } from "@beep/repo-cli/commands/Lint"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(lintSchemaFirstCommand, { version: "0.0.0" })

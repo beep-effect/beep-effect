@@ -24,14 +24,14 @@ import {
   Path,
   pipe,
 } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as HM from "effect/HashMap";
+import { FetchHttpClient } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
@@ -118,7 +118,7 @@ import {
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
 import type { Crypto } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
 import type {

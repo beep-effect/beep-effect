@@ -20,10 +20,10 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { identity } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const $I = $EpistemicDomainId.create("values/EvidenceSpan/EvidenceSpan.model");
 const textAnchorEquivalent = S.toEquivalence(TextAnchor);
@@ -210,7 +210,7 @@ export const isEvidenceSpanInternallyConsistent = EvidenceSpan.isInternallyConsi
  *
  * ```ts
  * import { EvidenceSpanArbitrary } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(EvidenceSpanArbitrary, { count: 1 })
  * ```

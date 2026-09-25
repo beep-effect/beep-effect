@@ -12,8 +12,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const documentTiers = defineFieldTiers({
   balanced: S.Struct({ abstractText: S.String, documentId: S.String, title: S.String }),

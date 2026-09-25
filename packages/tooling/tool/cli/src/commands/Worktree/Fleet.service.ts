@@ -61,7 +61,7 @@ import {
 } from "./Worktree.schemas.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { FleetLiveness, FleetLivenessProbe, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Fleet.service");

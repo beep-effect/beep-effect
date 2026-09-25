@@ -44,7 +44,7 @@ import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -755,7 +755,7 @@ const yeetInboxIdentityId = Effect.fnUntraced(function* (label: string, parts: R
   const bytes = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(A.join(parts, ":")))
     .pipe(Effect.mapError(YeetCommandError.new("Failed to hash inbox receipt identity.")));
-  return `${safeArtifactName(label)}-${Str.takeLeft(12)(Encoding.encodeHex(bytes))}`;
+  return `${safeArtifactName(label)}-${Str.takeLeft(12)(Hex.encode(bytes))}`;
 });
 
 /**

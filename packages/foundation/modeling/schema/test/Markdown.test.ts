@@ -3,9 +3,9 @@ import { decodeMarkdownTextAs, Markdown, MarkdownTextToHtml } from "@beep/schema
 import { loadMarkdownGfmModule, loadMarkdownModule, makeParseMarkdownForSchema } from "@beep/schema/test/Markdown";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeMarkdown2 = S.decodeEffect(Markdown);
 const decodeUnknownMarkdown = S.decodeUnknownEffect(Markdown);

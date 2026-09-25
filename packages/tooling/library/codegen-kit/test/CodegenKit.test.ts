@@ -3,10 +3,10 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { SpecSource } from "@beep/codegen-kit";
 
 const platform = Layer.merge(NodeServices.layer, FetchHttpClient.layer);
@@ -425,7 +425,7 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
       const raw = [
         'import { Effect } from "effect";',
         'import * as Schema from "effect/Schema";',
-        'import { HttpApi, HttpApiSchema } from "effect/unstable/httpapi";',
+        'import { HttpApi, HttpApiSchema } from "effect/http-api";',
         'import { unused } from "fixture";',
         'export class Api extends HttpApi.make("fixture") {}',
         "export type Payload = { readonly value: string };",

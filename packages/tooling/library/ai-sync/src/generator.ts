@@ -6,9 +6,10 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Console, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import * as Hex from "effect/encoding/Hex";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { AiSyncContentHash, AiSyncError, AiSyncSourceMetadata } from "./models.ts";
 import { TIER_ONE_SOURCES } from "./source-map.ts";
 
@@ -380,7 +381,7 @@ export const hashSourceText: (value: string) => Effect.Effect<AiSyncContentHash,
           message: "Failed to compute source content hash.",
           cause: O.some(cause),
         }),
-    }).pipe(Effect.map((buffer) => AiSyncContentHash.make(Encoding.encodeHex(new Uint8Array(buffer)))));
+    }).pipe(Effect.map((buffer) => AiSyncContentHash.make(Hex.encode(new Uint8Array(buffer)))));
   }
 );
 

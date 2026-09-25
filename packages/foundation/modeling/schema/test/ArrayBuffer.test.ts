@@ -2,8 +2,8 @@ import { fcRuns } from "@beep/fc-runs";
 import { ArrayBuf, isArrayBuf } from "@beep/schema/ArrayBuffer";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeArrayBuf = S.decodeEffect(ArrayBuf);
 const decodeUnknownArrayBuf = S.decodeUnknownEffect(ArrayBuf);

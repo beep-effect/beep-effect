@@ -11,7 +11,7 @@ import { useAtom } from "@effect/atom-react";
 import * as d3 from "d3";
 import { flow, HashSet, Order, pipe } from "effect";
 import * as O from "effect/Option";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react";
 import { cn } from "../lib/index.ts";
 

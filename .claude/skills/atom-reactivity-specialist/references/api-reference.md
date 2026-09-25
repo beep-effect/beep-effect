@@ -13,14 +13,14 @@
 - [AtomRpc](#atomrpc-effectunstablereactivityatomrpc)
 - [React Integration (@effect/atom-react)](#react-integration-effectatom-react)
 
-## Atom (`effect/unstable/reactivity/Atom`)
+## Atom (`effect/reactivity/Atom`)
 
 Import as:
 
 ```ts
-import { Atom } from "effect/unstable/reactivity"
+import { Atom } from "effect/reactivity"
 // or
-import * as Atom from "effect/unstable/reactivity/Atom"
+import * as Atom from "effect/reactivity/Atom"
 ```
 
 ### Constructors
@@ -133,7 +133,7 @@ The runtime bridges Effect services into the atom world. Services are shared
 via a `MemoMap` across all atoms created from the same runtime.
 
 ```ts
-import { Atom } from "effect/unstable/reactivity"
+import { Atom } from "effect/reactivity"
 
 // Default runtime (uses Atom.defaultMemoMap)
 const myAtom = Atom.runtime(MyServiceLayer)
@@ -167,7 +167,7 @@ Note: The `reactivityKeys` option is only available on `runtime.fn`, not on the 
 | `factory.addGlobalLayer(layer)` | Inject layer into all runtimes (logging, tracing) |
 | `factory.withReactivity(keys)` | Attach reactivity key invalidation to any atom |
 
-## AsyncResult (`effect/unstable/reactivity/AsyncResult`)
+## AsyncResult (`effect/reactivity/AsyncResult`)
 
 The lifecycle type for all async atoms.
 
@@ -186,7 +186,7 @@ The `waiting` flag on `Success` indicates an in-flight re-fetch (stale data disp
 ### Key operations
 
 ```ts
-import { AsyncResult } from "effect/unstable/reactivity"
+import { AsyncResult } from "effect/reactivity"
 
 AsyncResult.match(result, {
   onInitial: (r) => "loading...",
@@ -205,13 +205,13 @@ AsyncResult.isWaiting(result)
 AsyncResult.toExit(result)
 ```
 
-## Reactivity (`effect/unstable/reactivity/Reactivity`)
+## Reactivity (`effect/reactivity/Reactivity`)
 
 Key-based invalidation service. Mutations invalidate keys, queries
 re-execute when their keys are invalidated.
 
 ```ts
-import { Reactivity } from "effect/unstable/reactivity"
+import { Reactivity } from "effect/reactivity"
 
 // In service code
 Reactivity.mutation(effect, ["users"])         // Invalidate "users" key after effect
@@ -233,12 +233,12 @@ Reactivity.mutation(effect, ["users"])
 Reactivity.mutation(effect, { users: [userId], posts: [postId] })
 ```
 
-## AtomRpc (`effect/unstable/reactivity/AtomRpc`)
+## AtomRpc (`effect/reactivity/AtomRpc`)
 
 Typed RPC service atoms bridging `RpcGroup` to the atom world.
 
 ```ts
-import { AtomRpc } from "effect/unstable/reactivity"
+import { AtomRpc } from "effect/reactivity"
 
 class TodoClient extends AtomRpc.Service<TodoClient>()(
   "TodoClient",

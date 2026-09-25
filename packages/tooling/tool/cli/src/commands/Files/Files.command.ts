@@ -9,8 +9,8 @@ import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { FilesCommandError } from "./Files.errors.ts";
 import {
   ArchivePoorCandidatesOptions,
@@ -886,7 +886,7 @@ const filesStripMetadataCommand = Command.make(
  *
  * ```ts
  * import { filesCommand } from "@beep/repo-cli/commands/Files"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(filesCommand, { version: "0.0.0" })

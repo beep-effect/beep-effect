@@ -10,10 +10,10 @@ import {
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const createRuntimeLiteralKit = (
   literals: ReadonlyArray<unknown>,

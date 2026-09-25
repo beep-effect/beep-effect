@@ -10,7 +10,7 @@ import { Context, Effect, Layer, PubSub } from "effect";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { KeyValueStore, Persistence } from "effect/unstable/persistence";
+import { KeyValueStore, Persistence } from "effect/persistence";
 import { BatchId } from "../Domain/Identity.ts";
 import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";

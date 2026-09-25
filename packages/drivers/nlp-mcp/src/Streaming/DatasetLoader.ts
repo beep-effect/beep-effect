@@ -18,11 +18,11 @@ import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { readLines, readTextFile, TextEncoding } from "./TextStream.ts";
 
 const $I = $NlpMcpId.create("Streaming/DatasetLoader");

@@ -5,8 +5,8 @@ import { Float64Arr, Float64ArrayFromArray } from "@beep/schema/Float64Array";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeFloat16Arr = S.decodeUnknownEffect(Float16Arr);
 const decodeFloat16ArrayFromArray = S.decodeUnknownEffect(Float16ArrayFromArray);

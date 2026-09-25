@@ -17,12 +17,12 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import { NormalizedFixture, ProjectionSnapshot, RuleResult } from "@/domain/Bundle";
 import { LotCertificate, OntologyClassName, SupplierOffer } from "@/domain/Ontology";
 import type { DuckDbError } from "@beep/duckdb";
 import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";
-import type * as SqlError from "effect/unstable/sql/SqlError";
+import type * as SqlError from "effect/sql/SqlError";
 
 const $I = $LejeuneBoltWorkbenchId.create("runtime/Projections");
 const LEJEUNE_ONTOLOGY_NAMESPACE = "https://beep.dev/lejeune/ontology/";

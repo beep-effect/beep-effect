@@ -19,8 +19,8 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { RpcTest } from "effect/rpc";
 import * as S from "effect/Schema";
-import { RpcTest } from "effect/unstable/rpc";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 
 const decodeRunOntologyValidationResult = S.decodeUnknownEffect(RunOntologyValidationResult);

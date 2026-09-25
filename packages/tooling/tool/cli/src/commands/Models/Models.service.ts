@@ -37,8 +37,8 @@ import { ModelsTargetFile, ModelsTargetLocation, resolveTargetPath } from "./Mod
 import { expectedLocatorValue, renderGeneratedBlockBody } from "./Models.render.ts";
 import { DriftFinding, ModelsCheckReport } from "./Models.report.schemas.ts";
 import type { Crypto, Path } from "effect";
-import type { HttpClient } from "effect/unstable/http";
-import type * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import type { HttpClient } from "effect/http";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CatalogModel, CatalogSource, ModelId } from "./Models.catalog.schemas.ts";
 import type { ModelsCatalogSources } from "./Models.catalog.service.ts";
 import type {

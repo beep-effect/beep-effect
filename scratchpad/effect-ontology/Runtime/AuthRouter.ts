@@ -14,7 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { AuthenticationError } from "../Domain/Error/Auth.ts";
 import { TicketRequest, TicketResponse } from "../Domain/Schema/Auth.ts";
 import { ConfigService } from "../Service/Config.ts";
@@ -153,7 +153,7 @@ const handleAuthError = Effect.fn("handleAuthError")(function* (error: Authentic
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { AuthRouter } from "@effect-ontology/Runtime/AuthRouter"
  *
  * const served = Layer.provide(AuthRouter, HttpRouter.layer)

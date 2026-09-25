@@ -31,11 +31,11 @@ import { XSSProtectionHeader } from "@beep/schema/XssProtection";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ContentSecurityPolicyOption } from "@beep/schema/Csp";
 
 const decodeContentSecurityPolicyHeader = S.decodeEffect(ContentSecurityPolicyHeader);

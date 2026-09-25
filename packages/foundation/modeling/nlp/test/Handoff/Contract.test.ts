@@ -2,6 +2,7 @@ import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -9,7 +10,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeContractAnnotatedDocument = S.decodeEffect(Contract.AnnotatedDocument);
 const decodeContractProvenance = S.decodeEffect(Contract.Provenance);

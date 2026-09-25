@@ -17,8 +17,8 @@ import {
   Finite,
   Int,
   instanceOf,
+  isBetweenLength,
   isGreaterThan,
-  isLengthBetween,
   isMaxLength,
   isMinLength,
   Literals,
@@ -29,8 +29,8 @@ import {
   Uint8Array as Uint8ArraySchema,
   Union,
 } from "effect/Schema";
-import { Model as EffectModel } from "effect/unstable/schema";
-import { SqlModel } from "effect/unstable/sql";
+import { Model as EffectModel } from "effect/schema";
+import { SqlModel } from "effect/sql";
 import type { Top } from "effect/Schema";
 
 const PosInt = Int.check(
@@ -121,7 +121,7 @@ class MechanicalColumns extends Model<MechanicalColumns>("MechanicalColumns")({
   amount: String.pipe(pg.numeric(10, 2)),
   calendarDate: String.pipe(pg.date()),
   objectDate: DateSchema.pipe(pg.date({ mode: "date" })),
-  code: String.check(isLengthBetween(4, 4)).pipe(pg.char()),
+  code: String.check(isBetweenLength(4, 4)).pipe(pg.char()),
   payload: Struct({ ok: Boolean }).pipe(pg.json()),
   score: Finite.pipe(pg.real()),
   largeSequence: Int.pipe(pg.bigserial("number")),
@@ -257,7 +257,7 @@ export const effectDrizzleSchema = schema({
   enum_array_record: EnumArrayRecord,
   record_status: class EnumExportCollision extends Model<EnumExportCollision>("EnumExportCollision")({
     status: RecordStatus.pipe(pg.enum("record_status")),
-    code: String.check(isLengthBetween(4, 4)).pipe(pg.char()),
+    code: String.check(isBetweenLength(4, 4)).pipe(pg.char()),
   }) {},
   deduped_enum: class DedupedEnum extends Model<DedupedEnum>("DedupedEnum")({
     value: Literals(["draft", "draft", "active"]).pipe(pg.enum("deduped_status")),
@@ -478,7 +478,7 @@ export const _badVariantVersion = () =>
   );
 export const _charWithoutMaxLength = () => String.pipe(pg.char());
 export const _charWithMaximumOnly = () => String.check(isMaxLength(4)).pipe(pg.char());
-export const _charWithWrongExactLength = () => String.check(isLengthBetween(3, 3)).pipe(pg.char(4));
+export const _charWithWrongExactLength = () => String.check(isBetweenLength(3, 3)).pipe(pg.char(4));
 
 export const _badExtrasCallback = () => {
   class BadExtrasCallback extends Model<BadExtrasCallback>("BadExtrasCallback")(
@@ -514,7 +514,7 @@ export const _declarationNeedsExplicitColumn = () => {
 };
 
 export const _mixedExactCharWidths = () =>
-  Union([String.check(isLengthBetween(2, 2)), String.check(isLengthBetween(3, 3))]).pipe(pg.char());
+  Union([String.check(isBetweenLength(2, 2)), String.check(isBetweenLength(3, 3))]).pipe(pg.char());
 
 export const _mixedExactCharWidthsModelMirror = _mixedExactCharWidths;
 

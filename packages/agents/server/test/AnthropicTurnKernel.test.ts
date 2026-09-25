@@ -3,10 +3,10 @@ import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/pub
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import { AiError } from "effect/ai";
 import * as O from "effect/Option";
-import { AiError } from "effect/unstable/ai";
 import { beforeEach, vi } from "vitest";
-import type { Response } from "effect/unstable/ai";
+import type { Response } from "effect/ai";
 
 const providerState = vi.hoisted(
   (): {
@@ -31,8 +31,8 @@ vi.mock("@beep/anthropic", (importOriginal) =>
     effect.Effect.runPromise(
       effect.Effect.gen(function* () {
         const actual = yield* effect.Effect.tryPromise(() => importOriginal<typeof import("@beep/anthropic")>());
-        const languageModel = yield* effect.Effect.tryPromise(() => import("effect/unstable/ai/LanguageModel"));
-        const response = yield* effect.Effect.tryPromise(() => import("effect/unstable/ai/Response"));
+        const languageModel = yield* effect.Effect.tryPromise(() => import("effect/ai/LanguageModel"));
+        const response = yield* effect.Effect.tryPromise(() => import("effect/ai/Response"));
         const TestLanguageModel = effect.Layer.effect(
           languageModel.LanguageModel,
           languageModel.make({

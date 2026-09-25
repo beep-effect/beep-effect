@@ -17,7 +17,7 @@ import {
 import * as testAssert from "../../bun-test/utils.ts";
 import { Clock, Context, Duration, Effect, Fiber, Layer, Schema } from "effect";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 
 // Declared ahead of the describe blocks: Bun evaluates describe callbacks
 // synchronously during module evaluation, so a later `const` would be in TDZ.

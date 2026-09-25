@@ -3,9 +3,9 @@ import * as FilePathSchema from "@beep/schema/FilePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownFilePathSchemaFilePath = S.decodeUnknownEffect(FilePathSchema.FilePath);
 const decodeUnknownFilePathSchemaHasLeafSegment = S.decodeUnknownEffect(FilePathSchema.HasLeafSegment);

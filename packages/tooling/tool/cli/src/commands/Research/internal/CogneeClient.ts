@@ -19,16 +19,16 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Email, EmailString } from "@beep/schema";
 import { Config, Effect, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { RESEARCH_ENV_FILE_HINT } from "./ResearchEnv.ts";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+import type * as HttpClientError from "effect/http/HttpClientError";
 
 const $I = $RepoCliId.create("commands/Research/internal/CogneeClient");
 

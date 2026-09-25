@@ -25,9 +25,9 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ActionEvent, ExtractionPlan } from "@beep/qa-capture";
 
 const T0 = 1753838000000;

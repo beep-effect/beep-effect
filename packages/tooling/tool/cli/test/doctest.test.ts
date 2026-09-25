@@ -14,8 +14,8 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const encoder = new TextEncoder();
 
@@ -63,15 +63,15 @@ describe("doctest analyzer", () => {
     expect(verdict._tag).toBe("impure");
     if (verdict._tag === "impure") expect(verdict.reason).toBe("file-system");
 
-    expect(classifyDoctestFence('export * from "effect/unstable/http/HttpClient"', "ts")).toMatchObject({
+    expect(classifyDoctestFence('export * from "effect/http/HttpClient"', "ts")).toMatchObject({
       _tag: "impure",
       reason: "network",
     });
-    expect(classifyDoctestFence('import "effect/unstable/socket"', "ts")).toMatchObject({
+    expect(classifyDoctestFence('import "effect/socket"', "ts")).toMatchObject({
       _tag: "impure",
       reason: "network",
     });
-    expect(classifyDoctestFence('import "effect/unstable/process"', "ts")).toMatchObject({
+    expect(classifyDoctestFence('import "effect/process"', "ts")).toMatchObject({
       _tag: "impure",
       reason: "child-process",
     });

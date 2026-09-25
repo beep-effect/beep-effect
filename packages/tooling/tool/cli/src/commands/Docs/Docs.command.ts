@@ -9,9 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, pipe, Tuple } from "effect";
+import { Argument, Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Argument, Command } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { docsAggregateCommand } from "./Docs.aggregate.ts";
 

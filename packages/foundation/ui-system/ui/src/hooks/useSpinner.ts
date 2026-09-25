@@ -8,8 +8,8 @@ import { $UiId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import { useAtomMount, useAtomSet } from "@effect/atom-react";
 import { Match } from "effect";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
 
 const $I = $UiId.create("hooks/useSpinner");

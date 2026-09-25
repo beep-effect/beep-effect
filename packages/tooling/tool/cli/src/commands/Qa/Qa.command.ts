@@ -15,7 +15,7 @@ import { FFmpeg } from "@beep/ffmpeg";
 import { CaptureLane, ClockCorrelator, Collector, ExtractionRuleSet, SessionStore, Witness } from "@beep/qa-capture";
 import { A } from "@beep/utils";
 import { Effect, Layer, Path } from "effect";
-import { Argument, Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { markLiveSession, stopLiveSession } from "./Control.ts";
@@ -306,7 +306,7 @@ const qaJudgeSkillCommand = Command.make("judge-skill", { write: writeSkillFlag 
  *
  * ```ts
  * import { qaCommand } from "@beep/repo-cli/commands/Qa/index"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(qaCommand, { version: "0.0.0" })

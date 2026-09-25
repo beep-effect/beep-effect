@@ -2,7 +2,7 @@ import { ontologyGraphErrorAtom, ontologyGraphWorkerBridgeAtom } from "@beep/ont
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Schedule } from "effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/unstable/reactivity";
+import { AtomRegistry } from "effect/reactivity";
 import { vi } from "vitest";
 
 // The parent encodes every command before it crosses the worker boundary. A

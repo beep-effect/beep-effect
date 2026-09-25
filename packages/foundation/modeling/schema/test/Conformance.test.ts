@@ -16,10 +16,10 @@ import {
 import { URLStr } from "@beep/schema/URL";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeAnnotationResult = S.decodeResult(Annotation);
 const decodeEnforcementResult = S.decodeResult(Enforcement);

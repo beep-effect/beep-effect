@@ -3,10 +3,10 @@ import { makeLayer, PgliteClient, PgliteError, PgliteTestLayer } from "@beep/pgl
 import * as Pg from "@effect/sql-pg/PgClient";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Exit, Layer, Result, Scope } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const PgliteErrorArbitrary = Arbitrary.schema(PgliteError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 const encodePgliteError = S.encodeUnknownResult(PgliteError);

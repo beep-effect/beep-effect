@@ -4,10 +4,10 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Graph_ from "effect/Graph";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGraphSchemaEdgeIndex = S.decodeUnknownEffect(GraphSchema.EdgeIndex);
 const decodeGraphSchemaEdgeIndexFromString = S.decodeUnknownEffect(GraphSchema.EdgeIndexFromString);

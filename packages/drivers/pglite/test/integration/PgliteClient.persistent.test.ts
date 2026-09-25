@@ -5,7 +5,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

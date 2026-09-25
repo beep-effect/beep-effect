@@ -8,7 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import { Crypto, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
+import { Crypto, Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertPinnedArchive, extractArchiveTextEntries, renderUnknownJsonModule } from "../internal/FreeLawProject.ts";
@@ -305,7 +306,7 @@ const makeReporterId = Effect.fn("SyncDataToTs.ReportersDb.makeReporterId")(func
     .digest("SHA-256", textEncoder.encode(semanticKey))
     .pipe(SyncDataToTsError.mapError("Failed to compute a stable reporters-db identifier", targetId, reportersPath));
 
-  return `reporter:${pipe(Encoding.encodeHex(digest), Str.slice(0, 24))}`;
+  return `reporter:${pipe(Hex.encode(digest), Str.slice(0, 24))}`;
 });
 
 const formatReporterRangeBoundary = (boundary: string | null): string =>

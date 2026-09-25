@@ -2,9 +2,9 @@ import { fcRuns } from "@beep/fc-runs";
 import { RegExpFromStr, RegExpStr } from "@beep/schema/RegExp";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownRegExpFromStrEffect = S.decodeUnknownEffect(RegExpFromStr);
 const decodeUnknownRegExpStrEffect = S.decodeUnknownEffect(RegExpStr);

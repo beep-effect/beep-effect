@@ -215,7 +215,7 @@ const isImportedBindingMember = (
   );
 
 const isCommandMember = (expression: Expression, memberName: string): boolean =>
-  isImportedBindingMember(expression, "Command", memberName, "effect/unstable/cli");
+  isImportedBindingMember(expression, "Command", memberName, "effect/cli");
 
 const isArrayMake = (expression: Expression): boolean =>
   isImportedBindingMember(expression, "A", "make", "effect/Array") ||

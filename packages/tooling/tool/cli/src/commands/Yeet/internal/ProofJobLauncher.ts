@@ -53,7 +53,7 @@ import {
   terminationReasonForServiceResult,
   YeetProofJobCapsule,
 } from "./ProofJob.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schemas.ts";
 import type { ProofJobOutcome, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
 

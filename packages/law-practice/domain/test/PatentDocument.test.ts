@@ -12,9 +12,9 @@ import { Md } from "@beep/md";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePatentApplicationDocumentResult = S.decodeResult(PatentApplicationDocument);
 const decodePatentApplicationSectionsResult = S.decodeResult(PatentApplicationSections);

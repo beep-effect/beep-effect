@@ -2,11 +2,11 @@ import { fcRuns } from "@beep/fc-runs";
 import * as Duration from "@beep/schema/Duration";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as D from "effect/Duration";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownDurationFromInputEffect = S.decodeUnknownEffect(Duration.FromInput);
 const decodeUnknownDurationInputEffect = S.decodeUnknownEffect(Duration.Input);

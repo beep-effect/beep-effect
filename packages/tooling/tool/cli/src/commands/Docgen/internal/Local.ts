@@ -15,8 +15,8 @@ import { Console, Duration, Effect, flow, HashSet, Order, pipe, Result } from "e
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
-import * as ChildProcess from "effect/unstable/process/ChildProcess";
 import { readTurboCacheEnvironment } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
@@ -35,7 +35,7 @@ import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofMan
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
+import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { DocgenConfigDocument, DocgenPackageAnalysis, DocgenWorkspacePackage } from "./Operations.ts";
 

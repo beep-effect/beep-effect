@@ -19,13 +19,13 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
+import { FetchHttpClient } from "effect/http";
 import * as O from "effect/Option";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
 
 const PAGE_ID = "36869573788d8043907eddb021d99410";
 const UNIT_FILES = [

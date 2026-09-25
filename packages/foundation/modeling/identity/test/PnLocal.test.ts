@@ -11,12 +11,12 @@ import {
 } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownEscapedPnLocalOption = S.decodeUnknownOption(EscapedPnLocal);
 const decodeUnknownSafePnLocalOption = S.decodeUnknownOption(SafePnLocal);

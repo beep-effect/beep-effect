@@ -17,7 +17,7 @@ import {
 } from "@beep/ui/components/menubar";
 import { A } from "@beep/utils";
 import { useAtom } from "@effect/atom-react";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import * as React from "react";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";

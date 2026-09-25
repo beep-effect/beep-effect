@@ -4,8 +4,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import type * as PlatformError from "effect/PlatformError";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));

@@ -13,11 +13,12 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { XmlTextToUnknown } from "@beep/schema/Xml";
 import { A, Str } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
-import { Crypto, Effect, Encoding, pipe, Result } from "effect";
+import { Crypto, Effect, pipe, Result } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import { dual, flow } from "effect/Function";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { formatJsonValue } from "../../../internal/cli/Json.ts";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
 import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.ts";
@@ -214,7 +215,7 @@ const sha256Hex = Effect.fn("SyncDataToTs.sha256Hex")(function* (bytes: Uint8Arr
   const digest = yield* crypto
     .digest("SHA-256", bytes)
     .pipe(SyncDataToTsError.mapError(`Failed to compute SHA-256 digest for ${url}`, targetId));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 /**

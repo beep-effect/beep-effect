@@ -25,10 +25,10 @@ import {
 } from "@beep/schema/LocalDate";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Equal, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeLocalDate = S.decodeEffect(LocalDate);
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);

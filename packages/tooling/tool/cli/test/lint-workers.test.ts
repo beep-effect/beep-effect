@@ -8,10 +8,10 @@ import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
 import { beforeEach, describe, expect, vi } from "vitest";
 import type {
   canUseTurboCacheSecretSession,

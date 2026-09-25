@@ -9,8 +9,8 @@ import { Context, DateTime, Effect, Equal, Layer, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { HttpRouter } from "effect/unstable/http";
-import { SqlClient } from "effect/unstable/sql";
+import { HttpRouter } from "effect/http";
+import { SqlClient } from "effect/sql";
 import { describe } from "vitest";
 import {
   ConflictActor,

@@ -9,11 +9,11 @@ import { sanitizeTracerAttributes, withSanitizedToolSpan } from "@beep/mcp-kit";
 import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/SanitizedSpan";
 import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { Effect } from "effect";
+import { Tool, Toolkit } from "effect/ai";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Tracer from "effect/Tracer";
-import { Tool, Toolkit } from "effect/unstable/ai";
 
 const FixtureTool = Tool.make("fixture_tool", {
   parameters: S.Struct({ secret: S.String }),

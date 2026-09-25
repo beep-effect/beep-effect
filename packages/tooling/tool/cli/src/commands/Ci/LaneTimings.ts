@@ -43,6 +43,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { Console, Context, DateTime, Duration, Effect, Order, pipe, Schedule } from "effect";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -50,13 +51,12 @@ import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { Command, Flag } from "effect/unstable/cli";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type * as Crypto from "effect/Crypto";
+import type { ChildProcessSpawner } from "effect/process";
 import type * as SchemaAST from "effect/SchemaAST";
-import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
 

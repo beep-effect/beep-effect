@@ -2,8 +2,8 @@ import { fcRuns } from "@beep/fc-runs";
 import { AtUri } from "@beep/schema/AtURI";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isAtUri2 = S.is(AtUri);
 

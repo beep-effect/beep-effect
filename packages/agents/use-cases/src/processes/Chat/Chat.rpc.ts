@@ -14,9 +14,9 @@ import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Thread } from "@beep/workspace-domain";
 import { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import * as Rpc from "effect/unstable/rpc/Rpc";
-import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 import { ChatActionError } from "./Chat.errors.ts";
 
 /**
@@ -177,7 +177,7 @@ export const GetTurnRequestStatusRpc = Rpc.make("GetTurnRequestStatus", {
  *
  * ```ts
  * import { ChatRpcs, SendMessageRpc } from "@beep/agents-use-cases/public"
- * import * as RpcSchema from "effect/unstable/rpc/RpcSchema"
+ * import * as RpcSchema from "effect/rpc/RpcSchema"
  *
  * const registered = ChatRpcs.requests.get("SendMessage")
  * const streamsBlocks =
@@ -210,7 +210,7 @@ export const SendMessageRpc = Rpc.make("SendMessage", {
  *
  * ```ts
  * import { ChatRpcs, EditMessageRpc } from "@beep/agents-use-cases/public"
- * import * as RpcSchema from "effect/unstable/rpc/RpcSchema"
+ * import * as RpcSchema from "effect/rpc/RpcSchema"
  *
  * const registered = ChatRpcs.requests.get("EditMessage")
  * const streamsBlocks =

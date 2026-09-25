@@ -17,11 +17,11 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeDateTimeInputDate = S.decodeUnknownEffect(DateTimeInputDate);
 const decodeDateTimeInputDateTagged = S.decodeUnknownEffect(DateTimeInputDate.Tagged);

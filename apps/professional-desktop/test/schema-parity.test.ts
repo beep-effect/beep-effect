@@ -10,12 +10,12 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { SetWorkspaceVaultInput } from "@beep/workspace-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";
 import { DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/Intake.atoms";
 import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations";

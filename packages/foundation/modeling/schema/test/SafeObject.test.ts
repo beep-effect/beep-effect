@@ -2,8 +2,8 @@ import { fcRuns } from "@beep/fc-runs";
 import { SafeObject, SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSafeObject = S.decodeUnknownEffect(SafeObject);
 const decodeUnknownSafeObjectFromObjectKeyword = S.decodeUnknownEffect(SafeObjectFromObjectKeyword);

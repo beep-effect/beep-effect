@@ -1373,7 +1373,7 @@ Use this before submitting code:
 39. Deterministic format conversions use `S.decodeTo(..., SchemaTransformation.transform(...))`.
 40. Trivial helper wrapper lambdas are collapsed to direct helper refs where safe, and passthrough `pipe(...)` callbacks are expressed with `flow(...)`.
 41. Runtime source avoids `node:fs` / `node:path` / `node:child_process`; use Effect `FileSystem` / `Path` / process services.
-42. Runtime source avoids native `fetch`; HTTP boundaries use `effect/unstable/http` + platform layers (`BunHttpClient.layer`, etc.).
+42. Runtime source avoids native `fetch`; HTTP boundaries use `effect/http` + platform layers (`BunHttpClient.layer`, etc.).
 43. Runtime sorting uses `A.sort` with explicit `Order`, not native `Array.prototype.sort`.
 44. Boolean branching prefers `Bool.match` over ad-hoc `if/else` when branching on booleans.
 45. HTTP request/response composition uses Effect HTTP modules (`HttpClientRequest`, `HttpClientResponse`, `Headers`, `UrlParams`, `HttpMethod`, `HttpBody`).

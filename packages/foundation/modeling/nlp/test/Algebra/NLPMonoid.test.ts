@@ -1,5 +1,5 @@
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 /**
  * Property-based tests ("proofs") for NLP-specific monoid laws.
  *
@@ -9,7 +9,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
  * for it, exactly as in the legacy property suite.
  *
  * Property-based coverage for Effect v4's
- * `effect/unstable/arbitrary/Arbitrary`.
+ * `effect/Arbitrary`.
  */
 
 import * as NLP from "@beep/nlp/Algebra/NLPMonoid";

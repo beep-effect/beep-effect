@@ -3,9 +3,9 @@ import * as GlobModule from "@beep/schema/Glob";
 import { Glob } from "@beep/schema/Glob";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGlobModuleSchemaEffect = S.decodeEffect(GlobModule.Schema);
 const decodeUnknownGlobEffect = S.decodeUnknownEffect(Glob);

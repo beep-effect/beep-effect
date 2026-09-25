@@ -12,7 +12,7 @@ import { Layer } from "effect";
 import { dual } from "effect/Function";
 import { PacerAuth, PacerSession } from "./PacerAuth.service.ts";
 import { PclClient } from "./PclClient.service.ts";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
+import type * as HttpClient from "effect/http/HttpClient";
 import type { PacerConfig } from "./Pacer.config.ts";
 import type { PacerAuthError } from "./Pacer.errors.ts";
 

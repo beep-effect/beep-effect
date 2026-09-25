@@ -154,7 +154,7 @@ export const CanonicalAliasKey = S.String.check(S.isPattern(CANONICAL_ALIAS_KEY_
  * @category utilities
  * @since 0.0.0
  */
-export const BeepScopedPackageName = S.String.check(S.isStartsWith("@beep/")).pipe(
+export const BeepScopedPackageName = S.String.check(S.isStartingWith("@beep/")).pipe(
   S.brand("BeepScopedPackageName"),
   $I.annoteSchema("BeepScopedPackageName", {
     description: "Package name under the @beep scope.",

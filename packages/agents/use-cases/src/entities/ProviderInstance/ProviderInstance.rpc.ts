@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import * as Rpc from "effect/unstable/rpc/Rpc";
-import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 import {
   AddProviderInstanceCommand,
   GetProviderInstanceQuery,

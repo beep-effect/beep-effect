@@ -21,11 +21,11 @@ import { NonNegativeInt } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Stream } from "effect";
+import { FetchHttpClient } from "effect/http";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient } from "effect/unstable/http";
-import { ChildProcess } from "effect/unstable/process";
 
 // Nothing in this suite may reach a Cognee server: the one URL used points at
 // the loopback discard port so the login request is refused immediately.

@@ -3,8 +3,8 @@ import { AppendFileSyncOptions, ReaddirSyncOptions, RmSyncOptions } from "@beep/
 import { GlobOptions, Pattern } from "@beep/utils/Glob";
 import { PathInput } from "@beep/utils/Struct";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const encode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>

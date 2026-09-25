@@ -7,8 +7,9 @@
 
 import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { DateTime, Encoding, flow, Match, pipe, Result } from "effect";
+import { DateTime, flow, Match, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Base64Url from "effect/encoding/Base64Url";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -147,10 +148,10 @@ const refNode = (ref: ObjectRef): Result.Result<NamedNode, ProvRdfCodecError> =>
     [REF_IRI_PREFIX, RECORD_IRI_PREFIX, RELATION_IRI_PREFIX],
     A.some((prefix) => Str.startsWith(prefix)(ref))
   )
-    ? makeNamedNodeResult(`${REF_IRI_PREFIX}${Encoding.encodeBase64Url(ref)}`)
+    ? makeNamedNodeResult(`${REF_IRI_PREFIX}${Base64Url.encode(ref)}`)
     : pipe(
         makeNamedNodeResult(ref),
-        Result.orElse(() => makeNamedNodeResult(`${REF_IRI_PREFIX}${Encoding.encodeBase64Url(ref)}`))
+        Result.orElse(() => makeNamedNodeResult(`${REF_IRI_PREFIX}${Base64Url.encode(ref)}`))
       );
 
 const recordNode = (index: number): Result.Result<NamedNode, ProvRdfCodecError> =>
@@ -613,7 +614,7 @@ const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, Pro
         Str.startsWith(REF_IRI_PREFIX)(term.value)
           ? pipe(
               Str.slice(REF_IRI_PREFIX.length)(term.value),
-              Encoding.decodeBase64UrlString,
+              Base64Url.decodeString,
               Result.mapError(() => codecError(`Invalid encoded PROV object reference: ${term.value}`))
             )
           : Result.succeed(term.value),

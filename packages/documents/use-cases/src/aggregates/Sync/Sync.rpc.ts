@@ -10,9 +10,9 @@ import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import * as Rpc from "effect/unstable/rpc/Rpc";
-import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 import { VaultSyncActionError } from "./Sync.errors.ts";
 import { VaultSyncStatus } from "./VaultSyncEngine.ts";
 

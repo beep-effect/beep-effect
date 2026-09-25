@@ -5,7 +5,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Scope from "effect/Scope";
-import { Socket } from "effect/unstable/socket";
+import { Socket } from "effect/socket";
 import { beforeEach, expect, vi } from "vitest";
 import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket";
 

@@ -114,7 +114,7 @@ import {
 } from "./WatchStream.ts";
 import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
 import type { YeetWatchEvent } from "./WatchStream.ts";

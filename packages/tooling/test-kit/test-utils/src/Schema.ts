@@ -6,10 +6,10 @@
  */
 
 import { assert } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { fcRuns } from "./FastCheckRuns.ts";
 
 /**

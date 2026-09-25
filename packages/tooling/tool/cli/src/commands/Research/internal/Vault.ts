@@ -12,7 +12,7 @@
 
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -140,7 +140,7 @@ export const sha256HexOf = Effect.fn("ResearchVault.sha256HexOf")(function* (
   content: string
 ): Effect.fn.Return<string, ResearchCommandError, Crypto.Crypto> {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(
+  return Hex.encode(
     yield* crypto
       .digest("SHA-256", new TextEncoder().encode(content))
       .pipe(ResearchCommandError.mapError("Failed hashing UTF-8 content."))

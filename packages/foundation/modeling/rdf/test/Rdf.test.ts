@@ -115,9 +115,9 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Equal, Exit, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBlankNode = S.decodeUnknownEffect(BlankNode);
 const decodeCurie = S.decodeUnknownEffect(Curie);

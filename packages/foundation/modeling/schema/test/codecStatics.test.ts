@@ -9,12 +9,12 @@ import {
 import { withStatics } from "@beep/schema/SchemaUtils/withStatics";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { expectTypeOf } from "vitest";
 
 const Count = S.FiniteFromString;

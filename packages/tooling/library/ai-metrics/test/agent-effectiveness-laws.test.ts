@@ -10,9 +10,9 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeAiMetricsSection = S.encodeUnknownResult(AgentEffectivenessAiMetricsSection);
 const decodeAiMetricsSection = S.decodeUnknownResult(AgentEffectivenessAiMetricsSection);

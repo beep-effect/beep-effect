@@ -1,6 +1,6 @@
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { expect } from "vitest";
 
 export const expectSchemaRoundTrip = <A, E>(schema: S.Codec<A, E, never, never>): void => {

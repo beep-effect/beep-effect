@@ -22,9 +22,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Args from "effect/unstable/cli/Argument";
-import * as Command from "effect/unstable/cli/Command";
-import * as Flag from "effect/unstable/cli/Flag";
+import * as Args from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { ContentHash, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../../Domain/Model/ExtractionRun.ts";
@@ -273,7 +273,7 @@ const makeExtractLayer = (ontologyPath: string, noExternalVocabs: boolean) => {
  *
  * ```ts
  * import { extractCommand } from "@effect-ontology/Cli/Commands/Extract"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["ontologies/people.ttl", "--text", "Ada Lovelace was a mathematician"]
  * const program = Command.runWith(extractCommand, { version: "0.0.0" })([...argv])

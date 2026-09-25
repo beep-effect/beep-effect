@@ -31,12 +31,12 @@ import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
 import { JsonStringCodec } from "../schema/JsonCodec.ts";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("internal/process/StepExec");
 

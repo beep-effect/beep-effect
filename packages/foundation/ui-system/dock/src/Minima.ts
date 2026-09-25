@@ -12,9 +12,9 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { DockNode, DockWorkspace as DockWorkspaceModel, TabsNode } from "./Dock.tree.ts";
 import type { FontMetrics } from "@beep/pretext";
 import type { GroupMinimaRecord } from "./Dock.geometry.ts";
@@ -174,7 +174,7 @@ export const titleMinima: Dual3<FontMetrics, DockWorkspace, TabChrome, GroupMini
  * import { PretextCaptureFixture } from "@beep/pretext"
  * import { Effect } from "effect"
  * import * as Layer from "effect/Layer"
- * import { Atom, AtomRegistry } from "effect/unstable/reactivity"
+ * import { Atom, AtomRegistry } from "effect/reactivity"
  *
  * const groupId = GroupId.make("group-one")
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "The dragon", view: TextPanelView.make({ text: "one" }) })

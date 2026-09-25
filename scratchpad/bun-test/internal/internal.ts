@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import type * as BunTest from "../index.ts";
 
 // ----------------------------------------------------------------------------
@@ -364,7 +364,7 @@ export const addEqualityTesters = () => {
 };
 
 // ----------------------------------------------------------------------------
-// Property testing (effect/unstable/arbitrary)
+// Property testing (effect/Arbitrary)
 // ----------------------------------------------------------------------------
 
 type PropertyTimeout =

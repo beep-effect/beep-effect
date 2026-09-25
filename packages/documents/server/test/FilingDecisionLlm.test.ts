@@ -16,10 +16,10 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, FileSystem, Layer, Stream } from "effect";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as Response from "effect/unstable/ai/Response";
 
 const decodeDocumentIntakeDroppedFileInput = S.decodeEffect(Document.IntakeDroppedFileInput);
 

@@ -11,7 +11,7 @@ import {
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect, it } from "@effect/vitest";
 import { Cause, Console, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
 
 const provideScopedLayer =

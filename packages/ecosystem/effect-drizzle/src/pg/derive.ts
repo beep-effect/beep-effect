@@ -45,7 +45,7 @@ import { hasProperty, isBigInt, isBoolean, isNumber, isString, isTagged, not } f
 import { isSchema } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { get as getStruct } from "effect/Struct";
-import { VariantSchema } from "effect/unstable/schema";
+import { VariantSchema } from "effect/schema";
 import { classify as classifyCore, DeriveColumnError, flattenEncoded } from "../core/classification.ts";
 import { EntityIdLike as EntityIdLikeSchema, isEntityIdLike } from "../core/entity-id.ts";
 import { stringLiteralValues as collectStringLiteralValues } from "../core/literals.ts";
@@ -412,7 +412,7 @@ export const maxLengths = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded)
 const exactLengthFromCheck = (check: Check<unknown>): ReadonlyArray<number> => {
   const representation = check.annotations?.representation;
   const current =
-    representation?.id === "effect/schema/isLengthBetween" &&
+    representation?.id === "effect/schema/isBetweenLength" &&
     hasProperty(representation.payload, "minimum") &&
     isNumber(representation.payload.minimum) &&
     hasProperty(representation.payload, "maximum") &&
@@ -446,7 +446,7 @@ const collectExactLengths: {
 });
 
 /**
- * Collect exact encoded string lengths installed with `isLengthBetween(n, n)`.
+ * Collect exact encoded string lengths installed with `isBetweenLength(n, n)`.
  * @internal
  * @category utilities
  * @since 0.0.0
