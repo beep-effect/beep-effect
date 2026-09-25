@@ -130,6 +130,8 @@ export class ProvenanceStampOutcome extends S.Class<ProvenanceStampOutcome>($I`P
   })
 ) {}
 
+const isProvenanceStampFailureStatus = S.is(ProvenanceStampFailureStatus);
+
 /**
  * Decide whether a stamp outcome should count as a failed publish lane.
  *
@@ -150,7 +152,7 @@ export class ProvenanceStampOutcome extends S.Class<ProvenanceStampOutcome>($I`P
  * @since 0.0.0
  */
 export const isProvenanceStampFailure = (outcome: ProvenanceStampOutcome): boolean =>
-  S.is(ProvenanceStampFailureStatus)(outcome.status);
+  isProvenanceStampFailureStatus(outcome.status);
 
 const skippedStamp = (message: string): ProvenanceStampOutcome =>
   ProvenanceStampOutcome.make({ status: "skipped", message });
