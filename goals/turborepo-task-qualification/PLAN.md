@@ -2101,3 +2101,14 @@ revision and require refresh; the merge does not renew runtime evidence.
 Post-merge cache policy audit passes with zero findings and 1251 honestly
 unassessed computations. Packet, exploration, reflection and diff checks pass.
 Full local and hosted proof remain pending.
+
+### Post-D1 source attachment refresh — 2026-09-25
+
+The census at `8caad510d2` retains 144 workspaces, 3473 nodes and 1970
+executables. Two repo-cli test configurations declare the D1 JSON inputs;
+53 other nodes have changed input summaries. Six changed source hashes and
+three newly bound test/fixture files are reviewed. All eight gate-order
+handoff tests pass. The attachment accepts 1014 sources, six historical
+planner artifacts and 50 reviews, preserving all 14 broader obligations.
+See [the review](./research/d1-entrypoint-review.json). Current planner parity,
+complete semantic coverage and signed remote evidence remain unproven.

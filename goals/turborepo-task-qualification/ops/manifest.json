@@ -376,7 +376,8 @@
     "research/ordinary-real-invalidation.json",
     "research/ordinary-real-canary.json",
     "research/ordinary-client-transition.json",
-    "research/main-d1-baseline-integration.json"
+    "research/main-d1-baseline-integration.json",
+    "research/d1-entrypoint-review.json"
   ],
   "agentLaunchers": [
     {

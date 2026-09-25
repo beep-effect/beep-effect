@@ -15,16 +15,15 @@ this packet is this task; sibling source files remain outside its write scope.
 
 ## Consumer checkpoint — 2026-09-25
 
-The source census was regenerated at `3df15e7a3e`: 144 workspaces, 3,473 graph
-nodes and 1,970 executable computations. Commands, dependencies, effective
-configuration and census source bindings match the prior snapshot. Input
-summaries differ on 90 nodes in the live checkout, where generated files and
-concurrent proof activity remain relevant. This is a source-population snapshot,
-not an atomic filesystem or runtime-equivalence proof. See
-[the census refresh](./current-census-handoff-review.json).
+The source census was regenerated at `8caad510d2`: 144 workspaces, 3,473 graph
+nodes and 1,970 executable computations. No nodes were added or removed.
+Two repo-cli test configurations gained the D1 economics/handoff JSON inputs;
+53 other nodes have changed input summaries. Root scripts and global
+configuration are unchanged. This live census is not an atomic filesystem
+snapshot. See [the D1 source review](./d1-entrypoint-review.json).
 
-The validated attachment now binds 1,011 sources, six planner artifacts and 49
-reviews, retaining 14 broader obligations. Scoped npm tool paths are accepted
+The validated attachment now binds 1,014 sources, six historical planner artifacts
+and 50 reviews, retaining 14 broader obligations. Scoped npm tool paths are accepted
 without relaxing containment, symlink rejection or digest checks. The pure
 policy API remains `@beep/repo-configs/cache`; source attachment does not grant
 qualification or authorize activation.
