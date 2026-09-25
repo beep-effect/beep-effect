@@ -1,0 +1,247 @@
+[
+  {
+    "ownerAudit": "r37-modeling-supplement",
+    "originalFile": "r37-modeling-supplement/disposition.json",
+    "originalSha256": "21eeebbf9fe6fe140066ea50b78bd57f867ad5b6afbe817de27037b167027e27",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-modeling-supplement/disposition.json.txt",
+    "publishedSha256": "919a6c2a8b35c899c106953e0cf600fe87e986a91fdb4dbf15d60db9cd25cd85"
+  },
+  {
+    "ownerAudit": "r37-modeling-supplement",
+    "originalFile": "r37-modeling-supplement/disposition.md",
+    "originalSha256": "dcbf68aa69fb54ca4c1fb0a25b4c3b52e3648d4e0f1b6783fb0dde526566e8a7",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-modeling-supplement/disposition.md.txt",
+    "publishedSha256": "dcbf68aa69fb54ca4c1fb0a25b4c3b52e3648d4e0f1b6783fb0dde526566e8a7"
+  },
+  {
+    "ownerAudit": "r37-modeling-supplement",
+    "originalFile": "r37-modeling-supplement/proposed-rows.jsonl",
+    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-modeling-supplement/proposed-rows.jsonl.txt",
+    "publishedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "ownerAudit": "r37-drivers-af-locator-audit",
+    "originalFile": "r37-drivers-af-locator-audit/disposition.json",
+    "originalSha256": "bf11b2832582083adab41d49719018756310ccdfc97b5f783d7e301b029660a6",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-drivers-af-locator-audit/disposition.json.txt",
+    "publishedSha256": "d5851d163c96fbf93d20909dd181507a59f60b0e92cbf9719657671915bc1e0b"
+  },
+  {
+    "ownerAudit": "r37-drivers-af-locator-audit",
+    "originalFile": "r37-drivers-af-locator-audit/disposition.md",
+    "originalSha256": "d6186d51c960ae64a1d7fe769cb831409d7d3d9cb118ba6c715e51deeb5795d6",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-drivers-af-locator-audit/disposition.md.txt",
+    "publishedSha256": "d6186d51c960ae64a1d7fe769cb831409d7d3d9cb118ba6c715e51deeb5795d6"
+  },
+  {
+    "ownerAudit": "r37-drivers-af-locator-audit",
+    "originalFile": "r37-drivers-af-locator-audit/proposed-row-replacements.jsonl",
+    "originalSha256": "8416bd555f236e2f2828b2787bf648401d745a34211c888a7adc2c2ca01ce39f",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-drivers-af-locator-audit/proposed-row-replacements.jsonl.txt",
+    "publishedSha256": "8416bd555f236e2f2828b2787bf648401d745a34211c888a7adc2c2ca01ce39f"
+  },
+  {
+    "ownerAudit": "r37-thread-transcript-audit",
+    "originalFile": "r37-thread-transcript-audit/disposition.json",
+    "originalSha256": "95c3ddb4f870004d74dda1770c10e3a4ab302e4e3d59f6dfb668abc6d65c7375",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-thread-transcript-audit/disposition.json.txt",
+    "publishedSha256": "0b9bd393d1d4be2a8e2d49da04dae6b0a4dfe1c51db0098c070ad2df84cfb126"
+  },
+  {
+    "ownerAudit": "r37-thread-transcript-audit",
+    "originalFile": "r37-thread-transcript-audit/disposition.md",
+    "originalSha256": "6f0670935bf1af5041abb3db868fa5f0f526bece6e61eda8bf606e6707a1990f",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-thread-transcript-audit/disposition.md.txt",
+    "publishedSha256": "6f0670935bf1af5041abb3db868fa5f0f526bece6e61eda8bf606e6707a1990f"
+  },
+  {
+    "ownerAudit": "r37-thread-transcript-audit",
+    "originalFile": "r37-thread-transcript-audit/proposed-row-replacements.jsonl",
+    "originalSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-thread-transcript-audit/proposed-row-replacements.jsonl.txt",
+    "publishedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "ownerAudit": "r37-thread-transcript-audit",
+    "originalFile": "r37-thread-transcript-audit/retained-row.jsonl",
+    "originalSha256": "a16521f49727d591cad8b4de67f434c374ba76c3cecfdd446256865990b8f962",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-thread-transcript-audit/retained-row.jsonl.txt",
+    "publishedSha256": "a16521f49727d591cad8b4de67f434c374ba76c3cecfdd446256865990b8f962"
+  },
+  {
+    "ownerAudit": "r37-cli-ac-parent-audit",
+    "originalFile": "r37-cli-ac-parent-audit/disposition.json",
+    "originalSha256": "e6873fe724a278664ae083cd7ca6f8a618537989ededef17f9e09adcf8e7e7f1",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-ac-parent-audit/disposition.json.txt",
+    "publishedSha256": "e6873fe724a278664ae083cd7ca6f8a618537989ededef17f9e09adcf8e7e7f1"
+  },
+  {
+    "ownerAudit": "r37-cli-ac-parent-audit",
+    "originalFile": "r37-cli-ac-parent-audit/proposed-additions.jsonl",
+    "originalSha256": "effcc8ccb2ec74284646f92a12cc97cf8b0e97a3a499b607dd02a30a7d8531e6",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-ac-parent-audit/proposed-additions.jsonl.txt",
+    "publishedSha256": "effcc8ccb2ec74284646f92a12cc97cf8b0e97a3a499b607dd02a30a7d8531e6"
+  },
+  {
+    "ownerAudit": "r37-cli-ac-parent-audit",
+    "originalFile": "r37-cli-ac-parent-audit/proposed-row-replacements.jsonl",
+    "originalSha256": "073c774247a3eb72106b5f31f216db6424987fe2620c27065b826a833c4b0d2b",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-ac-parent-audit/proposed-row-replacements.jsonl.txt",
+    "publishedSha256": "073c774247a3eb72106b5f31f216db6424987fe2620c27065b826a833c4b0d2b"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/design-archive-list.json",
+    "originalSha256": "4b57b85e19ba731f94a96338bc4db32db833f405557776b5aef303cafd325418",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/design-archive-list.json.txt",
+    "publishedSha256": "4b57b85e19ba731f94a96338bc4db32db833f405557776b5aef303cafd325418"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/disposition.json",
+    "originalSha256": "88a834afa03bd7c18f37ca03c443bde97bb61255a255b04b06415099692869dc",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/disposition.json.txt",
+    "publishedSha256": "3df811ff04b3d25f6bd087e016834be30870a582bf6bfe0dc024ecd59c9606b7"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/disposition.md",
+    "originalSha256": "11cbb0650e55aab270281a4b5c9d009258ae0e2001034bb083e1b8dfe906e5fa",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/disposition.md.txt",
+    "publishedSha256": "11cbb0650e55aab270281a4b5c9d009258ae0e2001034bb083e1b8dfe906e5fa"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/proposed-metadata-rows.jsonl",
+    "originalSha256": "061f79842737fc8a7e867affeb251936b9c27dc46b7616dfa885127e54825eed",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/proposed-metadata-rows.jsonl.txt",
+    "publishedSha256": "061f79842737fc8a7e867affeb251936b9c27dc46b7616dfa885127e54825eed"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/proposed-new-rows.jsonl",
+    "originalSha256": "e797bc722c5822be6176ccb785ff6c0a462a508c4234d326ce7289f24fefd2aa",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/proposed-new-rows.jsonl.txt",
+    "publishedSha256": "e797bc722c5822be6176ccb785ff6c0a462a508c4234d326ce7289f24fefd2aa"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/r28-cli-commands-d-k-docgen-quality-worker-eval-source.archived-design.md",
+    "originalSha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/r28-cli-commands-d-k-docgen-quality-worker-eval-source.archived-design.md.txt",
+    "publishedSha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.archived-design.md",
+    "originalSha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.archived-design.md.txt",
+    "publishedSha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb"
+  },
+  {
+    "ownerAudit": "r37-docgen-owner-audit",
+    "originalFile": "r37-docgen-owner-audit/withdrawn-rows.jsonl",
+    "originalSha256": "132b038698c189b7f53dd42e306ac8fe942477cf893aa61831ced7148dbfc125",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-docgen-owner-audit/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "132b038698c189b7f53dd42e306ac8fe942477cf893aa61831ced7148dbfc125"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/disposition.json",
+    "originalSha256": "775e88a53cdbff02f28bea5e5b7f888f2b8aa56a0a325734a9cec17a191cd451",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/disposition.json.txt",
+    "publishedSha256": "4de548307d6dcd94cd42c3ed8f1ed7489b97fb23d0ccf36619b8c849b97e33d3"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/disposition.md",
+    "originalSha256": "9c9f5dc11469ec1dfe6747b1d51ad4a72471a9e055ca448548314c8a751068ce",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/disposition.md.txt",
+    "publishedSha256": "9c9f5dc11469ec1dfe6747b1d51ad4a72471a9e055ca448548314c8a751068ce"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/original-rows.jsonl",
+    "originalSha256": "6ebab3b362f8f51075186689a27e9215574616bf199af7fce8e3aeedc45ca85f",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/original-rows.jsonl.txt",
+    "publishedSha256": "6ebab3b362f8f51075186689a27e9215574616bf199af7fce8e3aeedc45ca85f"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/package-verify-step-outcome.original.md",
+    "originalSha256": "fcb71342ad7d5aeb04ee7f3eb3f08527e2abb1d5fd4135ee4b750f3c1f3dae21",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/package-verify-step-outcome.original.md.txt",
+    "publishedSha256": "fcb71342ad7d5aeb04ee7f3eb3f08527e2abb1d5fd4135ee4b750f3c1f3dae21"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/package-verify-step-outcome.replacement.md",
+    "originalSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/package-verify-step-outcome.replacement.md.txt",
+    "publishedSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/proposed-row-replacements.jsonl",
+    "originalSha256": "e7b3539c615a51abf8a452be770e302468bdef4ba6910f2fae0cd6f885102e5a",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/proposed-row-replacements.jsonl.txt",
+    "publishedSha256": "e7b3539c615a51abf8a452be770e302468bdef4ba6910f2fae0cd6f885102e5a"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/r30-cli-commands-l-q-github-check-lane-outcome.original.md",
+    "originalSha256": "76c7bbcb88a06254589b10cdf5c31c00e3dbd36662a96f0174950cb931ae3021",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/r30-cli-commands-l-q-github-check-lane-outcome.original.md.txt",
+    "publishedSha256": "76c7bbcb88a06254589b10cdf5c31c00e3dbd36662a96f0174950cb931ae3021"
+  },
+  {
+    "ownerAudit": "r37-cli-lq-audit",
+    "originalFile": "r37-cli-lq-audit/r30-cli-commands-l-q-github-check-lane-outcome.replacement.md",
+    "originalSha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-lq-audit/r30-cli-commands-l-q-github-check-lane-outcome.replacement.md.txt",
+    "publishedSha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee"
+  },
+  {
+    "ownerAudit": "r37-cli-rz-parent-audit",
+    "originalFile": "r37-cli-rz-parent-audit/disposition.json",
+    "originalSha256": "e730c84143d45f8efe58670c3f7aa5e84ca7137b4ae5b57823218478415feaf7",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-rz-parent-audit/disposition.json.txt",
+    "publishedSha256": "e730c84143d45f8efe58670c3f7aa5e84ca7137b4ae5b57823218478415feaf7"
+  },
+  {
+    "ownerAudit": "r37-cli-rz-parent-audit",
+    "originalFile": "r37-cli-rz-parent-audit/proposed-row-replacements.jsonl",
+    "originalSha256": "2ba9eff025a6ab9db8749bd173311a12d2b3e36b993c4dd2887000056ee16cd4",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-rz-parent-audit/proposed-row-replacements.jsonl.txt",
+    "publishedSha256": "2ba9eff025a6ab9db8749bd173311a12d2b3e36b993c4dd2887000056ee16cd4"
+  },
+  {
+    "ownerAudit": "r37-cli-yeet-audit",
+    "originalFile": "r37-cli-yeet-audit/disposition.json",
+    "originalSha256": "14316cc3f9d1ba18657459678e33179d627378a61826aaf72b901acd2f5b8931",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-yeet-audit/disposition.json.txt",
+    "publishedSha256": "a3636e9ef324c523793434e13e8c70e81ce7bcb2d431a40773b4ddd9c60e2475"
+  },
+  {
+    "ownerAudit": "r37-cli-yeet-audit",
+    "originalFile": "r37-cli-yeet-audit/disposition.md",
+    "originalSha256": "168069d5c9583d2f7a4c257872dde30fe820633e9322bfbc1e63d607b8507a51",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-yeet-audit/disposition.md.txt",
+    "publishedSha256": "168069d5c9583d2f7a4c257872dde30fe820633e9322bfbc1e63d607b8507a51"
+  },
+  {
+    "ownerAudit": "r37-cli-yeet-audit",
+    "originalFile": "r37-cli-yeet-audit/original-rows.jsonl",
+    "originalSha256": "9f1d79ad47d1d6512749fdc6ce013db54b20f4a671972958b20cfce98cb3d150",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-yeet-audit/original-rows.jsonl.txt",
+    "publishedSha256": "9f1d79ad47d1d6512749fdc6ce013db54b20f4a671972958b20cfce98cb3d150"
+  },
+  {
+    "ownerAudit": "r37-cli-yeet-audit",
+    "originalFile": "r37-cli-yeet-audit/proposed-row-replacements.jsonl",
+    "originalSha256": "43cc981c25c4f67e92ea257b3561b1f86baf15367da0d288d782cd45e43ebdfe",
+    "publishedFile": "goals/boolean-creep/data/r37-owner-reviews/r37-cli-yeet-audit/proposed-row-replacements.jsonl.txt",
+    "publishedSha256": "43cc981c25c4f67e92ea257b3561b1f86baf15367da0d288d782cd45e43ebdfe"
+  }
+]

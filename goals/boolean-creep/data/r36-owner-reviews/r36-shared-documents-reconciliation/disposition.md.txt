@@ -1,0 +1,13 @@
+# R36 shared-documents bounded recall reconciliation
+
+Withdraw exactly two current D1 rows: r25-shared-documents-dms-mirror-probe-probed-at and r25-shared-documents-vault-sync-status-probed-at. Delta: −2 census rows, −2 disqualified, zero qualified/design changes. No replacement D rows.
+
+DmsMirrorProbe (DmsMirror.ts:581-602) is a direct S.Class with five fields: connected Boolean; disconnectReason Option of five-string LiteralKit; probedAt Option<DateTimeUtc>; provider one-string LiteralKit; rootRemoteId Option<branded NonEmptyString>. Only connected583 is Boolean. There is no spread, intersection or custom superclass adding fields.
+
+VaultSyncStatus (VaultSyncEngine.ts:65-116) is a direct S.Class with twelve fields: connected Boolean; seven NonNegativeInt counters; disconnectReason Option of the string reason domain; cursorPosition Option<NonEmptyString>; probedAt Option<DateTimeUtc>; provider the same string domain. Only connected70 is Boolean. The date codec accepts string transport with legacy missing/null defaults; neither presence nor transport type creates a second Boolean. No custom inheritance or spread adds fields. Adjacent forceProbe belongs to a different input owner and cannot be combined with this record.
+
+Aliases were resolved: DmsMirrorDisconnectReason at DmsMirror.ts:516-522 is five strings; DmsProvider at domain Sync.values.ts:35 is box; RemoteItemId at 115 is a branded string. Consequently both complete owners are outside SPEC's ≥2 actual Boolean recall scope. Prior D1 independence explanations do not waive recall.
+
+These two IDs are still canonical and are distinct from prior qualified connectivity withdrawals. R32 recorded DmsMirrorProbe's one-Boolean exclusion. R33 withdrew vault-sync-status-connected and its cursor-position D1 sibling. Current three source files exactly match the recorded R33 HEAD as well as frozen R36 HEAD and origin/main, so the prior whole-owner ruling remains applicable. The newly reviewed timestamp IDs were not in those earlier withdrawal lists.
+
+No current design references either ID or either owner symbol. No design archive or implementation is required. The exact prior rows are in withdrawn-rows.jsonl; disposition.json binds the raw empty lane output, completed execution footer, source files, rules, inventory and prior rulings. No tracked edits, refs, launches, runtime tests, P3 or dry-round credit.

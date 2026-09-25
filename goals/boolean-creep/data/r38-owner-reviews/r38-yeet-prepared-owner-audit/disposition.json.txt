@@ -1,0 +1,62 @@
+{
+  "verdict": "withdraw-single-Boolean-tuple-owner",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "inputs": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "ba7f7efc7fbac137aad9cb4fa24612f2185fc6ae7d3438b4361b3d3665fdaa18"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "goals/boolean-creep/designs/yeet-prepared-publish-commit.md",
+      "sha256": "f27d5c5f3710f76999e2cd7170174d3e5a987c24270e5effde6e7afb1231bec2"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-yeet.execution.json",
+      "sha256": "72492903a47a0d3c4d48a2f9089538117f7a4e47a4fb1ff88f4dccc2fea6f3c5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-yeet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "withdrawIds": [
+    "yeet-prepared-publish-commit"
+  ],
+  "designArchives": [
+    "goals/boolean-creep/designs/yeet-prepared-publish-commit.md"
+  ],
+  "otherDesignReferences": [],
+  "outputs": [
+    {
+      "file": "disposition.md",
+      "sha256": "6bd1bb2bd267a3373974e07ad4fc73ea59dee6b11157459dc5fc2c364c2d6b4b"
+    },
+    {
+      "file": "withdrawn-rows.jsonl",
+      "sha256": "b06f555faa9b9a46a68910603155ac27e02cf9b990b9bd92bf5b4fefb7b75f45"
+    },
+    {
+      "file": "yeet-prepared-publish-commit.archived-design.md",
+      "sha256": "f27d5c5f3710f76999e2cd7170174d3e5a987c24270e5effde6e7afb1231bec2"
+    }
+  ],
+  "delta": {
+    "rows": -1,
+    "qualified": -1,
+    "designs": -1
+  },
+  "P3Credit": false,
+  "dryCredit": false
+}

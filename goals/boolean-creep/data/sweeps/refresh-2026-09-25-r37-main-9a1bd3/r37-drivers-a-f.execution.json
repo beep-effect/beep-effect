@@ -1,0 +1,22 @@
+{
+  "lane": "r37-drivers-a-f",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:34:51.013017+00:00",
+  "finished": "2026-09-25T07:38:13.323708+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-drivers-a-f.jsonl` \u2014 confirmed 0, disqualified 0. All 17 assigned roots were covered (`acp` through `freshbooks`); tests, `_generated`, and generated banners stayed out.\n\nEvery seeded cluster still exists with the same members and classification. No withdrawals. Anchor drift only: `AcpProtocolLoggingOptions` first boolean is line 284 (inventory 282); `clientProtocol` `supportsAck` is 851 (was 841); `serverProtocol` `supportsNotifications` is 869 (was 856); client `getSomesStruct` booleans start at 477 (record 472); agent `getSomesStruct` booleans start at 322 (record 317). DuckDB `began`/`closed` is still the exclusive idle/open/closed latch at 374. No unresolved source question.",
+  "transcriptSha256": "a1a5dd4c77cd20219e857e2b8258a1fd1bd3bd4c8fe9583dab7315af5f65cd15",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

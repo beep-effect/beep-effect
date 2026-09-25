@@ -1,0 +1,630 @@
+{
+  "date": "2026-09-25",
+  "head": "84058d6470137e35f108d13c7dba52129db9a301",
+  "main": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "round": "refresh-2026-09-25-r37-main-9a1bd3",
+  "expectedCorpusFileCount": 3186,
+  "expectedCorpusPathsSha256": "743c9cc416633d33e1db227bd65d77b4cce69227cf0a9b40c1674bebaa935cbc",
+  "expectedLaneCount": 27,
+  "expectedRecordCount": 727,
+  "expectedInventorySha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "files": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r37-preparation-v2/durable-sweep-v11.py",
+      "sha256": "756f615c2e1defd98c48791fe4b62cd921fa2b31e01c4fdedfb7e88ecb93e4fa"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/runners/sweep-17ad9e5af9f7849d.sh",
+      "sha256": "17ad9e5af9f7849d2c057c2251719d799aff5de1bf3d52988a2765d4755e3796"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/durable-sweep-runner.private",
+      "sha256": "958ea6b9464fb3db40fa0c72f6295e0f29b4d3f0042ca3395c7d38ccf2b15b48"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/ops/prompts/sweep-lane-round1.md",
+      "sha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b"
+    },
+    {
+      "file": "goals/boolean-creep/ops/validate-inventory.ts",
+      "sha256": "f1a02edfa18248538c5afda3f83ed2738cc74130df46292abd3c83dc232aa32e"
+    },
+    {
+      "file": "goals/boolean-creep/ops/validate-designs.ts",
+      "sha256": "1f3a7ea87ff409b5ce591413e52507b0f69bbe68121517c33587c8bd85913e5a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/round-verdict.json",
+      "sha256": "1f06d55c53085217df79dc21e92e3ab1a9c7daf8df097023b492ffcd57d06ad3"
+    },
+    {
+      "file": "~/.local/bin/grok",
+      "sha256": "9ce03ed23e16ea01072b4496263d6213a27899e1e3e107f008d36edf82e70407"
+    },
+    {
+      "file": "~/.local/share/mise/installs/bun/1.4.2/bin/bun",
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+    }
+  ],
+  "selectedDesigns": [
+    {
+      "id": "cache-pilot-non-execution",
+      "file": "goals/boolean-creep/designs/cache-pilot-non-execution.md",
+      "sha256": "e57eed531719ccd32066ed2851e1ebef82ee1b7b688dc1ad814e2fb94ff75b09"
+    },
+    {
+      "id": "citation-blank-page",
+      "file": "goals/boolean-creep/designs/citation-blank-page.md",
+      "sha256": "f27e077650b2933ef8897f8e1952c5943771a028db616ad2908a7af72eca667c"
+    },
+    {
+      "id": "codex-findings-packet-commit-kind",
+      "file": "goals/boolean-creep/designs/codex-findings-packet-commit-kind.md",
+      "sha256": "22288a0c635cc3cb0eddf15d3a1bc582b3af9bcb5f6d413097e993373d21d6eb"
+    },
+    {
+      "id": "color-support-level-flags",
+      "file": "goals/boolean-creep/designs/color-support-level-flags.md",
+      "sha256": "57cdde407a66b52710e9d8256b9fcf48501036a4734c08ae52592d07606ad876"
+    },
+    {
+      "id": "composer-shell-edit-content",
+      "file": "goals/boolean-creep/designs/composer-shell-edit-content.md",
+      "sha256": "cf7815ee513fd326d18396a18430addbcce9bc5cb5938fd4fe85ae0eb8076733"
+    },
+    {
+      "id": "corpus-legacy-word-terminal",
+      "file": "goals/boolean-creep/designs/corpus-legacy-word-terminal.md",
+      "sha256": "0a3fd27786bbb8b0734bea77bc5376258a233b514004dc2317a0a7dce41691ac"
+    },
+    {
+      "id": "corpus-pst-terminal",
+      "file": "goals/boolean-creep/designs/corpus-pst-terminal.md",
+      "sha256": "37fd0dded32871ecfd7f0df714b8dbc119c1242270b64a7e604844e428f6cf9c"
+    },
+    {
+      "id": "create-package-retired-name-reconciliation",
+      "file": "goals/boolean-creep/designs/create-package-retired-name-reconciliation.md",
+      "sha256": "418aec7efa52592a8f05f1da2d72a8b11b773a8575fd3c855a4aef73d457ef0b"
+    },
+    {
+      "id": "create-package-scaffold-shape",
+      "file": "goals/boolean-creep/designs/create-package-scaffold-shape.md",
+      "sha256": "52b28aa1ccc14b10341d73c5e39b34e4caf3a29d0ad7b3c35e73ddbbaad3967e"
+    },
+    {
+      "id": "create-package-template-type-flags",
+      "file": "goals/boolean-creep/designs/create-package-template-type-flags.md",
+      "sha256": "832ce7578791adee0a6d0599bd15f2905fba8f2fcc65d6e8377c74bf74faa938"
+    },
+    {
+      "id": "desktop-panel-menu-item-state",
+      "file": "goals/boolean-creep/designs/desktop-panel-menu-item-state.md",
+      "sha256": "3d25d1747bcda4d49bc8ef4c76e0e76becd7eb02a169f38e212a800f839d8e03"
+    },
+    {
+      "id": "docgen-runpod-template-search-scopes",
+      "file": "goals/boolean-creep/designs/docgen-runpod-template-search-scopes.md",
+      "sha256": "d5885e708851632dac82b60843c647dc62f25290bc4256b85abd5d78e9c9e837"
+    },
+    {
+      "id": "dock-tab-drag-phase",
+      "file": "goals/boolean-creep/designs/dock-tab-drag-phase.md",
+      "sha256": "70b4c16b34b405c85e0107296e1e4f8d37d0605d40af85e1850d47625195b1e9"
+    },
+    {
+      "id": "document-toolbar-busy-disabled",
+      "file": "goals/boolean-creep/designs/document-toolbar-busy-disabled.md",
+      "sha256": "d884d0709fcb163cdf32955eb25f9b4ea724a7585dcee37b3773d89aa8d131ba"
+    },
+    {
+      "id": "document-violation-flags",
+      "file": "goals/boolean-creep/designs/document-violation-flags.md",
+      "sha256": "4c976acb8f64e41e97e8d45a225fbac286b9a627ba779af3dc076e16b1ddc7ae"
+    },
+    {
+      "id": "drivers-migration-journal-shape-row",
+      "file": "goals/boolean-creep/designs/drivers-migration-journal-shape-row.md",
+      "sha256": "88d6a4725cb90304f1ab2266c78ee3f6c45269ae39772a752b2fad56bec29c80"
+    },
+    {
+      "id": "drivers-stream-state",
+      "file": "goals/boolean-creep/designs/drivers-stream-state.md",
+      "sha256": "7fb0cf6a0becf1dde711db6241568946d360dd8f328ed7a4f174884839abd5ca"
+    },
+    {
+      "id": "duckdb-transaction-began-closed",
+      "file": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "sha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77"
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "file": "goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+      "sha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee"
+    },
+    {
+      "id": "effect-import-source-transform-phase",
+      "file": "goals/boolean-creep/designs/effect-import-source-transform-phase.md",
+      "sha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1"
+    },
+    {
+      "id": "effect-vitest-function-reachability",
+      "file": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+      "sha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2"
+    },
+    {
+      "id": "effect-vitest-reachable-helper-flags",
+      "file": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+      "sha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3"
+    },
+    {
+      "id": "epistemic-candidate-comparison-action-gates",
+      "file": "goals/boolean-creep/designs/epistemic-candidate-comparison-action-gates.md",
+      "sha256": "8cf3094936527852cbf217790c2c514ed83cc11be63af830b0d29cb6fb5bad8d"
+    },
+    {
+      "id": "epistemic-proposal-card-action-flags",
+      "file": "goals/boolean-creep/designs/epistemic-proposal-card-action-flags.md",
+      "sha256": "f07570aa767056c46b74f9acaccb38a0b3ad2bf25fbaab39748e1dcaaa22b8a1"
+    },
+    {
+      "id": "epistemic-review-dialog-reason-gates",
+      "file": "goals/boolean-creep/designs/epistemic-review-dialog-reason-gates.md",
+      "sha256": "bda572d6807878e5c4030e8e51064a4c85e5ee2e2988259207f961234c97d48a"
+    },
+    {
+      "id": "files-worker-score-thresholds",
+      "file": "goals/boolean-creep/designs/files-worker-score-thresholds.md",
+      "sha256": "3e47aff0840b80b7fe3b77ac6fd1aa458512701497171e3a7d058b49929f4c5c"
+    },
+    {
+      "id": "foundation-ui-system-menus-open",
+      "file": "goals/boolean-creep/designs/foundation-ui-system-menus-open.md",
+      "sha256": "818e5c3ff9b12f107eff2fa01e90c5a86dcfdd440063b8d6ffdfef1e3117aea7"
+    },
+    {
+      "id": "foundation-ui-system-speech-input-connection",
+      "file": "goals/boolean-creep/designs/foundation-ui-system-speech-input-connection.md",
+      "sha256": "c6602b698d425c9209a0bf1ec3bc586ebeec74c74b7f64fedb8b7ef02f80bdc7"
+    },
+    {
+      "id": "html-datalist-child-grammar",
+      "file": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "sha256": "6e5857d0379e6602c027dd434daa5c2ca4de9b466b738675c1ad01e8e5fc9f8e"
+    },
+    {
+      "id": "html-dl-child-grammar",
+      "file": "goals/boolean-creep/designs/html-dl-child-grammar.md",
+      "sha256": "6f9e612920de3a49801f94abf7d6aadbebc4358839cd6809a4dbcd5da36a841b"
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "file": "goals/boolean-creep/designs/html-img-sizes-disposition.md",
+      "sha256": "6b41d50342b07d7bfc90205e1a2c8e666bb524fbdf1fff3bba347de2d8315ec2"
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "file": "goals/boolean-creep/designs/html-link-imagesizes-disposition.md",
+      "sha256": "cb58e03337163903f6b537916ebc2ab409bad309de055f176b08b6dede17e85f"
+    },
+    {
+      "id": "html-select-child-grammar",
+      "file": "goals/boolean-creep/designs/html-select-child-grammar.md",
+      "sha256": "c58454cf521486be6f3ea653824901a3422dfc3582bd2b4a8eb35d65c904d109"
+    },
+    {
+      "id": "id-citation-pincite-inherited",
+      "file": "goals/boolean-creep/designs/id-citation-pincite-inherited.md",
+      "sha256": "f4c98640f24269503a10ca84916db9b35b44ed04d0b6ffe23b67406d2ecada9f"
+    },
+    {
+      "id": "ids-statement-presence-kind",
+      "file": "goals/boolean-creep/designs/ids-statement-presence-kind.md",
+      "sha256": "a4ee5df6e9992870dec01fa90356b35c81d2c678b23364b08013bccb58f7aa6d"
+    },
+    {
+      "id": "intake-vault-status",
+      "file": "goals/boolean-creep/designs/intake-vault-status.md",
+      "sha256": "1b2bef5fa7a1f560573c035bdbb0a074c4dcfc878b80f7da8a7fa0249a68029f"
+    },
+    {
+      "id": "jsdoc-fence-state",
+      "file": "goals/boolean-creep/designs/jsdoc-fence-state.md",
+      "sha256": "bb577b931aa561e1b81522b749e88517a19e53de92e2d0495e55a0072c86c62e"
+    },
+    {
+      "id": "knowledge-ref-candidate",
+      "file": "goals/boolean-creep/designs/knowledge-ref-candidate.md",
+      "sha256": "83734c6aaf14bdda7f04954722c95cd60573fe6b9a55f4363c571f8154a3361a"
+    },
+    {
+      "id": "knowledge-ref-classification-input",
+      "file": "goals/boolean-creep/designs/knowledge-ref-classification-input.md",
+      "sha256": "2a0215d2b13ac93fcfce6432f52f9ed1be30ad145c419c02b8ee4ecb239a2215"
+    },
+    {
+      "id": "langextract-minimal-fold-segment-kind",
+      "file": "goals/boolean-creep/designs/langextract-minimal-fold-segment-kind.md",
+      "sha256": "c59a0b8267a9c00afe1069be15fbef0944a0e9ea433cb40e57cf4bbcce7467a0"
+    },
+    {
+      "id": "link-preview-fetch-machine",
+      "file": "goals/boolean-creep/designs/link-preview-fetch-machine.md",
+      "sha256": "01da2051eb15dbe3aa3deda53a6c854ed7320f1a0a51431e8f8114a51c49698f"
+    },
+    {
+      "id": "obs-qa-scene-provisioning",
+      "file": "goals/boolean-creep/designs/obs-qa-scene-provisioning.md",
+      "sha256": "c267e1bfca096aec077586202b56b2ff9d7ee3d81acfa3f9daa2899a791c05bd"
+    },
+    {
+      "id": "ontology-infer-session-recompute-latches",
+      "file": "goals/boolean-creep/designs/ontology-infer-session-recompute-latches.md",
+      "sha256": "f715d35403c3765d47478bf55153f4b7f68f7c3a0faad7a26de6dad39cdf9888"
+    },
+    {
+      "id": "ontology-inference-recompute-cause",
+      "file": "goals/boolean-creep/designs/ontology-inference-recompute-cause.md",
+      "sha256": "2d32ec2b73dcb58a3c162dec42e8b1a649eb8f8e5dc5156902c152ad5727ca50"
+    },
+    {
+      "id": "ontology-inspector-form-state",
+      "file": "goals/boolean-creep/designs/ontology-inspector-form-state.md",
+      "sha256": "d457c01a17564921d9d1a37be124de132e7d3c1cc3688d4f998d06118dfb08b7"
+    },
+    {
+      "id": "package-inventory-docgen-coverage",
+      "file": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+      "sha256": "942a8b273b4a346e6c804041db75c4f24a6a0822a987fb7d16774dc776618252"
+    },
+    {
+      "id": "package-verify-step-outcome",
+      "file": "goals/boolean-creep/designs/package-verify-step-outcome.md",
+      "sha256": "fcb71342ad7d5aeb04ee7f3eb3f08527e2abb1d5fd4135ee4b750f3c1f3dae21"
+    },
+    {
+      "id": "pincite-range-endpoints",
+      "file": "goals/boolean-creep/designs/pincite-range-endpoints.md",
+      "sha256": "c49576b0c98c1b4fd549d2e069f733872d8da214c603d87835c1820dc4ace482"
+    },
+    {
+      "id": "r2-apps-contact-form-submit-phase",
+      "file": "goals/boolean-creep/designs/r2-apps-contact-form-submit-phase.md",
+      "sha256": "410231ed204443a96162347c246bb8076522b82135ccd0ef9a8bbde1895f0c7e"
+    },
+    {
+      "id": "r2-apps-hero-clip-playback",
+      "file": "goals/boolean-creep/designs/r2-apps-hero-clip-playback.md",
+      "sha256": "5e5a1a60e1bbbaac3add9ce950384ea76f9b89286f95cdd6d5179e4adf35c51f"
+    },
+    {
+      "id": "r2-apps-sidebar-thread-list-phase",
+      "file": "goals/boolean-creep/designs/r2-apps-sidebar-thread-list-phase.md",
+      "sha256": "7baf69040464eceda83a77c2559083680dc8527a556961ca5e6089eadad48a7f"
+    },
+    {
+      "id": "r2-apps-vault-sync-command-busy",
+      "file": "goals/boolean-creep/designs/r2-apps-vault-sync-command-busy.md",
+      "sha256": "e51dcec7d2f1238eb0f2755362007677c1bc5b9a0c02c05fc93d93bb05356567"
+    },
+    {
+      "id": "r2-foundation-unique-match-search",
+      "file": "goals/boolean-creep/designs/r2-foundation-unique-match-search.md",
+      "sha256": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29"
+    },
+    {
+      "id": "r2-tooling-bin-main-fast-paths",
+      "file": "goals/boolean-creep/designs/r2-tooling-bin-main-fast-paths.md",
+      "sha256": "737bc13042d15d0c62a79fc31d4250c586a44f65a97a75cc00b3f12a98006013"
+    },
+    {
+      "id": "r27-boolean-state-foundation-sidebar-context-open-state",
+      "file": "goals/boolean-creep/designs/r27-boolean-state-foundation-sidebar-context-open-state.md",
+      "sha256": "48b81bbe371a2d28d878bd7951e483532ba8ce57cf7cb830119d6241bd9cbaf4"
+    },
+    {
+      "id": "r27-cli-commands-d-k-normalize-manifest-dedupe-move",
+      "file": "goals/boolean-creep/designs/r27-cli-commands-d-k-normalize-manifest-dedupe-move.md",
+      "sha256": "03fb86eea9faf008a743b555fb0858189d4f629428523d6d130da99b6216b93d"
+    },
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "file": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "0311430f93ee31517f8802b76a1f954fe814d2d2b6ea26fada3bdfc64003bbdf"
+    },
+    {
+      "id": "r27-tooling-library-observability-outcomes-dataset-scorecard-presence",
+      "file": "goals/boolean-creep/designs/r27-tooling-library-observability-outcomes-dataset-scorecard-presence.md",
+      "sha256": "ce529592a4a378fdbc4224f0d6a59ea6bec16eff51605e9d1a9b36c2e3d26ead"
+    },
+    {
+      "id": "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "file": "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+      "sha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac"
+    },
+    {
+      "id": "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "file": "goals/boolean-creep/designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md",
+      "sha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb"
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-stub-observations",
+      "file": "goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-stub-observations.md",
+      "sha256": "2dcb9cc87a7c9334c22e5f29acdee2c58e9f15f8fdbf9962eb568895a3d77566"
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "file": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+      "sha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d"
+    },
+    {
+      "id": "r28-cli-quality-test-lane-resolved-selection",
+      "file": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+      "sha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e"
+    },
+    {
+      "id": "r28-foundation-ui-chart-tooltip-default-item-flags",
+      "file": "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-default-item-flags.md",
+      "sha256": "16f194f194ab2688773063221216fd0e1f02f770cfe221342f784ef5b4ff7e09"
+    },
+    {
+      "id": "r28-foundation-ui-chart-tooltip-indicator-flags",
+      "file": "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-indicator-flags.md",
+      "sha256": "f5e5fb7aedc2b0c8785e185c42f3a3d5454e88088d8b14b3b53b59985126f254"
+    },
+    {
+      "id": "r28-foundation-ui-chart-tooltip-item-flags",
+      "file": "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-item-flags.md",
+      "sha256": "656278b280a189a041ecc46379aefad87a0c8a84335fceb68a5c30db5182c56b"
+    },
+    {
+      "id": "r28-tooling-library-observability-deployment-remote-fields",
+      "file": "goals/boolean-creep/designs/r28-tooling-library-observability-deployment-remote-fields.md",
+      "sha256": "8f5f55e1c20964415224a797a39e693dfd248dfd259db7cff312861b6c38855d"
+    },
+    {
+      "id": "r29-yeet-sweep-worktree-probe-address",
+      "file": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+      "sha256": "6142f066feac1f4d1bce1fb8282cf87837d52d34d477331035c9b9969a6c5c5e"
+    },
+    {
+      "id": "r3-apps-pglite-data-dir-probe",
+      "file": "goals/boolean-creep/designs/r3-apps-pglite-data-dir-probe.md",
+      "sha256": "d8f68dbcfb8c72b310c9c7cd3e541cbe892ea29068d9308324d54aac1746df91"
+    },
+    {
+      "id": "r3-apps-sidecar-devtools-gates",
+      "file": "goals/boolean-creep/designs/r3-apps-sidecar-devtools-gates.md",
+      "sha256": "59b3a4b7aed8e25a7231e01caabd235f6d04f38d8334df16f023b306a04e0de4"
+    },
+    {
+      "id": "r3-drivers-arch-tool-name-collision-stage-flags",
+      "file": "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "sha256": "55b954178f12e18e54c91a4c3967316de65c4d4c422f8ae9d5bfe16e97a3166d"
+    },
+    {
+      "id": "r3-foundation-invariant-enforcement-channels",
+      "file": "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md",
+      "sha256": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7"
+    },
+    {
+      "id": "r3-foundation-mention-plugin-lookup-phase",
+      "file": "goals/boolean-creep/designs/r3-foundation-mention-plugin-lookup-phase.md",
+      "sha256": "e92189878687287559ec4a498b08151f0bb5281894405e005af2ad38236f9074"
+    },
+    {
+      "id": "r3-foundation-notification-action-busy",
+      "file": "goals/boolean-creep/designs/r3-foundation-notification-action-busy.md",
+      "sha256": "1b246a3506e3a5ee4c6bd21afbf37c7b0a6935ffeb0a4fdae7c495df67b3dcb9"
+    },
+    {
+      "id": "r3-foundation-tier-gate-tool-hints",
+      "file": "goals/boolean-creep/designs/r3-foundation-tier-gate-tool-hints.md",
+      "sha256": "13ece9a600765600ab9680c31483d4b90edf0443dbbc7e00a917db2ae2fb71b5"
+    },
+    {
+      "id": "r3-foundation-todo-item-presence",
+      "file": "goals/boolean-creep/designs/r3-foundation-todo-item-presence.md",
+      "sha256": "59019a38bdcb6891722ede838c54202b220d4002ed3c1ecf5e8e57b41971069a"
+    },
+    {
+      "id": "r3-tooling-bun-report-drift-flags",
+      "file": "goals/boolean-creep/designs/r3-tooling-bun-report-drift-flags.md",
+      "sha256": "619cbd72ec172a514d85b0dc85ae785deb2b6887048a9afb7ec5ac3f25c76ac1"
+    },
+    {
+      "id": "r3-tooling-docker-tag-kind-flags",
+      "file": "goals/boolean-creep/designs/r3-tooling-docker-tag-kind-flags.md",
+      "sha256": "631a01ff29db947a3fd05648c3e5acf412a2779d44490cb845a2247822a863e7"
+    },
+    {
+      "id": "r3-tooling-ecosystem-polarity-specifier-call",
+      "file": "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "sha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544"
+    },
+    {
+      "id": "r3-tooling-registration-deletion-note-phase",
+      "file": "goals/boolean-creep/designs/r3-tooling-registration-deletion-note-phase.md",
+      "sha256": "7e15e4d80990e422adb574f7dd0fcc554d6819454733c7ac1324d83b6ba3a9fa"
+    },
+    {
+      "id": "r3-tooling-schema-first-fn-eligibility",
+      "file": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+      "sha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f"
+    },
+    {
+      "id": "r3-tooling-version-sync-category-filter-gates",
+      "file": "goals/boolean-creep/designs/r3-tooling-version-sync-category-filter-gates.md",
+      "sha256": "b56caa957a4636d70c04e023985ef50fa09d7373036cea7e6c8a32b49684231f"
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "file": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "76c7bbcb88a06254589b10cdf5c31c00e3dbd36662a96f0174950cb931ae3021"
+    },
+    {
+      "id": "r30-cli-yeet-portfolio-index-staged-deletion",
+      "file": "goals/boolean-creep/designs/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "sha256": "8155c8a6a376a6f55a0f6014603e5b9b537848b3198cd36d80a5df2d036d9cc2"
+    },
+    {
+      "id": "r30-tooling-library-support-open-file-descriptor",
+      "file": "goals/boolean-creep/designs/r30-tooling-library-support-open-file-descriptor.md",
+      "sha256": "d4cdbf2603237b346cdcf32677c0e11a94c0b482267d3e8a14696f0d45e776fb"
+    },
+    {
+      "id": "r30-tooling-library-support-open-mode",
+      "file": "goals/boolean-creep/designs/r30-tooling-library-support-open-mode.md",
+      "sha256": "d3debc57d58294b94c56f33225b6cbd31e9a0b35ad27083ab6afd20a6880c401"
+    },
+    {
+      "id": "r33-cli-yeet-clip-scan",
+      "file": "goals/boolean-creep/designs/r33-cli-yeet-clip-scan.md",
+      "sha256": "1b71efc14d718e5364eb4b6a9d52023d9cd1247b130fc2330e760a9d9e352672"
+    },
+    {
+      "id": "r36-cli-commands-a-c-cache-task-selection-pending",
+      "file": "goals/boolean-creep/designs/r36-cli-commands-a-c-cache-task-selection-pending.md",
+      "sha256": "bc2a0caa445cf346316ce9fc8090c5d7b2503dc00030c034623d3b6cfa824ad6"
+    },
+    {
+      "id": "r36-epistemic-ontology-document-toolbar-input",
+      "file": "goals/boolean-creep/designs/r36-epistemic-ontology-document-toolbar-input.md",
+      "sha256": "49d5ed42d938299f25d442b77bcc23d2b3a89fe6688d913694bcedc6007338bf"
+    },
+    {
+      "id": "runners-bake-freshness",
+      "file": "goals/boolean-creep/designs/runners-bake-freshness.md",
+      "sha256": "fe9d70104c0a2b8998f46838b3a85f8a025cbd95b00722dcbce0492ae2a203af"
+    },
+    {
+      "id": "scan-state-json-lexer-flags",
+      "file": "goals/boolean-creep/designs/scan-state-json-lexer-flags.md",
+      "sha256": "26fb57ce7bc9f94630620a5c011b134fdd3b46ab1353b0f23d887544ca5d3548"
+    },
+    {
+      "id": "short-form-case-citation-pincite-inherited",
+      "file": "goals/boolean-creep/designs/short-form-case-citation-pincite-inherited.md",
+      "sha256": "e6b890fa8c189788f8f8edafe6003888c5cfd2e4e54af94482e9dcc955f1a441"
+    },
+    {
+      "id": "statutes-at-large-pincite-is-range",
+      "file": "goals/boolean-creep/designs/statutes-at-large-pincite-is-range.md",
+      "sha256": "c3a911074f50d5aa076aa5ba0c50cb5b1b4c0937644d7f5785de1687b6054f1d"
+    },
+    {
+      "id": "supra-citation-pincite-inherited",
+      "file": "goals/boolean-creep/designs/supra-citation-pincite-inherited.md",
+      "sha256": "a4888213ed060f06c9de4a91d078a773b152d0a4079cc2fe9ee297ba4b809b16"
+    },
+    {
+      "id": "sync-data-target-selection",
+      "file": "goals/boolean-creep/designs/sync-data-target-selection.md",
+      "sha256": "23d667cc57a2efa2b16e63e87c1147a4eefe5b1fa3dc2bb2a441ec32d52119f1"
+    },
+    {
+      "id": "tabstrip-overflow-disposition",
+      "file": "goals/boolean-creep/designs/tabstrip-overflow-disposition.md",
+      "sha256": "f23f0d628e21270c05af2ea0fa8bba0e5153ac623759224cb9af194989ad9b7c"
+    },
+    {
+      "id": "thread-load-state-props",
+      "file": "goals/boolean-creep/designs/thread-load-state-props.md",
+      "sha256": "b0108f4f8fd0c3a63add234e1c1eb736b6d13c95c7533158ed4caa3fc1c712e9"
+    },
+    {
+      "id": "thread-transcript-load-state",
+      "file": "goals/boolean-creep/designs/thread-transcript-load-state.md",
+      "sha256": "85967cc1beaef9bdb894f52b11b904f6213b445c930e405aeda8fc7d109af30c"
+    },
+    {
+      "id": "todo-item-due-tone",
+      "file": "goals/boolean-creep/designs/todo-item-due-tone.md",
+      "sha256": "7decf6802eaf1173a4eef184350cb11436c471f7c632442f362bc67658605dd5"
+    },
+    {
+      "id": "tour-state-open-payload",
+      "file": "goals/boolean-creep/designs/tour-state-open-payload.md",
+      "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82"
+    },
+    {
+      "id": "vault-sync-push-failure-disposition",
+      "file": "goals/boolean-creep/designs/vault-sync-push-failure-disposition.md",
+      "sha256": "7bd699443e2b1bb317620d557bb6a2dcf7f137205d10f5da12d459772602a9af"
+    },
+    {
+      "id": "worktree-branch-diff-reading",
+      "file": "goals/boolean-creep/designs/worktree-branch-diff-reading.md",
+      "sha256": "ab1b08a9e27c57d68c146e7d0c87d91a6cb840e30c17c7fdbc29d6ac1eba785e"
+    },
+    {
+      "id": "worktree-idle-reading",
+      "file": "goals/boolean-creep/designs/worktree-idle-reading.md",
+      "sha256": "36b1074aaadc0212617ddaa417179fdac374c3a45d29c1a0abd044d5ae718b77"
+    },
+    {
+      "id": "worktree-policy-reading",
+      "file": "goals/boolean-creep/designs/worktree-policy-reading.md",
+      "sha256": "5edba3e00bb7a23d1752427f72008eafc62e2aeffc98df4e602a6235e603088f"
+    },
+    {
+      "id": "worktree-pr-classification",
+      "file": "goals/boolean-creep/designs/worktree-pr-classification.md",
+      "sha256": "f2f2d2f91081718ee617b43a2b7ac6f4710fc86508b58e326b5499801b93a7d8"
+    },
+    {
+      "id": "worktree-process-cwd-reading",
+      "file": "goals/boolean-creep/designs/worktree-process-cwd-reading.md",
+      "sha256": "07bc173a35de3324ab16386c2e923b631658ce23528ad5e1f9310d3922492cc6"
+    },
+    {
+      "id": "worktree-reap-candidate-retirement",
+      "file": "goals/boolean-creep/designs/worktree-reap-candidate-retirement.md",
+      "sha256": "dca540e8a064d548ec378fc86ff56b64cf77f0348e3d347af286ac3429e94167"
+    },
+    {
+      "id": "worktree-removal-mode",
+      "file": "goals/boolean-creep/designs/worktree-removal-mode.md",
+      "sha256": "34e5b095ba1a17d79b1fac861544087fd052de3fbc4f553ccce4b14cce5453d6"
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "file": "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md",
+      "sha256": "229a9f5f96532c43badf1dd3bf75198305c8f7226f30b0e3f5f1bd4de89ba7e0"
+    },
+    {
+      "id": "yeet-merge-ready-verdict",
+      "file": "goals/boolean-creep/designs/yeet-merge-ready-verdict.md",
+      "sha256": "409ea30a0f891b0da72bb34ec41b3de29a66310510196f6960e3a25dfd9d4c96"
+    },
+    {
+      "id": "yeet-prepared-publish-commit",
+      "file": "goals/boolean-creep/designs/yeet-prepared-publish-commit.md",
+      "sha256": "f27d5c5f3710f76999e2cd7170174d3e5a987c24270e5effde6e7afb1231bec2"
+    },
+    {
+      "id": "yeet-status-remote-check-phase",
+      "file": "goals/boolean-creep/designs/yeet-status-remote-check-phase.md",
+      "sha256": "505e4871813ae998252dc5ba99e6f873e3f1d22014f13e18ef482c965f0265b0"
+    },
+    {
+      "id": "yeet-sweep-git-state",
+      "file": "goals/boolean-creep/designs/yeet-sweep-git-state.md",
+      "sha256": "ef42beec1f327801ac102bfb914476f396b7234d417099d1f9c851708accb913"
+    }
+  ],
+  "formatter": {
+    "executable": "node_modules/@biomejs/cli-linux-x64/biome",
+    "executableSha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+    "configuration": "biome.jsonc",
+    "configurationSha256": "e4e0b1144a84786e65443af3ddbf7be34945395b1eaea247ddb1f66cdd3a5dc3"
+  }
+}

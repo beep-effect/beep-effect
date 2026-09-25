@@ -1,0 +1,40 @@
+{
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "finalSourceSha": "405bfebdc3effc3f294cfe6e140b24f823178651",
+  "finalOriginMainSha": "489ea7c48803e87bb1f4f10f83cf30613ca9f3c1",
+  "sourceStable": false,
+  "sourceDrift": [
+    "bun.lock",
+    "goals/boolean-creep/data/inventory.jsonl",
+    "goals/boolean-creep/designs/cosmos-backend-selection-webgl2.md",
+    "goals/boolean-creep/designs/r2-domains-ontology-graph-worker-requeue-latches.md",
+    "packages/foundation/modeling/identity/package.json",
+    "packages/foundation/modeling/identity/src/PnLocal.ts",
+    "packages/foundation/modeling/identity/tsconfig.check.json",
+    "packages/foundation/modeling/identity/tsconfig.json",
+    "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts"
+  ],
+  "complete": false,
+  "lanes": 27,
+  "completedLanes": 21,
+  "missingLanes": [
+    "r34-cli-commands-a-c",
+    "r34-cli-commands-d-k",
+    "r34-cli-commands-l-q",
+    "r34-cli-commands-r-z",
+    "r34-cli-internal-root",
+    "r34-cli-yeet"
+  ],
+  "qualifiedCandidates": 0,
+  "processExitCode": null,
+  "terminationObservation": "Controller inactive/dead with no surviving PID after workstation update. No terminal controller exit receipt; do not infer successful process completion."
+}

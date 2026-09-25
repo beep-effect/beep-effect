@@ -1,0 +1,25 @@
+# R35 first CLI lanes reconciliation
+
+Source `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`; main `5c768538e434336885d324cbf56d04fc2684959b`. Both lane execution receipts ended successfully; all source files reviewed here match the round frozen-input hashes.
+
+## Function parameter candidate
+
+Reject `r35-cli-internal-root-generated-file-mode-flags`. GeneratedFileDrift.ts:49-53 declares only an inline function parameter shape with write/check flags and an onConflict effect. The conflict guard is real, but SPEC and DECISIONS exclude function flag parameters. A parameter-object annotation does not become a named domain model merely because the raw report labels it type-literal. No qualification or design is added.
+
+## Disqualified constructed objects
+
+Admit the three D1 capture objects at GitExec.structuredCapture, GitExec.runGitOutput, and RepoRun.executor.runRepoCommand. These are actual constructed requests, distinct from their containing function parameters. StepExec independently consumes environment inheritance, trim and tee; preserve optional omission versus false.
+
+Admit seven D2 objects: two TextDecoder option objects in Cache.service and Cache.entrypoints; one FileSystem.remove object in Cache.dependencies; one in Cache.pilot; and three separate consecutive remove objects in Cache.experiment. The three experiment destinations are .turbo/runs, task out, and task .turbo. The pilot loop has one syntactic object site regardless of its three runtime iterations. Existing D2/Capture rows elsewhere name distinct owners; no current inventory row occupies these file/symbol/member sites. Existing same-file Cache Turbo cache schemas are unrelated carriers.
+
+## MailStoreExceptionRecord
+
+Withdraw `corpus-mail-store-exception-approved-disposition`. Inspection includes the complete schema and its TransformationEvidenceIdentity.fields spread. The six identity fields are string/refined-string/literal values. approved is the only Boolean among all remaining fields; optional MailDisposition is not Boolean. The current design itself acknowledges one physical Boolean, but asserts an E3 exception not supplied by SPEC or DECISIONS. Minimal E3 can survive inside an eligible larger owner; this complete owner does not meet that precondition.
+
+Archive its inventory row and design as history. No other design references the owner or ID in the dependency search. Preserve all current codecs, supported disposition values, inconsistent audit-input handling, approval gates, wire shape and error timing; withdrawal authorizes no source changes.
+
+## Proposed integration
+
+Use proposed-inventory-additions.jsonl for ten new disqualified rows and withdrawn-rows.jsonl for the one qualified archival/removal. Expected net delta: **+9 records, -1 qualified, +10 disqualified**. Preserve both raw reports unchanged. No new qualified record or design proposal is needed.
+
+Exact input and proposal hashes plus per-row dispositions are in disposition.json. No tracked edits, ref moves, launch, implementation, P3 approval or dry credit occurred.
