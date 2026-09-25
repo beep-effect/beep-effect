@@ -2298,3 +2298,13 @@ The unpublished merge was corrected and amended before any push; verification
 compared the real parent projections and preserved the eight codegen-only
 dependency changes. Use fail-fast sequencing and validate both JSON and conflict
 markers before staging. Existing commit hooks did not reject these markers.
+
+## Graph3D browser runner imports Node AsyncLocalStorage
+
+The original Chromium renderer suite passes five tests. Switching its tester to
+@beep/test-runner fails before collection with `NodeAsyncHooks.AsyncLocalStorage
+is not a constructor` in VitestInstrumentation. Keep real browser proof explicit;
+Node/Bun conformance does not establish browser compatibility. Resource and click
+changes are being proven with the upstream live tester while browser-compatible
+instrumentation remains an open prerequisite. A browser import/conformance case
+in runner promotion would have caught this platform boundary earlier.

@@ -2015,12 +2015,14 @@
           "@beep/graph-3d",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/graph-3d",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
