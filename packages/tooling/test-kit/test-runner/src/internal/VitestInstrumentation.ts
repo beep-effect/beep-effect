@@ -1,4 +1,3 @@
-import * as NodeAsyncHooks from "node:async_hooks";
 import { aroundEach, TestRunner } from "@effect/vitest";
 import {
   Array as Arr,
@@ -14,11 +13,11 @@ import {
   MutableRef,
   Number as Num,
   Option as O,
-  Predicate as P,
   pipe,
   Scope,
 } from "effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import { TestContextUnavailable, TestHang } from "../Vitest.errors.ts";
 import type { TestContext, Vitest } from "@effect/vitest";
 
@@ -49,7 +48,6 @@ interface PropertyRunState {
 }
 
 interface TestExecutionState {
-  readonly context: TestContext;
   // Registration tokens use reference identity; rc.112 Effect maps compare plain objects structurally.
   readonly propertyRuns: Map<object, PropertyRunState>;
 }
@@ -63,7 +61,6 @@ const makePropertyRunState = (): PropertyRunState => ({
   watchdogBudgetMillis: O.none(),
 });
 
-const testExecutionStorage = new NodeAsyncHooks.AsyncLocalStorage<TestExecutionState>();
 // Native Arbitrary resumes trials inside Effect fibers, which may be scheduled
 // from another test's async context. The public callback context retains its
 // execution identity across those resumptions; weak keys do not retain tasks.
@@ -311,15 +308,13 @@ const ensureExecutionContext = (): void => {
     if (testExecutions.has(context)) {
       return runTest();
     }
-    const execution: TestExecutionState = { context, propertyRuns: new Map() };
+    const execution: TestExecutionState = { propertyRuns: new Map() };
     testExecutions.set(context, execution);
-    return testExecutionStorage.run(execution, () =>
-      runTest()
-        .finally(() => finishPropertyRuns(execution))
-        .finally(() => {
-          testExecutions.delete(context);
-        })
-    );
+    return runTest()
+      .finally(() => finishPropertyRuns(execution))
+      .finally(() => {
+        testExecutions.delete(context);
+      });
   });
 };
 
@@ -341,25 +336,10 @@ const instrumentContextCallback =
     return instrumentEffect(self(...args), taskFromContext(context), clock, propertyRun);
   };
 
-// `it.effect.each` passes the Vitest test context as the callback's last
-// argument (rc.118 `makeMethods` fixtures change). The async-local execution
-// store is still preferred, but a shared-worker coverage run (`isolate: false`
-// with one worker) can invoke the case callback outside that store, so the
-// trailing context is the fallback before reporting the context as missing.
-const isTestContext = (value: unknown): value is TestContext => P.hasProperty(value, "task") && P.isObject(value.task);
-
 const instrumentCaseCallback =
-  <Args extends Array<unknown>, A, E, R>(self: (...args: Args) => Effect.Effect<A, E, R>, clock: Clock.Clock) =>
-  (...args: Args): Effect.Effect<A, E | TestContextUnavailable | TestHang, R | Scope.Scope> => {
-    const execution = testExecutionStorage.getStore();
-    if (execution !== undefined) {
-      return instrumentEffect(self(...args), taskFromContext(execution.context), clock);
-    }
-    const context = args[args.length - 1];
-    return isTestContext(context)
-      ? instrumentEffect(self(...args), taskFromContext(context), clock)
-      : missingTestContext("each");
-  };
+  <T, A, E, R>(self: (...args: Array<T>) => Effect.Effect<A, E, R>, clock: Clock.Clock) =>
+  (value: T, context: TestContext): Effect.Effect<A, E | TestHang, R | Scope.Scope> =>
+    instrumentEffect(self(value), taskFromContext(context), clock);
 
 const instrumentTest = <R>(test: Vitest.Test<R>, clock: Clock.Clock): Vitest.Test<R> =>
   new Proxy(test, {
@@ -379,16 +359,25 @@ const instrumentConditional = <R>(
     },
   });
 
-const instrumentEach = <R>(each: Vitest.Tester<R>["each"], clock: Clock.Clock): Vitest.Tester<R>["each"] =>
-  new Proxy(each, {
-    apply(target, thisArg, args) {
+const instrumentEach = <R>(tester: Vitest.Tester<R>, clock: Clock.Clock): Vitest.Tester<R>["each"] =>
+  new Proxy(tester.each, {
+    apply(_target, _thisArg, args) {
       const [cases] = args;
       return new Proxy(() => undefined, {
         apply(_register, registerThisArg, registerArgs) {
-          ensureExecutionContext();
           const [name, self, timeout] = registerArgs;
-          const registration = Reflect.apply(target, thisArg, [cases]);
-          return Reflect.apply(registration, registerThisArg, [name, instrumentCaseCallback(self, clock), timeout]);
+          // Let Vitest expand and format rows, then retain the original tester's
+          // layer provisioning, scoped runner and public per-invocation context.
+          const collector = TestRunner.createTaskCollector((formattedName, options, callback) =>
+            Reflect.apply(tester, registerThisArg, [formattedName, callback, options])
+          );
+          // The collector transports the returned Effect to the original tester;
+          // its public .for types otherwise expect an ordinary Promise/void body.
+          return Reflect.apply(collector.for(cases), registerThisArg, [
+            name,
+            P.isNumber(timeout) ? { timeout } : (timeout ?? {}),
+            instrumentCaseCallback(self, clock),
+          ]);
         },
       });
     },
@@ -423,7 +412,7 @@ const instrumentTester = <R>(tester: Vitest.Tester<R>, clock: Clock.Clock): Vite
         Match.when(Match.is("skipIf", "runIf"), () =>
           instrumentConditional(Reflect.get(target, property, receiver), clock)
         ),
-        Match.when("each", () => instrumentEach(Reflect.get(target, property, receiver), clock)),
+        Match.when("each", () => instrumentEach(target, clock)),
         Match.when("prop", () => instrumentProperty(Reflect.get(target, property, receiver), clock)),
         Match.orElse(() => Reflect.get(target, property, receiver))
       );
