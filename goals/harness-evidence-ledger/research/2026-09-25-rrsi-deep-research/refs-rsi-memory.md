@@ -52,8 +52,12 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) Framed informally as an evaluation–selection–update loop, following Good and Yudkowsky.
 - Relation to RRSI: the loop is at weight level, not harness level. Its useful contributions are provenance-preserving admission and separating the predicted, executed and outcome records.
 
-### 5. RSI-Exam: NOT FOUND
-- A title search on alphaXiv returned no "RSI-Exam". The nearest match is **RSIBench-Data** (arXiv 2607.25886, Meng et al.), summarized here as a substitute. RSI-Index (Vals AI) is another benchmark in the same family and was not read.
+### 5. RSI-Exam: public benchmark; paper not found on alphaXiv
+- The original title search on alphaXiv returned no RSI-Exam paper. That search result does not imply the benchmark was unavailable: [RSI-Exam's public repository](https://github.com/aiming-lab/RSI-Exam) records the 88-task leaderboard launch on August 26, 2026, and public data/code release on August 28. Its public set contains 35 tasks; 53 are held back.
+- RSI-Index (Vals AI) is another benchmark in the same family and was not read.
+
+### 6. RSIBench-Data (separate reference)
+- **RSIBench-Data** (arXiv 2607.25886, Meng et al.) is the distinct work summarized below; it is not a substitute for RSI-Exam.
 - (a) A researcher agent improves a fixed target model (Qwen3.5-35B-A3B, LoRA SFT) by writing training data. Fitness is the selection-eval score, with a separate "official" re-run.
 - (b) The agent forms a hypothesis about the capability gap, then builds and validates a data strategy against a whitelisted config.
 - (c) Final submission is the historical best selection score. The protocol separates infrastructure from research and forbids protected eval material in training data. Budget is fixed at 16h and $500.

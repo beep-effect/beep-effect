@@ -13,6 +13,7 @@ import * as O from "@beep/utils/Option";
 import { DateTime, Effect, pipe, Random } from "effect";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hashPublicTextSha256 } from "./privacy.ts";
@@ -1015,6 +1016,9 @@ export class AnnealedEditBudgetInput extends S.Class<AnnealedEditBudgetInput>($I
  * Round `0` yields `bMax`, round `totalRounds` yields `bMin`, and the budget is
  * non-increasing in between. A round past `totalRounds` is clamped to
  * `totalRounds`; a warm restart ({@link isWarmRestart}) resets `round` to `0`.
+ * Interior results within four relative machine epsilons of an integer are
+ * snapped to that integer before taking the ceiling. Endpoint and constant
+ * budgets retain their exact ceiling, including non-integral bounds.
  *
  * **Example** (Annealing four edits down to one)
  *
@@ -1030,9 +1034,15 @@ export class AnnealedEditBudgetInput extends S.Class<AnnealedEditBudgetInput>($I
  * @category utilities
  * @since 0.0.0
  */
-export const annealedEditBudget = ({ round, totalRounds, bMax, bMin }: AnnealedEditBudgetInput): number =>
-  pipe(
-    Math.min(round, totalRounds) / totalRounds,
-    (progress) => bMin + (bMax - bMin) * 0.5 * (1 + Math.cos(Math.PI * progress)),
-    Math.ceil
-  );
+export const annealedEditBudget = ({ round, totalRounds, bMax, bMin }: AnnealedEditBudgetInput): number => {
+  if (round === 0 || bMax === bMin) return Math.ceil(bMax);
+  if (round >= totalRounds) return Math.ceil(bMin);
+  const raw = bMin + (bMax - bMin) * 0.5 * (1 + Math.cos(Math.PI * (round / totalRounds)));
+  const nearest = Num.round(raw, 0);
+  // Only interior results within four relative machine epsilons of an integer
+  // are treated as floating-point noise. Never scale raw by a decimal factor.
+  const tolerance = Number.EPSILON * Math.abs(raw) * 4;
+  const nearInteger =
+    Math.abs(raw - nearest) <= tolerance && nearest >= Num.min(bMin, bMax) && nearest <= Num.max(bMin, bMax);
+  return Math.ceil(nearInteger ? nearest : raw);
+};

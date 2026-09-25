@@ -360,6 +360,29 @@ describe("harness-ledger", () => {
   });
 
   describe("annealedEditBudget", () => {
+    it("corrects cosine noise at an integral boundary without rounding genuine fractions", () => {
+      expect(annealedEditBudget({ round: 1, totalRounds: 3, bMax: 4, bMin: 0 })).toBe(3);
+      expect(annealedEditBudget({ round: 1, totalRounds: 3, bMax: 4.000000000533333, bMin: 0 })).toBe(4);
+      expect(annealedEditBudget({ round: 1, totalRounds: 2, bMax: 1e-20, bMin: 0 })).toBe(1);
+    });
+
+    it("preserves endpoint and constant ceilings even one epsilon above an integer", () => {
+      expect(annealedEditBudget({ round: 0, totalRounds: 3, bMax: 1 + Number.EPSILON, bMin: 0 })).toBe(2);
+      expect(annealedEditBudget({ round: 3, totalRounds: 3, bMax: 4, bMin: 1 + Number.EPSILON })).toBe(2);
+      expect(annealedEditBudget({ round: 999999999, totalRounds: 1000000000, bMax: 4, bMin: 1 + Number.EPSILON })).toBe(
+        2
+      );
+      expect(annealedEditBudget({ round: 1, totalRounds: 3, bMax: 1 + Number.EPSILON, bMin: 1 + Number.EPSILON })).toBe(
+        2
+      );
+    });
+
+    it("keeps large finite bounds finite without decimal scaling", () => {
+      expect(annealedEditBudget({ round: 1, totalRounds: 2, bMax: 1e308, bMin: 0 })).toBe(5e307);
+      expect(annealedEditBudget({ round: 1e308, totalRounds: 1.1e308, bMax: 4, bMin: 0 })).toBe(1);
+      expect(annealedEditBudget({ round: 0, totalRounds: 3, bMax: Number.MAX_VALUE, bMin: 0 })).toBe(Number.MAX_VALUE);
+    });
+
     it("starts at bMax, ends at bMin, and never increases", () => {
       for (const [bMax, bMin, totalRounds] of [
         [4, 1, 3],

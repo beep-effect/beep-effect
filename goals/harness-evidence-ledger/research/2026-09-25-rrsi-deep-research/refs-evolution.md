@@ -576,7 +576,8 @@ at test time, persisting harness), HarnessX (typed modular primitives, trace-dri
 
 **C.1 Round-level formulation.** Ω(H) = all harnesses reachable by arbitrary source edits and is left open; RRSI
 regularizes the *transition*. Each round:
-  H_t ∼ P_reg(· | H_t, F_t, L_t, b_t, E_t, B_t) ⊆ Ω(H_t);   H_{t+1} = argmax_{H' ∈ H_t ∩ A_t} Ŝ(H'),  else H_{t+1} = H_t.
+  𝓗_t ∼ P_reg(· | H_t, F_t, L_t, b_t, E_t, B_t) ⊆ Ω(H_t);   H_{t+1} = argmax_{H' ∈ 𝓗_t ∩ A_t} Ŝ(H'),  else H_{t+1} = H_t.
+𝓗_t = sampled candidate collection; H_t = incumbent harness.
 F_t = current-round feedback, L_t = edit history, b_t = annealed edit budget, E_t = exploration directives,
 B_t = pruning targets, A_t = admissible set. Start S* = Ŝ(H_0). **Before evolution, the unchanged H_0 is evaluated
 repeatedly to estimate δ.** The L0/L1/L2 names are analogies only; no norm-penalized objective is optimized and

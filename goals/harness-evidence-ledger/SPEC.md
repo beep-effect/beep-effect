@@ -18,8 +18,8 @@ management + subagents. The model is held fixed. This packet delivers:
 3. A hook-pulse extension that records a hashed `ContextSurface` id when a
    session touches a skill or an always-loaded harness file.
 4. Two scorer fixes: `EvalRecord.configSnapshotId` must hash the config
-   fingerprint, not the score breakdown; `evaluateLaw` must run its three
-   lanes in parallel.
+   fingerprint, not the score breakdown; `evaluateLaw` runs schema-first
+   and Biome concurrently, followed by tsgo.
 5. A rerun of the parked SkillOpt pilot with an annealed edit budget. Its
    results become the first ledger rows. Its surface census becomes the first
    pruning proposals.
