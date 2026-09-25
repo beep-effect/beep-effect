@@ -61,6 +61,14 @@
     {
       "file": "goals/boolean-creep/data/r39-lq-final-review/integration.json",
       "sha256": "c120b222820931349d7cd7bae2f2d7031858213cad5069ddf9d90aceecc686a6"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/lane-map.json",
+      "sha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/source-sha.txt",
+      "sha256": "449ad803c51fc558b0b86c6dfd550c45d795bb37d9ad6fd2e2b484e2f9aef423"
     }
   ]
 }
