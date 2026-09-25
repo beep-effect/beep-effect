@@ -9,7 +9,14 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
 2026-09-24 acceptance follow-up: P2 local evidence now covers lossless external
 decoding, every conflict category, read-only hashes, missing JSDoc targets, and
 the JudgePack template. See `history/2026-09-24-slice-1-acceptance.md`. Full package
-proof and schema-first pass; P3 hosted closeout is the remaining delivery gate; S2 and S3 remain outside this goal.
+proof and schema-first pass; P3 full Yeet proof and hosted closeout remain delivery
+gates; S2 and S3 remain outside this goal.
+
+2026-09-25 coverage follow-up: the operator approved three package-local Vitest
+isolation exceptions (wink, utils, identity). PR #1224 reached hosted merge
+readiness and was merged by the operator before implementation of these
+exceptions. Deliver the exceptions and final packet closeout in a follow-up PR,
+left open and mergeable. The agreed scope is recorded in `DECISIONS.md`.
 
 ## Phases
 
