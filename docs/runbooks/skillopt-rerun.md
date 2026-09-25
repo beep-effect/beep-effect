@@ -19,9 +19,10 @@ What changed from the P5 run
 | Codex rollout effort (if codex_exec is restored) | `none` | `low` (gpt-6-astra rejects `none`; `medium` timed out all 4 baseline items at 600 s) |
 | Rollout exec / task timeout | 600 s / 900 s | 1500 s / 1800 s |
 
-The target (`codex_exec`), the 8 train / 4 validation split, batch and
-minibatch 2, the soft gate over the full 4-item selection set, and the scorer
-(`bun run beep agent-effectiveness evals score`) are the same as P5.
+The 8 train / 4 validation split, batch and minibatch 2, the soft gate over
+the full 4-item selection set, and the scorer
+(`bun run beep agent-effectiveness evals score`) are the same as P5. The
+rollout target is not: see the table above.
 
 The cosine schedule gives these edit budgets for steps 1 to 12:
 `4 4 4 3 3 2 2 2 1 1 1 1`.
@@ -42,16 +43,16 @@ cd ../..
 
 ## 2. Check the logins
 
-Rollouts and the optimizer both run `claude -p --model opus` (the `codex_exec` target stays configurable for when the Codex pool returns).
-Both CLIs must already be logged in; a detached run cannot prompt.
+Rollouts and the optimizer both run `claude -p --model opus`. The
+`codex_exec` target stays configurable for when the Codex pool returns.
+Claude must already be logged in; a detached run cannot prompt.
 
 ```sh
-codex login status
 claude --version
 ```
 
-`codex login status` must report a logged-in account. If it does not, stop
-and log in before launching.
+Only if restoring the `codex_exec` target, also run `codex login status`
+and confirm it reports a logged-in account before launching.
 
 ## 3. Launch detached
 
@@ -89,7 +90,8 @@ first rollout. It needs no Codex or Claude calls:
 uv run --project tools/skillopt beep-skillopt-train \
   --config tools/skillopt/configs/beeplaw.rerun-2026-09.yaml \
   --cfg-options env.out_root=<scratch-dir>/out env.stub_scorer=true \
-    model.codex_exec_path=/bin/false
+    model.codex_exec_path=/bin/false \
+    model.claude_code_exec_path=/bin/false
 ```
 
 Look for `[config] lr_scheduler=cosine edit_budget=4 min_edit_budget=1` and

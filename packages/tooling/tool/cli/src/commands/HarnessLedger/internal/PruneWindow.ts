@@ -42,8 +42,9 @@ const readMcpServerNames = Effect.fn("HarnessLedger.readMcpServerNames")(functio
 
 /**
  * Enumerate prunable surfaces from a repo root: `.claude/skills/<dir>/SKILL.md`
- * as `skill:<dir>`, `.claude/hooks/<file>` as `hook:<file>`, and the server
- * names in `.mcp.json` as `mcp-server:<name>`.
+ * as `skill:<dir>` and the server
+ * names in `.mcp.json` as `mcp-server:<name>`. Hooks are excluded until
+ * execution telemetry can distinguish unused hooks from always-on hooks.
  *
  * @internal
  * @category use-cases
@@ -55,7 +56,6 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const skillsDir = path.join(repoRoot, ".claude", "skills");
-  const hooksDir = path.join(repoRoot, ".claude", "hooks");
   const skills = yield* listDirectorySorted(skillsDir).pipe(
     Effect.flatMap((names) =>
       Effect.filter(names, (name) =>
@@ -63,20 +63,9 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
       )
     )
   );
-  const hooks = yield* listDirectorySorted(hooksDir).pipe(
-    Effect.flatMap((names) =>
-      Effect.filter(names, (name) =>
-        fs.stat(path.join(hooksDir, name)).pipe(
-          Effect.map((info) => info.type === "File"),
-          Effect.orElseSucceed(() => false)
-        )
-      )
-    )
-  );
   const servers = yield* readMcpServerNames(path.join(repoRoot, ".mcp.json"));
   const refs = A.flatten([
     A.map(skills, (name) => [PrunableSurfaceKind.Enum.skill, name] as const),
-    A.map(hooks, (name) => [PrunableSurfaceKind.Enum.hook, name] as const),
     A.map(servers, (name) => [PrunableSurfaceKind.Enum["mcp-server"], name] as const),
   ]);
   return yield* Effect.forEach(refs, ([kind, name]) =>

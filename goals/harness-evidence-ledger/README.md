@@ -73,7 +73,12 @@ ledger CLI, the hook-pulse surface field, and the scorer fixes.
 
 ## Latest Evidence
 
-Locked decisions D1 to D14 in [`SPEC.md`](./SPEC.md). No ledger rows yet.
+Locked decisions D1 to D14 in [`SPEC.md`](./SPEC.md). The stopped P2 run produced two `proposed` rows,
+`hl-20260925-873a855c` and `hl-20260925-4fc1962c`, in
+[`2026-09.jsonl`](../../harness-ledger/rows/2026-09.jsonl). The run stopped
+after step 2 saturated the score through sandbox repair and task leakage;
+these proposals are not accepted harness edits. See
+[`FINDINGS.md`](history/p2-rerun/FINDINGS.md).
 
 ## Notes
 

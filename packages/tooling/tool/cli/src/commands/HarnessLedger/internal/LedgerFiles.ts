@@ -11,7 +11,7 @@ import { A, pipe, Str } from "@beep/utils";
 import { DateTime, Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
+import { HarnessLedgerBusyError, HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
 import { listDirectorySorted } from "./Fs.ts";
 import type { O } from "@beep/utils";
 
@@ -141,6 +141,55 @@ export const appendLedgerRows = Effect.fn("HarnessLedger.appendLedgerRows")(func
       );
   });
   return written;
+});
+
+/**
+ * Run `effect` under the exclusive ledger write fence
+ * `harness-ledger/.write.lock`, next to the rows directory.
+ *
+ * **Details**
+ *
+ * The fence is created with the `wx` open flag, so exactly one writer holds
+ * it; it wraps the whole read-check-append of a writer so two concurrent
+ * dispositions of one chain head cannot both append. An existing lock fails
+ * with `HarnessLedgerBusyError` and is left in place. The fence is removed
+ * after `effect` completes, fails, or is interrupted; a lock left by a killed
+ * process must be removed by hand once no writer is running.
+ *
+ * @internal
+ * @param repoRoot - Repository root holding `harness-ledger/`.
+ * @param effect - The read-check-append to run while holding the fence.
+ * @returns `effect`, run only after the fence is acquired.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const withLedgerWriteFence = Effect.fn("HarnessLedger.withLedgerWriteFence")(function* <A, E, R>(
+  repoRoot: string,
+  effect: Effect.Effect<A, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const ledgerDir = path.join(repoRoot, "harness-ledger");
+  const lockFile = path.join(ledgerDir, ".write.lock");
+  yield* fs
+    .makeDirectory(ledgerDir, { recursive: true })
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to create ${ledgerDir}.`)));
+  const acquire = fs
+    .writeFileString(lockFile, "harness-ledger write fence\n", { flag: "wx" })
+    .pipe(
+      Effect.catchTag("PlatformError", (error) =>
+        Effect.fail(
+          error.reason._tag === "AlreadyExists"
+            ? HarnessLedgerBusyError.new(lockFile)
+            : HarnessLedgerIoError.new(`Failed to acquire ${lockFile}.`, error)
+        )
+      )
+    );
+  return yield* Effect.acquireUseRelease(
+    acquire,
+    () => effect,
+    () => fs.remove(lockFile, { force: true }).pipe(Effect.ignore)
+  );
 });
 
 /**

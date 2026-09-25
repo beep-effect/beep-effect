@@ -138,9 +138,59 @@ export class HarnessLedgerIoError extends S.TaggedError<HarnessLedgerIoError>($I
 }
 
 /**
+ * Failure raised when another writer holds the ledger write fence.
+ *
+ * **Details**
+ *
+ * Every ledger append runs under an exclusive `harness-ledger/.write.lock`
+ * created with the `wx` open flag. A second writer fails closed with this
+ * error instead of forking a chain; it never removes a lock it did not create.
+ *
+ * **Example** (Report a held write fence)
+ *
+ * ```ts
+ * import { HarnessLedgerBusyError } from "@beep/repo-cli/commands/HarnessLedger"
+ *
+ * const error = HarnessLedgerBusyError.new("/repo/harness-ledger/.write.lock")
+ * console.log(error._tag) // "HarnessLedgerBusyError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HarnessLedgerBusyError extends S.TaggedError<HarnessLedgerBusyError>($I`HarnessLedgerBusyError`)(
+  "HarnessLedgerBusyError",
+  {
+    lockFile: S.String,
+    message: S.String,
+  },
+  $I.annoteError<HarnessLedgerBusyError>("HarnessLedgerBusyError", {
+    description: "Another writer holds the harness ledger write fence; nothing was appended.",
+  })
+) {
+  /**
+   * Construct a busy error for a held lock file.
+   *
+   * @param lockFile - Absolute path of the held write fence.
+   * @returns A typed busy error naming the lock file.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly new = (lockFile: string): HarnessLedgerBusyError =>
+    HarnessLedgerBusyError.make({
+      lockFile,
+      message: `Harness ledger write fence ${lockFile} is held by another writer; retry after it exits, or remove the lock once no writer is running.`,
+    });
+}
+
+/**
  * Union of every harness ledger command failure.
  *
  * @category errors
  * @since 0.0.0
  */
-export type HarnessLedgerCommandError = HarnessLedgerChainError | HarnessLedgerInputError | HarnessLedgerIoError;
+export type HarnessLedgerCommandError =
+  | HarnessLedgerBusyError
+  | HarnessLedgerChainError
+  | HarnessLedgerInputError
+  | HarnessLedgerIoError;

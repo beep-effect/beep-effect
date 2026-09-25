@@ -10,7 +10,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import {
   contextSurfaceId,
   HarnessEditRefKind,
+  HarnessFingerprintParts,
   HarnessLedgerRow,
+  harnessFingerprintFromParts,
   isStale,
   LedgerDisposition,
   makeHarnessLedgerRowId,
@@ -27,7 +29,13 @@ import {
 } from "./HarnessLedger.schemas.ts";
 import { captureHarnessFingerprint } from "./internal/Fingerprint.ts";
 import { chainHeads, chainLength, successorOf } from "./internal/LedgerChains.ts";
-import { appendLedgerRows, findLedgerRow, ledgerMonthOf, readLedgerRows } from "./internal/LedgerFiles.ts";
+import {
+  appendLedgerRows,
+  findLedgerRow,
+  ledgerMonthOf,
+  readLedgerRows,
+  withLedgerWriteFence,
+} from "./internal/LedgerFiles.ts";
 import { enumeratePruneCandidates, observeSessionWindow } from "./internal/PruneWindow.ts";
 import type { FileSystem, Path } from "effect";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
@@ -36,6 +44,7 @@ import type {
   HarnessLedgerListOptions,
   HarnessLedgerProposeOptions,
   HarnessLedgerPruneOptions,
+  ObservedSessionWindow,
   PruneSurfaceCandidate,
 } from "./HarnessLedger.schemas.ts";
 
@@ -60,6 +69,10 @@ export interface HarnessLedgerServiceShape {
   /**
    * Fold every chain to its latest row and apply the list filters.
    *
+   * Staleness compares the harness hashes captured now plus only the model
+   * and reasoning-effort components the options supply; an unset component
+   * is not compared, so each row's own recorded value stands in for it.
+   *
    * @since 0.0.0
    */
   readonly list: (
@@ -75,7 +88,7 @@ export interface HarnessLedgerServiceShape {
   ) => Effect.Effect<HarnessLedgerRow, HarnessLedgerCommandError>;
 
   /**
-   * Propose retiring every skill, hook, and MCP server with zero touches in
+   * Propose retiring every skill and MCP server with zero touches in
    * the last N hook-pulse sessions; append them only when `write` is set.
    *
    * @since 0.0.0
@@ -123,14 +136,16 @@ const proposeImpl = Effect.fn("HarnessLedger.propose")(function* (options: Harne
     repoRevision: options.repoRevision,
     disposition: LedgerDisposition.Enum.proposed,
   });
-  yield* appendLedgerRows(options.repoRoot, [row]);
+  yield* withLedgerWriteFence(options.repoRoot, appendLedgerRows(options.repoRoot, [row]));
   return row;
 });
 
-const dispositionImpl = Effect.fn("HarnessLedger.disposition")(function* (options: HarnessLedgerDispositionOptions) {
-  if (O.isSome(options.resurrectWhen) && options.to !== LedgerDisposition.Enum.tombstoned) {
-    return yield* HarnessLedgerInputError.new("--resurrect-when is only accepted with --to tombstoned.");
-  }
+// Runs under the ledger write fence: the successor check and the append must
+// not interleave with another writer, or two dispositions of one head fork
+// the chain.
+const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function* (
+  options: HarnessLedgerDispositionOptions
+) {
   const rows = yield* readLedgerRows(options.repoRoot);
   const previous = yield* Effect.fromOption(findLedgerRow(rows, options.rowId)).pipe(
     Effect.mapError(() => HarnessLedgerChainError.new(options.rowId, `No ledger row ${options.rowId}.`))
@@ -170,17 +185,43 @@ const dispositionImpl = Effect.fn("HarnessLedger.disposition")(function* (option
   return row;
 });
 
+const dispositionImpl = Effect.fn("HarnessLedger.disposition")(function* (options: HarnessLedgerDispositionOptions) {
+  if (O.isSome(options.resurrectWhen) && options.to !== LedgerDisposition.Enum.tombstoned) {
+    return yield* HarnessLedgerInputError.new("--resurrect-when is only accepted with --to tombstoned.");
+  }
+  return yield* withLedgerWriteFence(options.repoRoot, appendDisposition(options));
+});
+
 const passesFilter = <A>(filter: O.Option<A>, predicate: (value: A) => boolean): boolean =>
   O.match(filter, { onNone: () => true, onSome: predicate });
 
 const listImpl = Effect.fn("HarnessLedger.list")(function* (options: HarnessLedgerListOptions) {
   const rows = yield* readLedgerRows(options.repoRoot);
   const current = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
+  // An unset --model / --reasoning-effort is not compared: substitute the
+  // row's own recorded component so only supplied components and the harness
+  // hashes can make a row stale.
+  const entries = yield* Effect.forEach(chainHeads(rows), (head) =>
+    harnessFingerprintFromParts(
+      HarnessFingerprintParts.make({
+        modelId: O.getOrElse(options.modelId, () => head.fingerprint.modelId),
+        reasoningEffort: O.getOrElse(options.reasoningEffort, () => head.fingerprint.reasoningEffort),
+        harnessSessionHash: current.harnessSessionHash,
+        harnessBaselineHash: current.harnessBaselineHash,
+      })
+    ).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the row's current harness fingerprint.")),
+      Effect.map((fingerprint) =>
+        HarnessLedgerListEntry.make({
+          row: head,
+          stale: isStale(head, fingerprint),
+          chainLength: chainLength(rows, head),
+        })
+      )
+    )
+  );
   return pipe(
-    chainHeads(rows),
-    A.map((head) =>
-      HarnessLedgerListEntry.make({ row: head, stale: isStale(head, current), chainLength: chainLength(rows, head) })
-    ),
+    entries,
     A.filter(
       (entry) =>
         (!options.staleOnly || entry.stale) &&
@@ -221,9 +262,14 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
   );
 });
 
-const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (options: HarnessLedgerPruneOptions) {
-  const candidates = yield* enumeratePruneCandidates(options.repoRoot);
-  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions);
+// Reads open proposals and, with `write`, appends fresh ones. The caller runs
+// it under the write fence when `write` is set so the dedupe check and the
+// append cannot interleave with another writer.
+const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(function* (
+  options: HarnessLedgerPruneOptions,
+  candidates: ReadonlyArray<PruneSurfaceCandidate>,
+  observed: ObservedSessionWindow
+) {
   const rows = yield* readLedgerRows(options.repoRoot);
   const openTargets = pipe(
     chainHeads(rows),
@@ -259,6 +305,13 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
     proposals,
     written,
   });
+});
+
+const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (options: HarnessLedgerPruneOptions) {
+  const candidates = yield* enumeratePruneCandidates(options.repoRoot);
+  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions);
+  const plan = planPruneProposals(options, candidates, observed);
+  return yield* options.write ? withLedgerWriteFence(options.repoRoot, plan) : plan;
 });
 
 /**

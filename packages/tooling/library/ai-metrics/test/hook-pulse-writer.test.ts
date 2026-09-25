@@ -813,7 +813,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // hook file name are the canary: only their digest may reach the row.
         // The fixture cwd does not exist on disk, so the writer's root walk
         // finds nothing and falls back to cwd, which is also the codec default.
-        const surfacePayload = (toolName: string, toolInput: object) => ({
+        const surfacePayload = (toolName: string, toolInput: unknown) => ({
           ...baseFields,
           duration_ms: 3,
           hook_event_name: HookPulseEvent.Enum.PostToolUse,
@@ -831,6 +831,22 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
             key: O.some(`hook:${CANARY}.sh`),
           },
           { payload: surfacePayload("Read", { file_path: "packages/foo/src/x.ts" }), key: O.none<string>() },
+          { payload: surfacePayload("mcp__notion__search", { path: ["a", "b"] }), key: O.some("mcp-server:notion") },
+          {
+            payload: surfacePayload("mcp__notion__search", { path: { nested: true } }),
+            key: O.some("mcp-server:notion"),
+          },
+          { payload: surfacePayload("mcp__notion__search", 7), key: O.some("mcp-server:notion") },
+          { payload: surfacePayload("Read", null), key: O.none<string>() },
+          { payload: surfacePayload("Read", ["path"]), key: O.none<string>() },
+          {
+            payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh`, path: ["a"] }),
+            key: O.some(`hook:${CANARY}.sh`),
+          },
+          ...A.map([".", "repo", "repo/subdir"], (cwd) => ({
+            payload: { ...surfacePayload("Read", { file_path: ".claude/hooks/pulse.sh" }), cwd },
+            key: O.none<string>(),
+          })),
         ];
 
         yield* Effect.forEach(

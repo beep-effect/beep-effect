@@ -35,8 +35,11 @@
   config, so the three law lanes measure the agent's edit and nothing else.
   (2) Add the paper's pre-evaluation screen to the loop: reject a candidate
   whose diff mentions the scorer, its checks, or the fixture layout. (3) Record
-  the two baseline scores (0.5431, 0.5015) as the first empirical noise band
-  for the ledger's stale/acceptance predicates.
+  the two baseline scores (0.5431, 0.5015) as scorer-variance evidence for
+  rerun analysis: an evaluation-environment noise floor that a candidate's
+  gain must clear before it reads as signal. The pair is not an input to the
+  ledger's `isStale` (fingerprint mismatch only) or to any shipped acceptance
+  predicate; noise-band calibration stays out of shipped gates per SPEC.
 
 ## Three launch gotchas cost an hour before the first rollout ran
 
@@ -55,3 +58,13 @@
 - **Proposal:** The runbook now records each of these; a preflight command
   that checks the target backend's auth and quota, acknowledges or refuses on
   open inbox rows, and clears a stale `out/` would have prevented all of them.
+
+## Concurrent review ownership interrupted the repair pass (2026-09-25)
+
+- **Work:** resolving PR #1253 review findings and its main merge conflict.
+- **Evidence:** the inventory changed from an unresolved merge to staged content
+  while another live session ran `beep lint effect-vitest --write`; that session
+  then stopped with `hit your monthly spend limit` after editing the hook guard.
+- **Prevention:** record a single active PR repair owner and handoff path before
+  starting parallel all-PR sweeps. The second session preserved the existing edit
+  and resumed only after confirming the first had stopped.

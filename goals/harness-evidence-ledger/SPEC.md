@@ -203,9 +203,22 @@ reproduced from the session plan.
 - **Answer:** Pruning proposals: skills + hooks + MCP servers first; window in
   sessions (default 30, tunable) under the current harness hash; proposals
   only, never applied. AGENTS.md lines wait for line-level telemetry.
+  Amended below: hooks are out of scope until hook execution telemetry exists.
 - **Rationale:** These surfaces are observable today. A session window
   tracks use, not the calendar.
 - **Rejected:** skills only; all surfaces with a day window.
+
+#### D9 amendment (2026-09-25)
+
+Question: D8 stamps `surface` only on PostToolUse rows for Skill, `mcp__*`, and
+file tools. Hook execution never stamps a hook surface, so an always-on hook
+looks zero-touch in every window. Keep hooks in prune proposals?
+Answer: no. Hooks are excluded from prune candidates until hook execution
+telemetry exists; prune proposals cover skills and MCP servers only.
+Rationale: a file-tool touch cannot tell an unused hook from one that runs on
+every event, so every hook would be proposed for retirement every window.
+Rejected: count a file Read or Edit of the hook as use (measures editing, not
+execution); keep hooks and document the false positives.
 
 ### D10 (2026-09-25): Fingerprint home
 
@@ -221,7 +234,8 @@ reproduced from the session plan.
 
 - **Question:** What does the pilot rerun change?
 - **Answer:** Rerun params: cosine 4→1, 3 epochs, workers 4, Opus optimizer,
-  codex_exec target. Same 8/4 split and scorer as P5.
+  codex_exec target. Same 8/4 split and scorer as P5. The target is amended
+  to claude_code_exec by the D14 amendment below.
 - **Rationale:** Tests the two levers the pilot's FINDINGS named (bigger edit
   budgets, parallel workers) and holds everything else fixed.
 - **Rejected:** 3→1/2 epochs/Sonnet; autonomous scheduler.
@@ -293,7 +307,7 @@ and the Claude tool allowlist includes Edit/Write (the harness default is Read,B
 - [ ] A session that invokes a Skill emits a hook-pulse row with `surface`
       set; a product-only session does not. No path appears in any row.
 - [ ] `evals score` records a `configSnapshotId` that changes with AGENTS.md
-      and not with the score.
+      or an injected candidate skill outside the repo, and not with the score.
 - [ ] Scorer wall time per task drops against P5's roughly 2 minutes.
 - [ ] The rerun completes; results, first ledger rows, and
       `prune-proposals --window 30` output land in PR2.

@@ -46,6 +46,7 @@ import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
 const encodeListJson = S.encodeUnknownEffect(S.toCodecJson(S.Array(HarnessLedgerListEntry)));
 const encodePruneJson = S.encodeUnknownEffect(S.toCodecJson(HarnessLedgerPruneReport));
 const decodeMonth = S.decodeUnknownEffect(HarnessLedgerMonth);
+const decodeDispositionOptions = S.decodeEffect(HarnessLedgerDispositionOptions);
 
 const resolveRepoRoot = findRepoRoot().pipe(
   Effect.mapError(HarnessLedgerIoError.wrap("Failed to locate the repo root."))
@@ -71,6 +72,19 @@ const modelFlag = Flag.String("model").pipe(
 );
 const reasoningEffortFlag = Flag.String("reasoning-effort").pipe(
   Flag.withDescription('Reasoning effort for the fingerprint (recorded as "unknown" when absent)'),
+  Flag.optional
+);
+
+const listModelFlag = Flag.String("model").pipe(
+  Flag.withDescription(
+    "Compare --stale against this model id; when absent the model is not compared (each row's recorded model stands in)"
+  ),
+  Flag.optional
+);
+const listReasoningEffortFlag = Flag.String("reasoning-effort").pipe(
+  Flag.withDescription(
+    "Compare --stale against this reasoning effort; when absent the effort is not compared (each row's recorded effort stands in)"
+  ),
   Flag.optional
 );
 
@@ -160,6 +174,7 @@ export const harnessLedgerProposeCommand = Command.make(
       return yield* printLines([row.rowId, `Harness-Ledger: ${row.rowId}`]);
     }).pipe(
       Effect.catchTags({
+        HarnessLedgerBusyError: reportFailure("propose"),
         HarnessLedgerInputError: reportFailure("propose"),
         HarnessLedgerChainError: reportFailure("propose"),
         HarnessLedgerIoError: reportFailure("propose"),
@@ -229,7 +244,7 @@ export const harnessLedgerDispositionCommand = Command.make(
       }
       const delta = yield* buildDelta(input.score, input.cost);
       const touched = yield* Effect.forEach(input.touched, (spec) => parseHarnessSurfaceSpec(Str.trim(spec)));
-      const options = yield* S.decodeEffect(HarnessLedgerDispositionOptions)({
+      const options = yield* decodeDispositionOptions({
         repoRoot,
         rowId: Str.trim(input.row),
         to: input.to,
@@ -253,6 +268,7 @@ export const harnessLedgerDispositionCommand = Command.make(
       ]);
     }).pipe(
       Effect.catchTags({
+        HarnessLedgerBusyError: reportFailure("disposition"),
         HarnessLedgerInputError: reportFailure("disposition"),
         HarnessLedgerChainError: reportFailure("disposition"),
         HarnessLedgerIoError: reportFailure("disposition"),
@@ -309,7 +325,9 @@ export const harnessLedgerListCommand = Command.make(
   {
     stale: Flag.Boolean("stale").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Only rows whose fingerprint differs from the current harness fingerprint")
+      Flag.withDescription(
+        "Only rows whose harness surfaces changed, or whose model/effort differs from an explicit --model/--reasoning-effort; omitted components are not compared"
+      )
     ),
     disposition: Flag.Literals("disposition", LedgerDisposition.Options).pipe(
       Flag.withDescription("Only chains whose latest row has this disposition"),
@@ -319,8 +337,8 @@ export const harnessLedgerListCommand = Command.make(
       Flag.withDescription("Only chains whose latest row was written in YYYY-MM"),
       Flag.optional
     ),
-    model: modelFlag,
-    reasoningEffort: reasoningEffortFlag,
+    model: listModelFlag,
+    reasoningEffort: listReasoningEffortFlag,
     json: jsonFlag,
   },
   Effect.fn(function* (input) {
@@ -413,7 +431,7 @@ const pruneLines = (report: HarnessLedgerPruneReport): ReadonlyArray<string> => 
 
 /**
  * `bun run beep harness-ledger prune-proposals` — propose retiring skills,
- * hooks, and MCP servers with zero observed touches in the last N sessions.
+ * and MCP servers with zero observed touches in the last N sessions.
  *
  * **Details**
  *
@@ -483,6 +501,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
       return yield* printLines(pruneLines(report));
     }).pipe(
       Effect.catchTags({
+        HarnessLedgerBusyError: reportFailure("prune-proposals"),
         HarnessLedgerInputError: reportFailure("prune-proposals"),
         HarnessLedgerChainError: reportFailure("prune-proposals"),
         HarnessLedgerIoError: reportFailure("prune-proposals"),
@@ -491,7 +510,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Propose retiring zero-touch skills, hooks, and MCP servers over the last N sessions (current-harness-hash window deferred until hook-pulse stamps it at SessionStart)"
+    "Propose retiring zero-touch skills and MCP servers over the last N sessions (current-harness-hash window deferred until hook-pulse stamps it at SessionStart)"
   ),
   Command.provide(HarnessLedgerServiceLive)
 );

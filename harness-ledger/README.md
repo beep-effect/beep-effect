@@ -46,7 +46,7 @@ Row schema: `HarnessLedgerRow` in `@beep/repo-ai-metrics`.
 | `bun run beep harness-ledger propose --mechanism <class> --edit <commit:<sha>\|diff:<sha256>\|pending> [--hypothesis "<claim>" --expected-surface <kind> --expected-metric "<name>"] [--model <id>] [--reasoning-effort <level>] [--repo-revision <sha>] [--json]` | Captures the harness fingerprint now and appends one `proposed` row. Prints the row id and its trailer. |
 | `bun run beep harness-ledger disposition --row <rowId> --to <accepted\|rejected\|deferred\|waived\|tombstoned> --evidence "<text>" [--score <n> --cost <n>] [--resurrect-when "<text>"] [--touched <kind>:<name> ...]` | Appends a row that supersedes the latest row of a chain. Refuses a row that is already superseded. |
 | `bun run beep harness-ledger list [--stale] [--disposition <d>] [--month YYYY-MM] [--json]` | Folds each chain to its latest row and flags rows whose fingerprint differs from the current one. |
-| `bun run beep harness-ledger prune-proposals [--window <sessions>] [--state-dir <dir>] [--write] [--json]` | Proposes retiring skills, hooks, and MCP servers with zero hook-pulse touches in the last N sessions. Dry run unless `--write`. |
+| `bun run beep harness-ledger prune-proposals [--window <sessions>] [--state-dir <dir>] [--write] [--json]` | Proposes retiring skills and MCP servers with zero hook-pulse touches in the last N sessions. Dry run unless `--write`. |
 
 ## Trailer
 
@@ -57,3 +57,15 @@ Harness-Ledger: <rowId>
 ```
 
 No row means the change is product work, not a harness edit.
+
+`list` compares current harness surfaces using each row's recorded model and
+reasoning effort by default. Pass `--model` or `--reasoning-effort` to compare
+against a different regime explicitly. Hooks are excluded from zero-touch
+pruning until hook execution telemetry exists; file-tool touches alone cannot
+show whether an always-on hook is unused.
+
+Every write (`propose`, `disposition`, and `prune-proposals --write`) acquires
+an exclusive `harness-ledger/.write.lock` before reading the chain and releases
+it after append or failure. A concurrent writer fails closed with
+`HarnessLedgerBusyError`. If a process is killed before cleanup, verify no
+writer is active before manually removing the leftover lock and retrying.

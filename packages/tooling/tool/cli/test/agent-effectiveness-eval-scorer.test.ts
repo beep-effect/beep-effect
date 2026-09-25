@@ -4,6 +4,7 @@ import {
   aggregateLawFraction,
   buildAgentEffectivenessEvalScoreReport,
   encodeAgentEffectivenessEvalScoreReportJson,
+  evalConfigurationId,
   evaluateLaw,
   evaluateSkillOptCompletion,
   lawComponentScore,
@@ -107,6 +108,47 @@ const emptyLaw = {
 };
 
 describe("agent-effectiveness eval scorer", () => {
+  it.effect("fingerprints injected skills outside the repository independently of score", () =>
+    withTempFixture(
+      Effect.fnUntraced(function* (fixtureDir) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* fs.makeTempDirectoryScoped();
+        yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Shared guidance\n");
+        const candidate = path.join(fixtureDir, ".claude", "skills", "skillopt-target", "SKILL.md");
+        const identity = () => evalConfigurationId(repoRoot, fixtureDir, O.some("opus"), O.some("medium"));
+        const missing = yield* identity();
+        yield* writeText(candidate, "# Candidate A\n");
+        const first = yield* identity();
+        expect(first).not.toBe(missing);
+        expect(yield* identity()).toBe(first);
+        yield* writeText(candidate, "# Candidate B\n");
+        expect(yield* identity()).not.toBe(first);
+        yield* writeText(candidate, "# Candidate A\n");
+        expect(yield* identity()).toBe(first);
+        yield* writeText(path.join(fixtureDir, ".agents", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
+        const bothRoots = yield* identity();
+        expect(bothRoots).not.toBe(first);
+        yield* writeText(
+          path.join(fixtureDir, ".claude", "skills", "skillopt-target", "references", "notes.md"),
+          "n\n"
+        );
+        expect(yield* identity()).not.toBe(bothRoots);
+
+        // Two rollout dirs with different candidate content get different ids;
+        // identical content in a different dir gets the same id.
+        const otherDir = yield* fs.makeTempDirectoryScoped();
+        const otherIdentity = () => evalConfigurationId(repoRoot, otherDir, O.some("opus"), O.some("medium"));
+        yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate B\n");
+        const other = yield* otherIdentity();
+        expect(other).not.toBe(first);
+        expect(Str.startsWith("skillopt-scorer-")(other)).toBe(true);
+        yield* writeText(path.join(otherDir, ".claude", "skills", "skillopt-target", "SKILL.md"), "# Candidate A\n");
+        expect(yield* otherIdentity()).toBe(first);
+      })
+    )
+  );
+
   it.effect("scores completion checks from exports and manifest patterns", () =>
     withTempFixture(
       Effect.fnUntraced(function* (fixtureDir) {

@@ -79,7 +79,7 @@ export type HarnessLedgerAdmission = typeof HarnessLedgerAdmission.Type;
  */
 export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pickOptions(["skill", "hook", "mcp-server"])).pipe(
   $I.annoteSchema("PrunableSurfaceKind", {
-    description: "Context surface kinds enumerated as pruning candidates: skills, hooks, and MCP servers.",
+    description: "Pruning surface kinds; hook rows remain decodable, but enumeration waits for execution telemetry.",
   })
 );
 

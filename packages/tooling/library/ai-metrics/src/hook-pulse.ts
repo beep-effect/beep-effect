@@ -591,13 +591,13 @@ export type HookPulseNotificationType = typeof HookPulseNotificationType.Type;
  */
 export class HookPulseRawToolInput extends S.Class<HookPulseRawToolInput>($I`HookPulseRawToolInput`)(
   {
-    skill: S.OptionFromOptionalKey(S.String),
-    file_path: S.OptionFromOptionalKey(S.String),
-    notebook_path: S.OptionFromOptionalKey(S.String),
-    path: S.OptionFromOptionalKey(S.String),
+    skill: S.OptionFromOptionalKey(S.String).pipe(S.catchDecoding(() => Effect.succeedSome(O.none()))),
+    file_path: S.OptionFromOptionalKey(S.String).pipe(S.catchDecoding(() => Effect.succeedSome(O.none()))),
+    notebook_path: S.OptionFromOptionalKey(S.String).pipe(S.catchDecoding(() => Effect.succeedSome(O.none()))),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.catchDecoding(() => Effect.succeedSome(O.none()))),
   },
   $I.annote("HookPulseRawToolInput", {
-    description: "Surface-locating tool_input keys; every content-bearing key is dropped on decode.",
+    description: "Surface-locating tool_input keys; non-string values and content-bearing keys are dropped on decode.",
   })
 ) {
   static readonly decodeResult = S.decodeUnknownResult(HookPulseRawToolInput);
@@ -675,7 +675,9 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
     duration_ms: S.OptionFromOptionalKey(NonNegNum),
     reason: S.OptionFromOptionalKey(S.String),
     is_interrupt: S.OptionFromOptionalKey(S.Boolean),
-    tool_input: S.OptionFromOptionalKey(HookPulseRawToolInput),
+    tool_input: S.OptionFromOptionalKey(HookPulseRawToolInput).pipe(
+      S.catchDecoding(() => Effect.succeedSome(O.none()))
+    ),
   },
   $I.annote("HookPulseRawEvent", {
     description: "Whitelisted non-content fields forwarded from a coding-agent hook payload.",

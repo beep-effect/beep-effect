@@ -99,10 +99,11 @@ as history and recheck mutable dependencies before repair publication.
 
 Cross-reference (2026-09-25): the
 [harness-evidence-ledger](../harness-evidence-ledger/SPEC.md) goal applies the
-same rule to harness edits. Its `HarnessFingerprint` (model id, reasoning
-effort, and a hash of always-loaded harness surfaces) expires prior evidence
-when the evaluator, prompt, or model changes. The two expiry rules must not
-diverge; a change to either updates both packets.
+same principle of expiring stale evidence to harness edits. Its
+`HarnessFingerprint` changes with the model id, reasoning effort, or harness
+surfaces. Audit determinations separately invalidate when claims, evidence,
+authority rules, or evaluator versions change. The two packets share the
+principle without requiring identical invalidation inputs.
 
 Separate evidence judgment from temporal applicability and action. Missing
 sources, partial extraction, contradictory evidence, and unrun checks remain

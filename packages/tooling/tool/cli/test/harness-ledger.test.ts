@@ -13,7 +13,7 @@ import { Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
+import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 
@@ -162,6 +162,102 @@ layer(TestLayer)("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("fences concurrent dispositions and releases the fence after failures", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const ledger = yield* HarnessLedgerService;
+      const previous = yield* proposePending(root);
+      const options = HarnessLedgerDispositionOptions.make({
+        repoRoot: root,
+        rowId: previous.rowId,
+        to: "accepted",
+        evidence: "concurrent review",
+      });
+      const outcomes = yield* Effect.all(
+        [Effect.result(ledger.disposition(options)), Effect.result(ledger.disposition(options))],
+        { concurrency: 2 }
+      );
+      expect(A.filter(outcomes, Result.isSuccess)).toHaveLength(1);
+      expect(A.filter(outcomes, Result.isFailure)).toHaveLength(1);
+      expect(yield* readLedgerLines(root)).toHaveLength(2);
+      const stale = yield* Effect.flip(ledger.disposition(options));
+      expect(stale._tag).toBe("HarnessLedgerChainError");
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      expect(yield* fs.exists(path.join(root, "harness-ledger", ".write.lock"))).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("fails busy on a held write fence without appending or removing the lock", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const ledger = yield* HarnessLedgerService;
+      const previous = yield* proposePending(root);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const lockFile = path.join(root, "harness-ledger", ".write.lock");
+      yield* fs.writeFileString(lockFile, "held by another writer\n");
+
+      const busyDisposition = yield* Effect.flip(
+        ledger.disposition(
+          HarnessLedgerDispositionOptions.make({
+            repoRoot: root,
+            rowId: previous.rowId,
+            to: "accepted",
+            evidence: "blocked",
+          })
+        )
+      );
+      expect(busyDisposition._tag).toBe("HarnessLedgerBusyError");
+      const busyPropose = yield* Effect.flip(proposePending(root));
+      expect(busyPropose._tag).toBe("HarnessLedgerBusyError");
+      expect(yield* readLedgerLines(root)).toHaveLength(1);
+      expect(yield* fs.readFileString(lockFile)).toBe("held by another writer\n");
+
+      yield* fs.remove(lockFile);
+      yield* proposePending(root);
+      expect(yield* readLedgerLines(root)).toHaveLength(2);
+      expect(yield* fs.exists(lockFile)).toBe(false);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("bare list preserves each row's model provenance but observes guidance changes", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const ledger = yield* HarnessLedgerService;
+      yield* ledger.propose(
+        HarnessLedgerProposeOptions.make({
+          repoRoot: root,
+          mechanismClass: "skill",
+          edit: { kind: "pending" },
+          modelId: O.some("opus"),
+          reasoningEffort: O.some("medium"),
+        })
+      );
+      yield* proposePending(root);
+      expect(yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true }))).toHaveLength(0);
+      expect(
+        yield* ledger.list(
+          HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true, modelId: O.some("new-model") })
+        )
+      ).toHaveLength(2);
+      // Supplying both components compares them: only the unknown-model row is stale.
+      const matching = yield* ledger.list(
+        HarnessLedgerListOptions.make({
+          repoRoot: root,
+          staleOnly: true,
+          modelId: O.some("opus"),
+          reasoningEffort: O.some("medium"),
+        })
+      );
+      expect(A.map(matching, (entry) => entry.row.fingerprint.modelId)).toStrictEqual(["unknown"]);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.writeFileString(path.join(root, "AGENTS.md"), "# Changed guidance\n");
+      expect(yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, staleOnly: true }))).toHaveLength(2);
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("list folds chains to their latest row and flags stale fingerprints", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
@@ -224,14 +320,13 @@ layer(TestLayer)("harness-ledger service", (it) => {
       const dryRun = yield* ledger.pruneProposals(options);
       expect(dryRun.sessionsObserved).toBe(2);
       expect(dryRun.undecodableLines).toBe(1);
-      expect(dryRun.candidates).toBe(4);
+      expect(dryRun.candidates).toBe(3);
       expect(dryRun.touchedCandidates).toBe(1);
       expect(dryRun.written).toBe(false);
       const proposed = A.map(dryRun.proposals, (proposal) => `${proposal.candidate.kind}:${proposal.candidate.name}`);
-      expect(proposed).toStrictEqual(["skill:beta", "hook:pulse.sh", "mcp-server:notion"]);
+      expect(proposed).toStrictEqual(["skill:beta", "mcp-server:notion"]);
       expect(A.map(dryRun.proposals, (proposal) => proposal.row.mechanismClass)).toStrictEqual([
         "skill",
-        "control_flow",
         "client_tool",
       ]);
       const [first] = dryRun.proposals;
@@ -244,11 +339,11 @@ layer(TestLayer)("harness-ledger service", (it) => {
 
       const written = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, write: true }));
       expect(written.written).toBe(true);
-      expect(yield* readLedgerLines(root)).toHaveLength(3);
+      expect(yield* readLedgerLines(root)).toHaveLength(2);
 
       const again = yield* ledger.pruneProposals(options);
       expect(again.proposals).toHaveLength(0);
-      expect(again.alreadyProposed).toBe(3);
+      expect(again.alreadyProposed).toBe(2);
 
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);

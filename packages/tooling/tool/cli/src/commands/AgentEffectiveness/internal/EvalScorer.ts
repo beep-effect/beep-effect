@@ -264,6 +264,7 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
     });
     yield* recordAgentEffectivenessEvalScore({
       dataRoot: resolvedDataRoot,
+      dir,
       elapsedMs: Duration.toMillis(elapsed),
       modelId,
       reasoningEffort,

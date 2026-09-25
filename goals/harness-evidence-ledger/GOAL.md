@@ -30,7 +30,7 @@ Build (PLAN P1):
   reads and edits. No paths.
 - Scorer: `configSnapshotId` = fingerprint id; `evaluateLaw` lanes concurrent.
 - Rerun config: cosine 4 to 1, 3 epochs, 4 workers, Opus optimizer,
-  `codex_exec`, same 8/4 split and scorer as P5.
+  `claude_code_exec`, same 8/4 split and scorer as P5.
 
 Then P2 rerun (local, detached, overnight at most, full logs), P3 PR1 to
 mergeable, P4 PR2 with results, first rows, pruning proposals, and a

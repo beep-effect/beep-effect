@@ -266,15 +266,23 @@ case "${payload}" in
     # The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md`
     # and `.git`: `AGENTS.md` alone would stop at a nested app's own guide
     # (`apps/*/AGENTS.md`) and misfile every root surface. No match falls back to
-    # `cwd`, which is also the TypeScript codec's default.
+    # `cwd`, which is also the TypeScript codec's default. Only an absolute
+    # `cwd` enters the walk (a relative one yields no surface in the jq program
+    # and the codec alike), and the loop stops once a strip makes no progress,
+    # so a segment without `/` can never spin forever.
     repo_root="${raw_cwd}"
-    probe="${raw_cwd}"
+    case "${raw_cwd}" in
+      /*) probe="${raw_cwd}" ;;
+      *) probe="" ;;
+    esac
     while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
       if [ -e "${probe}/AGENTS.md" ] && [ -e "${probe}/.git" ]; then
         repo_root="${probe}"
         break
       fi
-      probe="${probe%/*}"
+      next_probe="${probe%/*}"
+      [ "${next_probe}" = "${probe}" ] && break
+      probe="${next_probe}"
     done
 
     # Every branch yields a string, never `empty` (see the `capture()` note in the

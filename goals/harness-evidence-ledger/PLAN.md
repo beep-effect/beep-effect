@@ -48,7 +48,7 @@ Order is schema, then service contract, then implementation.
 5. **Scorer fixes**: `configSnapshotId` becomes the fingerprint id;
    `evaluateLaw` runs its three lanes concurrently.
 6. **Rerun config** `tools/skillopt/configs/beeplaw.rerun-2026-09.yaml`:
-   cosine 4 to 1, 3 epochs, 4 workers, Opus optimizer, `codex_exec` target,
+   cosine 4 to 1, 3 epochs, 4 workers, Opus optimizer, `claude_code_exec` target,
    output under this packet's `history/`.
 
 Acceptance:
