@@ -1,0 +1,23 @@
+--- a/context/build.js
++++ b/context/build.js
+@@ -20,6 +20,7 @@
+ import { relPosix } from "../util/paths.js";
+ import { readSourceFile } from "../util/source.js";
+ import { readFollowNestedRepos, readFollowSubmodules, readIncludeDirs } from "../util/state.js";
++import { readDeepIgnore } from "../util/deep-ignore.js";
+ import { LlmFailureGate } from "../ai/failure.js";
+ import { CACHE_DIR, MANIFEST_VERSION, contextDirFor, deleteNode, digestSources, existingNodeSlugs, slugify, writeManifest, writeNode, } from "./node-file.js";
+ /** Extensions treated as source code. */
+@@ -51,7 +52,11 @@
+     })
+         .filter((f) => exts.some((e) => f.toLowerCase().endsWith(e)))
+         .filter((f) => !f.startsWith(outDir));
+-    return filterByOnlyDirs(walked, root, resolveOnlyDirs(outDir, explicitOnlyDirs));
++    // Local patch (2026-09-25): `.graftignore` files leave the concept tier here,
++    // the one list build and check share, so neither summarizes nor flags them.
++    const ignore = readDeepIgnore(root);
++    const kept = walked.filter((f) => !ignore(relPosix(root, f)));
++    return filterByOnlyDirs(kept, root, resolveOnlyDirs(outDir, explicitOnlyDirs));
+ }
+ export async function buildContext(dir, opts) {
+     const root = resolve(dir);
