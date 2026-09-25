@@ -450,10 +450,10 @@ export const yeetMonitorExitTable: ReadonlyArray<YeetMonitorExit> = A.map(
  * `firstObservedAt` is the poll that first saw the head. `pushedAt` is the head
  * commit's committer date (yeet publish commits and pushes in one step, so it
  * approximates the push). `redAt` is GitHub's `completedAt` for the first
- * failing check the loop saw on the head (the red as GitHub observed it, not
- * as the poll did). `redAt`, `settledAt`, `closeoutAt`, and `readyAt` are
- * stamped on first observation and never overwritten; a head change starts a
- * new timeline.
+ * failing required check the loop saw on the head (the red as GitHub observed
+ * it, not as the poll did); an optional red never stamps it. `redAt`,
+ * `settledAt`, `closeoutAt`, and `readyAt` are stamped on first observation
+ * and never overwritten; a head change starts a new timeline.
  *
  * **Example** (Construct a timeline)
  *
@@ -663,9 +663,12 @@ export type YeetPushToAckStage = typeof YeetPushToAckStage.Type;
  *
  * **Details**
  *
- * Every stage is optional: a head with no red has only `pushed`, a row the
- * owning session never saw has no `injected`, and a row superseded by a push
- * is often never acked. An absent stage renders as `-`, never as a failure.
+ * The chain follows the first required red: `red` is that red's instant, and
+ * `row`, `injected`, and `acked` all belong to its P0 `check-failed` row, so an
+ * optional red's P1 row never lends the chain a stage. Every stage is
+ * optional: a head with no required red has only `pushed`, a row the owning
+ * session never saw has no `injected`, and a row superseded by a push is often
+ * never acked. An absent stage renders as `-`, never as a failure.
  *
  * **Example** (A head with no red)
  *
@@ -704,13 +707,27 @@ const pushToAckInstant = (timeline: YeetPushToAckTimeline, stage: YeetPushToAckS
     Match.exhaustive
   );
 
-const renderStageDelta = (previous: O.Option<number>, millis: O.Option<number>): string =>
+const renderElapsed = (from: number, to: number): string => Duration.format(Duration.millis(to - from));
+
+// A stage stamped before the stage printed ahead of it is anchored on the push
+// instead, so the line never shows a negative or clamped-to-zero gap.
+const renderStageDelta = (pushed: O.Option<number>, previous: O.Option<number>, millis: O.Option<number>): string =>
   O.match(O.all({ from: previous, to: millis }), {
     onNone: () => "",
-    onSome: ({ from, to }) => ` (+${Duration.format(Duration.millis(Math.max(0, to - from)))})`,
+    onSome: ({ from, to }) =>
+      to >= from
+        ? ` (+${renderElapsed(from, to)})`
+        : O.match(
+            O.filter(pushed, (push) => push <= to),
+            {
+              onNone: () => "",
+              onSome: (push) => ` (push +${renderElapsed(push, to)})`,
+            }
+          ),
   });
 
 const renderPushToAckStage = (
+  pushed: O.Option<number>,
   previous: O.Option<number>,
   stage: YeetPushToAckStage,
   instant: O.Option<string>
@@ -719,7 +736,10 @@ const renderPushToAckStage = (
     onNone: () => [previous, `${stage} -`] as const,
     onSome: (value) => {
       const millis = epochMillis(value);
-      return [O.orElse(millis, () => previous), `${stage} ${value}${renderStageDelta(previous, millis)}`] as const;
+      return [
+        O.orElse(millis, () => previous),
+        `${stage} ${value}${renderStageDelta(pushed, previous, millis)}`,
+      ] as const;
     },
   });
 
@@ -728,10 +748,19 @@ const renderPushToAckStage = (
  *
  * **Details**
  *
- * Stages print in order; an absent stage prints `-`. A present stage after an
- * earlier present stage carries `(+<duration>)`, the wall clock since the
- * nearest earlier stamped stage, so the red → row and row → injected gaps read
+ * Stages print in order; an absent stage prints `-`. The `row`, `injected`,
+ * and `acked` stages are the first required red's P0 row, as
+ * `loadYeetPushToAckTimeline` joins them. A present stage after an earlier
+ * present stage carries `(+<duration>)`, the wall clock since the nearest
+ * earlier stamped stage, so the red → row and row → injected gaps read
  * straight off the line.
+ *
+ * A stage stamped before that earlier stage (GitHub's clock against the local
+ * one, or a row that is not this red's) never prints a negative or
+ * clamped-to-zero gap: it keeps its absolute instant and carries
+ * `(push +<duration>)`, the wall clock since `pushed`, instead. When `pushed`
+ * is absent or later still, the stage prints its instant alone. The stage
+ * after it still measures from it, the stamped stage printed just before.
  *
  * **Example** (Absent stages render as a dash)
  *
@@ -755,8 +784,9 @@ const renderPushToAckStage = (
  * @since 0.0.0
  */
 export const renderYeetPushToAckTimeline = (timeline: YeetPushToAckTimeline): string => {
+  const pushed = O.flatMap(timeline.pushedAt, epochMillis);
   const [, clauses] = A.mapAccum(YeetPushToAckStage.Options, O.none<number>(), (previous, stage) =>
-    renderPushToAckStage(previous, stage, pushToAckInstant(timeline, stage))
+    renderPushToAckStage(pushed, previous, stage, pushToAckInstant(timeline, stage))
   );
   return `push→row→ack ${Str.slice(0, 7)(timeline.headSha)}: ${A.join(clauses, ", ")}`;
 };

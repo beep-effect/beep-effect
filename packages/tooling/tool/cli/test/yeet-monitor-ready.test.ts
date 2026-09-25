@@ -240,31 +240,42 @@ it.layer(platform, { timeout: "30 seconds" })("push → row → ack timeline", (
     fixture((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        // The red head's evidence as the other writers leave it: the check-failed
-        // row, the inbox hook's first injection stamp, and the fix-sha ack.
-        const capsule = YeetFailureCapsule.make({
-          bucket: "fail",
-          headSha: head,
-          lane: "Vercel",
-          link: null,
-          observedAt: "2026-09-16T00:04:00.000Z",
-          prNumber: 7,
-          state: "FAILURE",
-          workflow: null,
+        // The red head's evidence as the other writers leave it: the optional
+        // Vercel red's P1 row first, then the required Check red's P0 row, the
+        // inbox hook's first injection stamp for each, and each row's fix-sha ack.
+        const redRow = Effect.fn("readyTest.redRow")(function* (lane: string, severity: "P0" | "P1", ts: string) {
+          const capsule = YeetFailureCapsule.make({
+            bucket: "fail",
+            headSha: head,
+            lane,
+            link: null,
+            observedAt: ts,
+            prNumber: 7,
+            state: "FAILURE",
+            workflow: null,
+          });
+          const id = yield* yeetInboxRowId(capsule);
+          yield* appendYeetInboxRow(root, YeetCheckFailedRow.make({ capsule, checkout: root, id, severity, ts }));
+          return id;
         });
-        const id = yield* yeetInboxRowId(capsule);
-        yield* appendYeetInboxRow(
-          root,
-          YeetCheckFailedRow.make({ capsule, checkout: root, id, severity: "P1", ts: "2026-09-16T00:04:00.000Z" })
-        );
+        const optionalId = yield* redRow("Vercel", "P1", "2026-09-16T00:02:30.000Z");
+        const id = yield* redRow("Check", "P0", "2026-09-16T00:04:00.000Z");
         yield* fs.makeDirectory(`${root}/.beep/inbox/sessions`, { recursive: true });
         yield* fs.writeFileString(
           `${root}/.beep/inbox/sessions/claude-1.json`,
           yield* encodeJson({
             schemaVersion: "yeet-hook-session/v1",
             incidentId: null,
-            seenIds: [id],
-            firstSeenAt: { [id]: "2026-09-16T00:04:30Z" },
+            seenIds: [optionalId, id],
+            firstSeenAt: { [optionalId]: "2026-09-16T00:02:40Z", [id]: "2026-09-16T00:04:30Z" },
+          })
+        );
+        yield* writeYeetAckReceipt(
+          root,
+          YeetAckReceipt.make({
+            id: optionalId,
+            ackedAt: "2026-09-16T00:03:30.000Z",
+            resolution: YeetAckFixResolution.make({ sha: nextHead }),
           })
         );
         yield* writeYeetAckReceipt(
@@ -275,22 +286,28 @@ it.layer(platform, { timeout: "30 seconds" })("push → row → ack timeline", (
             resolution: YeetAckFixResolution.make({ sha: nextHead }),
           })
         );
-        const red = YeetWatchCheck.make({
+        // GitHub completes the optional red first; only the required red stamps the head's red.
+        const optionalRed = YeetWatchCheck.make({
           name: "Vercel",
           outcome: "fail",
           required: false,
+          completedAt: O.some("2026-09-16T00:02:00Z"),
+        });
+        const red = YeetWatchCheck.make({
+          name: "Check",
+          outcome: "fail",
           completedAt: O.some("2026-09-16T00:03:00Z"),
         });
         const calls = yield* Ref.make(0);
-        // Poll 0: the red head, Lint still pending. Poll 1: the fix push, Lint green,
-        // closeout pending. Poll 2: the closeout reread binds it → ready.
+        // Poll 0: the red head (both reds), Lint still pending. Poll 1: the fix push,
+        // Lint green, closeout pending. Poll 2: the closeout reread binds it → ready.
         const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
           ...options,
           collectStatus: () =>
             Ref.getAndUpdate(calls, (n) => n + 1).pipe(
               Effect.map((n) =>
                 n === 0
-                  ? snapshot(root, [check("Lint", "pending"), red], false)
+                  ? snapshot(root, [check("Lint", "pending"), optionalRed, red], false)
                   : snapshot(root, [check("Lint")], n >= 2, nextHead)
               )
             ),

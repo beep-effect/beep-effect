@@ -197,19 +197,22 @@ describe("check record normalization", () => {
     })
   );
 
-  it("names the earliest failing completion as the head's first red", () => {
-    const record = (name: string, outcome: "fail" | "pass", completedAt: O.Option<string>) =>
-      YeetWatchCheck.make({ name, outcome, completedAt });
+  it("names the earliest required failing completion as the head's first red", () => {
+    const record = (name: string, outcome: "fail" | "pass", completedAt: O.Option<string>, required = true) =>
+      YeetWatchCheck.make({ name, outcome, required, completedAt });
     assertSome(
       yeetFirstRedAt([
         record("Lint", "fail", O.some("2026-09-25T12:05:00Z")),
         record("Build", "pass", O.some("2026-09-25T11:00:00Z")),
         record("Vercel", "fail", O.none()),
+        record("Preview", "fail", O.some("2026-09-25T11:30:00Z"), false),
         record("Check", "fail", O.some("2026-09-25T12:01:00Z")),
       ]),
       "2026-09-25T12:01:00Z"
     );
     assertNone(yeetFirstRedAt([record("Vercel", "fail", O.none())]));
+    // An optional red never stamps the head's red, however early it completes.
+    assertNone(yeetFirstRedAt([record("Preview", "fail", O.some("2026-09-25T11:30:00Z"), false)]));
   });
 });
 

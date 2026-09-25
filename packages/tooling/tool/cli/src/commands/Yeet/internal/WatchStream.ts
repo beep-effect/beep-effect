@@ -237,34 +237,46 @@ const instantMillis = (instant: string): number =>
 const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
 
 /**
- * When GitHub first observed a red among one head's checks.
+ * When GitHub first observed a required red among one head's checks.
  *
  * **Details**
  *
- * The earliest `completedAt` of any check that classifies as `fail`, required
- * or not, because either kind writes a `check-failed` inbox row. Checks whose
- * record carries no `completedAt` (external status contexts, a `--watch`
- * snapshot) do not contribute; with none left the instant is unknown.
+ * The earliest `completedAt` of any required check that classifies as `fail`.
+ * A required red is what writes the P0 `check-failed` inbox row the
+ * push → row → ack chain follows; an optional red writes a P1 row and never
+ * stamps the head's red. Checks whose record carries no `completedAt`
+ * (external status contexts, a `--watch` snapshot) do not contribute; with
+ * none left the instant is unknown.
  *
- * **Example** (The earliest failing completion wins)
+ * **Gotchas**
+ *
+ * `required` is GitHub's own flag, the one the inbox writer stamps P0 from. A
+ * matrix child of a required parent carries `required: false`, so its red
+ * does not stamp the head's red either.
+ *
+ * **Example** (The earliest required failing completion wins)
  *
  * ```ts
  * import { YeetWatchCheck, yeetFirstRedAt } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * const red = (name: string, completedAt: string) =>
- *   YeetWatchCheck.make({ name, outcome: "fail", completedAt: O.some(completedAt) })
- * const first = yeetFirstRedAt([red("Lint", "2026-09-25T12:05:00Z"), red("Check", "2026-09-25T12:01:00Z")])
+ * const red = (name: string, completedAt: string, required = true) =>
+ *   YeetWatchCheck.make({ name, outcome: "fail", required, completedAt: O.some(completedAt) })
+ * const first = yeetFirstRedAt([
+ *   red("Vercel", "2026-09-25T11:59:00Z", false),
+ *   red("Lint", "2026-09-25T12:05:00Z"),
+ *   red("Check", "2026-09-25T12:01:00Z")
+ * ])
  * console.log(O.getOrNull(first)) // "2026-09-25T12:01:00Z"
  * ```
  *
  * @param checks - One poll's checks for the head.
- * @returns The earliest failing check's `completedAt`, or `None` when no failing check carries one.
+ * @returns The earliest failing required check's `completedAt`, or `None` when no failing required check carries one.
  * @category getters
  * @since 0.0.0
  */
 export const yeetFirstRedAt: (checks: ReadonlyArray<YeetWatchCheck>) => O.Option<string> = flow(
-  A.filter((check: YeetWatchCheck) => check.outcome === YeetCheckOutcome.Enum.fail),
+  A.filter((check: YeetWatchCheck) => check.required && check.outcome === YeetCheckOutcome.Enum.fail),
   A.flatMap((check) => O.toArray(check.completedAt)),
   A.sort(instantOrder),
   A.head

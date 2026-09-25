@@ -40,6 +40,7 @@ import {
   describeYeetInboxRow,
   YeetInboxRow,
   YeetInboxRowJson,
+  YeetInboxSeverity,
   yeetInboxExpectedRowId,
   yeetInboxPaths,
   yeetInboxRowIsObserved,
@@ -797,6 +798,8 @@ const keepEarliestFirstSeen = (
  * `firstSeenAt` per row id across sessions. A missing directory, the hook's
  * in-flight temp files, and undecodable files are skipped: the stamps are
  * measurement, and a missing one reads as an absent stage, never an error.
+ * The push → row → ack join reads one stamp from the map: the one for the
+ * first required red's P0 row.
  *
  * **Example** (Build the read)
  *
@@ -832,7 +835,9 @@ export const loadYeetHookFirstSeen = Effect.fn("Yeet.loadYeetHookFirstSeen")(fun
 
 const entryOrder: Order.Order<YeetInboxEntry> = Order.mapInput(instantOrder, (entry: YeetInboxEntry) => entry.row.ts);
 
-const firstRedRowFor = (
+// The first required red's row: an optional red's P1 row, written by the same
+// watch, never stands in for it.
+const firstRequiredRedRowFor = (
   entries: ReadonlyArray<YeetInboxEntry>,
   headSha: string,
   prNumber: O.Option<number>
@@ -842,6 +847,7 @@ const firstRedRowFor = (
     A.filter(
       (entry) =>
         entry.row.kind === "check-failed" &&
+        YeetInboxSeverity.is.P0(entry.row.severity) &&
         entry.row.capsule.headSha === headSha &&
         O.contains(prNumber, entry.row.capsule.prNumber)
     ),
@@ -854,11 +860,16 @@ const firstRedRowFor = (
  *
  * **Details**
  *
- * `pushed` and `red` come from the head timeline the monitor loop stamped. The
- * row is the head's earliest `check-failed` row on this pull request; `row` is
- * its `ts`, `injected` the earliest hook `firstSeenAt` for its id, and `acked`
- * its receipt's `ackedAt` while the receipt still acknowledges it. A head with
- * no such row, or an unknown pull request number, keeps those stages absent.
+ * `pushed` and `red` come from the head timeline the monitor loop stamped;
+ * `red` is the head's first required red. The rest of the chain follows that
+ * red's P0 row: the head's earliest P0 `check-failed` row on this pull
+ * request, since a required red is what writes a P0 row. The timeline does
+ * not record which check stamped `red`, so the earliest P0 row stands in for
+ * it. An optional red's P1 row never joins, even when it was written first.
+ * `row` is the chosen row's `ts`, `injected` the earliest hook `firstSeenAt`
+ * for that row id, and `acked` that row's receipt `ackedAt` while the receipt
+ * still acknowledges it. A head with no P0 row, or an unknown pull request
+ * number, keeps those stages absent.
  *
  * **Example** (Build the join)
  *
@@ -884,7 +895,7 @@ export const loadYeetPushToAckTimeline = Effect.fn("Yeet.loadYeetPushToAckTimeli
   prNumber: O.Option<number>
 ): Effect.fn.Return<YeetPushToAckTimeline, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const view = yield* loadYeetInboxView(repoRoot);
-  const row = firstRedRowFor(view.entries, timeline.headSha, prNumber);
+  const row = firstRequiredRedRowFor(view.entries, timeline.headSha, prNumber);
   const firstSeen = yield* loadYeetHookFirstSeen(repoRoot);
   return YeetPushToAckTimeline.make({
     headSha: timeline.headSha,

@@ -22,7 +22,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -45,7 +45,8 @@ const writeRedRow = Effect.fn("pushAckTimelineTest.writeRedRow")(function* (
   root: string,
   lane: string,
   headSha: string,
-  ts: string
+  ts: string,
+  severity: "P0" | "P1" = "P0"
 ) {
   const capsule = YeetFailureCapsule.make({
     bucket: "fail",
@@ -58,7 +59,7 @@ const writeRedRow = Effect.fn("pushAckTimelineTest.writeRedRow")(function* (
     workflow: "Check",
   });
   const id = yield* yeetInboxRowId(capsule);
-  yield* appendYeetInboxRow(root, YeetCheckFailedRow.make({ capsule, checkout: root, id, severity: "P0", ts }));
+  yield* appendYeetInboxRow(root, YeetCheckFailedRow.make({ capsule, checkout: root, id, severity, ts }));
   return id;
 });
 
@@ -93,6 +94,32 @@ describe("push → row → ack rendering", () => {
     expect(renderYeetPushToAckTimeline(timeline)).toBe(
       "push→row→ack abc1234: pushed 2026-09-25T12:00:00Z, red 2026-09-25T12:10:00Z (+10m), " +
         "row 2026-09-25T12:10:20.000Z (+20s), injected -, acked 2026-09-25T12:15:20.000Z (+5m)"
+    );
+  });
+
+  it("anchors a stage stamped before the previous stage on the push instead of a negative gap", () => {
+    const timeline = YeetPushToAckTimeline.make({
+      headSha: head,
+      pushedAt: O.some("2026-09-25T18:09:52.000Z"),
+      redAt: O.some("2026-09-25T18:26:36Z"),
+      rowAt: O.some("2026-09-25T18:10:18.811Z"),
+      injectedAt: O.some("2026-09-25T18:28:48Z"),
+    });
+    strictEqual(
+      renderYeetPushToAckTimeline(timeline),
+      "push→row→ack abc1234: pushed 2026-09-25T18:09:52.000Z, red 2026-09-25T18:26:36Z (+16m 44s), " +
+        "row 2026-09-25T18:10:18.811Z (push +26s 811ms), injected 2026-09-25T18:28:48Z (+18m 29s 189ms), acked -"
+    );
+    // Without a push to anchor on, the early stage prints its instant alone.
+    strictEqual(
+      renderYeetPushToAckTimeline(
+        YeetPushToAckTimeline.make({
+          headSha: head,
+          redAt: O.some("2026-09-25T18:26:36Z"),
+          rowAt: O.some("2026-09-25T18:10:18.811Z"),
+        })
+      ),
+      "push→row→ack abc1234: pushed -, red 2026-09-25T18:26:36Z, row 2026-09-25T18:10:18.811Z, injected -, acked -"
     );
   });
 
@@ -225,6 +252,100 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
       );
       expect(renderYeetPushToAckTimeline(green)).toBe(
         "push→row→ack feedfac: pushed -, red -, row -, injected -, acked -"
+      );
+    })
+  );
+
+  it.effect("follows the first required red's P0 row past an earlier optional P1 row", () =>
+    Effect.gen(function* () {
+      const root = yield* makeTempRoot();
+      // The observed PR #1270 shape: the optional Vercel red lands a P1 row
+      // sixteen minutes before the required red that stamps the head's red.
+      const optional = yield* writeRedRow(root, "Vercel", head, "2026-09-25T18:10:18.811Z", "P1");
+      const required = yield* writeRedRow(root, "JSDoc Ratchet", head, "2026-09-25T18:27:50.483Z");
+      yield* writeSessionFile(
+        root,
+        "claude-1.json",
+        yield* encodeJson({
+          schemaVersion: "yeet-hook-session/v1",
+          incidentId: null,
+          seenIds: [optional, required],
+          firstSeenAt: { [optional]: "2026-09-25T18:10:30Z", [required]: "2026-09-25T18:28:48Z" },
+        })
+      );
+      yield* writeYeetAckReceipt(
+        root,
+        YeetAckReceipt.make({
+          id: optional,
+          ackedAt: "2026-09-25T18:12:00.000Z",
+          resolution: YeetAckFixResolution.make({ sha: "fix1111" }),
+        })
+      );
+      yield* writeYeetAckReceipt(
+        root,
+        YeetAckReceipt.make({
+          id: required,
+          ackedAt: "2026-09-25T18:35:10.000Z",
+          resolution: YeetAckFixResolution.make({ sha: "fix2222" }),
+        })
+      );
+
+      const joined = yield* loadYeetPushToAckTimeline(
+        root,
+        YeetHeadTimeline.make({
+          headSha: head,
+          firstObservedAt: "2026-09-25T18:10:00.000Z",
+          pushedAt: O.some("2026-09-25T18:09:52.000Z"),
+          redAt: O.some("2026-09-25T18:26:36Z"),
+        }),
+        O.some(pr)
+      );
+      deepStrictEqual(
+        joined,
+        YeetPushToAckTimeline.make({
+          headSha: head,
+          pushedAt: O.some("2026-09-25T18:09:52.000Z"),
+          redAt: O.some("2026-09-25T18:26:36Z"),
+          rowAt: O.some("2026-09-25T18:27:50.483Z"),
+          injectedAt: O.some("2026-09-25T18:28:48Z"),
+          ackedAt: O.some("2026-09-25T18:35:10.000Z"),
+        })
+      );
+      strictEqual(
+        renderYeetPushToAckTimeline(joined),
+        "push→row→ack abc1234: pushed 2026-09-25T18:09:52.000Z, red 2026-09-25T18:26:36Z (+16m 44s), " +
+          "row 2026-09-25T18:27:50.483Z (+1m 14s 483ms), injected 2026-09-25T18:28:48Z (+57s 517ms), " +
+          "acked 2026-09-25T18:35:10.000Z (+6m 22s)"
+      );
+    })
+  );
+
+  it.effect("keeps every inbox stage absent when the head has only an optional red's P1 row", () =>
+    Effect.gen(function* () {
+      const root = yield* makeTempRoot();
+      const optional = yield* writeRedRow(root, "Vercel", head, "2026-09-25T18:10:18.811Z", "P1");
+      yield* writeSessionFile(
+        root,
+        "claude-1.json",
+        yield* encodeJson({
+          schemaVersion: "yeet-hook-session/v1",
+          incidentId: null,
+          seenIds: [optional],
+          firstSeenAt: { [optional]: "2026-09-25T18:10:30Z" },
+        })
+      );
+      const joined = yield* loadYeetPushToAckTimeline(
+        root,
+        YeetHeadTimeline.make({
+          headSha: head,
+          firstObservedAt: "2026-09-25T18:10:00.000Z",
+          pushedAt: O.some("2026-09-25T18:09:52.000Z"),
+        }),
+        O.some(pr)
+      );
+      strictEqual(
+        renderYeetPushToAckTimeline(joined),
+        "push→row→ack abc1234: pushed 2026-09-25T18:09:52.000Z, red -, row -, injected -, acked -"
       );
     })
   );
