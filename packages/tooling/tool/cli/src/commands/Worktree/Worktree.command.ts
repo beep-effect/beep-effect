@@ -716,6 +716,7 @@ const renderDoctorReport = Effect.fn("Worktree.renderDoctorReport")(function* (r
  * import { Effect } from "effect"
  * Effect.isEffect(linkReferences("/checkout", "/checkout-worktrees/topic")) // => true
  * ```
+ *
  * @category workflows
  * @since 0.0.0
  */

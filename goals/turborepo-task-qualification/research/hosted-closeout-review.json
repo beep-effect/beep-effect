@@ -1,0 +1,63 @@
+{
+  "authority": "hosted-closeout-source-delta-review-with-fixture-tests",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "f584b076ed366809e7b053504f43b6aa6ea9c291",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "sha256": "aecc554627cd6ce572e328dbc727311463646daff8ed069a5d06648984ef091b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gates.ts",
+      "sha256": "c5bfbcce1928582027d82d05a653036d3f7cade1399183fd76999c8438ac31c8"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "sha256": "ea029b5c293f8af514480ce4f4cf92d5e1c7d483e4613fe4fd85cced6c9144a7"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GhCollect.ts",
+      "sha256": "47c4df32a5e635856b560876fb84d4b919727e007147c849afe3f6f6e4edfde3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
+      "sha256": "0175b1cca73db21be9b7c55bdbfc482eb3409f8782b6c154202a16fa1a0eb001"
+    }
+  ],
+  "findings": [
+    "Gh schemas and collection now request PR author, thread resolver and a separate latest-comment selection including actor kind/body/timestamp/url. First-page truncation alone does not determine the newest speaker.",
+    "Collection still reads mutable GitHub state through authenticated gh subprocesses and paginates separate comment, thread and review requests; the combined payload is not a transactionally consistent remote snapshot. Missing pagination cursor fails. Explicit reply/resolve intents still perform sequential external writes.",
+    "Gates classify unresolved threads and unanswered reviewer follow-ups as blocking. Bot acknowledgements and review-body advisories remain distinct; advisory totals use the newest nonempty body per author and account for threaded locations.",
+    "Newest-comment evidence follows the latest selection, falling back to the first page only when complete. Unknown newest authorship does not create a follow-up gate; the receipt does not strengthen that policy or treat old payloads as fresh observations.",
+    "Closeout report adds follow-up, acknowledgement and advisory counts with decoding/construction defaults of zero for older reports. Compatibility defaults are not new hosted evidence.",
+    "Greptile parseScore becomes exported without changing its labelled fraction parser. String parsing does not authenticate a producer or grant a hosted verdict.",
+    "The closeout hosted-checks gate remains unknown; monitor and gh pr checks own the live result. Cached comments, schemas or local fixtures cannot substitute for required fresh checks."
+  ],
+  "tests": {
+    "command": "bun run --cwd packages/tooling/tool/cli test test/yeet.test.ts test/yeet-review-thread-state.test.ts test/yeet-review-body-signal.test.ts",
+    "passed": 203,
+    "suites": 3,
+    "exit": 0,
+    "reviewedAssertions": [
+      "Reviewer follow-up blocks while 13 advisory findings do not.",
+      "A latest reviewer comment beyond the first comment page blocks and supplies the correct evidence.",
+      "Bot acknowledgement and reviewer self-resolution classify separately.",
+      "The hosted-checks closeout gate remains unknown."
+    ]
+  },
+  "limits": [
+    "Five historical closeout deltas reviewed; supporting thread-state and body-signal semantics are tested but not claimed as full new-source review.",
+    "No live review/comment/status mutation was performed for this evidence.",
+    "No full hosted proof, complete transitive semantic closure, signed remote comparison or tuple qualification follows from fixture tests. All 13 broader obligations remain open."
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 35,
+    "unresolved": 13
+  },
+  "retention": {
+    "fileCount": 10,
+    "archiveManifestSha256": "6593b67f65e807a855f8eb71f5e50ecd12abc1590fcc418b87f749ce37e4699e"
+  }
+}

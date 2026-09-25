@@ -1,5 +1,6 @@
 import { ReferenceMember, ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 import { testPlatform } from "./refs-test-utils.ts";
@@ -17,7 +18,7 @@ describe("reference manifest schemas", () => {
         ["effect", "deep"],
         ["effect-tsgo", "deep"],
       ]);
-      expect(O.isNone(manifest.members[0]?.onlyDir ?? O.none())).toBe(true);
+      assertNone(manifest.members[0]?.onlyDir ?? O.none());
     }, testPlatform)
   );
   const invalidMembers: ReadonlyArray<readonly [label: string, extra: Record<string, unknown>]> = [

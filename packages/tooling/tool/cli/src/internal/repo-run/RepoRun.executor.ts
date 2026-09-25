@@ -120,7 +120,7 @@ export const runRepoCommandCapture = makeRepoCommandCapture("RepoRun.runRepoComm
 export const runRepoCommandStreamingCapture = makeRepoCommandCapture("RepoRun.runRepoCommandStreamingCapture", true);
 
 /**
- * Execute a command and capture its stdout byte for byte.
+ * Execute a command and capture its stdout as untrimmed decoded text.
  *
  * Non-zero exit codes are represented in the returned value. Spawn failures
  * remain typed operational errors.
@@ -130,6 +130,10 @@ export const runRepoCommandStreamingCapture = makeRepoCommandCapture("RepoRun.ru
  * The counterpart of {@link runRepoCommandCapture} for a reader that parses a
  * machine format rather than showing output to a person. Two differences carry
  * the whole point:
+ *
+ * Output is UTF-8 decoded text, not a byte-preserving buffer: malformed bytes
+ * become replacement characters. The repo-run output bound still applies;
+ * callers requiring complete output must reject a true `truncated` flag.
  *
  * `trim` is off. The default capture runs `String.trim` over the entire buffer,
  * and a NUL is not whitespace, so a `-z` record set beginning with a space —

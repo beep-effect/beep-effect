@@ -1,0 +1,61 @@
+{
+  "authority": "scoped-evidence-path-boundary-repair",
+  "baseRevision": "4d136319d8764fe0127c7b8e1998f4878c92a1f8",
+  "sources": [
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts",
+      "sha256": "16553fbb07aafc724394861a2131d260efe404ef00e166ba2d315e940d4e73be"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "bff89a333f0e6eeead733a214211fc6096a9699c0e67cc114d5d0ae69d6c2708"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-entrypoints.test.ts",
+      "sha256": "a95e220f6068b62942a72da9fa2b30249ce808ffe79e2a160c53447c70df8d3c"
+    },
+    {
+      "path": "node_modules/@babel/cli/package.json",
+      "sha256": "e556943685a4d97266de91a20d29d6adb0765972224559ebb5a54ef8041e9199"
+    },
+    {
+      "path": "node_modules/@babel/cli/lib/babel/index.js",
+      "sha256": "d1e226978c56036093bb25390d859f58814910dbe95f11335fae65b974d13b35"
+    },
+    {
+      "path": "node_modules/babel-plugin-annotate-pure-calls/package.json",
+      "sha256": "b98772906da75909fbe1cbfaf0c73f25b30e89ce4081564819d619b966df1e8a"
+    },
+    {
+      "path": "node_modules/babel-plugin-annotate-pure-calls/dist/babel-plugin-annotate-pure-calls.cjs.js",
+      "sha256": "7f974040a9aa75f4bca63b3b3945c6077a5d3d12f6e3dec17a382ea9fed7a649"
+    }
+  ],
+  "change": "Allow @ at the start of a portable evidence path segment. Preserve relative nonempty segments, traversal rejection, no-follow containment, byte limits and exact digest verification.",
+  "tests": {
+    "files": 2,
+    "passed": 37,
+    "logSha256": "e0666bf19aa6489fd85053dcd136395c8e72e1f2f2a46bf2448f200187186fc1",
+    "controls": [
+      "scoped package path decode",
+      "relative hidden evidence path decode",
+      "dot/dotdot/empty segment and URL rejection",
+      "trailing newline rejection",
+      "actual scoped source attachment",
+      "changed source digest rejection",
+      "symlinked scope rejection"
+    ]
+  },
+  "limits": [
+    "Source identity only, no tool execution or transitive input closure.",
+    "No runtime qualification or signed-remote evidence.",
+    "Historical compiled-output receipt retains its original validation limitation; this is a separate repair receipt.",
+    "Full package and PR proof pending."
+  ],
+  "acceptedAttachment": {
+    "sources": 1009,
+    "artifacts": 6,
+    "reviews": 46,
+    "unresolved": 14
+  }
+}

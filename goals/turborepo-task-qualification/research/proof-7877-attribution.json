@@ -1,0 +1,28 @@
+{
+  "job": "78771094-3f91-4c0d-aea6-7ec51e42df5d",
+  "result": "failed",
+  "lane": "quality:lint-policy",
+  "inlineSchemaErrors": 14,
+  "actionableHostPaths": 1,
+  "paths": [
+    {
+      "path": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "matchesOriginMain": true
+    },
+    {
+      "path": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "matchesOriginMain": true
+    },
+    {
+      "path": "packages/foundation/modeling/schema/test/HttpHeaders.test.ts",
+      "matchesOriginMain": true
+    },
+    {
+      "path": "goals/effect-vitest-canon/ops/inventory/detector/beep_obs.jsonl",
+      "matchesOriginMain": true
+    }
+  ],
+  "inlineSchemaRepairPr": 1272,
+  "repairPrState": "OPEN",
+  "limits": "No inherited failure is waived; current head requires new full proof."
+}

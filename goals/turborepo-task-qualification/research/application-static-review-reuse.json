@@ -1,0 +1,251 @@
+{
+  "authority": "historical-static-review-reuse-with-current-source-checks",
+  "head": "b88102f8ed9a46d02b4ed532a2e2283f96edb6e1",
+  "sources": [
+    {
+      "path": "apps/todox/next.config.ts",
+      "sha256": "c8bd73a0c663bf651a00ee9530f5b41bbd35c54596657f41b6d67b193f049f4c"
+    },
+    {
+      "path": "apps/oip-web/next.config.ts",
+      "sha256": "6a62aaccefb30a7cadfb4e848f86e44b9edadaad84111afbde19029fd0bcb0f6"
+    },
+    {
+      "path": "apps/storybook/.storybook/main.ts",
+      "sha256": "56c9ee51ce5775315ec6d67f38826a95e3c8aac3027a9dbc7c870e95086e218f"
+    },
+    {
+      "path": "apps/professional-desktop/vite.config.ts",
+      "sha256": "8b595bfebbada7124c99f8faabaf82e92dcd4d04c4326ca5120a3f5856930827"
+    },
+    {
+      "path": "apps/labs/trustgraph-workbench/vite.config.ts",
+      "sha256": "bdb98d63e58e594184d1f1325fd45b9e158ac113904f8ef927cbc8482e9ed6e7"
+    },
+    {
+      "path": "apps/labs/semantica/vite.config.ts",
+      "sha256": "f0df6a4706ef5d3c4c4ece6bd4f0bc80b2c6a4d130a18cadbfcdc943dc262cf3"
+    },
+    {
+      "path": "apps/labs/lejeune-bolt-workbench/vite.config.ts",
+      "sha256": "bdb98d63e58e594184d1f1325fd45b9e158ac113904f8ef927cbc8482e9ed6e7"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+      "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664"
+    }
+  ],
+  "commands": [
+    {
+      "definition": "@beep/oip-web#beep:build",
+      "command": "NEXT_DISABLE_PWA=1 next build --turbopack",
+      "unchanged": true
+    },
+    {
+      "definition": "@beep/storybook#storybook:build",
+      "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
+      "unchanged": true
+    },
+    {
+      "definition": "@beep/todox#beep:build",
+      "command": "next build --turbopack",
+      "unchanged": true
+    },
+    {
+      "definition": "@beep/lejeune-bolt-workbench#beep:build",
+      "command": "vite build",
+      "unchanged": true
+    },
+    {
+      "definition": "@beep/professional-desktop#beep:build",
+      "command": "vite build",
+      "unchanged": true
+    },
+    {
+      "definition": "@beep/semantica#beep:build",
+      "command": "vite build",
+      "unchanged": true
+    },
+    {
+      "definition": "@beep/trustgraph-workbench#beep:build",
+      "command": "vite build",
+      "unchanged": true
+    }
+  ],
+  "historicalReviews": [
+    {
+      "name": "application-build-boundary-review.json",
+      "sha256": "591eedf3fde15e8570a112847089858afe7fdaf5009cc6de4f5118274fe1c80d",
+      "review": {
+        "kind": "application-build-boundary-review/v1",
+        "sourceRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+        "authority": "Seven application build configuration declarations only; no framework config evaluation or build execution.",
+        "boundarySha256": "4e179a5deb8d66e2e132e62f9f395cd96a587244baef65ed2b48daf7e230755b",
+        "commands": [
+          {
+            "kind": "terminal-command",
+            "command": "NEXT_DISABLE_PWA=1 next build --turbopack",
+            "family": "application-build",
+            "sites": [
+              {
+                "definition": "@beep/oip-web#beep:build",
+                "step": 0
+              }
+            ]
+          },
+          {
+            "kind": "terminal-command",
+            "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
+            "family": "application-build",
+            "sites": [
+              {
+                "definition": "@beep/storybook#storybook:build",
+                "step": 0
+              }
+            ]
+          },
+          {
+            "kind": "terminal-command",
+            "command": "next build --turbopack",
+            "family": "application-build",
+            "sites": [
+              {
+                "definition": "@beep/todox#beep:build",
+                "step": 0
+              }
+            ]
+          },
+          {
+            "kind": "terminal-command",
+            "command": "vite build",
+            "family": "application-build",
+            "sites": [
+              {
+                "definition": "@beep/lejeune-bolt-workbench#beep:build",
+                "step": 0
+              },
+              {
+                "definition": "@beep/professional-desktop#beep:build",
+                "step": 0
+              },
+              {
+                "definition": "@beep/semantica#beep:build",
+                "step": 0
+              },
+              {
+                "definition": "@beep/trustgraph-workbench#beep:build",
+                "step": 0
+              }
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "path": "apps/todox/next.config.ts",
+            "sha256": "c8bd73a0c663bf651a00ee9530f5b41bbd35c54596657f41b6d67b193f049f4c"
+          },
+          {
+            "path": "apps/oip-web/next.config.ts",
+            "sha256": "6a62aaccefb30a7cadfb4e848f86e44b9edadaad84111afbde19029fd0bcb0f6"
+          },
+          {
+            "path": "apps/storybook/.storybook/main.ts",
+            "sha256": "56c9ee51ce5775315ec6d67f38826a95e3c8aac3027a9dbc7c870e95086e218f"
+          },
+          {
+            "path": "apps/professional-desktop/vite.config.ts",
+            "sha256": "8b595bfebbada7124c99f8faabaf82e92dcd4d04c4326ca5120a3f5856930827"
+          },
+          {
+            "path": "apps/labs/trustgraph-workbench/vite.config.ts",
+            "sha256": "bdb98d63e58e594184d1f1325fd45b9e158ac113904f8ef927cbc8482e9ed6e7"
+          },
+          {
+            "path": "apps/labs/semantica/vite.config.ts",
+            "sha256": "f0df6a4706ef5d3c4c4ece6bd4f0bc80b2c6a4d130a18cadbfcdc943dc262cf3"
+          },
+          {
+            "path": "apps/labs/lejeune-bolt-workbench/vite.config.ts",
+            "sha256": "bdb98d63e58e594184d1f1325fd45b9e158ac113904f8ef927cbc8482e9ed6e7"
+          }
+        ],
+        "observations": {
+          "next": [
+            "Both Next configs mutate process.execArgv at config evaluation to remove --js-float16array. Todox otherwise exports an empty NextConfig.",
+            "OIP imports defineBeepNextConfig and redirect generation, passes process.env and a repoRoot derived from import.meta.url, declares PWA source/destination and a separate webpack hook.",
+            "The reviewed OIP command sets NEXT_DISABLE_PWA=1 and requests Turbopack. Effective PWA behavior must be established from the imported helper; declaration of a PWA destination is not evidence it is written by this command."
+          ],
+          "vite": [
+            "Three lab configs declare the React plugin and an absolute @ source alias derived from import.meta.url. Their server.host fields are development configuration, not evidence of a build-time listener.",
+            "Professional desktop adds a .ts-to-.tsx fallback resolver, a Lexical source transform, explicit chunk groups, installed dependency aliases and VITE_/TAURI_ environment prefixes.",
+            "No explicit build outDir appears in the reviewed Vite configs; output defaults remain owned by the installed framework rather than assumed from this review."
+          ],
+          "storybook": [
+            "Command explicitly names storybook-static output and sets NODE_OPTIONS=--disable-warning=DEP0205.",
+            "Story selection includes resolved epistemic-ui stories, shared UI stories and graph-3d driver stories; inputs cross the app workspace boundary.",
+            "Static directories include installed emojibase data and shared brand assets. Addons, manager/preview configuration and story imports remain transitive inputs.",
+            "Config reads PORTLESS and PORTLESS_URL while constructing HMR options. Their presence in config evaluation is not proof they affect production artifact bytes."
+          ]
+        },
+        "semanticInputs": [
+          "Application routes/components, static assets, config imports, package resolution and installed plugins/framework/runtime",
+          "Environment and process arguments, absolute alias roots and path membership",
+          "Generated assets, output/cache directory state, source maps and logs",
+          "Build-time imports or prerendering with possible external effects must be reviewed separately"
+        ],
+        "remaining": [
+          "Follow OIP helper and redirects, Storybook manager/preview/addons, and application import graphs for complete classification.",
+          "Resolve effective framework settings and actual output trees; inspect time/network/randomness and sensitive capture before candidate experiments.",
+          "No development server, production backend or deployment was started; no runtime or reuse claim."
+        ],
+        "qualified": false
+      }
+    },
+    {
+      "name": "oip-next-helper-review.json",
+      "sha256": "4419e8ed29ae3fcfb20c6ec51d8a34d86268af71d92c35fda104285d6fc9ad64",
+      "review": {
+        "kind": "oip-next-helper-source-review/v1",
+        "sourceRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+        "sources": [
+          {
+            "path": "apps/oip-web/next.config.ts",
+            "sha256": "6a62aaccefb30a7cadfb4e848f86e44b9edadaad84111afbde19029fd0bcb0f6"
+          },
+          {
+            "path": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+            "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664"
+          }
+        ],
+        "authority": "Source branch interpretation; plugin constructors and build not executed.",
+        "observations": [
+          "OIP supplies PWA source/destination without an enabled override. Shared helper enables PWA only when NEXT_DISABLE_PWA equals 0; this command supplies 1, so the helper passes disable:true to Serwist initialization.",
+          "Disabling PWA does not omit the plugin constructor: makePwaPlugin maps the configured feature to withSerwistInit with its disable argument. No claim is made about all constructor or framework effects.",
+          "Bundle analyzer is enabled by ANALYZE exactly 1 unless explicitly overridden. OIP passes process.env and supplies no analyzer override.",
+          "Shared helper composes MDX, PWA and analyzer plugins in that order after base configuration and security headers.",
+          "Base config selects tsconfig.next.json, repository tracing/Turbopack roots, merged workspace transpilation and import-optimization lists, and build/dev filesystem caching defaults."
+        ],
+        "resolvedQuestions": [
+          "Meaning of the recorded NEXT_DISABLE_PWA=1 value at the repository helper boundary."
+        ],
+        "remaining": [
+          "Serwist/MDX/analyzer constructor and framework behavior, imported redirect function, actual file outputs and capture.",
+          "Ambient ANALYZE remains a semantic configuration input; passing process.env does not identify its actual runtime value."
+        ],
+        "qualified": false
+      }
+    }
+  ],
+  "limits": [
+    "Original reviews retained verbatim with original revisions and scope.",
+    "Eight distinct source hashes and seven recorded command definitions match current files/census.",
+    "Only the original bounded static conclusions are reused; transitive frameworks, plugin execution, environment values and actual output remain unresolved.",
+    "No historical runtime evidence is renewed, no cache policy changes and no qualification promotion."
+  ],
+  "acceptedAttachment": {
+    "sources": 1002,
+    "artifacts": 6,
+    "reviews": 45,
+    "unresolved": 14
+  }
+}

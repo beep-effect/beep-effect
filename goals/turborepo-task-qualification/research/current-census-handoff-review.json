@@ -1,0 +1,781 @@
+{
+  "authority": "current-executable-census-snapshot",
+  "revision": "3df15e7a3e04bae67fe9e9741511d501d94e0871",
+  "counts": {
+    "workspaces": 144,
+    "nodes": 3473,
+    "executable": 1970
+  },
+  "beforeSha256": "aa09f3d137b7575bd22bbe296833f24db249e165543cc2522454a56a4812685d",
+  "afterSha256": "3acc31fed1b0842d1d943c2955a7d21b8301004881e77add5054c4a05254a0bf",
+  "sourceBindingsUnchanged": true,
+  "commandsDependenciesConfigurationsUnchanged": true,
+  "changedInputSummaries": [
+    {
+      "id": "//#changeset:status",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 5549,
+      "afterInputCount": 5555
+    },
+    {
+      "id": "//#config-sync:check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 764,
+      "afterInputCount": 766
+    },
+    {
+      "id": "//#fallow:audit:check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:boundaries:advisory",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:boundaries:config-check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 18878,
+      "afterInputCount": 30479
+    },
+    {
+      "id": "//#fallow:dead-code:check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:fix-preview:advisory",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:flags:advisory",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:health:advisory",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:health:check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#fallow:security:advisory",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 19341,
+      "afterInputCount": 30946
+    },
+    {
+      "id": "//#goals:doctor",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 20795,
+      "afterInputCount": 20807
+    },
+    {
+      "id": "//#goals:index-check",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 573,
+      "afterInputCount": 573
+    },
+    {
+      "id": "//#jsdoc:inventory:check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 11195,
+      "afterInputCount": 13076
+    },
+    {
+      "id": "//#knip:check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 8407,
+      "afterInputCount": 12529
+    },
+    {
+      "id": "//#knowledge:refs-check",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 26251,
+      "afterInputCount": 26267
+    },
+    {
+      "id": "//#knowledge:semantic-delta",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 26251,
+      "afterInputCount": 26267
+    },
+    {
+      "id": "//#lint:allowlist",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 6108,
+      "afterInputCount": 7985
+    },
+    {
+      "id": "//#lint:circular",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1738,
+      "afterInputCount": 1738
+    },
+    {
+      "id": "//#lint:effect-imports",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 7526,
+      "afterInputCount": 11780
+    },
+    {
+      "id": "//#lint:effect-imports-markdown",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1922,
+      "afterInputCount": 1922
+    },
+    {
+      "id": "//#lint:identity-registry",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 5642,
+      "afterInputCount": 5813
+    },
+    {
+      "id": "//#lint:jsdoc-module-tags",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 6650,
+      "afterInputCount": 11147
+    },
+    {
+      "id": "//#lint:jsdoc:root",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 4751,
+      "afterInputCount": 4753
+    },
+    {
+      "id": "//#lint:oxlint",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 7569,
+      "afterInputCount": 11823
+    },
+    {
+      "id": "//#lint:package-scripts",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 3598,
+      "afterInputCount": 3598
+    },
+    {
+      "id": "//#lint:policy-fingerprint",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1456,
+      "afterInputCount": 1456
+    },
+    {
+      "id": "//#lint:reflection-artifacts",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 522,
+      "afterInputCount": 522
+    },
+    {
+      "id": "//#lint:roadmap-refs",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 20796,
+      "afterInputCount": 20808
+    },
+    {
+      "id": "//#lint:schema-first",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 6716,
+      "afterInputCount": 8601
+    },
+    {
+      "id": "//#lint:tsgo-rules",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 5198,
+      "afterInputCount": 5369
+    },
+    {
+      "id": "//#lint:typos",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 16168,
+      "afterInputCount": 29875
+    },
+    {
+      "id": "//#repo-sanity:changeset-graph",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 865,
+      "afterInputCount": 867
+    },
+    {
+      "id": "@beep/identity#lint",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 892,
+      "afterInputCount": 933
+    },
+    {
+      "id": "@beep/oip-web#lint:deprecated-apis",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 662,
+      "afterInputCount": 663
+    },
+    {
+      "id": "@beep/oip-web#lint:jsdoc",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 61,
+      "afterInputCount": 62
+    },
+    {
+      "id": "@beep/oip-web#lint:laws",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 190,
+      "afterInputCount": 196
+    },
+    {
+      "id": "@beep/repo-cli#audit",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1072,
+      "afterInputCount": 1072
+    },
+    {
+      "id": "@beep/repo-cli#build",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1072,
+      "afterInputCount": 1072
+    },
+    {
+      "id": "@beep/repo-cli#check",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1072,
+      "afterInputCount": 1072
+    },
+    {
+      "id": "@beep/repo-cli#codegen",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1064,
+      "afterInputCount": 1064
+    },
+    {
+      "id": "@beep/repo-cli#coverage",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1050,
+      "afterInputCount": 1050
+    },
+    {
+      "id": "@beep/repo-cli#dev",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1064,
+      "afterInputCount": 1064
+    },
+    {
+      "id": "@beep/repo-cli#docgen",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1070,
+      "afterInputCount": 1070
+    },
+    {
+      "id": "@beep/repo-cli#doctest",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1080,
+      "afterInputCount": 1080
+    },
+    {
+      "id": "@beep/repo-cli#lint",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1075,
+      "afterInputCount": 1075
+    },
+    {
+      "id": "@beep/repo-cli#lint:deprecated-apis",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1513,
+      "afterInputCount": 1513
+    },
+    {
+      "id": "@beep/repo-cli#lint:fix",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1068,
+      "afterInputCount": 1068
+    },
+    {
+      "id": "@beep/repo-cli#lint:jsdoc",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 912,
+      "afterInputCount": 912
+    },
+    {
+      "id": "@beep/repo-cli#lint:laws",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1040,
+      "afterInputCount": 1040
+    },
+    {
+      "id": "@beep/repo-cli#package-test-typecheck",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1046,
+      "afterInputCount": 1046
+    },
+    {
+      "id": "@beep/repo-cli#storybook",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1064,
+      "afterInputCount": 1064
+    },
+    {
+      "id": "@beep/repo-cli#storybook:build",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1390,
+      "afterInputCount": 1390
+    },
+    {
+      "id": "@beep/repo-cli#storybook:start",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1064,
+      "afterInputCount": 1064
+    },
+    {
+      "id": "@beep/repo-cli#test",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1074,
+      "afterInputCount": 1074
+    },
+    {
+      "id": "@beep/repo-cli#test:integration",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1067,
+      "afterInputCount": 1067
+    },
+    {
+      "id": "@beep/repo-cli#test:integration:parallel",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1067,
+      "afterInputCount": 1067
+    },
+    {
+      "id": "@beep/repo-cli#test:integration:serial",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1067,
+      "afterInputCount": 1067
+    },
+    {
+      "id": "@beep/repo-cli#test:property",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1074,
+      "afterInputCount": 1074
+    },
+    {
+      "id": "@beep/repo-cli#test:storybook",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1379,
+      "afterInputCount": 1379
+    },
+    {
+      "id": "@beep/repo-cli#transit",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 1064,
+      "afterInputCount": 1064
+    },
+    {
+      "id": "@beep/repo-configs#audit",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 66,
+      "afterInputCount": 66
+    },
+    {
+      "id": "@beep/repo-configs#build",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 67,
+      "afterInputCount": 67
+    },
+    {
+      "id": "@beep/repo-configs#check",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 66,
+      "afterInputCount": 66
+    },
+    {
+      "id": "@beep/repo-configs#codegen",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 64,
+      "afterInputCount": 64
+    },
+    {
+      "id": "@beep/repo-configs#coverage",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 61,
+      "afterInputCount": 61
+    },
+    {
+      "id": "@beep/repo-configs#dev",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 58,
+      "afterInputCount": 58
+    },
+    {
+      "id": "@beep/repo-configs#docgen",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 64,
+      "afterInputCount": 64
+    },
+    {
+      "id": "@beep/repo-configs#doctest",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 86,
+      "afterInputCount": 86
+    },
+    {
+      "id": "@beep/repo-configs#lint",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 69,
+      "afterInputCount": 69
+    },
+    {
+      "id": "@beep/repo-configs#lint:deprecated-apis",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 657,
+      "afterInputCount": 657
+    },
+    {
+      "id": "@beep/repo-configs#lint:fix",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 62,
+      "afterInputCount": 62
+    },
+    {
+      "id": "@beep/repo-configs#lint:jsdoc",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 56,
+      "afterInputCount": 56
+    },
+    {
+      "id": "@beep/repo-configs#lint:laws",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 194,
+      "afterInputCount": 194
+    },
+    {
+      "id": "@beep/repo-configs#package-test-typecheck",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 60,
+      "afterInputCount": 60
+    },
+    {
+      "id": "@beep/repo-configs#storybook",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 58,
+      "afterInputCount": 58
+    },
+    {
+      "id": "@beep/repo-configs#storybook:build",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 384,
+      "afterInputCount": 384
+    },
+    {
+      "id": "@beep/repo-configs#storybook:start",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 58,
+      "afterInputCount": 58
+    },
+    {
+      "id": "@beep/repo-configs#test",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 67,
+      "afterInputCount": 67
+    },
+    {
+      "id": "@beep/repo-configs#test:integration",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 61,
+      "afterInputCount": 61
+    },
+    {
+      "id": "@beep/repo-configs#test:integration:parallel",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 61,
+      "afterInputCount": 61
+    },
+    {
+      "id": "@beep/repo-configs#test:integration:serial",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 61,
+      "afterInputCount": 61
+    },
+    {
+      "id": "@beep/repo-configs#test:property",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 67,
+      "afterInputCount": 67
+    },
+    {
+      "id": "@beep/repo-configs#test:storybook",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 373,
+      "afterInputCount": 373
+    },
+    {
+      "id": "@beep/repo-configs#transit",
+      "fields": [
+        "inputsDigest"
+      ],
+      "beforeInputCount": 58,
+      "afterInputCount": 58
+    },
+    {
+      "id": "@beep/storybook#lint:deprecated-apis",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 632,
+      "afterInputCount": 1175
+    },
+    {
+      "id": "@beep/storybook#lint:laws",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 159,
+      "afterInputCount": 319
+    },
+    {
+      "id": "@beep/todox#lint:deprecated-apis",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 644,
+      "afterInputCount": 645
+    },
+    {
+      "id": "@beep/todox#lint:jsdoc",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 43,
+      "afterInputCount": 44
+    },
+    {
+      "id": "@beep/todox#lint:laws",
+      "fields": [
+        "inputCount",
+        "inputsDigest"
+      ],
+      "beforeInputCount": 172,
+      "afterInputCount": 177
+    }
+  ],
+  "limits": [
+    "Input population/digests changed on 90 nodes; this live checkout has generated files and concurrent proof activity. This is not an atomic filesystem snapshot or equivalence proof.",
+    "Frozen runtime evidence remains tied to its recorded source; snapshot refresh does not renew it."
+  ],
+  "acceptedAttachment": {
+    "sources": 1011,
+    "artifacts": 6,
+    "reviews": 49,
+    "unresolved": 14
+  }
+}

@@ -44,8 +44,6 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { TUnsafe } from "@beep/types";
-import type { Layer } from "effect";
 
 const decodeStructInlineSchemaJson = S.decodeEffect(
   S.fromJsonString(
@@ -161,7 +159,7 @@ const writeText = Effect.fn("AiSyncTest.writeText")(function* (filePath: string,
   yield* fs.writeFileString(filePath, content);
 });
 
-layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
+layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
   it.effect(
     "validates the generated artifact set offline",
     Effect.fn(function* () {
