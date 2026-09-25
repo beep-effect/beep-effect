@@ -3649,12 +3649,14 @@
         "allow": [
           "@beep/fc-runs",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/types",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/fc-runs",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/types",
           "@beep/utils"
         ]

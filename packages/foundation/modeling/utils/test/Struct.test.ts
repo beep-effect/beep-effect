@@ -1,7 +1,8 @@
+import { it } from "@beep/test-runner";
 import { Str, Struct } from "@beep/utils";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
-import * as O from "effect/Option";
-import { describe, expect, expectTypeOf, it } from "vitest";
 
 describe("@beep/utils Struct.dotGet", () => {
   it("supports data-first and data-last calls", () => {
@@ -81,10 +82,10 @@ describe("@beep/utils Struct.dotGet", () => {
     const someUndefined = Struct.dotGetOption(source, "maybeUndefined");
     const none = Struct.dotGetOption(missing, "attributes.name");
 
-    expect(O.isSome(some)).toBe(true);
-    expect(O.isSome(someFromTuple)).toBe(true);
-    expect(O.isSome(someUndefined)).toBe(true);
-    expect(O.isNone(none)).toBe(true);
+    assertSome(some, "beep");
+    assertSome(someFromTuple, "beep");
+    assertSome(someUndefined, undefined);
+    assertNone(none);
   });
 });
 
@@ -92,14 +93,9 @@ describe("@beep/utils Struct.mapPath", () => {
   it("supports data-first and data-last calls", () => {
     const source = { profile: { name: "beep" } } as const;
     const renderName = (value: unknown) => `${value}!`;
-    const mapPath = Struct.mapPath as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => unknown;
 
-    const dataFirst = mapPath(source, renderName, "profile.name");
-    const dataLast = mapPath(source, renderName, "profile.name");
+    const dataFirst = Struct.mapPath(source, renderName, { path: "profile.name" });
+    const dataLast = pipe(source, Struct.mapPath(renderName, { path: "profile.name" }));
 
     expect(dataFirst).toBe("beep!");
     expect(dataLast).toBe("beep!");
@@ -109,12 +105,7 @@ describe("@beep/utils Struct.mapPath", () => {
     const source = { profile: { name: "boop" } } as const;
     const shout = (value: unknown) => Str.toUpperCase(String(value));
 
-    const mapPath = Struct.mapPath as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: ReadonlyArray<string>
-    ) => unknown;
-    const result = mapPath(source, shout, ["profile", "name"] as const);
+    const result = Struct.mapPath(source, shout, { path: ["profile", "name"] as const });
 
     expect(result).toBe("BOOP");
   });
@@ -123,27 +114,21 @@ describe("@beep/utils Struct.mapPath", () => {
     const runtimeMismatch = { profile: {} } as unknown as { profile: { name: string } };
     const fallback = (value: unknown) => (value === undefined ? "anonymous" : String(value));
 
-    const mapPath = Struct.mapPath as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => unknown;
-
-    expect(mapPath(runtimeMismatch, fallback, "profile.name")).toBe("anonymous");
+    expect(Struct.mapPath(runtimeMismatch, fallback, { path: "profile.name" })).toBe("anonymous");
   });
 });
 
 describe("@beep/utils Struct.mapPathLazy", () => {
   it("supports data-first and data-last calls", () => {
     const source = { profile: { name: "beep" }, count: 1 } as const;
-    const mapPathLazy = Struct.mapPathLazy as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => () => unknown;
 
-    const dataFirst = mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), "profile.name");
-    const dataLast = mapPathLazy(source, (value: unknown) => Number(value) + 1, "count");
+    const dataFirst = Struct.mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), {
+      path: "profile.name",
+    });
+    const dataLast = pipe(
+      source,
+      Struct.mapPathLazy((value: number) => value + 1, { path: "count" })
+    );
 
     expect(dataFirst()).toBe("BEEP");
     expect(dataLast()).toBe(2);
@@ -151,12 +136,9 @@ describe("@beep/utils Struct.mapPathLazy", () => {
 
   it("defers the lookup until the thunk is invoked", () => {
     const source = { profile: { name: "before" } };
-    const mapPathLazy = Struct.mapPathLazy as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => () => unknown;
-    const getUpper = mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), "profile.name");
+    const getUpper = Struct.mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), {
+      path: "profile.name",
+    });
 
     source.profile.name = "after";
 
