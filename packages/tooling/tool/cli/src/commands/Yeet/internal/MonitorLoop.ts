@@ -66,7 +66,7 @@ import {
   githubConclusion,
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -1150,7 +1150,7 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
     settleClockMs: millis,
     expected,
     families: O.match(expected, { onNone: A.empty<YeetGatedContextFamily>, onSome: yeetGatedFamiliesFor }),
-    changedPaths: yield* readYeetChangedPaths(context, capture),
+    changedPaths: yield* readYeetChangedPaths(context, options.capture ?? runRepoCommandCaptureRaw),
   });
   return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });
 });

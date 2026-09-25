@@ -1036,3 +1036,39 @@ evidence, what would have prevented it). Redact for the public repo.
   within the enclosing test rather than by line, so an insertion above existing
   rows is a no-op, and letting a file-level harness annotation declare the
   per-test-layer design as accepted so only genuinely new idioms count.
+
+## 2026-09-25 — the window TSV carries no shard durations, so the halves need a second collector
+
+- **Doing:** preparing the window-3 census so the admission report can show
+  the `repo-cli-1` / `repo-cli-2` halves separately, as `GOAL.md` asks
+  since #1219.
+- **Evidence:** `beep ci lane-timings --window --workflow check.yml --event
+  all --since 2026-09-23T00:00:00Z --until 2026-09-30T00:00:00Z --tsv
+  --preview` (1,305 rows) lists the four `Test Unit (…)` shards only in the
+  `pickup` population with an empty `durationSeconds`; the `duration`
+  population carries the lane aggregates (`Test Unit`, `Lint`, `Lint
+  Policy`) only, and `--markdown` has no per-job rows at all. The halves had
+  to come from `gh api repos/beep-effect/beep-effect/actions/runs/<id>/jobs`
+  for each of the 52 attempt-one successful runs (200 shard rows), filtered
+  to `run_attempt == 1` and `conclusion == success`, with nearest-rank
+  percentiles computed by hand (repo-cli-1 p95 717 s, repo-cli-2 681 s on the
+  09-25 preview).
+- **Would have prevented it:** emitting shard rows with their own
+  `durationSeconds` in the window TSV (a `shard` population, or filling the
+  field on the existing pickup rows) and a per-shard table in `--markdown`,
+  so one census run reports the halves the packet asks for.
+
+## 2026-09-25 — the goal launcher has no blocked-until state, so a date-gated goal loops
+
+- **Doing:** closing out #1219 (merged 2026-09-25T04:53Z, lane retired) and
+  continuing the packet, whose only remaining step is the window-3 census on
+  or after 2026-09-30T00:00Z.
+- **Evidence:** the goal launcher's completion hook re-evaluates "follow
+  `GOAL.md`" after every stop and reports the census unexecuted, while the
+  guard from #1219 refuses the command (`--until 2026-09-30T00:00:00.000Z is
+  in the future`, exit 1), so the session can neither satisfy the hook nor
+  legitimately act. Workaround: a one-shot scheduled task for
+  2026-09-30T01:00Z carrying the exact command and the halves recipe.
+- **Would have prevented it:** a `GOAL.md` convention for "blocked until
+  <instant>" that the launcher honours by exiting cleanly and re-firing at
+  that instant, so a date-gated goal is scheduled rather than looped.
