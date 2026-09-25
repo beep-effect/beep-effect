@@ -1,5 +1,17 @@
 # Boolean-Creep Eradication
 
+## Source advance after R40, 2026-09-25
+
+Main `41d6c9eb` changes the CLI EnvConfig and TurboCache source files. The
+branch includes that merge, but R40's frozen source remains `e624ab45`.
+Its partial evidence is historical; completing its missing lanes would not
+establish current-source convergence. Continue with a fresh full census after
+provider availability is restored and new admission inputs pass review.
+The existing EnvConfig and TurboCache inventory records require source refresh
+in that census. Inventory counts remain 725 / 108 qualified / 617 disqualified;
+no new owner judgment, dry-round, P3, or implementation credit is claimed.
+
+
 ## R40 partial census and reviewed corrections, 2026-09-25
 
 R40 stopped after provider usage exhaustion (HTTP 402), with 11 successful

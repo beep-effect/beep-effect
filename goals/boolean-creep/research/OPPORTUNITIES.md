@@ -1691,3 +1691,12 @@ changing any candidate record object. Preparation should validate the assembled
 design surface and compare row-level byte changes before claiming the bundle is
 ready. Both canonical validators now pass. Evidence:
 `data/r40-partial-reconciliation/mechanical-normalization.json`.
+
+### 2026-09-25 — Source movement supersedes pending historical recovery
+
+While the R40 recovery runner was being prepared after provider HTTP 402,
+main advanced through PR #1232 and changed EnvConfig.ts and TurboCache.ts.
+The runner's live-main guard refused the changed revision. Preserve the
+partial round and reusable runner tests, but use a fresh full census for
+current-source convergence. Check provider availability before starting a
+round and minimize the delay between runner admission and census execution.
