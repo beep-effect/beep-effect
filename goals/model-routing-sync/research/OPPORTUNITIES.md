@@ -114,3 +114,21 @@
   product workspaces require an in-range changeset, even for test-runner config.
   Add the narrow changeset and run that exact gate before republishing; package
   quick verification does not cover publication metadata.
+- PR #1240 was merged by the operator at 2026-09-25T10:22:25Z while its
+  canonical publisher was still proving the merged preview. Its head-local proof
+  and hosted readiness were already green, but packet lifecycle closeout had not
+  been committed. The agent did not merge it. Keep the running proof to terminal
+  and preserve its result; use an explicit delivery handoff before operator merge
+  so the packet and implementation can finish in the same PR.
+- The documentation closeout publisher committed and pushed successfully, then
+  `gh pr create` failed with `API rate limit already exceeded`. The canonical
+  waiter confirmed a failed publication job. A subsequent quota read showed
+  capacity available; retry publication through Yeet after checking for an
+  existing PR. Keep API quota failures separate from network and content failures.
+- PR #1249's `openclaw/pr-review` check failed before publishing a review:
+  `402 Payment Required: Grok Build usage balance exhausted`. This is reviewer
+  service capacity, not a finding against the packet. Asked the operator whether
+  balance restoration was underway or managed configuration diagnosis was wanted.
+  The operator chose to restore the balance and requested a retry afterward;
+  do not buy credits or weaken the check. Monitor reviewer capacity before
+  dispatch to make this dependency failure visible earlier.
