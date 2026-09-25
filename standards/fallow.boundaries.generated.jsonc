@@ -1349,12 +1349,14 @@
           "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -1362,14 +1364,18 @@
         "from": "@beep/colors",
         "allow": [
           "@beep/colors",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/colors",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -1377,14 +1383,18 @@
         "from": "@beep/cosmos",
         "allow": [
           "@beep/cosmos",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/cosmos",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -1392,10 +1402,12 @@
         "from": "@beep/data",
         "allow": [
           "@beep/data",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/data",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -2473,12 +2485,14 @@
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -2813,6 +2827,7 @@
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2820,6 +2835,7 @@
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3252,6 +3268,7 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/types",
           "@beep/utils"
         ],
@@ -3260,6 +3277,7 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/types",
           "@beep/utils"
         ]
@@ -3490,14 +3508,18 @@
       {
         "from": "@beep/tailscale",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
-          "@beep/tailscale"
+          "@beep/tailscale",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
-          "@beep/tailscale"
+          "@beep/tailscale",
+          "@beep/test-runner"
         ]
       },
       {

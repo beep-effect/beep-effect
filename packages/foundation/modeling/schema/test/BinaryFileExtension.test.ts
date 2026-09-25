@@ -4,9 +4,11 @@ import {
   isBinaryContent,
   isBinaryFileExtension,
 } from "@beep/schema/BinaryFileExtension";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeUnknownBinaryFileExtensionEffect = S.decodeUnknownEffect(BinaryFileExtension);
@@ -22,8 +24,8 @@ describe("BinaryFileExtension", () => {
   it.effect(
     "rejects undotted values",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownBinaryFileExtensionEffect("png"));
-      expect(Result.isFailure(failure1)).toBe(true);
+      const failure1 = yield* Effect.exit(decodeUnknownBinaryFileExtensionEffect("png"));
+      pipe(failure1, Exit.hasFails, assertTrue);
     })
   );
 

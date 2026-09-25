@@ -1,7 +1,11 @@
 import { EthAmount } from "@beep/schema/EthAmount";
-import { describe, expect, it } from "@effect/vitest";
-import { BigDecimal, Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { BigDecimal, Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownEthAmountEffect = S.decodeUnknownEffect(EthAmount);
@@ -29,10 +33,12 @@ describe("EthAmount", () => {
   it.effect(
     "rejects negative ETH amounts",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownEthAmountEffect(-0.000001));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("EthAmount must be greater than or equal to 0");
+      const failure1 = yield* Effect.exit(decodeUnknownEthAmountEffect(-0.000001));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "EthAmount must be greater than or equal to 0"
+        );
       }
     })
   );

@@ -1,0 +1,66 @@
+{
+  "package": "@beep/colors",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T12:36:57.723430+00:00",
+  "totalMs": 2939.02197265625,
+  "testCount": 15,
+  "files": [
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "ms": 15.02197265625,
+      "tests": 15
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor allows FORCE_COLOR to enable colors without a TTY",
+      "ms": 13.021909999999934
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor enables colors in CI environments",
+      "ms": 13.018966000000091
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor round-trips generated process-like values through the schema",
+      "ms": 13.016963000000032
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor decodes process-like inputs through the schema model",
+      "ms": 13.015650999999707
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor honors disable overrides for generated process-like values",
+      "ms": 13.015590999999858
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor enables colors for TTY terminals with a non-dumb TERM",
+      "ms": 1.753400000000056
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor disables colors for dumb TTY terminals",
+      "ms": 1.653396000000157
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor treats NO_COLOR as an override even when the value is empty",
+      "ms": 1.6467760000000453
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor treats --no-color as an override",
+      "ms": 1.6432999999997264
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor treats FORCE_COLOR=0 as disabled",
+      "ms": 1.6398550000003524
+    }
+  ]
+}

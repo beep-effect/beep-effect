@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/data",
+  "phase": "after",
+  "headBefore": "edfe81e91d3280a35c8ca1d53748fc0e7f196a0e",
+  "sourceFiles": {
+    "bun.lock": "2bc571ba5bd5037f3e2c8cd1f25e53d87d6e83994f1e47a48c6d81b03f9c4de3",
+    "packages/foundation/primitive/data/package.json": "e8a294daa19c62b3c1adf189d527ea1e67be486351c18fe574e449df3ed763fa",
+    "packages/foundation/primitive/data/src/Blockchain.ts": "3053f92206085d587774c65df08aeaaa4969a8b4318ebc4eea9eeacd4a4ea630",
+    "packages/foundation/primitive/data/src/Calendar.ts": "54c8565c8d97120e51540f3ae301231f370c6eabb52d8527dfdb9c14df0be288",
+    "packages/foundation/primitive/data/src/CurrencyCodes.ts": "3a141e870a5f1825515028e4999736d8a8bb8c1ab3168e5a2373a54ad2549c74",
+    "packages/foundation/primitive/data/src/HotKey.ts": "53e496366583205eaef3ccbe0c9f1e6ae52eb4efd54e0b208e4956f4994e82b6",
+    "packages/foundation/primitive/data/src/KeyboardShortcuts.ts": "1e7635da59463dc366449d188bdbd5097e1544f55783caf101bfb2011dcf6787",
+    "packages/foundation/primitive/data/src/MimeTypes.ts": "46c4ce992cf2cadf56f10431b54cd31bc7efbbf1896602fbbbf2a0fe2c90ec15",
+    "packages/foundation/primitive/data/src/Territories.ts": "6cae7f1ddc3c75172edeb0f2095aa3dc100414a554625bfa6bd2c3b2f336b913",
+    "packages/foundation/primitive/data/src/Timezones.ts": "5e4c6abe1d12b346d496460bbeb11390f95fd2b25eb0f3eb7d5d283e52ff3934",
+    "packages/foundation/primitive/data/src/generated/cldr-territories.ts": "81217847c99b657cecd5c78c97f562ff06c453807b59fc63c4a419645465b175",
+    "packages/foundation/primitive/data/src/generated/iana-media-types.ts": "5385bfecf98e9296ff21d723fe03e52eb6c5bbc3c3802404d2d579c6a4111e29",
+    "packages/foundation/primitive/data/src/generated/iana-timezones.ts": "55661c063a1135322ae52d8c34ffc1da44d8327bc69b9ee868e95afdd7e07dc6",
+    "packages/foundation/primitive/data/src/generated/iso4217.ts": "6b19f16ce3b9ae3986d9563e95e8cdeb8909d0f0097272b0db0eb7e27f0af875",
+    "packages/foundation/primitive/data/src/index.ts": "440d75ab730b13d21566987af7a853a9dd89989663456338c8f0bb4a6cadec27",
+    "packages/foundation/primitive/data/src/internal/data/calendar/index.ts": "bb727c072cf7779ac10c551892590353abf89164aa3d3296e1a4b6b0831dab19",
+    "packages/foundation/primitive/data/src/internal/data/calendar/month.ts": "7e8da3010968618c94cb578e9f840dfa4730cd574b31474dda53add748a58818",
+    "packages/foundation/primitive/data/src/internal/data/calendar/weekday.ts": "3acfa86d09f01af09722192e7895c6103eca3fef955d08cf294534a3e40f0ea2",
+    "packages/foundation/primitive/data/src/internal/data/currency-codes.ts": "6e5c8a22e802db9bd761404739df2e2bdd3b3d6f6845dc98f859ed7248ba4557",
+    "packages/foundation/primitive/data/src/internal/data/index.ts": "8f391d212ffbb9369138e973b2fa7d343c8204a778be73810ecf86f42dc0b196",
+    "packages/foundation/primitive/data/src/internal/data/keyboard-shortcuts.ts": "a91eee6bcb7a68554847ca2dd1d2da4af54024a8117a30bcfb739a5eef8608b6",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/application.ts": "f8b79df20751defcf108cfc76b0902bcd8d57611e6e4d427d912abe173baf3ab",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/audio.ts": "96f8100d097c084ae5f594f1ba909e5bf655fa3e574da531c27cf3bc6dce509c",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/image.ts": "8695d90fb8928ee864e02738908bbc5344e5c4c66eb8cf8de16fe230577ab53e",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts": "931848f72778eb8b34c86dc8d3ebdaa977cfd71ee8cd93827850016363099caf",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/misc.ts": "adc0e19e2b05835a57aa71689d8e088a165027155429169727b6471eb0d7c9fc",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/text.ts": "71dbcb47c5fda60ab850c07d58483319e2c5f49841fddfe1ea0bddbb7349f9ec",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/video.ts": "b3306b09d301548dddad94f35706a61b00ab8ae631635cc75344724f75efd2bf",
+    "packages/foundation/primitive/data/src/internal/data/timezones.ts": "72fc8d813b733e61c8ef0e1a4d98684078e13a8b3cb87a41a7611c2e3f991e9f",
+    "packages/foundation/primitive/data/src/internal/data/utils.ts": "e74dcea129d9173c3f43b25e86740ce536da4c7ad11cd397117fc79a570aa98b",
+    "packages/foundation/primitive/data/src/internal/index.ts": "979a069c7d8fcee41b4b5f949a0b8de1e812b5137698229393a86036970a3a81",
+    "packages/foundation/primitive/data/test/currency-codes.test.ts": "ab44e0351ea713e9a576e86a55a2853dfbd919c263dcf89d0fa67beda29b20b8",
+    "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts": "222cf4d16a175abf388e9f0384fa447996cabe9583e23501cbd3f4ba0ebf031a",
+    "packages/foundation/primitive/data/test/mime-types.test.ts": "f63369cb2d1ccc4fc8ab94e00b096a84d538af6de2e176daff65a8c38ca9f606",
+    "packages/foundation/primitive/data/test/territories.test.ts": "715b49aaa6703c9f40048a5656c2da67d3d20aa360c3587ff3722b153de5dcb6",
+    "packages/foundation/primitive/data/test/timezones.test.ts": "fde74e75553c2e66642865e0f15c4c994bd2e2d106a26edb6e1ac6fb3e8a6f24",
+    "packages/foundation/primitive/data/vitest.config.ts": "2d5503c37f0fc805421f3c35143a8e9579c9f061f8b95ec21b477992d21d561f",
+    "vitest.shared.ts": "289eefd120d20af1deb848c1f8f8d097a9359c347ae8e32b2f41ca11f3bab387"
+  },
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-reporter>"
+  ],
+  "wholeCommandSeconds": 0.6451535659980436,
+  "loadAverage": [15.78076171875, 13.58984375, 13.78955078125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.03 avg60=0.22 avg300=0.27 total=409416428\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=42001065\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=39060089\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.03 total=86222469\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=62221492\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.03 avg60=0.22 avg300=0.27 total=409418638\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=42001092\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=39060116\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.03 total=86222600\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=62221568\n"
+  },
+  "resourceLimits": {
+    "nofile": [1048576, 1048576],
+    "addressSpace": [-1, -1]
+  },
+  "rawReporterSha256": "24606d07525e1aaeba64db72a1daba24cfb253c48080ca826c9a6ff767e2e964",
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "comparability": "Pre-integration source hashes are stable. Historical Node/Vitest versions differ; no causal speedup claim. Confirm hashes after prerequisite merge."
+}
