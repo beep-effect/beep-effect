@@ -2057,3 +2057,19 @@ checkout. The refreshed attachment accepts 1011 sources, six artifacts and 49
 reviews with all 14 broader obligations preserved. The shared qualification
 contract now distinguishes this current snapshot from historical runtime pins.
 Neither refresh promotes a tuple or supplies signed remote acceptance.
+
+### Ordinary real-pilot canary controls — 2026-09-25
+
+The retained canary native executable (`2.11.5-canary.2`) passed seven ordinary
+Cache CLI controls at frozen source `8f11af6e49`: fresh miss, replay hit, source
+mutation miss, changed replay hit, two malformed-source failures without reuse,
+and a restored-input hit. Every native summary reports the canary version.
+The independent review checks stream digests, input-map changes, paired hashed
+environment metadata, absent failed-task archive and equal successful task logs.
+See [the retained receipt](./research/ordinary-real-canary.json).
+
+The native executable was overlaid in a network-isolated namespace; launcher
+and package declarations were unchanged. The canary used its own local cache
+namespace, and host task configurations remained unchanged. This bounded
+experiment does not establish signed-remote acceptance, current-head runtime
+evidence, complete semantic input coverage or a qualified tuple.

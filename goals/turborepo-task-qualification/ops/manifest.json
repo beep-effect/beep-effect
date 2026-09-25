@@ -373,7 +373,8 @@
     "research/ordinary-real-local-replay.json",
     "research/scoped-layer-repair.json",
     "research/current-census-handoff-review.json",
-    "research/ordinary-real-invalidation.json"
+    "research/ordinary-real-invalidation.json",
+    "research/ordinary-real-canary.json"
   ],
   "agentLaunchers": [
     {

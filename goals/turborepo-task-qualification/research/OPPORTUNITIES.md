@@ -2144,3 +2144,13 @@ Retain this as a CLI-loading failure, not failed-task-cache evidence. The
 continued control uses a new unimported source file so Biome, rather than CLI
 module loading, owns the intended failure. Phase-aware assertions would have
 classified the first result without confusing the two boundaries.
+
+### Canary version delegation during ordinary-CLI preflight — 2026-09-25
+
+Invoking the retained canary executable with `--version` from inside the frozen
+repository reported the installed stable version (`2.11.3`) despite a matching
+canary executable digest. Running it outside the repository reported
+`2.11.5-canary.2`. The isolated experiment overlaid the native executable and
+verified `turboVersion` in every native summary. Preflight should distinguish
+executable identity from repository-local delegation; filename and direct
+version output alone do not prove the client that executed the task.
