@@ -114,3 +114,9 @@
   product workspaces require an in-range changeset, even for test-runner config.
   Add the narrow changeset and run that exact gate before republishing; package
   quick verification does not cover publication metadata.
+- PR #1240 was merged by the operator at 2026-09-25T10:22:25Z while its
+  canonical publisher was still proving the merged preview. Its head-local proof
+  and hosted readiness were already green, but packet lifecycle closeout had not
+  been committed. The agent did not merge it. Keep the running proof to terminal
+  and preserve its result; use an explicit delivery handoff before operator merge
+  so the packet and implementation can finish in the same PR.
