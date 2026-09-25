@@ -13,9 +13,31 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const PN_LOCAL_ESCAPABLE = "_~.-!$&'()*+,;=/?#@%";
 const HEX = /^[0-9A-Fa-f]$/;
-const SafePnLocalArbitraryValues = ["prefLabel", "a.b", "9lives", "_local", "skos:prefLabel"] as const;
-const EscapedPnLocalArbitraryValues = ["prefLabel", "Ontology.models\\/HttpUrl", "claim\\#1", "a%20b"] as const;
-const SafePnPrefixArbitraryValues = ["skos", "beep", "schema.org", "ns_1"] as const;
+// These bounded patterns generate grammar-valid names; the public validators below
+// retain the full, unbounded acceptance rules.
+const pnBaseRange =
+  "A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF" +
+  "\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF" +
+  "\\uFDF0-\\uFFFD\\u{10000}-\\u{EFFFF}";
+const pnCharsRange = `${pnBaseRange}_0-9\\-\\u00B7\\u0300-\\u036F\\u203F-\\u2040`;
+const pnLocalFirst = `[${pnBaseRange}_:0-9]`;
+const pnLocalMiddle = `[${pnCharsRange}.:]`;
+const pnLocalFinal = `[${pnCharsRange}:]`;
+const pnEscapedUnit = "(?:%[0-9A-Fa-f]{2}|\\\\[_~.\\-!$&'()*+,;=/?#@%])";
+const SafePnLocalArbitrary = S.String.check(
+  S.isPattern(new RegExp(`^${pnLocalFirst}(?:${pnLocalMiddle}{0,38}${pnLocalFinal})?$`, "u"))
+);
+const SafePnPrefixArbitrary = S.String.check(
+  S.isPattern(new RegExp(`^[${pnBaseRange}](?:[${pnCharsRange}.]{0,38}[${pnCharsRange}])?$`, "u"))
+);
+const EscapedPnLocalArbitrary = S.String.check(
+  S.isPattern(
+    new RegExp(
+      `^(?:${pnLocalFirst}|${pnEscapedUnit})(?:(?:${pnLocalMiddle}|${pnEscapedUnit}){0,38}(?:${pnLocalFinal}|${pnEscapedUnit}))?$`,
+      "u"
+    )
+  )
+);
 const IriReferenceUnsafeCharacter = /[\u0000-\u0020<>"{}|^`\\]/gu;
 
 const codePointOf = (character: string): number | undefined => character.codePointAt(0);
@@ -143,7 +165,7 @@ export const SafePnLocal = S.declare<string>(
     description: "A local name that can be emitted as an unescaped Turtle PN_LOCAL value.",
     toCodecArbitrary: () =>
       S.link<string>()(
-        S.Literals<ReadonlyArray<string>>(SafePnLocalArbitraryValues),
+        SafePnLocalArbitrary,
         SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
       ),
   }
@@ -191,7 +213,7 @@ export const SafePnPrefix = S.declare<string>(
     description: "A namespace prefix that can be emitted as an unescaped Turtle PN_PREFIX value.",
     toCodecArbitrary: () =>
       S.link<string>()(
-        S.Literals<ReadonlyArray<string>>(SafePnPrefixArbitraryValues),
+        SafePnPrefixArbitrary,
         SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
       ),
   }
@@ -349,7 +371,7 @@ export const EscapedPnLocal = S.declare<string>(
     description: "A local name with Turtle PN_LOCAL parser-side escapes accepted at the parser boundary.",
     toCodecArbitrary: () =>
       S.link<string>()(
-        S.Literals<ReadonlyArray<string>>(EscapedPnLocalArbitraryValues),
+        EscapedPnLocalArbitrary,
         SchemaTransformation.transform({ decode: (value) => value, encode: (value) => value })
       ),
   }

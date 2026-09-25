@@ -1,0 +1,121 @@
+{
+  "package": "@beep/identity",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-24T21:34:27.188000+00:00",
+  "totalMs": 1143.5439453125,
+  "testCount": 115,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/identity/test/AnnoteError.test.ts",
+      "ms": 4.363525390625,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "ms": 271.5439453125,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
+      "ms": 34.44580078125,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Identity.test.ts",
+      "ms": 22.509521484375,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
+      "ms": 11.6787109375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IriBinding.test.ts",
+      "ms": 5.770263671875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/OntologyEntrypoints.test.ts",
+      "ms": 7.902099609375,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/PnLocal.test.ts",
+      "ms": 70.87060546875,
+      "tests": 16
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/TaggedError.equivalence.test.ts",
+      "ms": 14.830322265625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/TemplateGuards.test.ts",
+      "ms": 8.772216796875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
+      "ms": 36.2548828125,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "ms": 116.083740234375,
+      "tests": 10
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec repeats deterministic round-trips over the entire registry",
+      "ms": 266.340832
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec decodes and encodes known CURIEs",
+      "ms": 266.336496
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec round-trips generated CoreVocab IRIs through the schema codec",
+      "ms": 266.33173799999986
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec preserves literal expansion types",
+      "ms": 266.3312169999999
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "testName": "CURIE codec round-trips every CoreVocab term",
+      "ms": 266.16492299999993
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps the current root type-only named import inventory documented",
+      "ms": 112.67206399999998
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps every current runtime named import from @beep/identity available",
+      "ms": 112.52501900000004
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps every current runtime named import from @beep/identity/packages available",
+      "ms": 112.51005599999996
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness pins every generated package composer export to today's literal identity",
+      "ms": 112.50424699999996
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "testName": "@beep/identity shape-stable harness keeps RepoPkgs backed by the generated composer record",
+      "ms": 112.49901899999998
+    }
+  ]
+}

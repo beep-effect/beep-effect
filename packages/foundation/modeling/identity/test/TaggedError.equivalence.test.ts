@@ -1,6 +1,7 @@
 import { IdentityInterpolationError, IdentitySegmentCountError } from "@beep/identity";
 import { expand } from "@beep/identity/Curie";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { identity } from "effect";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/identity",
+  "phase": "after",
+  "headBefore": "2c51d78de102f4d799c90c9faa7ac41452c0899e",
+  "headAfter": "2c51d78de102f4d799c90c9faa7ac41452c0899e",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=../../../../goals/effect-vitest-canon/ops/inventory/timings/after/beep_identity.json"
+  ],
+  "commandQualification": "Run from the package directory, matching the baseline command shape. The committed after file is the summary shape with repo-relative paths; the raw reporter output is retained privately.",
+  "wholeCommandSeconds": 1.5425338745117188,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing; wholeCommandSeconds measures process elapsed time separately and is never the summary totalMs",
+  "registeredTestStatuses": {
+    "passed": 115
+  },
+  "loadAverage": [32.79, 21.15, 20.4],
+  "comparability": "Not comparable to the rc.113 baseline: the installed runtime moved to Effect rc.117, Vitest 5.0.1 and Node v24.20.0 under main's dependency refresh, and the remediation added five generator-coverage tests (110 to 115). Recorded as fresh evidence for the current contract; no speedup or regression is claimed. Workstation load during the run was high and is retained unadjusted."
+}
