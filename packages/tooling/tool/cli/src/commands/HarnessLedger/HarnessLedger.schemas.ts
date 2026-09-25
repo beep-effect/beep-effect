@@ -399,7 +399,7 @@ export class HarnessLedgerPruneOptions extends S.Class<HarnessLedgerPruneOptions
  * **Example** (Describing a skill candidate)
  *
  * ```ts
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { PruneSurfaceCandidate } from "@beep/repo-cli/commands/HarnessLedger"
  *
  * const candidate = PruneSurfaceCandidate.make({ kind: "skill", name: "yeet", surfaceId: Sha256Hex.make("a".repeat(64)) })

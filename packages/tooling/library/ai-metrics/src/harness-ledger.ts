@@ -317,7 +317,7 @@ export type LedgerDisposition = typeof LedgerDisposition.Type;
  *
  * ```ts
  * import { HarnessFingerprintParts } from "@beep/repo-ai-metrics"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const parts = HarnessFingerprintParts.make({
  *   modelId: "gpt-6-astra",
@@ -362,7 +362,7 @@ export class HarnessFingerprintParts extends S.Class<HarnessFingerprintParts>($I
  *
  * ```ts
  * import { HarnessFingerprint } from "@beep/repo-ai-metrics"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const fingerprint = HarnessFingerprint.make({
  *   modelId: "gpt-6-astra",
@@ -395,7 +395,7 @@ const encodeHarnessFingerprintPartsJson = S.encodeEffect(S.fromJsonString(Harnes
  *
  * ```ts
  * import { deriveHarnessFingerprintId, HarnessFingerprintParts } from "@beep/repo-ai-metrics"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  *
  * const id = Effect.runPromise(
@@ -438,7 +438,7 @@ export const deriveHarnessFingerprintId = Effect.fn("AiMetrics.deriveHarnessFing
  *
  * ```ts
  * import { harnessFingerprintFromParts, HarnessFingerprintParts } from "@beep/repo-ai-metrics"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  *
  * const fingerprint = Effect.runPromise(
@@ -924,7 +924,7 @@ type StaleCheckRow = { readonly fingerprint: Pick<HarnessFingerprint, "fingerpri
  *
  * ```ts
  * import { isStale } from "@beep/repo-ai-metrics"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const row = { fingerprint: { fingerprintId: Sha256Hex.make("a".repeat(64)) } }
  * console.log(isStale(row, { fingerprintId: Sha256Hex.make("a".repeat(64)) })) // false
