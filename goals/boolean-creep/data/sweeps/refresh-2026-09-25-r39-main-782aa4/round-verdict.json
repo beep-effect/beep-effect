@@ -40,11 +40,11 @@
     },
     {
       "file": "goals/boolean-creep/data/r39-owner-reviews/artifact-index.json",
-      "sha256": "167654535f6f890e400b6da69f26f9b3f13a8ca878834cec70752a95d03f877e"
+      "sha256": "14998f8660589623d7d245802398e3ee1a003cfb8ebc9b96382b6772fad1664e"
     },
     {
       "file": "goals/boolean-creep/data/r39-reconciliation-progress-2026-09-25.json",
-      "sha256": "3951b3f9849137a1f5f0ebc531935bc2e3f253100380763f34a82a747a434067"
+      "sha256": "b0ca6c3a4bf8e887395e94b489ac3a08fd8173e61f0202118d6775f14f1300bf"
     },
     {
       "file": "goals/boolean-creep/history/inventory/2026-09-25-r39-final-reconciled.jsonl",
@@ -52,7 +52,7 @@
     },
     {
       "file": "goals/boolean-creep/data/r39-owner-admission/integration.json",
-      "sha256": "4ff6e235fbe6446277d78c85acd0ec3078d609f1ce6307e898be1fbf6b249a6d"
+      "sha256": "ca0361201a71820da056120e4cdd5cf43f8e9d3274ee4b580e4b1de2f5eab336"
     },
     {
       "file": "goals/boolean-creep/data/r39-citation-integration/integration.json",

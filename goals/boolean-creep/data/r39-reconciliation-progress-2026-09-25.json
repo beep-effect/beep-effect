@@ -299,7 +299,7 @@
   },
   "canonicalPartialIntegration": {
     "file": "goals/boolean-creep/data/r39-owner-admission/integration.json",
-    "sha256": "4ff6e235fbe6446277d78c85acd0ec3078d609f1ce6307e898be1fbf6b249a6d",
+    "sha256": "ca0361201a71820da056120e4cdd5cf43f8e9d3274ee4b580e4b1de2f5eab336",
     "counts": {
       "rows": 724,
       "qualified": 108,

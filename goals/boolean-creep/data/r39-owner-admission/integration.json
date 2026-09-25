@@ -32,11 +32,11 @@
   "publicArtifacts": [
     {
       "file": "goals/boolean-creep/data/r39-owner-admission/projection-checks.json",
-      "sha256": "a3de6cd03b0287a4c0b76f456e05be30f3d509434242e117affc9e517eacd762"
+      "sha256": "ae0ef3e4dd9d6d45faf58ee3b920bacde39ebde9a1cd639bb355045b86cb350c"
     },
     {
       "file": "goals/boolean-creep/data/r39-owner-admission/proposed-rows.json",
-      "sha256": "ce3ed69eea55b7c3373eebf3f312318a7def6c3003b06932fbfacf4f42225701"
+      "sha256": "9a09e01c4b7c7ad4704bcc005ca42c142c19d0d09701d1d29199a92fc3a255f0"
     },
     {
       "file": "goals/boolean-creep/data/r39-owner-admission/review.json",

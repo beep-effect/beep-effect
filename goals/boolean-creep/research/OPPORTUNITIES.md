@@ -1647,3 +1647,12 @@ proof or push. The CLI reported that `--start-pr-early` cannot be combined with
 constraint. The terminal job was observed and acknowledged. A documented
 resume path for an already-committed, unverified head would avoid this failed
 submission while retaining full proof after an early push.
+
+### 2026-09-25 — Format public receipts before binding their bytes
+
+R40 predecessor verification detected three R39 public artifact mismatches:
+commit formatting compacted JSON arrays after their hashes had been captured. Semantic comparison against the sanitized private
+original proved the receipt content unchanged. The artifact hash and enclosing
+verdict binding were refreshed after formatting. Format receipts first, then
+build binding manifests from the final bytes and recheck them after committing.
+Evidence: `data/r39-owner-reviews/artifact-index.json` and the R39 round verdict.
