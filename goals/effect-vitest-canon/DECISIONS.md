@@ -559,3 +559,19 @@ comparison to an ambiguous judgment candidate at confidence 0.55. That candidate
 is review evidence, not an automatic migration requirement. P1 semantic review
 is complete for this question; the detector rows remain open until coordinated
 P2 disposition. No source, detector baseline, exception or phase gate changed.
+
+
+## Backlog-first remediation authorization
+
+Benjamin authorized remediation of the existing legitimate inventory after the
+progress PR merged. Work through that backlog before inventorying the remainder
+that arrived while main moved. This supersedes the requirement to refresh the
+whole census before starting P2. It does not claim current-main P1 completeness.
+
+Check each selected finding against the current file and installed Effect API
+before editing. Preserve the frozen census, timing receipts and review history.
+Apply reviewed corrections only where relevant to the selected work; defer the
+remaining census delta until the existing backlog is exhausted. Keep dependency
+order, lens order, package verification, timing and PR gates. Benjamin retains
+merge authority. The first remediation slice is the identity registry resource
+finding in foundation/modeling; keep this family in its own PR.
