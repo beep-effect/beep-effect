@@ -2827,6 +2827,7 @@
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2834,6 +2835,7 @@
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },

@@ -1,0 +1,71 @@
+{
+  "package": "@beep/pglite",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T14:13:53.191245+00:00",
+  "totalMs": 5066.915283203125,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/drivers/pglite/test/Pglite.equivalence.test.ts",
+      "ms": 1.149658203125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "ms": 1688.558837890625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+      "ms": 1837.915283203125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+      "testName": "PgliteClient (file-backed) persists rows across closing and reopening the same dataDir",
+      "ms": 1837.4683749999995
+    },
+    {
+      "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+      "testName": "PgliteClient (file-backed) runs Drizzle CRUD through the PgClient alias",
+      "ms": 1836.915254
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "testName": "PgliteClient layer lifecycle closes the managed PGlite instance when the layer scope closes",
+      "ms": 1688.5587640000003
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "testName": "PgliteError preserves cause-bearing driver error fields and encoded codec stability",
+      "ms": 55.30979399999978
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "testName": "PgliteError normalizes an unknown failure into the tagged driver error",
+      "ms": 29.14613300000019
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "testName": "PgliteError round-trips schema-derived driver errors through their encoded shape",
+      "ms": 29.040520000000015
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "testName": "PgliteClient (in-memory) executes PostgreSQL-dialect SQL through the generic SqlClient",
+      "ms": 9.930738999999448
+    },
+    {
+      "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+      "testName": "PgliteClient (in-memory) aliases the in-process client under the @effect/sql-pg PgClient tag",
+      "ms": 7.338969000000361
+    },
+    {
+      "file": "packages/drivers/pglite/test/Pglite.equivalence.test.ts",
+      "testName": "PgliteError declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+      "ms": 1.1496400000000904
+    }
+  ]
+}
