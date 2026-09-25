@@ -1753,3 +1753,19 @@ PR #1229's Fallow audit attributed a new cognitive-complexity score of 9
 corruption setup without dropping negative cases; all 19 orchestration tests
 pass. Run local Fallow with an explicit `--base origin/main` outside Yeet:
 the root wrapper uses `BEEP_PROOF_BASE`, and an unset value fails resolution.
+
+### 2026-09-25 — Fixture copies changed symlink input bytes
+
+The expanded stable pilot v19 failed before its matrix with "Read-only pilot
+inputs or configuration differ from the live census." A native Turbo 2.11.3
+read-only sandbox matched the source plan when package links were preserved.
+Repeating the copy through the runtime's `node:fs` `cp` changed exactly the
+`CLAUDE.md` inputs in `@beep/fc-runs#lint` and `@beep/test-runner#lint`: their
+relative `AGENTS.md` links became absolute host paths. Effect's filesystem
+copy uses that default. The fixture now copies links verbatim through the
+filesystem service, and integrity snapshots hash link text without following
+it. Regression fixtures retain relative links and reject retargeting even when
+the new link resolves to the same file. Twenty focused tests passed, including an exact source-integrity failure
+assertion for link retargeting; full package verification and the native
+qualification matrix remain separate pending gates. A fixture containing the
+packages' real symlink topology would have exposed this before the runtime run.

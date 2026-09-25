@@ -89,6 +89,7 @@ const faultDomain = LiteralKit([
   "missing-log",
   "source-write",
   "dependency-source-write",
+  "dependency-link-write",
   "missing-selected",
   "library-mismatch",
   "version-mismatch",
@@ -160,6 +161,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     for (const packageDirectory of [identityDirectory, typesDirectory, ...R.values(additionalDirectories)]) {
       yield* write(directory, `${packageDirectory}/src/index.ts`, "export const fixture = 1;\n");
       yield* write(directory, `${packageDirectory}/README.md`, "Fixture\n");
+      yield* write(directory, `${packageDirectory}/AGENTS.md`, "Fixture instructions\n");
+      yield* fs.symlink("AGENTS.md", path.join(directory, packageDirectory, "CLAUDE.md"));
       yield* write(directory, `${packageDirectory}/package.json`, '{"scripts":{"lint":"bun run beep:lint"}}');
       yield* write(
         directory,
@@ -344,8 +347,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             );
             const identity = mounted(`${guest}/${identityDirectory}`);
             const types = mounted(`${guest}/${typesDirectory}`);
+            for (const overlay of [identity, types])
+              expect(yield* fs.readLink(path.join(overlay, "CLAUDE.md"))).toBe("AGENTS.md");
             for (const relative of R.values(additionalDirectories)) {
               const overlay = mounted(`${guest}/${relative}`);
+              expect(yield* fs.readLink(path.join(overlay, "CLAUDE.md"))).toBe("AGENTS.md");
               expect(yield* fs.readFileString(path.join(overlay, "src/index.ts"))).toBe("export const fixture = 1;\n");
               const logMount = mounted(`${guest}/${relative}/.turbo`);
               expect(yield* fs.exists(logMount)).toBe(true);
@@ -433,6 +439,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                         "src/index.ts",
                         "unexpected write"
                       );
+                    if (fault === "dependency-link-write") {
+                      const link = path.join(mounted(`${guest}/packages/tooling/test-kit/test-runner`), "CLAUDE.md");
+                      yield* fs.remove(link);
+                      yield* fs.symlink("./AGENTS.md", link);
+                    }
                   });
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
@@ -634,7 +645,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       `rejects ${fault} without producing a receipt`,
       Effect.fnUntraced(function* () {
         const { root, fs, path, run } = yield* fixture(fault);
-        expect(Result.isFailure(yield* run().pipe(Effect.result))).toBe(true);
+        const failure = yield* run().pipe(Effect.flip);
+        if (fault === "dependency-link-write")
+          expect(failure.message).toBe("Read-only pilot package source changed during execution.");
         expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       })
     );

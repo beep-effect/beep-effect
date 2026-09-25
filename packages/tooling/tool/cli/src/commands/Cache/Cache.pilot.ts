@@ -156,6 +156,34 @@ const inputDigest = Effect.fn("CachePilot.inputDigest")(function* (inputs: Reado
   );
   return yield* JsonStringCodec(InputEntries).encode(entries).pipe(Effect.flatMap(hashText));
 });
+const copyPackage = Effect.fn("CachePilot.copyPackage")(function* (source: string, target: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let entries = 0;
+  const visit = Effect.fn("CachePilot.copyPackageEntry")(function* (
+    relative: string,
+    depth: number
+  ): Effect.fn.Return<void, CacheCommandError | PlatformError.PlatformError> {
+    if (depth > 16 || ++entries > 5000)
+      return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
+    const from = path.join(source, relative);
+    const to = path.join(target, relative);
+    const link = yield* fs.readLink(from).pipe(Effect.option);
+    if (O.isSome(link)) {
+      // Portable copy rewrites relative links to host paths. Preserve their Git input bytes.
+      yield* fs.symlink(link.value, to);
+      return;
+    }
+    const info = yield* fs.stat(from);
+    if (info.type === "Directory") {
+      yield* fs.makeDirectory(to);
+      for (const name of A.sort(yield* fs.readDirectory(from), Order.String))
+        yield* visit(path.join(relative, name), depth + 1);
+    } else if (info.type === "File") yield* fs.copyFile(from, to);
+    else return yield* CacheCommandError.new("Pilot package source contains an unsupported file kind.");
+  });
+  yield* visit("", 0);
+});
 const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -175,6 +203,13 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
       Effect.fn("CachePilot.snapshotEntry")(function* (name) {
         if (relative === "" && name === ".turbo") return;
         const child = path.join(relative, name);
+        const link = yield* fs.readLink(path.join(root, child)).pipe(Effect.option);
+        if (O.isSome(link)) {
+          files.push(
+            PilotFile.make({ path: child, mode: NonNegativeInt.make(0o120000), sha256: yield* hashText(link.value) })
+          );
+          return;
+        }
         const info = yield* fs.stat(path.join(root, child));
         if (info.type === "Directory") yield* visit(child, depth + 1);
         else if (info.type === "File")
@@ -372,15 +407,15 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* fs.makeDirectory(directory);
       const identity = path.join(directory, "identity");
       const types = path.join(directory, "types");
-      yield* fs.copy(path.join(source, identityDirectory), identity);
-      yield* fs.copy(path.join(source, typesDirectory), types);
+      yield* copyPackage(path.join(source, identityDirectory), identity);
+      yield* copyPackage(path.join(source, typesDirectory), types);
       const additionalPackages = yield* Effect.forEach(
         R.toEntries(additionalDependencyDirectories),
         Effect.fn("CachePilot.prepareDependency")(function* ([task, relative]) {
           if (!A.contains(expectedDependencies, task)) return O.none();
           const target = path.join(directory, "dependencies", relative);
           yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-          yield* fs.copy(path.join(source, relative), target);
+          yield* copyPackage(path.join(source, relative), target);
           return O.some(Tuple.make(relative, target));
         }),
         { concurrency: 1 }
