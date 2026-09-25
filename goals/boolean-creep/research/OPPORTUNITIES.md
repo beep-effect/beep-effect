@@ -1637,3 +1637,13 @@ help describes early push and monitoring but does not state this flag dependency
 The terminal proof job was observed and acknowledged, then retried with `--pr`.
 Documenting the dependency beside `--start-pr-early` would prevent this failed
 submission; an existing PR can still be reused.
+
+### 2026-09-25 — Early publication rejects amend-based resumption
+
+After committing R39 reconciliation and merging newly advanced main for PR
+#1246, an early-publication retry with `--amend --no-edit` terminated before
+proof or push. The CLI reported that `--start-pr-early` cannot be combined with
+`--amend` or `--no-edit`. The help lists these flags separately without that
+constraint. The terminal job was observed and acknowledged. A documented
+resume path for an already-committed, unverified head would avoid this failed
+submission while retaining full proof after an early push.
