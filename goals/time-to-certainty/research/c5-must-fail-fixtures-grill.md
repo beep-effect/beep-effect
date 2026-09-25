@@ -95,3 +95,46 @@ honest against the lane specs).
 
 C4.2 enforcement stays a later PR gated on `proof-report` reading `ready` with every C5 fixture green
 (rulings 7, 64).
+
+## Landing status (2026-09-24)
+
+Rulings 68–70 landed as proposed; the ratification is Benjamin's merge of this PR.
+
+- Ruling 68: `QualityTaskLaneRun.inputPackages` in `Quality.schemas.ts` (empty default for both
+  the constructor and a missing key, so a `quality-task-lane-run/v1` report written before the
+  field decodes as an empty scope); `turboLaneDigestPackages` in `TurboLaneDigest.ts` reads the
+  scope off a digest's own task ids; `resolveLaneInputDigest` in `Tasks.ts` now resolves
+  `{ inputDigest, inputPackages }` and every lane-run builder carries it.
+- Ruling 69: `workspaceForFile` and a new `changedPackageNamesForPaths` are exported from
+  `PackageVerify.ts` and used by both `quality package-verify`'s auto-detect and the Yeet verdict
+  writer; `changedPackagesForAttempt` in `ProofShadow.ts` unions `readYeetChangedPathsStrict` with
+  one `git status --porcelain=v1 -z --untracked-files=all` snapshot and folds the result into the
+  `ProofChangedPackages` tagged union (`known` / `unavailable`). `Settle.ts` gained
+  `readYeetChangedPathsStrict` and `readYeetChangedPaths` is now its tolerant wrapper, so the
+  tripwire can tell "no paths changed" from "the diff could not be read" while the docs-only
+  settle rule keeps its `hold` failure direction unchanged.
+- Ruling 70: `changedPackageTripwireFor` builds the predicate from the attempt's own reports;
+  `recordProofShadowForAttempt` takes the changed set and passes the tripwire to
+  `ProofLedger.make` (`loadProofShadowReport` keeps `constFalse`). `ProofShadowAttemptSummary`
+  gained `tripped` and the verdict line ends `; tripwire N`; `Handler.writeRunVerdict` reads the
+  changed set once and logs it.
+- Fixtures: `proof-shadow.test.ts` carries the ruling-70 must-fail fixture with its control, the
+  root-task-only lane, the undeclared-lane ordering, the `unavailable` fail-closed case, the
+  `proof-report` miss-by-reason assertion, and the changed-set reader's porcelain, union,
+  git-failure and workspace-failure cases; `turbo-lane-digest.test.ts` carries the package-scope
+  fixture for both digest paths; `quality-tasks.test.ts` carries the legacy decode.
+
+## Proposed ruling 71 (open — needs Benjamin's lock, NOT implemented): the proof ledger's checkout is the clone, not the worktree
+
+Evidence: `yeet proof-report` reads 0 rows in `beep-effect3` and `beep-effect21` (the clones lanes
+are cut from); the best reading anywhere is 9 attempts on 1 branch in a primary clone; every lane
+ledger dies with `yeet sweep --retire` (the residue archive keeps git residue, not `.beep/`). Under
+the ratified bar (200 attempts, 10 branches) the sample can never accumulate while the ledger path
+is `<repoRoot>/.beep/yeet/proof-ledger.ndjson`.
+
+Proposal: `proofLedgerPathForCheckout` resolves `git rev-parse --git-common-dir`'s parent (the
+clone) so sibling lanes of one clone share one ledger; facts keep `originKey` = the worktree that
+ran them. Open question for the lock: concurrent appends from two lanes — ruling 63's "one append
+per attempt" relies on O_APPEND atomicity for a multi-line write, so either measure the largest
+attempt append against `PIPE_BUF` or add a per-append rename publish through
+`publishJournalTextAtomically`. Machine-wide (across clones) stays the deferred P3 candidate.
