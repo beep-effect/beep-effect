@@ -16,6 +16,8 @@ Tracked, authored documentation for the beep-effect monorepo.
 
 Operational guidance includes [recovering from local Graft configuration
 drift](runbooks/graft-local-recovery.md). Timer units, their refresh, and the agent-run post-merge closeout: [systemd timers](runbooks/systemd-timers.md).
+Which TypeScript compiler runs where, why `typescript@6` and `@typescript/native` coexist, and
+how to wire the Effect compiler into WebStorm: [TypeScript toolchain](runbooks/typescript-toolchain.md).
 
 ## Rules
 
