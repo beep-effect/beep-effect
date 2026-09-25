@@ -43,7 +43,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { RepoRunContext, removeGitWorktree, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
@@ -474,8 +474,7 @@ const removeMergePreviewWorktree = Effect.fn("Yeet.removeMergePreviewWorktree")(
   context: RepoRunContext,
   worktreePath: string
 ): Effect.fn.Return<void, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  yield* gitCapture(context.repoRoot, ["worktree", "remove", "--force", worktreePath]);
-  yield* gitCapture(context.repoRoot, ["worktree", "prune"]);
+  yield* removeGitWorktree(context.repoRoot, worktreePath);
 });
 
 /**

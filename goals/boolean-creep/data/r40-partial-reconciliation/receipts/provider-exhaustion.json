@@ -1,0 +1,88 @@
+{
+  "kind": "r40-provider-exhaustion-receipt/v1",
+  "executionSummary": {
+    "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+    "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+    "finalSourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+    "finalOriginMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+    "sourceStable": true,
+    "sourceDrift": [],
+    "complete": false,
+    "lanes": 27,
+    "qualifiedCandidates": 2
+  },
+  "successful": [
+    "r40-foundation-primitive",
+    "r40-foundation-modeling-rest",
+    "r40-foundation-schema-n-z",
+    "r40-foundation-schema-a-m",
+    "r40-foundation-capability",
+    "r40-drivers-g-m",
+    "r40-drivers-a-f",
+    "r40-drivers-s-z",
+    "r40-architecture-ecosystem-internal",
+    "r40-drivers-n-r",
+    "r40-foundation-ui"
+  ],
+  "failed": [
+    {
+      "lane": "r40-epistemic-ontology",
+      "exitCode": 1,
+      "errors": [
+        "Grok provider usage balance exhausted (HTTP 402).",
+        "Provider/tool error event; inspect private transcript.",
+        "Diagnostic; inspect private transcript."
+      ],
+      "transcriptSha256": "9f4767fbbb02a188109eba49e30b7e70db52259237c2135b9a256800fd15ad78"
+    },
+    {
+      "lane": "r40-agents-workspace",
+      "exitCode": 1,
+      "errors": [
+        "Grok provider usage balance exhausted (HTTP 402).",
+        "Provider/tool error event; inspect private transcript.",
+        "Diagnostic; inspect private transcript."
+      ],
+      "transcriptSha256": "a24cb559285d7f8944f1e4789050317f692023bcf9866c8aab954c898c7ca18d"
+    },
+    {
+      "lane": "r40-law-practice-domain",
+      "exitCode": 1,
+      "errors": [
+        "Grok provider usage balance exhausted (HTTP 402).",
+        "Provider/tool error event; inspect private transcript.",
+        "Diagnostic; inspect private transcript."
+      ],
+      "transcriptSha256": "561ed879e1285cdeb6a975ac8ac25bc67a9a60b05dc0392cf1db0e5032cd898d"
+    },
+    {
+      "lane": "r40-shared-documents",
+      "exitCode": 1,
+      "errors": [
+        "Grok provider usage balance exhausted (HTTP 402).",
+        "Provider/tool error event; inspect private transcript.",
+        "Diagnostic; inspect private transcript."
+      ],
+      "transcriptSha256": "5b94f39d81a0d59b6317536b285bfd89250ed33f3d22e6c73b75686adaf1dd1e"
+    }
+  ],
+  "notExecuted": [
+    "r40-law-practice-runtime",
+    "r40-apps",
+    "r40-tooling-library-observability",
+    "r40-tooling-library-support",
+    "r40-tooling-policy",
+    "r40-tool-docgen",
+    "r40-cli-internal-root",
+    "r40-cli-commands-a-c",
+    "r40-cli-commands-d-k",
+    "r40-cli-commands-l-q",
+    "r40-cli-commands-r-z",
+    "r40-cli-yeet"
+  ],
+  "serviceTerminal": true,
+  "serviceResult": "exit-code",
+  "retryPolicy": "Preserve original attempt artifacts. No duplicate full-round relaunch; prepare separately reviewed missing-lane recovery only after provider restored and exact-input checks.",
+  "dryCredit": false,
+  "P3Credit": false
+}

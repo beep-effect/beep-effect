@@ -1,0 +1,141 @@
+{
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "kind": "source-derived abstract closure, not runtime test",
+  "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+  "owner": "makeStreamChoiceParts",
+  "scope": "writer-local shouldFinish/textStarted/textEnded/finished; excludes inner-choice hasFinish",
+  "lines": [896, 901, 907, 913],
+  "storedTupleCount": 6,
+  "localRepresentable": 16,
+  "localReachable": 9,
+  "projection": ["shouldFinish", "textStarted", "textEnded", "finished"],
+  "witnesses": [
+    {
+      "tuple": [false, false, false, false],
+      "trace": [
+        {
+          "choices": [],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "tuple": [false, false, false, true],
+      "trace": [
+        {
+          "choices": [],
+          "usage": true
+        },
+        {
+          "choices": [],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "tuple": [false, true, false, false],
+      "trace": [
+        {
+          "choices": [
+            {
+              "text": true,
+              "finish": false
+            }
+          ],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "tuple": [false, true, false, true],
+      "trace": [
+        {
+          "choices": [],
+          "usage": true
+        },
+        {
+          "choices": [
+            {
+              "text": true,
+              "finish": false
+            }
+          ],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "tuple": [false, true, true, false],
+      "trace": [
+        {
+          "choices": [
+            {
+              "text": true,
+              "finish": true
+            }
+          ],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "tuple": [false, true, true, true],
+      "trace": [
+        {
+          "choices": [],
+          "usage": true
+        },
+        {
+          "choices": [
+            {
+              "text": true,
+              "finish": true
+            }
+          ],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "tuple": [true, false, false, true],
+      "trace": [
+        {
+          "choices": [],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "tuple": [true, true, false, true],
+      "trace": [
+        {
+          "choices": [
+            {
+              "text": false,
+              "finish": true
+            },
+            {
+              "text": true,
+              "finish": false
+            }
+          ],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "tuple": [true, true, true, true],
+      "trace": [
+        {
+          "choices": [
+            {
+              "text": true,
+              "finish": true
+            }
+          ],
+          "usage": true
+        }
+      ]
+    }
+  ]
+}

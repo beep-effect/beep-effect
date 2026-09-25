@@ -1,0 +1,126 @@
+[
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/startup-verification.json",
+    "sha256": "197bb4c77915c463da395581e657b91a46bc275d295710e43f9760f8478e5a9a",
+    "privateOriginalSha256": "70d03ce31cdff6f9c35346f7fad88de452849092e1a0279573f75ece49c518ee"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/modeling-rest-review.json",
+    "sha256": "4876fa2a35ee58dc8ca0a1f143ecffee36456397d691d0973f20559ebc0bfa59",
+    "privateOriginalSha256": "fdd9824dd2c09a3554f4ea65ee8263d8619b06a62f5f7d65540fcd3199cb2129"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/capability-review.json",
+    "sha256": "110aa7570f6a91425da6b4c1276addbaffeba4156823a3e2b03920188eaf7da5",
+    "privateOriginalSha256": "89d7a6123f264e89aa80ecfb513ca6af6b940e4545c4f294565b2b8f1c1148a4"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/foundation-ui-review.json",
+    "sha256": "a1aa9d63b598bfaa890113743d2999017a1346c800178a9d72fd2aeeddb1cfd7",
+    "privateOriginalSha256": "bf449b95c00fa5fac1da82f9330f42d1f9538b16f572fff6958093c44072bb04"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/schema-a-m-review.json",
+    "sha256": "acfd259b055309145df1144e0929eaed4efd46543a21c163a06ff12f3fd1d68a",
+    "privateOriginalSha256": "b99bb36e2fc3158aa814d50cfd9f07db2810c9646458ee5d033bc2dc3320d29b"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/schema-n-z-review.json",
+    "sha256": "cd451ce2da4fd04e1d1ff20f1f1d6f57bfebc2faa767a0a57c41cd604a0d07b2",
+    "privateOriginalSha256": "cd451ce2da4fd04e1d1ff20f1f1d6f57bfebc2faa767a0a57c41cd604a0d07b2"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/drivers-a-f-review.json",
+    "sha256": "8f23e0fc788b42e2d90bfbc4a6949b2dd9b4700a1f664e30c837aaa981871e4a",
+    "privateOriginalSha256": "2a89803e684011bea720713b20404887aa8f5ffe40bb4e1cdc4fac25be8c6e5c"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/drivers-g-m-review.json",
+    "sha256": "bae77696deb9bce1736095385374a13e0f4cac2e3a8ed5f59c959f8121a4bca6",
+    "privateOriginalSha256": "bae77696deb9bce1736095385374a13e0f4cac2e3a8ed5f59c959f8121a4bca6"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/drivers-n-r-review.json",
+    "sha256": "2583864fb5fad203d9eed940f53acb23319f1cb0343ebef38fe2b1b2e8c985fb",
+    "privateOriginalSha256": "f422613c9ffabef9dc0b973988dc81e9bdf1d1448457b14826b909dd0dc7611c"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/drivers-s-z-review.json",
+    "sha256": "8b3f2026a25efaae86c14d81cb538e8bd8e006c3dc74a9968f3b63a50b847c0f",
+    "privateOriginalSha256": "8b3f2026a25efaae86c14d81cb538e8bd8e006c3dc74a9968f3b63a50b847c0f"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/architecture-ecosystem-internal-review.json",
+    "sha256": "ad6cb78ab37b981ef8ce24019d5c563698df74600949212d33399a3d5ba233b0",
+    "privateOriginalSha256": "ad6cb78ab37b981ef8ce24019d5c563698df74600949212d33399a3d5ba233b0"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/drivers-n-r-stream-writer-finite.json",
+    "sha256": "c3623c3ffb36737967d1ea44b0fe191f240d5d740257524477dd4956ae066e4a",
+    "privateOriginalSha256": "0ec8ef8412cf079baf43fbacb8287c034ee239b59c84e6ce614bedf63b17d9bd"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/duckdb-design-clarification.json",
+    "sha256": "2aa3fd48af07c0f0ed26f81993a5be9faf582e893cc5e8e1fd74f365bb593e55",
+    "privateOriginalSha256": "02882a4da5526217a1ff1bd8d78222153686b8eff9f1c1ecfefa61e760a2fe0f"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/correction-set-review.json",
+    "sha256": "55c482ff80262b23b0afcdefc4beca5cfb781967f1d9bd41edaedc517b3e0070",
+    "privateOriginalSha256": "2bae9324d7ecff1337235eb0c947ad1b77475e8e520983615c06ce7c67e2cddb"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/stream-choice-writer-independent-review.json",
+    "sha256": "1ca41dcc09b8a1f56a39193766d6d65cd36fdccafb54c9c97ac6cee3306382f6",
+    "privateOriginalSha256": "67c7c6c63ce528d749b234aa8810e1efbe0a3a65fc2a121ebf620619d59ae1f2"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/parent-progress.json",
+    "sha256": "4fc0df2b4554cf423103237a792db2b7fd49895d96cd3dbc29e0397950e9b9e3",
+    "privateOriginalSha256": "10f93d163870295443f183417d66d10db63f8822fe2a40ec1be008ad5a95380a"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/provider-exhaustion.json",
+    "sha256": "0c9dffc028b2b5c1ae7310792080ebe3fc9967175db0b66e9dea902d9c1b8d72",
+    "privateOriginalSha256": "0c9dffc028b2b5c1ae7310792080ebe3fc9967175db0b66e9dea902d9c1b8d72"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/pending-inventory-withdrawals.json",
+    "sha256": "1dc5b8e00f55b0c99bec57e4acebdb1fc7baf1a37cc56e31b443502575e1955f",
+    "privateOriginalSha256": "761223c698fd781202afd5e0a4bf120abad8aa1874a467763d2b747dd66ce58a"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/proposed-citation-corrections.json",
+    "sha256": "6d1c6469085f523dafd685f083c93fd40026061e758ccd87796fc235a191dbbf",
+    "privateOriginalSha256": "a80647e94e6f86d7ad501b8b60ad7775dbb1c01b30f9a9479ac2c1f2a81f4b10"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/duckdb-proposed-design.json",
+    "sha256": "3c56ac9c198f80f4fc5c13eaef9d9b9843a9542824c7df7f153bebeb1d8a8fed",
+    "privateOriginalSha256": "0e2c5aa930ca084dfea73c93829760736e834a184d59d54fa460f7e41fbc08d8"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/writer-admission/bindings.json",
+    "sha256": "b26bbb3a59a04192ac99a4df1ff27848a3bbc8b67da0dc0d234f60327ea630a1",
+    "privateOriginalSha256": "2ceb0a9e2a0f4081dbb1e9bc7444769557cf41366108daaae2ff9334a1545537"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/writer-admission/r40-drivers-openai-compat-stream-choice-writer.design.md",
+    "sha256": "8f878ce720d802e4a4e4d821197ada189db185df653e0ff7b05dd6c2642f0111",
+    "privateOriginalSha256": "8f878ce720d802e4a4e4d821197ada189db185df653e0ff7b05dd6c2642f0111"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/writer-admission/r40-drivers-openai-compat-stream-choice-writer.proposed.jsonl",
+    "sha256": "e7b59a8fe66eab073142c4f2c56cdf40e57d73a9c7aa79c4e1c35262385fbb36",
+    "privateOriginalSha256": "e7b59a8fe66eab073142c4f2c56cdf40e57d73a9c7aa79c4e1c35262385fbb36"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/writer-admission/validation.json",
+    "sha256": "9c8aa1c31236d7f006dbbcc704724843502c10e72ea86d5e9029a3cb2b327407",
+    "privateOriginalSha256": "4bab224cc8dfb260f0dae726a6cb1cacbe1e967ff61bc30633a2057e6f751485"
+  },
+  {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/mechanical-normalization.json",
+    "sha256": "a53dc32311f5444b317c7a3b8d0a8be6a1bec82a2a3c67a446bf9be5b15591a2"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "lane": "r40-architecture-ecosystem-internal",
+  "sourceFiles": 114,
+  "seedRows": 3,
+  "executionSha256": "ad3cd840d7332b0eb13bb64d44f2e279f986a1d5a35922354a9a593058bd22b4",
+  "transcriptSha256": "d99f6229a225c6c8a45eeb288a8b380eff87a2957d328de3058976f69df7ec8d",
+  "disposition": "reconciled-no-new-records",
+  "newQualified": 0,
+  "newDisqualified": 0,
+  "coverage": "Transcript enumerates114 included files and scans all9 roots, schema/type/literal/sibling-state candidates. Parent source checks WorkItem independent defaults/env forwarding and complete Meta owner plus PG/SQLite independent patchers. Meta267 is declaration; hasDefault273 is field, no anchor correction. Serial/identity can supply database default without default payload; no E3 narrowing.",
+  "P3Credit": false,
+  "dryCredit": false
+}

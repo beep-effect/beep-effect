@@ -1,0 +1,1495 @@
+{
+  "kind": "r40-modeling-rest-reconciliation/v1",
+  "createdAt": "2026-09-25T10:49:46.685957+00:00",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "scope": "Bounded primary evidence reconciliation plus complete seeded-owner and non-TypeScript supplement; no P3/dry or implementation credit.",
+  "disposition": "reconciled-with-one-proposed-existing-D2-withdrawal",
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/lane-map.json",
+      "sha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/frozen-inputs.json",
+      "sha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-modeling-rest.execution.json",
+      "sha256": "c0fbc02fc64541b4a9549f3fe2a6ea7ca7e1b17a7b0b4e7dc46f3314985429a8"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "private-evidence/boolean-creep/transcripts/refresh-2026-09-25-r40-main-5bb775/r40-foundation-modeling-rest.ndjson",
+      "sha256": "20839dd66db4e03f4f0e1c170cd85eff0a2887eb9dd3425fa908a6e925454253"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r39-modeling-supplement/disposition.json",
+      "sha256": "250a6f81e4fa0eca8bce8e1486e44f52f4e43b697e5abc40e89f68405ef61839"
+    }
+  ],
+  "counts": {
+    "roots": 11,
+    "includedFiles": 177,
+    "typescriptFiles": 175,
+    "nonTypescriptFiles": 2,
+    "seeds": 25,
+    "qualified": 5,
+    "disqualified": 20,
+    "primaryRawRows": 0,
+    "primaryEnumeratedIncludingExcluded": 187,
+    "excludedGeneratedFiles": 10,
+    "proposedWithdrawals": 1
+  },
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+      "sha256": "7a815ef355d229d005ffc62f836e1ed222865d7cd92380615a69a371f9be0956",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "sha256": "7a9ca39b11ca3f85d426f826392150d4874d2a34c63c1b0f689906f676e3eac2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.contract.ts",
+      "sha256": "205def4b8f71e228e70f47419f78f3407df7c1e03631d290d35828b24b0f6432",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.foreign.ts",
+      "sha256": "22c7108ff178569695dd8efe91d712d45836efef364158084f1578e259d57b4b",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.form-control.ts",
+      "sha256": "34448166f2c8a7194399595e868a537be17ac531b73756d1c344c3488efb2b5e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.nodes.ts",
+      "sha256": "bf1664dc3b7b7f97902931c58fb24efc3e4ab784ac7ad7fc295e163c78fb1c8f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
+      "sha256": "4af40842772dcc9b62430f626d37ba060a4b65e99b518aca958b761133136a91",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.script.ts",
+      "sha256": "14ccd96b063ac336ea81fbfa4c7b2e168acf9ecc5e993798edc1eeb3828a79ff",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
+      "sha256": "83aefea28353387811da26bc4f3e2bb07ad101689ac2a8a93906f47173cc0c4d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.source-size.ts",
+      "sha256": "1497140cc5912f0c87adafb09beb700752a99c94c4cd224c4a9e8cb70d7e73a9",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.srcset.ts",
+      "sha256": "17302bff4a21388052dedbbd6a3fa909be57e1b5a634bbbb200d98fd8716384f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Html.ts",
+      "sha256": "1b5930ab143cc927004c2b187252942296dc1fe81a958f83a09fa15f80978507",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/Version.ts",
+      "sha256": "63eec98eeb5beda699aadc3ef34fa12e19f3b9f30b01d5fe69eee3deb514bf01",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/index.ts",
+      "sha256": "95dedf64877863567cd2ded17968a5e55b644c85e230d5eb4a7c2ceec4d2eace",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/Html.ascii.ts",
+      "sha256": "69090172a6f3e90946e1272369b19b36e71bd618b209ff7cadd6a7426aadd830",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/Html.language-tag.ts",
+      "sha256": "67d07b2dfe0889008daa52c275a03a0fd605c86e43d2d272dbad59ff71e92402",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/Html.readonly.ts",
+      "sha256": "e95fc066f967f4059017a344192622802fdf43ec1016b771ac7c66b682c0bfe2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-authoring-invariants.ts",
+      "sha256": "f77634f42c78842a2c55e8fdc19f7ec449f7b7dcba0d3d4448d03207bc53a57b",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-boundary-invariants.ts",
+      "sha256": "369c6e31581d3329bcc7374b44458763094b189f1dace7cbe952ba85740e836d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-contracts.ts",
+      "sha256": "d6f28cf31d853061edd10c16642319b098a344ff85e89a243dc74ce2045ba122",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-profile-registry.ts",
+      "sha256": "f5068424097392c793f602f80369b23e09a0a7069540c37ba2e788b81ca5ac32",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-registry.ts",
+      "sha256": "cf48bba3c849d14f3a7f352e0e61139b5451fd5c0592341720cf0d1f0daee58d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-source-registry.ts",
+      "sha256": "639d9a5fc6d24aabc432d0a56cffcc1c10bd405a73cca17e10ed8e8ab0053fb0",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-structure-invariants.ts",
+      "sha256": "430fc49ce0192348c3f046a8ba2267bc50c0c8e75f92135a73979a2ea30558b9",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.heading-conformance.ts",
+      "sha256": "7b7af8a35eb7a71d18634fe855a125ab1604933744ac39d2dd6c86cb22d9f0c2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.policy-conformance-registry.ts",
+      "sha256": "e003a54e0a918ee4fc6c48ff5487344c62cea961b1f66e4317cabba27a88ca61",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/internal/conformance/Html.script-conformance.ts",
+      "sha256": "7a1aebbc8b17c5d64d2ef6acfff629f5fe211b6e83984b57f58bbd840f0d8390",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/html/src/whatwg-url.d.ts",
+      "sha256": "3fd1152dd06a14a810c482f1fa4a1ea8af04d795edc565cb78c11016096cd4de",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Curie.ts",
+      "sha256": "260e8f9c3f8772b87a347e5f9c0c5919e73ffc3f69b1e55b47d387f5c92ff73c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Fibered.ts",
+      "sha256": "388817acc0eef963bc3442d02a6bf4cf397f80ae8e264a1f88185d5dc702471c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "sha256": "2882e2c41b1c4912724d4074eced0c544ca644c99b4866b535ca7dd073430348",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
+      "sha256": "eaa2ff391ba6acc06b709348707acba84d59baf992e9d391df45a232930b558e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
+      "sha256": "4c7e8c688051a66c1b44b0cceb20c4ee6936dbdd23ee33e90f16b2524f2bae72",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Vocab.ts",
+      "sha256": "bd494a2fd47635f0d00987326a1d4f50919714f077b1520352c4e81fc51f7094",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/index.ts",
+      "sha256": "99b8275ca8418b415da062990d5c14aacd4a658b9ddbecc67739c4e685a1e8c3",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/packages.ts",
+      "sha256": "74cefc595762207772dd33a694b2631784c14b30137f9727ae2cd4f6d7262535",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.behavior.ts",
+      "sha256": "d0769e94f6c0f57f95dda4a84ba109fd33af86cc42f45342e1c1fcda0125b91e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+      "sha256": "8b3beab4fe942c8bb0b4eb09943884abc57fba3f4f6920a0e03f6707a5b0d389",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.conformance.ts",
+      "sha256": "271a2c8f36835530a8e9d29b6ab63b6bd7d939b4077456794ed5dc14174493a8",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "sha256": "c81ecffe8adca84add1e1f1659d5a4c4a054e5c0a255ab3bf0d1253ad86debe6",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.normalize.ts",
+      "sha256": "0806484b23cb44b2d9a65d9e030a6855ed447dd9608506a08debef6c621c0f5d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Version.ts",
+      "sha256": "b28867edd74378d4a9f2215378a908bc7919e5b974313ab8e38a32d761012056",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/index.ts",
+      "sha256": "ecadc5621a9b241ef54140f67dbd3a9d157c06f606416a2099994d4651866ba2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.conformance-registry.ts",
+      "sha256": "18b3a1d1844e8769b2761bb9412fafaf74ef4ddb0491739864b2e670879f42d9",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.strict-invariants.ts",
+      "sha256": "456395f4911a2d56367bafac38ef5f27d4113b8c88e05e5d4741b3f50a9ee329",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.behavior.ts",
+      "sha256": "bf50b67f1b10ba07a01f530d4cfafbc8382654701041a5d789d0a3f1bd323232",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
+      "sha256": "364d900c5a3f88fd7d7abcbd01d0ab59070bd24e931d97373d5fe79e60b309f1",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "sha256": "a6af6dc79755114c2bf347eeb7fa65b779f7f6891f9fd9b43689d4317c41960e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.html.ts",
+      "sha256": "fe48c8c8acd5023398d76eb80af2964b38bfcb7446c9cffb6824b6e88408b322",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "sha256": "0887f65318d5ecf71eee9eefe8a2ef8ac85362a33ccc42aa5d49f32ed1167371",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.render.ts",
+      "sha256": "4932551b6eb2af215f4c236ec38da582fa062c266307df0603f8ea0a5779b685",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.safe.ts",
+      "sha256": "8752ad8b63d4ca1a498afc468f52700b43030f0111f2ae53512fe9ec2518b101",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.ts",
+      "sha256": "c78a4605f6be4832d3faa66679a923afe7d457ff7637cf524fa4fa8dbf1845c2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Version.ts",
+      "sha256": "ee59fbf3f61b86e5ae9eeee22d0e177b82136e1a6b8fc4cf0c6eb695851b39b4",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/index.ts",
+      "sha256": "2e4845d19208155895204ba33cb4ee297436429d9c6a89d3ffd423238eb23f1c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts",
+      "sha256": "7584ba35b3613a11597b853d220623c6ab64ad2f31d281efb8b004294d237659",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts",
+      "sha256": "065ccd15f561f90a5cc14d925b4675272c079caf5f288f64540eb48bfccb5499",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts",
+      "sha256": "9712d7bdbb486aec36804646b0a3d509aa6fbdff67f664bc6f488948d08301b1",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts",
+      "sha256": "10da246a14c3abca4aed033064afb41f316915c4a1bc75ce0fba0181afe0ac4d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+      "sha256": "03369384f469aebb0e3007d0e5d4e0b47cc4d082fcc8afb307565a40fc5520ac",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+      "sha256": "01d7f123c1de051f41a3f92bb0d089188e1ee477082f97e4a33f74a9f97a2c92",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/index.ts",
+      "sha256": "fd66d04e3110b1993f1caad53479624a5da3542414c2b9651e475929b21c8533",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
+      "sha256": "90c061179852f75fab9e8a513b5fa2ac869ab1e76c0d4ea3a8c984bd9fe4baa6",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+      "sha256": "8fe7b86a40e3c79b6890c20c2be678bce426b348bc0303d6a41fdf42c8dc083a",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
+      "sha256": "4402536f94cfbaddb76ced09419fb720985a1f8abc747c913917cffbe3fa304f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
+      "sha256": "9a6cf01b9151c48574dc511aead83038d081b19e2bdfbd9e430818eb52b3f9df",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts",
+      "sha256": "95529fd856f0a264775c08e26c3d199c1d833c64313b2ae7eec291f98ab6ec9e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
+      "sha256": "90f2381d441949e852111f83bc673ad17b61591ee7825cb00d13158d8ff38fa1",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Similarity.ts",
+      "sha256": "8ce4f3f9058c7fb163c094a68539cdc0ac5539ef806cb820fa0324552c48e719",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+      "sha256": "d7de63315dab330e3e994f647cf1de228e4acb7f4052b61e1238f3c40eac7e2d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Vectorization.ts",
+      "sha256": "e4df8d50609cb7b25ab76b5ecbbd055716731bbffd2f6f73bd9d03114e5bc7a6",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/index.ts",
+      "sha256": "e4324d0146887c571eb0863ffcbfdb3bf5edff51004a0ff3d26ee96b315665fb",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "sha256": "f6654e0097ce711dcc191b953b11547c58092c4a8fb47d743f31e082c38ce947",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "sha256": "3561d46f36ac5a1fc655c250edbe5211c6af18713c912b03ffd971d0b3eb8256",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/index.ts",
+      "sha256": "337f96ff0dfbf0c3f23acb54ac3c9f38d5451eba4b7f036921c7ab3692cd990d",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+      "sha256": "9e67b67e15a2e425af0cfc0833c3a54d82ab5d59c484d8c4ee1807941f85e4bb",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Handoff/index.ts",
+      "sha256": "342a288c42c9aca3ecddf92dbcba42e7bc2d165ac77768b1eccff33862ef1d2c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/IdentifierText.ts",
+      "sha256": "3fe5724cfeb22e0bafa6c050b161623a8622f4bfdf223ded6aff7f9b80bb1a35",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
+      "sha256": "c2c80e927bbee6bdcd2e2298249845f21ec7ec667ce6305218efde1b90998808",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Ontology/index.ts",
+      "sha256": "42fb52d9a60bea30a80619fcb5cb38160d0d46e82b9f3971b6bc5c33353d1ff1",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Composable.ts",
+      "sha256": "08233a56d6e42e83f8e3b2aa3f2e6e14b8a67df322cfa991ea9ca540bc9612cd",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Definition.ts",
+      "sha256": "94ba33cd1a86243916be0a001d7a20a6df24582aef6ded79889dca10f20c85c6",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/index.ts",
+      "sha256": "e1cb39b41fb07c4f7f46aabc92bba1928da1c32da1161ae92313cb693a7ee877",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/PathText.ts",
+      "sha256": "82dc0eca2c3cae2f795e4088ff03c17d86113f63b1d558b5d4d6270fc1c14f99",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/QueryText.ts",
+      "sha256": "f7bb42f45217272ca103b3378a94012002b749c0da67e70b562782cccccb7f53",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/VariantText.ts",
+      "sha256": "ca6ffdfc238221d706663957091eda6733dd92f8a205d2337eddfaaddb5a87c5",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/index.ts",
+      "sha256": "50ae977068b5b4ba5f766aa3f8eeca32fa0e6421cd31ce2fc7a126a7bd1f54d8",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/internal/numbers.ts",
+      "sha256": "d591330648c14f940ea6c5bdc1dd283cacf3e81aa173e1988ddd3652a1bf92ef",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.assembly.ts",
+      "sha256": "c8ac1ea3fd39a8e79aed7a59e66cae1cb75a25451b20105e0761ca9d26a36ed7",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.markdown.ts",
+      "sha256": "8ad6542769a46383ef89519c4d48936ef10951b2a3d43670b35c0b85f5f56dc3",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
+      "sha256": "5dcb0c7c1c03d90571b77099140dbbe851f57ae5f1d5883934aa35dd743e734f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
+      "sha256": "52e49f58df0ee24fae86432c9ce7a2aac519026d2c7bc14bda51f51e2217147e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+      "sha256": "d5f38113171311a923258533ed3d6e7a2c6dd2020bba559d3afa5930b860873e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "sha256": "e12bed696f93fc3d9cd7c617eae5780b68a8ad4b9b403aa9583ef8ba5383f332",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.seed.ts",
+      "sha256": "9b3671ad64a49b4a89227b36413cbec9067e49a328eff8f096a8e370bfc31f25",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "sha256": "e4c1f8b5c6dd99c33d3256046b76dc5cb271bdb1790ada4e3262049d58f9afb7",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "sha256": "bcd04988ac889746773d819476c9cb0efcc1083fd5cdbe46301940a9dad15339",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/index.ts",
+      "sha256": "dc0122bc7d7c68359a45b95a63ec2e9459950e47694dc0694a618ff5a8f9c854",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/internal/Fold.ts",
+      "sha256": "ba8998082f776ad5c86442018bb1d9500088f82dcca3019e5d29ef52f4dfc240",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+      "sha256": "9b20ee1b45ba8ad6b77becf135ba6450ec809850db5ceed7a45861cd645236b3",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
+      "sha256": "299d1c7e88a2744b3777186ecfa2a6e35972dabfcf085ab47c39a74fb152a08e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+      "sha256": "370b9be702b0dea978f941f07290155d2fafb9708f35e0f0e54b4a5183843116",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "sha256": "79023a18d6a52cafb98ca31edf47294a12c46161df7dc00007b7697e53d34646",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+      "sha256": "fa52134f6b91e898ee2e30863bdcd7cd26f656b427ef68e245af6397a974cc7f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Version.ts",
+      "sha256": "7e065c31b861c5fd3d2ae2450d5e842ad4e53edfef47a6e54a37a35ad8296484",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/index.ts",
+      "sha256": "7dd2f8f49b04df038647b589ba44429e7fe2e5c001dd3fccef3e2b163b54d589",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
+      "sha256": "6eb5ab120b1e04dd0ecbdec0fa9c64fcddc40f15f2ea0e1960ea9a9ba77d026f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.table-caption.ts",
+      "sha256": "9a119cadc138e5a5335173b7e63d3b168279690df5ec34012117b9f4b14d0fb2",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/internal/conformance/Pandoc.conformance-registry.ts",
+      "sha256": "796ea5aa9aed4f05d87c0f310d9cd3c6acebd1a48d2390c38e96586942052df9",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/SourceTextIdentity.ts",
+      "sha256": "144d4ae61dd77dc9aaaf1b93fa7259f1102bece374a1486fce87db98f45ccff7",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+      "sha256": "5205c15bd2eb4b1bff3c0599ba8b502eacc7ca7ec1d413647c3565a17a94542c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "sha256": "e96a7eb75d15d00caf7aeeaca12fbb7eaf5e8b38e55a35e7b3664b2f38951af0",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/index.ts",
+      "sha256": "8a4c106e67bebaeab80f64a0faec3cb06f128700c451cff739cbe0e0c7cfc0ff",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
+      "sha256": "0ff959bde4112e5b862400d44b90444c4834cc89373300174a122f5cdaa97841",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Evidence.ts",
+      "sha256": "eb94d80d006711ff410f5b72c7b237d56cccca6ee776f5116b43660b28e45168",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts",
+      "sha256": "cca65c2d0212564cbc3c27b0bd82631edf1372ef51e43a7ddebcf3731bb5167f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+      "sha256": "f8bffa891d006c2301ced3d753ca18ea4eb323f1e581ab754608323c6469e815",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Prov.ts",
+      "sha256": "d3d8926eb907bdc9b9069c23ddf325298118777e2a41f2046793e6c005b13fc5",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+      "sha256": "f8492489b289d54cc63a02be554c94cddf30209b1e81c1c5223ab895d064392f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+      "sha256": "d95c8c87ea2b5311a3135678b5e87654b650a4a2cba88ae074756e3298949288",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts",
+      "sha256": "b50963b25ce525604ca30a08da133157269f06c054a6d0efbcf037af9a4f77b3",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
+      "sha256": "dcafc17928649d28aac040c645bad32cc0d78c01b198aae46355c9621e0e6edc",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "sha256": "9c478dbf1106e7d59c946eef56c9fe8bc1ca6fe4f672cc658e3bb9405d2a5fba",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/index.ts",
+      "sha256": "89e4bfbf5eedc754b511305776cbb20ef22dfeda701738f809d79eb1d16b2521",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Uri.ts",
+      "sha256": "6989c0c82f1b0adcced2313a2bf0ab554cb5d05657583765525ee35c0e722f1f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Version.ts",
+      "sha256": "0af5745de976cd639dc1b222e9862e78cab8774ea4f57c5fa4322d3c4d836d2c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Dcterms.ts",
+      "sha256": "39389f4a1329126672fd64f00a72b2c30a6c39651a16fd301fabdeabb5ab3ffd",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Oa.ts",
+      "sha256": "49622398e4063700adb0d267fcb00947b1efb8fb05ee8ca0df2c52ba5e213ba5",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Owl.ts",
+      "sha256": "026c0feb279825c0f46ee7c0678e7a6ed15b4ce4d542aa524216663d52814487",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Prov.ts",
+      "sha256": "cd64e3a452e22c250c74afdca9491ec0ebd7d5cd530d95c43af1d6b5bcc34d2f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Rdf.ts",
+      "sha256": "27fcba81e42d5b12099afe9e3d93b725c569dabcdc2eade7256c01d215168a3a",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts",
+      "sha256": "b400de4973322cc2d6643f8d7cdcb1c670eab8aad5169aa14f468f022e12813b",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/SchemaOrg.ts",
+      "sha256": "375beb9cab7b202fbd358497ef6962a9989e0f39dbfb68b88e0ffa6500acf29b",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+      "sha256": "b7ffa62b6907bb9bde370c4ceaa3326ea87a326519be10e87f9624249418262c",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
+      "sha256": "bba84b725c9157bd960da9a38e1d07be01943b47c68f8f4135f97cac9b461287",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/index.ts",
+      "sha256": "35869cb5efb804c335ef6670f93d5f78d0a7311bd52023c2e250156cf450cf2f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
+      "sha256": "34d7dbc3eeb319b433668340983f76f0f101d2a4624243c414c4c9791c40b353",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
+      "sha256": "7340d2e54114eb6989d235140351ede23250812368298774c119ae6d76108f13",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/Gate.ts",
+      "sha256": "54212ff391b5b4e819aff33455b08e9294a5219aacf01d01ad361fbecb76b811",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+      "sha256": "f833a4c49c52f9462ebb29ef080b73558d73b5b3eddac2e41c2dfac841b2fe23",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SchemaReference.ts",
+      "sha256": "3179b3b20a638d34a9fb58bbe7dd071ffef9624e55d08c550d47c14844a31668",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts",
+      "sha256": "eea17db23f52e2a6bb8c1d79d965aef73ba02b4422853690ee742970f7773785",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillContract.ts",
+      "sha256": "db8c33eac91396920338d50da8e31b376312c3c64485f261d77fcc7bda0e390a",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillProjection.ts",
+      "sha256": "a5ce2bcf6169d47896e09cab8ff1837cf94adec0ce826eee467852d9b440e478",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/index.ts",
+      "sha256": "33df56f08794cb3e8bafe58dc8674d79c567682daef75dbaee17c28ed100cdba",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Array.ts",
+      "sha256": "cd4efae08c43221bfe8a0e1f040e967b449c71e00a48fa8bac6b40a9cc15f819",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Bool.ts",
+      "sha256": "2d0cb83138bb837fc631e3de26c1877ff3a1d330c0a086e143bc0e5a57f686f5",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Data.ts",
+      "sha256": "50e3a8152bb913a72e44b94522e8a5cda44c787c09b8f18892b64acae8f5728e",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/DateTime.ts",
+      "sha256": "9b4b4cf39319c34753e98375f9e5641e8fe44ce497647a61745eb6512d7b8abe",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/DrainableWorker.ts",
+      "sha256": "5116602f407b472198bf5d3d5beb0fdcdfdabf512940af4101466a5ca3d0d1c8",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Equal.ts",
+      "sha256": "bf8bbbcedc77ba143062f8878c1ebbf07797da5ba7d0c5035fec15dd9a37f75f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Errors.ts",
+      "sha256": "5eca992bb642129812e52fe2151a77cfb12b97192220ed39bac8811ed50d1ec3",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Event.ts",
+      "sha256": "e664c9c5b77889e12bb6daba8b549b7088f3c58ee17271e27cf35c0478bf2ced",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+      "sha256": "7a717a315c615470ae0a83a21b17cf04bf93c2e47e9c664331eeed8303920744",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Function.ts",
+      "sha256": "9ce6fa6b796272f01bf9d78f493095946efbdcc2d985832847fdb3d86566dfec",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Glob.ts",
+      "sha256": "7df7185ed6c7bfd9e27affca38542fc814d2a9eeb48e168e243b299781550826",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/GlobalValue.ts",
+      "sha256": "3000c0ba1ae0391c41037f2bd4a47077733aae18a3ffeed7872be9c810ede900",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/HostProcess.ts",
+      "sha256": "07f481c4dff1a9dd3e4885e19bd0021c08683d7fddf61b1c9e80b848303aafc0",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Html.ts",
+      "sha256": "117d2d238b7ce64ab5ce862420026155fa4372674ca3cdf0cb7810e125463c17",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/NodeUrl.ts",
+      "sha256": "4fa5b1dd503bb68637b1f137a4c2645909267ac2d22cd24448867c4a0a94fa55",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Number.ts",
+      "sha256": "54334fb347107ffba81683f797163e427e37beb2a280b6b7a349c5aacab15600",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Option.ts",
+      "sha256": "9058fcd6349a90f2ae7949250d5e6a1a324c2b140ada7d0f0cfe78e6b1d549c1",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Path.ts",
+      "sha256": "15a6658651d9ae45b384a9d0458e99fafc38c703beddb4c99e86783a8ec802d5",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Predicate.ts",
+      "sha256": "fd36482dfda8d5c5ea016c47b77820b8ff1fc01b9f94852c187fab69b381f028",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Random.ts",
+      "sha256": "b445a371a4a8f58d07e74b95d61cdbcfa2f911978adc1785f80e59c6c80fc660",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Record.ts",
+      "sha256": "18c810d15e3b5bf783bd4ae2f34ff951db32e857b59a6917839620e8d5aee9bf",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Schema.ts",
+      "sha256": "7019b6764203bea8caaee4d0d950b8b441520855242189ebeba703bb996571ed",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Str.ts",
+      "sha256": "dcda77011874da44ebf787b69002949862b4c4c6e676e77eb6c9ef8c6ee889f9",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Stream.ts",
+      "sha256": "3652367254d08dce04e54e20741277cf6e958a851ccc5838c612e0d3f4a86c09",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Struct.ts",
+      "sha256": "b292dc3682481789777eb0598672eb5a3692761ef795b7c131ad67db31165c47",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Text.ts",
+      "sha256": "500b8db0bc1e5f3627f69fa12d911049feeaa89acd47fbca69dcacf5381c00ab",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Utils.ts",
+      "sha256": "970021956007b94933ad8588b23bddfe34abbf6e2eac07b71df918a281a21a0b",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/index.ts",
+      "sha256": "bb0dad9961c5d8d878ee930b61e93c87412d53877e1a75638ec507ed70e61d76",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/internal/StructPath.ts",
+      "sha256": "6857b1ee91cac3b66ef731d719439f5e5aab0e2ff12c706fb4a3c29c2329527f",
+      "matchesFrozenAndSourceAndR39": true
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/thunk.ts",
+      "sha256": "59c7811c8414466c9ea96af2e2103039fcb06731e9826a064cfb9851e70aa876",
+      "matchesFrozenAndSourceAndR39": true
+    }
+  ],
+  "designBindings": [
+    {
+      "file": "goals/boolean-creep/designs/html-select-child-grammar.md",
+      "sha256": "c58454cf521486be6f3ea653824901a3422dfc3582bd2b4a8eb35d65c904d109",
+      "matchesFrozenAndR39": true,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      }
+    },
+    {
+      "file": "goals/boolean-creep/designs/html-dl-child-grammar.md",
+      "sha256": "6f9e612920de3a49801f94abf7d6aadbebc4358839cd6809a4dbcd5da36a841b",
+      "matchesFrozenAndR39": true,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      }
+    },
+    {
+      "file": "goals/boolean-creep/designs/html-datalist-child-grammar.md",
+      "sha256": "6e5857d0379e6602c027dd434daa5c2ca4de9b466b738675c1ad01e8e5fc9f8e",
+      "matchesFrozenAndR39": true,
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      }
+    },
+    {
+      "file": "goals/boolean-creep/designs/html-img-sizes-disposition.md",
+      "sha256": "6b41d50342b07d7bfc90205e1a2c8e666bb524fbdf1fff3bba347de2d8315ec2",
+      "matchesFrozenAndR39": true,
+      "cardinality": {
+        "representable": 64,
+        "legal": 20
+      }
+    },
+    {
+      "file": "goals/boolean-creep/designs/html-link-imagesizes-disposition.md",
+      "sha256": "cb58e03337163903f6b537916ebc2ab409bad309de055f176b08b6dede17e85f",
+      "matchesFrozenAndR39": true,
+      "cardinality": {
+        "representable": 8,
+        "legal": 6
+      }
+    }
+  ],
+  "seedLedger": [
+    {
+      "id": "glob-options-scan-flags",
+      "file": "packages/foundation/modeling/utils/src/Glob.ts",
+      "line": 85,
+      "symbol": "GlobOptions",
+      "members": ["absolute", "dot", "nodir"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independent glob scan toggles; docs treat them as optional runtime flags and all 8 combinations are legal."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Optional scan options absolute/dot/nodir are independent."
+    },
+    {
+      "id": "resolved-glob-options-scan-flags",
+      "file": "packages/foundation/modeling/utils/src/Glob.ts",
+      "line": 108,
+      "symbol": "ResolvedGlobOptions",
+      "members": ["absolute", "dot", "nodir"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Resolved copies of independent glob flags with independent defaults; no exclusive write or implied phase."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Same independent scan axes after false defaults."
+    },
+    {
+      "id": "rm-sync-options-flags",
+      "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+      "line": 124,
+      "symbol": "RmSyncOptions",
+      "members": ["force", "recursive"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independent node:fs rmSync toggles; force and recursive combine freely (example makes both true)."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Node force and recursive are independent API options."
+    },
+    {
+      "id": "nlp-token-annotation-flags",
+      "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+      "line": 234,
+      "symbol": "Token",
+      "members": [
+        "abbrevFlag",
+        "contractionFlag",
+        "stopWordFlag",
+        "negationFlag"
+      ],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independently observed wink/NLP token facts; a token may be any combination of abbrev, contraction, stop, and negation."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Four optional Boolean lexical annotations coexist without a phase constraint."
+    },
+    {
+      "id": "allow-list-url-policy-relative-flags",
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "line": 125,
+      "symbol": "AllowListUrlPolicySpec",
+      "members": [
+        "allowRelative",
+        "allowProtocolRelative",
+        "allowBackslashRelative"
+      ],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Docs at Md.escape.ts:103-105 treat relative, protocol-relative, and backslash-relative axes as independent; defaults are true/false/false at 125/128/131. isAllowedRelativeDestination at 404-407 ANDs allowRelative with the narrower flags, so allowRelative=false merely deactivates those permissions rather than rejecting a stored combo. All eight configurations remain legal policy."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Three Boolean policy defaults; disabling broad allowance does not invalidate independently configured narrower switches."
+    },
+    {
+      "id": "html-standard-global-boolean-attributes",
+      "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+      "line": 1867,
+      "symbol": "StandardGlobalAttributes",
+      "members": ["autofocus", "headingreset", "inert", "itemscope"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D2",
+        "note": "WHATWG global boolean attributes on the HTML AST overlay; independently present presence-booleans mirroring the specification, not a domain phase."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Withdraw recommendation: four Option<true | \"\"> HTML presence encodings are not boolean-typed members. Full spread EnumeratedGlobalAttributes has string literal domains, not Boolean fields; remaining fields strings/integer. D2 does not waive recall."
+    },
+    {
+      "id": "html-picture-source-sizes-auto",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1082,
+      "symbol": "inspectPictureSourceResponsiveRelationships",
+      "members": ["hasSizes", "followingImageAllowsAuto"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "hasSizes and followingImageAllowsAuto are independently observed at Html.conformance.ts:1082-1083. The width missing-sizes check at 1085 uses their conjunction as a filter over free combinations; later density/auto-uses issues still run. Both-true, both-false, and mixed pairs remain reachable."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "hasSizes and followingImageAllowsAuto independently derive from source and following image."
+    },
+    {
+      "id": "taxonomy-loader-manifest-presence",
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "line": 527,
+      "symbol": "decodeLoadManifestEntry",
+      "members": ["hasLoadKind", "hasLoadStatus"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Local Option-presence projections used as a priority match; combined-true is the alignment row, which carries both loadKind and loadStatus."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "kind and status presence independent; branches support both true."
+    },
+    {
+      "id": "identity-property-descriptor-flags",
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "line": 1976,
+      "symbol": "createTemplateIdentity.defineProperties",
+      "members": ["enumerable", "writable", "configurable"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Repeated Object.defineProperties descriptor toggles; every writer in createTemplateIdentity sets enumerable, writable, and configurable true together, and the ECMAScript descriptor domain still allows the other seven combinations. Anchor moved from 1989 to the first descriptor at 1976."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "ECMAScript descriptor configurable/enumerable/writable are independent even though this producer sets them true."
+    },
+    {
+      "id": "html-select-child-grammar",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1923,
+      "symbol": "inspectElementOrder.select",
+      "members": ["traditional", "customizable"],
+      "status": "designed",
+      "classification": [
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 1923
+          },
+          "note": "Both predicates derive from sequenceTags; traditional permits only option/optgroup/hr, while customizable requires a leading button, so combined true is impossible. Empty, button, and div witness the three legal outcomes."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "completeOwnerDisposition": "Traditional forbids button while customizable requires leading button: exactly three pairs; shared significantText/content checks remain independent."
+    },
+    {
+      "id": "html-dl-child-grammar",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1798,
+      "symbol": "inspectElementOrder.description-list",
+      "members": ["direct", "wrapped"],
+      "status": "designed",
+      "classification": [
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 1798
+          },
+          "note": "Direct requires nonempty complete top-level dt+/dd+ groups; wrapped requires a nonempty div-only sequence after script-supporting filtering and one group inside each div. Both derive from the same sequence and cannot both hold (1798-1825)."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "completeOwnerDisposition": "Nonempty direct dt/dd vs div wrappers mutually exclusive; empty/invalid both false; significantText veto retained."
+    },
+    {
+      "id": "html-datalist-child-grammar",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1895,
+      "symbol": "inspectElementOrder",
+      "members": ["optionMode", "mixed"],
+      "status": "designed",
+      "classification": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 1896
+          },
+          "note": "mixed is assigned as optionMode && a direct-child non-option predicate over original children, so mixed implies optionMode; FF/TF/TT are produced and optionMode=false with mixed=true is unwritable."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "completeOwnerDisposition": "mixed implies optionMode; malformed constructed AST remains supported diagnostic input."
+    },
+    {
+      "id": "html-media-child-grammar",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1858,
+      "symbol": "inspectElementOrder.media",
+      "members": ["hasSrc", "valid"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "hasSrc at Html.conformance.ts:1858 is src-attribute presence; valid at 1866 is the ordered-child scan. Empty orderedChildren validate with or without src. A source child with src set fails; source after fallback fails without src. All four computed pairs stay reachable."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "hasSrc does not determine valid; arbitrary children produce all four diagnostic combinations."
+    },
+    {
+      "id": "r3-foundation-auto-button-command-presence",
+      "file": "packages/foundation/modeling/html/src/Html.form-control.ts",
+      "line": 264,
+      "symbol": "resolveAutoButtonState",
+      "members": ["hasCommand", "hasCommandFor", "parentIsSelect"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independently observed HTML facts: command presence, commandfor presence, and select parent. Match.when handles both-true as auto-command-and-commandfor; remaining combinations are also legal Auto-state reasons."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Three independent command/commandfor/select facts; supported combined branch retained."
+    },
+    {
+      "id": "r3-foundation-skill-completion-summary-bindings",
+      "file": "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts",
+      "line": 329,
+      "symbol": "summaryBindingsMatchRegistry",
+      "members": ["uniqueResultIds", "resultsMatchDeclarations"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independent coherence checks over a gate summary (unique ids vs declaration binding). Combined-true is the pass path; either check can fail alone."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Uniqueness and declaration agreement independent validations; conjunction is not phase evidence."
+    },
+    {
+      "id": "r2-foundation-html-foreign-entry-flags",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 2030,
+      "symbol": "inspectForeignEntryPoint",
+      "members": ["entersFromHtml", "usesIntegrationElement"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "entersFromHtml (root or HTML parent) and usesIntegrationElement (svg/math name) are computed independently at Html.conformance.ts:2030-2032. Combined-true is the legal entry path; entersFromHtml without an integration element is the diagnostic at 2033. Already-foreign parents with or without integration names remain legal observations."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "HTML ancestry and integration-element identity independent input facts."
+    },
+    {
+      "id": "r3-foundation-attribute-requirement-gates",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1348,
+      "symbol": "inspectAttributeRequirement",
+      "members": ["applies", "hasViolation"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "applies at Html.conformance.ts:1348-1354 and hasViolation at 1355-1364 are independent calculations; 1365 emits only their conjunction. A non-applicable requirement may still observe a violation, and an applicable one may pass. All four observations stay legal."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Applicability and violation independent; violation may exist when requirement does not apply."
+    },
+    {
+      "id": "struct-from-entries-property-descriptor-flags",
+      "file": "packages/foundation/modeling/utils/src/Struct.ts",
+      "line": 698,
+      "symbol": "fromEntries",
+      "members": ["configurable", "enumerable", "writable"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Reflect.defineProperty descriptor in fromEntries; configurable, enumerable, and writable are independent ECMAScript attributes rather than one domain phase."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Descriptor API independent flags retained; constant producer values do not narrow API domain."
+    },
+    {
+      "id": "r2-foundation-iri-ipv6-segment-facts",
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts",
+      "line": 306,
+      "symbol": "parseIpv6Side",
+      "members": ["isLast", "hasDot"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independently observed IPv6-segment facts at Iri.ts:306-307: last-slot vs dotted IPv4 tail. Combined-true is the legal IPv4-mapped last segment when allowIpv4Tail is set; middle h16 and last h16 are also legal. The hasDot && !isLast arm at 309-311 rejects a free combination."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Last-position and dotted-segment presence independent diagnostic input facts."
+    },
+    {
+      "id": "r24-foundation-modeling-rest-link-sizes-issue-flags",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1035,
+      "symbol": "inspectLinkResponsiveRelationships",
+      "members": ["imageSizesIncompatible", "iconSizesMisplaced"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independent HTML facts: imagesizes/srcset compatibility versus sizes on a non-icon link. The return concatenates both issues; all four combinations are legal."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Responsive sizes incompatibility independent of icon sizes/rel issue; preserve both and order."
+    },
+    {
+      "id": "r24-foundation-modeling-rest-recovery-budget-coherence",
+      "file": "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+      "line": 227,
+      "symbol": "RecoveryBudgetCoherenceCheck",
+      "members": [
+        "attemptsContiguous",
+        "attemptTimingsWithinBudget",
+        "attemptsChronological",
+        "consumedMatchesHistory",
+        "attemptsWithinBudget",
+        "operationsWithinBudget",
+        "elapsedWithinBudget",
+        "terminalReasonMatchesBudget"
+      ],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Independent recovery-history coherence predicates AND-ed at Recovery.ts:267-279. Combined-true is the pass path. attempt-budget-exhausted forces attempts==max only for that terminal reason; operation-budget and time-budget terminals still let attemptsWithinBudget and terminalReasonMatchesBudget fail separately."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Eight independently compared coherence checks, including terminal-reason branches; mismatches are supported diagnostic inputs."
+    },
+    {
+      "id": "r24-foundation-modeling-rest-gate-summary-coherence",
+      "file": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
+      "line": 317,
+      "symbol": "GateSummaryCoherenceCheck",
+      "members": ["passed", "resultMatches", "levelsMatch"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D1",
+        "note": "Derived blocking-policy outcome plus two independent agreement checks (verificationResult vs verifiedLevels). Both-true is the pass path; either check can fail alone."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "passed plus result/level agreement independent diagnostics; enum payloads not counted as Boolean."
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 987,
+      "symbol": "inspectImgResponsiveRelationships",
+      "members": [
+        "hasSrcset",
+        "hasSizes",
+        "loadingIsLazy",
+        "sizesIsExactlyAuto",
+        "missingSizes",
+        "incompatibleSizes"
+      ],
+      "status": "designed",
+      "classification": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 994
+          },
+          "note": "missingSizes is width profile AND absent sizes; it implies hasSrcset and excludes hasSizes, exact auto and incompatibleSizes."
+        },
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 990
+          },
+          "note": "Exact-auto string analysis implies sizes presence, while successful sourceSizeAnalysis is required for incompatibility. Lazy loading, raw srcset presence/profile and exact-auto/usesAuto control the incompatibility formula at 991-998; these determine the complete 64/20 bit projection."
+        }
+      ],
+      "cardinality": {
+        "representable": 64,
+        "legal": 20
+      },
+      "completeOwnerDisposition": "Retain six-member 64/20 projection: raw presence differs from successful parse; exact-auto differs from parsed usesAuto; missing and incompatible cannot coexist."
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "line": 1033,
+      "symbol": "inspectLinkResponsiveRelationships",
+      "members": ["hasImageSrcset", "hasImageSizes", "imageSizesIncompatible"],
+      "status": "designed",
+      "classification": [
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 1035
+          },
+          "note": "imageSizesIncompatible requires successful sourceSizeAnalysis(imageSizesValue), then absent raw imagesrcset or density profile. Incompatibility implies imagesizes presence, with all six remaining bit tuples reachable across supported parser inputs."
+        },
+        {
+          "class": "E4",
+          "cite": {
+            "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+            "line": 1044
+          },
+          "note": "Width-profile imagesrcset with absent imagesizes yields the missing issue. Profile classification is consumed before output disposition selection; raw presence alone does not imply parse success."
+        }
+      ],
+      "cardinality": {
+        "representable": 8,
+        "legal": 6
+      },
+      "completeOwnerDisposition": "Retain 8/6 projection: parsed incompatibility implies raw sizes presence; iconSizesMisplaced separate independent axis."
+    },
+    {
+      "id": "r28-foundation-modeling-rest-bun-glob-scan-options",
+      "file": "packages/foundation/modeling/utils/src/Glob.ts",
+      "line": 491,
+      "symbol": "scanOptions",
+      "members": ["dot", "onlyFiles"],
+      "status": "disqualified",
+      "classification": {
+        "class": "D2",
+        "note": "Named scanOptions object at Glob.ts:491-495 is typed Bun.GlobScanOptions; dot copies ResolvedGlobOptions.dot and onlyFiles copies nodir. BunGlobConstructor is typeof Bun.Glob at 276; glob.scanSync(scanOptions) consumes this bag at 501. SDK-boundary mirror, not a domain phase. cwd is a string payload, not a Boolean axis. Distinct from GlobOptions, ResolvedGlobOptions, and the withdrawn sequential entry-filter projection."
+      },
+      "cardinality": null,
+      "completeOwnerDisposition": "Actual constructed Bun scan options contains dot and onlyFiles; SDK D2, no producer-derived narrowing."
+    }
+  ],
+  "excludedGeneratedFiles": [
+    "packages/foundation/modeling/html/src/Html.meta.ts",
+    "packages/foundation/modeling/html/src/Html.model.ts",
+    "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/Dcterms.terms.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/Owl.terms.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/Rdf.terms.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/Rdfs.terms.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/SchemaOrg.terms.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/Skos.terms.ts",
+    "packages/foundation/modeling/rdf/src/Vocab/generated/vocab-terms.data.json"
+  ],
+  "coverageEvidence": {
+    "transcriptEnumerationLine": 209,
+    "completeTypescriptReadScanLine": 235,
+    "seedAnchorLedgerLine": 695,
+    "all25CanonicalAnchorsMatchScript": true,
+    "unboundedBooleanSearchLines": [767, 769],
+    "inferredBooleanSearchLine": 670,
+    "primaryLimit": "Nearby-declaration heuristic alone is not exhaustive; broader searches, current complete seeded owners, unchanged source bindings and nonTS supplement support bounded reconciliation.",
+    "nonTypescriptSupplement": "Read all90 JSONLD and34 Turtle lines. JSONLD context defines namespace aliases only; nodes contain labels/IRIs/arrays and no Boolean typed values or Boolean coercions. Turtle has IRIs, strings and language tags, no Boolean declarations/literals. Do not flatten nodes or fabricate presence predicates. Full24-line whatwg-url ambient declarations have branded UrlRecord, optional baseURL and Boolean-returning function, not Boolean data owner.",
+    "historicalReuse": "All177 included source bytes and5 retained design bytes equal exact R39 source snapshot; historical ontology supplement bound as additional evidence."
+  },
+  "findings": [
+    {
+      "id": "footer-counts",
+      "severity": "evidence-correction",
+      "resolution": "closed-by-this-receipt",
+      "detail": "Footer187 files/26seeds and additional seed JSON are inaccurate. Manifest177files/25seeds; primary enumeration includes10excluded generated files; only2ontology seed files are included."
+    },
+    {
+      "id": "presence-valued-html-attributes-outside-recall",
+      "severity": "inventory-correction",
+      "resolution": "proposed-withdrawal-for-parent-integration",
+      "detail": "SPEC33 requires boolean-typed members. Full StandardGlobalAttributes1864-1887 spread EnumeratedGlobalAttributes1833-1846 plus four Option<BooleanAttribute> fields; BooleanAttribute666 is S.Literals([true, \"\"]). Empty string is not false; Option presence is not Boolean member. String-valued enumerated attributes do not restore recall. No explicit exception located in bounded prior modeling reviews; canonical D2 note labels semantic presence-booleans without changing the type threshold. Withdraw this D row without fabricated replacement.",
+      "designDependencies": []
+    }
+  ],
+  "proposedWithdrawnRows": [
+    {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "html-standard-global-boolean-attributes",
+      "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+      "line": 1867,
+      "symbol": "StandardGlobalAttributes",
+      "kind": "schema-struct",
+      "members": ["autofocus", "headingreset", "inert", "itemscope"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "WHATWG global boolean attributes on the HTML AST overlay; independently present presence-booleans mirroring the specification, not a domain phase."
+      }
+    }
+  ],
+  "proposedDesignChanges": [],
+  "unresolvedSourceQuestions": [],
+  "terminalChecks": {
+    "exitCode": 0,
+    "endTurn": true,
+    "transcriptHashMatches": true,
+    "rawFileBytes": 0,
+    "reportValidationExitCode": 0
+  },
+  "sourceAndCanonicalEdited": false
+}

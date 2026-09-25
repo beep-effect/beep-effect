@@ -1,0 +1,50 @@
+{
+  "lane": "r39-law-practice-domain",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "sourceFiles": 214,
+  "seeds": 25,
+  "classificationChanges": 0,
+  "newQualified": 0,
+  "completeParentReconciliation": true,
+  "independentReview": false,
+  "inputs": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-law-practice-domain.execution.json",
+      "sha256": "48d7cf2669c6f9d7209157eae49bb50b384c18b9eb9fc47c79586302d1e18ff4"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-law-practice-domain.ndjson",
+      "sha256": "a854e4ab8ce3f88f0c40a54ef9007221133997aa321cbf65921f291b5882b45e"
+    },
+    {
+      "file": "goals/boolean-creep/data/owner-readmission-2026-09-24.json",
+      "sha256": "faea982e7cf8303a8e364ab70ad34db61a026a1564f94485bcd560f79542d18a"
+    },
+    {
+      "file": "goals/boolean-creep/data/constitutional-owner-disposition-2026-09-24.md",
+      "sha256": "544ca1c3c3ff7be2b1c430d2da189e722c3821b9761e58aa09d2852c76f8b9d4"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-law-domain-supplement/AUDIT.md",
+      "sha256": "96b7d58df54d7ed895fb15f1321ffee39d3112e18849d4d3284e9903080ce17d"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-law-domain-supplement/coverage.json",
+      "sha256": "cb1dae9577f0b274f6cb11c121b56793a3d2450cbfdeeddd25575559433abc11"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-law-domain-supplement/inventory-proposals.json",
+      "sha256": "3a03fc5d4ec3b8d46e7def969eb466d62eed45119c6fd7e6b40652942127b5dd"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-law-domain-supplement/seed-accounting.json",
+      "sha256": "2cb27cbd08905a0617ec8749ebf7c034aabd6fca887ed543047e55d1293de7a6"
+    }
+  ]
+}

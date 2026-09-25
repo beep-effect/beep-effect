@@ -1,0 +1,1182 @@
+{
+  "reviewKind": "independent-read-only-lane-reconciliation",
+  "lane": "r40-foundation-schema-a-m",
+  "round": "refresh-2026-09-25-r40-main-5bb775",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "currentHead": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "bindings": {
+    "laneMapSha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03",
+    "frozenInputsSha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83",
+    "inventorySha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+    "inventoryMatchesFrozen": true,
+    "executionSha256": "1dd461eb92abe1d26e40c1be531109e039be3a1488472c5b3dce5fd631945d79",
+    "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reportBytes": 0,
+    "transcriptSha256": "2e78ee68fb6df82f5c5e740f60b0537d2d3a2819e76ac12483504c364887928f",
+    "transcriptMatchesExecution": true,
+    "terminalEventSha256": "561433a65ab2fb4e79a55f28021a1434f81ce1b8ae5a4a844121299af4f9c82e",
+    "terminalEventHashEncoding": "canonical sorted compact JSON of final NDJSON row",
+    "specSha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "decisionsSha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+    "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+    "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a"
+  },
+  "terminal": {
+    "exitCode": 0,
+    "stopReason": "end_turn",
+    "terminalNdjsonLine": 1155,
+    "initialHeadEvidenceNdjsonLine": 69,
+    "reportValidationExitCode": 0,
+    "validationOnlyProvesShape": true
+  },
+  "coverage": {
+    "assignedFiles": 188,
+    "allAssignedFileHashesMatchFrozen": true,
+    "assignedSourceFiles": [
+      {
+        "file": "packages/foundation/modeling/schema/src/AbortSignal.ts",
+        "sha256": "8ca6e9e04f9afbc8ee1212e1abf496247cad026f6d5d77fd08924c9e72c16960"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Age/Age.schema.ts",
+        "sha256": "adfc4195e343009bf4c821e26d28808cf76a9d27050a3d683b6d34242cd0fd9f"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Age/index.ts",
+        "sha256": "eea4833b6881c3d1b0311c4301871d6281dccb16f7a735bca0a07035e7d9b8b0"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ArrayBuffer.ts",
+        "sha256": "538ec783ec788b1be27a941b71fe5267b3a3db8a9fe41e8d0be8fe28dae560ad"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
+        "sha256": "fdb437178ef49fa930ee840a351728361bd0cc5096bfe6303ba01d2e64069310"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/AtURI.ts",
+        "sha256": "ee45bd36172ea045be1af58b28847d777f01ea56247a8913c092f2dc2d679e89"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/BigDecimal.ts",
+        "sha256": "37af72f99547e5efcd32a9e0697bbbc68f0d49d8c200e323183496cf068e5417"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/BinaryFileExtension.ts",
+        "sha256": "aac9eb078aa864bceba3a298885c99e67f3aa808d2c63d4e4c81d627dc38b346"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/BufferEncoding.ts",
+        "sha256": "6f83f979ed88a64b7705e81f558206b42db4d72fd826e30e7adc38594caecac3"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Bytes.ts",
+        "sha256": "f5e2b704d3dce2f432504d6b19691cdc18ea286c32792d6a069e4568a4e83b64"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
+        "sha256": "bf56faab3ef0f21ede66267536262096a51aea03f08acac5687235855b088be6"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CardinalDirection/index.ts",
+        "sha256": "8a151298223d7ae81672584533809f17e0b84b6b9e148f1ab250a8d7c41d6919"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.adjust.ts",
+        "sha256": "f40f8b48bcd72df783bd6ddea5327c6de2e6c50a0ebfb9944881b214bab55e1a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.hex.ts",
+        "sha256": "429332672991b7acabb2b8c0692fe6daa2caf4dcf8c2997efa56bd6957ca4bf9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.oklch.ts",
+        "sha256": "34d92314df1c5e44c552146b85e19be6a481914293b47c24a02ffa6a44d8fdbb"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.rgb.ts",
+        "sha256": "039c8ffdbc4f7f43f697ac0fabb0e68ea34a22aa595499921be0ed7abfc58e22"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.scale.ts",
+        "sha256": "43413b132d153e0d41eff6ea37835206e652f9e2c0684d47ad44562c2984ce8f"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.shared.ts",
+        "sha256": "b87579810ce01d37948eec28738a4e40dd65d60a28eaeb2d00d2da3dab2366ef"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.transforms.ts",
+        "sha256": "25aab7f16b6054c1a68a258fea10cc907b6484494739abfed45ce719b927fc2c"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/Color.ts",
+        "sha256": "074aeff92a92769602e7c0a740bd6f3bb7474437c15830530d0904278e725660"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Color/index.ts",
+        "sha256": "d4533d249748616596c3d4db7651ebfb6c04fdac7eb3db60ac2dd6f535824008"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
+        "sha256": "f18a2692ded35b7c09b34a3be629104329d52a8c08aeb1d4943faaf2362ae0a9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.annotations.ts",
+        "sha256": "5a0e0d67dc62473ca1865ea93040942684a5dd85eb8d0c6d4fd30769854586f0"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.collector.ts",
+        "sha256": "19306cedc4d812b9047aa71e49276a5efd72747620804946c199bf40f041f509"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+        "sha256": "9ad14c399cbbcacf5911ef8a621d2b49f3887b676e313d3f34432d27848a501f"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.policy.schema.ts",
+        "sha256": "2221f5049622e57ba5fc9ce7afc78624031bea46f046b4e5d9db76eb1c996d15"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.profile.schema.ts",
+        "sha256": "ced0936d0497dcc50b1738ef005425637c2e23ea241e8fa3dc60c8dabd576534"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
+        "sha256": "af50fa4965292603a67a2a9b51d3493b377cfcbd86221835a152b01f0f5b25a2"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
+        "sha256": "aa44742eb769778b2739b9bf1c10dc2f75af0c847001b3184d1f27503affa607"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Conformance/index.ts",
+        "sha256": "36aa1ce562b895f17acec5d6c9e7f7dba2e768be3285ead73ecb18a63a8baa57"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ContinentCode.ts",
+        "sha256": "57e31a8d830bf85faa33b24c3badce220fd2aa0cff93f178fef97552cbd070f8"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ContinentName.ts",
+        "sha256": "79ef7c1fadd613b88906fe161692ba963bb0cf739d8d8a5b02929c1eff172679"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CountryCode.ts",
+        "sha256": "1ef95f0fde60708b1827bf85c696fc86eaac858fe88087c4fb6c09fce030de11"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CountryName.ts",
+        "sha256": "626059b782ce3e2bfe3eb1144f1718239bc733859ae020c155f39931c1919454"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts",
+        "sha256": "c0767ba562b039ebcfd26b7525e4b07b639fc70e158d9fe5d57145585bbfdbd6"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/index.ts",
+        "sha256": "c78a4644a7d960c008cca87198e5c7149f5de35375f0eb1b3605e53f053c508e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/CrossOriginOpenerPolicy.schema.ts",
+        "sha256": "3ff2f5d46ed44af46e53fbd91332d3dc2b3768001075caa5e606123ea5214366"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/index.ts",
+        "sha256": "1653f094042ef0b1787765f406a11661bbd6d9ff427eb6ca572e63c53db60e15"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/CrossOriginResourcePolicy.schema.ts",
+        "sha256": "06de1eaa52e68beb49874a2ac26e034af67c494cc2d17084fc174cced38fac16"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/index.ts",
+        "sha256": "71870559acb2d9ae6746657a395119ba0a54ec46c446e0f10d9fa84825a9ad18"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CryptoTxnHash/CryptoTxnHash.schema.ts",
+        "sha256": "3ca097eca85251721638a72fbd352b87d1c9dcb68def6542fd3387c2463d3aec"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CryptoTxnHash/index.ts",
+        "sha256": "0fe947b82eb4a5d23cb09574b6b8d21542247d7b9822acab3c657d6b498cffb0"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CryptoWalletAddress/CryptoWalletAddress.schema.ts",
+        "sha256": "99a74f3f721b40e82c952e1eb9c68a8e8e91b6462bdd563a4f2919a358aef14e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CryptoWalletAddress/index.ts",
+        "sha256": "4d76618e18d6d22fba61e42df0853ef684fdf6bed69858b928f2363b910bd072"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+        "sha256": "894b9e919fa75aa2fef6fd87faac024a5ab407e57f94a375424933fd95a9530a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Csp/index.ts",
+        "sha256": "19234d82735d47ab6a917ef82abd8a17ea0808cac982e52c42a27bcd17220b17"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Csv/Csv.schema.ts",
+        "sha256": "9682155c67363cc385a9c5b0ffed078c9146b9899c6ff096dfadd36a50b2abc9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Csv/index.ts",
+        "sha256": "2afe47945ed29e5e949837f236f473b0b15964ad357b73705f7b7508514bbd37"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
+        "sha256": "73942b62bb4782552c7d6b7169a820ae8adf28072ac1f27ffb37225249345529"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvCodecOptions/index.ts",
+        "sha256": "e0ad980b7850d75c6fa762f395fe1acc72c49f2e07695dc172804a9b45216858"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvError/CsvError.errors.ts",
+        "sha256": "22772bbfefc7ebce97139be9ea50748c64e3ff8f2e0b5eb10052bf0a054193a7"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvError/index.ts",
+        "sha256": "6fc2b78ff847819bd64738d1ed72be36e73814dffbfdc63129f5154cf42e2fb1"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvFormatter/CsvFormatter.formatter.ts",
+        "sha256": "09e6d86db9dee278646a2337ac00d9e0048a6faf9e696715052b6d849615d87b"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvFormatter/index.ts",
+        "sha256": "b60a61f0fe23db05c59f4099762e15f82c1d81635f2c6db7c391f4f0f4fa3308"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts",
+        "sha256": "f1b846ffb4c2495a17ecded45ae60c3eb958f97bb82e9e97e89a4e7ed145cb1b"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CsvParser/index.ts",
+        "sha256": "534b97c3f911b327796e08723a4e7c4f48554a9357ec1641f41247392e5da899"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Cuid.ts",
+        "sha256": "f1cd376c3b1a386ce71e3f57cf30f8c0acf4b825690de47060e966435d380ad7"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/CurrencyCode.ts",
+        "sha256": "e6dc142017f3b38a83fd8481c64b001d2a78d6ec3771a5c327d2e8a343a13eb3"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.adapter.ts",
+        "sha256": "bc6519f5284b1fbcea7234b5c066bc0c7b29e679ecd21e491fc615c188769a28"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
+        "sha256": "a287ed2d69ccaf8f2484aec2197933bb17fd0c784b8fcfb0dfc47e2cddf3280c"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts",
+        "sha256": "72bb31c26c4973da8d804e9ac244b8f951afc258fa5bedf8ae1420875e488d21"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Did.ts",
+        "sha256": "f9fa0cd45fb0644c6d9195ae45003481e773d1b498112d45c68d5857eedfd5a5"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomCssProperties/DomCssProperties.schema.ts",
+        "sha256": "ea2b3feded719a97c4c667bc3a9df149a42016d140bd922627b08010c2eee9f3"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomCssProperties/index.ts",
+        "sha256": "a685ba02c0902b7aa5a53b906037b5d0c1bcc4e9eeaddfbe781103daccd74ac4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomDragEvent/DomDragEvent.schema.ts",
+        "sha256": "b9ff80551955c02892e04f0846a845961ac438774a26ed4280e4035d1e8ba16e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomDragEvent/index.ts",
+        "sha256": "5f053b51dc31446e25fa0ade1060f5892c9b3a664af51c9894b0dc4469230b94"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomEvent/DomEvent.schema.ts",
+        "sha256": "f8240d320961dc8b82c6138aaf3c68b4fc5216644d3c412876882b5d37647c21"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomEvent/index.ts",
+        "sha256": "e6e6c0737d6da90a1e5b4dffcfeea10f907df158b701cf392c7544348e47c8bd"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomHtmlElement/DomHtmlElement.schema.ts",
+        "sha256": "d951c97e9cebaa227321429d3651b3157eb4af8ffd1d0a996e15799738973e4a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomHtmlElement/index.ts",
+        "sha256": "8cb342252717c4d1979bef52b878806a5b9ad99d2b6c34e191759d553371f73d"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomMouseEvent/DomMouseEvent.schema.ts",
+        "sha256": "b8cf03ad4f9e27c90201b41410ea43d5e610cbd7606025b6536e49b1e217bee4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomMouseEvent/index.ts",
+        "sha256": "64647b8497731f6d2171a5769455e4edd1261068034be5193b1b369db9a3e1e4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomReactNode/DomReactNode.schema.ts",
+        "sha256": "36d53e782ea7906efda019888c09a151ce331cd9c5905b82439628ab280ab507"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/DomReactNode/index.ts",
+        "sha256": "03bdb7ffd5260b7b5edb280aec74b771862c6bef3d7299d87239524246d01390"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Double.ts",
+        "sha256": "39c8d4b03b01f842a36424c623d45fbaa6631a5f57a6215dd03bd02af63a2203"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
+        "sha256": "8ae39e89aba2ba1c868462ce22bd34feb3651917a573170c82f4d72ca857ceb1"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Duration/Duration.schema.ts",
+        "sha256": "51f5788f447f200e985798c2746fe53f263a00f0518fd3cc04cf8173920d6b0d"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Duration/Duration.transforms.ts",
+        "sha256": "9ba1605c6df55e88dd0b9c3a83c59da3a039764223840ad5d9cac8f2b68ab2a4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Duration/index.ts",
+        "sha256": "7c4929a8f1b0e7652a8c8d7ef82e4652ed0f573c8b1919c28ae0d55a99af3553"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EffectSchema.ts",
+        "sha256": "57e228a9a090173c9fe57fde1be922d31d9c3655afc4d0621ef3043846189293"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Email.ts",
+        "sha256": "f8500710c6ca107d80b2775c5e3aa5ce2e47aafa854031005dfe5bb9c11e9b59"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EthAmount/EthAmount.schema.ts",
+        "sha256": "4a471cbe73a41e8bcd3b1f1602813a7d6414f197a00842f5b54c65f0dd972446"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EthAmount/index.ts",
+        "sha256": "4cc8194be4f076265ca52d42ee61b08e22223ca6c1ab5da0fe051321fb40a4e0"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EthereumValidatorPublicKey/EthereumValidatorPublicKey.schema.ts",
+        "sha256": "d14cd9fffbe704523f6097b86453391eae2f6d443bb82db6952b04ef1c4ab29e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EthereumValidatorPublicKey/index.ts",
+        "sha256": "fc8ca96486cd63033692c947b97848641c1ee3b7b90cc171a53edfe641b57dbc"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EvmAddress/EvmAddress.schema.ts",
+        "sha256": "8db1557e2ed1b2b775f7bc89c671347200dd259755f2eab8a69889d59224c0e1"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/EvmAddress/index.ts",
+        "sha256": "7ff94f9019a4af27bdfe890b78facdd20a09abc21eb8852d36dff1b3fbb2ad42"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
+        "sha256": "746100a21ee3f2024043bef4c0e7d525766a79fbef1614ef44561d964bdcb3e1"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ExpectCt/index.ts",
+        "sha256": "2637ebc10610b1c019e05b08a6c906a09b80ddb17fff2097b8b2671005e1ad38"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileDiff.schema.ts",
+        "sha256": "0721abd7fe69c555a92b42e7a92146735b49eba953b275dfcbbfab0f08b4dd88"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileExtension.ts",
+        "sha256": "4934c88b9b7d51985decec233bae16e088f5d27f9e268cb810e5b40fdedb2db5"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
+        "sha256": "58c61de01adf480bbeb307c78d4120b3e68ce5f49ae58c62b776140b56293763"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileName.ts",
+        "sha256": "cbaf42ee100eae2cabaa83f0a367a37e38e1479545691c5969a2fed5221fe163"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.guards.ts",
+        "sha256": "d2e479e3bdf85ad9ad860a7e78323a09c62265298c79b01647998e0551d97861"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.roots.ts",
+        "sha256": "ee978c38be4dfebb2be4e450cd59c16636dc94712076c003a199145d6d39f0ba"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.schema.ts",
+        "sha256": "0914a6add2b563abab5ec9d93cfca6c5ed6c3e6fd777ca4f82d716f61b2686b4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.segments.ts",
+        "sha256": "503a913f066e1e1b22f0b4362164ebba63705826e044e376c0158f8c4e6a28e2"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.shared.ts",
+        "sha256": "42f2d2820c2b4beda794d1906e5b2c56a2254eb0332371978520873c2305d1ed"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.windows.ts",
+        "sha256": "b67c1ce84cfd5fda35db517985d7f4a5f54baa8c20918f0ed13761741acc91ce"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FilePath/index.ts",
+        "sha256": "35c0d457e5b81864021124ac21146bca215e0805db90ca81a32548ef7c0991ff"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.asset-catalog.ts",
+        "sha256": "342b0d4a09b85de0df0225464b8a52b2cfcac14fc399149d1abc877b61e1638c"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.audio-catalog.ts",
+        "sha256": "eccac3e61191bfb3291b9b7a26d740cb069b5572681481da46bf1f3a3eae6b71"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.behavior.ts",
+        "sha256": "17eaf5cc4a2a66f9fbdef76a223c1424b24d3237fb618b54356ca7a08fc50053"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.catalog-constructor.ts",
+        "sha256": "ba2d0ffaa14fd0b3afa472adec16d8a44258bec5d981ebb3d7b9e8702f65c10c"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.catalog.ts",
+        "sha256": "96b0e90d652a79674369a325eae677fb2fd9e0ae9e88bf978c9824bd73b6dc97"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.compressed-catalog.ts",
+        "sha256": "162dfb08a4b736f29751063805074d6ba3617f1762d64ec815a1f9c753fbd9e1"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.document-catalog.ts",
+        "sha256": "424aaffe7c15acf78a65860e80e018a44095fc4558be41f3aa9e9ddb73ff8b81"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.executable-catalog.ts",
+        "sha256": "9c13342539188812c96160a0960883e1370a3232fa98d3266935d8c97dd2728a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.image-catalog.ts",
+        "sha256": "62f8055ca50376903c5aa8dacaca05cf7d3f461f2c34e94c559dfacc167c4a94"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
+        "sha256": "302f0555a3edca4ef462bc82ac740899d982f8b4cc25f41240854327a4c2072e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.structured-data-catalog.ts",
+        "sha256": "4dfe2202a349f543cc1ed04d39d69457bbecddb1f64df4914cf696a937d22ad1"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.video-catalog.ts",
+        "sha256": "61056dc9598c3ef6e48d845330b399742100e585b66a5b0ef179e793a4ec3852"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FileTypeChecker/index.ts",
+        "sha256": "5c69ffdfaeafbc9638e9884885afa59d8d44c7a828e518fd04397825de306c97"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Fixed32.ts",
+        "sha256": "13dc12645f75e2765fb2a966a9a4db0838b55046d3b6fa7083cbd1e7e8ec6108"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Fixed64.ts",
+        "sha256": "f850bb05ce7b1d7a10aa9a06d3a33769bc9c8f85deb4c6d1f8b93930e0f64a5a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Float.ts",
+        "sha256": "32a4712ba8470b249869c0087b46f5187e463489a9ad18a9deb3e73e0f039d6c"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Float16Array.ts",
+        "sha256": "38afdb4efab8bd9a3196af5ceaf586b04e6928452087f863f2bdfb5edf61a306"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Float32Array.ts",
+        "sha256": "48ede722bc16a1b351cbd06756b1da11220d20874b4d0bbf9973854dc85dd40f"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Float64Array.ts",
+        "sha256": "ae6eca267625649e3971a339891ba559190bb857d4765686edd6019d96cf0c15"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Fn/Fn.schema.ts",
+        "sha256": "30d3a18739db4f842e8f040ad6ee1a7798e3f1ebd15b74a3cec3d8b89691271b"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Fn/index.ts",
+        "sha256": "d549cf0f5c188f609dad0bc927613d2cb52b68a1bbe02b69103af30f711f0148"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+        "sha256": "e9e6b9e1856d271db5045a69fb9e04b4523d112d875479dbb10de74aa209175c"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/index.ts",
+        "sha256": "d828a372ac775af3b01ce04d75175fd235c07aa3ce1f7dfc32c40975f7a9fa6e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+        "sha256": "349901c03fb3793ba4ef184ac9d03c3866e4ea5070445c4e5da3dff97ea799c4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/FrameGuard/index.ts",
+        "sha256": "65ea29636f9d766a0b3c4f8f4719153972aaeabb181d8b6001e43d60dd70d17a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Glob/Glob.schema.ts",
+        "sha256": "ac28dbcbafa7d6ace019ed5ba7d59afa656455197854f0c17f34f5f5d16b0389"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Glob/index.ts",
+        "sha256": "06088af0cd0da18c47b4741bab2add3a2b6e72141e04b17454122dfc3dfa0a55"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
+        "sha256": "ab24ccbc7761109a3d28b6cf59d2e55f7469cfa347957145ddc043fdc4bfd980"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
+        "sha256": "1a0cb753db43df14a2b4d67296f25d3135e1dd8d78c4043cf6f222f9f1a32688"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
+        "sha256": "f1322fd3898e6d49666eace0d8afb669d277904f586b7768114b9b45e775bdcb"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.guards.ts",
+        "sha256": "3782d053037db8056ff5b33e6d35f2b27d0f4e4a1036334200e2186678a59d59"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
+        "sha256": "b88d64d41ac3feae876a2ea6ec852dd5f77d7bce4138a80eda238aad9614c97f"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.rebuild.ts",
+        "sha256": "fd3364f3dc6d1aab483fc66b18053c9cc103a5693193087c90a4b1c1f64963fa"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.shared.ts",
+        "sha256": "05b0d6943e7c895893c70737eae663830b6ca1d8b90bd3d16a3c6f7ad02fa5e9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
+        "sha256": "53eaf1d1151b932403a4a7af3a0e2d07f902c8ee38b122c84ea96bbc869c224a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Graph/index.ts",
+        "sha256": "d1ac9c8a3e0992a5ca57876b69ddae1f4fe789b99a6f108bde258b095e268d80"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HashSet.ts",
+        "sha256": "6ad7e41d13f89650a6e7e7ee77073ad7aee4d276be62bf465b44840525fda62a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Html.ts",
+        "sha256": "c1347535e7d0d5b75ad89f76fb3d61eaa07b17a69faa23742c8aa482baf2445e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Http/Http.headers.shared.ts",
+        "sha256": "5b0e752a404ae83a0a3dbee4093270aaddd93d61102e6fba70e84ba3bfb4b083"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpHeaders/HttpHeaders.schema.ts",
+        "sha256": "1c8e1a20fcfedbf5c9b708a173af4972365e1cefad7b64a26cf7f858aa91ce06"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpHeaders/index.ts",
+        "sha256": "a463ce72f4ec9b8d42d68735636fd4adffead59a1c72a303067b8d121cdb0742"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts",
+        "sha256": "d093bd93bb9e12e7bbd644c2957304cdc936d4402695a60f32384eac1d0d0d37"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpMethod/index.ts",
+        "sha256": "e8022193930d46958a5d750e272a3a7a3a32e76d75556feb76233a0a72ecf9d7"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpProtocol/HttpProtocol.schema.ts",
+        "sha256": "c295b9306dd5b19c1b3ad7ae7de2adc43de1d973abee4b4f5c427ec4b0abd870"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpProtocol/index.ts",
+        "sha256": "65b1460a9cc1bb05506bd060c7ea45df3ae7d98cd8b604e5ade927ef947c4832"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.category.ts",
+        "sha256": "7fdd6193ba815d9040ccfaf804d00d6b397e1b71414186ab5ff4697492f1f7e9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.core.ts",
+        "sha256": "71c22cc0dc321036bbedd9b5c3310f0b2dd3bd30798d5b321f21ed780cb48807"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.extended.ts",
+        "sha256": "efeaa13f581eadf9b46f223fb55d3510454fefb88cfd77a8d220ae2d486b9030"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.resource.ts",
+        "sha256": "6c0fec04979692134fab7abc2f9d71373f8c08bde9eb470005086653b019806e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.client-error.ts",
+        "sha256": "d541fd04e4fa26a941f797d81b3a168ad41304acf54231e5ef7fdb6132ed147e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.informational.ts",
+        "sha256": "8b4702b1fb89192e0f74fd04030d7dfb1d765f7b9f19b882c0b712811fe11fd2"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.redirection.ts",
+        "sha256": "4e273c89cb54ecbb17affcda2d55fcd316079cc417377cad6227cbfc0db8604e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts",
+        "sha256": "4862ee0762556b81e5d176eb30a7f82a8de6ab4dee3a36e61142f5bb9891cf5d"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.server-error.aggregate.ts",
+        "sha256": "fb5d34a2ed28c9c999e92c2ea2f4ecd4e39b380f98e95164518dfc82eea9f913"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.server-error.ts",
+        "sha256": "e119c891c83fa4b3ba958b2361a4f71f10e6f608b8adbef558e157b52bff9d72"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.shared.ts",
+        "sha256": "b3192b5d7b5060881fb3554a7623c37a43509757726ae6e697576252961d19ab"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.success.ts",
+        "sha256": "ff4ac2c53cfd07c1f6781a6f1125f5b06c94f3b237239edde8c69e3d0672d1d8"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.unofficial.aggregate.ts",
+        "sha256": "bbb92cc8a3f64b9e5461d2b77100173ce4a1d1ffdd3202b22039f601d41b0065"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.unofficial.ts",
+        "sha256": "e4bc43198daaa2ce37dd33b9643524cae432977aca7b81087cb1cc6eb2547702"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/HttpStatus/index.ts",
+        "sha256": "e1e3819e0c696d9353fb58fbc407dd27053201b09c5b8bd9884e392885b980f5"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Int.ts",
+        "sha256": "445153e1fa5822fbfaa6309b771acd8f625b9c0383c9827328722199d06daab5"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Int64.ts",
+        "sha256": "47e39b850b7b7c854570d33bb5c3d8b718f4584992e5e345ccc2f2c103344aab"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+        "sha256": "bffbf83b7d815a6876d71929f3cb4c6aab1191acce28ba9fdb25a31ea654357e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
+        "sha256": "5fab4a20f18d1763a3e7a9c5252c5e73023f8b5c2649372bc05eb4ea3a7c747d"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/JSONSchema/index.ts",
+        "sha256": "f8e7b467ec38064a44da7bafcf7f5ff9cd79f5b383c25d01e16af166b4c69267"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Json.ts",
+        "sha256": "2eace01589b6c90b0a2546d27f0d456e0039fff83d979ab20cc36e6119b6f7d6"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
+        "sha256": "dc29bea835a5f759506ac8934b193081867aa5ccd69b7db1e3616a94fd1a5c1a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Jsonl.ts",
+        "sha256": "1264663176539f9abdf75e906a1bfbfbfcebfa77ed1fac8b90a4c179ffe31a17"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/KebabStr.ts",
+        "sha256": "cf2df5b8284e04507dc4bff63e88f05add696120c7492d576b2d0221c959751e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+        "sha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/LiteralKit/index.ts",
+        "sha256": "af4c673a808fd2b76b5b4757e0b6ffcdce874710dbe1efd16a2d292ad0078593"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/LocalDate/LocalDate.schema.ts",
+        "sha256": "b1f2819c6be55e80c524589388e9a7b810ae435ab02bf88d9368ea840d3c54b6"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/LocalDate/index.ts",
+        "sha256": "9f54fd9eb81c244059b0e87557182bc2740ac82f2dbbc92e43ff9b4a2ade6797"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Logs.ts",
+        "sha256": "866336779de199f1c8353d7dbc11ba06c69d6b7e22db837615d1f57a0ce8d58e"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+        "sha256": "6ac39215a60caab0e334e0caf02efb06bd0030dd1dcea608c54ae02918741fb9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts",
+        "sha256": "479e7328ea32397b0aaf550d75b55f73df5e8230ca98912542e145666f15d288"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Markdown.ts",
+        "sha256": "718741dd4d5daf6f4d9fa21db98211c8d5a7a424f9fa721876ae196b513fbc13"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/MimeType.ts",
+        "sha256": "afc10ea3ae9a0410fdf193e7d9383c9b8b443f69cee1c1cecbab126db97ebe45"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/MutableHashMap.ts",
+        "sha256": "203711cbec30dcbf14fca3ae52cb9695b24a2e3f2f1dc95a9e3e6f85453afcc8"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/MutableHashSet.ts",
+        "sha256": "c3866edc249cb84e234cf14dfba8cfc989c2b9e3ff1259db3651db373444f39a"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/index.ts",
+        "sha256": "4f17f32dd830581d2c3b8b5747e0570a7b72ad7a3c83a8ed4b42b69bf9507411"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/ProtobufInt64Input.ts",
+        "sha256": "7395d8b56a9d88a741731f5a19e0b3f32dce2178f4ff73e695818089cce6d894"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/ProtobufNumber.ts",
+        "sha256": "37e75c20c2b87ceb7e8adda2f573664bc4fce3a059d71f27ca5f0101c38e36b9"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/crypto.ts",
+        "sha256": "550c3533e43bc66656d8ea7301a7ea7c0ce2d9c1f7fd6bcd54a24e1a94e5b2f5"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/domGlobal.ts",
+        "sha256": "99e99708e0563cac38fe461efd1a557f6c6fe519013700c95e578f4396d5d175"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/email.ts",
+        "sha256": "c3f9fda19965099a24b7371d00384b32ff4cbe97b077cc02e8f653640ce7dcf4"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/markdown.ts",
+        "sha256": "5af7d9c2e1b054c5b10ebe5f8cd647e849d74e2ae19a0e87da233fa8eefc2353"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/internal/yaml.ts",
+        "sha256": "a5e3799867854c5ee737a6eb0168f203daba81f83b7cf0c84b08e20d50b4596d"
+      }
+    ],
+    "transcriptFreshDiscovery": true,
+    "transcriptScriptFileCount": 187,
+    "scriptOmission": "packages/foundation/modeling/schema/src/Jsonl.ts",
+    "omissionRecoveredByExplicitReadsNdjsonLines": [820, 856],
+    "wholeLaneAssessment": "188 assigned files covered by broad fresh lexical discovery plus explicit Jsonl reads; raw scripts alone cover 187. Independent reconciliation scanned all 188 frozen paths for direct/schema/inferred Boolean candidates and checked all 11 complete seed owners. Lexical heuristics are not a compiler-proof inventory.",
+    "seedCount": 11,
+    "qualifiedSeedCount": 1,
+    "seedDispositions": [
+      {
+        "id": "json-schema-node-keywords",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "json-schema-node-keywords",
+          "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+          "line": 212,
+          "symbol": "Node",
+          "kind": "schema-struct",
+          "members": ["deprecated", "readOnly", "uniqueItems", "writeOnly"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Draft-2020-12 JSON Schema keyword mirror; readOnly/writeOnly/deprecated/uniqueItems are independent spec keywords on the wire."
+          }
+        },
+        "disposition": "retain-D2",
+        "actualBooleanMemberCount": 4,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Node complete owner 175-269 and optionalKeyword 125-126 inspected: four Boolean-valued optional wire keywords remain independent external vocabulary. Existing accepted campaign rubric includes optional Boolean fields; no withdrawal or contract change recommended. Additional SubSchema unions and arbitrary payload Options do not supply extra Boolean members.",
+        "sourceSha256": "bffbf83b7d815a6876d71929f3cb4c6aab1191acce28ba9fdb25a31ea654357e",
+        "sourceLineVerified": true,
+        "designSha256": null,
+        "directUnwrappedBooleanMemberCount": 0,
+        "booleanDomainExplanation": "Four Boolean-valued optional members: decoded Option<boolean> with None/Some(false)/Some(true), encoded optional boolean with absent/false/true. Count the actual Boolean values, never treat mere Option presence as an extra Boolean."
+      },
+      {
+        "id": "csv-codec-options-toggles",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "csv-codec-options-toggles",
+          "file": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
+          "line": 54,
+          "symbol": "CsvCodecOptions",
+          "kind": "schema-struct",
+          "members": [
+            "ignoreEmpty",
+            "ltrim",
+            "rtrim",
+            "trim",
+            "strictColumnHandling"
+          ],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent CSV codec config toggles; all 32 combinations are legal settings, not exclusive phases."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 5,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete owner 51-88 has five direct BoolKeyDefaultFalse controls and independent quote/escape/comment payloads. Parser precedence 46-60 does not restrict accepted option combinations; 32 configurations remain legal.",
+        "sourceSha256": "73942b62bb4782552c7d6b7169a820ae8adf28072ac1f27ffb37225249345529",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "force-https-redirect-config-flags",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "force-https-redirect-config-flags",
+          "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+          "line": 42,
+          "symbol": "ForceHttpsRedirectConfig",
+          "kind": "schema-struct",
+          "members": ["includeSubDomains", "preload"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent HSTS tokens; the serializer emits each flag separately and all four header combinations are legal."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 2,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete Config owner 39-48: includeSubDomains and preload are independent defaults. Outer enabled tuple/Boolean option is a separate owner; maxAge is payload.",
+        "sourceSha256": "e9e6b9e1856d271db5045a69fb9e04b4523d112d875479dbb10de74aa209175c",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "jsonc-parser-sdk-flags",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "jsonc-parser-sdk-flags",
+          "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
+          "line": 54,
+          "symbol": "decodeJsoncUnknown.parse",
+          "kind": "object-literal",
+          "members": ["allowTrailingComma", "disallowComments"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Hard-coded jsonc-parser ParseOptions; the pair mirrors the SDK contract rather than a domain state machine."
+          },
+          "notes": "R29 native source check: the actual SDK ParseOptions object opens at Jsonc.ts:54; its Boolean members are lines 55-56. Preserve the object-start locator and D2 wire classification."
+        },
+        "disposition": "retain-D2",
+        "actualBooleanMemberCount": 2,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete parse options literal 54-57 has two actual Boolean values mirroring SDK options; errors array is outside that owner.",
+        "sourceSha256": "dc29bea835a5f759506ac8934b193081867aa5ccd69b7db1e3616a94fd1a5c1a",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "literalkit-attach-helper-descriptors",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "literalkit-attach-helper-descriptors",
+          "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+          "line": 620,
+          "symbol": "attachHelperDescriptors",
+          "kind": "object-literal",
+          "members": ["enumerable", "writable", "configurable"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Line moved from 618 to 620. The annotate descriptor still sets independent ECMAScript PropertyDescriptor controls (enumerable false, writable false, configurable true); the three attributes are not an exclusive LiteralKit phase."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 3,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete annotate property descriptor 616-623 has three independent ECMAScript descriptor controls plus value method; literal assignments are not lifecycle evidence.",
+        "sourceSha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "literalkit-readonly-property",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "literalkit-readonly-property",
+          "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+          "line": 820,
+          "symbol": "readonlyProperty",
+          "kind": "object-literal",
+          "members": ["enumerable", "writable", "configurable"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Line moved from 818 to 820. readonlyProperty still returns one PropertyDescriptor whose enumerable, writable, and configurable controls are independent ECMAScript attributes."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 3,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete readonlyProperty descriptor 818-823 has value payload and three independent descriptor controls.",
+        "sourceSha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "mapped-literalkit-attach-helper-descriptors",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "mapped-literalkit-attach-helper-descriptors",
+          "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 212,
+          "symbol": "attachHelperDescriptors",
+          "kind": "object-literal",
+          "members": ["enumerable", "writable", "configurable"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "ECMAScript PropertyDescriptor controls on the rewrapped annotate method; all eight attribute combinations remain legal and do not encode a phase."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 3,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete annotate descriptor 208-215 has value method and three independent descriptor controls.",
+        "sourceSha256": "6ac39215a60caab0e334e0caf02efb06bd0030dd1dcea608c54ae02918741fb9",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "mapped-literalkit-make-directional-kit-readonly-property",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "mapped-literalkit-make-directional-kit-readonly-property",
+          "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 234,
+          "symbol": "makeDirectionalKit.readonlyProperty",
+          "kind": "object-literal",
+          "members": ["enumerable", "writable", "configurable"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Directional-kit PropertyDescriptor helper whose three ECMAScript attributes are independent controls, not exclusive mapped-literal state."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 3,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete directional descriptor 232-237 has value payload and three independent descriptor controls.",
+        "sourceSha256": "6ac39215a60caab0e334e0caf02efb06bd0030dd1dcea608c54ae02918741fb9",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "mapped-literalkit-readonly-property",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "mapped-literalkit-readonly-property",
+          "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 364,
+          "symbol": "MappedLiteralKit.readonlyProperty",
+          "kind": "object-literal",
+          "members": ["enumerable", "writable", "configurable"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Top-level MappedLiteralKit PropertyDescriptor helper whose independent ECMAScript attributes do not form a mapped-literal phase."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 3,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete top-level descriptor 362-367 has value payload and three independent descriptor controls.",
+        "sourceSha256": "6ac39215a60caab0e334e0caf02efb06bd0030dd1dcea608c54ae02918741fb9",
+        "sourceLineVerified": true,
+        "designSha256": null
+      },
+      {
+        "id": "r3-foundation-invariant-enforcement-channels",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "r3-foundation-invariant-enforcement-channels",
+          "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+          "line": 276,
+          "symbol": "hasCoherentEnforcement",
+          "kind": "sibling-state",
+          "members": [
+            "typeLevel",
+            "runtime",
+            "staticAnalysis",
+            "documented",
+            "notEnforced",
+            "mechanicallyEnforced",
+            "explicitGap",
+            "gapDoesNotContradictMechanicalEvidence"
+          ],
+          "status": "designed",
+          "cardinality": {
+            "representable": 256,
+            "legal": 32
+          },
+          "storage": "derived",
+          "exposure": "internal",
+          "targetShape": "literalkit",
+          "tier": 1,
+          "notes": "Round26 expands the original five independent channel observations with three deterministic aliases; archived former D1 remains correct for its narrower surface. The sixth test case permits a nonempty enforcement array with all five observations false, so all32 base vectors occur. The validation observations include rejected inputs: five observational acceptance classes have15/1/6/7/3 vectors,17 accepted for some decidability and46 accepted vector/decidability pairs. Derive one private disposition from existing typed arrays; retain all encoded tags/payloads/order/defaults/dedupe/filter messages unchanged.",
+          "evidence": [
+            {
+              "class": "E4",
+              "cite": {
+                "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+                "line": 281
+              },
+              "note": "mechanicallyEnforced is the OR of typeLevel/runtime/staticAnalysis, explicitGap is documented OR notEnforced, and gapDoesNotContradictMechanicalEvidence is !notEnforced OR !mechanicallyEnforced. These aliases constrain eight locals to32 computed tuples."
+            },
+            {
+              "class": "E4",
+              "cite": {
+                "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+                "line": 285
+              },
+              "note": "The exact guard plus five-way decidability match maps32 base vectors into five acceptance classes; test-only realizes the otherwise easily missed all-false observation. The private disposition removes the full Boolean cluster without narrowing the independent source enforcement array."
+            }
+          ]
+        },
+        "disposition": "retain-designed-qualification-only",
+        "actualBooleanMemberCount": 8,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Full enclosing predicate 275-295 and six-case enforcement owner 120-273 inspected. Five independent observations plus three deterministic aliases; test-only array realizes all-false. E4 281-283 valid; 256/32 observed-tuples count includes rejected validator inputs, not post-filter objects. Existing design five-class matrix matches current formula; no P3 credit.",
+        "sourceSha256": "9ad14c399cbbcacf5911ef8a621d2b49f3887b676e313d3f34432d27848a501f",
+        "sourceLineVerified": true,
+        "designSha256": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7"
+      },
+      {
+        "id": "r24-foundation-schema-a-m-file-type-checker-ebml-evidence",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "r24-foundation-schema-a-m-file-type-checker-ebml-evidence",
+          "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.behavior.ts",
+          "line": 164,
+          "symbol": "collectEbmlEvidence",
+          "kind": "sibling-state",
+          "members": ["webm", "matroska"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Declaration moved from line 151 to webm at 164 and matroska at 165. Each flag is an independent extension-plus-doctype observation; both may be true, and selectDetectedFile maps evidence.length>1 to Option.none rather than masking a union."
+          }
+        },
+        "disposition": "retain-D1",
+        "actualBooleanMemberCount": 2,
+        "recallThresholdMet": true,
+        "completeOwnerReview": "Complete collectEbmlEvidence 160-168 has two independent extension/doctype observations; selectDetectedFile 184-198 rejects ambiguous evidence instead of promising exclusivity.",
+        "sourceSha256": "17eaf5cc4a2a66f9fbdef76a223c1424b24d3237fb618b54356ca7a08fc50053",
+        "sourceLineVerified": true,
+        "designSha256": null
+      }
+    ],
+    "nonSeedDisposition": [
+      {
+        "file": "packages/foundation/modeling/schema/src/Jsonl.ts",
+        "owner": "JsonlChunkParseResult",
+        "line": 25,
+        "actualBooleanMembers": ["done"],
+        "payloadAxes": ["error", "read", "values"],
+        "disposition": "below-recall-threshold",
+        "note": "error presence is not a second Boolean; complete owner and consumer inspected."
+      },
+      {
+        "owners": [
+          "Color.scale configuration owners",
+          "ExpectCtConfig",
+          "ValidateFileTypeOptions",
+          "ProtobufInt64Input"
+        ],
+        "disposition": "isolated-single-Boolean-owners",
+        "note": "Do not merge distinct owners to manufacture a cluster."
+      },
+      {
+        "owners": [
+          "AtURI helpers",
+          "LocalDate helpers",
+          "Graph codec helpers",
+          "crypto predicates",
+          "Conformance annotation/report helpers"
+        ],
+        "disposition": "function-returns-or-payloads-not-Boolean-members",
+        "note": "Multiple Boolean-returning functions are functions, not sibling Boolean state."
+      }
+    ]
+  },
+  "conformanceMatrix": {
+    "representable": 256,
+    "computedTuples": 32,
+    "outcomeClasses": {
+      "rejectsAll": 15,
+      "explicitGap": 3,
+      "localMechanical": 6,
+      "typeLevelOnly": 1,
+      "typeAndLocal": 7
+    },
+    "acceptedVectors": 17,
+    "acceptedVectorDecidabilityPairs": 46,
+    "totalVectorDecidabilityPairs": 160,
+    "matrixCalculatedIndependentlyFromCurrentSource": true
+  },
+  "findings": [
+    {
+      "id": "coverage-summary-count",
+      "severity": "evidence-correction",
+      "note": "Lane completion asserts every assigned root but reports 187 TypeScript files; frozen assignment has 188. Jsonl.ts omitted from scripted root lists and separately read. Preserve correction in reconciliation; do not endorse the raw 187 count as whole-lane enumeration."
+    },
+    {
+      "id": "json-schema-option-recall-clarification",
+      "severity": "nonblocking-rubric-clarification",
+      "note": "optionalKeyword is OptionFromOptionalKey(S.Boolean): None/Some(false)/Some(true) decoded and absent/false/true encoded. Parent clarified accepted recall includes Boolean-valued optional fields. D2 seed retained; do not manufacture Boolean members from arbitrary Option payload presence. No exclusion or contract change proposed."
+    },
+    {
+      "id": "conformance-design-provenance",
+      "severity": "provenance-only",
+      "note": "Existing design honestly cites historical checkout 7440cb8 and main 9b7553; this fresh exact-source comparison confirms current owner formula/cardinality but does not rewrite that provenance or supply independent P3."
+    }
+  ],
+  "rawEmptyClassification": "terminal-successful zero-new-record output requiring reconciliation; not an empty whole inventory and not standalone dryness proof",
+  "newQualifiedCandidates": [],
+  "contractOrSemanticDesignDriftFound": false,
+  "citationLocatorsForAllSeedsMatchCurrentSource": true,
+  "credit": {
+    "dryRound": false,
+    "P3": false,
+    "Gate2": false,
+    "implementation": false
+  },
+  "mutations": "Only this private receipt; no tracked files, source, inventory, designs, parent-progress, services, or proofs changed.",
+  "reviewSteering": "Parent clarified optional Boolean-valued fields count toward recall; Option presence alone does not. Initial direct-unwrapped-only interpretation corrected before handoff."
+}
