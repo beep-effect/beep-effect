@@ -354,7 +354,8 @@
     "research/hosted-closeout-review.json",
     "research/quality-helper-review.json",
     "research/package-verifier-review.json",
-    "research/quality-entrypoint-review.json"
+    "research/quality-entrypoint-review.json",
+    "research/refs-entrypoint-review.json"
   ],
   "agentLaunchers": [
     {

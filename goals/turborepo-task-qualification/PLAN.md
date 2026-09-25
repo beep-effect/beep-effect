@@ -1867,3 +1867,19 @@ retains 144 workspaces and 3473 nodes. Four Refs sources were missing from
 the attachment and are now bound explicitly: 972 sources, six artifacts,
 38 reviews and 14 unresolved obligations. Their semantics remain unreviewed;
 the prior proof failure is not yet cleared.
+
+
+### Reference workspace entrypoint — 2026-09-25
+
+Review 39 classifies Refs planning, refresh, linking and timer effects.
+Sixteen isolated fixture/codec tests passed. The manifest and public barrel
+are newly bound, bringing the attachment to 974 sources and 39 reviews.
+See [the receipt](./research/refs-entrypoint-review.json).
+
+Refresh can return a receipt containing failed members, and captures are
+trimmed and bounded. Command success or a valid receipt cannot establish
+successful refresh or exact log equality. Git/network, deep-provider inputs,
+clock, filesystem writes and service-manager effects remain explicit.
+No production reference refresh, deep build or timer mutation was executed.
+All 14 broader census obligations remain; this bounded review does not close
+transitive input discovery or qualify any tuple.
