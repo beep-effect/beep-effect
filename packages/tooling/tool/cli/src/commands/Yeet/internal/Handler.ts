@@ -67,6 +67,7 @@ import {
   YeetAttemptTerminated,
 } from "./AttemptJournal.ts";
 import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
+import { printYeetEconomicsCloseoutSummary, YeetEconomicsSource } from "./Economics.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -1488,6 +1489,11 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   );
   const reportPath = yield* writePrCloseoutReport(context, report);
   yield* Console.log(`[yeet] PR closeout report written to ${reportPath}`);
+  // Where the branch's minutes went (A3); a failed read is one log line and
+  // never fails the closeout.
+  yield* printYeetEconomicsCloseoutSummary(context.repoRoot, context.branch).pipe(
+    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make)
+  );
   // The closeout is the read-first surface an agent runs after a gap, so it is
   // where a comment posted while nothing was attached has to surface.
   yield* replayYeetMonitorComments(context, report.prNumber);

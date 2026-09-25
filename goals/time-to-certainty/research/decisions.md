@@ -913,3 +913,85 @@ changed set must record `changed-package-tripwire` and would-reuse 0; a control 
 would never reuse across any package change, which is ruling 1's "any edit anywhere invalidates
 every lane" defect by another door); a lane-id allowlist of "package lanes" (a second table to keep
 honest against the lane specs).
+
+## 2026-09-25 — A3 economics surface, round 23 (three rulings, proposed by the orchestrator; the merge of this PR is the lock)
+
+Context: PLAN A3 turns the A1 computation into a Yeet subcommand reading the same journals, so every
+closeout can print where the minutes went. The design contract is
+`research/a3-economics-surface.md`; its §0 findings are why the surface is not a line-for-line port:
+post-A5 verdicts carry wrapper and inner lanes together, the script's live-journal discovery misses the
+`beep-effectN-worktrees/*` lanes, and M4 and the termination mix are never computed there. Round 22 is
+reserved by the concurrent pr-event-awareness amendments, so these rulings are round 23.
+
+**Ruling 73 (A3-1) — `yeet economics` is a checkout report over live attempt journals.**
+
+`bun run beep yeet economics [--json] [--branch <name>] [--fleet]`.
+
+- **Default scope**: every `.beep/yeet/runs/<runId>/attempts.ndjson` of the current checkout, plus
+  an orphan `verdict.json` beside a journal that has no terminal row for that attempt. `--branch`
+  narrows to that branch's run directory (`repoRunArtifactId(branch)`). `--fleet` adds every sibling
+  checkout under the projects root (the clone's parent): directories named `beep-effect*` and the
+  lanes under `beep-effect-worktrees/*` and `beep-effect*-worktrees/*`, each labelled by its path
+  relative to the projects root. Checkouts without `.beep/yeet/runs` are skipped, not errors.
+- **Document**: `YeetEconomicsReport`, an `S.Class`, `schemaVersion: "yeet-economics/v1"`;
+  `--json` prints it through a `JsonStringCodec`. Field names shared with
+  `verification-economics/v1` keep the Python spelling (`p50Ms`, `closedEpisodes`,
+  `startsWithoutFinish`, …) so rows compare by name; nothing is written to `research/`.
+- **Stays with the A1 script**: hosted runs, admission, the hosted execution-amplification join
+  (M3), the article comparison, corpus replay, input receipts, and the ratified close re-run
+  (ruling 8: same script, row by row).
+- **Rejected**: reusing `verification-economics/v1` (the document drops four sections and adds two);
+  a section in `yeet status` (per-branch; the sample is per-checkout); writing a persisted artifact
+  at closeout (nothing reads one).
+
+**Ruling 74 (A3-2) — wrapper lanes and inner lanes are separate populations.**
+
+- A verdict lane is **inner** when it carries `parentLaneId`; `YeetVerdictLane` gains
+  `parentLaneId: S.optionalKey(S.String)` (additive; `yeet-verdict/v2` unchanged), set by
+  `laneFromQualityTaskRun` from `QualityTaskLaneRunReport.parentLaneId`. For verdicts written before
+  this lands, a lane is a **wrapper** when its id starts with one of `full:`, `feedback:`,
+  `prepare:`, `publish:`, `monitor:`, `closeout:`, `advisory:`, `commit:`; every other lane is inner.
+- Each population has its own denominator: share percentages, totals and the accounted-time
+  percentage are computed within the population. The two are never summed.
+- First-failure offsets walk one population: the actionable lane is the first failed inner lane in
+  verdict order, and its start offset is the sum of the non-negative durations of the inner lanes
+  before it; when no inner lane failed, the walk is over wrappers instead. Completion offset =
+  start offset + the failing lane's duration. Attempts with no failed lane carrying a duration are
+  `notReconstructable`.
+
+**Ruling 75 (A3-3) — metric definitions carried by the surface.**
+
+- **M1** `redToGreen`: episodes keyed by `(checkout, runId)`, attempts sorted by
+  `(startedAt, attemptId)`; a red attempt joins the streak, a green attempt with no streak closes
+  nothing, a green attempt after a streak closes an episode with `spanMs = max(0, end − start)`
+  (`end` = the green's `endedAt`, else its `startedAt`; `start` = the first red's `startedAt`). Red =
+  `outcome !== "success"`; a terminated row is red. **Comparable** = mode in
+  `verify | repair | publish` and not a lock bounce (`failureKind === "handler-error"` and the
+  message contains `Another Yeet full proof`, case-sensitive). `comparable24h` keeps closed episodes
+  with span ≤ 86 400 000 ms; `uncut` keeps all closed episodes. **Left-censored** (ruling 18): the
+  journal has a compaction cutoff (`terminalEvictionCutoffRecordedAt`, else
+  `oldestEvictedRecordedAt`) and `start ≤ cutoff`. **Right-censored**: a streak still open at the
+  end, reported with its observed lower bound. Each summary: `closedEpisodes`, `p50Ms`, `p95Ms`,
+  `totalEpisodeSpanMinutes`, `measuredAttemptMachineMinutes`, `leftCensoredEpisodesExcluded`,
+  `leftCensoredObservedAttempts`, `rightCensoredStreaks`, `rightCensoredRedAttempts`, and for
+  `comparable24h` also `closedEpisodesOver24hExcluded`.
+- **M2** `firstFailure.completionOffsetP50Ms` per ruling 74, plus `startOffsetP50Ms`, both P95s,
+  `redAttempts`, `attemptsWithReconstructableOuterFailure`,
+  `attemptsWithoutReconstructableOuterFailure`, `actionableLaneMix` and `receiptProxyMix` (the
+  seven proxy classes and match order of the A1 script: `scheduler-lock-bounce`,
+  `native-compiler-flake`, `stale-workspace-or-projection`, `base-churn`,
+  `scheduler-or-submitter`, `semantic-delta-path`, `unclassified`, matched on the lowercased
+  concatenation of message, every lane's `repairCommand`, and `failedStepId`).
+- **M4** `unchangedFingerprint`: within one `(checkout, runId)`, `failedUnchangedFingerprintThenGreen`
+  counts red attempts whose next attempt is green with the same `diffFingerprint`;
+  `attemptsWithFingerprint` counts attempts carrying one; `classification` is `measured` when at
+  least one attempt carries a fingerprint, else `unmeasurable`. The A1 script still hardcodes
+  `unmeasurable`; the packet records that the close re-run inherits it.
+- **M5** `terminations`: `starts`, `startsWithoutFinish` (starts minus terminal rows), and
+  `reasonMix` over `YeetAttemptTerminationReason` (the 16 values), sorted by count then reason.
+- **M3** is not on this surface (it needs the hosted join); recorded as the A1 close re-run's job.
+- **Estimator**: nearest rank, index `clamp(ceil(p · n) − 1, 0, n − 1)`, `None` on empty input;
+  rounding is `Math.round` (not round-half-to-even; documented in the schema annotation). Missing
+  percentiles encode as `null` (`S.OptionFromNullOr`). The `Option`-returning helper at
+  `Ci/LaneTimings.ts` (`nearestRank`, ~L2194) is promoted to a shared internal module and
+  `Cache/Cache.command.ts` (~L342) points at it; no third copy.

@@ -2390,3 +2390,21 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   mixed-tree before attributing it. The general lesson: a proof is only evidence about a named commit
   if the thing it measured is that commit; "ran in the lane" and "proved the head" are different
   claims, and the job currently reports the second while doing the first.
+
+## 2026-09-25 — the A1 script double-counts lane time on post-A5 journals and misses every `*-worktrees` lane
+
+- Doing: porting the A1 economics computation to `bun run beep yeet economics` (A3) and reading the
+  script's loader and discovery against the current verdict and checkout layout.
+- Evidence: since A5 a verdict lists the wrapper lanes and then the inner lanes each wrapper ran, and
+  both carry `durationMs` (`Verdict.ts` `laneFromQualityTaskRun`). `research/scripts/economics.py` sums
+  every duration-bearing lane in `lane_metrics`, in each episode's `laneDurationMs`, and in the
+  first-failure offset walk, so on any journal written after A5 the same wall time counts twice and the
+  accounted share can pass 100%. Its `discover_live_roots` globs `beep-effect[0-9]*` and
+  `beep-effect-worktrees/*` only, while every lane lives beside its clone as
+  `beep-effect<N>-worktrees/<lane>` under the projects root (31 lanes with `.beep/yeet/runs` on
+  2026-09-25); the first `yeet economics --fleet` read on 2026-09-25 found 86 checkouts with journals. The A1 baseline predates A5 and is not affected.
+- Prevention: the A3 surface splits the two populations with their own denominators (ruling 74) and
+  discovers `beep-effect*-worktrees/*` (ruling 73). The A1 close re-run inherits both defects until the
+  script is fixed: it must split wrapper and inner lanes (by `parentLaneId`, else the ruling-74 prefix
+  rule) and glob the numbered `-worktrees` roots before the ratified row-by-row re-run, or the close
+  numbers are not comparable with the baseline and leave out most of the fleet.
