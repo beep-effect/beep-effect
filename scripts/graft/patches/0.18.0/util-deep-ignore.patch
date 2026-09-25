@@ -1,6 +1,6 @@
 --- a/util/deep-ignore.js
 +++ b/util/deep-ignore.js
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,90 @@
 +/**
 + * Local patch (2026-09-25): a committed, repo-level ignore list for the meaning
 + * tier. `<root>/.graftignore` names files the LLM passes must never spend a
@@ -15,6 +15,7 @@
 + */
 +import { readFileSync } from "node:fs";
 +import { join } from "node:path";
++import { contentHash } from "./id.js";
 +export const DEEP_IGNORE_FILE = ".graftignore";
 +function toRegExp(pattern) {
 +    let p = pattern.trim();
@@ -26,6 +27,12 @@
 +    let re = "";
 +    for (let i = 0; i < p.length; i++) {
 +        const c = p[i];
++        // A trailing `/**` (also what a trailing `/` became above) scopes the rule to
++        // that path and its descendants: `vendor/` must not match `vendored.ts`.
++        if (c === "/" && p.slice(i + 1) === "**") {
++            re += "(?:/.*)?";
++            break;
++        }
 +        if (c === "*") {
 +            if (p[i + 1] === "*") {
 +                i++;
@@ -60,14 +67,27 @@
 +        return () => false;
 +    return (rel) => rules.some((r) => r.test(rel));
 +}
++/** The text of `<root>/.graftignore`, or null when there is none. A file that
++ * exists but cannot be read is an error: silently ignoring nothing would send
++ * every listed file back through the LLM passes. */
++export function readDeepIgnoreText(root) {
++    try {
++        return readFileSync(join(root, DEEP_IGNORE_FILE), "utf8");
++    }
++    catch (err) {
++        if (err && typeof err === "object" && err.code === "ENOENT")
++            return null;
++        throw err;
++    }
++}
 +/** The matcher for `<root>/.graftignore`; a missing file ignores nothing. */
 +export function readDeepIgnore(root) {
-+    let text = "";
-+    try {
-+        text = readFileSync(join(root, DEEP_IGNORE_FILE), "utf8");
-+    }
-+    catch {
-+        return () => false;
-+    }
-+    return compileDeepIgnore(text);
++    const text = readDeepIgnoreText(root);
++    return text === null ? () => false : compileDeepIgnore(text);
++}
++/** Content hash of the rule file, recorded in the graph fingerprint so a rule
++ * change alone counts as drift; null when there is no file. */
++export function deepIgnoreHash(root) {
++    const text = readDeepIgnoreText(root);
++    return text === null ? null : contentHash(text);
 +}

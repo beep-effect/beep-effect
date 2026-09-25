@@ -4,7 +4,7 @@
  import { relPosix } from "../util/paths.js";
  import { readSourceFile } from "../util/source.js";
  import { readFollowNestedRepos, readFollowSubmodules, readIncludeDirs } from "../util/state.js";
-+import { readDeepIgnore } from "../util/deep-ignore.js";
++import { deepIgnoreHash, readDeepIgnore } from "../util/deep-ignore.js";
  import { emptyExtractCache, readExtractCache, writeExtractCache, } from "./extract-cache.js";
  import { writeFingerprint } from "./fingerprint.js";
  import { seedGraph } from "./seed.js";
@@ -17,3 +17,12 @@
          onProgress: ({ index, total, node }) => opts.onProgress?.({ phase: "enrich", index, total, file: node }),
          // Periodic durability flush of partial crux; the next run folds it back in by
          // body_hash, so an interrupted --deep run never repays the crux it computed.
+@@ -277,7 +280,7 @@
+     // these source bytes." Nothing about the projections below — which is why it is
+     // safe to write here, and why `graphOnly` builds (the query path, which stops
+     // right after this line) are still recorded as fresh.
+-    writeFingerprint(outDir, entries, opts.onlyDirs);
++    writeFingerprint(outDir, entries, opts.onlyDirs, deepIgnoreHash(root) ?? undefined);
+     // Tier-2 passive surface: project the nodes into per-file markdown cards, and
+     // refresh the INDEX roster. Pure projection — no LLM, no network.
+     //

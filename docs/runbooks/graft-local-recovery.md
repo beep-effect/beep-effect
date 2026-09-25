@@ -458,9 +458,10 @@ graft --version
 The deep build depends on workstation-local patches to the installed `dist/`,
 recorded as unified diffs under `scripts/graft/patches/<graft version>/`. Four
 fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
-`context/build.js`); six add the meaning-tier ignore list (`util/deep-ignore.js`
-plus hooks in `graph/enrich.js`, `graph/build.js`, `context/build.js`, `cli.js`,
-and `claude/stats.js`). A reinstall or upgrade removes them, and a new Graft
+`context/build.js`); eight add the meaning-tier ignore list (`util/deep-ignore.js`
+plus hooks in `graph/enrich.js`, `graph/build.js`, `graph/check.js`,
+`graph/fingerprint.js`, `context/build.js`, `cli.js`, and `claude/stats.js`). A
+reinstall or upgrade removes them, and a new Graft
 version needs them ported into a new version directory first. After the
 install, apply and verify them, then run the two focused checks above:
 
@@ -484,8 +485,13 @@ repo root names files the LLM passes skip: their symbols are marked
 summarizes nor coverage-checks them, and the structural graph still indexes
 them, so `graft grep` and `graft callers` keep seeing every symbol. The syntax
 is a gitignore subset (`*`, `**`, `?`, `#` comments, a trailing `/`); a
-pattern without a leading `/` matches at any depth. The list is honoured only
-by a dist that carries the `util-deep-ignore` patch family, which
+pattern without a leading `/` matches at any depth, and a trailing `/` or
+`/**` matches only that path and its descendants. The rule file's hash is
+recorded in the graph fingerprint, so editing it alone counts as drift for the
+query-time refresh, and `graft check` reports a symbol still `excluded` after
+its rule was removed as pending. A rule file that exists but cannot be read
+fails the build rather than silently ignoring nothing. The list is honoured
+only by a dist that carries the `util-deep-ignore` patch family, which
 `apply-dist-patches.sh --check` verifies.
 
 A clean deep build prints no `meaning coverage:` line (Graft prints it only
