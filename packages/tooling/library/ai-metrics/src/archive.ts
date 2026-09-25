@@ -6,9 +6,18 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Str } from "@beep/utils";
-import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
+import { Defect, Sha256Hex } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as Str from "@beep/utils/Str";
+import { thunkFalse } from "@beep/utils/thunk";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as Encoding from "effect/Encoding";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
@@ -28,7 +37,7 @@ const ArchiveSha256Hex = S.toEncoded(Sha256Hex).pipe(
 
 const decodedBase64ByteLengthSatisfies = (predicate: (byteLength: number) => boolean) => (value: string) =>
   Result.match(Encoding.decodeBase64(value), {
-    onFailure: () => false,
+    onFailure: thunkFalse,
     onSuccess: (bytes) => predicate(bytes.byteLength),
   });
 
