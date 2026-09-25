@@ -56,18 +56,15 @@ export const makeIt = (clock: Clock.Clock) => makeVitestRuntime(clock).it;
  * instrumentation registers, then drive those callbacks directly, for example
  * outside the async-local execution store. `undefined` selects the live clock.
  *
- * **Example** (Capture the instrumented each callback)
+ * **Example** (Instrument the stock methods on the live clock)
  *
  * ```ts
  * import { instrumentMethods } from "@beep/test-runner/test/Vitest";
+ * import { it } from "@effect/vitest";
  * import * as Effect from "effect/Effect";
- * import type { Vitest } from "@effect/vitest";
  *
- * let captured: ((...args: ReadonlyArray<unknown>) => unknown) | undefined;
- * const methods = {
- *   effect: { each: () => (_name: string, self: typeof captured) => void (captured = self) },
- * } as unknown as Vitest.Methods<never>;
- * instrumentMethods(methods, undefined).effect.each([1])("captured", (() => Effect.void) as never);
+ * const instrumented = instrumentMethods(it, undefined);
+ * instrumented.effect("runs under the package watchdog", () => Effect.void);
  * ```
  *
  * @param methods - Effect Vitest methods to wrap.
