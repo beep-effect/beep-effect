@@ -968,10 +968,12 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Remaining gates
 
-R35 is complete and wet. Preserve its frozen execution evidence, reconciled
-inventory, archived designs, and owner audits. Do not restart the controller.
-Publish this checkpoint, refresh main, and prepare the next current-source
-census against the reconciled inventory and complete designs.
+R38 is complete and wet, with 722 inventory rows: 106 qualified and 616
+disqualified. The dry streak remains zero. Preserve the completed rounds'
+frozen execution evidence, reconciled inventories, archived designs, and owner
+audits; do not restart their controllers. Continue the current-source census
+from the reconciled inventory and complete designs, with fresh admission inputs
+and independent review for each new round.
 
 Two consecutive complete current-source dry rounds remain required, followed
 by replacement independent zero-finding P3 review and a packet ratification
