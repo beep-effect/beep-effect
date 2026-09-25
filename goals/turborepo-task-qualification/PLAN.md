@@ -1780,3 +1780,18 @@ obligations. No cache setting, tuple lifecycle or Yeet proof ownership changed.
 Full semantic closure, downstream enforcement review and signed sibling receipts
 remain required. The latest published-head proof ended at the existing
 Effect/Vitest and schema-policy failures; it is not a green full proof.
+
+### Shadow reporting versus verified-state authority — 2026-09-25
+
+Review 33 follows the report to its CLI consumer and the separate publish reuse
+guard. A disposable Git fixture confirms that a ready shadow report alone is
+rejected by the verified-state guard; a synthetic exact full state is accepted,
+while tracked-content drift and a non-full state are rejected. The fixture
+state is synthetic and grants no real proof credit. See
+[the authority receipt](./research/proof-authority-review.json).
+
+Shadow recording is observational in the inspected Handler path. The existing
+verified-state guard compares Git state and selectors but does not independently
+compare actual toolchain binaries, ambient environment or the current proof
+command. These bounded checks do not satisfy complete tuple qualification.
+All 13 broader census obligations remain unresolved; no proof ownership changed.

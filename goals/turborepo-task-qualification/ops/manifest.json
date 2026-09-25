@@ -348,7 +348,8 @@
     "research/process-boundary-delta-review.json",
     "research/type-only-delta-review.json",
     "research/proof-identity-delta-review.json",
-    "research/proof-ledger-shadow-review.json"
+    "research/proof-ledger-shadow-review.json",
+    "research/proof-authority-review.json"
   ],
   "agentLaunchers": [
     {
