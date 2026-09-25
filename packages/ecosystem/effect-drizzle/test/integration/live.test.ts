@@ -3,14 +3,17 @@
 import { VersionConflictError } from "@beep/effect-drizzle";
 import { PgliteClient, PgliteTestLayer } from "@beep/pglite";
 import { layer as makePgliteLayer } from "@effect/sql-pglite/PgliteClient";
-import { expect, layer } from "@effect/vitest";
+import { assert, expect, layer } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { PGlite, types } from "@electric-sql/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { drizzle } from "drizzle-orm/pglite";
-import { findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
+import { filter, findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
+import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso } from "effect/DateTime";
-import { die, flip, fn, fnUntraced, gen, map, option, tryPromise } from "effect/Effect";
+import { die, exit, flip, fn, fnUntraced, forEach, gen, map, option, tryPromise } from "effect/Effect";
+import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { identity } from "effect/Function";
 import { effect as effectLayer, merge, provideMerge, unwrap } from "effect/Layer";
 import { getOrThrow, getOrUndefined, isNone, none, some } from "effect/Option";
@@ -413,6 +416,44 @@ layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite
       expect(conflict.table).toBe("user");
       expect(conflict.id).toBe(snapshot.id);
       expect(conflict.expectedVersion).toBe(1);
+    })
+  );
+
+  it.effect(
+    "lets exactly one concurrent optimistic writer persist its result",
+    fnUntraced(function* () {
+      const organization = yield* createOrganization("optimistic-contention");
+      const repository = yield* userOptimisticRepository;
+      const insert = yield* makeEffect(User.insert)({
+        orgId: organization.id,
+        email: "round-four-contention@example.com",
+        name: "Concurrent Snapshot",
+        bio: null,
+        nickname: none(),
+        settings: { theme: "light" },
+        active: true,
+        status: "active",
+      });
+      const snapshot = yield* repository.insert(insert);
+      const requests = yield* forEach(["Concurrent A", "Concurrent B"], (name) =>
+        makeEffect(User.update)({ id: snapshot.id, rowVersion: snapshot.rowVersion, name })
+      );
+      const results = yield* forEach(requests, (request) => exit(repository.update(request)), { concurrency: 2 });
+      expect(filter(results, isSuccess)).toHaveLength(1);
+      const winner = getOrThrow(findFirst(results, isSuccess));
+      const loser = getOrThrow(findFirst(results, isFailure));
+      assertTrue(hasFails(loser));
+      assertFalse(hasDies(loser));
+      assertFalse(hasInterrupts(loser));
+      const conflict = getOrThrow(Cause.findErrorOption(loser.cause));
+      assert(isVersionConflict(conflict));
+      expect(conflict.table).toBe(User.sql.tableName);
+      expect(conflict.id).toBe(snapshot.id);
+      expect(conflict.expectedVersion).toBe(snapshot.rowVersion);
+      const persisted = yield* repository.findById(snapshot.id);
+      yield* repository.delete(snapshot.id);
+      expect(persisted).toEqual(winner.value);
+      expect(persisted.rowVersion).toBe(snapshot.rowVersion + 1);
     })
   );
 

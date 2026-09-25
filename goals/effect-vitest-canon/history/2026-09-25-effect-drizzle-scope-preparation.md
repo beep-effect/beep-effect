@@ -95,3 +95,18 @@ Source was restored after each control before final package proof. Full audit
 passed in 14.1 seconds and docgen in 3.2 seconds. No baseline or source-tree
 replacement was used. This addresses the saved empty-enumeration finding;
 remaining generated codec laws and runtime instrumentation are still pending.
+
+## Native PGlite contention witness
+
+The original sequential stale-snapshot case remains unchanged. A separate row
+now receives two optimistic updates with concurrency explicitly bounded to two.
+The test requires one success, a typed VersionConflictError without defects or
+interruptions for the loser, exact original table/ID/version fields, and a
+persisted row equal to the successful result with one version increment.
+The row is deleted after reading its persisted value. It uses the existing
+native PGlite client and schemas; it does not claim parallel engine execution.
+
+Full package verification passed: audit 14.9 seconds and docgen 3.3 seconds.
+The focused Node test also passed (one executed, nine unrelated cases skipped).
+This closes the additional contention-witness implementation work, not the
+remaining generated codec laws, instrumentation, final ledger or hosted gates.
