@@ -1,0 +1,86 @@
+{
+  "kind": "boolean-creep-r37-parent-integration/v1",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "inventoryBefore": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r37-reconciliation.jsonl",
+    "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+  },
+  "inventoryAfter": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-r37-final-reconciled.jsonl",
+    "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+  },
+  "records": 727,
+  "qualified": 111,
+  "disqualified": 616,
+  "applied": 0,
+  "withdrawnQualifiedIds": [
+    "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+    "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source"
+  ],
+  "newDisqualifiedIds": [
+    "r37-cli-commands-a-c-health-serve-log-options",
+    "r37-cli-commands-d-k-worker-eval-source-quality-targets"
+  ],
+  "metadataUpdatedIds": [
+    "r29-acp-client-constructed-protocol-options",
+    "r29-acp-agent-constructed-protocol-options",
+    "ci-local-step-plan",
+    "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+    "codex-findings-ingest-command-options",
+    "codex-findings-ingest-command-force-refresh",
+    "r26-cli-commands-d-k-goals-index-command-mode",
+    "worktree-residue-reason-flags",
+    "package-verify-step-outcome",
+    "r30-cli-commands-l-q-github-check-lane-outcome",
+    "r3-tooling-lint-tagged-union-pattern-gates",
+    "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+    "check-census-package-config-presence",
+    "r26-cli-yeet-provenance-stamp-lane-status",
+    "r32-cli-yeet-settle-input-observations",
+    "r32-cli-yeet-settle-budget-phase"
+  ],
+  "archivedDesigns": [
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r37-reconciliation/package-verify-step-outcome.md",
+      "sha256": "fcb71342ad7d5aeb04ee7f3eb3f08527e2abb1d5fd4135ee4b750f3c1f3dae21"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r37-reconciliation/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+      "sha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r37-reconciliation/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md",
+      "sha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r37-reconciliation/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "76c7bbcb88a06254589b10cdf5c31c00e3dbd36662a96f0174950cb931ae3021"
+    }
+  ],
+  "designReplacements": [
+    "package-verify-step-outcome",
+    "r30-cli-commands-l-q-github-check-lane-outcome"
+  ],
+  "rawDispositions": [
+    {
+      "id": "thread-transcript-load-state",
+      "disposition": "retain-existing16/7-reject-truncated8/4",
+      "ownerAudit": "r37-thread-transcript-audit"
+    },
+    {
+      "id": "r37-cli-commands-r-z-research-install-timers-options",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r37-cli-rz-parent-audit"
+    },
+    {
+      "id": "r37-cli-commands-r-z-worktree-remove-options",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r37-cli-rz-parent-audit"
+    }
+  ],
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "publicationEvidencePending": false,
+  "ownerArtifactIndex": "goals/boolean-creep/data/r37-owner-reviews/artifact-index.json",
+  "reconciliationReceipt": "goals/boolean-creep/data/r37-reconciliation-progress-2026-09-25.json"
+}

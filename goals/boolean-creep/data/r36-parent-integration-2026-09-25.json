@@ -1,0 +1,129 @@
+{
+  "kind": "boolean-creep-r36-parent-integration/v1",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMainSha": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "inventoryBefore": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r36-reconciliation.jsonl",
+    "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+  },
+  "inventoryAfter": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-r36-final-reconciled.jsonl",
+    "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+  },
+  "records": 727,
+  "qualified": 113,
+  "disqualified": 614,
+  "withdrawnIds": [
+    "ai-provider-cli-claude-auth-status-payload",
+    "r2-apps-renderer-react-grab-gate",
+    "r2-foundation-graph-validation-result",
+    "r25-shared-documents-dms-mirror-probe-probed-at",
+    "r25-shared-documents-vault-sync-status-probed-at",
+    "r3-apps-ontology-menu-aria-hidden",
+    "r3-apps-smoke-mkdir-recursive",
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin",
+    "worktree-fleet-epoch-target"
+  ],
+  "withdrawnQualifiedIds": [
+    "r2-foundation-graph-validation-result",
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin",
+    "worktree-fleet-epoch-target"
+  ],
+  "newQualifiedIds": [
+    "r36-epistemic-ontology-document-toolbar-input",
+    "r36-cli-commands-a-c-cache-task-selection-pending"
+  ],
+  "changedQualifiedIds": [],
+  "designReplacements": [
+    "document-toolbar-busy-disabled",
+    "sync-data-target-selection",
+    "worktree-removal-mode"
+  ],
+  "archivedDesigns": [
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/document-toolbar-busy-disabled.md",
+      "sha256": "207bae595ea4980394db93390b6950c5ec4d3aa83c6ddaa23d5b5c034eebc28d"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/r2-foundation-graph-validation-result.md",
+      "sha256": "344d9f22031f44ce6ee15dbe867942a5adb7f87fdfc7365352cee944b03cb2c0"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/scheduler-admission-attempt-origin.md",
+      "sha256": "444d12dd3ed8bc58c9b651a541cb27eb173984de9904381432c6d9edf036eb48"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/scheduler-promotion-tick-origin.md",
+      "sha256": "a4f114899dca8baf37fba062f245d0cab31dddd37e864dfb2e013bdf23ced46b"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/sync-data-target-selection.md",
+      "sha256": "1465c0d9ddf9254ff77a7a013fa49e6ca149ebcf61c93201329f15c3f035fc4a"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/worktree-fleet-epoch-target.md",
+      "sha256": "ad2d00d8625ae0b41e5ce1adc97a6802b5d4d674314d057e02a8c15b48e75919"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r36-reconciliation/worktree-removal-mode.md",
+      "sha256": "050a79ac5d16dfc151e81d9581cc36ff6356504e2ecc58495e2b90bdbcda6c31"
+    }
+  ],
+  "metadataUpdates": [
+    {
+      "id": "r2-apps-smoke-practice-kg-options",
+      "line": 178,
+      "kind": "object-literal",
+      "symbol": "makeFixtureBundle.options",
+      "file": "apps/practice-kg-mcp/src/smoke.ts",
+      "sourceSha256": "03135f74063d827c5e4761e1a30964c561cbeceb4a2f60cfed4e0c388fd02905"
+    },
+    {
+      "id": "r2-apps-ontology-menu-open-current",
+      "line": 720,
+      "file": "apps/professional-desktop/src/App.tsx",
+      "sourceSha256": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17"
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+      "sourceSha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+      "line": 241
+    }
+  ],
+  "rawDispositions": [
+    {
+      "id": "r36-drivers-g-m-tool-name-collision-row-truncation",
+      "disposition": "outside-recall-net-single-Boolean-owner",
+      "ownerAudit": "r36-tool-name-reconciliation"
+    },
+    {
+      "id": "r36-cli-internal-root-exclusive-mode-flags",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r36-cli-parent-reconciliation"
+    },
+    {
+      "id": "effect-import-rules-summary-operation",
+      "disposition": "retain-minimal4/3-preserve-independent-strictFailure",
+      "ownerAudit": "r36-cli-parent-reconciliation"
+    },
+    {
+      "id": "r36-cli-commands-r-z-install-timers-request",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r36-cli-tail-reconciliation"
+    },
+    {
+      "id": "r36-cli-commands-r-z-worktree-remove-options",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r36-cli-tail-reconciliation"
+    }
+  ],
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "applied": 0,
+  "publicationEvidencePending": false,
+  "ownerArtifactIndex": "goals/boolean-creep/data/r36-owner-reviews/artifact-index.json",
+  "reconciliationReceipt": "goals/boolean-creep/data/r36-reconciliation-progress-2026-09-25.json"
+}

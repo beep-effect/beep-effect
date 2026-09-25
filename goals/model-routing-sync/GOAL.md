@@ -7,7 +7,7 @@ below are repo-relative.
 Outcome: a `Models` command group in `@beep/repo-cli` whose schemas decode the
 live upstream model catalog, `$HOME/.codex/models_cache.json`, and
 `cursor-agent models`, and whose `check` run prints routing drift for every
-declared target. Read-only: slice 1 has no write path at all (R12).
+declared target. Read-only: slice 1 has no projection write path (R12).
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -27,6 +27,9 @@ Scope:
 - In: `packages/tooling/tool/cli/src/commands/Models/**`, its registration in
   the CLI root, tests for it, and this packet. A `model-ids` lane under
   `commands/Lint/` is a later slice.
+- Approved 2026-09-25 addition: package-local `isolate: true` in the Vitest
+  configs for `@beep/wink`, `@beep/utils`, and `@beep/identity`, with coverage
+  verification. Preserve shared defaults, assertions, and thresholds.
 - Out: any `--write` path (slice 2); other products' configs
   (`$HOME/.config/semantica/runtime.env`, `$HOME/.config/muse/settings.json`,
   `$HOME/.claude-mem/settings.json`) which are opt-in later; agent memory
@@ -50,16 +53,16 @@ Workflow:
 
 Acceptance:
 
-- [ ] The schemas decode the live upstream `models.json`, the Codex cache, and
+- [x] The schemas decode the live upstream `models.json`, the Codex cache, and
       `cursor-agent models` output without loss.
-- [ ] `check` prints drift for every declared target, including the seven known
+- [x] `check` prints drift for every declared target, including the seven known
       live conflicts in `SPEC.md`, and exits non-zero on drift.
-- [ ] No `--write` path exists: the only writes are the R6 ledger, the
+- [x] No `--write` path exists: the only writes are the R6 ledger, the
       optional `--report-dir` output, and the `init` seed manifest.
-- [ ] `SPEC.md` slice-1 acceptance criteria are satisfied.
-- [ ] Required verification commands pass, or unrelated failures are reproduced
+- [x] `SPEC.md` slice-1 acceptance criteria are satisfied.
+- [x] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 

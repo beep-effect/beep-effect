@@ -1,0 +1,74 @@
+{
+  "kind": "r38-rust-open-options-audit/v1",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "reject-excluded-builder-method-flag-arguments",
+  "rejectedRawIds": [
+    "r38-apps-webkit-extension-open-options"
+  ],
+  "sourceBindings": [
+    {
+      "file": "apps/professional-desktop/src-tauri/src/lib.rs",
+      "sha256": "38cb7dbd02f08ba866fc589e8ba24f894f6659dc4cae818715ecfa05ab76b4b5",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/apps/professional-desktop/src-tauri/src/lib.rs",
+      "sha256": "38cb7dbd02f08ba866fc589e8ba24f894f6659dc4cae818715ecfa05ab76b4b5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-apps.jsonl",
+      "sha256": "992967a95ab4b9e6c9e4ac3510eeaae3d5acd10a3d8633c4699bff7771ade121"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-apps.execution.json",
+      "sha256": "ee5f99cc73c950966cd0cee9f1d6b5f808fda450124e39128256b3b35df61d88"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r38-main-9a1bd3/r38-apps.ndjson",
+      "sha256": "82f625cf1d9800d73a0f96ebdac18d91e5dd90ae5356772108419a9b02d29079"
+    },
+    {
+      "file": "~/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/share/doc/rust/html/std/fs/struct.OpenOptions.html",
+      "sha256": "76bd5958651de7257c72cf23787b741f119ffc321a6ff148d425aaf11b70ab0b"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "canonicalDuplicates": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "disqualified": 0,
+    "designs": 0
+  },
+  "unresolvedOwnerQuestions": [],
+  "P3Credit": false,
+  "dryCredit": false,
+  "trackedEdits": false,
+  "outputs": [
+    {
+      "file": "disposition.md",
+      "sha256": "8d773f4929190a77bd0255c45654b69b61c62c028f4ca0fd16d685583fd98400"
+    },
+    {
+      "file": "proposed-rows.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

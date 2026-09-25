@@ -1,0 +1,26 @@
+{
+  "kind": "private-symbolic-proposal-check-not-runtime-test",
+  "alphabet": [
+    "lint",
+    "--cache",
+    "--cache=",
+    "--force",
+    "--remote-only",
+    "--remote-cache-read-only",
+    "--force=false",
+    "--no-cache",
+    "true",
+    "false",
+    "True",
+    "",
+    " ",
+    "--graph",
+    "--cwd=x",
+    "--",
+    "-x"
+  ],
+  "maxSuffixLength": 4,
+  "cases": 88744,
+  "mismatches": 0,
+  "bothTrueReachable": false
+}

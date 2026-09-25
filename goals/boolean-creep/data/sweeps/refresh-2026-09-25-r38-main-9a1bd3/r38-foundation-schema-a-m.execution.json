@@ -1,0 +1,22 @@
+{
+  "lane": "r38-foundation-schema-a-m",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:08:29.881617+00:00",
+  "finished": "2026-09-25T08:11:34.379733+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-schema-a-m.jsonl`. Confirmed 0, disqualified 0. All 88 assigned roots (188 non-test source files) were covered. Seed owners, members, and classifications still match the current source (including JSON Schema line 212, LiteralKit `readonlyProperty` at 820, and EBML flags at 164); nothing was withdrawn or left unresolved.",
+  "transcriptSha256": "6b602bb6176827475e6466d22acdce508244f2a4fc5b24cd32822a0e4e9726be",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

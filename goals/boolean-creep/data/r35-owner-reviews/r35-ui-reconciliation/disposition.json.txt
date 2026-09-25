@@ -1,0 +1,119 @@
+{
+  "kind": "r35-ui-source-disposition/v1",
+  "createdAt": "2026-09-25T06:27:20.063119+00:00",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "scope": "UI raw five rows plus seven footer owner claims; bounded source audit and P2 correction proposals",
+  "inputSha256": {
+    "packages/foundation/ui-system/ui/src/components/todo-item.tsx": "c1d62d3b50a9b7b44d8ab45ef1982acd2f5997c681067927369d4ac0ec5ba6c5",
+    "packages/foundation/ui-system/ui/src/components/notification-card.tsx": "aa6f424128b3e43d2b6659c72124c732d47d7bc825e7b8ca3f08e0c1826b2af0",
+    "packages/foundation/ui-system/ui/src/components/chart.tsx": "0b515cbd1ee51eb79ee36bb2d941507f180fdb1ce233b0db44526de62711e0c5",
+    "packages/foundation/ui-system/ui/src/components/date-picker.tsx": "a756f629e0d4452f31d9d06413cab95e0e3e469efcf4fde322cb29ba3eff1592",
+    "packages/foundation/ui-system/ui/src/components/color-picker.tsx": "e4f87c71b8bc8a7a7f50b87ec5c4598e57c367a6e66aa3f21366b5977090c8b0",
+    "packages/foundation/ui-system/ui/src/components/emoji-picker.tsx": "eaa45aac0045f7fdecaeb8626d3986968910ca0a0293054eeeeb297dc5a59cf4",
+    "packages/foundation/ui-system/ui/src/components/calendar.tsx": "f936e834fada80a84671ee7cf253d5fa1d1aed6b4491c30d7aa6bd77347c6307",
+    "packages/foundation/ui-system/ui/src/components/sidebar.tsx": "b39a60fc6edf7ed5b5dc753f8521589e8fba7c70e290266f5d6eede96087bdcb",
+    "packages/foundation/ui-system/ui/src/components/speech-input.tsx": "0b3b5c9b37f0d0b8affa13c5198bfb7e64696a459b519bfd4270da5b82b3ffad",
+    "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts": "8ac1c75527e20c7378f8eb9066c47b2c6646cb49af1302181ddfa8adfcab9231",
+    "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts": "e3c10c48d870fae958875c43139fc7e1bfa197f7d6aebeb45782b4809fc25629",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "goals/boolean-creep/data/inventory.jsonl": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-foundation-ui.jsonl": "2ed288ae8d2d00f94889168ff834bcb41fb4b4d32f8e0795abf07c94b400bb39",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-foundation-ui.execution.json": "9f230444b43ca0c8a14f1009bcf9663d1c81036baabbb83fe4c92bd33950d15d",
+    "goals/boolean-creep/data/r28-chart-family-integration.json": "057961e51a8663372896eb73e45d26026817038fcf2b53c337825a74bd604de5",
+    "goals/boolean-creep/designs/family-chart-tooltip-layout.md": "24a3c2dc8fb0e162b5501621aa1ba46afaab44633289c26de1b0576e87a45dc0",
+    "goals/boolean-creep/designs/foundation-ui-system-speech-input-connection.md": "2c9397fd6b25ebffabd8c8f6939c154ef3083cf3282e1f920e8042dc95189cfc",
+    "node_modules/react-day-picker/dist/esm/types/props.d.ts": "61341dacd1164409a0eea8865c8df0b49ffb3328cc781c9fbf04e1825c26d77b",
+    "goals/boolean-creep/designs/r27-boolean-state-foundation-use-scribe-result-connected.md": "f67a9a7c64d057e5881f8b08fddbf059894c6c2585e55ae5175aa144f3c62ec2",
+    "goals/boolean-creep/designs/r3-foundation-todo-item-presence.md": "59019a38bdcb6891722ede838c54202b220d4002ed3c1ecf5e8e57b41971069a",
+    "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-indicator-flags.md": "f5e5fb7aedc2b0c8785e185c42f3a3d5454e88088d8b14b3b53b59985126f254",
+    "goals/boolean-creep/designs/r3-foundation-notification-action-busy.md": "1a9933365b385787ca56e928789047745896655198412a2f78d58c6ac89b0aa8",
+    "goals/boolean-creep/designs/r27-boolean-state-foundation-spinner-state.md": "b4e85ca55268012858b241d7adbded00eed209c75fdc3d0ca5b2c71bb67c8bd7",
+    "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-default-item-flags.md": "16f194f194ab2688773063221216fd0e1f02f770cfe221342f784ef5b4ff7e09",
+    "goals/boolean-creep/designs/r28-foundation-ui-chart-tooltip-item-flags.md": "656278b280a189a041ecc46379aefad87a0c8a84335fceb68a5c30db5182c56b",
+    "goals/boolean-creep/designs/r27-boolean-state-foundation-sidebar-context-open-state.md": "48b81bbe371a2d28d878bd7951e483532ba8ce57cf7cb830119d6241bd9cbaf4",
+    "goals/boolean-creep/designs/todo-item-due-tone.md": "7decf6802eaf1173a4eef184350cb11436c471f7c632442f362bc67658605dd5"
+  },
+  "historicalSourceReuse": {
+    "packages/foundation/ui-system/ui/src/components/todo-item.tsx": {
+      "currentSha256": "c1d62d3b50a9b7b44d8ab45ef1982acd2f5997c681067927369d4ac0ec5ba6c5",
+      "comparisonCommit": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "identical": true
+    },
+    "packages/foundation/ui-system/ui/src/components/notification-card.tsx": {
+      "currentSha256": "aa6f424128b3e43d2b6659c72124c732d47d7bc825e7b8ca3f08e0c1826b2af0",
+      "comparisonCommit": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "identical": true
+    },
+    "packages/foundation/ui-system/ui/src/components/chart.tsx": {
+      "currentSha256": "0b515cbd1ee51eb79ee36bb2d941507f180fdb1ce233b0db44526de62711e0c5",
+      "comparisonCommit": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+      "identical": true
+    }
+  },
+  "retainIds": [
+    "todo-item-due-tone",
+    "r3-foundation-todo-item-presence",
+    "r28-foundation-ui-chart-tooltip-indicator-flags",
+    "r28-foundation-ui-chart-tooltip-default-item-flags",
+    "r28-foundation-ui-chart-tooltip-item-flags",
+    "r2-foundation-calendar-daypicker-display",
+    "r27-boolean-state-foundation-sidebar-context-open-state"
+  ],
+  "updateIds": [
+    "r3-foundation-notification-action-busy"
+  ],
+  "withdrawIds": [
+    "r2-foundation-date-picker-disabled-open",
+    "r2-foundation-color-picker-disabled-open",
+    "r2-foundation-emoji-picker-disabled-open",
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-boolean-state-foundation-use-scribe-result-connected"
+  ],
+  "qualifiedWithdrawIds": [
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-boolean-state-foundation-use-scribe-result-connected"
+  ],
+  "newQualifiedIds": [],
+  "reasons": {
+    "todo": "Reject consolidation. Raw ten-Boolean projection1024/232 is arithmetically correct, but SPEC permits independently adjudicated relations in one declaration. Existing due16/7 and metadata128/64 constrain distinct outputs and share only a real input; no duplicate cluster. priority contributes four declared alternatives, not Boolean recall. Preserve independent selection/description. Existing LiteralKit designs remain preferable to unspecified full-owner tagged-union proposal.",
+    "chart": "Reject all three proposed D1 replacements. Each complete props owner has hideIndicator and nestLabel Booleans, satisfying recall. Minimal indicator/nestLabel relation is6/5; private sole writer excludes dot/true. hideIndicator is independent and retained. D1 on the different two-Boolean projection does not refute this relation. No enum counted as a Boolean. Exact source equals R28 source.",
+    "notification": "Accept three actual local members and8/6. Preserve source type/Option values and inline disabled consumer. Corrected design retains five presentation cases and encoded Option distinctions. Independent P3 still required.",
+    "pickers": "Withdraw exact disabled/open rows: disabled belongs to props while open belongs to nested scoped state; no sibling open local is declared. DatePickerInner also has isControlled and ColorPickerInner has controlled, but neither creates the old disabled/open carrier or a constrained qualifying relation. Inherited props do not relocate nested state.open. No runtime change.",
+    "calendar": "Retain D1. Calendar inherits React.ComponentProps<typeof DayPicker>, including optional showOutsideDays and showWeekNumber (installed declaration lines194/201), defaults the former at42, and reads props.showWeekNumber at113. All supplied Boolean pairs and omission remain independent; no declaration disappearance.",
+    "spinner": "Withdraw qualified row: complete SpinnerState has runOnce:Boolean and interval/timeout:number|undefined only. Optional handle presence is not another Boolean. Genuine timing constraints do not bypass the two-Boolean net. Archive its design; no runtime rewrite.",
+    "scribe": "Withdraw qualified UseScribeResult row: complete interface has only isConnected:Boolean; status is a literal, error nullable string, transcripts/payloads and callable controls do not add Boolean members. Archive companion design. Repair eligible SpeechInputContextValue design to retain hook isConnected and own status promotion without this companion.",
+    "sidebar": "Retain qualified minimal open/state4/2 relation and separate D1 flags record. Full context has open/openMobile/isMobile actual Booleans. Its sole producer derives state from open at189 and co-carries both at191. Independent mobile axes stay untouched; literal is not counted as Boolean."
+  },
+  "designActions": {
+    "replaceWithPrivateProposals": [
+      "r3-foundation-notification-action-busy",
+      "foundation-ui-system-speech-input-connection"
+    ],
+    "archiveAfterCanonicalWithdrawal": [
+      "r27-boolean-state-foundation-spinner-state",
+      "r27-boolean-state-foundation-use-scribe-result-connected"
+    ],
+    "retainTodoAndChartDesigns": true
+  },
+  "expectedInventoryDelta": {
+    "records": -5,
+    "qualified": -2
+  },
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "sourceModified": false,
+  "trackedFilesModified": false,
+  "proposalSha256": {
+    "design-proposals/foundation-ui-system-speech-input-connection.md": "c6602b698d425c9209a0bf1ec3bc586ebeec74c74b7f64fedb8b7ef02f80bdc7",
+    "design-proposals/r3-foundation-notification-action-busy.md": "1b246a3506e3a5ee4c6bd21afbf37c7b0a6935ffeb0a4fdae7c495df67b3dcb9",
+    "proposed-inventory-updates.jsonl": "bad387a77ed0d819c42ec7fe081828a47f02a875730420227cbdf50e10c15843",
+    "withdrawn-rows.jsonl": "9cceacd252ecdf202e3b445cdaa9aff11f26a45b969756d4112890ebbb655c4a"
+  },
+  "validation": {
+    "proposedInventoryValidatorExit": 0,
+    "proposedInventoryValidatorSummary": "inventory OK: 1 records, 1 unique ids",
+    "HEADAndMainRechecked": true
+  }
+}

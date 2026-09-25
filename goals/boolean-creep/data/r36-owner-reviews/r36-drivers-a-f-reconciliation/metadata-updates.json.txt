@@ -1,0 +1,15 @@
+[
+  {
+    "id": "acp-patched-protocol-options",
+    "oldLine": 388,
+    "newLine": 390,
+    "reason": "Actual interface declaration moved; 390 is not first inherited Boolean."
+  },
+  {
+    "id": "drivers-cosmos-graph-config",
+    "line": 22,
+    "oldCite": "Cosmos.renderer.ts:441-446",
+    "newCite": "Cosmos.renderer.ts:445",
+    "reason": "Constructor invocation locator only; schema declaration unchanged."
+  }
+]

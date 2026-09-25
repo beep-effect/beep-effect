@@ -455,13 +455,15 @@ workstation:
 npm install -g --prefix "$HOME/.local" @nanonets/graft@0.18.0
 graft --version
 ```
-The deep build depends on four workstation-local patches to the installed
-`dist/` (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
-`context/build.js`), recorded as
-unified diffs under `scripts/graft/patches/<graft version>/`. A reinstall or
-upgrade removes them, and a new Graft version needs them ported into a new
-version directory first. After the install, apply and verify them, then run
-the two focused checks above:
+The deep build depends on workstation-local patches to the installed `dist/`,
+recorded as unified diffs under `scripts/graft/patches/<graft version>/`. Four
+fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
+`context/build.js`); eight add the meaning-tier ignore list (`util/deep-ignore.js`
+plus hooks in `graph/enrich.js`, `graph/build.js`, `graph/check.js`,
+`graph/fingerprint.js`, `context/build.js`, `cli.js`, and `claude/stats.js`). A
+reinstall or upgrade removes them, and a new Graft
+version needs them ported into a new version directory first. After the
+install, apply and verify them, then run the two focused checks above:
 
 ```sh
 scripts/graft/apply-dist-patches.sh          # applies what is missing, keeps *.orig-<version> backups
@@ -470,3 +472,29 @@ scripts/graft/apply-dist-patches.sh --check  # exit 0 only when every recorded p
 
 The loader's stamp guard keeps upkeep quiet across upgrades, so an upgrade
 needs no `graft init`.
+
+### Meaning-tier ignore list (`.graftignore`)
+
+Graft 0.18.0 selects files from `git ls-files` plus a fixed directory skip
+list, so a generated file the model cannot summarize (the 17,000-line
+`packages/drivers/box/src/_generated/Box.models.gen.ts` answers every crux
+call with an empty tool call) was retried twice per night and left `graft
+check` reporting one stale file forever. The committed `.graftignore` at the
+repo root names files the LLM passes skip: their symbols are marked
+`excluded` rather than `pending` or `stale`, the concept pass neither
+summarizes nor coverage-checks them, and the structural graph still indexes
+them, so `graft grep` and `graft callers` keep seeing every symbol. The syntax
+is a gitignore subset (`*`, `**`, `?`, `#` comments, a trailing `/`); a
+pattern without a leading `/` matches at any depth, and a trailing `/` or
+`/**` matches only that path and its descendants. The rule file's hash is
+recorded in the graph fingerprint, so editing it alone counts as drift for the
+query-time refresh, and `graft check` reports a symbol still `excluded` after
+its rule was removed as pending. A rule file that exists but cannot be read
+fails the build rather than silently ignoring nothing. The list is honoured
+only by a dist that carries the `util-deep-ignore` patch family, which
+`apply-dist-patches.sh --check` verifies.
+
+A clean deep build prints no `meaning coverage:` line (Graft prints it only
+when the pass degraded), so the refresh reads the always-printed `meaning: N
+computed, N cached, N stale, N pending` tally instead: covered is computed plus
+cached, total adds stale and pending, and excluded symbols count in neither.

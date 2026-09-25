@@ -1,0 +1,12 @@
+--- a/claude/stats.js
++++ b/claude/stats.js
+@@ -17,7 +17,8 @@
+         nodeCount: w.meta?.nodeCount ?? nodes.length,
+         edgeCount: w.meta?.edgeCount ?? edges.length,
+         languages: w.meta?.languages ?? [],
+-        totalCount: nodes.length,
++        // Local patch (2026-09-25): `.graftignore` symbols are not owed a summary.
++        totalCount: nodes.filter((n) => n.summary_state !== 'excluded').length,
+         readyCount,
+     };
+ }

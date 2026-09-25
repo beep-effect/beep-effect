@@ -1,0 +1,22 @@
+{
+  "lane": "r37-cli-commands-l-q",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:45:17.290194+00:00",
+  "finished": "2026-09-25T07:48:39.195134+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-l-q.jsonl`. Confirmed 0, disqualified 0. Validator: 0 records, OK.\n\nEvery assigned root was covered (115 source files under Labs, Laws, Lint, Purge, Qa, Quality, Models; HEAD `84058d6470137e35f108d13c7dba52129db9a301`). No new or reclassified cluster. Seeded owners and member sets still match current writers and readers. Locator drift only: `PackageVerifyStepResult` writers are now at 636 and 651; `GithubCheckLaneOutcome` / `runGithubCheckLane` locals moved to about 2021 and 2038; `taggedUnionViolation` locals to 480; `effectTsgoReadmeParser` to 364; `hasCheckOverlay` locals to 757. No withdrawals and no unresolved source question.",
+  "transcriptSha256": "642b7976c053b2059f7df784c58df75282b6d18b73f33b9a1a70dcc9cb4ea456",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

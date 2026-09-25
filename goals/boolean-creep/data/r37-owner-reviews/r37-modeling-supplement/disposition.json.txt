@@ -1,0 +1,391 @@
+{
+  "kind": "r37-modeling-rest-nonTS-coverage-supplement/v1",
+  "reviewedAt": "2026-09-25T07:38:50.899299+00:00",
+  "sourceHead": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "supplement-complete-no-eligible-Boolean-owners",
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      },
+      "included": true,
+      "frozenBindingMatches": true,
+      "lines": 90
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      },
+      "included": true,
+      "frozenBindingMatches": true,
+      "lines": 34
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r37-main-9a1bd3/r37-foundation-modeling-rest.ndjson",
+      "sha256": "7d92b42df2d1e62aec1891bda51204c5acfff14fc0094d7aa2b37fc59ef772e9"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-foundation-modeling-rest.execution.json",
+      "sha256": "bbe544bd8e6cdbe87b93988b47d3c9448530b716d62205267a21979da6e24274"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/lane-map.json",
+      "sha256": "faf0fb6146002315b766562d99f2e85f3d37e103159d6cbd277c5084f1a8efee"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/frozen-inputs.json",
+      "sha256": "7899aad7b6482a13cd6dfbaec90bf6722845b6a9f41da5e03ef5505a45c4cc0a"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "primaryTranscriptSha256": "7d92b42df2d1e62aec1891bda51204c5acfff14fc0094d7aa2b37fc59ef772e9",
+  "jsonld": {
+    "graphResourceCount": 11,
+    "objectCount": 24,
+    "booleanValueCount": 0,
+    "owners": [
+      {
+        "path": "$",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@context",
+          "@id",
+          "@type",
+          "dcterms:title",
+          "beep:pathTemplateSegment",
+          "@graph"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@context",
+        "id": null,
+        "keys": [
+          "beep",
+          "dcterms",
+          "skos"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[0]",
+        "id": "beep:concept/legal-document",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[1]",
+        "id": "beep:concept/correspondence",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:broader",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[1].skos:broader",
+        "id": "beep:concept/legal-document",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[2]",
+        "id": "beep:concept/email-message",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:broader",
+          "skos:closeMatch",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[2].skos:broader",
+        "id": "beep:concept/correspondence",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[2].skos:closeMatch",
+        "id": "https://folio.openlegalstandard.org/RDQy4rbUg82ScgiiXEQ7ZBU",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[3]",
+        "id": "beep:document-class/draft",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[3].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[4]",
+        "id": "beep:document-class/redline",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[4].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[5]",
+        "id": "beep:document-class/filed",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[5].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[6]",
+        "id": "beep:document-class/received",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[6].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[7]",
+        "id": "beep:document-class/privileged",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[7].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[8]",
+        "id": "beep:document-class/extracted-child",
+        "keys": [
+          "@id",
+          "@type",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[8].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[9]",
+        "id": "beep:filing-root/local-vault",
+        "keys": [
+          "@id",
+          "@type",
+          "beep:rootSegment",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[9].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[10]",
+        "id": "beep:filing-root/box-mirror",
+        "keys": [
+          "@id",
+          "@type",
+          "beep:rootSegment",
+          "skos:inScheme",
+          "skos:prefLabel"
+        ],
+        "directBooleanMembers": []
+      },
+      {
+        "path": "$.@graph[10].skos:inScheme",
+        "id": "beep:taxonomy/legal-intake",
+        "keys": [
+          "@id"
+        ],
+        "directBooleanMembers": []
+      }
+    ]
+  },
+  "turtle": {
+    "subjects": [
+      {
+        "id": "beep:taxonomy/legal-intake",
+        "type": "ConceptScheme",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:concept/legal-document",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:concept/correspondence",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:concept/email-message",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:document-class/draft",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:document-class/redline",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:document-class/filed",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:document-class/received",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:document-class/privileged",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:document-class/extracted-child",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:filing-root/local-vault",
+        "type": "Concept",
+        "booleanMembers": 0
+      },
+      {
+        "id": "beep:filing-root/box-mirror",
+        "type": "Concept",
+        "booleanMembers": 0
+      }
+    ],
+    "booleanLiteralOrDatatypeCount": 0
+  },
+  "proposedRows": [],
+  "coverageScope": "only the two named seed files; supplements primary evidence",
+  "P3Credit": false,
+  "dryCredit": false,
+  "sourceEdits": false,
+  "outputs": [
+    {
+      "file": "disposition.md",
+      "sha256": "dcbf68aa69fb54ca4c1fb0a25b4c3b52e3648d4e0f1b6783fb0dde526566e8a7"
+    },
+    {
+      "file": "proposed-rows.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

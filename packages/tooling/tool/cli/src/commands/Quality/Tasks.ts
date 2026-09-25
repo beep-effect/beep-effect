@@ -1900,12 +1900,16 @@ const digestValue = (digest: TurboLaneDigest): string => digest.digest;
 
 // A lane that resolved no Turbo digest also has no package scope: an undeclared
 // lane, a failed step and a missing lane ledger all land here (ruling 68).
-// Failed and declared-digest lanes therefore carry an empty scope by
-// construction. That costs the tripwire nothing: every production lane tuple
-// declares no digest, so a failed lane resolves `None` and the ledger refuses
-// its key as `undeclared-inputs` before the tripwire is consulted; a lane whose
-// digest the executor declared has no Turbo ledger to derive a scope from
-// whether it passed or failed.
+// Failed and declared-digest lanes carry an empty scope by construction, and
+// not for want of a ledger: `laneStepsWithLedgers` attaches one to every
+// wrapper step whatever the caller declared, and `resolveLaneInputDigest`
+// removes it under `Effect.ensuring`. The scope is discarded because
+// `resolveLaneInputDigestSource` returns at its
+// `O.isSome(declared) || O.isSome(outcome.failure)` short-circuit, before the
+// ledger is ever read. In production the declared digest is always `None` and
+// Turbo folds no digest for a red run, so a failed lane's key is `undeclared`
+// and the ledger refuses it as `undeclared-inputs` before the tripwire is
+// consulted.
 const unscopedLaneInputs = (inputDigest: O.Option<string>): LaneInputResolution => ({
   inputDigest,
   inputPackages: A.empty<string>(),

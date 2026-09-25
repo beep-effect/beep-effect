@@ -1,0 +1,22 @@
+{
+  "lane": "r35-foundation-modeling-rest",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 90,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:14:35.254169+00:00",
+  "finished": "2026-09-25T06:17:28.865408+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-foundation-modeling-rest.jsonl`. It contains 0 confirmed and 0 disqualified records. The validator accepted it.\n\nEvery assigned root was covered, including `ontology/src/seed/legal-intake.ttl`. The checkout matches `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`. All 26 seeded clusters still match their owners, members, lines, and classifications, so nothing was rewritten. Generated `Html.meta.ts`, `Html.model.ts`, and `rdf` vocab term files stayed out of scope. No seed drift and no unresolved source question.",
+  "transcriptSha256": "0df65ffbff08f2e0c46ac42cff044591b317b7f72177f60f4e041b0c26e15f20",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

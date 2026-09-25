@@ -1,0 +1,84 @@
+[
+  {
+    "symbol": "BakeCheckReport",
+    "declaration": 334,
+    "booleans": [
+      "lockfileMatches",
+      "bunArchiveMatches",
+      "bunVersionMatches",
+      "fresh"
+    ],
+    "action": "retain-declaration-already-current"
+  },
+  {
+    "symbol": "BakeCliOptions",
+    "declaration": 93,
+    "booleans": [
+      "plan",
+      "check",
+      "json"
+    ],
+    "action": "retain-named-type-declaration-already-current"
+  },
+  {
+    "symbol": "WorktreeListEntry",
+    "declaration": 50,
+    "booleans": [
+      "detached",
+      "locked",
+      "prunable"
+    ],
+    "action": "retain-correct-first-boolean-to55"
+  },
+  {
+    "symbol": "WorktreeDoctorEntry",
+    "declaration": 233,
+    "booleans": [
+      "detached",
+      "locked",
+      "prunable",
+      "clean",
+      "unpushed",
+      "hasEnv",
+      "hasNodeModules"
+    ],
+    "action": "retain-declaration-already-current"
+  },
+  {
+    "symbol": "WorkspaceDescriptor",
+    "declaration": 966,
+    "booleans": [
+      "hasProjectTsconfig",
+      "hasCheckTsconfig",
+      "hasDocgenConfig"
+    ],
+    "action": "retain-declaration-current-correct-notes"
+  },
+  {
+    "symbol": "SyncDataTargetSelection",
+    "declaration": 62,
+    "booleans": [
+      "all",
+      "includeAuthenticated"
+    ],
+    "action": "retain-correct-declaration-and-first-boolean"
+  },
+  {
+    "symbol": "WorktreeRemovalRequest",
+    "declaration": 489,
+    "booleans": [
+      "archive",
+      "deleteBranch",
+      "exemptInvokerSession"
+    ],
+    "action": "retain-declaration-current-correct-evidence-guard"
+  },
+  {
+    "symbol": "FleetEpochTarget",
+    "declaration": 1311,
+    "booleans": [
+      "materialized"
+    ],
+    "action": "withdraw-one-boolean-complete-owner"
+  }
+]

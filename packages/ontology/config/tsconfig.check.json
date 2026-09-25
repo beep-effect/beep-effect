@@ -4,6 +4,9 @@
   "references": [
     {
       "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
     }
   ],
   "compilerOptions": {

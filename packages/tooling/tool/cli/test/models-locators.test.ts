@@ -54,7 +54,42 @@ const readFixture = Effect.fnUntraced(function* (name: string, locator: Locator)
   return yield* reader.read(file(yield* readFixtureText(name)), locator);
 });
 
-layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive))((it) => {
+layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "30 seconds" })((it) => {
+  it.effect("reads every distinct anchored example value without treating delimiters as regex", () =>
+    Effect.gen(function* () {
+      const reader = yield* ModelsLocatorReader;
+      const locator: Locator = {
+        _tag: "line-value",
+        binding: binding("model"),
+        render: verbatim,
+        linePrefix: " *",
+        before: 'model: "',
+        after: '"',
+      };
+      assertSome(
+        yield* reader.read(
+          file(
+            [
+              ' * model: "gpt-6-astra", model: "gpt-daybreak-blue-latest"',
+              ' * model: "gpt-6-astra"',
+              'const model: "not-an-example" = value',
+            ].join("\n")
+          ),
+          locator
+        ),
+        "gpt-6-astra, gpt-daybreak-blue-latest"
+      );
+      assertNone(yield* reader.read(file('const model: "not-an-example" = value'), locator));
+      assertSome(
+        yield* reader.read(file(' * model[0]="gpt-6-astra"'), {
+          ...locator,
+          before: 'model[0]="',
+        }),
+        "gpt-6-astra"
+      );
+    })
+  );
+
   it("renders each locator field", () => {
     assertSome(expectedLocatorValue(codexHeavy, "model", verbatim), "gpt-6-astra");
     assertSome(expectedLocatorValue(codexHeavy, "effort", verbatim), "medium");
