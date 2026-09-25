@@ -1,11 +1,17 @@
+import { fcRuns } from "@beep/fc-runs";
 import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { fixture, testPlatform, workspace, writeExecutable } from "./refs-test-utils.ts";
+
+// JSON normalizes -0 to 0; schema equivalence compares their numeric value.
+const refreshStatusEquivalent = S.toEquivalence(RefsRefreshStatus);
+const manifestEquivalent = S.toEquivalence(ReferenceWorkspaceManifest);
 
 const gitStub = `#!/bin/sh
 printf 'git %s %s\\n' "\${PWD##*/}" "$*" >> "$HOME/commands.log"
@@ -36,6 +42,67 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
 });
 
 describe("reference planning and refresh", () => {
+  it.effect(
+    "round-trips manifests through the JSON codec",
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(ReferenceWorkspaceManifest),
+        (manifest) =>
+          ReferenceWorkspaceManifest.encodeJson(manifest).pipe(
+            Effect.flatMap(ReferenceWorkspaceManifest.decodeJson),
+            Effect.map((decoded) => {
+              expect(manifestEquivalent(decoded, manifest)).toBe(true);
+              return true;
+            })
+          ),
+        fcRuns(100)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
+
+  it.effect(
+    "rejects undeclared manifest and member keys through decode",
+    Effect.fnUntraced(function* () {
+      const manifest = {
+        schemaVersion: "beep-references/v1",
+        theme: "effect",
+        rootDefault: "$HOME/refs",
+        workspaceLink: ".repos/effect-workspace",
+        members: [{ name: "effect", url: "upstream", tier: "deep" }],
+      };
+      expect((yield* ReferenceWorkspaceManifest.decode(manifest).pipe(Effect.result))._tag).toBe("Success");
+      expect(
+        (yield* ReferenceWorkspaceManifest.decode({ ...manifest, branch: "topic" }).pipe(Effect.result))._tag
+      ).toBe("Failure");
+      expect(
+        (yield* ReferenceWorkspaceManifest.decode({
+          ...manifest,
+          members: [{ name: "effect", url: "upstream", tier: "deep", branch: "topic" }],
+        }).pipe(Effect.result))._tag
+      ).toBe("Failure");
+    })
+  );
+
+  it.effect(
+    "round-trips refresh status through the JSON codec",
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(RefsRefreshStatus),
+        (status) =>
+          RefsRefreshStatus.encodeJson(status).pipe(
+            Effect.flatMap(RefsRefreshStatus.decodeJson),
+            Effect.map((decoded) => {
+              expect(refreshStatusEquivalent(decoded, status)).toBe(true);
+              return true;
+            })
+          ),
+        fcRuns(100)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
+
   it.effect(
     "plans absent members without creating the root or links",
     Effect.fnUntraced(function* () {
@@ -71,7 +138,7 @@ describe("reference planning and refresh", () => {
       expect(log).not.toContain("graft effect-tsgo ");
       expect(log).toContain("graft references build env=1");
       expect(log).toContain(`check ${f.root}`);
-      const saved = yield* S.decodeEffect(S.fromJsonString(RefsRefreshStatus))(
+      const saved = yield* RefsRefreshStatus.decodeJson(
         yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))
       );
       expect(saved.members).toEqual(status.members);
@@ -85,7 +152,7 @@ describe("reference planning and refresh", () => {
     Effect.fnUntraced(function* () {
       const f = yield* prepare();
       const manifestFile = f.path.join(f.owner, "scripts/references.json");
-      const manifest = yield* S.decodeEffect(ReferenceWorkspaceManifest)({
+      const manifest = yield* ReferenceWorkspaceManifest.decode({
         schemaVersion: "beep-references/v1",
         theme: "effect",
         rootDefault: "$HOME/refs",
@@ -95,10 +162,7 @@ describe("reference planning and refresh", () => {
           { name: "effect-tsgo", url: "upstream", tier: "structural", onlyDir: ["src"] },
         ],
       });
-      yield* f.fs.writeFileString(
-        manifestFile,
-        yield* S.encodeEffect(S.fromJsonString(ReferenceWorkspaceManifest))(manifest)
-      );
+      yield* f.fs.writeFileString(manifestFile, yield* ReferenceWorkspaceManifest.encodeJson(manifest));
       for (const member of manifest.members)
         yield* f.fs.makeDirectory(f.path.join(f.root, member.name, ".git"), { recursive: true });
       yield* f.fs.writeFileString(f.path.join(f.root, "effect", "advance"), "");

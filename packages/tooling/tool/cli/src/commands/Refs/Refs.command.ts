@@ -9,7 +9,6 @@ import { Command, Flag } from "effect/cli";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as S from "effect/Schema";
 import { resolveOperatorPath, resolveUnitBunPath } from "../../internal/systemd/index.ts";
 import { ReferenceWorkspaceError } from "./Refs.errors.ts";
 import { RefsRefreshStatus } from "./Refs.schemas.ts";
@@ -45,7 +44,7 @@ const refreshCommand = Command.make(
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
     const status = yield* workspace.refresh(home, resolved, jobs);
-    yield* Console.log(yield* S.encodeEffect(S.fromJsonString(RefsRefreshStatus))(status));
+    yield* Console.log(yield* RefsRefreshStatus.encodeJson(status));
   })
 ).pipe(
   Command.withDescription("Pull clean main members and rebuild their reference indexes (operator only)"),
