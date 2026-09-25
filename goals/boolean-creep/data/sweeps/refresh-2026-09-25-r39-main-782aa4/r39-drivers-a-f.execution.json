@@ -1,0 +1,22 @@
+{
+  "lane": "r39-drivers-a-f",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:48:24.942691+00:00",
+  "finished": "2026-09-25T08:52:27.422903+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-drivers-a-f.jsonl`. Confirmed 0, disqualified 0. All 16 assigned roots were covered (99 in-scope files; `_generated` and tests excluded). The 24 seed clusters still exist with the same owners, members, and classifications, so none were rewritten. No withdrawals and no unresolved source question. The validator reports `inventory OK: 0 records`.",
+  "transcriptSha256": "287320cb9a3b5ed8c4eda5fee0fb2f59d799a8d726d6eca37b6c43b876540058",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

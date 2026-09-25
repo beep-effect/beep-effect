@@ -1,0 +1,13 @@
+{
+  "lane": "r40-drivers-s-z",
+  "sourceFiles": 59,
+  "seedRows": 5,
+  "executionSha256": "5a962bed59ecb5a239bd81a087a29b6578baaea635cbcb4850f4829bac28c213",
+  "transcriptSha256": "e323b9dcdc8f80e3cafbc39544e6e813febb28f42a07fa5622e5aac416f28382",
+  "disposition": "reconciled-no-new-records",
+  "newQualified": 0,
+  "newDisqualified": 0,
+  "coverage": "All9root enumeration/transcript scans inspected; parent re-read five owners and their independent observations. SHACL all four pairs supported: zero retained results with either decoded conforms at rawcount0 (nottruncated) or rawcount1/cap0 (truncated). Wink stats toggles, advertised capabilities, punctuation/stopword and optional lexical observations remain independent. Single-Boolean SSE/WebSocket owners stay outside recall.",
+  "P3Credit": false,
+  "dryCredit": false
+}

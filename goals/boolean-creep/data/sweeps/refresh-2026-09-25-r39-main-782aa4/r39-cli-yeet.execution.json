@@ -1,0 +1,22 @@
+{
+  "lane": "r39-cli-yeet",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T09:01:39.920500+00:00",
+  "finished": "2026-09-25T09:05:24.601998+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-yeet.jsonl`. It contains 0 confirmed and 0 disqualified records. All 70 assigned Yeet source files were covered, and the source SHA `ea3ac40867e4f292b7f0708b156231f0462ddcd9` matches.\n\nThe 35 seeded clusters still match their current owners, members, and classifications. The `YeetRunOptions` D1 note still cites `Guards.ts:140-287` for `ciParity` conflicts, but those rejects now live around lines 50\u201354. Single-boolean owners such as `PrCloseoutOptions`, `PrCloseoutReport`, `ProofShadowReport`, `PorcelainScan`, and `ItemScan` stay outside the net. No source question is unresolved.",
+  "transcriptSha256": "f84528955d292c0dedc06914e333f2100f50daf439b4571fd74d4f7cfda8df27",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -55,6 +55,7 @@ import {
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
 import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
+import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
@@ -4069,15 +4070,82 @@ const renderResidueCandidateLine = (candidate: ResidueReapReport["candidates"][n
   return `- ${candidate.action} class=${candidate.reapClass}${age}${entries}${bytes}${skip} ${candidate.path}`;
 };
 
+// Human output caps rows per class and section; the JSON report always lists every
+// candidate (a single checkout's Turbo cache can hold hundreds of thousands).
+const RESIDUE_ROWS_PER_CLASS = 25;
+
+type ResidueCandidate = ResidueReapReport["candidates"][number];
+
+type ResidueSection = readonly [string, ReadonlyArray<ResidueCandidate>];
+
+const residueSectionLabel = (candidate: ResidueCandidate): string =>
+  pipe(
+    O.fromUndefinedOr(candidate.checkoutRoot),
+    O.map((checkoutRoot) => `checkout: ${checkoutRoot}`),
+    O.getOrElse(() => "home")
+  );
+
+const byResidueSectionLabel = Order.mapInput(Order.String, ([label]: ResidueSection) => label);
+
+const residueSkipSummary = (skipped: ReadonlyArray<ResidueCandidate>): string =>
+  pipe(
+    A.groupBy(skipped, (candidate) => O.getOrElse(O.fromUndefinedOr(candidate.skipReason), () => "unknown")),
+    R.toEntries,
+    A.sort(byResidueSectionLabel),
+    A.map(([reason, entries]) => `${reason}=${A.length(entries)}`),
+    A.match({ onEmpty: () => "", onNonEmpty: (parts) => ` skip-reasons: ${A.join(parts, ", ")}` })
+  );
+
+const renderResidueClassBlock = (
+  reapClass: ResidueReapReport["classes"][number],
+  candidates: ReadonlyArray<ResidueCandidate>
+): ReadonlyArray<string> => {
+  const eligible = A.filter(candidates, (candidate) => candidate.action !== "skip");
+  const skipped = A.filter(candidates, (candidate) => candidate.action === "skip");
+  // Qualification views are reflink copies: a byte count would only be apparent, so none is claimed.
+  const bytes =
+    reapClass === "qualification-views"
+      ? "eligible-bytes=apparent-only"
+      : `eligible-bytes=${A.reduce(eligible, 0, (total, candidate) => total + O.getOrElse(O.fromUndefinedOr(candidate.bytes), () => 0))}`;
+  const rows = A.appendAll(eligible, skipped);
+  const omitted = A.length(rows) - RESIDUE_ROWS_PER_CLASS;
+  return [
+    `${reapClass}: candidates=${A.length(candidates)} eligible=${A.length(eligible)} skipped=${A.length(skipped)} ${bytes}${residueSkipSummary(skipped)}`,
+    ...A.map(A.take(rows, RESIDUE_ROWS_PER_CLASS), renderResidueCandidateLine),
+    ...(omitted > 0 ? [`... ${omitted} more ${reapClass} rows omitted; --json lists every candidate`] : []),
+  ];
+};
+
+const renderResidueSection = ([label, candidates]: ResidueSection): ReadonlyArray<string> => [
+  `== ${label} ==`,
+  ...A.flatMap(
+    A.filter(ResidueReapClass.Options, (reapClass: ResidueReapClass) =>
+      A.some(candidates, (candidate) => candidate.reapClass === reapClass)
+    ),
+    (reapClass: ResidueReapClass) =>
+      renderResidueClassBlock(
+        reapClass,
+        A.filter(candidates, (candidate) => candidate.reapClass === reapClass)
+      )
+  ),
+];
+
 const renderResidueReportLines = (report: ResidueReapReport): ReadonlyArray<string> => [
   report.applied
     ? "RESIDUE REAP APPLY — removed only old, revalidated entries from closed home-residue classes"
     : "RESIDUE REAP DRY RUN — nothing will be removed; pass --apply to reap eligible entries",
   `home root: ${report.homeRoot}`,
   `repo root: ${report.repoRoot}`,
-  `thresholds: default=${report.maxAgeDays}d turbo=${report.turboMaxAgeDays}d`,
+  `checkouts: ${A.length(report.checkoutRoots)}${report.fleet ? " (fleet)" : ""}`,
+  `shared turbo cache: ${report.sharedTurboCacheRoot}`,
+  `thresholds: default=${report.maxAgeDays}d turbo=${report.turboMaxAgeDays}d turbo-runs=${report.turboRunsMaxAgeDays}d shared-turbo=${report.sharedTurboMaxAgeDays}d shared-turbo-budget=${report.sharedTurboMaxBytes}B views-keep=${report.qualificationViewsKeep}`,
   `classes: ${A.join(report.classes, ", ")}`,
-  ...A.map(report.candidates, renderResidueCandidateLine),
+  ...pipe(
+    A.groupBy(report.candidates, residueSectionLabel),
+    R.toEntries,
+    A.sort(byResidueSectionLabel),
+    A.flatMap(renderResidueSection)
+  ),
   `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
   ...A.map(report.warnings, (warning) => `warning: ${warning}`),
 ];
@@ -4093,7 +4161,10 @@ const renderResidueReportLines = (report: ResidueReapReport): ReadonlyArray<stri
  *
  * const report = ResidueReapReport.make({
  *   scannedAt: "2026-09-03T12:00:00.000Z", homeRoot: "/home/me", repoRoot: "/repo",
- *   maxAgeDays: 30, turboMaxAgeDays: 14, applied: false, classes: ["codex-sessions"],
+ *   maxAgeDays: 30, turboMaxAgeDays: 14, turboRunsMaxAgeDays: 1,
+ *   sharedTurboCacheRoot: "/home/me/.cache/beep/turbo", sharedTurboMaxAgeDays: 14,
+ *   sharedTurboMaxBytes: 21474836480, qualificationViewsKeep: 2, fleet: false,
+ *   checkoutRoots: ["/repo"], applied: false, classes: ["codex-sessions"],
  *   candidates: [], reapedCount: 0, reclaimedBytes: 0, warnings: [],
  * })
  * console.log(renderResidueReportLinesForTesting(report)[1]) // "home root: /home/me"
@@ -4112,9 +4183,13 @@ export const renderResidueReportLinesForTesting: (report: ResidueReapReport) => 
  *
  * **Details**
  *
- * Version 1 does not VACUUM SQLite databases, sweep Turbo caches across other
- * checkouts, or perform size-based eviction. It uses age or bounded idleness
- * only, defaults to a non-mutating report, and revalidates every apply action.
+ * Defaults to a non-mutating report and revalidates every apply action.
+ * `--fleet` sweeps the repository-scoped classes (per-checkout Turbo cache,
+ * Turbo run summaries, interrupted merged previews) in every clone and linked
+ * worktree sharing this origin. The shared Turbo cache is aged, then
+ * size-evicted down to `--shared-turbo-max-bytes`; qualification views keep the
+ * newest `--qualification-views-keep` plus every view a receipt cites. SQLite
+ * databases are never VACUUMed.
  *
  * **Example** (Reference the registered subcommand)
  *
@@ -4134,7 +4209,7 @@ const residueReapCommand = Command.make(
     ),
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Emit the encoded residue-reap/v1 report as JSON")
+      Flag.withDescription("Emit the encoded residue-reap/v2 report as JSON")
     ),
     classes: Flag.Literals("classes", ResidueReapClass.Options).pipe(
       Flag.between(0, A.length(ResidueReapClass.Options)),
@@ -4146,11 +4221,54 @@ const residueReapCommand = Command.make(
     ),
     turboMaxAgeDays: Flag.Finite("turbo-max-age-days").pipe(
       Flag.withDefault(14),
-      Flag.withDescription("Minimum age in days for entries in this checkout's .turbo/cache")
+      Flag.withDescription("Minimum age in days for entries in each checkout's .turbo/cache")
+    ),
+    fleet: Flag.Boolean("fleet").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Sweep repository-scoped classes in every clone and worktree sharing this origin")
+    ),
+    turboRunsMaxAgeDays: Flag.Finite("turbo-runs-max-age-days").pipe(
+      Flag.withDefault(1),
+      Flag.withDescription("Minimum age in days for Turbo run summaries under .turbo/runs")
+    ),
+    sharedTurboMaxAgeDays: Flag.Finite("shared-turbo-max-age-days").pipe(
+      Flag.withDefault(14),
+      Flag.withDescription("Age in days past which shared Turbo cache entries are evicted regardless of size")
+    ),
+    sharedTurboMaxBytes: Flag.Finite("shared-turbo-max-bytes").pipe(
+      Flag.withDefault(21474836480),
+      Flag.withDescription("Byte budget the shared Turbo cache is evicted down to, oldest-written first")
+    ),
+    qualificationViewsKeep: Flag.Int("qualification-views-keep").pipe(
+      Flag.withDefault(2),
+      Flag.withDescription("Newest qualification dependency views always kept, besides any a receipt cites")
     ),
   },
-  Effect.fn(function* ({ apply, classes, json, maxAgeDays, turboMaxAgeDays }) {
-    const report = yield* runResidueReap({ apply, classes, maxAgeDays, turboMaxAgeDays });
+  Effect.fn(function* ({
+    apply,
+    classes,
+    fleet,
+    json,
+    maxAgeDays,
+    qualificationViewsKeep,
+    sharedTurboMaxAgeDays,
+    sharedTurboMaxBytes,
+    turboMaxAgeDays,
+    turboRunsMaxAgeDays,
+  }) {
+    const checkoutRoots = fleet ? yield* (yield* FleetMirrorService).listCheckouts() : A.empty<string>();
+    const report = yield* runResidueReap({
+      apply,
+      checkoutRoots,
+      classes,
+      fleet,
+      maxAgeDays,
+      qualificationViewsKeep,
+      sharedTurboMaxAgeDays,
+      sharedTurboMaxBytes,
+      turboMaxAgeDays,
+      turboRunsMaxAgeDays,
+    });
     if (json) {
       const encoded = yield* encodeUnknownResidueReapReport(report);
       yield* printLines([yield* jsonStringifyPretty(encoded)]);
@@ -4158,7 +4276,12 @@ const residueReapCommand = Command.make(
     }
     yield* printLines(renderResidueReportLines(report));
   })
-).pipe(Command.withDescription("Dry-run-first janitor for bounded Codex, Turbo, and beep cache residue"));
+).pipe(
+  Command.withDescription(
+    "Dry-run-first janitor for bounded Codex, Turbo, merged-preview, qualification-view, and beep cache residue"
+  ),
+  Command.provide(FleetMirrorServiceLive)
+);
 
 /**
  * Quality command group for repo operational checks.
@@ -4199,7 +4322,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
     "- bun run beep quality profile detect",
     "- bun run beep quality tmpfs-reap [--apply] [--json]",
-    "- bun run beep quality residue-reap [--apply] [--json] [--classes <class>]",
+    "- bun run beep quality residue-reap [--apply] [--json] [--fleet] [--classes <class>]",
     "- bun run beep quality package-verify @beep/repo-cli",
     "- bun run beep quality changeset-graph",
     "- bun run beep quality fallow audit --advisory",
