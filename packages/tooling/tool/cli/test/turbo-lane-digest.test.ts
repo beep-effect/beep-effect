@@ -1,4 +1,5 @@
 import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
+import { QualityTaskFailed } from "@beep/repo-cli/commands/Quality";
 import {
   appendTurboLaneLedger,
   closeTurboLaneLedger,
@@ -10,6 +11,7 @@ import {
   resolveLaneInputDigestForTesting,
   TURBO_LANE_LEDGER_ENV,
   TurboLaneDigest,
+  TurboLaneTaskHash,
   TurboRunSummary,
   TurboSummaryTask,
   turboLaneDigestFromSummary,
@@ -378,6 +380,33 @@ describe("Turbo lane digests", () => {
       // The scope is derived from the digest's own rows, so it reads the same off the digest.
       const folded = yield* readTurboLaneDigest(root, startedAtIso, ["check", "test", "lint:policy"]);
       assertSome(O.map(folded, turboLaneDigestPackages), ["@beep/x", "@beep/y"]);
+
+      // Review round 1: the root node spells itself `//`, which is not a workspace, so a
+      // digest folding only root tasks names no package at all.
+      expect(
+        turboLaneDigestPackages(
+          TurboLaneDigest.make({
+            digest: "root-only",
+            summaryIds: ["run"],
+            tasks: [
+              TurboLaneTaskHash.make({ taskId: "//#lint:policy", hash: "h1", cacheStatus: "HIT" }),
+              TurboLaneTaskHash.make({ taskId: "//#lint:typos", hash: "h2", cacheStatus: "MISS" }),
+            ],
+          })
+        )
+      ).toStrictEqual([]);
+
+      // Review round 1, kriegcloud P2: a failed step short-circuits before any Turbo
+      // digest is read, so it resolves neither a digest nor a scope.
+      const failed = yield* resolveLaneInputDigestForTesting(
+        {
+          ...outcome(child),
+          failure: O.some(QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })),
+        },
+        O.none()
+      );
+      assertNone(failed.inputDigest);
+      expect(failed.inputPackages).toStrictEqual([]);
     }, providePlatform)
   );
 

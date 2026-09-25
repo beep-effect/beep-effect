@@ -32,7 +32,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
+import { DateTime, Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -483,6 +483,29 @@ describe("proof shadow mode", () => {
     ).pipe(provideScopedLayer(PlatformLayer))
   );
 
+  // Review round 1, kriegcloud P2: a failed lane resolves no Turbo digest, so it
+  // carries no package scope either. That costs the tripwire nothing, because the
+  // ledger refuses an undeclared key before the tripwire is ever consulted.
+  it.live("refuses a failed scoped lane as undeclared-inputs rather than the tripwire", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        const lanes = [lane("quality:check", "failed", O.none(), 1_000, ["@beep/x"])];
+        const summary = yield* recordProofShadowForAttempt(
+          root,
+          facts(),
+          [report(lanes)],
+          changedKnown(["@beep/x"], 2)
+        );
+        expect(summary).toMatchObject({ recorded: 1, wouldReuse: 0, undeclared: 1, tripped: 0 });
+
+        const rows = yield* (yield* ProofLedger.make(root)).shadowRows;
+        expect(
+          A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
+        ).toStrictEqual(["undeclared-inputs"]);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   // C5 fixture (ruling 69): an unreadable changed set fails the tripwire closed — every
   // scoped lane is refused, and only a lane with no scope at all is still decided by
   // its digest.
@@ -640,35 +663,39 @@ describe("proof shadow changed packages", () => {
 
   // Two workspaces are the smallest repository in which "deepest containing workspace"
   // and "outside every workspace" are both observable.
-  const inWorkspaceCheckout = Effect.fn("ProofShadowTest.inWorkspaceCheckout")(function* <Value, Failure, Requirements>(
+  const seedWorkspaces = Effect.fn("ProofShadowTest.seedWorkspaces")(function* (root: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* fs.writeFileString(
+      path.join(root, "package.json"),
+      '{"name":"tripwire-root","private":true,"workspaces":["packages/*"]}\n'
+    );
+    for (const name of ["x", "y"]) {
+      yield* fs.makeDirectory(path.join(root, "packages", name, "src"), { recursive: true });
+      yield* fs.writeFileString(
+        path.join(root, "packages", name, "package.json"),
+        `{"name":"@beep/${name}","private":true}\n`
+      );
+    }
+  });
+
+  const inTempRoot = Effect.fn("ProofShadowTest.inTempRoot")(function* <Value, Failure, Requirements>(
     use: (root: string) => Effect.Effect<Value, Failure, Requirements>
   ) {
     const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
     return yield* Effect.acquireUseRelease(
-      fs.makeTempDirectory().pipe(
-        // The workspace reader canonicalises every directory it returns, so the root the
-        // paths resolve against has to be canonical too.
-        Effect.flatMap((created) => fs.realPath(created)),
-        Effect.tap((root) =>
-          Effect.gen(function* () {
-            yield* fs.writeFileString(
-              path.join(root, "package.json"),
-              '{"name":"tripwire-root","private":true,"workspaces":["packages/*"]}\n'
-            );
-            for (const name of ["x", "y"]) {
-              yield* fs.makeDirectory(path.join(root, "packages", name, "src"), { recursive: true });
-              yield* fs.writeFileString(
-                path.join(root, "packages", name, "package.json"),
-                `{"name":"@beep/${name}","private":true}\n`
-              );
-            }
-          })
-        )
-      ),
+      // The workspace reader canonicalises every directory it returns, so a temp
+      // root reached through a symlinked `TMPDIR` would not compare equal to it.
+      fs.makeTempDirectory().pipe(Effect.flatMap((created) => fs.realPath(created))),
       use,
       (root) => Effect.ignore(fs.remove(root, { recursive: true }))
     );
+  });
+
+  const inWorkspaceCheckout = Effect.fn("ProofShadowTest.inWorkspaceCheckout")(function* <Value, Failure, Requirements>(
+    use: (root: string) => Effect.Effect<Value, Failure, Requirements>
+  ) {
+    return yield* inTempRoot((root) => Effect.flatMap(seedWorkspaces(root), () => use(root)));
   });
 
   it("parses porcelain entries, keeping both sides of a rename and paths with spaces", () => {
@@ -693,7 +720,7 @@ describe("proof shadow changed packages", () => {
         const changed = yield* changedPackagesForAttempt(
           context(root),
           gitStub(
-            { output: "packages/x/src/a.ts\n" },
+            { output: "packages/x/src/a.ts\0" },
             {
               output:
                 " M packages/x/src/a.ts\0" +
@@ -717,7 +744,7 @@ describe("proof shadow changed packages", () => {
       Effect.gen(function* () {
         const changed = yield* changedPackagesForAttempt(
           context(root),
-          gitStub({ output: "docs/README.md\n" }, { output: "" })
+          gitStub({ output: "docs/README.md\0" }, { output: "" })
         );
         expect(changed).toMatchObject({ kind: "known", packages: [], paths: 1 });
         expect(renderProofChangedPackages(changed)).toBe("proof shadow changed packages: none (1 path(s))");
@@ -730,7 +757,7 @@ describe("proof shadow changed packages", () => {
       Effect.gen(function* () {
         const statusFailed = yield* changedPackagesForAttempt(
           context(root),
-          gitStub({ output: "packages/x/src/a.ts\n" }, { exitCode: 128, output: "fatal: not a git repository" })
+          gitStub({ output: "packages/x/src/a.ts\0" }, { exitCode: 128, output: "fatal: not a git repository" })
         );
         expect(statusFailed).toMatchObject({ kind: "unavailable" });
         expect(
@@ -740,7 +767,7 @@ describe("proof shadow changed packages", () => {
 
         const diffTruncated = yield* changedPackagesForAttempt(
           context(root),
-          gitStub({ output: "packages/x/src/a.ts\n", truncated: true }, { output: "" })
+          gitStub({ output: "packages/x/src/a.ts\0", truncated: true }, { output: "" })
         );
         expect(diffTruncated).toMatchObject({ kind: "unavailable" });
         expect(
@@ -748,6 +775,85 @@ describe("proof shadow changed packages", () => {
             diffTruncated.kind === "unavailable" ? diffTruncated.reason : ""
           )
         ).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // Review round 1, CodeRabbit Major: `resolveWorkspaceDirs` canonicalises every
+  // directory it returns, so a checkout reached through a symlink used to compare
+  // symlinked paths against canonical workspace directories and map nothing —
+  // `known []`, a silent fail-open for every lane.
+  it.effect("maps a changed path to its package when the checkout is reached through a symlink", () =>
+    inTempRoot((base) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const real = path.join(base, "real");
+        const link = path.join(base, "link");
+        yield* fs.makeDirectory(real, { recursive: true });
+        yield* seedWorkspaces(real);
+        yield* fs.symlink(real, link);
+
+        const changed = yield* changedPackagesForAttempt(
+          context(link),
+          gitStub({ output: "packages/x/src/a.ts\0" }, { output: "" })
+        );
+        expect(changed).toMatchObject({ kind: "known", packages: ["@beep/x"], paths: 1 });
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // Review round 1, kriegcloud P2: a workspace catalog that read cleanly but names
+  // nothing maps every path to nothing, which reads exactly like "nothing changed".
+  it.effect("reports an empty workspace list as unavailable rather than no changed packages", () =>
+    inTempRoot((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        // A root that declares workspaces but ships none: the read succeeds and is empty.
+        yield* fs.writeFileString(
+          path.join(root, "package.json"),
+          '{"name":"tripwire-root","private":true,"workspaces":["packages/*"]}\n'
+        );
+        const changed = yield* changedPackagesForAttempt(
+          context(root),
+          gitStub({ output: "packages/x/src/a.ts\0" }, { output: "" })
+        );
+        expect(changed).toStrictEqual(
+          ProofChangedPackagesUnavailable.make({ kind: "unavailable", reason: "workspace list was empty" })
+        );
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // Review round 1, CodeRabbit Minor: without `-z` git applies `core.quotePath` and a
+  // path carrying a space, a quote or a non-ASCII byte comes back C-quoted; without
+  // `--no-renames` only the destination of a rename is reported.
+  it.effect("reads the committed diff NUL-separated and rename-free, keeping paths verbatim", () =>
+    inWorkspaceCheckout((root) =>
+      Effect.gen(function* () {
+        const invocations = yield* Ref.make(A.empty<ReadonlyArray<string>>());
+        const recordingStub = Effect.fn("ProofShadowTest.recordingStub")(function* (
+          _command: string,
+          args: ReadonlyArray<string>
+        ) {
+          yield* Ref.update(invocations, A.append(args));
+          return {
+            exitCode: 0,
+            truncated: false,
+            output: A.contains(args, "diff") ? "packages/y/src/with space.ts\0packages/x/src/caf\u00e9.ts\0" : "",
+          };
+        });
+
+        const changed = yield* changedPackagesForAttempt(context(root), recordingStub);
+        expect(changed).toMatchObject({ kind: "known", packages: ["@beep/x", "@beep/y"], paths: 2 });
+
+        const diffArgs = pipe(
+          yield* Ref.get(invocations),
+          A.findFirst((args) => A.contains(args, "diff")),
+          O.getOrThrow
+        );
+        expect(diffArgs).toStrictEqual(["diff", "--name-only", "--no-renames", "-z", "origin/main...HEAD"]);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

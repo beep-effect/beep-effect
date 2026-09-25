@@ -373,19 +373,89 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
 });
 
 /**
+ * Run one repository command through a capture and take its whole output, or
+ * fail with why it cannot be trusted.
+ *
+ * **Details**
+ *
+ * The strict counterpart of a tolerant `capture(...).pipe(Effect.orElseSucceed(...))`
+ * read: a spawn failure carries `onSpawnFailure` as its message, a non-zero exit
+ * and a truncated capture each fail with the rendered command line, its exit code
+ * where there is one, and nothing parsed. Callers own their parsing, so a reader
+ * that must distinguish "the command said nothing" from "the command could not be
+ * read" never has to re-state these three branches.
+ *
+ * **Example** (Build the strict capture effect)
+ *
+ * ```ts
+ * import { runRepoCommandCapture } from "@beep/repo-cli/internal/repo-run"
+ * import { captureRepoCommandStrict } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const read = captureRepoCommandStrict({
+ *   repoRoot: ".",
+ *   command: "git",
+ *   args: ["status", "--porcelain=v1", "-z"],
+ *   onSpawnFailure: "Failed to read the working-tree status.",
+ *   capture: runRepoCommandCapture
+ * })
+ * console.log(Effect.isEffect(read)) // true
+ * ```
+ *
+ * @param options - The checkout, the command and its arguments, the spawn-failure message, and the capture to run it through.
+ * @returns The command's captured output, verbatim.
+ * @category services
+ * @since 0.0.0
+ */
+export const captureRepoCommandStrict = Effect.fn("Yeet.captureRepoCommandStrict")(function* (options: {
+  readonly repoRoot: string;
+  readonly command: string;
+  readonly args: ReadonlyArray<string>;
+  readonly onSpawnFailure: string;
+  readonly capture: typeof runRepoCommandCapture;
+}): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const { args, capture, command, onSpawnFailure, repoRoot } = options;
+  const commandText = A.join([command, ...args], " ");
+  const result = yield* capture(command, args, repoRoot).pipe(Effect.mapError(YeetCommandError.new(onSpawnFailure)));
+  if (result.exitCode !== 0) {
+    return yield* YeetCommandError.make({
+      message: `${commandText} exited with code ${result.exitCode}.`,
+      command: commandText,
+      exitCode: result.exitCode,
+    });
+  }
+  if (result.truncated) {
+    return yield* YeetCommandError.make({
+      message: `${commandText} produced more output than the capture bound.`,
+      command: commandText,
+    });
+  }
+  return result.output;
+});
+
+/**
  * Read the paths the head changed against its base, failing when the read did
  * not produce the whole list.
  *
  * **Details**
  *
- * The same `git diff --name-only <base>...HEAD` read {@link readYeetChangedPaths}
- * performs, with the opposite failure direction: a spawn failure, a non-zero
- * exit and a truncated capture each fail rather than degrade to no paths. A
- * caller that must not silently shrink its changed set — the proof shadow
- * pass's changed-package tripwire, which decides nothing when the set is
- * unknown and everything scoped when it is (time-to-certainty ruling 69) —
- * reads this; the docs-only settle rule keeps the tolerant reader, whose
- * failure direction is `hold`.
+ * The same merge-base diff {@link readYeetChangedPaths} performs, with the
+ * opposite failure direction: a spawn failure, a non-zero exit and a truncated
+ * capture each fail rather than degrade to no paths. A caller that must not
+ * silently shrink its changed set — the proof shadow pass's changed-package
+ * tripwire, which decides nothing when the set is unknown and everything scoped
+ * when it is (time-to-certainty ruling 69) — reads this; the docs-only settle
+ * rule keeps the tolerant reader, whose failure direction is `hold`.
+ *
+ * **Gotchas**
+ *
+ * The read is `-z`, so paths arrive NUL-separated and verbatim: without it git
+ * applies `core.quotePath` and a path carrying a non-ASCII byte, a quote or a
+ * newline comes back C-quoted and would be mapped to the wrong package or to
+ * none. Paths are therefore never trimmed — a leading or trailing space is part
+ * of the name. `--no-renames` is set because rename detection reports only the
+ * destination path, and a lane that verified the source path must see it change
+ * too; a rename surfaces as both sides, which is a superset of the default.
  *
  * **Example** (Build the strict reader effect)
  *
@@ -408,7 +478,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
  *
  * @param context - Repo context naming the checkout and its base ref.
  * @param capture - The command capture to run `git` through; the repo capture by default.
- * @returns The changed paths, trimmed and non-empty.
+ * @returns The changed paths, non-empty and unmodified.
  * @category services
  * @since 0.0.0
  */
@@ -417,23 +487,14 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
 ): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const range = `${context.base}...HEAD`;
-  const result = yield* capture("git", ["diff", "--name-only", range], context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to read the paths changed across ${range}.`))
-  );
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `git diff --name-only ${range} exited with code ${result.exitCode}.`,
-      command: `git diff --name-only ${range}`,
-      exitCode: result.exitCode,
-    });
-  }
-  if (result.truncated) {
-    return yield* YeetCommandError.make({
-      message: `git diff --name-only ${range} produced more output than the capture bound.`,
-      command: `git diff --name-only ${range}`,
-    });
-  }
-  return pipe(Str.split(result.output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  const output = yield* captureRepoCommandStrict({
+    repoRoot: context.repoRoot,
+    command: "git",
+    args: ["diff", "--name-only", "--no-renames", "-z", range],
+    onSpawnFailure: `Failed to read the paths changed across ${range}.`,
+    capture,
+  });
+  return pipe(Str.split(output, "\0"), A.filter(Str.isNonEmpty));
 });
 
 /**
@@ -442,11 +503,13 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
  *
  * **Details**
  *
- * `git diff --name-only <base>...HEAD` on the local remote-tracking ref is a
- * merge-base diff, so a stale ref still yields the head's own changes and no
- * fetch is needed. A failed or truncated read yields no paths, which can never
- * classify the head docs-only: the failure direction is `hold`, never a silent
- * `skip-satisfied`.
+ * `git diff --name-only --no-renames -z <base>...HEAD` on the local
+ * remote-tracking ref is a merge-base diff, so a stale ref still yields the
+ * head's own changes and no fetch is needed. A failed or truncated read yields
+ * no paths, which can never classify the head docs-only: the failure direction
+ * is `hold`, never a silent `skip-satisfied`. See
+ * {@link readYeetChangedPathsStrict} for why the read is NUL-separated and
+ * rename-free.
  *
  * **Example** (Build the reader effect)
  *
@@ -469,7 +532,7 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
  *
  * @param context - Repo context naming the checkout and its base ref.
  * @param capture - The command capture to run `git` through; the repo capture by default.
- * @returns The changed paths, trimmed and non-empty; empty when the diff could not be read.
+ * @returns The changed paths, non-empty and unmodified; empty when the diff could not be read.
  * @category services
  * @since 0.0.0
  */

@@ -1,6 +1,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
-import { Console, DateTime, Duration, Effect, Layer, pipe } from "effect";
+import { Console, DateTime, Duration, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { constFalse, dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -32,8 +32,8 @@ import {
   ProofReuseMiss,
 } from "./ProofFact.ts";
 import { ProofLedger } from "./ProofLedger.ts";
-import { readYeetChangedPathsStrict } from "./Settle.ts";
-import type { Crypto, FileSystem, Path } from "effect";
+import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
+import type { Crypto, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
@@ -539,24 +539,14 @@ const readWorktreeChangedPaths = Effect.fn("Yeet.ProofShadow.readWorktreeChanged
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture
 ): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const commandText = A.join(["git", ...WORKTREE_STATUS_ARGS], " ");
-  const result = yield* capture("git", WORKTREE_STATUS_ARGS, context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to read the working-tree status of ${context.repoRoot}.`))
-  );
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `${commandText} exited with code ${result.exitCode}.`,
-      command: commandText,
-      exitCode: result.exitCode,
-    });
-  }
-  if (result.truncated) {
-    return yield* YeetCommandError.make({
-      message: `${commandText} produced more output than the capture bound.`,
-      command: commandText,
-    });
-  }
-  return porcelainChangedPaths(result.output);
+  const output = yield* captureRepoCommandStrict({
+    repoRoot: context.repoRoot,
+    command: "git",
+    args: WORKTREE_STATUS_ARGS,
+    onSpawnFailure: `Failed to read the working-tree status of ${context.repoRoot}.`,
+    capture,
+  });
+  return porcelainChangedPaths(output);
 });
 
 const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(function* (
@@ -567,20 +557,36 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
   YeetCommandError,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
+  const fs = yield* FileSystem.FileSystem;
+  // The workspace reader canonicalises every directory it returns, so the root
+  // the changed paths resolve against has to be canonical too: a checkout
+  // reached through a symlink would otherwise compare symlinked paths against
+  // canonical workspace directories, match nothing, and read as "no package
+  // changed" — a silent fail-open for every lane.
+  const repoRoot = yield* fs
+    .realPath(context.repoRoot)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to resolve the checkout path ${context.repoRoot}.`)));
   // `FsUtils` is a layer the CLI builds at its entry point, but the verdict
   // writer's requirement set is fixed by its callers; build it for this one
   // workspace read and let the scope discard it, so nothing upstream widens.
   const workspaces = yield* Effect.scoped(
     Layer.build(FsUtilsLive).pipe(
-      Effect.flatMap((fsUtils) => collectWorkspaces(context.repoRoot).pipe(Effect.provide(fsUtils)))
+      Effect.flatMap((fsUtils) => collectWorkspaces(repoRoot).pipe(Effect.provide(fsUtils)))
     )
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the workspace list.")));
+  // A catalog that read cleanly but names no workspace maps every path to
+  // nothing, which is indistinguishable from "nothing changed" and would leave
+  // the tripwire inert. This repository always has workspaces, so an empty one
+  // is an unreadable one.
+  if (A.isReadonlyArrayEmpty(workspaces)) {
+    return ProofChangedPackagesUnavailable.make({ kind: "unavailable", reason: "workspace list was empty" });
+  }
   const committed = yield* readYeetChangedPathsStrict(context, capture);
   const worktree = yield* readWorktreeChangedPaths(context, capture);
   const paths = A.dedupe([...committed, ...worktree]);
   return ProofChangedPackagesKnown.make({
     kind: "known",
-    packages: changedPackageNamesForPaths(context.repoRoot, workspaces, paths),
+    packages: changedPackageNamesForPaths(repoRoot, workspaces, paths),
     paths: A.length(paths),
   });
 });
@@ -705,6 +711,13 @@ const laneInputScopes = (
  * digest already spans every input Turbo declares for the root task. Undeclared
  * lanes never reach the tripwire: the ledger refuses them as
  * `undeclared-inputs` first.
+ *
+ * A failed lane also carries an empty scope, because `resolveLaneInputDigest`
+ * short-circuits on failure before it reads any Turbo digest. Nothing is lost:
+ * every production lane tuple declares no digest, so a failed lane's key is
+ * `undeclared` and the ledger refuses it as `undeclared-inputs` before the
+ * tripwire runs. A lane whose digest the executor declared has no Turbo ledger
+ * to derive a scope from on either outcome.
  *
  * **Example** (A scoped lane trips on its own package)
  *
