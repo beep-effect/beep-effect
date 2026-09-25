@@ -24,7 +24,7 @@ body timeout. Its layer has an explicit acquisition/release hook budget.
 - Migrated non-live Bun tests: 20 passed across three files; test typecheck passed.
 - Full package verification: audit passed in 7.6 seconds; docgen in 4.4 seconds.
 - Configured Node timing: 20 passed and one optional live case skipped, whole
-  command 4.255 seconds. This does not prove an external OBS session executed.
+  command 4.506 seconds on `3cd5f90e82e41513a5a0daa72923c880c82a3ac1`. This does not prove an external OBS session executed.
 - Exact probe-expression harness with an injected fake WebSocket passed open,
   error, close, timeout, interruption and constructor-defect scenarios. Every
   constructed socket was closed once and all three listeners removed; a
