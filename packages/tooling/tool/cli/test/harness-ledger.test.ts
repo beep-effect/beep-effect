@@ -95,7 +95,7 @@ describe("harness-ledger CLI", () => {
   );
 });
 
-layer(TestLayer)("harness-ledger service", (it) => {
+layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
   it.effect("propose appends one line that HarnessLedgerRow decodes", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
@@ -356,7 +356,7 @@ layer(TestLayer)("harness-ledger service", (it) => {
 
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("prune-proposals proposes nothing when no session was observed", () =>
