@@ -2134,3 +2134,13 @@ config-sync passed and Effect/Vitest failed on the new attachment test. Use the
 specific lane result before running a generator. The test now uses `it.layer`
 with an explicit timeout; the unchanged ratchet passes. A failed wrapper-level
 hint should name the actual failing inner lane.
+
+### Imported-source invalidation stopped before Turbo — 2026-09-25
+
+The ordinary real lint invalidation probe put malformed syntax in identity's
+imported barrel. Bun rejected that file while loading the Cache CLI, before
+Turbo emitted a run summary. The experiment's one-summary assertion then failed.
+Retain this as a CLI-loading failure, not failed-task-cache evidence. The
+continued control uses a new unimported source file so Biome, rather than CLI
+module loading, owns the intended failure. Phase-aware assertions would have
+classified the first result without confusing the two boundaries.

@@ -371,7 +371,9 @@
     "research/scoped-evidence-path-review.json",
     "research/refs-key-quality-review.json",
     "research/ordinary-real-local-replay.json",
-    "research/scoped-layer-repair.json"
+    "research/scoped-layer-repair.json",
+    "research/current-census-handoff-review.json",
+    "research/ordinary-real-invalidation.json"
   ],
   "agentLaunchers": [
     {

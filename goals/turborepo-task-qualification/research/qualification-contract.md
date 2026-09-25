@@ -13,7 +13,38 @@ and capture-safety verdicts. Neither source review nor a local cache hit can
 satisfy those imports. The sole writer for the qualification source files and
 this packet is this task; sibling source files remain outside its write scope.
 
-## Current consumer checkpoint: Git-exclusion repair
+## Consumer checkpoint — 2026-09-25
+
+The source census was regenerated at `3df15e7a3e`: 144 workspaces, 3,473 graph
+nodes and 1,970 executable computations. Commands, dependencies, effective
+configuration and census source bindings match the prior snapshot. Input
+summaries differ on 90 nodes in the live checkout, where generated files and
+concurrent proof activity remain relevant. This is a source-population snapshot,
+not an atomic filesystem or runtime-equivalence proof. See
+[the census refresh](./current-census-handoff-review.json).
+
+The validated attachment now binds 1,011 sources, six planner artifacts and 49
+reviews, retaining 14 broader obligations. Scoped npm tool paths are accepted
+without relaxing containment, symlink rejection or digest checks. The pure
+policy API remains `@beep/repo-configs/cache`; source attachment does not grant
+qualification or authorize activation.
+
+The [v23 receipt](./local-matrix-v23.md) keeps stable Turbo 2.11.3 and canary
+2.11.5-canary.2 results separate at their frozen source. Each has 67 local
+observations, 40 checks and ten shadow decisions. Separately, the
+[ordinary real CLI replay](./ordinary-real-local-replay.json) proves one fresh
+miss and two local hits at `8f11af6e49`, including exact task-log archive bytes.
+The [source invalidation controls](./ordinary-real-invalidation.json) additionally
+verify valid-source invalidation, failed-task non-reuse and restored local replay.
+These source boundaries must not be collapsed into a current-head runtime claim.
+
+Adoption can consume the population, policy API, decomposition leads and
+retained invalidation evidence for preparation. Accepted signed conformance and
+trust receipts, complete semantic/capture closure, a validated qualified pilot,
+and final package/hosted closeout remain owed. No tuple is promoted by this
+checkpoint. The older section below is historical context, not current pins.
+
+## Historical consumer checkpoint: Git-exclusion repair
 
 The implementation and refreshed runtime experiments are at `0dca998780`.
 The latest operational census was refreshed at that same commit and accepted

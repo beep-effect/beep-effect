@@ -2038,3 +2038,22 @@ the full matrix, establish signed remote evidence or promote any tuple.
 The new scoped-tool attachment test now uses `it.layer` with a bounded layer
 timeout. The Effect/Vitest ratchet passes without a baseline change; see
 [the test-lifecycle repair](./research/scoped-layer-repair.json).
+
+### Ordinary real source invalidation and handoff refresh — 2026-09-25
+
+At frozen source `8f11af6e49`, a valid identity source edit causes a local miss
+and then a local hit. An unimported malformed source file fails the real lint
+task twice with the same new hash, both misses, and no archive for that hash.
+Restoring the original inputs recovers the original local hit. Independent
+summary review verifies the sole input-map changes and compares successful
+archive logs. An earlier malformed imported barrel stops during CLI loading
+before Turbo; it is retained separately and earns no task-failure credit. See
+[the invalidation receipt](./research/ordinary-real-invalidation.json).
+
+The regenerated source census at `3df15e7a3e` retains 144 workspaces, 3473 nodes
+and 1970 executable computations. Commands, dependencies, configurations and
+census source bindings are unchanged; 90 input summaries differ in the live
+checkout. The refreshed attachment accepts 1011 sources, six artifacts and 49
+reviews with all 14 broader obligations preserved. The shared qualification
+contract now distinguishes this current snapshot from historical runtime pins.
+Neither refresh promotes a tuple or supplies signed remote acceptance.
