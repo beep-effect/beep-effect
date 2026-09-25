@@ -1,0 +1,22 @@
+{
+  "lane": "r39-apps",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:54:35.877235+00:00",
+  "finished": "2026-09-25T08:58:18.553825+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-apps.jsonl`. It contains 0 confirmed and 0 disqualified records. Every assigned root was covered: 125 source files across `apps/architecture-lab-proof/src`, `apps/oip-web/src`, `apps/practice-kg-mcp/src`, `apps/professional-desktop/src`, `apps/professional-desktop/src-tauri/src`, and `apps/todox/src`.\n\nAll 58 scoped seeds still match their owners and classifications, so none were rewritten. Fourteen line anchors have drifted, including `r2-apps-mcpb-user-config-required`, `r2-apps-oip-route-instant-flags`, `r2-apps-oip-nav-image-priority`, `r3-apps-oip-redirects-permanent`, `r3-apps-oip-about-image-fill`, `r3-apps-contact-http-disable-logger`, `r3-apps-pglite-mkdir-recursive`, `r3-apps-dispatch-turn-subscribe-immediate`, `r3-apps-package-mkdir-recursive`, `r3-apps-package-foreach-discard`, `r3-apps-theme-mode-toggle-glyph-aria-hidden`, `r3-apps-oip-social-glyph-aria-hidden`, `r3-apps-theme-toggle-glyph-aria-hidden`, and `r3-apps-app-toaster-rich-colors`. No new eligible cluster turned up, and no source question was left unresolved.",
+  "transcriptSha256": "dfbfcd2eac227080be270bb0add6891537c8a6ee22ae65a13ebe335f376c6ee2",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

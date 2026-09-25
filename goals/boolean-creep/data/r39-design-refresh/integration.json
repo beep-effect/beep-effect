@@ -1,0 +1,25 @@
+{
+  "roundComplete": false,
+  "independentP3Approval": false,
+  "implementation": false,
+  "designs": [
+    {
+      "id": "r3-tooling-bun-report-drift-flags",
+      "originalSha256": "619cbd72ec172a514d85b0dc85ae785deb2b6887048a9afb7ec5ac3f25c76ac1",
+      "sha256": "85149dc0345971c7c21696b675831d38f7e518b539dff1049b7b5859996ed91f",
+      "operation": "append-source-location-map"
+    },
+    {
+      "id": "knowledge-ref-candidate",
+      "originalSha256": "83734c6aaf14bdda7f04954722c95cd60573fe6b9a55f4363c571f8154a3361a",
+      "sha256": "4ffb5fe45a4116732928e2396dd435d375476d8d68b2855c419aa5512f8386e4",
+      "operation": "append-source-location-map"
+    },
+    {
+      "id": "knowledge-ref-classification-input",
+      "originalSha256": "2a0215d2b13ac93fcfce6432f52f9ed1be30ad145c419c02b8ee4ecb239a2215",
+      "sha256": "365fe0adfa52af6500df3a7a3fb56bfb95a6c62a54a2c74abb276a918c178c44",
+      "operation": "append-source-location-map"
+    }
+  ]
+}

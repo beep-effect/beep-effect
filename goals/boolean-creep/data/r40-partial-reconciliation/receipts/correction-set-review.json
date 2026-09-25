@@ -1,0 +1,171 @@
+{
+  "kind": "r40-correction-set-review/v1",
+  "createdAt": "2026-09-25T11:02:19.134464+00:00",
+  "disposition": "approved-exact-bounded-correction-set",
+  "findingCount": 0,
+  "findings": [],
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-inventory-before-writer-admission.jsonl",
+      "sha256": "897fcb6a37b25cd9c53d364b154cb0291fda850bb1725732a188683b426d044c"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-citation-corrections.json",
+      "sha256": "a80647e94e6f86d7ad501b8b60ad7775dbb1c01b30f9a9479ac2c1f2a81f4b10"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/pending-inventory-withdrawals.json",
+      "sha256": "761223c698fd781202afd5e0a4bf120abad8aa1874a467763d2b747dd66ce58a"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/duckdb-proposed-design.json",
+      "sha256": "0e2c5aa930ca084dfea73c93829760736e834a184d59d54fa460f7e41fbc08d8"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/duckdb-design-clarification.json",
+      "sha256": "02882a4da5526217a1ff1bd8d78222153686b8eff9f1c1ecfefa61e760a2fe0f"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/correction-set-validation.json",
+      "sha256": "3c0068a342bffdb023a0b997771171e96299c3b21df5d6b83ecaaac228e6a45b"
+    },
+    {
+      "file": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "sha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-designs/duckdb-transaction-began-closed.md",
+      "sha256": "8b0bab86da531e270cce38a0b2473a266208d63244a737f5b16ca7f905e8759e"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-design-archives/tour-state-open-payload.md",
+      "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-design-archives/duckdb-transaction-began-closed.md",
+      "sha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "sha256": "678ef629f5faee38272d1aa33d63c0465c856dc2364ebda3d63acd1deeb50fb0"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "sha256": "d29685834098895e62ff905bdbc94e9dc76fb3007c38033a6d24085845ebb053"
+    },
+    {
+      "file": ".repos/effect/packages/effect/src/Effect.ts",
+      "sha256": "e7edbbf8f68afc9ea35f12b4ac08c57483caedd36a4b797da99bdb329f08716f"
+    },
+    {
+      "file": ".repos/effect/packages/effect/src/internal/effect.ts",
+      "sha256": "9d5aa0718935ae52fce439b611f7eebf3fc6a655c6782f1efac8af3e40320547"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "sha256": "678ef629f5faee38272d1aa33d63c0465c856dc2364ebda3d63acd1deeb50fb0",
+      "matchesOriginalR40Source": true
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e",
+      "matchesOriginalR40Source": true
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "sha256": "d29685834098895e62ff905bdbc94e9dc76fb3007c38033a6d24085845ebb053",
+      "matchesOriginalR40Source": true
+    }
+  ],
+  "scopeLimits": {
+    "withdrawals": "Mechanical cross-artifact verification only. Reviewer authored original withdrawal recommendations; this is NOT independent semantic reapproval of those withdrawals.",
+    "independentReview": "Two citation/kind corrections and narrow DuckDB rollback-assignment clarification.",
+    "excluded": "New StreamWriterState admission, other owner semantics, full P3, dry-round or implementation credit, publication/proof readiness.",
+    "liveProse": "README/PLAN may have advanced; neither is treated as still frozen or reviewed here."
+  },
+  "inventoryChecks": {
+    "canonicalRows": 726,
+    "proposedRows": 724,
+    "proposedQualified": 107,
+    "proposedDisqualified": 617,
+    "removedIds": [
+      "html-standard-global-boolean-attributes",
+      "tour-state-open-payload"
+    ],
+    "addedIds": [],
+    "changedRows": [
+      {
+        "id": "nlp-mcp-text-stream-options",
+        "changedKeys": ["line"]
+      },
+      {
+        "id": "openclaw-telegram-channel-document-flags",
+        "changedKeys": ["kind", "line"]
+      }
+    ],
+    "allOtherRecordsIdentical": true,
+    "relativeOrderPreserved": true,
+    "withdrawnRowsEqualCanonical": true,
+    "citationBeforeAndAfterMatchExactly": true,
+    "canonicalSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+    "proposedSha256": "897fcb6a37b25cd9c53d364b154cb0291fda850bb1725732a188683b426d044c"
+  },
+  "archiveChecks": [
+    {
+      "id": "tour-state-open-payload",
+      "canonicalFile": "goals/boolean-creep/designs/tour-state-open-payload.md",
+      "archiveFile": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-design-archives/tour-state-open-payload.md",
+      "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82",
+      "byteIdentical": true
+    },
+    {
+      "id": "duckdb-transaction-began-closed",
+      "canonicalFile": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "archiveFile": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-design-archives/duckdb-transaction-began-closed.md",
+      "sha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77",
+      "byteIdentical": true
+    }
+  ],
+  "citationReview": [
+    {
+      "id": "nlp-mcp-text-stream-options",
+      "approved": true,
+      "reason": "TextStreamOptions class starts253;251 is JSDoc metadata.253-266 spreads TextReadOptions.fields, whose skipEmpty/trim declarations225/228 remain independent BoolKeyDefaultFalse fields. Onlyline251->253."
+    },
+    {
+      "id": "openclaw-telegram-channel-document-flags",
+      "approved": true,
+      "reason": "telegramChannelDocument123-134 constructs an object literal; configWrites125 andenabled127 are literalBoolean wire settings,126 is dmPolicy. Change line126->123 andkind type-literal->object-literal only; D2 unchanged."
+    }
+  ],
+  "duckdbReview": {
+    "approved": true,
+    "appendOnly": true,
+    "originalPrefixBytesPreserved": true,
+    "appendedBytes": 997,
+    "originalSha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77",
+    "proposedSha256": "8b0bab86da531e270cce38a0b2473a266208d63244a737f5b16ca7f905e8759e",
+    "sourceLines": [
+      373, 374, 375, 376, 377, 378, 383, 384, 385, 387, 388, 392, 393, 394, 395
+    ],
+    "effectReferenceCurrentHead": "2a8f5c748d83d8de22bf865618aa76ec77b000b2",
+    "effectReferenceNote": "Reference HEAD has advanced from earlier clarification receipt, but both cited Effect source file hashes are byte-identical to that receipt; approval binds bytes, not stale HEAD.",
+    "behavior": "BEGIN succeeds before began=true. COMMIT branch assigns closed only after unignored COMMIT completes. Failure branch yields ROLLBACK.pipe(Effect.ignore), then assigns closed and rethrows original use cause. Effect.ignore default uses matchEffect with success/failure mapped to void; typed rollback failure is swallowed, so assignment still runs. Unignored defect/interruption before assignment leaves latches open for ensuring. Preserve mask and restore placement, SQL ordering, typed error suppression, cleanup retry behavior. Appendix explicitly overrides earlier success-only wording without changing implementation.",
+    "cardinality": "Original4/3 retained; this review does not reapprove full design or public grammar."
+  },
+  "newWriterAdmissionIncluded": false,
+  "canonicalEdited": false,
+  "proofsRun": false,
+  "P3Credit": false,
+  "dryCredit": false
+}

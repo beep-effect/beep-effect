@@ -1,0 +1,22 @@
+{
+  "lane": "r40-foundation-capability",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T10:39:32.466113+00:00",
+  "finished": "2026-09-25T10:43:13.232588+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 2,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-capability.jsonl`\n\nConfirmed 2, disqualified 0. All nine assigned roots were covered (165 TypeScript sources; no non-TypeScript or template files in the lane).\n\nSeed drift: `ColorSupport` still qualifies, but representable states are 32 once `ColorSupportLevel` (0|1|2|3) is counted with the three flags; legal stays 3. `MinimalFoldMatchSearch` still qualifies, but `match` is `Option<MatchedText>`, not a boolean, so the boolean members are `ambiguous` and `exhausted` (8 representable, 4 legal). `UniqueMatchSearch` has only `ambiguous`. `BackendCapabilities` now starts at line 250 (seed 247) and `AnnotationOptions` at line 318 (seed 316); those classifications are unchanged and were not rewritten. Other seeded clusters still match their prior rulings.",
+  "transcriptSha256": "17a6a326b3af649acf1e5e8979b0fdf24eed159a84f90357a210a5254a425703",
+  "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a",
+  "seedSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

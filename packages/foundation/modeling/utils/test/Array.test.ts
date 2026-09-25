@@ -1,7 +1,8 @@
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
 import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
-import { describe, expect, it } from "vitest";
 
 const nonEmpty: A.NonEmptyReadonlyArray<number> = [1, 2, 3];
 

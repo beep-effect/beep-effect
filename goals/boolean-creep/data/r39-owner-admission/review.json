@@ -1,0 +1,206 @@
+{
+  "kind": "r39-independent-owner-admission-review/v1",
+  "sourceHead": "220d9426dad4b708807b6297cb71d75449288749",
+  "main": "220d9426dad4b708807b6297cb71d75449288749",
+  "historicalSource": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "scope": "Two bounded owner qualification/design admission proposals only",
+  "admissionApproved": true,
+  "findingCount": 0,
+  "findings": [],
+  "owners": [
+    {
+      "id": "effect-vitest-inspect-context-phase",
+      "admissionApproved": true,
+      "findingCount": 0,
+      "findings": [],
+      "completeOwner": "Private twelve-property return object at EffectVitestDetectors.ts681-717; five actual Boolean fields, including provider facts. Function parameters are not the nominated owner.",
+      "cardinality": {
+        "representable": 8,
+        "legal": 4
+      },
+      "evidence": "E4 at685-687; also test-presence redundancy. Four modes follow enclosingTest637-639,743-765,1149-1152.",
+      "producerClosure": "Single private producer681-717, single construction1429; all thirteen detector calls1430-1442 inspected. No public context input boundary.",
+      "consumerClosure": [
+        "helper lookup689",
+        "runtime720/726",
+        "layer769/777",
+        "scope835/841",
+        "result862/868",
+        "expect987/991",
+        "boolean1034/1039",
+        "property1068/1070",
+        "clock1192/1198",
+        "resource callback792-818"
+      ],
+      "targetReuse": "Retain existing test Option and exact callback/mode payload. Remove derivatives; do not create parallel phase state. Provider facts and helper payload stay independent.",
+      "guardAccounting": "Delete three local derivatives and three returned fields plus all stored-field reads. Eligibility predicates remain necessary and are accurately described as replacements, not deleted decisions.",
+      "encodedCompatibility": "Private synchronous operational context; no codec or persisted field. Ordered findings and AST/callback identity preserved.",
+      "testInventory": "Existing detector harness covers plain/effect/live, runtime/scope/result/data/property/clock, helper reachability/shadowing, withLive and provider handling. Design requests complete ordered findings across all four states and supported independent facts. No implementation test execution claimed."
+    },
+    {
+      "id": "r39-cli-internal-root-append-terminal-already",
+      "admissionApproved": true,
+      "findingCount": 0,
+      "findings": [],
+      "completeOwner": "Sibling locals inside appendLocked657-686; appendedTerminal674 and terminalAlreadyExists677 are actual Booleans. journalExists658 remains independent.",
+      "cardinality": {
+        "representable": 4,
+        "legal": 3
+      },
+      "evidence": "E4: terminalAlreadyExists = appendedTerminal && prior terminal ID membership.",
+      "producerClosure": "Local const bindings cannot be supplied externally. Decoded event union140-160 accepts start/finish/termination/compaction; terminalAttemptIds234-238 includes both terminal tags. All public inputs continue through existing decoder.",
+      "consumerClosure": [
+        "append suppression679",
+        "retention IDs681-684",
+        "reconciliation680 before compaction685",
+        "external callers AttemptJournal246 and scheduler734"
+      ],
+      "targetReuse": "Existing module already imports LiteralKit and identity annotations. No exact equivalent TerminalAppendDisposition/fresh-terminal/duplicate-terminal domain found in CLI source. Private three-case literal is a derived view of event plus journal, not encoded state. Event guards retain payload narrowing.",
+      "guardAccounting": "Delete two stored Boolean locals and implication conjunction; replace downstream reads with case dispatch. Terminal classifier, membership, compaction guard, filesystem observation, locking, repair and errors remain.",
+      "encodedCompatibility": "No encoded changes. Original line is appended unchanged; decoded event controls state; eventTag remains diagnostic. Journal-compacted does not reserve an attempt slot; nonterminal records after terminal remain supported.",
+      "testInventory": "Read lock refusal2651-2668, compaction2671-2688, ordinary finish/cross-tag duplicate and repeated abnormal terminal3794-3847. Planned extensions cover all three states, both terminal tags/orders, different IDs, absent/existing journal and nonterminal-after-terminal. No implemented or passing new tests claimed."
+    }
+  ],
+  "inputHashes": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "sha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "sha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
+      "sha256": "f7038d83d2a9beab41a4e5b7943eb36f757b0be37e3a2f6290b1a1b89cf9b28e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts",
+      "sha256": "af38dcea9fe5c4ba8e77c7b8254b645d01160d2ae3bf418595a2fd5b22957243"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "sha256": "baafff158d39672af2113e26404994e6ec270b32edf1dd826e9d879afcc401cc"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "sha256": "fc8a785e45d60a4602d3a83ed9adb5933b1526cc0ae7c1a356d6792aaa1de46f"
+    },
+    {
+      "file": "AGENTS.md",
+      "sha256": "e72d3febf2eea6ef6cbd29300ebde44775560d4237506bb27492a0ac407ca9a9"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-inspect-context-design/disposition.json",
+      "sha256": "840d4ef831221347e70982e1494aaa6934a998e68ecc5957adf4a662458eeba6"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-inspect-context-design/effect-vitest-inspect-context-phase.md",
+      "sha256": "8f18cd2aebe80a27cf67e67c6a8bb0ba3084ecc40e71206f5e8d7e991abe479e"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-inspect-context-design/proposed-row.json",
+      "sha256": "8c9b144c5fa6944a034dfa3932cc78854ed64e0af199651e3ec3a238445ef459"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-inspect-context-owner-audit/disposition.json",
+      "sha256": "af272ca7ff05d79852499bcace42b110568ca35656146c3f75caf4c0313bf979"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-inspect-context-owner-audit/disposition.md",
+      "sha256": "bc3670f3939d562f63813ad0e0f3c2279c2b4386c153ba3950079ca63c0490db"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-inspect-context-owner-audit/truth-table.json",
+      "sha256": "6c9e3e86e1a9afe26a40d0c34ded3beacc52ef0dd732fe7e14b705789610bea1"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-append-terminal-owner-audit/disposition.json",
+      "sha256": "f30b1c91284df39978adab8791f29517a043f305affcc4a68adf3b82b09eebdf"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-append-terminal-owner-audit/disposition.md",
+      "sha256": "95e48ac2cc32a6769523a9d14bfb616e367e0f0bc9971d585bfb9ce8063f77fb"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-append-terminal-owner-audit/r39-cli-internal-root-append-terminal-already.design.md",
+      "sha256": "3f703de48a9afac7bb81c3df37c6831dd43a1c29437a4b71aa6d6475652afe62"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-append-terminal-owner-audit/truth-table.json",
+      "sha256": "6a56c1a8cad4a98831e8460cb332c10d49419df00852c9017be0e2f01bf2f39e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-internal-root.jsonl",
+      "sha256": "18274e19841bf4b869be6120d66cd8a2cd9ac4bf1c5c3f3dbb08fa17f4e4027e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-l-q.jsonl",
+      "sha256": "ba16eab9f8df06bcaf95ef6908d257ae9d96b82e476270cf1f0c9e33f264f9ae"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "sha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622",
+      "currentHeadMatches": true,
+      "historicalRoundSourceMatches": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "sha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f",
+      "currentHeadMatches": true,
+      "historicalRoundSourceMatches": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
+      "sha256": "f7038d83d2a9beab41a4e5b7943eb36f757b0be37e3a2f6290b1a1b89cf9b28e",
+      "currentHeadMatches": true,
+      "historicalRoundSourceMatches": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts",
+      "sha256": "af38dcea9fe5c4ba8e77c7b8254b645d01160d2ae3bf418595a2fd5b22957243",
+      "currentHeadMatches": true,
+      "historicalRoundSourceMatches": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "sha256": "baafff158d39672af2113e26404994e6ec270b32edf1dd826e9d879afcc401cc",
+      "currentHeadMatches": true,
+      "historicalRoundSourceMatches": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "sha256": "fc8a785e45d60a4602d3a83ed9adb5933b1526cc0ae7c1a356d6792aaa1de46f",
+      "currentHeadMatches": true,
+      "historicalRoundSourceMatches": true
+    }
+  ],
+  "outputs": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-independent-admission-review/review.md",
+      "sha256": "938545af043814ab96723e9320a47749e98abcfc461d31e6310b7bea70085f48"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-independent-admission-review/projection-checks.json",
+      "sha256": "a3de6cd03b0287a4c0b76f456e05be30f3d509434242e117affc9e517eacd762"
+    }
+  ],
+  "canonicalMutations": false,
+  "implementation": false,
+  "blanketP3Approval": false,
+  "dryCredit": false
+}

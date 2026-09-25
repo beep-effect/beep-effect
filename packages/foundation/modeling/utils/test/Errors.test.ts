@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { Err } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 
