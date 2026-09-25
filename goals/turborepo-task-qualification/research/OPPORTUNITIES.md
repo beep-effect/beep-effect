@@ -2032,3 +2032,14 @@ exactly those entries and changes the hash; repeat masked plans agree. Evidence:
 in input-profile validation would expose this before a long comparison matrix.
 Do not remove live proof artifacts or add exclusions without establishing their
 semantic relevance. No task body was executed by these controls.
+
+### Node-hosted worktree test launched a Bun-only CLI — 2026-09-25
+
+The older merged-preview coverage run passed 4,668 tests but failed the worktree
+reference-linking integration test with `ReferenceError: Bun is not defined`.
+The test used `process.execPath`, which names Node in the Vitest coverage
+process, to launch the Bun-only CLI. The same assumption remains in main.
+Resolving Bun before adding the fixture's stub executable to the child PATH
+preserves the simulated install while selecting the intended runtime. An
+explicit runtime contract in subprocess fixtures would catch this before the
+full coverage lane. Evidence: `research/worktree-runtime-repair.json`.

@@ -343,7 +343,8 @@
     "research/main-alias-integration-repair.json",
     "research/post-main-census-refresh.json",
     "research/generated-input-lint-controls.json",
-    "research/proof-reuse-delta-review.json"
+    "research/proof-reuse-delta-review.json",
+    "research/worktree-runtime-repair.json"
   ],
   "agentLaunchers": [
     {

@@ -1710,3 +1710,12 @@ tests passed. The earlier filtered run passed 23 tests and skipped 239.
 serialization from Crypto service/error propagation, temporary index/staging
 writes, and metadata-only package scope. It is accepted as review 28, with all
 13 broader obligations retained. No tuple is qualified by these results.
+
+### Worktree-test runtime repair — 2026-09-25
+
+The older merged-preview coverage proof exposed an inherited test that used
+Node's executable to launch the Bun-only CLI. Resolving Bun before the fixture
+PATH override preserves the mocked nested install. All 36 worktree tests pass
+both normally and with coverage enabled; package lint/type-check pass. See
+[the attributed receipt](./research/worktree-runtime-repair.json). These scoped
+checks do not replace the final full proof or qualify any cache tuple.

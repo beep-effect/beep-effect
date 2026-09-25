@@ -17,6 +17,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, Stream } from "effect";
+import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
 import { fixture, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
@@ -401,7 +402,16 @@ esac
     yield* writeExecutable(f.path.join(f.bin, "bun"), "#!/bin/sh\nexit 0\n");
     const cli = yield* f.path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
     const ambientPath = yield* Config.String("PATH");
-    const bun = process.execPath;
+    // Vitest may run under Node; resolve Bun before the fixture shadows it.
+    const runtime = yield* ChildProcess.make("bun", ["-p", "process.execPath"], {
+      env: { PATH: ambientPath },
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "inherit",
+    });
+    const bun = yield* runtime.stdout.pipe(Stream.decodeText(), Stream.mkString, Effect.map(Str.trim));
+    expect(yield* runtime.exitCode).toBe(0);
+    expect(bun).not.toBe("");
     const handle = yield* ChildProcess.make(bun, [cli, "worktree", "new", "topic"], {
       cwd: f.owner,
       env: { HOME: f.home, PATH: `${f.bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: f.root },
