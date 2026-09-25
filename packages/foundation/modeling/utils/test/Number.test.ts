@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { N } from "@beep/utils";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "@effect/vitest";
 
 describe("Number utilities", () => {
   it("refines positive numeric values", () => {

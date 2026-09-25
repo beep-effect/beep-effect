@@ -5,7 +5,7 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Keep all test runs isolated; shared config disables isolation for coverage.
+      // Model initialization must not reuse mutated module state across test files.
       isolate: true,
       testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 20_000,
     },

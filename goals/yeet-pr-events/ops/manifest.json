@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "yeet-pr-events",
+    "title": "Yeet PR Events",
+    "status": "paused",
+    "created": "2026-09-25",
+    "updated": "2026-09-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/yeet-pr-events",
+  "lifecycle": "paused",
+  "mission": "Make `yeet monitor --until-ready` the durable producer of every PR event that matters (required reds, base conflicts, review threads, human comments) as attributed, per-head-coalesced inbox rows; deliver them to the owning session whether it is blocked, idle, or dead; and measure the push -> row -> ack timeline.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/pr-event-awareness",
+    "graduated": "2026-09-25"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/yeet-pr-events/README.md",
+    "goals/yeet-pr-events/SPEC.md",
+    "goals/yeet-pr-events/PLAN.md",
+    "goals/yeet-pr-events/GOAL.md",
+    "goals/yeet-pr-events/research/SOURCES.md",
+    "explorations/pr-event-awareness/BRIEF.md",
+    "explorations/pr-event-awareness/MAP.md",
+    "explorations/pr-event-awareness/DECISIONS.md",
+    "explorations/pr-event-awareness/RESEARCH.md",
+    "explorations/pr-event-awareness/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/pr-event-awareness/RESEARCH.md",
+    "../../explorations/pr-event-awareness/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/yeet-pr-events/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research inheritance",
+      "status": "complete"
+    },
+    {
+      "id": "W1",
+      "name": "Check fidelity and measurement",
+      "status": "pending"
+    },
+    {
+      "id": "W2",
+      "name": "Converge.ts, loop contract and wave return",
+      "status": "pending"
+    },
+    {
+      "id": "W3",
+      "name": "Conflict row and cleared ack",
+      "status": "pending"
+    },
+    {
+      "id": "W4",
+      "name": "Comment rows and per-consumer cursor",
+      "status": "pending"
+    },
+    {
+      "id": "W5",
+      "name": "Wave-exempt kit and hook parity",
+      "status": "pending"
+    },
+    {
+      "id": "W6",
+      "name": "Attribution and law text",
+      "status": "pending"
+    },
+    {
+      "id": "W7",
+      "name": "Socket probe gate",
+      "status": "pending"
+    },
+    {
+      "id": "W8",
+      "name": "Session-owned inbox tail",
+      "status": "pending"
+    },
+    {
+      "id": "W9",
+      "name": "pr-wave notifier and liveness rule",
+      "status": "pending"
+    },
+    {
+      "id": "W10",
+      "name": "Snapshot collapse follow-up",
+      "status": "pending"
+    },
+    {
+      "id": "P11",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P12",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P13",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "bunx --bun vitest run packages/tooling/tool/cli/test/yeet-status-triage.test.ts packages/tooling/tool/cli/test/proof-job.test.ts",
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bash -n .claude/hooks/yeet-inbox.sh",
+    "test \"$(wc -m < goals/yeet-pr-events/GOAL.md)\" -le 4000",
+    "jq . goals/yeet-pr-events/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check",
+    "git diff --check -- goals/yeet-pr-events goals/INDEX.md",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The W7 probe delivers from none of the detached senders; close slice 2 as cut instead of improvising a sender.",
+    "The retire fence rejects the tail even with its cwd outside the lane.",
+    "withKeyDefaults cannot keep the legacy status.json fixture decoding.",
+    "The SessionStart hook cannot spawn the tail and return inside its 2 s budget.",
+    "The work needs .claude/settings.json edits, a drivers/* package, a settings-level opt-in, or a change to the sequence-break or hook-pulse invariants.",
+    "Target-file ownership overlaps in the Yeet internals or the hooks and coordination has not resolved it.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
