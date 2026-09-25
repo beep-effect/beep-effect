@@ -1719,3 +1719,16 @@ PATH override preserves the mocked nested install. All 36 worktree tests pass
 both normally and with coverage enabled; package lint/type-check pass. See
 [the attributed receipt](./research/worktree-runtime-repair.json). These scoped
 checks do not replace the final full proof or qualify any cache tuple.
+
+### Process capture boundary review — 2026-09-25
+
+Two shared Git/command executor deltas are reviewed in
+[the receipt](./research/process-boundary-delta-review.json). Six native
+synthetic subprocess controls distinguish merged/trimmed human output from
+untrimmed stdout-only machine text. Both replace malformed UTF-8 and enforce
+the output bound. The raw API documentation now states those limits. The
+existing step/Git suite passed 22 tests; package lint/type-check passed.
+
+The operational attachment accepted review 29 with 968 sources, six artifacts
+and all 13 broader obligations retained. This establishes neither arbitrary
+filename/byte fidelity nor transitive semantic closure or signed replay.

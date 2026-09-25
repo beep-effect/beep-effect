@@ -2043,3 +2043,22 @@ Resolving Bun before adding the fixture's stub executable to the child PATH
 preserves the simulated install while selecting the intended runtime. An
 explicit runtime contract in subprocess fixtures would catch this before the
 full coverage lane. Evidence: `research/worktree-runtime-repair.json`.
+
+### Raw capture is decoded and bounded text — 2026-09-25
+
+`runRepoCommandCaptureRaw` advertised byte-for-byte stdout, but native controls
+show invalid UTF-8 becomes replacement characters and oversized output is
+truncated with a notice. The API correctly preserves leading whitespace and
+separates stderr for text protocols. Its documentation now names the decoding
+and truncation limits; callers requiring byte fidelity need a byte contract.
+Evidence: `research/process-boundary-delta-review.json`. No byte-preserving
+qualification is inferred from the raw name or NUL-delimited parsing.
+
+### Inherited Effect/Vitest inventory drift — 2026-09-25
+
+The full proof reports 21 new detector findings across six test files. Each
+file matches main before the qualification branch's runtime-only worktree test
+repair; five still match byte for byte. Inventory-aware checks when the source
+tests land would prevent a later qualification proof inheriting this red.
+The attribution is retained with the process-boundary archive. No inventory
+baseline was expanded to waive the findings.

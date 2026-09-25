@@ -344,7 +344,8 @@
     "research/post-main-census-refresh.json",
     "research/generated-input-lint-controls.json",
     "research/proof-reuse-delta-review.json",
-    "research/worktree-runtime-repair.json"
+    "research/worktree-runtime-repair.json",
+    "research/process-boundary-delta-review.json"
   ],
   "agentLaunchers": [
     {
