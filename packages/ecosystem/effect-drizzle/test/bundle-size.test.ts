@@ -1,4 +1,5 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Deferred from "effect/Deferred";
 import {
@@ -11,6 +12,7 @@ import {
   orDie,
   scoped,
   tryPromise,
+  withSpan,
 } from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
@@ -47,7 +49,7 @@ describe("bundle size probe", () => {
   it.effect(
     "measures the sole artifact as raw UTF-8 bytes",
     fnUntraced(function* () {
-      const artifact = yield* tryPromise(buildBundleConsumer);
+      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.bundle.build"));
       expect(artifact.rawBytes).toBe(new TextEncoder().encode(artifact.text).byteLength);
       expect(artifact.rawBytes).toBeGreaterThan(1000);
     })
@@ -91,14 +93,16 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
           expect(baselineAfter).toEqual(baselineBefore);
         }).pipe(orDie)
       );
-      const artifact = yield* tryPromise(buildBundleConsumer);
+      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.bundle.build"));
       const baselineRawBytes = artifact.rawBytes - 1;
       const probe = yield* acquireProbe([
         Bun.which("bun") ?? "bun",
         new URL("./bundle-size.probe.ts", import.meta.url).pathname,
         `--test-baseline-raw-bytes=${baselineRawBytes}`,
       ]);
-      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output));
+      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
+        withSpan("EffectDrizzle.bundle.drain")
+      );
       expect(exitCode).not.toBe(0);
       const lines = stdout.split("\n");
       expect(lines[0]).toBe(formatBundleSizeLine(artifact.rawBytes, baselineRawBytes));
@@ -132,7 +136,9 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
       const interrupted = yield* Fiber.await(fiber);
       assertTrue(Exit.hasInterrupts(interrupted));
       expect(probe.process.signalCode).toBe("SIGKILL");
-      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output));
+      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
+        withSpan("EffectDrizzle.bundle.drain")
+      );
       expect(exitCode).not.toBe(0);
       expect(stdout).toBeTypeOf("string");
       expect(stderr).toBeTypeOf("string");

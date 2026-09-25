@@ -1,7 +1,8 @@
 /** Executable proof of the ecosystem polarity contract and dialect import DAG. */
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import { fnUntraced, forEach, gen, map, tryPromise } from "effect/Effect";
+import { fnUntraced, forEach, gen, map, tryPromise, withSpan } from "effect/Effect";
 import { decodeUnknownEffect, Record as RecordSchema, String, Unknown } from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -82,6 +83,7 @@ const sourceEdges = (directoryUrl: URL, requiredFile: string) =>
       files,
       (file) =>
         tryPromise(() => Bun.file(new URL(file, directoryUrl)).text()).pipe(
+          withSpan("EffectDrizzle.boundary.read", { attributes: { file } }),
           map((source) => moduleSpecifiers(file, source))
         ),
       { concurrency: "unbounded" }
@@ -216,7 +218,7 @@ describe("bundle isolation", () => {
   it.effect(
     "drops unrelated PostgreSQL column families and SQLite from an integer import",
     fnUntraced(function* () {
-      const artifact = yield* tryPromise(buildBundleConsumer);
+      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.boundary.build"));
       // A vacuous stub (the Bun.build shaker failure mode) cannot pass:
       // the bundle must carry the real integer implementation.
       expect(artifact.rawBytes).toBeGreaterThan(1000);

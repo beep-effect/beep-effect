@@ -143,3 +143,21 @@ property asserts preservation of that omission. Full package verification
 passed (audit 16.0s, docgen 3.2s), and the focused Node property passed with 54
 unrelated cases skipped. The initial failure log remains in private proof
 artifacts. Runner adoption, final ledger reconciliation and timings remain.
+
+## Public runner adoption
+
+All seven runtime suites now import `it` from `@beep/test-runner`; both native
+integration suites use its `it.layer` with the existing 90000ms hook budget.
+The dependency is development-only and generated TypeScript references were
+synchronized. Existing test modes, assertions and native clients are retained.
+
+PGlite setup errors identify generate/apply/regenerate phases and carry named
+spans. SQLite first/no-op pushes, direct open/close and directory cleanup have
+named spans. Bundle build/drain and boundary source reads/builds are named;
+source-read attributes contain only the relative file name.
+
+Full package verification passed (audit 15.9s, docgen 3.2s). The focused Node
+PGlite contention test passed (one case, nine skipped, 5.35s) with
+`BEEP_TEST_TRACE=1`, but no trace lines appeared in the captured output. This
+proves runner execution, not diagnostic-output completeness. Retain the open
+observability dispositions until phase and failure-output checks are complete.

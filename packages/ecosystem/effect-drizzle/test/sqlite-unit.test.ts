@@ -2,7 +2,8 @@
 
 import { SchemaAssemblyError as SqliteSchemaAssemblyError } from "@beep/effect-drizzle/sqlite";
 import { fcRuns } from "@beep/fc-runs";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { defineRelations, getTableName, is as isDrizzleEntity, SQL } from "drizzle-orm";
 import { getTableConfig, SQLiteDialect } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";

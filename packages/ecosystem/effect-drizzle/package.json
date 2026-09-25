@@ -74,6 +74,7 @@
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
     "@beep/pglite": "workspace:^",
+    "@beep/test-runner": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/sql-pglite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",

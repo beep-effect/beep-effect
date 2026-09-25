@@ -1,9 +1,10 @@
 /** Real-file SQLite execution proofs for the round-seven dialect. */
 import { Database } from "bun:sqlite";
 import { VersionConflictError } from "@beep/effect-drizzle";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { layer as makeSqliteLayer } from "@effect/sql-sqlite-bun/SqliteClient";
-import { assert, expect, layer } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
@@ -25,6 +26,7 @@ import {
   orDie,
   sync,
   tryPromise,
+  withSpan,
 } from "effect/Effect";
 import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
@@ -201,13 +203,17 @@ const SqliteHarnessState = effectLayer(
     const databaseDirectory = yield* fileSystem.makeTempDirectory({
       prefix: "effect-drizzle-live-",
     });
-    yield* addFinalizer(() => fileSystem.remove(databaseDirectory, { recursive: true, force: true }).pipe(orDie));
+    yield* addFinalizer(() =>
+      fileSystem
+        .remove(databaseDirectory, { recursive: true, force: true })
+        .pipe(withSpan("EffectDrizzle.sqlite.directory-cleanup"), orDie)
+    );
     const databasePath = `${databaseDirectory}/live.sqlite`;
-    const migrationOutput = yield* runPush(databasePath);
-    const noOpOutput = yield* runPush(databasePath);
+    const migrationOutput = yield* runPush(databasePath).pipe(withSpan("EffectDrizzle.sqlite.first-push"));
+    const noOpOutput = yield* runPush(databasePath).pipe(withSpan("EffectDrizzle.sqlite.no-op-push"));
     const drizzleClient = yield* acquireRelease(
-      sync(() => new Database(databasePath)),
-      (client) => sync(() => client.close())
+      sync(() => new Database(databasePath)).pipe(withSpan("EffectDrizzle.sqlite.direct-open")),
+      (client) => sync(() => client.close()).pipe(withSpan("EffectDrizzle.sqlite.direct-close"))
     );
     drizzleClient.run("PRAGMA foreign_keys = ON");
     return SqliteHarness.of({ databasePath, drizzleClient, migrationOutput, noOpOutput });
@@ -226,7 +232,7 @@ const SqliteRepositoryLayer = unwrap(
 
 const SqliteHarnessLayer = SqliteRepositoryLayer.pipe(provideMerge(SqliteHarnessState));
 
-layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite gauntlet", (it) => {
+it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite gauntlet", (it) => {
   it.effect(
     "applies projected DDL through drizzle-kit and regenerates to no-op",
     fnUntraced(function* () {

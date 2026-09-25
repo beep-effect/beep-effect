@@ -1,9 +1,11 @@
+import { withSpan } from "effect/Effect";
 /** Live PostgreSQL execution proofs for @beep/effect-drizzle round four. */
 
 import { VersionConflictError } from "@beep/effect-drizzle";
 import { PgliteClient, PgliteTestLayer } from "@beep/pglite";
+import { it } from "@beep/test-runner";
 import { layer as makePgliteLayer } from "@effect/sql-pglite/PgliteClient";
-import { assert, expect, layer } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { PGlite, types } from "@electric-sql/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
@@ -92,11 +94,11 @@ class PgliteHarnessError extends TaggedError<PgliteHarnessError>("@beep/effect-d
   { message: StringSchema, cause: Unknown }
 ) {}
 
-const tryHarness = <A>(try_: () => PromiseLike<A>) =>
+const tryHarness = <A>(phase: string, try_: () => PromiseLike<A>) =>
   tryPromise({
     try: try_,
-    catch: (cause) => PgliteHarnessError.make({ message: "PGlite harness operation failed", cause }),
-  });
+    catch: (cause) => PgliteHarnessError.make({ message: `PGlite harness ${phase} failed`, cause }),
+  }).pipe(withSpan(`EffectDrizzle.pglite.${phase}`));
 
 const isVersionConflict = is(VersionConflictError);
 
@@ -133,9 +135,9 @@ const PgliteHarnessState = effectLayer(
     client.pglite.parsers[types.TIMESTAMP] = identity;
     client.pglite.parsers[types.TIMESTAMPTZ] = identity;
     const db = drizzle({ client: client.pglite });
-    const migration = yield* tryHarness(() => pushSchema(drizzleExports, db));
-    yield* tryHarness(() => migration.apply());
-    const noOp = yield* tryHarness(() => pushSchema(drizzleExports, db));
+    const migration = yield* tryHarness("generate", () => pushSchema(drizzleExports, db));
+    yield* tryHarness("apply", () => migration.apply());
+    const noOp = yield* tryHarness("regenerate", () => pushSchema(drizzleExports, db));
     return PgliteHarness.of({
       migrationStatements: migration.sqlStatements,
       noOpStatements: noOp.sqlStatements,
@@ -155,7 +157,7 @@ const RepositoryClientLayer = unwrap(
 
 const PgliteHarnessLayer = merge(PgliteHarnessState, RepositoryClientLayer).pipe(provideMerge(PgliteTestLayer));
 
-layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite gauntlet", (it) => {
+it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite gauntlet", (it) => {
   it.effect(
     "applies drizzle-kit DDL from the @beep/effect-drizzle projection and regenerates to no-op",
     fnUntraced(function* () {

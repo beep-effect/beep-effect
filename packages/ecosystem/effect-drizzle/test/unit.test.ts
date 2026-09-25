@@ -3,7 +3,8 @@
 import { Model, ModelInvariantError, VersionConflictError } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import { fcRuns } from "@beep/fc-runs";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { findFirst, head, sort } from "effect/Array";
