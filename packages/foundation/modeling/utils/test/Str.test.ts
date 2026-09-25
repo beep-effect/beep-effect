@@ -1,7 +1,8 @@
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
-import { describe, expect, it } from "vitest";
 
 describe("@beep/utils Str.equivalence", () => {
   it("data-first: compares strings for equality", () => {
@@ -46,7 +47,11 @@ describe("@beep/utils Str.mapPrefix", () => {
     expect(Str.mapPrefix("x_", ["a", "b"])).toEqual(["x_a", "x_b"]);
   });
 
-  // data-last skipped: pre-existing bug — dual impl has swapped param order (prefix, arr) instead of (arr, prefix)
+  it("data-last: agrees with the two-argument form", () => {
+    const values: A.NonEmptyReadonlyArray<string> = ["a", "b"];
+    expect(pipe(values, Str.mapPrefix("x_"))).toEqual(["x_a", "x_b"]);
+    expect(pipe(values, Str.mapPrefix("x_"))).toEqual(Str.mapPrefix("x_", values));
+  });
 });
 
 describe("@beep/utils Str.mapPostfix", () => {
@@ -54,7 +59,11 @@ describe("@beep/utils Str.mapPostfix", () => {
     expect(Str.mapPostfix("_x", ["a", "b"])).toEqual(["a_x", "b_x"]);
   });
 
-  // data-last skipped: pre-existing bug — dual impl has swapped param order (postfix, arr) instead of (arr, postfix)
+  it("data-last: agrees with the two-argument form", () => {
+    const values: A.NonEmptyReadonlyArray<string> = ["a", "b"];
+    expect(pipe(values, Str.mapPostfix("_x"))).toEqual(["a_x", "b_x"]);
+    expect(pipe(values, Str.mapPostfix("_x"))).toEqual(Str.mapPostfix("_x", values));
+  });
 });
 
 describe("@beep/utils Str.camelCase", () => {

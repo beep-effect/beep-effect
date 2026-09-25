@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { Path } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 
 describe("Path helpers", () => {
@@ -35,17 +36,21 @@ describe("Path helpers", () => {
     expect(Path.isAbsolute("x")).toBe(false);
   });
 
-  it("toFileUrl and fromFileUrl round-trip an absolute path", () => {
-    const absolute = Path.resolve("beep.txt");
-    const url = Effect.runSync(Path.toFileUrl(absolute));
-    expect(url.protocol).toBe("file:");
-    expect(Effect.runSync(Path.fromFileUrl(url))).toBe(absolute);
-  });
+  it.effect("toFileUrl and fromFileUrl round-trip an absolute path", () =>
+    Effect.gen(function* () {
+      const absolute = Path.resolve("beep.txt");
+      const url = yield* Path.toFileUrl(absolute);
+      expect(url.protocol).toBe("file:");
+      expect(yield* Path.fromFileUrl(url)).toBe(absolute);
+    })
+  );
 
-  it("fromFileUrl fails with a bare BadArgument for a non-file URL", () => {
-    const error = Effect.runSync(Effect.flip(Path.fromFileUrl(new URL("https://example.com/file.txt"))));
-    expect(error._tag).toBe("BadArgument");
-    expect(error.module).toBe("Path");
-    expect(error.method).toBe("fromFileUrl");
-  });
+  it.effect("fromFileUrl fails with a bare BadArgument for a non-file URL", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(Path.fromFileUrl(new URL("https://example.com/file.txt")));
+      expect(error._tag).toBe("BadArgument");
+      expect(error.module).toBe("Path");
+      expect(error.method).toBe("fromFileUrl");
+    })
+  );
 });

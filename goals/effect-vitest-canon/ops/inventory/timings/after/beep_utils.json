@@ -1,0 +1,141 @@
+{
+  "package": "@beep/utils",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T10:12:11.562000+00:00",
+  "totalMs": 503.366455078125,
+  "testCount": 189,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/utils/test/Array.test.ts",
+      "ms": 7.640380859375,
+      "tests": 29
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "ms": 9.969482421875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Errors.test.ts",
+      "ms": 9.764404296875,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "ms": 11.294921875,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Function.test.ts",
+      "ms": 3.35009765625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "ms": 34.366455078125,
+      "tests": 14
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/HostProcess.test.ts",
+      "ms": 81.644775390625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Number.test.ts",
+      "ms": 2.006103515625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Option.test.ts",
+      "ms": 3.795654296875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Path.test.ts",
+      "ms": 8.138916015625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Predicate.test.ts",
+      "ms": 2.951171875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Schema.test.ts",
+      "ms": 2.401611328125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "ms": 14.30859375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Str.test.ts",
+      "ms": 9.2548828125,
+      "tests": 50
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Struct.test.ts",
+      "ms": 7.364013671875,
+      "tests": 36
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/TaggedError.equivalence.test.ts",
+      "ms": 4.96630859375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/utils/test/HostProcess.test.ts",
+      "testName": "HostProcess browser-eval guard evaluates the @beep/utils barrel without a process global",
+      "ms": 74.64477199999999
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "testName": "@beep/utils schema parity preserves representative encoded option and path shapes",
+      "ms": 11.849205999999981
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "testName": "@beep/utils schema parity round-trips Pattern",
+      "ms": 11.763383000000033
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "testName": "@beep/utils schema parity round-trips GlobOptions",
+      "ms": 11.756433000000015
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "testName": "@beep/utils schema parity round-trips AppendFileSyncOptions",
+      "ms": 11.752898000000016
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "testName": "@beep/utils schema parity round-trips RmSyncOptions",
+      "ms": 11.749612999999954
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "testName": "makeDrainableWorker waits for work enqueued during active processing before draining",
+      "ms": 9.969551000000024
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "testName": "FileSystem sync wrappers appendFileSync appends to a file, creating it",
+      "ms": 9.687117
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "testName": "FileSystem sync wrappers existsSync reports presence without a failure channel",
+      "ms": 9.535102999999992
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "testName": "FileSystem sync wrappers statSync returns a File.Info with branded bigint size",
+      "ms": 9.519237999999973
+    }
+  ]
+}
