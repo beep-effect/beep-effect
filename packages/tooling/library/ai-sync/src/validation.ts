@@ -131,6 +131,8 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep laws:*)",
   "Bash(bun run beep research install-timers:*)",
   "Bash(bun run beep graft deep install-timer --refresh:*)",
+  "Bash(bun run beep refs plan:*)",
+  "Bash(bun run beep refs install-timer --refresh:*)",
   "Bash(systemctl --user list-timers:*)",
   "Bash(systemctl --user status beep-:*)",
   "Bash(journalctl --user -u beep-:*)",
@@ -148,7 +150,7 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 62-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands and the exact structural `graft build` (never `--deep`, which spends model quota, nor `init`/`uninstall`/`upgrade`, which rewrite tracked agent wiring and are denied outright).",
+      "Exact 64-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands and the exact structural `graft build` (never `--deep`, which spends model quota, nor `init`/`uninstall`/`upgrade`, which rewrite tracked agent wiring and are denied outright).",
   })
 );
 
@@ -173,13 +175,15 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
+  "Bash(bun run beep refs refresh:*)",
+  "Bash(bun run beep refs install-timer)",
   "Bash(graft init:*)",
   "Bash(graft uninstall:*)",
   "Bash(graft upgrade:*)",
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 21-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the Graft lifecycle commands that rewrite tracked agent wiring.",
+      "Exact 23-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the Graft lifecycle commands that rewrite tracked agent wiring.",
   })
 );
 

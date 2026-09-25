@@ -231,6 +231,14 @@ night. The first seed is what saves the first night's full build: the refresh
 re-summarizes only changed files, so the owner starts from a meaning tier rather
 than from nothing.
 
+The Effect reference workspace at `$HOME/YeeBois/references/effect` has its own
+03:30 `beep-refs-refresh` timer, rendered by `beep refs install-timer`.
+It uses `claude-opus-5` through CLIProxyAPI and reuses
+`$HOME/.config/beep-graft/env` unchanged. See the [systemd timer
+runbook](systemd-timers.md) for the agent-permitted `beep refs plan` and
+`beep refs install-timer --refresh` forms; agents never run `beep refs refresh`
+or a fresh refs timer install.
+
 The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
@@ -459,11 +467,19 @@ graft --version
 Do not pass `--ignore-scripts` to that install: `tree-sitter-kotlin` ships no
 prebuilt Linux binding and builds it in its install script, and without it
 every `graft` invocation dies at startup with `No native build was found`.
-If an install already skipped it, run `npm rebuild tree-sitter-kotlin` inside
-the installed package directory (the directory `readlink -f "$(command -v
-graft)"` resolves into, one level above `dist/`). Keep exactly one `graft` on
-the machine: a second copy installed into a mise node global shadows this one
-on the systemd unit's PATH and the preflight then reads the wrong version.
+If an install already skipped it, resolve the installed package root and rebuild:
+
+```sh
+graft_package="$(npm root -g --prefix "$HOME/.local")/@nanonets/graft"
+(cd "$graft_package" && npm rebuild tree-sitter-kotlin)
+```
+
+Resolve the package from the same user-local npm prefix used for installation.
+`command -v graft` can select a mise shim, whose location does not identify the
+installed package root.
+Keep exactly one `graft` on the machine: a second copy installed into a mise node
+global shadows this one on the systemd unit's PATH and the preflight then reads
+the wrong version.
 The deep build depends on workstation-local patches to the installed `dist/`,
 recorded as unified diffs under `scripts/graft/patches/<graft version>/`. Four
 fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
