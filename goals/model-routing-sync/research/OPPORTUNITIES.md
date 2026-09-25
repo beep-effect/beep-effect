@@ -59,3 +59,10 @@
   in models-check.test.ts. Schema-derived report round-trip coverage resolved
   the advisory without another inventory exception. All 39 Models tests and
   schema-first lint pass.
+
+- Hosted review found two stale packet surfaces: the SPEC locator census still
+  named ts-literal for template/examples, and launcher acceptance boxes were
+  unchecked. Align all current acceptance surfaces with the evidence before
+  publication; historical census reports remain historical. The queued initial
+  proof was cancelled before admission so the replacement proves the corrected
+  commit rather than an obsolete head.

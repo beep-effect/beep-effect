@@ -62,7 +62,7 @@ proof and schema-first pass; P3 hosted closeout is the remaining delivery gate; 
 - Prose naming a not-yet-existing command uses the bare form `beep models check`, never
   `bun run beep models check`, until the command is registered — the semantic-delta gate treats the
   latter as an introduced broken reference.
-- The 19 JSDoc examples are cosmetic; the docgen ratchet is the real risk on that target, so they
+- The six seeded JSDoc example files are cosmetic; the docgen ratchet is the real risk on that target, so they
   move last inside S2.
 
 ## Verification Commands

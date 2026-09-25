@@ -69,8 +69,8 @@ Locator strategy is per format; every rewrite is line-anchored and idempotent.
 | `.claude/skills/oracle/SKILL.md` | md generated block | `codex.heavy` |
 | `.claude/skills/impeccable/agents/*.toml` | toml top-level key (`model`, `model_reasoning_effort`) | `codex.heavy` x `codex-plugin` |
 | `.../Quality/internal/JSDocMigrateTitles.ts:108` | ts-literal | `jsdoc.migrate-titles` |
-| `.../Qa/JudgePack.ts:935` | ts-literal | `qa.judge` |
-| 19 JSDoc examples (Qa, Yeet, Docgen) | ts-literal | cosmetic; docgen ratchet is the risk |
+| `.../Qa/JudgePack.ts` command template | line-value (`task --model ` / ` --effort ` / ` --prompt-file ` delimiters) | `qa.judge` |
+| Six JSDoc example files (Qa Inventory/JudgeCheck/render, Yeet Provenance/Resume, Docgen QualityWorkerEval) | line-value (`linePrefix: " *"`, `model: "` before, `"` after) | cosmetic; docgen ratchet is the risk |
 
 ### Home targets
 
