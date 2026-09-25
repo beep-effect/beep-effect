@@ -43,3 +43,19 @@ execution passed all 18 tests across the bundle and SQLite suites. The ordered
 is supporting evidence, not an AST-equivalence or cancellation-path proof.
 A deterministic interruption witness is still needed before claiming that
 branch of cleanup has been exercised. Remaining lens work is not closed.
+
+## Deterministic probe interruption witness
+
+The bundle probe's acquisition/release path is shared with a new cancellation
+case in the same test file. It starts a real idle Bun child, signals acquisition
+with Deferred, then interrupts and awaits the child fiber. The assertions require
+an interrupted Exit, SIGKILL termination, nonzero child exit and completed stdout
+and stderr reads. No sleep or timeout increase controls this test. A separate
+outer safety finalizer prevents leaks if the tested release callback regresses.
+
+All eight bundle tests pass. A temporary negative control replaced only the
+helper release callback with a no-op: the new test failed with expected SIGKILL
+versus actual null. The safety finalizer then cleaned up the child. Source was
+restored byte-for-byte before final package proof; audit passed in 14.9 seconds
+and docgen in 3.3 seconds. This proves the bundle helper cancellation path, not a
+new interruption test of drizzle-kit itself. All prior assertions remain.
