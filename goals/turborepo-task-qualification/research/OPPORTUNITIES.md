@@ -2116,3 +2116,13 @@ While verifying the scoped evidence-path repair, `beep quality package-verify
 argument, received 2.” Help advertises `[<package...>]`. Run one package per
 invocation; matching help cardinality to the command guard would prevent this
 failed invocation. No proof credit is assigned to it.
+
+### Refs quality repair feedback — 2026-09-25
+
+Full lint-policy identified a branch-introduced deterministic service key after
+narrow fixture tests had passed. Canonical `quality test-tsgo` now verifies the
+repair. Run that diagnostic when adding test services. An initial focused test
+invocation named nonexistent refs-worktree/refs-provider files; selecting the
+actual refresh-plan, timer and schema suites passed 16 tests. That failed
+selection earns no proof credit. `docgen:local` also correctly refused bounded
+proof for the branch lockfile change; full docgen remains required.

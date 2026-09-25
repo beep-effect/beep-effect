@@ -46,7 +46,7 @@ export const workspace = ReferenceWorkspace;
  * @since 0.0.0
  */
 export class ReferenceFixture extends Context.Service<ReferenceFixture, Effect.Success<ReturnType<typeof fixture>>>()(
-  "RefsTest/ReferenceFixture"
+  "@beep/repo-cli/test/refs-test-utils/ReferenceFixture"
 ) {}
 
 /**

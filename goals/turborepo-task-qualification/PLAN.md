@@ -2005,3 +2005,16 @@ artifacts and 46 reviews; all 14 broader obligations remain. The historical
 receipt retains its original limitation. This repair proves source identity,
 not tool execution, transitive input closure or signed-remote qualification.
 Full package and PR proof remain pending.
+
+### Refs lint-policy remediation — 2026-09-25
+
+The earlier full proof failed lint-policy. The introduced Refs fixture service
+key now matches its deterministic declaration identity; the canonical test-tsgo
+lane passes across 267 files and all 16 Refs tests pass. Inherited Refs/Worktree
+JSDoc warnings were repaired without implementation changes; targeted ESLint
+passes. See [the receipt](./research/refs-key-quality-review.json).
+
+The attachment accepts 1011 sources, six artifacts and 47 reviews, retaining
+all 14 broader obligations. Bounded docgen refuses this branch because its
+lockfile delta requires full proof. Package and full proof remain pending;
+these repairs do not renew runtime evidence or promote a qualification tuple.

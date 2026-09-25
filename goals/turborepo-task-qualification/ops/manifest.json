@@ -368,7 +368,8 @@
     "research/nested-lambda-boundary-review.json",
     "research/application-static-review-reuse.json",
     "research/compiled-output-delta-review.json",
-    "research/scoped-evidence-path-review.json"
+    "research/scoped-evidence-path-review.json",
+    "research/refs-key-quality-review.json"
   ],
   "agentLaunchers": [
     {
