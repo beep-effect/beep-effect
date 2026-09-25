@@ -68,7 +68,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) None.
 - Relation to RRSI: direct empirical evidence of noise-chasing and non-monotone search. Keeping the historical best masks regressions but does not fix the search. This supports RRSI's noise floor and its call for attribution and stall detection.
 
-### 6. MetaClaw, Xia et al., arXiv 2603.17187
+### 7. MetaClaw, Xia et al., arXiv 2603.17187
 - (a) The meta-model M=(θ, S): policy weights plus a skill library. Signals are failure trajectories (for skills) and PRM scores (for RL).
 - (b) An LLM evolver distills new skills from failures: S_{g+1}=S_g ∪ E(S_g, D_sup). GRPO LoRA updates run in idle windows (OMLS: sleep, keyboard idle, calendar).
 - (c) There is no validation gate for a skill. It is added once the failure count reaches a threshold. The key guard is **skill-generation versioning**: every trajectory is stamped with a generation g, and when g advances the RL buffer is flushed of samples with version ≤g. Support data (failures that caused the skill) is kept apart from query data (post-adaptation), which prevents stale-reward contamination.
@@ -79,7 +79,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) Continual meta-learning (a MAML support/query analogy).
 - Relation to RRSI: the support/query split and version flush are a leakage and staleness discipline that RRSI's ledger could adopt, since it records which harness version produced each score. Monotonic growth of the skill set is the complexity accumulation that RRSI's pruning targets.
 
-### 7. Agent0, Xia et al., COLM 2026 (arXiv 2511.16043)
+### 8. Agent0, Xia et al., COLM 2026 (arXiv 2511.16043)
 - (a) Weights of two agents, curriculum and executor, trained from one base with zero external data. The executor's reward is agreement with its own majority vote. The curriculum's reward is R_C = format · max(0, λ_unc·(1−2|p̂−0.5|) + λ_tool·γ·min(N_tool, C) − R_rep).
 - (b) The curriculum agent generates tasks. Tasks are kept only if executor self-consistency p̂ ∈ [0.3, 0.8] (|p̂−0.5| ≤ δ=0.25).
 - (c) Noise guard: ADPO scales the advantage by f(p̂), down-weighting ambiguous pseudo-labels, and relaxes the upper clip ε_high(p̂) on ambiguous tasks. Tool reward is capped at C=4 so spurious tool calls are not rewarded. A BLEU-cluster repetition penalty enforces diversity.
@@ -94,7 +94,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 
 ## Skills / memory evolution
 
-### 8. SkillRL, Xia et al., arXiv 2602.08234
+### 9. SkillRL, Xia et al., arXiv 2602.08234
 - (a) Policy weights (GRPO) plus a hierarchical SkillBank of general and task-specific skills. The signal is binary task success on ALFWorld, WebShop and search QA.
 - (b) A teacher (o3) distills skills from successes and turns failures into "failure lessons". At each validation epoch it proposes new skills and refinements, but only for task categories with Acc(C) < δ (0.4). Failures are sampled with a diversity-aware, severity-prioritized round robin.
 - (c) New skills are simply added (SKILLBANK ∪ S_new) with no score gate. The KL anchor to the SFT reference keeps the policy close. Context grows, but distillation keeps it roughly 10% below raw-memory baselines.
@@ -105,7 +105,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) Abstraction beats memorization. A continual-learning framing.
 - Relation to RRSI: category-gated proposal is a crude form of evidence-aware targeting. The unbounded skill growth is exactly what RRSI's pruning answers.
 
-### 9. SkillOpt, Yang et al. (Microsoft), arXiv 2605.23904
+### 10. SkillOpt, Yang et al. (Microsoft), arXiv 2605.23904
 - (a) A single skill document (best_skill.md, 300–2k tokens) for a frozen agent. The signal is the benchmark score on scored rollouts.
 - (b) A separate optimizer model reflects on failure and success minibatches separately and proposes add, delete or replace edits. Proposals are merged hierarchically with failure-first priority and ranked, then **clipped to an edit budget L_t**. This "textual learning rate" follows a cosine schedule (default L=4 decaying to 2).
 - (c) **Strict held-out gate**: the edit is accepted only if the selection-split score is strictly greater than the current one. Ties are rejected. Splits are train/selection/test at 2:1:7, and the test split stays locked until the final report. Skill hashes are cached so the same skill is never re-evaluated. The prompts ban hard-coded task-specific values.
@@ -116,7 +116,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) An explicit deep-learning analogy: batch size ↔ evidence noise, edit budget ↔ learning rate, gate ↔ validation, slow update ↔ momentum.
 - Relation to RRSI: **the closest precedent for its mechanisms**. It has cosine-annealed bounded edits (≈ annealed sparsity), a rejected-edit buffer (≈ negative evidence), and a held-out gate. It lacks a noise band δ (the gate is a strict > with no δ), a leakage critic on diffs, and a cost-aware acceptance term.
 
-### 10. EvolveMem, Liu et al., arXiv 2605.13941
+### 11. EvolveMem, Liu et al., arXiv 2605.13941
 - (a) The retrieval configuration of a memory system: top-k per view, fusion mode, context budget, answer style, and per-category overrides. Fitness is F1 on LoCoMo or MemBench.
 - (b) An LLM diagnosis module reads per-question raw logs (question, prediction, gold, sources) and proposes Δθ. It can invent new dimensions, which is how entity-swap, query decomposition and answer verification appeared.
 - (c) A three-branch update. **Revert** to the best-so-far if f_{r−1}−f_r > τ_rev. **Explore** with a random perturbation if |Δf| < ε for 2 rounds (stall detection). Otherwise **apply** Δθ clamped to safe ranges. Evaluation and evolution use the same QA set, and there is no noise band or leakage guard.
@@ -127,7 +127,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) "AutoResearch" (observe, hypothesize, experiment, validate). Complementary learning systems and Ebbinghaus forgetting for content.
 - Relation to RRSI: its stall→explore rule matches RRSI's structured exploration and revert-on-regression is a crude floor. It has no held-out split, so it is a candidate for the benchmark-fitting failure mode.
 
-### 11. ReasoningBank, Ouyang et al., ICLR 2026 (arXiv 2509.25140)
+### 12. ReasoningBank, Ouyang et al., ICLR 2026 (arXiv 2509.25140)
 - (a) A test-time memory of distilled strategy items (title, description, content). The signal is an LLM-as-judge success or failure label with no ground truth.
 - (b) Each trajectory yields at most 3 items. Successes become strategies and failures become preventive lessons. The prompts forbid naming specific sites, queries or strings, a leakage-style abstraction guard at extraction time. MaTTS (parallel self-contrast over k trajectories, or sequential re-check) produces contrastive memory.
 - (c) No acceptance gate. Consolidation is plain append.
@@ -138,7 +138,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) Memory as a new scaling dimension alongside test-time scaling.
 - Relation to RRSI: its "no specific entities" rule is a proposal-side version of RRSI's leakage screen. Its judge-noise robustness study is a model for measuring δ. Its append-only memory is the accumulation that RRSI prunes.
 
-### 12. Agent KB, Tang et al., arXiv 2507.06229
+### 13. Agent KB, Tang et al., arXiv 2507.06229
 - (a) A knowledge base of experience units ⟨task embedding, goal predicates, (action, reasoning) pairs, compatibility metadata⟩ shared across smolagents, OWL, SWE-Agent and OpenHands.
 - (b) Two-stage Reason→Retrieve→Refine. The planning stage retrieves workflows. The feedback stage retrieves fixes keyed on execution traces. Retrieval is hybrid BM25 plus embeddings, α=0.5, k=3.
 - (c) **Disagreement gate**: a refined plan ρ′ is applied only if cos(φ(ρ), φ(ρ′)) ≥ β=0.8. This keeps edits close to the original plan and is a trust-region-like bound on how far a revision may move. Dedup applies when cos > 0.8, and an LLM ranker keeps the better entry.
@@ -149,7 +149,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) A restructured case-based reasoning cycle (Retrieve–Reuse–Revise–Retain).
 - Relation to RRSI: its EMA utility with eviction is the closest precedent to RRSI's structural pruning ("a mechanism must keep earning its place"), applied to memory entries rather than harness components.
 
-### 13. AutoMem, Wu et al. (Stanford), arXiv 2607.01224
+### 14. AutoMem, Wu et al. (Stanford), arXiv 2607.01224
 - (a) Two targets: (1) the memory scaffold (code, prompts, file schema, action vocabulary), and (2) a LoRA "memory specialist" model. The task model stays frozen. Fitness is BALROG progression (Crafter, MiniHack, NetHack).
 - (b) A meta-LLM (Opus) reviews full episode traces of up to 10^5 steps and revises the scaffold. In loop 2 the meta-LLM selects the agent's own good memory operations as SFT data and chooses the LoRA config jointly.
 - (c) Each scaffold revision is **kept only if average progression improves on the same fixed seeds**. It is a greedy gate with no noise band, and SE is large (e.g. 27.5±7.1). Keeping the task model frozen guards task competence.
@@ -160,7 +160,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - (h) Metamemory (Flavell, Nelson), the extended mind, and an explicit θ/∇L analogy (scaffold = parameters, revision = gradient).
 - Relation to RRSI: an example of gate-on-evolve-seeds with a large SE, which is exactly where RRSI's noise-adjusted floor applies. It also shows that bloat (unbounded files) appears naturally and has to be pruned.
 
-### 14. EnvHarness / EnvRigger, Huang et al. (Google), arXiv 2608.19880
+### 15. EnvHarness / EnvRigger, Huang et al. (Google), arXiv 2608.19880
 - (a) The environment rather than the agent. Plug-in wrappers are Stage (initial state), Contract (action and observation filters and transition changes) and Chain (concatenated episodes). The original verifier is kept unchanged.
 - (b) EnvRigger follows Observe→Diagnose→Write→Validate on a black-box policy's successes and failures, and makes the environment harder when the policy is at SR=1.
 - (c) The Validate step decides ACCEPT, REFINE or REJECT from **rollout statistics over K runs, never a single trace**. It targets an SR band: candidates that are unsolvable (SR=0) or trivial are rejected. The prompt says to prefer narrow perturbations and to keep working hooks verbatim, adjusting only their magnitude. Reward (R) is deliberately not exposed, so the eval metric cannot be gamed.
@@ -175,7 +175,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 
 ## Theory / evaluation
 
-### 15. Dwork et al. 2015, "Generalization in Adaptive Data Analysis and Holdout Reuse" (arXiv 1506.02629)
+### 16. Dwork et al. 2015, "Generalization in Adaptive Data Analysis and Holdout Reuse" (arXiv 1506.02629)
 - Problem: reusing a holdout adaptively overfits the holdout itself. In their synthetic experiment (n=10k, d=10k, labels independent of the data), the standard holdout reports more than 63% accuracy at k=500 while the true accuracy is 50%.
 - **Thresholdout (exact rule, Fig. 1).** Inputs: training set S_t, holdout S_h, threshold T, noise rate σ, budget B.
   1. Sample γ ~ Lap(2σ) and set T̂ ← T + γ.
@@ -191,7 +191,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - Unifying frame: **approximate max-information**, which composes DP-based and description-length-based guarantees. Cross-validation and bootstrap do not fix adaptive reuse.
 - Relation to RRSI: this supplies the theory for RRSI's claim that an adaptively reused evolve set overfits. The lesson is to let a finite validation set reveal as little as possible per query (bits, noise, a budget on "surprising" answers). RRSI's ledger ("do not re-test falsified hypotheses") limits adaptive queries, and its noise floor δ plays the role of T. RRSI does not add DP noise or an overfitting budget B, and that gap is worth noting.
 
-### 16. Louizos, Welling, Kingma 2018, "Learning Sparse NNs through L0 Regularization" (arXiv 1712.01312)
+### 17. Louizos, Welling, Kingma 2018, "Learning Sparse NNs through L0 Regularization" (arXiv 1712.01312)
 - Each parameter group is multiplied by a stochastic gate z ∈ [0,1], so ‖θ‖₀ = number of active gates.
 - Gates use the **hard concrete** distribution: a binary concrete sample s = σ((log u − log(1−u) + log α)/β) is stretched to (γ,ζ) = (−0.1, 1.1) and clipped with z = min(1, max(0, s̄)). This puts point masses at exactly 0 and 1.
 - The expected L0 penalty Σ_j σ(log α_j − β log(−γ/ζ)) = Σ P(z_j ≠ 0) is differentiable through the reparameterization trick, so gates and weights train jointly by SGD.
@@ -202,14 +202,14 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 
 ## Blogs
 
-### 17. Ding et al., "What evolves when we talk about harness evolution?" (Harness-Delta Attribution)
+### 18. Ding et al., "What evolves when we talk about harness evolution?" (Harness-Delta Attribution)
 - (a–c) Studies existing harness-evolution methods around a frozen LLM, covering prompts, tools, memory, skills, orchestration code and control flow.
 - (e) **HDA** splits an observed gain into Overfitting (O), Test-time scaling (T) and Generalizable (G). It uses a compute-matched baseline B_cc and an evolved harness with detected shortcuts neutralized (E_neutral), and treats G as a conservative upper bound.
 - Findings: most gains are illusory. ALFWorld is 98% O (hard-coded object layouts, zero LLM calls). LiveMath is 79% O (a recurring answer phrase in 21/35 questions). CREATE is 73% T (parallel sampling). In 4 of 16 settings the held-out score was worse than baseline despite training gains. Selecting on validation reduced O but still left gaps of 5.9–11.7 points below the training gains.
 - Recommendations: report held-out results and overfitting, charge test-time compute in utility, and use benchmarks with fewer artifacts and real distribution shift.
 - Relation to RRSI: this is the empirical diagnosis RRSI answers. O maps to leakage screening and benchmark-specific fitting. T maps to complexity-aware acceptance (ΔC ≤ β0 + β1ΔS). Its finding that validation selection is not enough matches Dwork's theory.
 
-### 18. Weng, "Harness engineering for self-improvement" (2026-07-04)
+### 19. Weng, "Harness engineering for self-improvement" (2026-07-04)
 - A harness is the orchestration around a base model: workflow, tools, context, evaluation. Self-improvement runs through harness optimization (prompt → structured context → workflow → executable harness code), meta-level context engineering (MCE, Meta-Harness), and evolutionary search (AlphaEvolve, DGM, ShinkaEvolve).
 - Selection: Self-Harness uses weakness mining plus bounded proposals. AHE requires edits backed by observability evidence, each with a predicted next-round impact. Evolutionary methods keep a Pareto frontier.
 - Archives: skill and eval databases, and file-based history. Failed attempts are kept as learning resources.
@@ -217,7 +217,7 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 - Theory: bi-level optimization, where the inner loop is content and the outer loop is the mechanism.
 - Relation to RRSI: this survey places RRSI's regularizers in context. AHE's "predicted impact per edit" is close to RRSI's hypothesis field in its ledger, and read-only evaluators are the infrastructure half of leakage defense.
 
-### 19. Zhang & Khattab, "Language model harnesses are compositional generalizers"
+### 20. Zhang & Khattab, "Language model harnesses are compositional generalizers"
 - Claim: a good harness makes each LM call see a *locally in-distribution* input even when the whole task is OOD. Recursive LMs do this by offloading context into symbolic variables and calling sub-agents programmatically.
 - Evidence: training on tasks 8–32× shorter generalizes to longer ones. Transfer across domains works when the structure is shared and the tokens differ, whereas plain Transformers fail.
 - Implication: generalization capacity can sit in the harness's decomposition, and harness design changes the scaling coefficients.
@@ -229,63 +229,63 @@ Source: alphaXiv full-text queries (2026-09-25). Axes per item:
 
 ### Archives / lineages / ledgers
 - **Keep-everything archive (quality-diversity):** DGM (1) and DGM-H (3) keep every valid node, and HGM (2) keeps a tree with per-node counts. These serve as stepping stones, not as evidence.
-- **Evidence ledgers of attempts:** SkillOpt (9) has a rejected-edit buffer, an edit_apply_report, and an optimizer meta-skill. RSIBench-Data (5) records hypothesis, data, config and result per attempt. NeoHorse (4) keeps separate prediction, action and outcome records. MetaClaw (6) stamps generation versions. DGM-H (3) grows its own performance tracking.
+- **Evidence ledgers of attempts:** SkillOpt (10) has a rejected-edit buffer, an edit_apply_report, and an optimizer meta-skill. RSIBench-Data (6) records hypothesis, data, config and result per attempt. NeoHorse (4) keeps separate prediction, action and outcome records. MetaClaw (7) stamps generation versions. DGM-H (3) grows its own performance tracking.
 - **Contrast:** only SkillOpt feeds *rejected* edits back to the proposer as negative evidence, which is RRSI mechanism B in miniature. HGM uses lineage statistics for selection, not for proposal.
 
 ### Credit assignment / attribution
 - **Lineage level:** HGM's CMP (2).
-- **Per entry, online:** Agent KB's EMA utility (12).
-- **Per category, triggering proposals:** SkillRL's Acc(C)<δ (8). NeoHorse's deficiency profile (4).
-- **Longitudinal before/after replay:** SkillOpt's slow update (9), which sorts items into improvements, regressions, persistent failures and stable successes.
-- **Post-hoc decomposition:** Ding HDA into O/T/G (17). EvolveMem's ablations (10).
+- **Per entry, online:** Agent KB's EMA utility (13).
+- **Per category, triggering proposals:** SkillRL's Acc(C)<δ (9). NeoHorse's deficiency profile (4).
+- **Longitudinal before/after replay:** SkillOpt's slow update (10), which sorts items into improvements, regressions, persistent failures and stable successes.
+- **Post-hoc decomposition:** Ding HDA into O/T/G (18). EvolveMem's ablations (11).
 - **No per-edit attribution:** DGM, DGM-H, AutoMem, ReasoningBank, MetaClaw. None of them caps edit count *to make* attribution possible. SkillOpt's edit budget comes closest.
 
 ### Noise handling
-- **Statistical selection:** HGM uses Thompson sampling on clade-pooled counts (2). EnvRigger decides from K-rollout statistics, never one trace (14).
-- **Sample-reliability weighting:** Agent0's ADPO advantage scaling by self-consistency (7).
-- **Judge-noise robustness measured:** ReasoningBank flips labels at simulated judge accuracy of 50–100% (11).
-- **Strict gate with no noise band:** SkillOpt's strict > with ties rejected (9) and AutoMem's same-seed gate (13).
-- **Revert and floor-like rules:** EvolveMem reverts when the drop exceeds τ_rev (10). RSIBench-Data keeps the historical best (5), yet 78% of continued runs finish below their peak, which is evidence of noise-chasing.
-- **Formal noise:** Dwork's Laplace-noised threshold (15).
+- **Statistical selection:** HGM uses Thompson sampling on clade-pooled counts (2). EnvRigger decides from K-rollout statistics, never one trace (15).
+- **Sample-reliability weighting:** Agent0's ADPO advantage scaling by self-consistency (8).
+- **Judge-noise robustness measured:** ReasoningBank flips labels at simulated judge accuracy of 50–100% (12).
+- **Strict gate with no noise band:** SkillOpt's strict > with ties rejected (10) and AutoMem's same-seed gate (14).
+- **Revert and floor-like rules:** EvolveMem reverts when the drop exceeds τ_rev (11). RSIBench-Data keeps the historical best (6), yet 78% of continued runs finish below their peak, which is evidence of noise-chasing.
+- **Formal noise:** Dwork's Laplace-noised threshold (16).
 - **Gap:** no item pre-measures a noise band δ by re-running an unchanged baseline, as RRSI mechanism E does.
 
 ### Forgetting / pruning / decay
-- **Explicit eviction by utility:** Agent KB (12).
-- **Importance decay, dedup, capped reinforcement (content only):** EvolveMem (10).
-- **Delete edits in the proposal space:** SkillOpt (9).
-- **Emergent dedup found by the meta-LLM:** AutoMem (13).
-- **Append-only with monotone growth:** MetaClaw S_{g+1}⊇S_g (6), SkillRL 55→100 skills (8), ReasoningBank (11), DGM/DGM-H archives, EnvHarness components.
+- **Explicit eviction by utility:** Agent KB (13).
+- **Importance decay, dedup, capped reinforcement (content only):** EvolveMem (11).
+- **Delete edits in the proposal space:** SkillOpt (10).
+- **Emergent dedup found by the meta-LLM:** AutoMem (14).
+- **Append-only with monotone growth:** MetaClaw S_{g+1}⊇S_g (7), SkillRL 55→100 skills (9), ReasoningBank (12), DGM/DGM-H archives, EnvHarness components.
 - **Takeaway:** almost none prune *harness mechanisms* for lack of measured gain. RRSI mechanism G is new in that respect, and Agent KB's eviction is the nearest analogue.
 
 ### Evolve vs held-out vs OOD discipline
-- **Proper 3-way splits:** SkillOpt 2:1:7 with test locked (9). DGM-H train/val/test (3). EnvHarness held-out plus OOD (14). SkillRL on OOD QA (8).
-- **Transfer shifts:** HGM across dataset and model at once (2). SkillOpt across model, harness and benchmark (9). EvolveMem LoCoMo→MemBench (10). DGM across models and languages (1). Agent KB's asymmetric domain transfer (12).
-- **Evolve set = report set (weak discipline):** EvolveMem (10), AutoMem's fixed seeds (13), RSIBench-Data's selection = official subset (admitted) (5), DGM benchmark subsets (1). Agent KB's pass@k feeds earlier attempts forward on the same instance (12).
-- **Reported generalization gaps:** Ding HDA shows validation-selected harnesses 5.9–11.7 points below training gains, and 4 of 16 settings end below baseline held-out (17). Dwork's classic 63% vs 50% (15).
+- **Proper 3-way splits:** SkillOpt 2:1:7 with test locked (10). DGM-H train/val/test (3). EnvHarness held-out plus OOD (15). SkillRL on OOD QA (9).
+- **Transfer shifts:** HGM across dataset and model at once (2). SkillOpt across model, harness and benchmark (10). EvolveMem LoCoMo→MemBench (11). DGM across models and languages (1). Agent KB's asymmetric domain transfer (13).
+- **Evolve set = report set (weak discipline):** EvolveMem (11), AutoMem's fixed seeds (14), RSIBench-Data's selection = official subset (admitted) (6), DGM benchmark subsets (1). Agent KB's pass@k feeds earlier attempts forward on the same instance (13).
+- **Reported generalization gaps:** Ding HDA shows validation-selected harnesses 5.9–11.7 points below training gains, and 4 of 16 settings end below baseline held-out (18). Dwork's classic 63% vs 50% (16).
 
 ### Leakage / benchmark-fitting guards
-- **Proposal-side abstraction rules:** ReasoningBank bans specific sites, queries and strings (11). SkillOpt bans hard-coded task values (9).
-- **Frozen verifier and read-only evaluator:** EnvHarness hides the R axis (14). Weng's read-only evaluators (18). RSIBench-Data forbids protected eval material (5). NeoHorse decontamination screening (4).
-- **Staleness and leak separation:** MetaClaw support/query plus version flush (6). HGM target-leak exclusion in its analysis (2).
+- **Proposal-side abstraction rules:** ReasoningBank bans specific sites, queries and strings (12). SkillOpt bans hard-coded task values (10).
+- **Frozen verifier and read-only evaluator:** EnvHarness hides the R axis (15). Weng's read-only evaluators (19). RSIBench-Data forbids protected eval material (6). NeoHorse decontamination screening (4).
+- **Staleness and leak separation:** MetaClaw support/query plus version flush (7). HGM target-leak exclusion in its analysis (2).
 - **Gap:** none has a critic that reads each *diff* before evaluation, as RRSI mechanism D does.
 
 ### Cost / complexity growth
-- **Capped local incentives:** Agent0 caps the tool reward at C (7).
-- **Token accounting:** ReasoningBank +4.3% tokens (11). SkillRL about −10% context against raw memory (8). Agent KB overhead under 0.4% (12). EnvHarness −9.8% steps (14).
-- **Cost as utility term:** only Ding HDA's T component (17) and Weng's discussion (18) treat test-time compute as something to charge for. No method has an acceptance rule like ΔC ≤ β0+β1ΔS. RRSI mechanism F is new here.
-- **Bounded edit magnitude:** SkillOpt's edit budget (9). Agent KB's cosine disagreement gate β=0.8 (12). EnvRigger's "narrow perturbations" rule (14).
+- **Capped local incentives:** Agent0 caps the tool reward at C (8).
+- **Token accounting:** ReasoningBank +4.3% tokens (12). SkillRL about −10% context against raw memory (9). Agent KB overhead under 0.4% (13). EnvHarness −9.8% steps (15).
+- **Cost as utility term:** only Ding HDA's T component (18) and Weng's discussion (19) treat test-time compute as something to charge for. No method has an acceptance rule like ΔC ≤ β0+β1ΔS. RRSI mechanism F is new here.
+- **Bounded edit magnitude:** SkillOpt's edit budget (10). Agent KB's cosine disagreement gate β=0.8 (13). EnvRigger's "narrow perturbations" rule (15).
 
 ### Exploration / stall handling
-- **Stall→explore:** EvolveMem adds random perturbation after 2 flat rounds (10). RRSI's structured exploration is a targeted version (unexercised components).
-- **Scheduled exploration→exploitation:** HGM's τ (2). SkillOpt's cosine budget decay (9). RRSI's annealed b_max→b_min.
-- **Novelty and diversity:** DGM child-count bonus (1). Agent0 BLEU repetition penalty (7). SkillRL categorical-entropy sampling (8).
+- **Stall→explore:** EvolveMem adds random perturbation after 2 flat rounds (11). RRSI's structured exploration is a targeted version (unexercised components).
+- **Scheduled exploration→exploitation:** HGM's τ (2). SkillOpt's cosine budget decay (10). RRSI's annealed b_max→b_min.
+- **Novelty and diversity:** DGM child-count bonus (1). Agent0 BLEU repetition penalty (8). SkillRL categorical-entropy sampling (9).
 
 ### Theory
 - **Gödel machine lineage:** DGM (empirical relaxation), HGM (Theorem 1: a CMP oracle is equivalent to a GM), DGM-H (metacognitive self-reference).
-- **Adaptive data analysis:** Dwork (15). Ding's O/T/G is its empirical cousin (17). None of the evolution papers applies DP noise or a holdout budget.
-- **Regularization:** L0 hard-concrete (16) maps to RRSI's sparsity cap. SkillOpt's DL analogy (learning rate, momentum, validation) and AutoMem's θ/∇L analogy are the practical counterparts.
-- **Quality-diversity and open-endedness:** DGM, DGM-H. Bandits and best-arm identification: HGM. Meta-learning: MetaClaw. Curriculum and UED: Agent0, EnvHarness. Metamemory: AutoMem. Compositional generalization: Zhang & Khattab (19).
+- **Adaptive data analysis:** Dwork (16). Ding's O/T/G is its empirical cousin (18). None of the evolution papers applies DP noise or a holdout budget.
+- **Regularization:** L0 hard-concrete (17) maps to RRSI's sparsity cap. SkillOpt's DL analogy (learning rate, momentum, validation) and AutoMem's θ/∇L analogy are the practical counterparts.
+- **Quality-diversity and open-endedness:** DGM, DGM-H. Bandits and best-arm identification: HGM. Meta-learning: MetaClaw. Curriculum and UED: Agent0, EnvHarness. Metamemory: AutoMem. Compositional generalization: Zhang & Khattab (20).
 
 ### Items not found
-- RSI-Exam: no match on alphaXiv. RSIBench-Data (2607.25886) is used as the nearest substitute, and RSI-Index (Vals AI) is noted but was not read.
+- RSI-Exam: the alphaXiv search found no paper; the public benchmark is recorded in item 5. RSIBench-Data is a separate reference in item 6. RSI-Index (Vals AI) is noted but was not read.
 - All three blogs were fetched successfully.
