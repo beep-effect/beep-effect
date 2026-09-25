@@ -5,9 +5,13 @@
  * @since 0.0.0
  */
 
+import * as A from "@beep/utils/Array";
 import { escapeHtml } from "@beep/utils/Html";
-import { Effect, FileSystem, Layer, Match } from "effect";
-import * as A from "effect/Array";
+import { thunkEmptyStr } from "@beep/utils/thunk";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { HttpApiScalar, OpenApi } from "effect/unstable/httpapi";
@@ -43,7 +47,7 @@ const docsLink = (entry: CatalogEntry): string =>
     Match.tag("ContractSource", () => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`),
     Match.tag("SpecSource", (source) =>
       Match.value(source.dialect).pipe(
-        Match.when("json-schema-2020-12", () => ""),
+        Match.when("json-schema-2020-12", thunkEmptyStr),
         Match.orElse(() => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`)
       )
     ),
