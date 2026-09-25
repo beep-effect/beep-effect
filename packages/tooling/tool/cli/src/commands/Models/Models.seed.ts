@@ -114,6 +114,27 @@ const codexConfig = (id: string, root: TargetRoot, path: string): ModelSyncTarge
     tomlKey("plan_mode_reasoning_effort", at("codex.plan", "codex-cli", "effort")),
   ]);
 
+const doctrineEffort: Locator = {
+  _tag: "line-value",
+  binding: at("codex.heavy", "codex-cli", "effort"),
+  render: verbatim,
+  linePrefix: "",
+  before: 'model_reasoning_effort="',
+  after: '"',
+};
+
+const exampleModels = (id: string, path: string, role: RoutingRole): ModelSyncTarget =>
+  target(id, "repo", `packages/tooling/tool/cli/src/commands/${path}`, false, [
+    {
+      _tag: "line-value",
+      binding: at(role, "codex-plugin", "model"),
+      render: verbatim,
+      linePrefix: " *",
+      before: 'model: "',
+      after: '"',
+    },
+  ]);
+
 const codexLauncher = (id: string, path: string): ModelSyncTarget =>
   target(id, "home", path, true, [
     {
@@ -198,7 +219,7 @@ const onlyRoles = (roles: ReadonlyArray<RoutingRole>): BindingFilter => BindingF
 
 const seedTargets: ReadonlyArray<ModelSyncTarget> = [
   // ── Repo doctrine and skills (R9) ─────────────────────────────────────────
-  target("repo.agents-md", "repo", "AGENTS.md", false, [block("volume-pools", allBindings, true)]),
+  target("repo.agents-md", "repo", "AGENTS.md", false, [block("volume-pools", allBindings, true), doctrineEffort]),
   target("repo.docs.agent-pools", "repo", "docs/runbooks/agent-pools.md", false, [
     block("cursor-seats", cursorSeats, true),
   ]),
@@ -259,9 +280,11 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
   ]),
   target("home.claude.rules.working-style", "home", "$HOME/.claude/rules/working-style.md", true, [
     block("codex-delegation", onlyRoles(["codex.heavy", "codex.plan"]), false),
+    doctrineEffort,
   ]),
   target("home.codex.agents-md", "home", "$HOME/.codex/AGENTS.md", true, [
     block("codex-lane", onlyRoles(["codex.heavy", "codex.plan"]), false),
+    doctrineEffort,
   ]),
   target("home.cliproxyapi.dankstation", "home", "$HOME/YeeBois/workstation-apps/CLIProxyAPI/DANKSTATION.md", true, [
     block("deprecated-routable", onlyRoles(["deprecated.routable"]), true),
@@ -368,6 +391,30 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
     "home",
     "$HOME/.agents/skills/impeccable/agents/impeccable_manual_edit_applier.toml"
   ),
+  exampleModels("repo.examples.qa-inventory", "Qa/Inventory.schemas.ts", "qa.judge"),
+  exampleModels("repo.examples.qa-judge-check", "Qa/JudgeCheck.ts", "qa.judge"),
+  exampleModels("repo.examples.qa-render", "Qa/Qa.render.ts", "qa.judge"),
+  exampleModels("repo.examples.yeet-provenance", "Yeet/internal/Provenance.ts", "codex.heavy"),
+  exampleModels("repo.examples.yeet-resume", "Yeet/internal/Resume.ts", "codex.heavy"),
+  exampleModels("repo.examples.docgen-worker", "Docgen/internal/QualityWorkerEval.ts", "codex.heavy"),
+  target("repo.code.qa-judge-pack", "repo", "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts", false, [
+    {
+      _tag: "line-value",
+      binding: at("qa.judge", "codex-plugin", "model"),
+      render: verbatim,
+      linePrefix: "",
+      before: "task --model ",
+      after: " --effort ",
+    },
+    {
+      _tag: "line-value",
+      binding: at("qa.judge", "codex-plugin", "effort"),
+      render: verbatim,
+      linePrefix: "",
+      before: " --effort ",
+      after: " --prompt-file ",
+    },
+  ]),
 ];
 
 /**

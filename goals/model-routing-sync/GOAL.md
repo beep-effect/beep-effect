@@ -7,7 +7,7 @@ below are repo-relative.
 Outcome: a `Models` command group in `@beep/repo-cli` whose schemas decode the
 live upstream model catalog, `$HOME/.codex/models_cache.json`, and
 `cursor-agent models`, and whose `check` run prints routing drift for every
-declared target. Read-only: slice 1 has no write path at all (R12).
+declared target. Read-only: slice 1 has no projection write path (R12).
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -50,16 +50,16 @@ Workflow:
 
 Acceptance:
 
-- [ ] The schemas decode the live upstream `models.json`, the Codex cache, and
+- [x] The schemas decode the live upstream `models.json`, the Codex cache, and
       `cursor-agent models` output without loss.
-- [ ] `check` prints drift for every declared target, including the seven known
+- [x] `check` prints drift for every declared target, including the seven known
       live conflicts in `SPEC.md`, and exits non-zero on drift.
-- [ ] No `--write` path exists: the only writes are the R6 ledger, the
+- [x] No `--write` path exists: the only writes are the R6 ledger, the
       optional `--report-dir` output, and the `init` seed manifest.
-- [ ] `SPEC.md` slice-1 acceptance criteria are satisfied.
-- [ ] Required verification commands pass, or unrelated failures are reproduced
+- [x] `SPEC.md` slice-1 acceptance criteria are satisfied.
+- [x] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 
