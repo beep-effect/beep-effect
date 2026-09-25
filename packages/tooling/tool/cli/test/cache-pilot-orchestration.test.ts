@@ -43,6 +43,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -460,12 +461,14 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                     );
                     if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
                     yield* corruptSource();
-                    const log =
-                      fault === "unsafe-log"
-                        ? "/fixture/private.ts\n"
-                        : fault === "initial-divergence" && guest === "/fixture-other"
-                          ? "different lint observation\n"
-                          : "lint observation\n";
+                    const log = Match.value({ fault, guest }).pipe(
+                      Match.when({ fault: "unsafe-log" }, () => "/fixture/private.ts\n"),
+                      Match.when(
+                        { fault: "initial-divergence", guest: "/fixture-other" },
+                        () => "different lint observation\n"
+                      ),
+                      Match.orElse(() => "lint observation\n")
+                    );
                     if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
                     const progress = hit
                       ? "cache hit, replaying logs"
