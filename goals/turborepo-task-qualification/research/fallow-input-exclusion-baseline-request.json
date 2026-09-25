@@ -1,0 +1,14 @@
+{
+  "previous": "e8d7cb421aba050e8ebcf326cbe33a90ae8d850f8b9694b19dca2f07887af2c4",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (vitest cache levers, perf/vitest-cache-levers)",
+    "reason": "Accept the !.fallow/** input negation every $TURBO_DEFAULT$ task gained so untracked fallow audit residue no longer shifts task hashes between checkouts; no command, cache flag, output, dependency edge or global configuration changed.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/fallow-input-exclusion-baseline-review.md",
+      "sha256": "e8ccc5c6a7a53044f39f56d538dfe9afd3e6720ceab7d2309dc03d8ef3577c5d"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
