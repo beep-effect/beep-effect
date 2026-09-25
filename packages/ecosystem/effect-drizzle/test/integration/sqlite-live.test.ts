@@ -10,6 +10,7 @@ import { findFirst } from "effect/Array";
 import { Service } from "effect/Context";
 import { formatIso, makeUnsafe, toDate } from "effect/DateTime";
 import {
+  acquireRelease,
   addFinalizer,
   exit,
   flip,
@@ -192,9 +193,11 @@ const SqliteHarnessState = effectLayer(
     const databasePath = `${databaseDirectory}/live.sqlite`;
     const migrationOutput = yield* runPush(databasePath);
     const noOpOutput = yield* runPush(databasePath);
-    const drizzleClient = new Database(databasePath);
+    const drizzleClient = yield* acquireRelease(
+      sync(() => new Database(databasePath)),
+      (client) => sync(() => client.close())
+    );
     drizzleClient.run("PRAGMA foreign_keys = ON");
-    yield* addFinalizer(() => sync(() => drizzleClient.close()));
     return SqliteHarness.of({ databasePath, drizzleClient, migrationOutput, noOpOutput });
   })
 ).pipe(provide(BunFileSystem.layer));
