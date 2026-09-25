@@ -2003,3 +2003,13 @@ undersize guard also leaves its rejected archive on disk. Evidence:
 mode-bound qualification contract, and cleanup of rejected outputs, would make
 the packaging boundary easier to qualify. This observation does not authorize
 changing the deployment artifact format or prove normal builds vary modes.
+
+### CI path-reader documentation mismatch — 2026-09-25
+
+The `HeavyAdmission.ts` review at `1504e77bcf` found a comment describing
+`git diff --name-only --no-renames -z`, while `readHeavyAdmissionChangedPaths`
+still requests `git diff --name-only` and splits/trim lines. Source receipt:
+`research/ci-entrypoint-delta-review.json`. Tests for unusual filenames tied
+to the actual reader, and synchronized documentation, would prevent treating
+the comment as evidence of lossless handling. This review does not establish
+a hosted admission exploit or qualify external verdict reuse.

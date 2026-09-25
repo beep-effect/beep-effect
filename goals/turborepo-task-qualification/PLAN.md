@@ -1649,3 +1649,19 @@ remain outside this batch; separate evidence for them still requires assessment.
 Nineteen original drift members changed again after the historical checkpoint.
 Retain exact revision/hash boundaries. This source review establishes neither
 transitive semantic closure nor runtime or signed qualification.
+
+### CI partition delta and native selection — 2026-09-25
+
+Seven CI/workflow source deltas were reviewed at `1504e77bcf`; see
+[the receipt](./research/ci-entrypoint-delta-review.json). The two existing
+contract suites passed all 88 tests, including invalid shard sets and shimmed
+admission/execution. Six actual CLI dry-runs proved the committed partitions
+against 136 selected executable tasks per lane. Repo-cli forwards complementary
+`--shard=1/2` and `--shard=2/2` arguments; no task body ran in these dry-runs.
+
+The source review distinguishes the heavy-admission comment from its current
+implementation: Git output remains newline-split despite the comment describing
+NUL-delimited output. Lossless filename handling is not proved. The operational
+census accepted the review, retaining 968 sources, six artifacts, 26 reviews
+and all 13 unresolved obligations. Hosted execution and downstream runtime
+semantics remain separate evidence requirements; no tuple is qualified.
