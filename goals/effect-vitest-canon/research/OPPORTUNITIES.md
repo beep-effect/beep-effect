@@ -2288,3 +2288,13 @@ schema package-only shared-worker coverage command now passes 725 tests across
 78 files, exit 0, with no TestContextUnavailable failures. The prior 60 failures
 remain documented above as pre-integration evidence. The integration receipt is
 `history/2026-09-25-schema-runner-integration.md`.
+
+## Stack merge resolution must fail closed
+
+During runner integration, the cache baseline's synthetic merge-base blob
+contained conflict markers and could not decode as JSON. The resolution command
+lacked fail-fast shell handling, so later staging and commit steps still ran.
+The unpublished merge was corrected and amended before any push; verification
+compared the real parent projections and preserved the eight codegen-only
+dependency changes. Use fail-fast sequencing and validate both JSON and conflict
+markers before staging. Existing commit hooks did not reject these markers.
