@@ -49,5 +49,28 @@ have reviewed reasons for native subjects, shorter lifetimes, pure providers,
 module mocks, or assertions whose exact native payload is deliberately unknown.
 Non-test-utils baseline rows are preserved.
 
-Committed-head timing, original-ledger reconciliation and hosted PR closure
-remain separate steps. A passing package proof does not complete the goal.
+## Inventory and committed-head timing
+
+Implementation commit: `aeee188d63c21487683580dab0c728f85a0b1fb7`.
+The original 165 rows reconcile to 27 fixed findings, 69 retained exceptions
+and 69 coverage-only no-findings judgments. Nine historical runner detector
+rows are retained exceptions with prior-split provenance, not new repair credit;
+four historical runner coverage judgments remain coverage-only.
+
+The original 85 detector rows and their dispositions are preserved in
+`2026-09-25-test-utils-original-detector-dispositions.jsonl`. The active detector
+sidecar now contains the 64 current exceptions. All 229 rows across the original
+archive, four lens sidecars and current detector sidecar strictly decode against
+EffectVitestFinding with excess properties rejected.
+
+The full configured Node timing cohort ran at the implementation commit above,
+verified unchanged after collection: 255 registered, 250 passed, five skipped,
+eighteen files. Reporter duration was 19,874.05 ms; whole-command duration was
+20.279 seconds. The source manifest remained unchanged. Maximum observed
+one-minute host load was 19.99; maximum CPU/memory/IO pressure avg10 was
+4.02/0.18/0.00. These are recorded context, not adjustment factors. Runtime and
+test populations differ from the baseline; no causal speedup is claimed.
+This final full-suite run includes the bounded-prefix and helper cleanups.
+
+Hosted PR closure remains pending. A passing package proof does not complete
+the goal.
