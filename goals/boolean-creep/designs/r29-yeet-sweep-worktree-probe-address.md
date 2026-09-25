@@ -1,240 +1,114 @@
 # r29-yeet-sweep-worktree-probe-address
 
-## Current source refresh — 2026-09-14
+## Exact-source P2 refresh — 2026-09-24
 
-This P2 refresh is bound to source/main
-`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`. Sweep.ts SHA256 is
-`88ec5658bf142fecb7c6c5f494ee3106a179f9f8459588c8a182e77ce0620d1a`.
-Compared with the historical design source at main `3657f8f9`, Sweep.ts differs
-only in the renderer's JSDoc category; the entire Sweep test file and encoded
-Sweep schemas are byte-identical. All selected-field producers/readers and
-fixture locations below therefore remain current. Qualification remains 4/3.
-The historical source binding below is provenance, superseded by this binding.
+Source HEAD: `f97a89bdfdc5bc71b69aab09b8d425591698d42a`. Source hashes, frozen-head equality and input/output bindings are in the companion `audit.json`. This document supersedes historical source coordinates for this owner only. It is a P2 proposal awaiting independent P3; it grants no implementation, dryness or Gate 2 credit.
 
-Current indirect consumers also include `Retire.ts:77–104,201–237,331–347`
-and `Porcelain.ts:157–174,195–219`. They receive SweepGitState through the
-existing observer. Retire reads only the unchanged PR state/head fields;
-Porcelain forwards the state to that gate and emits the dedicated retire plan
-and report codecs. Neither reads the fields selected by this design, constructs
-a competing state, or serializes the raw class. Preserve these routes, the
-retirement gate and the current `yeet-retire-sweep-plan/v1` and
-`yeet-retire-sweep-report/v1` outputs. Include retirement plan/report fixtures
-in implementation validation alongside the unchanged Sweep suite.
+Disposition: retain the admitted minimal reliability/address cluster at **4 representable / 3 legal**. Reject the R32 expansion to mainCheckedOutElsewhere and branchCheckedOutElsewhere with 16/9. No canonical inventory/design was edited by this audit.
 
-This expands the known consumer list in the retained design; prior statements
-that the old list was exhaustive do not exclude these new indirect users.
-No product tests ran and no census, dryness or independent P3 credit is granted.
+Unless prefixed otherwise, paths below are relative to `packages/tooling/tool/cli/`.
 
-Native P2 proposal on HEAD `1c07c15495aaa42f521b887b01e943e68804606c`,
-whose reviewed Sweep source equals immutable main
-`3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`. The tracking ref subsequently
-advanced separately; that is not an exact-current-main claim. This native P2 design is installed and awaits independent review. Product references below
-are relative to `packages/tooling/tool/cli/`.
+## Current shape and complete-owner boundary
 
-# Current shape
+`src/commands/Yeet/internal/Sweep.ts:178-201` defines `SweepGitState`, an exported S.Class and the documented world/planner seam at :120-146. Seven Boolean members pass the campaign net. This design selects only `worktreeProbeUnreliable` (:189) and `mainWorktreePath` (:190), an actual Option-valued field with optional encoded key and constructor None default.
 
-`SweepGitState`, `src/commands/Yeet/internal/Sweep.ts:177-200`, is an actual
-named class and the world/planner seam documented at :119-146. The complete
-owner contains seven Booleans, so it passes the initial campaign net. This
-independently adjudicated minimal cluster selects the actual fields
-`worktreeProbeUnreliable: S.Boolean` (:188) and
-`mainWorktreePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey,
-SchemaUtils.withNoneDefault)` (:189). It does not invent a predicate over a
-required string or a synthetic field.
+The other fields stay intact: required NonEmptyString branch/mainBranch/headBranch; independent mainCheckedOutElsewhere and branchCheckedOutElsewhere; branchMergedIntoBase; lockfileMovedOnMainUpdate; worktreeDirty/statusProbeUnreliable (separately admitted status owner); and optional-key/None-default mainTip, localTip, remoteTip, pullRequestState, pullRequestHeadBranch, pullRequestHeadOid. Do not constrain branch names, revision text, PR strings, empty absence, ancestry or unrelated combinations through this owner.
 
-The live writer at :756-762 uses the same `worktreeList` result to produce the
-reliability flag and address. A failed, nonzero or truncated result has no
-address. The explicit comment forbids naming a worktree nobody observed. The
-exported `refreshNotCompletedHandoff` contract at :1003-1009 repeats this rule:
-an unreadable list cannot supply a holding address, so the handoff stays bare.
-The direct fixture at `test/yeet-sweep-plan.test.ts:814-821` exercises it.
+The full generic class currently accepts all four selected Boolean/Option-presence projections. Qualification does not infer a restriction merely because the live producer is narrower. It rests on the explicit addressed-observation/handoff contract: the observer at :758-764 discards partial/unreliable addresses and explains why an unobserved holder must not be named; the exported `refreshNotCompletedHandoff` gotcha at :1010-1017 requires a bare command when the holder is unknown. No alternate supported construction combining unreliable with Some(path) was found. Known supported callers agree with the selected restriction.
 
-The supported class input space is wider than the live writer's full occupancy
-image. The tests construct `mainCheckedOutElsewhere: true` with no address
-(:279/:285) and an unreliable worktree observation while the branch-occupancy
-Boolean remains false (:814-821 plus defaults :46-67). Preserve those inputs.
-They do not contradict the selected reliability/address contract. Do not
-derive or constrain either occupancy Boolean from this new field.
+## R32 expansion adjudication
 
-# Cardinality gap
+The raw proposal uses the class gotcha (:142-146), conservative observer writes (:752-764), and the truncated-probe fixture to argue unreliable implies both checkout booleans true plus None path. That describes the observer's normal output, but is too narrow for the supported public helper seam:
 
-The real Boolean/presence product is four; three combinations have supported
-meaning. Payload values are not collapsed to one concrete address.
+- `test/yeet-sweep-plan.test.ts:846-854` deliberately tests an unreadable probe with `mainCheckedOutElsewhere: true`, `worktreeProbeUnreliable: true`, and inherited `branchCheckedOutElsewhere: false`, `mainWorktreePath: None` from :46-68. Its bare handoff is legitimate and must remain representable. The raw 16/9 proposal rejects it.
+- Reliable held-main/no-address inputs at :280 and :286 are legitimate partial information. None must not mean main is free.
+- `test/support/RetireFenceInvoker.ts:33-51` constructs reliable Some(owningClone) with BOTH checkout booleans false. The retirement gate reads only PR facts. Preserve this fixture instead of tightening its unrelated fields to imitate the observer.
+- `Sweep.ts:582-591` derives occupancy and path from the same lookup in the real observer. Thus a pure producer-image analysis would also correlate reliable main occupancy with path presence, contradicting the raw proposal's claim that all eight reliable four-axis combinations are the producer image. Producer reachability and public helper construction are different domains.
 
-| Unreliable | Address | Supported meaning and evidence |
-| --- | --- | --- |
-| false | None | Reliable/unaddressed. Default fixture :46-69; held-main partial fixtures :279/:285. This does not assert that main is free. |
-| false | Some(path) | Reliable/addressed. Direct handoff fixtures :773-811 preserve ordinary paths, spaces and embedded quotes. |
-| true | None | Unreliable/unaddressed. Writer Sweep.ts:756-762 and direct no-address fixture :814-821. |
-| true | Some(path) | Excluded by the same-probe producer contract and the exported handoff's prohibition on naming an unobserved holder. |
+The class gotcha needs clarification during implementation: its conservative assignment explanation describes `observeSweepGitState`, while planner/helper construction supports partial facts. It must not be used to silently outlaw supported helper tuples. Preserve both occupancy booleans without defaults or derivation from the new observation. The separate worktreeDirty/statusProbeUnreliable 4/3 owner is neither reopened nor redesigned here.
 
-Evidence is the exclusive writer plus a real Boolean/optional-payload
-implication: an address requires a reliable worktree observation. It is not
-the stronger claim that reliable implies addressed, or that absence proves a
-free main. Generic `.make` permissiveness and the reader's ability to render
-a contradictory address do not establish that contradictory tuple as a
-legitimate helper contract. No such supported fixture or alternate path
-producer was found. No whole-owner cardinality is asserted.
+## Cardinality gap and finite table
 
-# Target schema
+| worktreeProbeUnreliable | mainWorktreePath | Contract | Target |
+| --- | --- | --- | --- |
+| false | None, including omitted constructor address | Supported reliable observation without address; occupancy remains independent | unaddressed |
+| false | Some(path) | Supported reliable addressed observation | addressed(path) |
+| true | None, including omitted constructor address | Supported unreliable observation without address | unreliable |
+| true | Some(path) | Excluded by the explicit no-unobserved-holder contract | unrepresentable |
 
-Replace only these two fields with one required
-`mainWorktreeObservation: SweepMainWorktreeObservation`. Own the three
-discriminator values with one annotated local
-`LiteralKit(["unreliable", "unaddressed", "addressed"])`, named
-`SweepMainWorktreeObservationKind`, without `as const` or a parallel literal
-union. The canonical tagged model has precisely these cases:
+`finite-table.json` enumerates these four rows and all sixteen proposed expanded projections. The minimal model preserves twelve projections when multiplied by the untouched occupancy pair; this is not a whole-owner cardinality claim. Payload values remain the complete S.NonEmptyString domain. The table is static proof, not a runtime test result.
 
-| kind | Case payload |
-| --- | --- |
-| unreliable | none |
-| unaddressed | none |
-| addressed | `mainWorktreePath: S.NonEmptyString` |
+## Target schema
 
-Use the repository's LiteralKit member construction and
-`S.toTaggedUnion("kind")` with schema-derived constructors/guards/match.
-Prefer annotated class members when a reusable model is needed; plain struct
-members are acceptable only as the concrete internal discriminated-record
-composition boundary, with a same-name schema-derived Type alias. Do not add
-a broad `S.Unknown`, custom assertion, ad-hoc runtime guard, or codec.
+Keep `SweepGitState` as an annotated class. Replace only the two selected fields with required `mainWorktreeObservation: SweepMainWorktreeObservation`. Use the existing LiteralKit helper to own the discriminants and produce the internal tagged-record union:
 
-The model is derived from the existing captured observation. Keep the current
-probe and lookup order. If `probeUnreliable(worktreeList)` is true, construct
-unreliable without trusting parsed partial output. Otherwise match the actual
-`worktreeHolding` Option: None becomes unaddressed, Some(path) becomes addressed
-with the exact path. Do not add another probe or derive new facts from path
-equality, required strings or occupancy Booleans.
+```ts
+const SweepMainWorktreeObservationKind = LiteralKit([
+  "unreliable", "unaddressed", "addressed",
+]);
+const SweepMainWorktreeObservation =
+  SweepMainWorktreeObservationKind.toTaggedUnion("kind")({
+    unreliable: {},
+    unaddressed: {},
+    addressed: { mainWorktreePath: S.NonEmptyString },
+  }).pipe($I.annoteSchema("SweepMainWorktreeObservation", {
+    description: "A reliable worktree holder address, a reliable unaddressed observation, or an unreadable probe.",
+  }));
+type SweepMainWorktreeObservation = typeof SweepMainWorktreeObservation.Type;
+```
 
-The new field is required. The old reliability Boolean was required, while
-an omitted old address received None. Migrate those legitimate constructor
-calls explicitly to unreliable or unaddressed according to their original
-Boolean. Do not default an omitted new required observation silently. Paths
-retain the full NonEmptyString domain, including whitespace-only nonempty
-strings accepted by the class, embedded quotes and metacharacters. The live
-parser's existing trim behavior remains at the observation boundary.
+This is a concrete internal discriminated-record composition boundary: local LiteralKit.toTaggedUnion constructs S.Struct members with schema-defaulted tags and calls upstream S.toTaggedUnion. Keep the outer owner class. Add annotations to the literal domain using the repo helper that preserves LiteralKit statics if needed; do not export an unannotated shared schema. No new role file or package is required. Avoid needless new public exports; the class field provides the schema for tests, or export only if an actual consumer requires it.
 
-# Migration inventory
+Use `.cases.unreliable.make({})`, `.cases.unaddressed.make({})`, and `.cases.addressed.make({ mainWorktreePath: path })`; do not supply a defaulted kind. Use schema-derived `.isAnyOf`, `.guards` and `.match`. No manual predicate, parallel union type, broad unknown field, runtime coherence filter, legacy adapter or duplicated field getter.
 
-- `Sweep.ts:177-200`: replace only reliability/address fields with the new
-  derived observation. Keep all other fields, schema defaults and payloads.
-  Keep required `branch`, `mainBranch` and `headBranch` NonEmptyString values.
-  In particular preserve the independently supported main/branch occupancy
-  Booleans, local/remote/main tip Options, PR Options, ancestry Boolean and
-  lockfile forecast. The separate accepted status-pair design remains closed;
-  coordinate serial shared-class edits without revisiting its 4/3 decision.
-- `Sweep.ts:148-171,450-475`: migrate both documented `.make` examples from
-  reliable plus omitted path to unaddressed. Retain all example payloads.
-- `Sweep.ts:267-278`: replace reliability tests with the schema-derived
-  unreliable-case guard. Keep exact blocker descriptions and priority.
-  Reliable unaddressed and addressed cases still read the independent
-  occupancy Booleans and `headBranch` exactly as today. No occupancy inference
-  from address presence is permitted.
-- `Sweep.ts:556-588,712-771`: preserve parsing, self-path exclusion, first
-  matching branch lookup and capture semantics. Construct the new field once
-  from the same worktree probe and existing Option lookup. Keep the two
-  occupancy writers at :750-752 exactly conservative, including their
-  independent helper-input domain. Keep `probeUnreliable` for all other uses.
-- `Sweep.ts:1026-1050`: match the new observation once to create the complete
-  handoff. Unreliable and unaddressed produce today's None-path reason and
-  bare `bun run beep yeet sweep`; addressed produces today's holder suffix
-  and quoted `cd ... && bun run beep yeet sweep --branch ...`. Reuse a shared
-  local thunk for identical no-address output only when it shortens the
-  actual implementation. Do not rebuild the old Boolean/Option bag or add a
-  conversion facade. Preserve both dual call forms, `localMain`/`trackingMain`
-  full Options, `optionText` formatting and POSIX shell quoting.
-- `Sweep.ts:304-317,319-348,403-410`: ff-main, local deletion and end-state
-  retain their precondition arrays and ordering through the migrated main/
-  branch helpers. A reliable but held-main/no-path fixture still blocks;
-  an unreliable probe still names the unreadable command, not an occupancy
-  claim. An in-place main merge still uses the separate clean-worktree check.
-- `Sweep.ts:485-505,798-803,1052-1101,1186-1230,1312-1335`: preserve plan
-  construction, post-refresh handoff selection and report execution. The
-  original captured state remains the common input; do not resample it, move
-  lockfile decisions earlier or change step routing.
-- `test/yeet-sweep-plan.test.ts:46-75,199-235,509-521,544-556,773-821`: migrate
-  base fixtures, failure/truncation assertions and handoff case constructors.
-  The base fixture is unaddressed. The override helper's old Partial shape
-  must migrate honestly; do not leave an adapter that silently fixes
-  contradictory legacy fields. Keep all explicit unrelated overrides.
-- `src/test/Yeet.test-kit.ts:66-67` exports sweep codecs and the Sweep module;
-  the package's test route at `package.json:65-68` exposes this internal test
-  seam while denying internal source imports. Preserve SweepGitState and all
-  existing helper signatures atomically. No unused export or legacy alias is
-  required solely to keep old fixtures compiling.
-- Existing caller routes remain: `Porcelain.ts:92-107,134-150` encodes/renders
-  plan/report; `Merge.ts:254-257` consumes the sweep report;
-  `MonitorLoop.ts:982-988` invokes sweep after merge. They do not read either
-  removed field. Graft plus targeted source/test searches found the direct
-  writer/readers above; absence of graph edges alone was not the proof.
+Keep the replacement field required. Old omission of path meant None, but the old reliability Boolean was required: explicitly migrate each caller to its correct case. Never silently default missing replacement observations. Do not introduce a stricter path schema, trimming, existence check or canonicalization. Spaces, whitespace-only nonempty paths, quotes and shell metacharacters remain valid constructor payloads; existing parser trim and shell quoting retain their current boundary roles.
 
-# Guard-deletion accounting
+Reference verification: `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:710-719,793-815` implements and demonstrates this helper. `.repos/effect/packages/effect/SCHEMA.md:2137-2163` and `src/Schema.ts:6178-6233` establish tagged cases/guards/match. `src/Schema.ts:14159-14179` and local `SchemaUtils/withConstructorDefaults.ts:49-54` establish optional-key decode/encode and constructor None semantics. No advanced API is assumed from memory.
 
-Delete the stored Boolean/Option pair and its implicit prohibition on
-unreliable/Some(path). The producer's repeated reliability-dependent field
-writes become one exhaustive observation construction. The Option test at
-the worktree lookup boundary remains necessary for addressed versus
-unaddressed; it is not a deleted safety check.
+## Migration inventory
 
-Replace the two reliability branches in mainFreePrecondition and
-branchFreePrecondition with schema-derived case selection. Preserve their
-observable failed preconditions. Replace the two independent
-`O.match(state.mainWorktreePath)` calls at :1033-1047 with one exhaustive
-observation match producing a coherent reason/command pair. No compatibility
-getter should reconstruct both removed fields.
+1. `Sweep.ts:178-201`: replace the selected fields only. Preserve the other fifteen fields and all defaults. Revise owner gotcha :140-146 to distinguish observer conservative writes from legitimate partial helper construction; retain the independent status-pair contract and its separate migration.
+2. `Sweep.ts:155-171,458-474`: change both documented class constructors from reliable/omitted address to unaddressed, retaining every other example input.
+3. `Sweep.ts:556-591,714-775`: keep probe ordering, captured output, parseWorktreeList, self-path exclusion and first matching branch lookup. Construct the new observation once: unreliable probe -> unreliable; reliable probe -> O.match(worktreeHolding(...)) for unaddressed/addressed. Never retain an address parsed from failed/nonzero/truncated output. Preserve both conservative occupancy writers :752-754 exactly and preserve all other observation fields. Do not add subprocesses or re-read the worktree list.
+4. `Sweep.ts:268-279`: replace reliability tests in mainFreePrecondition and branchFreePrecondition with the schema-derived unreliable-case test. Keep exact unreadable-command blocker priority. For either reliable case, use the two untouched occupancy booleans and headBranch exactly as before. Do not infer free/held from an address or None.
+5. `Sweep.ts:305-349,404-411`: ff-main, local deletion and end-state continue to use those preconditions with the same arrays/order; head-on-main fast-forward still uses cleanWorktreePrecondition. Remote deletion :351-382 remains independent of worktree-probe failure.
+6. `Sweep.ts:1034-1060`: replace the two separate O.match(mainWorktreePath) expressions with one exhaustive observation match that constructs the complete SweepStepNeedsOperator. Both unreliable and unaddressed produce the identical existing bare command and unknown-holder reason; addressed uses its exact path in reason and POSIX-quoted cd/--branch command. Reuse one local no-address thunk if it reduces duplication. Preserve dual invocation forms, full localMain/trackingMain Options, optionText formatting, reason punctuation and shellQuote behavior. Do not rebuild the old Boolean/Option bag.
+7. State forwarding/execution stays unchanged: `Sweep.ts:486-507,800-805,842-864,894-917,951-986,1065-1124,1194-1263,1320-1344`. These cover build/plan, leased remote deletion, local/remote revalidation, post-refresh install decision and handoff, end-state routing, step execution, and report writing. Keep time ordering, tip guards, lease semantics, original observed mainTip and post-refresh lockfile diff. No guard deletion credit for these safety checks.
+8. `test/yeet-sweep-plan.test.ts:46-76`: base fixture becomes unaddressed. Update stateWith's Partial override input honestly for the new field; remove old Boolean/Option knobs instead of adding a normalizing adapter. `:200-235` truncated fixture becomes unreliable but retains its explicit two true occupancy fields; `:540-585` observer assertions inspect the new case and keep occupancy assertions. The held-main/no-path cases :280/:286 remain unaddressed with main occupancy true. `:801-854` handoff constructors use addressed/unreliable while preserving all unrelated overrides, especially branch occupancy false in :848.
+9. `test/support/RetireFenceInvoker.ts:33-51`: migrate reliable Some(owningClone) to addressed(owningClone), preserving both false checkout booleans and all PR facts. This new direct constructor was absent from the historical design's migration inventory and is required for complete current-source coverage. `test/yeet-sweep-retire.test.ts:227` runs this helper; preserve its test process/session-fence behavior.
+10. `src/test/Yeet.test-kit.ts:71-72,83-84` exposes Retire/Sweep modules and schemas through the existing test seam. `package.json:67,70,77` blocks internal route imports, maps test imports, and excludes test source from packaged files. Change known decoded TypeScript construction atomically; no old alias/codec is justified for an unsupported raw serialization route.
+11. Retirement consumers: `Retire.ts:99-124` retireBlocker reads only pullRequestState/pullRequestHeadBranch; :229-271 retireInvokingWorktree applies that gate; :362-380 renderRetirePlan formats it. None reads the selected fields or requires occupancy tightening. Keep the exact gate, process cwd transition, WorktreeRemovalService request, archive behavior and invoker exemption untouched.
+12. CLI routes: `Porcelain.ts:140-169` encodes ordinary SweepPlan/SweepReport; :172-214 encodes retirement documents; :222-245 observes lane facts, forwards them to retirement, then plans/executes a fresh owning-clone sweep. Preserve stdout document shape and plan-versus-execute routing. `Merge.ts:258` and `MonitorLoop.ts:1344` invoke executeSweep without constructing this class or inspecting the selected fields.
 
-Retain `probeUnreliable`, worktree occupancy checks, head-branch checks,
-deletion/PR/tip guards, `shellQuote`, and post-refresh lockfile checks. They
-remain safety or output boundaries and get no deletion credit. This does not
-delete the independent status-pair checks on behalf of its separate design.
+Targeted corpus and test searches found no other direct constructor/field reader and no raw SweepGitState codec consumer. Graft edges were supplemented with text/barrel searches, not treated as complete TypeScript reference resolution.
 
-# Encoded-side impact
+## Guard-deletion accounting
 
-No raw SweepGitState encode/decode consumer was found. The exported class is
-an internal decoded/test seam, so its known TypeScript callers can migrate
-atomically. Do not introduce a legacy class codec or serialize the new tag.
+- Delete two independently stored fields and the comment-only unreliable/Some(path) prohibition from the decoded owner; the new tagged schema makes that contradictory combination unavailable.
+- Replace the reliability-dependent address write with one complete observation construction. Its input reliability branch and Option choice remain necessary boundary work; do not falsely count them as deleted safety checks.
+- Replace the two precondition reliability branches with schema-derived case selection. Observable blockers and their priority remain unchanged; no precondition is removed.
+- Delete the two independent Option matches in refreshNotCompletedHandoff and construct one coherent reason/command pair through the union. Two no-address cases share exact output while retaining their distinct observation meaning.
+- Retain probeUnreliable, occupancy reads/writes, head comparisons, status/dirty checks, PR/tip/ancestry checks, shellQuote, post-refresh lockfile checks, deletion revalidation and lease enforcement. None earns deletion credit here. Add no compatibility getter rebuilding the removed pair.
 
-The existing documents remain exact: Sweep.schemas.ts:120 precondition
-description/satisfied; :150 plan step fields; :182 plan; :349 report;
-:383 SweepPlanJson and :412 SweepReportJson. Keep all legitimate existing
-actions, precondition arrays, reason text, operator commands, output statuses
-and omission behavior. In particular bare versus addressed handoff output is
-observable and cannot be collapsed. Preserve the actual unsupported input
-boundary: no new output for unreliable plus invented Some(path) is promised.
+## Encoded-side impact
 
-# Test impact
+This is Tier 1: a decoded internal/test seam with no located persisted raw-class codec. Known TypeScript callers migrate atomically. Do not serialize the new tag or add a speculative legacy codec.
 
-Retain all current plan and report tests, including codec round-trip at
-yeet-sweep-plan.test.ts:492-506, remote deletion unaffected by worktree probe
-failure at :233-235, and the partial occupancy fixtures at :279/:285 and
-:814-821. Preserve ordinary addressed paths (:773-783), spaces (:787-794),
-embedded quotes (:796-803), and prohibition on a looping in-place command
-(:805-812).
+Preserve existing encoded surfaces exactly: `Sweep.schemas.ts` SweepPrecondition, SweepPlanStep, SweepPlan, SweepStepOutcome, SweepReport; codecs at :383/:412; `Retire.schemas.ts` YeetRetireSweepPlanJson :88 and YeetRetireSweepReportJson :123. Versions stay yeet-sweep-plan/v1, yeet-sweep-report/v1, yeet-retire-sweep-plan/v1 and yeet-retire-sweep-report/v1. Keep every plan action, blocker description/order, status, omission, duration field, reason and operatorCommand. executeSweep continues writing the same sweep-report artifact via its codec. No migration of historical artifacts is needed because raw state is not stored in them.
 
-Add focused model/observer coverage during implementation for the three
-variants: reliable None, reliable Some(exact path), unreliable None. Explicitly
-check failed/nonzero/truncated output containing a plausible path never
-produces addressed. Confirm unreliable has no address member, without adding
-new production exports solely for a test. Compare exact reason and command
-for both no-address variants and preserve all blocker descriptions/order.
-Retain the unknown-worktree/branch-false helper fixture; it must not become
-unrepresentable through an unrelated occupancy tightening.
+## Test impact and implementation validation
 
-No package tests ran in this P2 preparation. During implementation run the
-focused Sweep suite, required `@beep/repo-cli` package verification, and the
-campaign's authorized aggregate checks. Private equation/byte checks are
-supporting evidence, not execution of the TypeScript tests or P3 approval.
+No product tests or runtime sweep were run during this P2 audit. After independent P3 and Gate 2, implementation must:
 
-# Risk
+- Run focused `yeet-sweep-plan.test.ts` and `yeet-sweep-retire.test.ts` suites, including RetireFenceInvoker; run the required full `bun run beep quality package-verify @beep/repo-cli` and campaign/Yeet checks appropriate to the eventual batch.
+- Cover all three target cases and explicitly reject constructing unreliable with an address through the declared model; assert exact path payload preservation. Check old omitted-path constructors migrate to reliable unaddressed or unreliable as their original reliability dictates.
+- Preserve held-main/None, unreliable with branch occupancy false, and reliable addressed with both occupancy fields false. These are regression tests against the rejected R32 narrowing.
+- Check failed/nonzero/truncated worktree output containing plausible addresses yields unreliable, never addressed, while occupancy remains conservatively true in observer results.
+- Compare precondition order and exact handoff command/reason for ordinary paths, spaces, embedded quotes, whitespace-only nonempty direct payloads and shell metacharacters. Cover data-first/data-last handoff calls and full localMain/trackingMain absence/presence combinations.
+- Preserve report codec round trip (`yeet-sweep-plan.test.ts:523-537`), untouched remote-deletion behavior on probe failure (:234-235), in-place main rules and retirement JSON shapes. Use finite table as coverage guidance; an equation-only enumeration is not runtime or P3 proof.
 
-The principal risk is conflating unaddressed with unoccupied, which would
-erase supported partial information and alter safety blockers. A second is
-retaining a path from truncated output or combining it with a contradictory
-unreliable flag, yielding a misleading operator command. The three-case model
-preserves the former and prevents the latter without changing other facts.
+## Risk and landing
 
-Keep this separate from the accepted status pair and the unadmitted
-ancestry/local-tip finding. Apply admitted Sweep migrations within the ordered
-Tier1E subsystem batch using serial shared-file edits. Rebind if HEAD/source
-changes. Parent admission and independent review must confirm the minimal
-constructor-domain contract before implementation; no full-owner product or
-P3 approval is claimed here.
+The main risk is mistaking observer invariants for the full supported constructor contract. The proposed minimal model avoids that by retaining occupancy, including the newly found retirement construction. Other risks are naming a path from truncated output, changing bare/addressed command quoting, or conflating unaddressed with main-free. The migration and tests above cover each explicitly.
+
+Keep this owner separate from the status/dirty owner and unadmitted ancestry/tip correlations. Apply shared Sweep.ts edits serially within the authorized Tier 1 batch after independent exact-source review; rebind if sources change. This P2 refresh is not permission to mutate source now.

@@ -1,0 +1,569 @@
+{
+  "kind": "boolean-creep-r33-parent-integration/v1",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "inventoryBefore": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r33-reconciliation.jsonl",
+    "sha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c"
+  },
+  "inventoryAfter": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-r33-final-reconciled.jsonl",
+    "sha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf"
+  },
+  "records": 747,
+  "qualified": 123,
+  "disqualified": 624,
+  "withdrawnIds": [
+    "agents-chat-turn-surface",
+    "docgen-generation-outcome",
+    "docgen-quality-package-outcome",
+    "docgen-runpod-cleanup-outcome",
+    "docgen-subject-collection-outcome",
+    "docgen-worker-packet-review",
+    "files-border-classification",
+    "files-face-detection-presence",
+    "files-person-reference-disposition",
+    "goals-packet-migration-kind",
+    "goals-transition-plan-disposition",
+    "nlp-mcp-file-info-exists",
+    "obs-record-state-changed-data",
+    "obs-record-state-changed-event",
+    "obs-request-status-result",
+    "onepassword-cli-account-signed-in",
+    "openclaw-channel-probe-wire",
+    "phoenix-prompt-read-exists",
+    "practice-kg-document-tool-row-truncated",
+    "practice-kg-tool-result-truncated",
+    "r2-apps-dms-mirror-disconnected-bits",
+    "r2-apps-ipc-spike-mount-gates",
+    "r2-tooling-packet-transition-stream-trace",
+    "r24-drivers-n-r-openclaw-agent-meta-wire-aborted-stop-reason",
+    "r24-drivers-n-r-openclaw-agent-turn-aborted-stop-reason",
+    "r25-apps-hero-video-state-playing-element",
+    "r25-apps-streaming-turn-view-active",
+    "r25-cli-commands-r-z-fleet-checkout-detached-branch",
+    "r25-cli-internal-root-gh-page-info",
+    "r25-drivers-a-f-box-action-base-destructive-provider",
+    "r25-drivers-n-r-jsonl-output-truncated-errors",
+    "r25-drivers-n-r-openclaw-gateway-health-wire-ok-plugins",
+    "r25-drivers-n-r-openclaw-secrets-reload-output-ok",
+    "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+    "r26-agents-workspace-runtime-evidence-span-presence",
+    "r26-apps-sidecar-ipc-ready-latch",
+    "r26-drivers-n-r-openclaw-gateway-health-ok-plugins",
+    "r26-drivers-n-r-openclaw-telegram-group-intent",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+    "r28-shared-documents-vault-sync-status-cursor-position",
+    "r3-apps-chat-orchestrator-incremental-metrics",
+    "r3-apps-editor-proof-document-markdown-flags",
+    "r3-apps-intake-orchestrator-incremental-metrics",
+    "r3-apps-ontology-orchestrator-incremental-metrics",
+    "r3-apps-tauri-ipc-incremental-metrics",
+    "r3-apps-vault-sync-orchestrator-incremental-metrics",
+    "r3-drivers-arch-folder-resolution-blocked-provider",
+    "receipt-fallback-draft-occupancy",
+    "runtime-activity-payload-kind",
+    "sidecar-transport-ipc-token",
+    "vault-sync-status-connected"
+  ],
+  "withdrawnQualifiedIds": [
+    "docgen-generation-outcome",
+    "docgen-quality-package-outcome",
+    "docgen-runpod-cleanup-outcome",
+    "docgen-subject-collection-outcome",
+    "docgen-worker-packet-review",
+    "files-border-classification",
+    "files-face-detection-presence",
+    "files-person-reference-disposition",
+    "goals-packet-migration-kind",
+    "goals-transition-plan-disposition",
+    "nlp-mcp-file-info-exists",
+    "phoenix-prompt-read-exists",
+    "r2-tooling-packet-transition-stream-trace",
+    "r26-apps-sidecar-ipc-ready-latch",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+    "r3-drivers-arch-folder-resolution-blocked-provider",
+    "receipt-fallback-draft-occupancy",
+    "runtime-activity-payload-kind",
+    "vault-sync-status-connected"
+  ],
+  "reclassifiedQualifiedIds": [
+    "files-image-orientation-state"
+  ],
+  "newQualifiedIds": [
+    "r33-cli-yeet-clip-scan"
+  ],
+  "changedQualifiedIds": [
+    "obs-qa-scene-provisioning"
+  ],
+  "archivedDesigns": [
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/docgen-generation-outcome.md",
+      "sha256": "71e60fe8de89e9dd80c5ea3040efb5bb36c9d2f7174b866b2223844eda4a4e96"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/docgen-quality-package-outcome.md",
+      "sha256": "9e43563b1fd03309948285b83bf2551533defec5fca73e82ecda7ed994b0f32e"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/docgen-runpod-cleanup-outcome.md",
+      "sha256": "3d07ded4c6415ec01de8d2bd46481a550e37e8c4b46c8a9b8883ede88e69e428"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/docgen-subject-collection-outcome.md",
+      "sha256": "229cf6b132b02e1176a9ea9ced2a315963b7cad16b065077441d163e868ca1d1"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/docgen-worker-packet-review.md",
+      "sha256": "e33284a639587d4c4919dd7deabd1b42bfa96b88708b0bb30be8e4d4b7b11517"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/files-border-classification.md",
+      "sha256": "7f88cd5ff44697c82ba022b46eb708f42cf85f4000872e36cc32cbe33e9c0896"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/files-face-detection-presence.md",
+      "sha256": "1c2a6281c7913a540bb0aa30d2795b61a39eb69ee59f1d019151e9d02fa21743"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/files-image-orientation-state.md",
+      "sha256": "43240d90a49709355e141483ef8486614642a784742f6d9447cab80e15379c1d"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/files-person-reference-disposition.md",
+      "sha256": "24559c16d01a944d01f648721fd81e67b75bfc63d64422c2fbe36117a6021462"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/goals-packet-migration-kind.md",
+      "sha256": "3013362ddbbb3d3a20b45c40bccfe1ad04942f748bf595e45d0d555cc977d87c"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/goals-transition-plan-disposition.md",
+      "sha256": "a48692bc497dafb3b15ac0bf825d55af6ba207eadd3140cbcc5bda0911422f2a"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/nlp-mcp-file-info-exists.md",
+      "sha256": "9502877d2d306436a651b1bfe327ed98d621829f1b3865bb4824adf42f20b7e5"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/obs-qa-scene-provisioning.md",
+      "sha256": "e567a9c317ccb660694135b7aecd1db4166cf5730c56f8711215e9fba9aaa668"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/phoenix-prompt-read-exists.md",
+      "sha256": "4879666f032b7ef166f889ef7c1d92a1c0e2cd574c30929d5a6808c5e16613bb"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/r2-tooling-packet-transition-stream-trace.md",
+      "sha256": "48a5e8631f330c5d59d7fbf4b29d37abad0a01a4f487a4d1d91acc2adbf45648"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/r26-apps-sidecar-ipc-ready-latch.md",
+      "sha256": "abca4ccceaba750f91806fae24d1b6532005d938629b40ec38d615f181bd0951"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+      "sha256": "b12f8348c2ed6fb17f159066057328204a925d18c62b4a76e2c26b5e6bc36bab"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/r3-drivers-arch-folder-resolution-blocked-provider.md",
+      "sha256": "4df5e3e9f8c81b2837f061bd111f9c0785117292d6b3ab6fafa1217ee36159dd"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/receipt-fallback-draft-occupancy.md",
+      "sha256": "d4924626241a4f36a66a083ce8b0dca49a885e0948134f1cb0075f57dc045106"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/runtime-activity-payload-kind.md",
+      "sha256": "c09aa824a7a40236757588a42d1b44ce43b7b9f424ecbb81b2aea930c63140ef"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r33-reconciliation/vault-sync-status-connected.md",
+      "sha256": "46d66dc07eff18cb1b5140f2e2f90ec655b03a8c5c0c239987165b2d85f723d3"
+    }
+  ],
+  "rawDispositions": [
+    {
+      "id": "r33-cli-commands-l-q-models-locator-xml-parser-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-l-q.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-cli-commands-l-q-effect-vitest-project-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-l-q.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-cli-commands-r-z-install-timers-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.jsonl",
+      "disposition": "excluded-function-flag-parameter-object"
+    },
+    {
+      "id": "r33-cli-commands-r-z-entry-reading",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.jsonl",
+      "disposition": "outside-boolean-net-one-directory"
+    },
+    {
+      "id": "r33-cli-commands-r-z-remove-command-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.jsonl",
+      "disposition": "excluded-function-flag-parameter-object"
+    },
+    {
+      "id": "r33-cli-commands-r-z-policy-derivation-probe",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.jsonl",
+      "disposition": "outside-boolean-net-one-probeFailed"
+    },
+    {
+      "id": "r33-cli-internal-root-contained-file-read",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-internal-root.jsonl",
+      "disposition": "outside-recall-net-single-Boolean-owner"
+    },
+    {
+      "id": "r33-cli-internal-root-contained-bytes-read",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-internal-root.jsonl",
+      "disposition": "outside-recall-net-single-Boolean-owner"
+    },
+    {
+      "id": "r33-cli-yeet-clip-scan",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-yeet.jsonl",
+      "disposition": "designed-after-P2-complete-owner-audit"
+    },
+    {
+      "id": "r33-cli-yeet-retire-removal-request",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-yeet.jsonl",
+      "disposition": "duplicate-existing-owner-write-site-invalid-D1"
+    },
+    {
+      "id": "obs-qa-scene-provisioning",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-n-r.jsonl",
+      "disposition": "replaced-by-complete-local-owner-E3-design"
+    },
+    {
+      "id": "r33-drivers-s-z-venice-sse-done",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-s-z.jsonl",
+      "disposition": "outside-recall-net-single-Boolean-owner"
+    },
+    {
+      "id": "r33-drivers-s-z-xai-sse-done",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-s-z.jsonl",
+      "disposition": "outside-recall-net-single-Boolean-owner"
+    },
+    {
+      "id": "r33-drivers-s-z-xai-ws-is-binary",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-s-z.jsonl",
+      "disposition": "outside-recall-net-single-Boolean-owner"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-html-element-meta-content-flags",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-audio-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-button-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-form-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-img-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-input-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-marquee-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-object-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-ol-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-option-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-script-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-select-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-template-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-textarea-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "r33-foundation-modeling-rest-video-boolean-attributes",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl",
+      "disposition": "excluded-generated-surface"
+    },
+    {
+      "id": "literalkit-attach-helper-descriptors",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-schema-a-m.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "literalkit-readonly-property",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-schema-a-m.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r24-foundation-schema-a-m-file-type-checker-ebml-evidence",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-schema-a-m.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r30-tooling-library-observability-collector-serve-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-pointerdown-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-pointermove-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-pointerup-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-pointercancel-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-pointerover-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-pointerout-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-focusin-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-focusout-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-keydown-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-transitionstart-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-transitionend-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-transitioncancel-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-animationstart-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-animationend-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-animationcancel-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-observability-witness-scroll-listener-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl",
+      "disposition": "disqualified"
+    },
+    {
+      "id": "r33-tooling-library-support-pg-external-make-client-options",
+      "rawFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-support.jsonl",
+      "disposition": "disqualified"
+    }
+  ],
+  "metadataUpdates": [
+    {
+      "id": "graph-3d-sprite-material-flags",
+      "kind": "object-literal",
+      "file": "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+      "sourceSha256": "cba63c0ac98d951899b9b4ba335ea3324dbeb480de0b5b481386e1c75d0a8073"
+    },
+    {
+      "id": "r3-foundation-scribe-connect-latches",
+      "disqualifierNote": "Independent callback observations: initially both false; open settles without handledError; a subsequent rejection makes both true. settleReject sets handledError before external onError and before settled; the callback may throw, leaving handledError true and settled false. Thus all four pairs remain supported observations without imposing nonthrowing callbacks.",
+      "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+      "sourceSha256": "e3c10c48d870fae958875c43139fc7e1bfa197f7d6aebeb45782b4809fc25629"
+    },
+    {
+      "id": "effect-drizzle-meta-column-flags",
+      "line": 267,
+      "file": "packages/ecosystem/effect-drizzle/src/core/Meta.ts",
+      "sourceSha256": "42a4413c1261106557e72d43e6a7f7d7adae58dbdd1d20f0aa80f333c685db19"
+    },
+    {
+      "id": "vault-sync-move-delta-axes",
+      "line": 736,
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
+      "sourceSha256": "abba2373867fa544580b30ed6e99b43b21fdbdb47d3c5e49199ebd80244b4249"
+    },
+    {
+      "id": "ci-local-options",
+      "line": 2340,
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sourceSha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820"
+    },
+    {
+      "id": "aimetrics-install-doctor-options",
+      "line": 998,
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sourceSha256": "f7807d0240ec0665e5e6dfbc05220a68f28035d440bc99639bd1fc976abbd640"
+    },
+    {
+      "id": "corpus-legacy-word-terminal",
+      "line": 3302,
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "sourceSha256": "9a0168e82fac4a588cfc9364e2ef4f3351729987962aa549cf1e6c91d1c7c388"
+    },
+    {
+      "id": "worktree-porcelain-accumulator",
+      "line": 604,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sourceSha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "id": "r25-cli-commands-r-z-porcelain-accumulator-detached-branch",
+      "line": 604,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "sourceSha256": "f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66"
+    },
+    {
+      "id": "tsconfig-workspace-descriptor-presence",
+      "line": 966,
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sourceSha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "id": "tsconfig-workspace-owner-presence",
+      "line": 966,
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sourceSha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "id": "tsconfig-sync-mode-flags",
+      "line": 449,
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "sourceSha256": "d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f"
+    },
+    {
+      "id": "worktree-residue-reason-flags",
+      "line": 423,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "sourceSha256": "0ecf2874735ffc7650712822ffa9034b662400d069858f20e067f65d06fee2d2"
+    },
+    {
+      "id": "worktree-doctor-entry-facts",
+      "line": 233,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sourceSha256": "1c395b9af66034c2db877a1d72fcc079e7a246f0b6c313d8e31c586a60e3c3e8"
+    },
+    {
+      "id": "r25-cli-commands-r-z-worktree-doctor-entry-detached-branch",
+      "line": 233,
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sourceSha256": "1c395b9af66034c2db877a1d72fcc079e7a246f0b6c313d8e31c586a60e3c3e8"
+    },
+    {
+      "id": "r30-cli-commands-l-q-coverage-regression-clean-remove-options",
+      "line": 1314,
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sourceSha256": "049ca3c529230d959ca40bfb967d0d334fe499a8f6dbc029739ec2c3808b9a64"
+    },
+    {
+      "id": "literalkit-attach-helper-descriptors",
+      "line": 620,
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sourceSha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+    },
+    {
+      "id": "literalkit-readonly-property",
+      "line": 820,
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sourceSha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+    },
+    {
+      "id": "r24-foundation-schema-a-m-file-type-checker-ebml-evidence",
+      "line": 164,
+      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.behavior.ts",
+      "sourceSha256": "17eaf5cc4a2a66f9fbdef76a223c1424b24d3237fb618b54356ca7a08fc50053"
+    },
+    {
+      "id": "r3-foundation-verified-span-source-failure-facts",
+      "line": 619,
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+      "sourceSha256": "90491cfb18525783afb2b591db44855ec241851dd4d40da641ef0a0326d33e1b"
+    },
+    {
+      "id": "r31-foundation-capability-mcp-wire-tool-annotations",
+      "line": 458,
+      "symbol": "wireToolFor.annotations",
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sourceSha256": "e8b5c85dc5d4d3ff0ddadf20c93d74d749ec81e2d28d2359414f2b769eccc69c"
+    }
+  ],
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "applied": 0
+}

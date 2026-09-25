@@ -1,0 +1,92 @@
+{
+  "method": "Source-derived finite carrier table; no runtime execution",
+  "representable": 312,
+  "legal": 13,
+  "rows": [
+    {
+      "reapClass": "git-worktree",
+      "classified": "true",
+      "shapeSkipReason": "None",
+      "parentRepo": "Some(path)"
+    },
+    {
+      "reapClass": "git-worktree",
+      "classified": "false",
+      "shapeSkipReason": "None",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "head-install",
+      "classified": "true",
+      "shapeSkipReason": "None",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "fallow-cache",
+      "classified": "true",
+      "shapeSkipReason": "None",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "scoped-temp",
+      "classified": "true",
+      "shapeSkipReason": "None",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "vitest-forks-tmp",
+      "classified": "true",
+      "shapeSkipReason": "None",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "true",
+      "shapeSkipReason": "None",
+      "parentRepo": "Some(path)"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "false",
+      "shapeSkipReason": "gitdir-target-exists",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "false",
+      "shapeSkipReason": "gitdir-target-exists",
+      "parentRepo": "Some(path)"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "false",
+      "shapeSkipReason": "parent-repo-present",
+      "parentRepo": "Some(path)"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "false",
+      "shapeSkipReason": "wrong-shape",
+      "parentRepo": "None"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "false",
+      "shapeSkipReason": "wrong-shape",
+      "parentRepo": "Some(path)"
+    },
+    {
+      "reapClass": "dangling-worktree-stub",
+      "classified": "false",
+      "shapeSkipReason": "contents-present",
+      "parentRepo": "Some(path)"
+    }
+  ],
+  "independentPayloads": [
+    "root: string",
+    "path: string",
+    "idleSinceMillis: number"
+  ],
+  "companionObservationStates": 14,
+  "knownPathSequentialStatPairs": 9
+}

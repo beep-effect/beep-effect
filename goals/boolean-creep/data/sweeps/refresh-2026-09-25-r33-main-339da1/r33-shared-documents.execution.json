@@ -1,0 +1,22 @@
+{
+  "lane": "r33-shared-documents",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:43:07.243787+00:00",
+  "finished": "2026-09-25T01:45:33.942445+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-shared-documents.jsonl` (validator: 0 records). Confirmed 0, disqualified 0.\n\nAll seven assigned roots were covered (220 non-test source files). No new or reclassified clusters. Seed owners still match their members and classifications; nothing withdrawn.\n\nLine drift only: `VaultSyncStatus.connected` is line 70 (inventory still 65); `enqueueMoveDeltas` locals are lines 736\u2013737 (inventory 729). `dms-mirror-probe-connected` is already in the canonical inventory and was left out of this round\u2019s seed list; Box writers at `DmsMirrorBox.ts` 849\u2013866 are unchanged, so it was not re-emitted.",
+  "transcriptSha256": "a65cb4de3a0195cf9495b8e683e40bc30360985fbf5da28b4bbc6a33cc6774f2",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

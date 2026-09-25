@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "boolean-creep-bounded-design-refresh/v1",
+  "date": "2026-09-22",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-person-reference-refresh.jsonl",
+    "sha256": "e710d6d59420ca225ee0c516384ce1797a1d37f7afce9eed2906032db3f450b9"
+  },
+  "inventoryAfterSha256": "b276f0b0ffccccc39779394df44c219945a091dd5fdea8513daa66049ffc6ed5",
+  "changedIds": ["files-person-reference-disposition"],
+  "unchangedRows": 753,
+  "qualificationChanged": false,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 128,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/files-person-reference-disposition.md",
+      "sha256": "24559c16d01a944d01f648721fd81e67b75bfc63d64422c2fbe36117a6021462"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-files-person-reference-disposition.md",
+      "sha256": "0ec9cabb88bb6829149fa86dced825ca3e64261254821d749482f4de1d8aefd5"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-files-person-reference-disposition.md",
+      "sha256": "85140945029f09de3faaf26f670ade3ec624b144927fc6216749f8f8ca08436f"
+    },
+    {
+      "file": "data/2026-09-22-person-reference-probe-results.json",
+      "sha256": "776be3689c3e8b8cfae1492b48a8be8a2ef77fba630c8d73cc488ede26d96ed2"
+    },
+    {
+      "file": "data/2026-09-22-person-reference-revision-projections.json",
+      "sha256": "a73ae6800e1217f8ee09493b882d6a88226b5352c050965e092d599502020d66"
+    }
+  ],
+  "savedSubset": {
+    "sourceReceipt": "data/classifier-score-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "890ef6f88ceb6d6c8f4a3a07394c9824b9ef2e28ab78393cce79eb28d6e58053",
+    "previousPendingCount": 31,
+    "completedIds": ["files-person-reference-disposition"],
+    "pendingCount": 30,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "meaning": "Dated subset only; newer source impact and full current-source backlog remain outstanding."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-quality-task-refresh.jsonl"
+}

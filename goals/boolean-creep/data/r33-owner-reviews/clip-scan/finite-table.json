@@ -1,0 +1,158 @@
+{
+  "owner": "ClipScan",
+  "booleanAcceptance": [
+    {
+      "inString": false,
+      "escaped": false,
+      "accepted": true,
+      "phase": "outside-string"
+    },
+    {
+      "inString": false,
+      "escaped": true,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "inString": true,
+      "escaped": false,
+      "accepted": true,
+      "phase": "inside-string"
+    },
+    {
+      "inString": true,
+      "escaped": true,
+      "accepted": true,
+      "phase": "escape-pending"
+    }
+  ],
+  "transitions": [
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "quote",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "construct phase change"
+    },
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "backslash",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "return original state unchanged"
+    },
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "open-array",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "increment depth; construct"
+    },
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "open-object",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "increment depth; construct"
+    },
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "close-array",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "decrement depth; set lastComplete=index+1 and closeDepth=new depth; construct"
+    },
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "close-object",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "decrement depth; set lastComplete=index+1 and closeDepth=new depth; construct"
+    },
+    {
+      "fromPhase": "outside-string",
+      "characterKind": "other",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "return original state unchanged"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "quote",
+      "toPhase": "outside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "backslash",
+      "toPhase": "escape-pending",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "open-array",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "open-object",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "close-array",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "close-object",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "inside-string",
+      "characterKind": "other",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "quote",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "backslash",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "open-array",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "open-object",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "close-array",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "close-object",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    },
+    {
+      "fromPhase": "escape-pending",
+      "characterKind": "other",
+      "toPhase": "inside-string",
+      "numericAndIdentityBehavior": "preserve numeric fields; construct new state"
+    }
+  ],
+  "proofStatus": "Static source-derived table; no runtime execution or independent review claimed."
+}

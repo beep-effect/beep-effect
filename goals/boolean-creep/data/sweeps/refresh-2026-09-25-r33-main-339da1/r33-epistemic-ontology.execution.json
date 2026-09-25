@@ -1,0 +1,22 @@
+{
+  "lane": "r33-epistemic-ontology",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:42:58.950263+00:00",
+  "finished": "2026-09-25T01:47:12.232203+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-epistemic-ontology.jsonl`.\n\nConfirmed 0, disqualified 0. All 13 assigned roots were scanned (230 non-test source files). The validator passed.\n\nSeed classifications still match current writers and readers, so nothing new was appended. The bounded SHACL `conforms`/`truncated` pair stays a shared-contract D1: this producer never emits `true`/`true`, and that does not narrow `ShaclValidationResult`. No ineligible seed withdrawals and no unresolved source question.",
+  "transcriptSha256": "1327dfde0be06111fc9bec2c21190b2154ae6c179692cadfb790a66f66cdc1b7",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

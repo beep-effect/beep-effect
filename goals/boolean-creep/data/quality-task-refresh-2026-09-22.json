@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "boolean-creep-bounded-design-refresh/v1",
+  "date": "2026-09-22",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-quality-task-refresh.jsonl",
+    "sha256": "b276f0b0ffccccc39779394df44c219945a091dd5fdea8513daa66049ffc6ed5"
+  },
+  "inventoryAfterSha256": "5deb7a0d9b716bc5ba734ac9bed45da6c925731cc7652ea99449e87179cf4a3f",
+  "changedIds": [
+    "r28-cli-quality-coverage-resolved-operation",
+    "r28-cli-quality-test-lane-resolved-selection",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "r30-cli-commands-l-q-github-check-lane-outcome"
+  ],
+  "unchangedRows": 750,
+  "qualificationChanged": false,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 128,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/r28-cli-quality-coverage-resolved-operation.md",
+      "sha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-r28-cli-quality-coverage-resolved-operation.md",
+      "sha256": "1cb10d65bbf46f88cb4a59271dde3e0395b171c275fe6670206a48575c22ea61"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r28-cli-quality-coverage-resolved-operation.md",
+      "sha256": "b388158df5e4f0a50c4730feb08f0898c0a8d661d93d77e3986c1476ced3de14"
+    },
+    {
+      "file": "designs/r28-cli-quality-test-lane-resolved-selection.md",
+      "sha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-r28-cli-quality-test-lane-resolved-selection.md",
+      "sha256": "98cead274247f4a33b762490d7994792c69bbc65fbcabfd40cc9b3308f182e3d"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r28-cli-quality-test-lane-resolved-selection.md",
+      "sha256": "0ae5a0fec2f4e9e6fa285823bbc1f4d8b0033f8a4d1058b93d99383a1f3fdf28"
+    },
+    {
+      "file": "designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "0311430f93ee31517f8802b76a1f954fe814d2d2b6ea26fada3bdfc64003bbdf"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "aee73c370e51703cf5e34071359a4e36d25b71d259a0b388810f117bff881f58"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "sha256": "abcfe5cabce1b3e06c2f79db2ae32522d2f8d7683c5e945337cd9f8818cab62e"
+    },
+    {
+      "file": "designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "76c7bbcb88a06254589b10cdf5c31c00e3dbd36662a96f0174950cb931ae3021"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "b6d87b563630d240fbebc2dccd5536226db27b4948fdeae5725fec27a6ceb55b"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "sha256": "ea58fe9fdefef4de0ef0ace8b4bab28226783289a1c8e455f0cc346dc0076650"
+    },
+    {
+      "file": "data/2026-09-22-coverage-operation-source-delta.json",
+      "sha256": "c53faa4af09e3877fdb3eb16d4a3f7f9178a81465d79ddf9df7c15567803c074"
+    },
+    {
+      "file": "data/2026-09-22-coverage-operation-projections.json",
+      "sha256": "533138c0a6ef2ae5d3c8ca38352e3c25ee746d20e98ee93a2ad312a40be2c1ac"
+    },
+    {
+      "file": "data/2026-09-22-test-selection-parser-probe.json",
+      "sha256": "0742d6ae749d823a313d3b33b7a8f94739e0763d3e0b2ee80050093bff03e58b"
+    },
+    {
+      "file": "data/2026-09-22-lane-outcome-finite-table-proof.json",
+      "sha256": "983c6231e2dfbb1028592b0bcfa3d3c6f225ef7eaa0fb0f7ec32f244407bb32b"
+    }
+  ],
+  "parentAdjustments": [
+    "Corrected test-selection title typo and removed private probe session identifier from published audit."
+  ],
+  "savedSubset": {
+    "sourceReceipt": "data/person-reference-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "32c02e6b95eba93b590b0c4d825c29c33a4d0f33a2f4287995eadd03523837e5",
+    "previousPendingCount": 30,
+    "completedIds": [
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "pendingCount": 28,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; coverage and test-selection source refreshes are outside this subset. Whole current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-id-citation-admission.jsonl"
+}

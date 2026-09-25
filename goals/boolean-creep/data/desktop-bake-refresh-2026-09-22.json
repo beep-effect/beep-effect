@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-desktop-bake-refresh.jsonl",
+    "sha256": "c780f0a4e7b60b447ae697e8092d6b36e4f8cc2439462ba48bcd8ecf11467906"
+  },
+  "inventoryAfterSha256": "a855479f1664aa3ec732645113bb91f637095e2115cc65ec9260d76a82965178",
+  "refreshedIds": [
+    "r3-apps-pglite-data-dir-probe",
+    "r3-apps-sidecar-devtools-gates",
+    "runners-bake-freshness"
+  ],
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 133,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/r3-apps-pglite-data-dir-probe.md",
+      "sha256": "d8f68dbcfb8c72b310c9c7cd3e541cbe892ea29068d9308324d54aac1746df91"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r3-apps-pglite-data-dir-probe.md",
+      "sha256": "7eb87cd6f9262510abda1c4a04fc118204c4c31a34a32da74ff8703691775ac3"
+    },
+    {
+      "file": "data/2026-09-22-r3-apps-pglite-data-dir-probe-projection.json",
+      "sha256": "d1499e9768d740b0b4f4a237846949ca9e5c8451bddf312160ddca08506c4a09"
+    },
+    {
+      "file": "designs/r3-apps-sidecar-devtools-gates.md",
+      "sha256": "59b3a4b7aed8e25a7231e01caabd235f6d04f38d8334df16f023b306a04e0de4"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r3-apps-sidecar-devtools-gates.md",
+      "sha256": "71e9cb3cf386ce93ce525bdf9e1bce5cfdfc01625874c874f2f9cc6069984dbc"
+    },
+    {
+      "file": "data/2026-09-22-r3-apps-sidecar-devtools-gates-projection.json",
+      "sha256": "0424c311e68fe925a264392c10f6b0cc79a569ecd41d027d60c384a361bc0451"
+    },
+    {
+      "file": "designs/runners-bake-freshness.md",
+      "sha256": "fe9d70104c0a2b8998f46838b3a85f8a025cbd95b00722dcbce0492ae2a203af"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-runners-bake-freshness.md",
+      "sha256": "9ac64c0cfc4a0fb56c7087b34f04266cef80f6a2445de6287fd7ab6ddbd7b1e6"
+    },
+    {
+      "file": "data/2026-09-22-runners-bake-freshness-projection.json",
+      "sha256": "999a12aec5dd939cf028468b51ed35c8f0b890444c61709cd81cf3e1ecccff7a"
+    }
+  ],
+  "verifiedHashBindings": 38,
+  "savedSubset": {
+    "sourceReceipt": "data/citation-stream-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "ac91b48aee462650572ceff0c066f8a23f47add031eb53d3f0116e9a38cb1f2e",
+    "previousPendingCount": 16,
+    "completedIds": [
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "runners-bake-freshness"
+    ],
+    "pendingCount": 13,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "yeet-status-remote-check-phase",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "goals-packet-migration-kind",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-dispatch-spinner-refresh.jsonl"
+}

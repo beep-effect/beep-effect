@@ -1,0 +1,22 @@
+[
+  {
+    "dataDirExists": false,
+    "markerExists": false,
+    "legal": true
+  },
+  {
+    "dataDirExists": false,
+    "markerExists": true,
+    "legal": false
+  },
+  {
+    "dataDirExists": true,
+    "markerExists": false,
+    "legal": true
+  },
+  {
+    "dataDirExists": true,
+    "markerExists": true,
+    "legal": true
+  }
+]

@@ -1056,6 +1056,93 @@ export class CiLaneTimingWindowOptions extends S.Class<CiLaneTimingWindowOptions
 ) {}
 
 /**
+ * Bound a census window breaches when it cannot yet be admission evidence.
+ *
+ * **Details**
+ *
+ * `future-cutoff` means `--until` is still ahead of the wall clock, so the
+ * interval keeps filling after the read. `short-span` means the interval is
+ * under the seven-day census week the packets admit on. Both are reasons a
+ * result is a preview; neither is a reason the numbers are wrong.
+ *
+ * **Example** (List the guarded bounds)
+ *
+ * ```ts
+ * import { CiLaneTimingWindowGuardReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiLaneTimingWindowGuardReason.Options)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CiLaneTimingWindowGuardReason = LiteralKit(["future-cutoff", "short-span"]).pipe(
+  $I.annoteSchema("CiLaneTimingWindowGuardReason", {
+    description: "Bound a bounded lane-timing census window breaches: a future cutoff, or a span under seven days.",
+  })
+);
+
+/**
+ * Bound a census window breaches when it cannot yet be admission evidence.
+ *
+ * **Example** (Type one guarded bound)
+ *
+ * ```ts
+ * import type { CiLaneTimingWindowGuardReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * const reason: CiLaneTimingWindowGuardReason = "future-cutoff"
+ * console.log(reason)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CiLaneTimingWindowGuardReason = typeof CiLaneTimingWindowGuardReason.Type;
+
+/**
+ * Whether a census window may be read, and on what terms.
+ *
+ * **Details**
+ *
+ * The verdict is what the guard produces instead of a bare boolean: it keeps
+ * the interval that was judged next to every bound that interval breached, so
+ * the preview banner names the same facts the refusal would have named.
+ * `reasons` is empty for a complete past week, and `preview` records that the
+ * operator accepted a partial read rather than that the read is admissible.
+ *
+ * **Example** (Describe an unbreached preview verdict)
+ *
+ * ```ts
+ * import { CiLaneTimingWindowGuardVerdict } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const verdict = CiLaneTimingWindowGuardVerdict.make({
+ *   preview: true,
+ *   reasons: [],
+ *   since: DateTime.makeUnsafe("2026-09-23T00:00:00Z"),
+ *   until: DateTime.makeUnsafe("2026-09-30T00:00:00Z"),
+ * })
+ * console.log(verdict.reasons)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLaneTimingWindowGuardVerdict extends S.Class<CiLaneTimingWindowGuardVerdict>(
+  $I`CiLaneTimingWindowGuardVerdict`
+)(
+  {
+    preview: S.Boolean,
+    reasons: S.Array(CiLaneTimingWindowGuardReason),
+    since: S.DateTimeUtc,
+    until: S.DateTimeUtc,
+  },
+  $I.annote("CiLaneTimingWindowGuardVerdict", {
+    description: "Judged census interval with every bound it breached and whether the operator accepted a preview.",
+  })
+) {}
+
+/**
  * Workflow-run provenance retained before the jobs join.
  *
  * **Example** (Construct one run provenance record)
@@ -2580,6 +2667,198 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
 export const renderCiLaneTimingWindowTsv = (report: CiLaneTimingWindowReport): string =>
   A.join([A.join(WINDOW_TSV_COLUMNS, "\t"), ...A.map(report.rows, renderWindowRowTsv)], "\n");
 
+const CI_LANE_TIMING_CENSUS_SPAN = Duration.days(7);
+
+const censusWindowSpan = (verdict: CiLaneTimingWindowGuardVerdict): Duration.Duration =>
+  DateTime.distance(verdict.since, verdict.until);
+
+const CI_LANE_TIMING_WINDOW_GUARD_BREACH: Record<
+  CiLaneTimingWindowGuardReason,
+  (options: CiLaneTimingWindowOptions, now: DateTime.Utc) => boolean
+> = {
+  "future-cutoff": (options, now) => DateTime.isGreaterThan(options.until, now),
+  "short-span": (options) =>
+    Duration.isLessThan(DateTime.distance(options.since, options.until), CI_LANE_TIMING_CENSUS_SPAN),
+};
+
+const CI_LANE_TIMING_WINDOW_GUARD_REFUSAL: Record<
+  CiLaneTimingWindowGuardReason,
+  (verdict: CiLaneTimingWindowGuardVerdict) => string
+> = {
+  "future-cutoff": (verdict) => `--until ${DateTime.formatIso(verdict.until)} is in the future`,
+  "short-span": (verdict) => `window spans ${Duration.format(censusWindowSpan(verdict))}, under seven days`,
+};
+
+const CI_LANE_TIMING_WINDOW_GUARD_BANNER: Record<
+  CiLaneTimingWindowGuardReason,
+  (verdict: CiLaneTimingWindowGuardVerdict) => string
+> = {
+  "future-cutoff": () => "cutoff is in the future",
+  "short-span": () => "span under seven days",
+};
+
+const CI_LANE_TIMING_WINDOW_PREVIEW_HEADER = "ci lane timing window (PREVIEW, not an admission census)";
+
+const renderGuardReasons = (
+  verdict: CiLaneTimingWindowGuardVerdict,
+  phrases: Record<CiLaneTimingWindowGuardReason, (verdict: CiLaneTimingWindowGuardVerdict) => string>
+): string =>
+  A.join(
+    A.map(verdict.reasons, (reason) => phrases[reason](verdict)),
+    "; "
+  );
+
+const renderGuardBannerClause = (verdict: CiLaneTimingWindowGuardVerdict): string =>
+  A.match(verdict.reasons, {
+    onEmpty: () => "no bound breached",
+    onNonEmpty: () => renderGuardReasons(verdict, CI_LANE_TIMING_WINDOW_GUARD_BANNER),
+  });
+
+const renderGuardWindowClause = (verdict: CiLaneTimingWindowGuardVerdict): string =>
+  `Window ${DateTime.formatIso(verdict.since)} → ${DateTime.formatIso(verdict.until)}: ${renderGuardBannerClause(verdict)}.`;
+
+/**
+ * Report every seven-day-census bound a window breaches at a given instant.
+ *
+ * **Details**
+ *
+ * The clock is a parameter rather than a read so the judgement is pure and
+ * testable. A cutoff exactly at `now` is not in the future, and a span of
+ * exactly seven days is not short; both boundaries pass. Reasons are returned
+ * in declaration order, and a window may breach both at once.
+ *
+ * **Example** (Judge a window whose cutoff has not arrived)
+ *
+ * ```ts
+ * import { assessCiLaneTimingWindowBounds, CiLaneTimingWindowOptions } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const options = CiLaneTimingWindowOptions.make({
+ *   branch: O.none(),
+ *   event: "all",
+ *   headSha: O.none(),
+ *   since: DateTime.makeUnsafe("2026-09-23T00:00:00Z"),
+ *   until: DateTime.makeUnsafe("2026-09-30T00:00:00Z"),
+ *   workflow: "check.yml",
+ * })
+ *
+ * console.log(assessCiLaneTimingWindowBounds(options, DateTime.makeUnsafe("2026-09-24T22:00:00Z")))
+ * // [ 'future-cutoff' ]
+ * ```
+ *
+ * @param options - Decoded census interval and filters.
+ * @param now - Instant the interval is judged against.
+ * @returns Every breached bound, empty for a complete past week.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const assessCiLaneTimingWindowBounds: {
+  (now: DateTime.Utc): (options: CiLaneTimingWindowOptions) => ReadonlyArray<CiLaneTimingWindowGuardReason>;
+  (options: CiLaneTimingWindowOptions, now: DateTime.Utc): ReadonlyArray<CiLaneTimingWindowGuardReason>;
+} = dual(
+  2,
+  (options: CiLaneTimingWindowOptions, now: DateTime.Utc): ReadonlyArray<CiLaneTimingWindowGuardReason> =>
+    A.filter(CiLaneTimingWindowGuardReason.Options, (reason) =>
+      CI_LANE_TIMING_WINDOW_GUARD_BREACH[reason](options, now)
+    )
+);
+
+/**
+ * Render the line that marks census output as a preview.
+ *
+ * **Details**
+ *
+ * The banner is a Markdown blockquote so it survives a paste into an admission
+ * document instead of blending into the tables, and it prints for every
+ * preview — an unbreached window included, as `no bound breached` — so no
+ * preview run can be pasted as a census by omitting the qualifier. `--tsv`
+ * stamps the same sentence as a leading `#` comment row instead of this
+ * blockquote, so machine-readable rows carry the qualifier too.
+ *
+ * **Example** (Render the banner for a future cutoff)
+ *
+ * ```ts
+ * import { CiLaneTimingWindowGuardVerdict, renderCiLaneTimingWindowPreviewBanner } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const verdict = CiLaneTimingWindowGuardVerdict.make({
+ *   preview: true,
+ *   reasons: ["future-cutoff"],
+ *   since: DateTime.makeUnsafe("2026-09-23T00:00:00Z"),
+ *   until: DateTime.makeUnsafe("2026-09-30T00:00:00Z"),
+ * })
+ *
+ * console.log(renderCiLaneTimingWindowPreviewBanner(verdict))
+ * ```
+ *
+ * @param verdict - Judged census interval with its breached bounds.
+ * @returns One blockquote line naming the interval and every breached bound.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCiLaneTimingWindowPreviewBanner = (verdict: CiLaneTimingWindowGuardVerdict): string =>
+  `> **Preview, not an admission census.** ${renderGuardWindowClause(verdict)}`;
+
+const renderCiLaneTimingWindowPreviewComment = (verdict: CiLaneTimingWindowGuardVerdict): string =>
+  `# Preview, not an admission census. ${renderGuardWindowClause(verdict)}`;
+
+const renderCiLaneTimingWindowGuardRefusal = (verdict: CiLaneTimingWindowGuardVerdict): string =>
+  `${renderGuardReasons(verdict, CI_LANE_TIMING_WINDOW_GUARD_REFUSAL)}. Pass --preview to run a preview that is never an admission census.`;
+
+/**
+ * Refuse a census window that cannot be admission evidence yet.
+ *
+ * **Details**
+ *
+ * The guard reads the clock and judges the decoded interval before any GitHub
+ * call, so a refused window costs no API budget. Without `--preview` a future
+ * cutoff or a span under seven days fails with every breached bound named;
+ * with `--preview` the same verdict is returned so the output can carry its
+ * banner. Admission stays an external decision: passing the guard never means
+ * the numbers admit.
+ *
+ * **Example** (Reference the guard)
+ *
+ * ```ts
+ * import { guardCiLaneTimingWindowBounds } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(typeof guardCiLaneTimingWindowBounds)
+ * ```
+ *
+ * @param options - Decoded census interval and filters.
+ * @param preview - Whether the operator accepted a preview run.
+ * @returns The judged verdict, or a refusal naming every breached bound.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const guardCiLaneTimingWindowBounds = Effect.fn("Ci.guardCiLaneTimingWindowBounds")(function* (
+  options: CiLaneTimingWindowOptions,
+  preview: boolean
+): Effect.fn.Return<CiLaneTimingWindowGuardVerdict, CiCommandError> {
+  const now = yield* DateTime.now;
+  const verdict = CiLaneTimingWindowGuardVerdict.make({
+    preview,
+    reasons: assessCiLaneTimingWindowBounds(options, now),
+    since: options.since,
+    until: options.until,
+  });
+  if (!preview && A.matchToBoolean(verdict.reasons)) {
+    return yield* CiCommandError.make({ message: renderCiLaneTimingWindowGuardRefusal(verdict) });
+  }
+  return verdict;
+});
+
+const withCiLaneTimingWindowPreview = (
+  verdict: CiLaneTimingWindowGuardVerdict,
+  header: ReadonlyArray<string>,
+  body: string
+): string =>
+  verdict.preview ? A.join([...header, renderCiLaneTimingWindowPreviewBanner(verdict), "", body], "\n") : body;
+
+const withCiLaneTimingWindowPreviewComment = (verdict: CiLaneTimingWindowGuardVerdict, body: string): string =>
+  verdict.preview ? A.join([renderCiLaneTimingWindowPreviewComment(verdict), body], "\n") : body;
+
 const decodeCiLaneTimingWindowOptionsInput = S.decodeUnknownEffect(CiLaneTimingWindowOptions);
 
 const decodeCiLaneTimingWindowOptions = Effect.fn("Ci.decodeCiLaneTimingWindowOptions")(function* (
@@ -2644,8 +2923,22 @@ const markdownFlag = Flag.Boolean("markdown").pipe(
   Flag.withDescription("Print the bounded census as admission-document Markdown")
 );
 
+const previewFlag = Flag.Boolean("preview").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Accept a partial --window (future --until or under seven days); output is stamped as a preview")
+);
+
 /**
  * `beep ci lane-timings` — collect hosted lane timings with attempt-1 filtering.
+ *
+ * **Details**
+ *
+ * `--window` runs {@link guardCiLaneTimingWindowBounds} before the first
+ * GitHub read, so a cutoff in the future or a span under seven days costs no
+ * API budget unless `--preview` is passed. The guard applies to every output
+ * mode, and so does the stamp: `--preview` prefixes the summary and Markdown
+ * with a blockquote banner and the TSV with a `#` comment row, so no preview
+ * output is paste-compatible with an admission census.
  *
  * **Example** (Reference the command)
  *
@@ -2665,6 +2958,7 @@ export const ciLaneTimingsCommand = Command.make(
     event: eventFlag,
     headSha: headShaFlag,
     markdown: markdownFlag,
+    preview: previewFlag,
     runs: runLimitFlag,
     since: sinceFlag,
     tsv: tsvFlag,
@@ -2672,7 +2966,19 @@ export const ciLaneTimingsCommand = Command.make(
     window: windowFlag,
     workflow: workflowFlag,
   },
-  Effect.fnUntraced(function* ({ branch, event, headSha, markdown, runs, since, tsv, until, window, workflow }) {
+  Effect.fnUntraced(function* ({
+    branch,
+    event,
+    headSha,
+    markdown,
+    preview,
+    runs,
+    since,
+    tsv,
+    until,
+    window,
+    workflow,
+  }) {
     const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
     if (!window) {
       const report = yield* collectCiLaneTimings(repoRoot, runs);
@@ -2687,16 +2993,21 @@ export const ciLaneTimingsCommand = Command.make(
       workflow,
       ...O.getSomesStruct({ branch, headSha, since, until }),
     });
+    const verdict = yield* guardCiLaneTimingWindowBounds(options, preview);
     const githubClient = yield* makeCiLaneTimingGithubClient();
     const windowReport = yield* collectCiLaneTimingWindow(repoRoot, options).pipe(
       Effect.provideService(CiLaneTimingGithubClient, githubClient)
     );
     yield* Console.log(
       tsv
-        ? renderCiLaneTimingWindowTsv(windowReport)
+        ? withCiLaneTimingWindowPreviewComment(verdict, renderCiLaneTimingWindowTsv(windowReport))
         : markdown
-          ? renderCiLaneTimingWindowMarkdown(windowReport)
-          : renderCiLaneTimingWindowSummary(windowReport)
+          ? withCiLaneTimingWindowPreview(verdict, A.empty<string>(), renderCiLaneTimingWindowMarkdown(windowReport))
+          : withCiLaneTimingWindowPreview(
+              verdict,
+              [CI_LANE_TIMING_WINDOW_PREVIEW_HEADER],
+              renderCiLaneTimingWindowSummary(windowReport)
+            )
     );
   })
 ).pipe(

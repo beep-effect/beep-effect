@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-packet-migration-readmission.jsonl",
+    "sha256": "74279d873907caef82966090d93df735f6068ee03fd14c1c4f06c08512a7ef95"
+  },
+  "inventoryAfterSha256": "5ab42622406dec216b20f7153faaf3c06c0ce5424c3f44d2a9603fe071969785",
+  "restoredQualifiedIds": ["goals-packet-migration-kind"],
+  "unchangedRows": 756,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 133,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/goals-packet-migration-kind.md",
+      "sha256": "3013362ddbbb3d3a20b45c40bccfe1ad04942f748bf595e45d0d555cc977d87c"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-goals-packet-migration-kind-ruling.md",
+      "sha256": "cfca9fbb7d0b657f24b222ff8bb8c435420d32f9861c474481e12730185b8769"
+    },
+    {
+      "file": "data/2026-09-22-goals-packet-migration-kind-ruling-projection.json",
+      "sha256": "d5dbe222ed562b8611d244aa4412f64ad8fdd3de29f49368e3db6e0adca48685"
+    }
+  ],
+  "verifiedHashBindings": 12,
+  "ownerDecision": {
+    "file": "DECISIONS.md",
+    "sha256": "e85016058ca6000aa1309eaa7a737566ba1ddef4141509df0b39c693ff4306d9"
+  },
+  "savedSubset": {
+    "sourceReceipt": "data/dispatch-spinner-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "e11845ea144ae822f744ad5314e51ef77ab4815acf7d06189f586b5afb96ce23",
+    "previousPendingCount": 11,
+    "completedIds": ["goals-packet-migration-kind"],
+    "pendingCount": 10,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "yeet-status-remote-check-phase",
+      "yeet-merge-ready-criterion-changed",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-worker-arch-refresh.jsonl"
+}

@@ -1,0 +1,75 @@
+# Practice KG tool-result complete-owner audit
+
+Frozen source32f111f3707a63168b68ed04516af800ecc3a66c and
+main339da1562a2ed52f73a0a693c176fc52cca9ccb6.
+Recommend two outside-recall-net withdrawals, consistent with R33 footer.
+Neither is a semantic reclassification into D1/D2. No qualified design exists
+at either expected canonical design path, so preserve rows/history without a
+design archive operation.
+
+## practice-kg-document-tool-row-truncated
+
+Canonical row is D1; complete owner PracticeKgDocumentToolRow is
+PracticeKg.tools.ts357-372 (member anchor truncated369). Eleven fields:
+digest:String; docket/family/organizedPath/pointer/snippet/sourceOriginChain/
+sourceRelativePath/text each NullOr<String>; score NullOr<Finite>; truncated
+NullOr<Boolean>. Thus only one Boolean-bearing field even under the generous
+nullable-Boolean interpretation. Nullable text does not become a Boolean member.
+No spread or inherited custom field hides a second Boolean in this declaration.
+
+Its historical independence argument may describe accepted row data correctly,
+but that cannot satisfy SPEC's >=2 actual Boolean recall threshold. Preserve
+all schemas, null/text handling, decoding, row projections and public field
+references. No new tagged union, codec or virtual text-presence bit.
+
+## practice-kg-tool-result-truncated
+
+Canonical row is D1; complete owner PracticeKgToolResult is
+PracticeKg.tools.ts187-200 (truncated195). Seven fields: bundle_version,
+data:ColumnarEnvelope, epistemic_status, note:optionalKey<String>, tier,
+total:NonNegativeInt and truncated:Boolean. Only truncated is Boolean.
+Nested values that may appear inside arbitrary columnar data are not sibling
+Boolean members of this owner. Neither the note's optionality nor finite tier
+or epistemic literal choices count as additional Boolean fields.
+
+The projectRows producer in server PracticeKg.tool-handlers.ts54-100 preserves
+shared metadata and optional note independently; result constructors84 and92
+set truncation from row fit or false. No producer behavior changes field types.
+Preserve the full encoded response, note omission, budget/tier selection and
+columnar payload. No guard deletion or model migration is approved.
+
+## Reconciliation and limits
+
+R33 law-practice-runtime footer explicitly identifies both as outside the net
+and emits no replacement records. Preserve that raw evidence unchanged. Parent
+should remove the two seeded D1 rows after R33 terminal, recording their exact
+historical rows and source hashes. Do not retain an out-of-net D1 row merely
+because its original domain-independence explanation remains plausible.
+
+Inspected complete owner declarations and tool result producer following Graft
+symbol retrieval. No runtime tests, schema execution, qualified design, P3,
+census dry or implementation credit. No tracked changes, fetch or HEAD changes.
+Graft saved25687 tokens in one call.
+
+## Input bindings
+
+- `packages/law-practice/use-cases/src/PracticeKg.tools.ts`: `23627d9752685998c3a8b569fc19d7a2630f3b231710be65b48456cfdd4151c2`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/inputs/packages/law-practice/use-cases/src/PracticeKg.tools.ts`: `23627d9752685998c3a8b569fc19d7a2630f3b231710be65b48456cfdd4151c2`
+
+- `packages/law-practice/server/src/PracticeKg.tool-handlers.ts`: `61da7bb50ff022c0997a342f0dd5c12c2a9846876819b926632f80ca8ef6307e`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/inputs/packages/law-practice/server/src/PracticeKg.tool-handlers.ts`: `61da7bb50ff022c0997a342f0dd5c12c2a9846876819b926632f80ca8ef6307e`
+
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/inputs/goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/inputs/goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-law-practice-runtime.execution.json`: `89c806f3993eb1d1ddeb419cab6792fcebe5bfd10145200953f0cddb060676a7`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/inputs/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-law-practice-runtime.execution.json`: `89c806f3993eb1d1ddeb419cab6792fcebe5bfd10145200953f0cddb060676a7`
+
+## Output bindings
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/historical-rows.json`: `c8a06f440b0b834a2808b9d9360834a1e523ef527fc97d9b9513aeed7e625929`
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/disposition.json`: `458c8b5cbfd013f0ba201a6c351cae5068c74dda383aebf402a62a7954c76deb`

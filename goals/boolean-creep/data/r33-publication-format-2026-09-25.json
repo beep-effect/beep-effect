@@ -1,0 +1,84 @@
+{
+  "kind": "boolean-creep-evidence-format-snapshots/v1",
+  "note": "Embedded original execution and audit hashes resolve to exact original bytes below when public JSON formatting differs. No raw JSONL report or transcript was rewritten.",
+  "files": [
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/docgen-owner-scope/disposition.json",
+      "originalSha256": "cc3ba6f587c0e37a43fcaacd164e76cbf9718c658782fb601add43c7e16f7407",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/disposition.json-cc3ba6f587c0.txt",
+      "formattedSha256": "af8e93ef29e781ec189ea3f8bce50cea296f53e72c3cbcfcb2a2340c66f08520"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/drivers-a-f/disposition.json",
+      "originalSha256": "9edf53a3500c949022493b2535213e42d56cb580c4d641610bdbfc49394af7ec",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/disposition.json-9edf53a3500c.txt",
+      "formattedSha256": "14bc089f0d0ab81be4c4f9a9d1740822aac42806fcc46377539923a322a85bb0"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/drivers-n-r-scope/all-seed-ledger.json",
+      "originalSha256": "08cfcbd9d27203ff493ea331c3aeed5eb92d1b9edb422705a595c740625277a5",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/all-seed-ledger.json-08cfcbd9d272.txt",
+      "formattedSha256": "0681c6e2fd74fffe4de6a7ccc9b1ee7f4d88b447036f09f0286dea33cb726f5f"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/drivers-n-r-scope/scope-dispositions.json",
+      "originalSha256": "c914d39bb157a0e3560c3781607ed19dddba27b7f6834af29a040bfd8cd2c775",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/scope-dispositions.json-c914d39bb157.txt",
+      "formattedSha256": "77e1111e2bfd4d1866af47a977b5ed3241a051045b461598c9c2fe2431e20e2b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/files-owner-scope/finite-evidence.json",
+      "originalSha256": "c1e88f21b56dfceecd04a4210d5af21bedd3a097f3a21b2284b1cc7233c61b88",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/finite-evidence.json-c1e88f21b56d.txt",
+      "formattedSha256": "e7da27b8d17f8941f446580f77d77da24208da95325087599fa77a5cb7b37035"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/files-owner-scope/scope-dispositions.json",
+      "originalSha256": "0410bc2113f5dba8f98d6f38e8de38cc0d29b31921af4f665943cb2ad9dc3dd3",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/scope-dispositions.json-0410bc2113f5.txt",
+      "formattedSha256": "526e1a5266d007254b9e8a163fb7c1797711f6946b6cc9e4b90cdb1b978e8ae3"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/goals-owner-scope/scope-proposal.json",
+      "originalSha256": "5f9efcd5d59330311bd6c07d7d7e862fa942b35c1c7eef60f006b63a5af36cba",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/scope-proposal.json-5f9efcd5d593.txt",
+      "formattedSha256": "1520c479f39f97774a2ce42fef4c76b8a45e153b3e847ed1a672486339af4676"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/finite-table.json",
+      "originalSha256": "7593e1b29560d7de8b7861fde8ee4d96663bc6bc3a8bc6fbd45b0eb3347f2832",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/finite-table.json-7593e1b29560.txt",
+      "formattedSha256": "b1c009f67cfc77c9a13334f4c3d842255f5477a893422c1fd95c339900db8096"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/practice-kg-tool-results/disposition.json",
+      "originalSha256": "458c8b5cbfd013f0ba201a6c351cae5068c74dda383aebf402a62a7954c76deb",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/disposition.json-458c8b5cbfd0.txt",
+      "formattedSha256": "c5ce91cd4eedf0271b560850fbb64e7bf9456c40141fd86d842f19b0fd7584e4"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/r33-tail-scope/scope-proposal.json",
+      "originalSha256": "69f154335a63277c65bc523dd85974b4b83c268be062c8a06170c19aac785f36",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/scope-proposal.json-69f154335a63.txt",
+      "formattedSha256": "cd95392a5200b7cd935b72d550a6e4c921e3593db9fb4d595f9b6d6723181d2a"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/vault-sync-status/withdrawal-proposal.json",
+      "originalSha256": "fb9c99d437ce68dbc8c9c70d4ba29c662498b576c0fd9daf4a388f8e6664ab60",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/withdrawal-proposal.json-fb9c99d437ce.txt",
+      "formattedSha256": "273a74ab3bb02bc2fdf484446779a0905421039b996d02e4d0ffc94b71a6f2b4"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-parent-integration-2026-09-25.json",
+      "originalSha256": "0183555aec46126a135795c48d9a44d1827ed9346f85acdaad66714fa68df86a",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/r33-parent-integration-2026-09-25.json-0183555aec46.txt",
+      "formattedSha256": "99652292922d7d5515405e18e4e6095ca49fb1cca552feaa4a02630896b97db0"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-reconciliation-progress-2026-09-25.json",
+      "originalSha256": "f5c1112bb16f9bff0af6d588516c6796051da9ffbf337e3008dd21cd3796deee",
+      "originalBytes": "goals/boolean-creep/history/2026-09-25-r33-publication-format/r33-reconciliation-progress-2026-09-25.json-f5c1112bb16f.txt",
+      "formattedSha256": "86cd53b1b9bf40a5c8145f87a2791c575a6d451325070563940f28ac8456da27"
+    }
+  ]
+}

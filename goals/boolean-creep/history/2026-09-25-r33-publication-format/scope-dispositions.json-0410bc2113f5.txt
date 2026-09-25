@@ -1,0 +1,71 @@
+[
+  {
+    "id": "files-face-detection-presence",
+    "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+    "line": 175,
+    "symbol": "DetectFacesEntry",
+    "actualBooleanMembers": [
+      "hasFace"
+    ],
+    "actualBooleanCount": 1,
+    "scopeDisposition": "withdraw-outside-recall-net",
+    "qualification": "not-applicable"
+  },
+  {
+    "id": "files-border-classification",
+    "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
+    "line": 400,
+    "symbol": "DetectBordersEntry",
+    "actualBooleanMembers": [
+      "hasBorder"
+    ],
+    "actualBooleanCount": 1,
+    "scopeDisposition": "withdraw-outside-recall-net",
+    "qualification": "not-applicable"
+  },
+  {
+    "id": "files-worker-score-thresholds",
+    "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+    "line": 1389,
+    "symbol": "isWorkerDispositionCoherent",
+    "actualBooleanMembers": [
+      "couldMeetMatchThreshold",
+      "mustMeetMatchThreshold",
+      "couldMeetReviewThreshold",
+      "couldMissReviewThreshold",
+      "hasQualityFlags",
+      "hasPartialAlignerRejection"
+    ],
+    "actualBooleanCount": 6,
+    "scopeDisposition": "retain-recall-eligible",
+    "qualification": "retain-threshold-cluster16/6"
+  },
+  {
+    "id": "files-image-orientation-state",
+    "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+    "line": 52,
+    "symbol": "ImageAuditMetadataPresence",
+    "actualBooleanMembers": [
+      "hasExif",
+      "hasIcc",
+      "hasIptc",
+      "hasXmp",
+      "orientationApplied"
+    ],
+    "actualBooleanCount": 5,
+    "scopeDisposition": "retain-recall-eligible",
+    "qualification": "needs-contract-and-evidence-refresh-no-reapproval"
+  },
+  {
+    "id": "files-person-reference-disposition",
+    "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
+    "line": 1258,
+    "symbol": "PersonMatchReference",
+    "actualBooleanMembers": [
+      "accepted"
+    ],
+    "actualBooleanCount": 1,
+    "scopeDisposition": "withdraw-outside-recall-net",
+    "qualification": "not-applicable"
+  }
+]

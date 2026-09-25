@@ -1,8 +1,8 @@
 # Instance
 
 - ID: `r27-boolean-state-foundation-spinner-state`
-- Source: `93217d998f851e2e93d9864e2b5315552eaa58a7`
-- Corpus: `origin/main@d1b4d769fbaffddd55717f3b1ba461897dd545c5`
+- Source: `0be1f13d62fa00cb65e34ff69ec99043380f8d81`
+- Source main: same HEAD; P2 refresh only, not a new corpus census.
 - Owner: `packages/foundation/ui-system/ui/src/hooks/useSpinner.ts:36`, `SpinnerState`
 - Members: `runOnce`, `timeout`, `interval`; stored, internal, Tier 1C.
 - Original source adjudication: `data/design-refresh-2026-09-09-r27-boolean-ui-carriers.md` (immutable).
@@ -11,12 +11,11 @@
 
 # Current shape
 
-The R28 merge leaves `useSpinner.ts` byte-identical to the prior source.
-Its only executable consumer adds the extracted blur-normalization helper
-at `useNumberInput.ts:88–113`, now called at 978, and exported helper-test seam
-at 133–135. Spinner construction and event semantics are unchanged; the
-consumer citations below follow their current lines. Preserve that new seam
-and its tests while implementing this private state migration.
+Current source retains the same four-state timer carrier and extracted
+number-input blur-normalization seam. Preserve the current `useSpinner(actions)`
+public signature: one bag containing co-equal increment/decrement callbacks,
+not the older positional callback pair. The sole executable in-package caller
+at `useNumberInput.ts:894` already passes that bag.
 
 `SpinnerState` at `useSpinner.ts:36–40` combines one Boolean with two
 actual `number | undefined` timer handles. The initial value at 51 is
@@ -31,9 +30,9 @@ with the previous `runOnce` value at 97–101. The timeout creates a
 the delay callback itself does not execute `run`.
 
 `spinnerStateAtom` at 66 is scoped through `Atom.family` and `useId`
-at 169. `spinnerCleanupAtom` at 109 registers a finalizer that reads the
+at 167. `spinnerCleanupAtom` at 109 registers a finalizer that reads the
 latest state with `get.once` at 111. **Both** the state and cleanup atoms
-are mounted at 179–180. The source comment at 172–178 records an actual
+are mounted at 177–178. The source comment at 170–176 records an actual
 idle-TTL leak caused by dropping the state mount; preserve those mounts.
 
 # Cardinality gap
@@ -60,28 +59,21 @@ Keep the private state owner in `hooks/useSpinner.ts`. Reuse its `$I`
 composer and the existing `@beep/schema` dependency. Define the finite
 domain once and let the kit build the private case schemas:
 
-```ts
-const SpinnerPhase = LiteralKit(["idle", "initial-delay", "repeat-delay", "repeating"]).pipe(
-  $I.annoteSchema("SpinnerPhase", {
-    description: "Idle, initial hold, restarted hold, or active repetition.",
-  })
-)
-type SpinnerPhase = typeof SpinnerPhase.Type
+Define an unannotated private `SpinnerPhaseBase` with
+`LiteralKit(["idle", "initial-delay", "repeat-delay", "repeating"])`.
+Use its literal members to build named case schemas, with `S.tag` phase
+fields and only their case payload: idle has none, each delay has
+`timeout: S.Number`, repeating has `interval: S.Number`. Combine via
+`S.Union`, apply `$I.annoteSchema` to that union, then apply
+`S.toTaggedUnion("phase")` last so `.cases` and `.match` remain available.
+Use named schema-derived Type aliases; do not author a parallel type union.
+If using the kit's `mapMembers` construction, call it on the unannotated base;
+annotation restoration helpers do not restore every kit construction method.
+This replaces the old snippet that annotated the kit/union before assuming
+its specialized helper methods survived. Validate the chosen composition
+against current installed/local Effect APIs during implementation.
 
-const SpinnerState = SpinnerPhase.toTaggedUnion("phase")({
-  idle: {},
-  "initial-delay": { timeout: S.Number },
-  "repeat-delay": { timeout: S.Number },
-  repeating: { interval: S.Number },
-}).pipe(
-  $I.annoteSchema("SpinnerState", {
-    description: "One spinner phase owning only its active browser timer.",
-  })
-)
-type SpinnerState = typeof SpinnerState.Type
-```
-
-The kit's case structs are sufficient for this private transient union;
+The named case structs are sufficient for this private transient union;
 there is no parallel interface or object with optional case fields.
 Construct with the exact case schema, for example
 `SpinnerState.cases["initial-delay"].make({ timeout })`, omitting the
@@ -91,7 +83,7 @@ Do not add `runOnce` getters, cached timer-presence flags, or a second
 Boolean state atom. Timer IDs stay browser-number payloads; no narrower
 positive/integer schema or opaque token conversion is needed.
 
-Keep command tags and callback signatures at 42–49 and 165–194 exactly.
+Keep command tags and callback signatures at42–49 and163–193 exactly.
 The callback-bearing `SpinnerCommand` is an operational interface, not
 the state being modeled. Keep the two schedule values and their existing
 schedule construction untouched.
@@ -108,6 +100,19 @@ The transition table is exact:
 | stop | any | clear owned timer, if any | idle |
 | unmount/finalize | any | read latest state, clear owned timer | no new state write |
 
+This table describes stored-state transitions, not an assertion that only one
+timer can exist under arbitrary reentrant callbacks. `run` is a public callback
+and may synchronously call stop/start or throw. The current command reads state
+once before clearing/calling run, then schedules/writes from that captured state.
+Retain that snapshot behavior: do not reread after run or add a finally reset.
+If run throws, scheduling and the final write are skipped; previously cleared
+handles may remain recorded. If run reenters, the outer continuation can still
+schedule and overwrite the nested state. Those are existing behaviors, not
+new lifecycle cases or authorization to add generation/cancellation machinery.
+Likewise interval callbacks retain the original run closure and params; rerender
+does not refresh an already scheduled callback. Unmount finalization clears
+only recorded handles and does not reset the atom itself.
+
 Preserve clear-before-callback-before-scheduling order. Do not add
 generation tokens, async scheduling, cancellation policy, changed exception
 handling, or reentrant-callback repairs while replacing this carrier.
@@ -123,23 +128,22 @@ handling, or reentrant-callback repairs while replacing this carrier.
 - `useSpinner.ts:66`: keep the same family key, atom lifetime, and initial value.
 - `useSpinner.ts:77–101`: implement the table through schema-derived
   dispatch while preserving callback and timer ordering.
-- `useSpinner.ts:109–113,169–180`: retain the cleanup finalizer's latest
+- `useSpinner.ts:109–113,167–178`: retain the cleanup finalizer's latest
   `get.once`, the per-hook scope, and **both** mounts. Do not add TTL,
   keep-alive, or service/runtime changes.
-- `useSpinner.ts:182–194`: retain public `up(params?)`, `down(params?)`,
+- `useSpinner.ts:181–193`: retain public `up(params?)`, `down(params?)`,
   and `stop()` behavior and closure payloads.
 - `packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts:17,894`:
   sole executable source caller; no signature migration. Preserve start
   handlers at 907–923 and release/leave/touch-end stops at 1017–1035.
 - `packages/foundation/ui-system/ui/src/hooks/index.ts:18`: retains the
-  exported number-input hook. `package.json:108`/130 expose hook subpaths.
+  exported number-input hook. `package.json:115`/137 expose hook subpaths.
   The private state is not exported; no new export is needed for its tests.
 
 Graft identified `useNumberInput`; the direct call is at
-`useNumberInput.ts:894`. Exhaustive TypeScript, TSX, and MDX symbol/subpath
-searches across packages/apps
-found no executable caller of `useNumberInput` beyond its own documentation
-example. `test/hooks.test.ts` and `test/schema-parity.test.ts` import
+`useNumberInput.ts:894`. The prior broader census found no app caller, but this refresh does not
+claim a new repository-wide absence proof. Public hook subpath consumers remain
+supported, regardless of current in-package reachability. `test/hooks.test.ts` and `test/schema-parity.test.ts` import
 number-input helpers, not the hook. The current `hooks.test.ts:45–56` adds
 `NumberInputTestKit.resolveBlurInterfaceValue` fixtures for invalid text,
 unclamped precision, and values below/inside/above bounds; those do not exercise
@@ -166,7 +170,7 @@ the legitimate transition dispatch remains.
 None. Timer handles and the private atom state are not persisted or sent
 over a wire. Public hook callback arguments and results remain unchanged.
 No option codec, storage migration, package export, or dependency change
-is required. `@beep/schema` is already declared at `package.json:29`.
+is required. `@beep/schema` is already declared at `package.json:36`.
 
 # Test impact
 
@@ -181,7 +185,10 @@ past the registry's configured idle TTL while still mounted must leave
 stop effective. Unmount from either delay and from repeating must prevent
 later callbacks; remount must begin idle and scopes must remain independent.
 
-No current spinner hook test or story was found. Add a small portless
+The inspected hook/helper fixtures do not exercise spinner lifecycle. The
+abstract transition table is not runtime timer, React registry or browser proof.
+Include callback capture across rerenders, callback exceptions, and bounded
+reentrant stop/start tests to protect current sequencing without repairing it. Add a small portless
 Storybook fixture through the actual `useNumberInput` hook, plus a public
 spinner-control fixture where needed to exercise repeated-start without an
 intervening stop. Use Atom state in new fixtures. Record actual mouse

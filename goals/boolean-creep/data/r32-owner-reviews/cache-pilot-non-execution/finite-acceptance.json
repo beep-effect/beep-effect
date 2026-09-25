@@ -1,0 +1,909 @@
+{
+  "schemaVersion": "boolean-creep-finite-projection/v1",
+  "representable": 64,
+  "legal": 27,
+  "rejected": 37,
+  "scope": "ratified mathematical projection, not runtime codec proof",
+  "rows": [
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "no-summary"
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "passed",
+            "exitCode": -7
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "summary-no-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "selected-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "no-summary"
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "summary-no-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "missing-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "selected-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "missing-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "no-summary"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "passed",
+            "exitCode": -7
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "summary-no-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "selected-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "no-summary"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "summary-no-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-root-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "selected-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-root-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "no-summary"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "passed",
+            "exitCode": -7
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "summary-no-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": -7,
+            "observation": "selected-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "no-summary"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "summary-no-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "configuration-refusal",
+          "reason": "malformed-child-config",
+          "outcome": {
+            "status": "failed",
+            "exitCode": 0,
+            "observation": "selected-execution"
+          }
+        }
+      }
+    },
+    {
+      "reason": "malformed-child-config",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "absent-script",
+          "exitCode": -7,
+          "observation": "no-summary"
+        }
+      }
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "absent-script",
+          "exitCode": -7,
+          "observation": "summary-no-execution"
+        }
+      }
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "absent-script",
+          "exitCode": -7,
+          "observation": "selected-execution"
+        }
+      }
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": false,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "absent-script",
+          "exitCode": 0,
+          "observation": "no-summary"
+        }
+      }
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": false,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": false,
+      "accepted": false,
+      "canonicalProjection": null
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "absent-script",
+          "exitCode": 0,
+          "observation": "summary-no-execution"
+        }
+      }
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": false,
+      "accepted": true,
+      "canonicalProjection": {
+        "id": "record-independent-of-reason",
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "evidence": {
+          "kind": "absent-script",
+          "exitCode": 0,
+          "observation": "selected-execution"
+        }
+      }
+    },
+    {
+      "reason": "absent-script",
+      "exitZero": true,
+      "summaryPresent": true,
+      "selectedExecutionObserved": true,
+      "passed": true,
+      "accepted": false,
+      "canonicalProjection": null
+    }
+  ]
+}

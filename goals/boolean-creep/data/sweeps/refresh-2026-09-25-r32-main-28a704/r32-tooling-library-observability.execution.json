@@ -1,0 +1,22 @@
+{
+  "lane": "r32-tooling-library-observability",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T00:52:48.979066+00:00",
+  "finished": "2026-09-25T00:57:51.741424+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-library-observability.jsonl`. Confirmed 0, disqualified 0. All three assigned roots were covered, and the validator passed with 0 records.\n\nSeed drift: the `passed`/`qualityGate` rows on `OutcomeLabel`, `AiMetricsOutcomeLabelInput`, and `OutcomeLabelAnnotationRow` are one Boolean plus a required status string, so they are outside this net and were not re-recorded. The other scoped seeds still match their owners and classifications. No unresolved in-net source question.",
+  "transcriptSha256": "983f4b3c637e6cfefab15363bce48547c65fe172c4870d2f510510ad9c3111fc",
+  "runnerSha256": "aa44ba577e1b7204b1c85a0549dec38d8afaa068dc269d06b86150e89fc633b4",
+  "seedSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

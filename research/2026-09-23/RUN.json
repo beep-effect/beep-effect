@@ -50,10 +50,7 @@
   "frictions": [
     {
       "source": "user-X",
-      "tools": [
-        "search_posts_all",
-        "search_news"
-      ],
+      "tools": ["search_posts_all", "search_news"],
       "error": "client-not-enrolled",
       "detail": "X API v2 Client Forbidden (client-not-enrolled); continued without X."
     },

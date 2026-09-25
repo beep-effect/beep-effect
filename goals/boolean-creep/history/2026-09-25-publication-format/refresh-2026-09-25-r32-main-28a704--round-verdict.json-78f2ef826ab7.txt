@@ -1,0 +1,103 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r32-main-28a704",
+  "roundNumber": 32,
+  "finalizedAt": "2026-09-25T01:23:11.746377+00:00",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "originMainSha": "28a7045c9b353544a37733bdb46ffb2a0b6ca7bc",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "rawOccurrenceDispositions": 53,
+  "newQualifiedIds": [
+    "effect-vitest-function-reachability",
+    "effect-vitest-reachable-helper-flags",
+    "cache-pilot-non-execution"
+  ],
+  "newQualifiedCount": 3,
+  "changedQualifiedIds": [
+    "r3-drivers-arch-tool-name-collision-stage-flags",
+    "r29-yeet-sweep-worktree-probe-address",
+    "r30-cli-yeet-portfolio-index-staged-deletion"
+  ],
+  "withdrawnQualifiedIds": [
+    "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+    "m365-tool-error-retryability",
+    "tool-name-collision-row-truncated-digest",
+    "xai-sse-done-payload",
+    "venice-sse-done-payload",
+    "xai-websocket-message-binary",
+    "dms-mirror-probe-connected",
+    "organization-tenant-placement-bits",
+    "contained-file-read-outcome",
+    "r26-cli-commands-l-q-osv-ignore-expiry"
+  ],
+  "withdrawnDisqualifiedIds": [
+    "r2-foundation-float-fast-check-options",
+    "r2-foundation-double-fast-check-options",
+    "r2-drivers-arch-box-post-apply-verdict",
+    "r3-foundation-mermaid-accessible-name",
+    "r3-foundation-mermaid-style-safety",
+    "r24-foundation-ui-mermaid-svg-safety",
+    "r2-domains-ontology-graph-fold-flags",
+    "r25-tooling-library-policy-test-route-base-disable-flags"
+  ],
+  "records": 778,
+  "qualified": 142,
+  "disqualified": 636,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/execution-summary.json",
+      "sha256": "3b313330dc8d657d89acab6ab56e92ae18988019384682a97389c566388c1ed7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/execution-audit.json",
+      "sha256": "7cffd52401eb262fa08bbfb9b88a675c0044a132b2ec9f9eeab0c8965bc2deed"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/lane-map.json",
+      "sha256": "aa4d01dae376c4a2466be2541ed6e08eafd3b3ee61ed64467bc41c727ceef191"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/launch-controller-exit.json",
+      "sha256": "9a6d0c0507345a1de17f7be21cbc21562e690da02dd049f623c8245f2f6e917e"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-parent-integration-2026-09-25.json",
+      "sha256": "cc62e90372499b9b2581824b13e0a2c970fc102636ceda6126a8d9e4703943bc"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json",
+      "sha256": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-admissions-2026-09-25.json",
+      "sha256": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r32-final-reconciled.jsonl",
+      "sha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/data/decision-snapshot-index-2026-09-22.json",
+      "sha256": "d952ea6ccca9d4005746f7ddc0a5f9393d571a8953bca5210953623d6d9dae4c"
+    }
+  ],
+  "note": "Source-stable full census reconciled against complete owners. Three new qualifications; explicit owner ruling authorizes Cache receipt64/27. Withdrawals correct recall scope and earn no implementation credit. Replacement independent P3 and two current-source dry rounds remain required."
+}

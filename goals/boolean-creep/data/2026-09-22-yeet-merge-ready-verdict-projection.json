@@ -1,0 +1,1635 @@
+{
+  "representable": 4608,
+  "legal": 1025,
+  "tables": [
+    {
+      "criteria": [false, false, false, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, false, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, true, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, true, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, false, true, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, false, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, true, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, true, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 2], [false, 3]]
+    },
+    {
+      "criteria": [false, false, false, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, false, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, true, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, true, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 2], [false, 4]]
+    },
+    {
+      "criteria": [false, false, false, true, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, true, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, true, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 2], [false, 5]]
+    },
+    {
+      "criteria": [false, false, false, true, true, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 2],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, false, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 2], [false, 6]]
+    },
+    {
+      "criteria": [false, false, false, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 2], [false, 7]]
+    },
+    {
+      "criteria": [false, false, false, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 2]]
+    },
+    {
+      "criteria": [false, false, true, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, false, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, true, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, true, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 3], [false, 4]]
+    },
+    {
+      "criteria": [false, false, true, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, true, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, true, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 3], [false, 5]]
+    },
+    {
+      "criteria": [false, false, true, false, true, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 3],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 3], [false, 6]]
+    },
+    {
+      "criteria": [false, false, true, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 3], [false, 7]]
+    },
+    {
+      "criteria": [false, false, true, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 3]]
+    },
+    {
+      "criteria": [false, false, true, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, true, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, false, true, true, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [false, false, true, true, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [false, false, true, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [false, false, true, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 4]]
+    },
+    {
+      "criteria": [false, false, true, true, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 1],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, false, true, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [false, false, true, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [false, false, true, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 5]]
+    },
+    {
+      "criteria": [false, false, true, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [false, false, true, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 6]]
+    },
+    {
+      "criteria": [false, false, true, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1], [false, 7]]
+    },
+    {
+      "criteria": [false, false, true, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 1]]
+    },
+    {
+      "criteria": [false, true, false, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, false, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, true, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, true, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 3], [false, 4]]
+    },
+    {
+      "criteria": [false, true, false, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, true, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, true, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 3], [false, 5]]
+    },
+    {
+      "criteria": [false, true, false, false, true, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 3],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 3], [false, 6]]
+    },
+    {
+      "criteria": [false, true, false, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 3], [false, 7]]
+    },
+    {
+      "criteria": [false, true, false, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 3]]
+    },
+    {
+      "criteria": [false, true, false, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, true, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, true, false, true, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [false, true, false, true, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [false, true, false, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [false, true, false, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 4]]
+    },
+    {
+      "criteria": [false, true, false, true, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 2],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, false, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [false, true, false, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [false, true, false, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 5]]
+    },
+    {
+      "criteria": [false, true, false, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [false, true, false, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 6]]
+    },
+    {
+      "criteria": [false, true, false, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2], [false, 7]]
+    },
+    {
+      "criteria": [false, true, false, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 2]]
+    },
+    {
+      "criteria": [false, true, true, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, true, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [false, true, true, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, true, false, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [false, true, true, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, true, false, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, false, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 4]]
+    },
+    {
+      "criteria": [false, true, true, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, true, false, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, false, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 5]]
+    },
+    {
+      "criteria": [false, true, true, false, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 3]]
+    },
+    {
+      "criteria": [false, true, true, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 0],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [false, true, true, true, false, false, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, true, false, false, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [false, true, true, true, false, true, false, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 4]]
+    },
+    {
+      "criteria": [false, true, true, true, true, false, false, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 5], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 5]]
+    },
+    {
+      "criteria": [false, true, true, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 0], [false, 6]]
+    },
+    {
+      "criteria": [false, true, true, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 0], [false, 7]]
+    },
+    {
+      "criteria": [false, true, true, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 0]]
+    },
+    {
+      "criteria": [true, false, false, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, false, true, true],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, true, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, true, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 3], [false, 4]]
+    },
+    {
+      "criteria": [true, false, false, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, true, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, true, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 3], [false, 5]]
+    },
+    {
+      "criteria": [true, false, false, false, true, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 3],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 3], [false, 6]]
+    },
+    {
+      "criteria": [true, false, false, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 3], [false, 7]]
+    },
+    {
+      "criteria": [true, false, false, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 3]]
+    },
+    {
+      "criteria": [true, false, false, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, true, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [true, false, false, true, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, false, false, true, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, false, false, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, false, false, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 4]]
+    },
+    {
+      "criteria": [true, false, false, true, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 2],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, false, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, false, false, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, false, false, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 5]]
+    },
+    {
+      "criteria": [true, false, false, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, false, false, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 6]]
+    },
+    {
+      "criteria": [true, false, false, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2], [false, 7]]
+    },
+    {
+      "criteria": [true, false, false, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 2]]
+    },
+    {
+      "criteria": [true, false, true, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, true, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [true, false, true, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, true, false, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, false, true, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, true, false, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, false, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 4]]
+    },
+    {
+      "criteria": [true, false, true, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, true, false, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, false, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 5]]
+    },
+    {
+      "criteria": [true, false, true, false, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 3]]
+    },
+    {
+      "criteria": [true, false, true, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 1],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, false, true, true, false, false, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, true, false, false, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, false, true, true, false, true, false, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 4]]
+    },
+    {
+      "criteria": [true, false, true, true, true, false, false, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 5], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 5]]
+    },
+    {
+      "criteria": [true, false, true, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 1], [false, 6]]
+    },
+    {
+      "criteria": [true, false, true, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 1], [false, 7]]
+    },
+    {
+      "criteria": [true, false, true, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 1]]
+    },
+    {
+      "criteria": [true, true, false, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, true, false, false, false, false, false, true],
+      "legalReadyBlockerPairs": [
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6]
+      ]
+    },
+    {
+      "criteria": [true, true, false, false, false, false, true, false],
+      "legalReadyBlockerPairs": [
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, true, false, false, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, true, false, false, false, true, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 2],
+        [false, 3],
+        [false, 4],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, true, false, false, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, false, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 4]]
+    },
+    {
+      "criteria": [true, true, false, false, true, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 2],
+        [false, 3],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, true, false, false, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, false, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 5]]
+    },
+    {
+      "criteria": [true, true, false, false, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 3]]
+    },
+    {
+      "criteria": [true, true, false, true, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 2],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, true, false, true, false, false, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, true, false, false, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, true, false, true, false, true, false, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 4]]
+    },
+    {
+      "criteria": [true, true, false, true, true, false, false, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 5], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 5]]
+    },
+    {
+      "criteria": [true, true, false, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 2], [false, 6]]
+    },
+    {
+      "criteria": [true, true, false, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 2], [false, 7]]
+    },
+    {
+      "criteria": [true, true, false, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 2]]
+    },
+    {
+      "criteria": [true, true, true, false, false, false, false, false],
+      "legalReadyBlockerPairs": [
+        [false, 3],
+        [false, 4],
+        [false, 5],
+        [false, 6],
+        [false, 7]
+      ]
+    },
+    {
+      "criteria": [true, true, true, false, false, false, false, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, false, false, false, true, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, true, true, false, false, true, false, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, false, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 4]]
+    },
+    {
+      "criteria": [true, true, true, false, true, false, false, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 5], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, false, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 5]]
+    },
+    {
+      "criteria": [true, true, true, false, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 3], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, false, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 3], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, false, true, true, true, true],
+      "legalReadyBlockerPairs": [[false, 3]]
+    },
+    {
+      "criteria": [true, true, true, true, false, false, false, false],
+      "legalReadyBlockerPairs": [[false, 4], [false, 5], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, false, false, false, true],
+      "legalReadyBlockerPairs": [[false, 4], [false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, true, false, false, true, false],
+      "legalReadyBlockerPairs": [[false, 4], [false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, false, false, true, true],
+      "legalReadyBlockerPairs": [[false, 4], [false, 5]]
+    },
+    {
+      "criteria": [true, true, true, true, false, true, false, false],
+      "legalReadyBlockerPairs": [[false, 4], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, false, true, false, true],
+      "legalReadyBlockerPairs": [[false, 4], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, true, false, true, true, false],
+      "legalReadyBlockerPairs": [[false, 4], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, false, true, true, true],
+      "legalReadyBlockerPairs": [[false, 4]]
+    },
+    {
+      "criteria": [true, true, true, true, true, false, false, false],
+      "legalReadyBlockerPairs": [[false, 5], [false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, true, false, false, true],
+      "legalReadyBlockerPairs": [[false, 5], [false, 6]]
+    },
+    {
+      "criteria": [true, true, true, true, true, false, true, false],
+      "legalReadyBlockerPairs": [[false, 5], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, true, false, true, true],
+      "legalReadyBlockerPairs": [[false, 5]]
+    },
+    {
+      "criteria": [true, true, true, true, true, true, false, false],
+      "legalReadyBlockerPairs": [[false, 6], [false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, true, true, false, true],
+      "legalReadyBlockerPairs": [[false, 6]]
+    },
+    {
+      "criteria": [true, true, true, true, true, true, true, false],
+      "legalReadyBlockerPairs": [[false, 7]]
+    },
+    {
+      "criteria": [true, true, true, true, true, true, true, true],
+      "legalReadyBlockerPairs": [[true, null]]
+    }
+  ]
+}

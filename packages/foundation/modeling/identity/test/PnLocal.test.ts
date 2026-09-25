@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   acceptsEscapedLocal,
   EscapedPnLocal,
@@ -9,7 +10,9 @@ import {
   SafePnPrefix,
   unescapeLocal,
 } from "@beep/identity";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -77,7 +80,7 @@ describe("PnLocal", () => {
   it("rejects a local name ending in a lone backslash", () => {
     expect(acceptsEscapedLocal("bad\\")).toBe(false);
     expect(acceptsEscapedLocal("\\")).toBe(false);
-    expect(O.isNone(decodeUnknownEscapedPnLocalOption("bad\\"))).toBe(true);
+    assertNone(decodeUnknownEscapedPnLocalOption("bad\\"));
   });
 
   it.prop(
@@ -88,53 +91,51 @@ describe("PnLocal", () => {
       const escaped = escapeLocal(local);
       expect(unescapeLocal(escaped)).toBe(local);
       expect(acceptsEscapedLocal(escaped)).toBe(true);
-    }
+    },
+    { arbitrary: fcRuns(100) }
   );
 
-  it("round-trips generated safe PN_LOCAL schema values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SafePnLocal)]), ([local]) => {
-          const decoded = O.flatMap(encodeSafePnLocalOption(local), decodeUnknownSafePnLocalOption);
+  it.prop(
+    "round-trips generated safe PN_LOCAL schema values",
+    [Arbitrary.schema(SafePnLocal)],
+    ([local]) => {
+      const decoded = O.flatMap(encodeSafePnLocalOption(local), decodeUnknownSafePnLocalOption);
 
-          expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
-          expect(isSafeLocal(local)).toBe(true);
+      expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
+      expect(isSafeLocal(local)).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("round-trips generated safe PN_PREFIX schema values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SafePnPrefix)]), ([prefix]) => {
-          const decoded = O.flatMap(encodeSafePnPrefixOption(prefix), decodeUnknownSafePnPrefixOption);
+  it.prop(
+    "round-trips generated safe PN_PREFIX schema values",
+    [Arbitrary.schema(SafePnPrefix)],
+    ([prefix]) => {
+      const decoded = O.flatMap(encodeSafePnPrefixOption(prefix), decodeUnknownSafePnPrefixOption);
 
-          expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
-          expect(isSafePrefix(prefix)).toBe(true);
+      expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
+      expect(isSafePrefix(prefix)).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("round-trips generated escaped PN_LOCAL schema values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(EscapedPnLocal)]), ([local]) => {
-          const decoded = O.flatMap(encodeEscapedPnLocalOption(local), decodeUnknownEscapedPnLocalOption);
+  it.prop(
+    "round-trips generated escaped PN_LOCAL schema values",
+    [Arbitrary.schema(EscapedPnLocal)],
+    ([local]) => {
+      const decoded = O.flatMap(encodeEscapedPnLocalOption(local), decodeUnknownEscapedPnLocalOption);
 
-          expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
-          expect(acceptsEscapedLocal(local)).toBe(true);
+      expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
+      expect(acceptsEscapedLocal(local)).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("falls back to full IRI when a local cannot be emitted unescaped", () => {
     expect(
@@ -188,5 +189,35 @@ it.effect(
       expect(yield* S.decodeEffect(codec)(value)).toBe(value);
       expect(yield* S.encodeEffect(codec)(value)).toBe(value);
     }
+  })
+);
+
+it.effect.each([SafePnLocal, SafePnPrefix, EscapedPnLocal])(
+  "generates varied grammar-valid PN names %#",
+  Effect.fnUntraced(function* (schema) {
+    const values = yield* Arbitrary.sampleEffect(Arbitrary.schema(schema), {
+      count: 128,
+      size: 40,
+      seed: 20260708,
+    });
+
+    expect(values).toHaveLength(128);
+    expect(A.dedupe(values).length).toBeGreaterThan(5);
+    expect(A.every(values, S.is(schema))).toBe(true);
+    expect(A.some(values, (value) => /[\u{10000}-\u{EFFFF}]/u.test(value))).toBe(true);
+  })
+);
+
+it.effect(
+  "generates both escaped and percent-encoded PN_LOCAL units",
+  Effect.fnUntraced(function* () {
+    const values = yield* Arbitrary.sampleEffect(Arbitrary.schema(EscapedPnLocal), {
+      count: 128,
+      size: 40,
+      seed: 20260708,
+    });
+
+    expect(A.some(values, (value) => /\\[_~.\-!$&'()*+,;=/?#@%]/u.test(value))).toBe(true);
+    expect(A.some(values, (value) => /%[0-9A-Fa-f]{2}/u.test(value))).toBe(true);
   })
 );

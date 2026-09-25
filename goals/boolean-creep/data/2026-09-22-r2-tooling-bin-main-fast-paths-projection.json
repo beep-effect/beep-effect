@@ -1,0 +1,22 @@
+[
+  {
+    "quality": false,
+    "ci": false,
+    "legal": true
+  },
+  {
+    "quality": false,
+    "ci": true,
+    "legal": true
+  },
+  {
+    "quality": true,
+    "ci": false,
+    "legal": true
+  },
+  {
+    "quality": true,
+    "ci": true,
+    "legal": false
+  }
+]

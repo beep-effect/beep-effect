@@ -1,0 +1,152 @@
+{
+  "qualifiedCluster": {
+    "representable": 12,
+    "legal": 7
+  },
+  "fullCarrierProjection": [
+    {
+      "connected": false,
+      "reason": null,
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": null,
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "credentials-missing",
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "credentials-missing",
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "auth-failed",
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "auth-failed",
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "root-unreachable",
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "root-unreachable",
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "transient",
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "transient",
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "probe-failed",
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": false,
+      "reason": "probe-failed",
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": true,
+      "reason": null,
+      "rootPresent": false,
+      "legal": true
+    },
+    {
+      "connected": true,
+      "reason": null,
+      "rootPresent": true,
+      "legal": true
+    },
+    {
+      "connected": true,
+      "reason": "credentials-missing",
+      "rootPresent": false,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "credentials-missing",
+      "rootPresent": true,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "auth-failed",
+      "rootPresent": false,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "auth-failed",
+      "rootPresent": true,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "root-unreachable",
+      "rootPresent": false,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "root-unreachable",
+      "rootPresent": true,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "transient",
+      "rootPresent": false,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "transient",
+      "rootPresent": true,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "probe-failed",
+      "rootPresent": false,
+      "legal": false
+    },
+    {
+      "connected": true,
+      "reason": "probe-failed",
+      "rootPresent": true,
+      "legal": false
+    }
+  ]
+}

@@ -114,8 +114,10 @@ import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import { ProofJobOutcome, ProofJobRunner } from "./ProofJob.ts";
 import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import {
+  changedPackagesForAttempt,
   proofShadowAttemptFacts,
   recordProofShadowForAttempt,
+  renderProofChangedPackages,
   renderProofShadowAttemptSummary,
 } from "./ProofShadow.ts";
 import {
@@ -1609,8 +1611,17 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
     })
   );
   // Shadow mode (ruling 63): observe what the proof ledger would have reused,
-  // never change what ran, and never let a ledger fault fail the attempt.
-  yield* recordProofShadowForAttempt(plan.context.repoRoot, proofShadowAttemptFacts(attempt), innerLaneReports).pipe(
+  // never change what ran, and never let a ledger fault fail the attempt. The
+  // attempt's changed package set is read once here and feeds the ledger's
+  // changed-package tripwire (rulings 69, 70); it never fails.
+  const changedPackages = yield* changedPackagesForAttempt(plan.context);
+  yield* Console.log(`[yeet] ${renderProofChangedPackages(changedPackages)}`);
+  yield* recordProofShadowForAttempt(
+    plan.context.repoRoot,
+    proofShadowAttemptFacts(attempt),
+    innerLaneReports,
+    changedPackages
+  ).pipe(
     Effect.flatMap((summary) => Console.log(`[yeet] ${renderProofShadowAttemptSummary(summary)}`)),
     Effect.catch((error) => Console.error(`[yeet] proof shadow skipped: ${error.message}`))
   );

@@ -1,0 +1,382 @@
+{
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "lane": {
+    "lane": "r33-drivers-n-r",
+    "areas": [
+      "packages/drivers/n3/src",
+      "packages/drivers/nlp-mcp/src",
+      "packages/drivers/obs/src",
+      "packages/drivers/onepassword-cli/src",
+      "packages/drivers/openai/src",
+      "packages/drivers/openai-compat/src",
+      "packages/drivers/openclaw/src",
+      "packages/drivers/oxigraph/src",
+      "packages/drivers/pacer/src",
+      "packages/drivers/pglite/src",
+      "packages/drivers/phoenix/src",
+      "packages/drivers/postgres/src",
+      "packages/drivers/pretext/src",
+      "packages/drivers/rdf-canonize/src",
+      "packages/drivers/runpod/src"
+    ],
+    "maxTurns": 60,
+    "fileCount": 88
+  },
+  "withdrawals": [
+    {
+      "id": "phoenix-prompt-read-exists",
+      "declarationStart": 825,
+      "declarationEnd": 837,
+      "actualBooleanMembers": [
+        {
+          "name": "exists",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "promptVersionId: string|null"
+      ],
+      "reason": "S.Boolean exists plus nullable String id; only two fields. SDK projection at Phoenix.service.ts519-529 proves a presence derivation, not a second Boolean member. Genuine E3 relationship remains below recall net.",
+      "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+      "symbol": "PhoenixPromptReadResult",
+      "previousStatus": "designed",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "nlp-mcp-file-info-exists",
+      "declarationStart": 126,
+      "declarationEnd": 153,
+      "actualBooleanMembers": [
+        {
+          "name": "exists",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "lineCount?: NonNegativeInteger",
+        "sizeBytes?: NonNegativeInteger"
+      ],
+      "reason": "Two independently optional numeric statistics are not Boolean members; identity mapFields and codec statics add no fields. StreamingHandlers.ts176-190 writes absence/presence output and StreamingTools.ts1537-1544 publishes it on MCP. Wire exposure and the existing compatibility ruling do not waive the net.",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FileInfoOutput",
+      "previousStatus": "reviewed",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "openclaw-channel-probe-wire",
+      "declarationStart": 121,
+      "declarationEnd": 133,
+      "actualBooleanMembers": [
+        {
+          "name": "ok",
+          "type": "Option<boolean>"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "error: Option<string>"
+      ],
+      "reason": "Optional verdict is one member with absent/false/true states, not two flags. Nested probe envelope at141-152 and projection375-382 do not add sibling flags to this owner.",
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "symbol": "OpenclawChannelProbeWire",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "onepassword-cli-account-signed-in",
+      "declarationStart": 194,
+      "declarationEnd": 206,
+      "actualBooleanMembers": [
+        {
+          "name": "signedIn",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "account: Option<OnePasswordCliAccountName>"
+      ],
+      "reason": "Optional account text and one flag only. whoami writer117-120 is not a public restriction; test OnePasswordCli.service.test.ts75-83 explicitly constructs signed-out without account. No secret operation was run.",
+      "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.models.ts",
+      "symbol": "OnePasswordCliAccount",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "obs-request-status-result",
+      "declarationStart": 385,
+      "declarationEnd": 407,
+      "actualBooleanMembers": [
+        {
+          "name": "result",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "code: integer",
+        "comment: Option<string>"
+      ],
+      "reason": "Integer status code and optional comment are payloads, not flags. ObsProtocol.service.ts385-402 uses result for success/error and optional comment only for text. D2 semantics remain historical but net fails first.",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRequestStatus",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "obs-record-state-changed-data",
+      "declarationStart": 876,
+      "declarationEnd": 899,
+      "actualBooleanMembers": [
+        {
+          "name": "outputActive",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "outputPath: Option<string>",
+        "outputState: ObsOutputState"
+      ],
+      "reason": "Required state literal and optional path are not Boolean members. Wire decode remains unchanged; do not derive artificial paused/started flags from outputState.",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRecordStateChangedData",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "obs-record-state-changed-event",
+      "declarationStart": 923,
+      "declarationEnd": 951,
+      "actualBooleanMembers": [
+        {
+          "name": "outputActive",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "eventType: defaulted RecordStateChanged tag",
+        "outputPath: Option<string>",
+        "outputState: ObsOutputState"
+      ],
+      "reason": "Typed wrapper adds only a literal eventType, not another flag. ObsProtocol.service.ts364-379 copies the event data; Obs.service.ts86 matches event state separately.",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRecordStateChangedEvent",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-agent-turn-aborted-stop-reason",
+      "declarationStart": 732,
+      "declarationEnd": 759,
+      "actualBooleanMembers": [
+        {
+          "name": "aborted",
+          "type": "Option<boolean>"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "model: Option<string>",
+        "provider: Option<string>",
+        "runId: Option<string>",
+        "status: NonEmptyString",
+        "stopReason: Option<string>",
+        "text: Option<string>"
+      ],
+      "reason": "All remaining fields are text/status payloads. projectAgentTurn357-373 forwards optional aborted and stopReason independently. No flags borrowed from parent live-acceptance input.",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawAgentTurn",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-agent-meta-wire-aborted-stop-reason",
+      "declarationStart": 197,
+      "declarationEnd": 212,
+      "actualBooleanMembers": [
+        {
+          "name": "aborted",
+          "type": "Option<boolean>"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "agentMeta: Option<OpenclawAgentIdentityWire>",
+        "stopReason: Option<string>"
+      ],
+      "reason": "Wire metadata has one optional Boolean; nested provider/model identity is a separate payload. Neither metadata absence nor stopReason presence is a second Boolean member.",
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "symbol": "OpenclawAgentMetaWire",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r25-drivers-n-r-jsonl-output-truncated-errors",
+      "declarationStart": 241,
+      "declarationEnd": 272,
+      "actualBooleanMembers": [
+        {
+          "name": "truncated",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "count: NonNegativeInteger",
+        "errors?: readonly JsonlLineErrorOutput[]",
+        "records: readonly unknown[]"
+      ],
+      "reason": "The optional errors array and required count/records are payloads. Identity mapFields adds no flags. Capacity and parse-error observations may remain independent, but this whole output owner has only one Boolean.",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "JsonlOutput",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r25-drivers-n-r-openclaw-gateway-health-wire-ok-plugins",
+      "declarationStart": 98,
+      "declarationEnd": 113,
+      "actualBooleanMembers": [
+        {
+          "name": "ok",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "channels: Record<string,OpenclawChannelHealth>",
+        "plugins: Option<OpenclawGatewayPluginsWire>"
+      ],
+      "reason": "Channel map values are distinct nested owners; their flags cannot be flattened into gateway siblings. projectGatewayHealth339-355 preserves ok independently of plugin section.",
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "symbol": "OpenclawGatewayHealthWire",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r25-drivers-n-r-openclaw-secrets-reload-output-ok",
+      "declarationStart": 449,
+      "declarationEnd": 461,
+      "actualBooleanMembers": [
+        {
+          "name": "ok",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "warningCount: NonNegativeInt"
+      ],
+      "reason": "Required warningCount is numeric, not a zero/nonzero Boolean. CLI decodes this stdout at OpenclawCli.service.ts568; no external process executed in audit.",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawSecretsReloadOutput",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+      "declarationStart": 132,
+      "declarationEnd": 144,
+      "actualBooleanMembers": [
+        {
+          "name": "authenticated",
+          "type": "boolean (default true)"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "body: Option<unknown>",
+        "headers: Record<string,string>",
+        "method: RunpodHttpMethod",
+        "path: RunpodRawPath",
+        "query: Record<string,RunpodQueryValue>"
+      ],
+      "reason": "Complete raw request has no second flag. Body handling630-650 and token selection652-666 are independent policies; no query/header values are invented as schema Boolean fields.",
+      "file": "packages/drivers/runpod/src/Runpod.service.ts",
+      "symbol": "RunpodRawRequest",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r26-drivers-n-r-openclaw-gateway-health-ok-plugins",
+      "declarationStart": 634,
+      "declarationEnd": 652,
+      "actualBooleanMembers": [
+        {
+          "name": "ok",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "channels: Record<string,OpenclawChannelHealth>",
+        "pluginErrorCount: NonNegativeInt",
+        "pluginsLoaded: readonly string[]"
+      ],
+      "reason": "Nested channel flags are not gateway members; count and array are not Boolean members. Domain projection copies ok and independently derives plugin summaries at OpenclawCli.service.ts339-355.",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawGatewayHealth",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    },
+    {
+      "id": "r26-drivers-n-r-openclaw-telegram-group-intent",
+      "declarationStart": 910,
+      "declarationEnd": 922,
+      "actualBooleanMembers": [
+        {
+          "name": "requireMention",
+          "type": "boolean"
+        }
+      ],
+      "booleanMemberCount": 1,
+      "otherFields": [
+        "groupPolicy: Option<OpenclawTelegramGroupPolicy>"
+      ],
+      "reason": "Policy enum/presence is not a second Boolean. OpenclawRender.ts129-132 forwards mention and optional override separately; no broader Telegram flags are borrowed.",
+      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
+      "symbol": "OpenclawTelegramGroupIntent",
+      "previousStatus": "disqualified",
+      "disposition": "withdraw-from-live-census-out-of-net",
+      "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+      "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6"
+    }
+  ],
+  "notes": [
+    "Withdrawal is recall-net ineligibility, not a new D1 or D2 ruling. Preserve old rows in history; do not add a withdrawn status to inventory/v1.",
+    "OBS provisioning correction is separate and not included in these fifteen withdrawals."
+  ]
+}

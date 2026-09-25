@@ -1,0 +1,251 @@
+{
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "frozenMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "seedCount": 43,
+  "withdrawals": 15,
+  "qualifiedWithdrawals": 2,
+  "censusOnlyWithdrawals": 13,
+  "notWithdrawnByFullOwnerScopeCheck": 27,
+  "separateObsAudit": 1,
+  "sourceFiles": [
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sha256": "024369cc9269c9a24393704da6bce703761a8c9cea381079fb813b57c8f97eb0",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "sha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
+      "sha256": "851e229c9406d8ed6da18f4e9cb115d53c689dbdcb75d7f5d24b93911cb60f32",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "sha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/Obs.models.ts",
+      "sha256": "c03b059ce35aea46ed77d340f9b30ecbcc028e0801851b072b64b2fb7d4e2050",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/Obs.service.ts",
+      "sha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "sha256": "72668ac65ff9a96e59c57bd7e4d520657026d55bd382aa7edc67593ffd6fc702",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/obs/src/ObsProtocol.service.ts",
+      "sha256": "74d0f65d3452d09305e7e28a2ab97b6302df2277bedcbc90b59253dc362219d6",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.models.ts",
+      "sha256": "31ccd6e6d1c9d35801429c614f80c45294f426308c73aef13ffa4b57ea8f267f",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.service.ts",
+      "sha256": "1be07e9bed0debba7d0a06c5f3b4b1df0d8b0387425dfecbc149d0ade225fcce",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/onepassword-cli/test/OnePasswordCli.service.test.ts",
+      "sha256": "303b664de6b6378c17e7ee387fb0a9a71531e0fd1a33c866406810da41f89d0f",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "sha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "sha256": "eea86725c680356eaa38a1f66d7571ed64a944dd56197f68b688ec8ab8721052",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
+      "sha256": "55d176882446604984a36f1fd8e65db93ad6e24ddfd346781047a01f23c2c97c",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "sha256": "d29685834098895e62ff905bdbc94e9dc76fb3007c38033a6d24085845ebb053",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pcl.models.ts",
+      "sha256": "64696d135b14b304fb95d8708b17772f24b3928e78c77f41c1ffcc999ed11647",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+      "sha256": "d65c1297be41c3378bae043e6bda17d02f5a8e1bb8acf1067af597935c8bb8f2",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+      "sha256": "79c92d2c3fdaefefd1ce4f9b2296e29095b1dbbed176f1c0acbeeb638d9548e7",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "sha256": "6a1d8a7f99d35df77136260627e885181f7cd0f68f27d1d976acac8840dfebeb",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "sha256": "71f074e09ffa63c350b8c09a0224dc3ac53c2733cebe7234f9556706bc859e66",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "sha256": "9a0bec88800fe309d3f790976203b85d73191b66d2500d905570c5d4395b59be",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/pretext/src/browser.ts",
+      "sha256": "4948a0e12d38ba9eac882fa4c832ae99abd6b156f0ed41450a1f27b63e601e4f",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.service.ts",
+      "sha256": "689802362f0dd9e3ad8251d1b366cba24813fd10dbc8caeac52b4a2b3cf84392",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "sha256": "281c45bedcfb4e5ac06a95416a1143d6b169332f395166eb1a3df1559d8392f4",
+      "matchesFrozenHead": true,
+      "matchesFrozenMain": true
+    }
+  ],
+  "inputs": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/lane-map.json",
+      "sha256": "9e6a2fcf470d041b79acd07b6413259a2763284174ef0d5a96d399117f93e303"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-n-r.execution.json",
+      "sha256": "62fde28915fd3f444b0d51f37c844f82b2456da66d14eff3f4d8b9a9d698fe86"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-n-r.jsonl",
+      "sha256": "b635d8c6340a62868908aa13d20644414dca3d814f69edc667fb61bfb4dc390a"
+    },
+    {
+      "file": "goals/boolean-creep/designs/nlp-mcp-file-info-exists.md",
+      "sha256": "9502877d2d306436a651b1bfe327ed98d621829f1b3865bb4824adf42f20b7e5"
+    },
+    {
+      "file": "goals/boolean-creep/designs/phoenix-prompt-read-exists.md",
+      "sha256": "4879666f032b7ef166f889ef7c1d92a1c0e2cd574c30929d5a6808c5e16613bb"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "all-seed-ledger.json",
+      "sha256": "08cfcbd9d27203ff493ea331c3aeed5eb92d1b9edb422705a595c740625277a5"
+    },
+    {
+      "file": "design-archive-list.json",
+      "sha256": "af346408fa6b1a0098ace2d30f352596e2a329cc030487088128b1d2558f9531"
+    },
+    {
+      "file": "design-archives/nlp-mcp-file-info-exists.md",
+      "sha256": "9502877d2d306436a651b1bfe327ed98d621829f1b3865bb4824adf42f20b7e5"
+    },
+    {
+      "file": "design-archives/phoenix-prompt-read-exists.md",
+      "sha256": "4879666f032b7ef166f889ef7c1d92a1c0e2cd574c30929d5a6808c5e16613bb"
+    },
+    {
+      "file": "dispositions.md",
+      "sha256": "dae0f08339521c537d24b8af6b599c7dfade428267c9c789ac11087bfaffca2f"
+    },
+    {
+      "file": "historical-rows.jsonl",
+      "sha256": "9040db294b26bb2a0457ace86bf5235fe6302ce563ca53a348ddcaebc60dd039"
+    },
+    {
+      "file": "inventory-removals.json",
+      "sha256": "35d9eaa34ab058fdc9484c0638dd0c8f0a6365fa3af7e824776b22a8b8359279"
+    },
+    {
+      "file": "scope-dispositions.json",
+      "sha256": "c914d39bb157a0e3560c3781607ed19dddba27b7f6834af29a040bfd8cd2c775"
+    }
+  ],
+  "graft": {
+    "calls": 3,
+    "estimatedTokensSaved": 281134
+  },
+  "canonicalEdits": false,
+  "sourceEdits": false,
+  "runtimeTestsRun": false,
+  "independentP3Credit": false,
+  "dryRoundCredit": false
+}

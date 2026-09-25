@@ -154,6 +154,62 @@ const bareTaskName = (taskId: string): string =>
     O.getOrElse(() => taskId)
   );
 
+// Turbo spells a root task `//#lint:policy`; `//` is the graph's root node, not a workspace.
+const ROOT_TASK_PACKAGE = "//";
+
+const taskIdPackage = (taskId: string): O.Option<string> =>
+  pipe(
+    Str.split(taskId, "#"),
+    O.liftPredicate((parts) => A.length(parts) > 1),
+    O.flatMap(A.head),
+    O.filter(Str.isNonEmpty),
+    O.filter(P.not(Str.equivalence(ROOT_TASK_PACKAGE)))
+  );
+
+/**
+ * The workspace packages a lane digest's Turbo tasks belong to.
+ *
+ * **Details**
+ *
+ * A Turbo task id is `<package>#<task>`, and the root node spells itself `//`,
+ * so a lane whose only tasks are root tasks (`//#lint:policy`) has an empty
+ * package scope. The names are deduped and sorted so the scope is a stable set
+ * rather than an echo of Turbo's task ordering. Time-to-certainty ruling 68
+ * carries this onto the lane run as observation data: it is what the proof
+ * ledger's changed-package tripwire intersects with the attempt's changed
+ * packages, and it is never part of the reuse key.
+ *
+ * **Example** (Read the scope of a two-package lane)
+ *
+ * ```ts
+ * import { TurboLaneDigest, TurboLaneTaskHash, turboLaneDigestPackages } from "@beep/repo-cli/test/Quality"
+ *
+ * const digest = TurboLaneDigest.make({
+ *   digest: "ab12",
+ *   summaryIds: ["run"],
+ *   tasks: [
+ *     TurboLaneTaskHash.make({ taskId: "@beep/x#check", hash: "h1", cacheStatus: "HIT" }),
+ *     TurboLaneTaskHash.make({ taskId: "@beep/x#test", hash: "h2", cacheStatus: "MISS" }),
+ *     TurboLaneTaskHash.make({ taskId: "//#lint:policy", hash: "h3", cacheStatus: "HIT" })
+ *   ]
+ * })
+ * console.log(turboLaneDigestPackages(digest)) // [ '@beep/x' ]
+ * ```
+ *
+ * @param digest - A lane digest folded from one or more Turbo run summaries.
+ * @returns The sorted, deduped workspace names of the digest's non-root tasks.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const turboLaneDigestPackages = (digest: TurboLaneDigest): ReadonlyArray<string> =>
+  pipe(
+    digest.tasks,
+    A.map((task) => taskIdPackage(task.taskId)),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
 const taskPassed = (task: TurboSummaryTask): boolean =>
   task.cache.status === "HIT" || (task.execution?.exitCode ?? null) === 0;
 

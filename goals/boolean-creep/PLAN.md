@@ -1,5 +1,33 @@
 # PLAN — Boolean-Creep Eradication
 
+## R33 reconciliation, 2026-09-25
+
+R33 is finalized complete/wet on 2026-09-25. All 27 primary lanes completed on
+unchanged source and main; the separate supplemental audit covers the two
+ontology seed files omitted by the primary lane. The 50 raw records reconcile
+to one new qualified owner, ClipScan, and a corrected OBS E3 design.
+
+The inventory has 747 rows: 123 qualified and 624 disqualified, with zero
+applied. Complete-owner audits withdrew 51 records outside the Boolean recall
+net, including 19 prior qualifications. The unsupported image-orientation
+design is archived and its observation pair is retained as D1. Historical
+rows and designs remain available. See `data/r33-parent-integration-2026-09-25.json`
+and the R33 round verdict.
+
+The current dry streak remains zero. Two current-source dry rounds,
+replacement independent P3 review, packet ratification merged by Benjamin,
+implementation, and final exact-main closure remain required.
+
+
+R32 is finalized complete/wet on 2026-09-25: 27 successful lanes, 3,181 corpus
+files, source-stable execution, and all 53 raw records reconciled. Inventory is
+778 rows /142 qualified /636 disqualified (16 historical reviewed, 126 designed,
+zero applied). Three new owners are designed, including the owner-authorized
+CachePilotNonExecution grammar (64/27); ten qualified and eight disqualified
+historical rows were archived outside the recall net. See the R32 round verdict
+and `data/r32-parent-integration-2026-09-25.json`. Dry streak is zero; independent
+P3, packet ratification, implementation and final exact-main closure remain.
+
 Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 [`DECISIONS.md`](./DECISIONS.md).
 
@@ -19,16 +47,240 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 
 ## Current lane
 
+Earlier launch observation: R32 was verified active/running on source `f97a89bdfdc5bc71b69aab09b8d425591698d42a` / main `28a7045c9b353544a37733bdb46ffb2a0b6ca7bc`: 3,181 files, 27 lanes, four concurrent lanes. Admission and created-input verification passed. Two pre-controller network failures were retained. Results require terminal and semantic reconciliation; no dry or P3 credit. See `data/r32-launch-observation-2026-09-24.json`.
+
+2026-09-24 owner resolution: both contract questions are settled. Remote status is re-admitted at 12/5 with all 31 current fields; constitutional citation is resolved as a non-admitted finding because static exclusion supplies no E1–E4 evidence (36/21 finite domain retained). Current inventory: 757 rows /149 qualified /608 disqualified; zero applied. R31 is finalized wet, with no dry credit. Corrected R32 partition covers 3,181 files in 27 lanes, including 20 newly assigned files; read-only predecessor preflight passes. Exact-input launcher review/binding remains before launch. Receipts: data/owner-readmission-2026-09-24.json, data/r31-final-reconciliation-2026-09-24.json and data/r32-preparation-2026-09-24.json.
+
+2026-09-22 main synchronization: fast-forwarded to `02f8084070af1fe3329b4c769705394a9f33b9f1` with all 265 dirty packet paths preserved byte-for-byte; post-merge version sync passed. Receipt: `data/main-sync-02f808-2026-09-22.json`. The one changed corpus file is `Ci/LaneTimings.ts`; no inventory owner/evidence path changed, and all 437 explicitly recorded source hash bindings checked still match. Partition remains 3,141 files /27 lanes. This is mechanical continuity evidence, not current census or P3 approval. Inventory remains 756 rows /148 qualified /608 disqualified, zero applied; constitutional preamble and remote status contracts remain held.
+
+2026-09-22 tooling/tmpfs refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`: ecosystem call-kind and prepared publish retain 4/3; private tmpfs candidate and observation domains retain 312/13 and 72/14, preserving full payloads, sequential observations and fresh safety checks. Receipt: `data/tooling-tmpfs-refresh-2026-09-22.json`. Inventory remains 756 rows: 148 qualified (16 historical reviewed, 132 designed), 608 disqualified, zero applied. Only the remote-status contract hold remains in the dated subset; constitutional preamble remains a separate hold. The full current-source backlog remains uncounted. No census dry credit, independent P3 approval or implementation credit.
+
+2026-09-22 Yeet state refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`: readiness retains 4,608/1,025 including the new required-census writer; criterion-change events retain 4/2 with direct-schema and union compatibility obligations. Remote status is withdrawn into an explicit public-contract hold, not disqualified. Receipt: `data/yeet-state-refresh-2026-09-22.json`. Inventory is 756 rows: 148 qualified (16 historical reviewed, 132 designed), 608 disqualified, zero applied. Five dated-subset owners remain pending, including remote status; constitutional preamble is also held. No current census dry credit, independent P3 approval or implementation credit.
+
+2026-09-22 worker/Arch refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`: both evaluator source operations retain 8/3 and private folder resolution retains 4/3, with full raw-helper compatibility, validation ordering and adoption authorization preserved. Receipt: `data/worker-arch-refresh-2026-09-22.json`. Inventory remains 757 rows: 149 qualified (16 historical reviewed, 133 designed), 608 disqualified, zero applied. The dated subset has seven pending owners; the full current-source backlog remains uncounted. No census dry credit, independent P3 approval or implementation credit.
+
+The [packet-migration re-admission](./data/packet-migration-readmission-2026-09-22.json)
+implements Benjamin's contract ruling in the design: parked excludes backfill
+and output texts; backfill requires manifest and permits README. Explicit false,
+omission and empty String/Array payloads remain supported. Full cardinality is
+**24/12**. Inventory returns to **757 records /149 qualified /608 disqualified**,
+with **16 historical reviewed /133 designed /zero applied**. The dated subset
+now has **10 pending IDs**. Only constitutional preamble remains contract-held;
+full census, independent P3 and implementation remain pending.
+
+The [dispatch and spinner refresh](./data/dispatch-spinner-refresh-2026-09-22.json)
+updates CLI dispatch **4/3** and spinner state **8/4** with complete startup,
+callback, timer and teardown preservation. Packet migration is withdrawn into
+[an explicit contract hold](./data/goals-packet-migration-contract-hold-2026-09-22.md):
+its old **24/6** was producer coverage, not proved public legal cardinality.
+Inventory is **756 records /148 qualified /608 disqualified**, with **16 historical
+reviewed /132 designed /zero applied**. The dated subset has **11 pending IDs**,
+including the held packet-migration owner. Constitutional preamble is also held.
+Current census, independent P3 and implementation remain unfinished; withdrawal
+confers no disqualification or dry-round credit.
+
+The [desktop and bake refresh](./data/desktop-bake-refresh-2026-09-22.json)
+updates PGlite observations **4/3**, sidecar devtools **4/3**, and bake freshness
+**128/27**. It preserves existence-error fallback, configuration/error order,
+all report fields and current Effect rc.117 APIs. Bake freshness returns to
+`designed`; its wider decoder-acceptance question remains an independent P3
+obligation. Inventory remains **757 records /149 qualified /608 disqualified**,
+now **16 historical reviewed /133 designed /zero applied**. The dated subset
+has **13 pending IDs**. Current census, independent review and implementation
+remain unfinished; the constitutional preamble contract question stays open.
+
+The [citation and stream refresh](./data/citation-stream-refresh-2026-09-22.json)
+updates statutes range **4/3**, blank page **4/3** and stream text/finish state
+**8/6** at main `0be1f13d62`. It preserves unknown range endpoints, full citation
+payloads and nested CaseGroup codecs, plus open-text/finished and late-chunk
+stream behavior. The dated subset now has **16 pending IDs**. Inventory remains
+**757 records /149 qualified /608 disqualified**, with **17 historical reviewed
+/132 designed /zero applied**. Full current census, replacement independent P3
+and implementation are still pending; the constitutional preamble question
+remains open. Finite projections do not prove runtime codecs or service behavior.
+
+The [DMS and Vault refresh](./data/dms-vault-refresh-2026-09-22.json)
+corrects both connection owners to **12/7** while preserving unknown reasons;
+the DMS root remains independent. Vault push failure remains **4/3** and reuses
+the existing operation-status literals. Parent review rejected unsupported DMS
+reason/root restrictions before admission. Inventory remains **757 records /149
+qualified /608 disqualified**, now **17 historical reviewed /132 designed /zero
+applied**: Vault status awaits replacement independent review. The dated subset
+has **19 pending IDs**. Current census, independent P3 and implementation are
+unfinished. The constitutional preamble contract question remains open.
+
+Current partition observation at `0be1f13d62` assigns **3,141 files to 27 lanes**;
+[the receipt](./data/corpus-partition-0be1-2026-09-22.json) records the two added
+Cache source files. This is mechanical partition coverage only. No census lane
+was launched, and the R31 reconciliation/admission requirements still apply.
+
+The [SyncData, fleet epoch and retired-name refresh](./data/sync-fleet-retired-refresh-2026-09-22.json)
+updates three more designs at main `0be1f13d62`, preserving independent access
+policy, flat fleet JSON and retired-name mutation ordering. The dated subset now
+has **22 pending IDs**. The [bounded disqualified reconciliation](./data/disqualified-impact-reconciliation-2026-09-22.json)
+revalidates all 12 previously listed changed-path D1 records and repairs their
+locators. This does not cover new-source census. Inventory remains **757 records
+/149 qualified /608 disqualified**, with 18 historical reviewed, 131 designed
+and zero applied. Current census, independent P3 and implementation remain
+unfinished; the constitutional preamble contract question is still open.
+
+The [scaffold and worktree refresh](./data/scaffold-worktree-refresh-2026-09-22.json)
+updates ScaffoldShape **24/11**, TemplateContext **1,658,880/31**, and worktree
+removal **4/3** against main `0be1f13d62`. It preserves the current two-argument
+package-script helper, all template payloads, and worktree retirement exemption
+fields and safety rechecks. Inventory remains **757 records /149 qualified
+/608 disqualified**, with 18 historical reviewed, 131 designed and zero applied.
+The dated subset now has **25 pending IDs**. Current census, remaining source
+reconciliation and independent P3 are unfinished; the constitutional preamble
+contract question remains open. Finite projections are arithmetic evidence,
+not runtime implementation or generated-output equivalence proof.
+
+The [Supra and short-form admission](./data/supra-shortform-admission-2026-09-22.json)
+restores both complete inheritance owners as qualified/designed **8/5** each.
+All three inheritance designs preserve stable-ID-only and unknown provenance,
+independent footnote state, and their complete distinct recursive payloads.
+Inventory is **757 records /149 qualified /608 disqualified**, with 18 historical
+reviewed, 131 designed and zero applied. The dated subset remains **28 pending
+IDs**. Only the constitutional preamble owner remains contract-held; current
+census, remaining source reconciliation and independent P3 are unfinished.
+
+The [Id-citation admission](./data/id-citation-admission-2026-09-22.json)
+restores the full inheritance provenance owner as qualified/designed **8/5**.
+It preserves inherited-without-provenance, stable-ID-only, index-only and both
+provenance values, with independent footnote state. The stable-ID implication
+is a documented semantic inference; no existing runtime guard is claimed deleted.
+Inventory is **755 records /147 qualified /608 disqualified**, with 18 historical
+reviewed, 129 designed and zero applied. The dated subset remains **28 pending
+IDs**. Supra and short-form reconciliation remain, and the constitutional
+preamble question is unanswered. Independent P3 and implementation are pending.
+
+The [quality-task refresh](./data/quality-task-refresh-2026-09-22.json)
+completes all four qualified owner audits triggered by main `0be1f13d62`: coverage
+operation, test-lane selection, proof reuse and lane outcome. It preserves current
+cache-runtime routing and diagnostic JSON, separates reuse from outcome ownership,
+and corrects impossible mixed-mode test assumptions. Inventory remains 754 records
+/146 qualified /608 disqualified, zero applied. The dated subset now has **28
+pending IDs**; the two other refreshes are outside that subset. The remaining
+12 changed-path disqualified records and new-source census still need reconciliation.
+Benjamin authorized stable-ID-only inherited pincites; the Id proposal is saved
+privately for parent review, with Supra and short-form reconciliation still pending.
+The constitutional preamble question remains unanswered.
+
+The [person-reference revision](./data/person-reference-refresh-2026-09-22.json)
+completes the 28/7 Tier 2 design refresh at `0be1f13d62`. Schema decoding
+replaces the old coherence predicates at per-reference validation, and refined
+references flow to the report without a later duplicate conversion. Existing
+independent checks remain; six newly invalid tuples have explicitly documented
+error precedence. Inventory remains 754 /146 qualified /608 disqualified, zero
+applied. The dated subset now has **30 pending IDs**. New-main source impact,
+four citation holds, full census and independent P3 remain outstanding.
+
+Main was fast-forwarded again to `0be1f13d62` after PRs #1182 and #1187.
+The [source-impact receipt](./data/main-0be1f13d62-forward-2026-09-22.json)
+identifies 16 inventory records referencing changed files, including four
+qualified records. Those require source-impact reconciliation; the dated subset
+count is not a complete backlog. All six existing refresh receipt chains still
+verify, and the Files and Knowledge owner source files were not changed.
+
+The [classifier and score refresh](./data/classifier-score-refresh-2026-09-22.json)
+restores the Knowledge classifier as qualified/designed (16/6) under Benjamin's
+kind-specific grammar ruling and completes the Files score audit (16/6).
+Inventory is now **754 records /146 qualified /608 disqualified**, with
+18 historical reviewed, 128 designed and zero applied. The dated subset has
+**31 pending IDs**; the full current-source backlog remains uncounted.
+The [joint Knowledge sequencing](./data/knowledge-candidate-classifier-sequencing-2026-09-22.md)
+requires candidate and classifier migration together after P3/GATE 2. Four
+citation owners remain held. The person-reference refresh remains under
+revision until its plan actually replaces the old coherence checks.
+
+Main advanced through PR #1185 and was fast-forwarded to `f5e1d4c64f`.
+The [forward receipt](./data/main-f5e1d4c64f-forward-2026-09-22.json) records
+the four changed paths; refreshed owner sources and dependencies did not change.
+After the workstation restart, all five prior refresh receipt chains verified.
+Benjamin's kind-specific Knowledge grammar ruling survived on disk; its P2
+reconciliation resumes from fresh snapshots. This recovery adds no census or
+independent-review credit.
+
+The [file-read, receipt and M365 refresh](./data/read-receipt-m365-refresh-2026-09-22.json)
+completes three P2 audits at `f137beedb2`. It adds missing contained-read
+consumers, strengthens receipt identity and browser-QA obligations, and proves
+nine M365 wire projections with a bounded codec prototype. The saved September
+14 subset has **32 pending IDs**; the full current-source backlog remains
+uncounted. Inventory remains 753 /145 qualified /608 disqualified, zero applied.
+Benjamin resolved the Knowledge classifier contract: grammar flags must be
+kind-specific. Its qualification and P2 design are now being reconciled under
+the recorded decision; the separate citation questions remain open.
+
+The [responsive-image and timestamp refresh](./data/responsive-timestamp-refresh-2026-09-22.json)
+completes three P2 audits at `f137beedb2`: IMG (64/20), link (8/6), and
+PostgreSQL timestamp metadata (4/2). Designs preserve raw attribute presence,
+diagnostic ordering, timestamp identity validation and wrapper defaults.
+The dated September 14 subset now has **35 pending IDs**; the whole current-source
+backlog remains uncounted. Inventory remains 753 records /145 qualified /608
+disqualified, with zero applied. Independent review and implementation remain pending.
+
+The [HTML child-grammar refresh](./data/html-design-refresh-2026-09-22.json)
+completes select, description-list and datalist P2 audits at `f137beedb2`.
+All three retain 4/3 qualification and designed status. The designs now preserve
+filtered-element versus content-model distinctions, singular wrapped versus
+plural direct description groups, exact diagnostics and traversal order, and
+schema-helper construction. Bounded probes support existing behavior; they are
+not implementation or independent-review proof. The saved September 14 subset
+now has **38 pending IDs**. Inventory remains 753 /145 qualified /608
+disqualified, with zero applied. The full current-source backlog is uncounted.
+
+The [Knowledge/WebSocket adjudication](./data/knowledge-websocket-refresh-2026-09-22.json)
+at `f137beedb2` qualifies the private `RefCandidate` (512 representable /10
+producer tuples), refreshes the XAI WebSocket design, and withdraws the
+unsupported classifier-input D1 disposition into an explicit unresolved hold.
+The classifier's broader public contract is not narrowed by the candidate
+design. Current inventory is **753 records: 145 qualified, 608 disqualified;
+18 historical reviewed, 127 designed, zero applied**. The saved September 14
+subset at that checkpoint had **41 pending IDs**; the new Knowledge qualification is outside
+that subset. The [hold index](./data/open-owner-holds-2026-09-22.json) preserves
+all four citation owners and the new classifier owner as unresolved. No dry,
+independent-review, or implementation credit follows from this work.
+
+Main advanced again through PR #1180 and was fast-forwarded to
+`f137beedb270a071d4aa2ecc1dd52a9d233044d1`. The
+[delta receipt](./data/main-f137beedb2-forward-2026-09-22.json) verifies all
+26 recorded driver source/dependency input files unchanged and records the
+successful frozen install. Four corpus files changed; two existing D1 Knowledge
+rows reference changed paths; their adjudication is recorded above. Prior receipts retain
+their original source bindings; this delta supplies no census or review credit.
+
+**Resumed after save PR #1176 merged on 2026-09-22.** The continuation
+starts at `dc852c92efdd7d259e3983ec30cd19cb9b4fd65d`. The
+[current source-impact map](./data/source-impact-2026-09-22.json) partitions
+3,139 included files across 27 lanes. Compared with the September 14 resumption
+base, 110 included files changed; 72 inventory records, including 13 qualified
+records, reference changed owner/evidence paths. All recorded owner/evidence
+files still exist. These are mechanical comparisons, not semantic audits or a
+complete remaining-work count. They do not replace the 45 pending IDs in the
+[saved September 14 subset](./data/pr1176-backlog-reconciliation-2026-09-21.json).
+The two citation decisions remain unanswered; independent owner/design audits
+can proceed while final R31 reconciliation remains gated on those answers.
+
+The [September 22 driver refresh](./data/driver-design-refresh-2026-09-22.json)
+completes Phoenix prompt readback and the XAI/Venice SSE designs against that
+source. Their qualifications remain unchanged; corrected guard accounting,
+stream ordering/error behavior, runtime imports and schema-helper construction
+are now explicit. Their historical `reviewed` statuses reset to `designed`.
+At that checkpoint inventory was 754 records: 144 qualified (18 historical reviewed, 126 designed),
+610 disqualified, zero applied. This leaves **42 pending IDs in the saved
+September 14 subset**, not 42 in the complete current-source backlog. All three
+still require replacement independent review.
+
 The [2026-09-21 acknowledgement boundary correction](./data/ack-request-boundary-correction-2026-09-21.json)
 reclassifies the raw acknowledgement request as D1. The application already
 receives the existing tagged resolution; conflicting flags produce supported
-parser diagnostics. Current inventory is **754 records: 144 qualified and
+parser diagnostics. At that checkpoint the inventory was **754 records: 144 qualified and
 610 disqualified**, with **112 Tier 1 /32 Tier 2**, 21 historical reviewed,
 123 designed, and zero applied. The prior row and design are archived. No
 independent-review or implementation credit follows from this correction.
 
 
-**Resumed at Benjamin's instruction on 2026-09-14, after save PR #1069 merged.**
+**Historical resumption on 2026-09-14, after save PR #1069 merged.**
 The [handoff](./PAUSE.md) preserves the unanswered decisions and resume order.
 The new continuation branch starts from main
 `cecfb9f8e9a5f20d768666c65f89425349f7f9e6`. The prepared classifier resolves
@@ -632,13 +884,14 @@ jq . goals/boolean-creep/ops/manifest.json
 test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 ```
 
-## Blockers
+## Remaining gates
 
-Two citation decisions remain open, covering the four R31 owner holds in the
-[pause handoff](./PAUSE.md). The prior Grok HTTP 402 blocker cleared at
-the 2026-09-08 preflight. P2R still requires two complete current-source dry
-rounds and corrected designs. P3 and P4 remain evidence-gated on that census,
-the replacement zero-finding review, and the merged packet-only ratification
-PR. The working branch also contains four pre-existing committed
-`scratchpad/yeet-effect/` files; preserve them and isolate packet changes at
-publication so the ratification PR remains packet-only.
+R32 is finalized complete/wet with three new qualified owners and zero dry
+credit. Preserve its execution/finalization receipts. Synchronize the next
+source snapshot with main, reconcile any new source impact, then prepare R33
+admission against the updated inventory and complete designs. Do not restart
+the completed R32 controller. No owner question remains unanswered.
+
+P2R still requires two complete current-source dry rounds. P3 and P4 remain
+evidence-gated on census, replacement zero-finding review, and the merged
+packet-only ratification PR. No implementation or dry credit is claimed.

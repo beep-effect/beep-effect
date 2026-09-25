@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   CoreVocab,
   CurieFromIri,
@@ -9,13 +10,13 @@ import {
   makeCurieCodec,
   makeCurieFromIri,
 } from "@beep/identity";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { expectTypeOf } from "vitest";
 
 const decodeUnknownCurieFromIriOption = S.decodeUnknownOption(CurieFromIri);
 const encodeCurieFromIriOption = S.encodeOption(CurieFromIri);
@@ -49,24 +50,25 @@ describe("CURIE codec", () => {
     }
   });
 
-  it("property-checks round-trips over the entire registry", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.Constant(coreCurieCases)]), ([cases]) => {
-          for (const current of cases) {
-            const iri = expandOption(current.curie, CoreVocab);
+  // Arbitrary.Constant ignores size/seed: the 100-run floor intentionally repeats
+  // the same fixed registry list rather than exploring a generated domain.
+  it.prop(
+    "repeats deterministic round-trips over the entire registry",
+    [Arbitrary.Constant(coreCurieCases)],
+    ([cases]) => {
+      for (const current of cases) {
+        const iri = expandOption(current.curie, CoreVocab);
 
-            expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
-            if (O.isSome(iri)) {
-              expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
-            }
-          }
+        expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
+        if (O.isSome(iri)) {
+          expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
+        }
+      }
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "decodes and encodes known CURIEs",
@@ -76,19 +78,18 @@ describe("CURIE codec", () => {
     })
   );
 
-  it("round-trips generated CoreVocab IRIs through the schema codec", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(CurieFromIri)]), ([iri]) => {
-          const decoded = O.flatMap(encodeCurieFromIriOption(iri), decodeUnknownCurieFromIriOption);
+  it.prop(
+    "round-trips generated CoreVocab IRIs through the schema codec",
+    [Arbitrary.schema(CurieFromIri)],
+    ([iri]) => {
+      const decoded = O.flatMap(encodeCurieFromIriOption(iri), decodeUnknownCurieFromIriOption);
 
-          expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
+      expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "fails schema decoding for unknown prefixes and known-prefix unknown terms",

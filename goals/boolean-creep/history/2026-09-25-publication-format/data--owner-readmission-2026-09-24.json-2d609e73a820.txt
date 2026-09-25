@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-24-pre-owner-readmission.jsonl",
+    "sha256": "0d8fe9a739df128f764fc060643f486c1d98a68b37739a405401ee8848d7f88e"
+  },
+  "inventoryAfterSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "refreshedIds": [
+    "yeet-status-remote-check-phase"
+  ],
+  "unchangedRows": 756,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 133,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/yeet-status-remote-check-phase.md",
+      "sha256": "505e4871813ae998252dc5ba99e6f873e3f1d22014f13e18ef482c965f0265b0"
+    },
+    {
+      "file": "data/remote-owner-audit-2026-09-24.md",
+      "sha256": "df4b1701f8be6071d019d24ef5faadc3a447a6fe1bb913ddfa2f4fb43c0150ff"
+    },
+    {
+      "file": "data/remote-acceptance-2026-09-24.json",
+      "sha256": "a8e5c99ef1015a2913ed10bb03b0e0b38bd42356ad615b1a38708c1fe1bbd856"
+    }
+  ],
+  "verifiedHashBindings": 39,
+  "savedSubset": {
+    "sourceReceipt": "data/tooling-tmpfs-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "66400682f8cffbc8d98ee468ac864ff4d12b2847b6994265b2db6b79ab169bd6",
+    "previousPendingCount": 1,
+    "completedIds": [
+      "yeet-status-remote-check-phase"
+    ],
+    "pendingCount": 0,
+    "pendingIds": [],
+    "meaning": "Dated subset complete; full current-source census and review still required."
+  },
+  "constitutionalDisposition": "Resolved nonAdmittedSourceFinding: no E1-E4 source evidence; not D1/D2.",
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false
+}

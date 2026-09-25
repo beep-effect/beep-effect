@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-tooling-tmpfs-refresh.jsonl",
+    "sha256": "3d40765bc7eab25890f7a116fbb3ce9b77c7e704c4b0c09c660a767bbc1cc23f"
+  },
+  "inventoryAfterSha256": "0d8fe9a739df128f764fc060643f486c1d98a68b37739a405401ee8848d7f88e",
+  "refreshedIds": [
+    "r3-tooling-ecosystem-polarity-specifier-call",
+    "yeet-prepared-publish-commit",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+    "r28-cli-internal-root-tmpfs-stub-observations"
+  ],
+  "unchangedRows": 752,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 132,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+      "sha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r3-tooling-ecosystem-polarity-specifier-call.md",
+      "sha256": "b562191eba70acc6f03d273b075b4f2db950cb2ee0ceb89db99e3e77afb5bbe2"
+    },
+    {
+      "file": "designs/yeet-prepared-publish-commit.md",
+      "sha256": "f27d5c5f3710f76999e2cd7170174d3e5a987c24270e5effde6e7afb1231bec2"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-yeet-prepared-publish-commit.md",
+      "sha256": "6fe8ced45da3b458f9124058e5251252352a27c6c4f4b9a8b0fad82ad45f3ca8"
+    },
+    {
+      "file": "data/2026-09-22-yeet-prepared-publish-commit-projection.json",
+      "sha256": "a569ecc02c377713fb9735015b6bf9fcbda033a5b95bca01c82d77362f42f458"
+    },
+    {
+      "file": "designs/r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+      "sha256": "b12f8348c2ed6fb17f159066057328204a925d18c62b4a76e2c26b5e6bc36bab"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r28-cli-internal-root-tmpfs-discovered-classified-skip.md",
+      "sha256": "323df67e09161a10eb504e31f9ba27c1cea582990bd10da5a4dc83f5fcbdd4cf"
+    },
+    {
+      "file": "data/2026-09-22-r28-cli-internal-root-tmpfs-discovered-classified-skip-projection.json",
+      "sha256": "a32996fc9f0fb7562093ba5067452718aa983fefc09cc2df1b6dc5f6e5376f19"
+    },
+    {
+      "file": "designs/r28-cli-internal-root-tmpfs-stub-observations.md",
+      "sha256": "2dcb9cc87a7c9334c22e5f29acdee2c58e9f15f8fdbf9962eb568895a3d77566"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r28-cli-internal-root-tmpfs-stub-observations.md",
+      "sha256": "79fa0bde75e17565d048b5658578f7b67a8159886ca5cffb91ec99d2859afb0e"
+    },
+    {
+      "file": "data/2026-09-22-r28-cli-internal-root-tmpfs-stub-observations-projection.json",
+      "sha256": "7745bd76e5a7f4f0709b1e244bc0ba21b4f39d6508b46ce893b10ddc1ba83bfe"
+    }
+  ],
+  "verifiedHashBindings": 49,
+  "savedSubset": {
+    "sourceReceipt": "data/yeet-state-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "58105ab14215945ce3120b6ecd5f082d184677d7ebd07f65c29366db46ad5b92",
+    "previousPendingCount": 5,
+    "completedIds": [
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "yeet-prepared-publish-commit",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "pendingCount": 1,
+    "pendingIds": [
+      "yeet-status-remote-check-phase"
+    ],
+    "meaning": "Dated subset only; remote contract hold remains pending. Full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-24-pre-owner-readmission.jsonl"
+}
