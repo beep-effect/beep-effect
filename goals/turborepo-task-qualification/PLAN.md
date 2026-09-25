@@ -2073,3 +2073,31 @@ and package declarations were unchanged. The canary used its own local cache
 namespace, and host task configurations remained unchanged. This bounded
 experiment does not establish signed-remote acceptance, current-head runtime
 evidence, complete semantic input coverage or a qualified tuple.
+
+### Shared local cache across client transitions — 2026-09-25
+
+Five ordinary CLI executions share one disposable local cache namespace at
+frozen source `8f11af6e49`. Stable execution misses then hits; replacing the
+native executable with the retained canary misses then hits; restoring stable
+recovers its original hit. All source input maps are equal. Native summaries
+confirm the selected versions and a changed runtime digest; paired metadata
+is equal within each client. Both successful cache archives contain the same
+task log. See [the independent review](./research/ordinary-client-transition.json).
+
+This control demonstrates invalidation across the observed executable change,
+without relying on separate cache namespaces. It does not isolate the runtime
+digest contribution from Turbo's own hashing implementation. Signed remote
+acceptance, complete semantic coverage and qualification remain outstanding.
+
+### Main D1 integration — 2026-09-25
+
+Main commit `b2a654bc43` is merged. The cache baseline conflict preserves this
+branch's nine reviewed AI-sync dependency removals and incorporates main's
+repo-cli test/test:property inputs for the two D1 JSON fixtures.
+[The conflict review](./research/main-d1-baseline-integration.json) links both
+prior reviews. Source census attachments still describe their recorded
+revision and require refresh; the merge does not renew runtime evidence.
+
+Post-merge cache policy audit passes with zero findings and 1251 honestly
+unassessed computations. Packet, exploration, reflection and diff checks pass.
+Full local and hosted proof remain pending.

@@ -2154,3 +2154,13 @@ canary executable digest. Running it outside the repository reported
 verified `turboVersion` in every native summary. Preflight should distinguish
 executable identity from repository-local delegation; filename and direct
 version output alone do not prove the client that executed the task.
+
+### Publication preflight interruptions — 2026-09-25
+
+The canary evidence push succeeded, then the PR lookup failed with GitHub
+`API rate limit already exceeded`; local proof had not started. A separate
+verification job retained the proof obligation. The next evidence publication
+was correctly refused after main changed the cache baseline. A three-way JSON
+review preserved both independent projection changes and recorded their basis.
+An existing-PR lookup that can recover after rate-limit reset, plus structured
+baseline diffs, would reduce repeated publication and conflict-review work.

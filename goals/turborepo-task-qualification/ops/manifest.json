@@ -374,7 +374,9 @@
     "research/scoped-layer-repair.json",
     "research/current-census-handoff-review.json",
     "research/ordinary-real-invalidation.json",
-    "research/ordinary-real-canary.json"
+    "research/ordinary-real-canary.json",
+    "research/ordinary-client-transition.json",
+    "research/main-d1-baseline-integration.json"
   ],
   "agentLaunchers": [
     {
