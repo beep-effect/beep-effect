@@ -325,13 +325,29 @@ const instrumentContextCallback =
     return instrumentEffect(self(...args), taskFromContext(context), clock, propertyRun);
   };
 
+// `it.effect.each` passes the Vitest test context as the callback's last
+// argument (rc.118 `makeMethods` fixtures change). The async-local execution
+// store is still preferred, but a shared-worker coverage run (`isolate: false`
+// with one worker) can invoke the case callback outside that store, so the
+// trailing context is the fallback before reporting the context as missing.
+const isTestContext = (value: unknown): value is TestContext =>
+  typeof value === "object" &&
+  value !== null &&
+  "task" in value &&
+  typeof value.task === "object" &&
+  value.task !== null;
+
 const instrumentCaseCallback =
   <Args extends Array<unknown>, A, E, R>(self: (...args: Args) => Effect.Effect<A, E, R>, clock: Clock.Clock) =>
   (...args: Args): Effect.Effect<A, E | TestContextUnavailable | TestHang, R | Scope.Scope> => {
     const execution = testExecutionStorage.getStore();
-    return execution === undefined
-      ? missingTestContext("each")
-      : instrumentEffect(self(...args), taskFromContext(execution.context), clock);
+    if (execution !== undefined) {
+      return instrumentEffect(self(...args), taskFromContext(execution.context), clock);
+    }
+    const context = args[args.length - 1];
+    return isTestContext(context)
+      ? instrumentEffect(self(...args), taskFromContext(context), clock)
+      : missingTestContext("each");
   };
 
 const instrumentTest = <R>(test: Vitest.Test<R>, clock: Clock.Clock): Vitest.Test<R> =>
