@@ -1,0 +1,56 @@
+{
+  "package": "@beep/fc-runs",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T07:16:18.648000+00:00",
+  "totalMs": 443.205322265625,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "ms": 66.205322265625,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "fcRuns (one-round-loop P1 env-max helper) keeps the inline value as a floor and defaults to the helper's run count",
+      "ms": 64.59598299999999
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "fcRuns (one-round-loop P1 env-max helper) parses only positive-integer environment floors (fence 3 input guard)",
+      "ms": 64.38072299999999
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "fcRuns (one-round-loop P1 env-max helper) raises to the environment floor in a fresh process (boot snapshot)",
+      "ms": 64.35244
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "environment seed parsing reads the configured seed 42 without pinning property tests",
+      "ms": 64.343255
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "environment seed parsing reads the configured seed -7 without pinning property tests",
+      "ms": 64.33567400000004
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "environment seed parsing reads the configured seed 0 without pinning property tests",
+      "ms": 1.2052710000000388
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "environment seed parsing reads the configured seed 2.5 without pinning property tests",
+      "ms": 1.1610230000000001
+    },
+    {
+      "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
+      "testName": "environment seed parsing reads the configured seed invalid without pinning property tests",
+      "ms": 1.147250999999983
+    }
+  ]
+}
