@@ -274,6 +274,7 @@ class BeepLawAdapter(EnvAdapter):
         )
         self.repo_root = _find_repo_root(repo_root or None)
         self.target_model = ""
+        self.reasoning_effort = ""
         self.codex_exec_sandbox = str(codex_exec_sandbox or "workspace-write")
         self.dataloader = BeepLawDataLoader(
             split_dir=split_dir,
@@ -301,6 +302,7 @@ class BeepLawAdapter(EnvAdapter):
             os.environ.get("BEEP_SKILLOPT_STUB_SCORER")
         )
         self.target_model = str(cfg.get("target_model") or "")
+        self.reasoning_effort = str(cfg.get("reasoning_effort") or "")
         self.codex_exec_sandbox = str(
             cfg.get("codex_exec_sandbox") or self.codex_exec_sandbox or "workspace-write"
         )
@@ -367,6 +369,7 @@ class BeepLawAdapter(EnvAdapter):
             "--task",
             str(manifest_path),
             "--json",
+            *_scorer_model_args(self.target_model, self.reasoning_effort),
         ]
         proc = subprocess.run(
             cmd,
@@ -387,6 +390,16 @@ class BeepLawAdapter(EnvAdapter):
         if not isinstance(payload, dict) or "score" not in payload:
             raise RuntimeError(f"scorer JSON missing score: {payload!r}")
         return payload
+
+
+def _scorer_model_args(target_model: str, reasoning_effort: str) -> list[str]:
+    """Scorer provenance flags; empty config values add nothing, keeping the P5 command."""
+    args: list[str] = []
+    if target_model.strip():
+        args.extend(["--model", target_model.strip()])
+    if reasoning_effort.strip():
+        args.extend(["--reasoning-effort", reasoning_effort.strip()])
+    return args
 
 
 def _iter_source_files(scratch_dir: Path) -> list[Path]:

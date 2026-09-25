@@ -9,15 +9,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import {
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
+  AiMetricsConfigSnapshotInput,
   AiMetricsQualityGateStatus,
   aiMetricsDerivedDuckDbPath,
+  HarnessFingerprintInput,
   hashPublicTextSha256,
+  makeAiMetricsConfigSnapshot,
+  makeHarnessFingerprint,
   recordAiMetricsBenchmarkRun,
   upsertAiMetricsBenchmarkCase,
   withAiMetricsDuckDb,
 } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -32,7 +35,6 @@ import {
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalRecord");
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const recordNote = (report: AgentEffectivenessEvalScoreReport): string =>
   `skillopt scorer score=${report.score} completion=${report.breakdown.completion} schemaFirst=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`;
@@ -43,6 +45,8 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
   {
     dataRoot: S.String,
     elapsedMs: S.Finite,
+    modelId: S.Option(S.NonEmptyString),
+    reasoningEffort: S.Option(S.NonEmptyString),
     report: AgentEffectivenessEvalScoreReport,
     task: SkillOptTaskManifest,
     taskPath: S.String,
@@ -59,12 +63,20 @@ class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffect
  * `hashPublicTextSha256(task.prompt)` and the manifest path is retained as
  * `promptRef`.
  *
+ * `configSnapshotId` is `skillopt-scorer-<fingerprintId>`, where the
+ * fingerprint is the `HarnessFingerprint` of the repo's agent configuration
+ * snapshot plus the rollout model id and reasoning effort (`unknown` when not
+ * supplied). It changes when harness surfaces or the model change, never when
+ * the score changes.
+ *
  * @category services
  * @since 0.0.0
  */
 export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEvalScorer.record")(function* ({
   dataRoot,
   elapsedMs,
+  modelId,
+  reasoningEffort,
   report,
   task,
   taskPath,
@@ -89,13 +101,12 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
   const promptHash = yield* hashPublicTextSha256(task.prompt).pipe(
     Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to hash SkillOpt task prompt."))
   );
-  const configSnapshotPayload = yield* encodeJson({
-    scorer: "agent-effectiveness-evals-score/v1",
-    breakdown: report.breakdown,
-  }).pipe(Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to encode scorer config snapshot.")));
-  const configSnapshotDigest = yield* hashPublicTextSha256(configSnapshotPayload).pipe(
-    Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to hash scorer config snapshot."))
+  const configSnapshot = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot })).pipe(
+    Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to snapshot agent configuration."))
   );
+  const fingerprint = yield* makeHarnessFingerprint(
+    HarnessFingerprintInput.make({ modelId, reasoningEffort, snapshot: configSnapshot })
+  ).pipe(Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to derive harness fingerprint.")));
   const recordedAtEpochMillis = yield* Clock.currentTimeMillis;
 
   const run = yield* pipe(
@@ -116,7 +127,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
       recordAiMetricsBenchmarkRun(
         AiMetricsBenchmarkRunInput.make({
           benchmarkCaseId: task.id,
-          configSnapshotId: `skillopt-scorer-${configSnapshotDigest}`,
+          configSnapshotId: `skillopt-scorer-${fingerprint.fingerprintId}`,
           elapsedMs,
           note: O.some(recordNote(report)),
           passed: report.score >= 0.999,

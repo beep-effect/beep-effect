@@ -15,6 +15,7 @@ import {
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
+  hashPublicTextSha256,
   hookPulseDisarmSentinelPath,
   hookPulseDisarmWindowsPath,
   hookPulseLedgerDir,
@@ -145,6 +146,7 @@ const canonicalRowKeys = [
   "durationMs",
   "sessionEndReason",
   "isInterrupt",
+  "surface",
 ];
 
 // Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
@@ -797,6 +799,68 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         expect(decoded.sessionId).toBe(yield* privateDigest(session));
         expect(decoded.cwd).toBe(yield* privateDigest(baseFields.cwd));
         expect(decoded.transcriptPath).toEqual(O.some(yield* privateDigest(baseFields.transcript_path)));
+      })
+    )
+  );
+
+  it.effect("hashes context surfaces to the digests the TypeScript codec derives", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // The shell `surface_program` and `hookPulseContextSurfaceKey` are two
+        // implementations of one classification. Each payload runs through both,
+        // and each digest is also pinned to its expected key, so a rule that
+        // drifted on both sides the same way still fails. The skill name and the
+        // hook file name are the canary: only their digest may reach the row.
+        // The fixture cwd does not exist on disk, so the writer's root walk
+        // finds nothing and falls back to cwd, which is also the codec default.
+        const surfacePayload = (toolName: string, toolInput: object) => ({
+          ...baseFields,
+          duration_ms: 3,
+          hook_event_name: HookPulseEvent.Enum.PostToolUse,
+          permission_mode: "default",
+          tool_input: toolInput,
+          tool_name: toolName,
+          tool_response: { stdout: CANARY },
+          tool_use_id: "toolu_writer_surface",
+        });
+        const cases = [
+          { payload: surfacePayload("Skill", { skill: `/${CANARY}` }), key: O.some(`skill:${CANARY}`) },
+          { payload: surfacePayload("mcp__notion__search", { query: CANARY }), key: O.some("mcp-server:notion") },
+          {
+            payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh` }),
+            key: O.some(`hook:${CANARY}.sh`),
+          },
+          { payload: surfacePayload("Read", { file_path: "packages/foo/src/x.ts" }), key: O.none<string>() },
+        ];
+
+        yield* Effect.forEach(
+          cases,
+          Effect.fnUntraced(function* ({ payload, key }) {
+            const run = yield* runWriter(yield* encodeJson(payload));
+            const row = expectSingleRow(run);
+            const writerRow = yield* decodeHookPulseRow(row);
+            const codecRow = yield* withSaltEnv(
+              {},
+              decodeHookPulseFromRaw({
+                event: payload,
+                notifierRev: "log-only-0",
+                instrumentClass: HookPulseInstrumentClass.Enum.production,
+                agentKind: HookPulseAgentKind.Enum["claude-code"],
+                evidenceTier: HookPulseEvidenceTier.Enum.derived,
+                ts: "2026-08-01T06:40:07.000Z",
+              })
+            );
+            const expected = yield* O.match(key, {
+              onNone: () => Effect.succeedNone,
+              onSome: (value) => Effect.asSome(hashPublicTextSha256(value)),
+            });
+
+            expect(writerRow.surface).toEqual(expected);
+            expect(codecRow.surface).toEqual(expected);
+            expect(row).not.toContain(CANARY);
+          }),
+          { discard: true }
+        );
       })
     )
   );

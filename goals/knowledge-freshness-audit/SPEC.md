@@ -97,6 +97,13 @@ A regenerable reverse index invalidates dependent determinations when claims,
 evidence, authority rules, or evaluator versions change. Preserve old receipts
 as history and recheck mutable dependencies before repair publication.
 
+Cross-reference (2026-09-25): the
+[harness-evidence-ledger](../harness-evidence-ledger/SPEC.md) goal applies the
+same rule to harness edits. Its `HarnessFingerprint` (model id, reasoning
+effort, and a hash of always-loaded harness surfaces) expires prior evidence
+when the evaluator, prompt, or model changes. The two expiry rules must not
+diverge; a change to either updates both packets.
+
 Separate evidence judgment from temporal applicability and action. Missing
 sources, partial extraction, contradictory evidence, and unrun checks remain
 visible unresolved obligations. Models may propose classifications, not grant

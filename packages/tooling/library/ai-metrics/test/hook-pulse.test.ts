@@ -13,6 +13,7 @@ import {
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
+  hashPublicTextSha256,
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
@@ -60,6 +61,53 @@ const autoApprovedPostToolUse = rawInput("2026-08-01T08:39:56.000Z", {
 });
 
 const autoApprovedSequence = [autoApprovedPreToolUse, autoApprovedPostToolUse];
+
+// Context-surface fixtures (goals/harness-evidence-ledger, D8). The raw skill
+// name and paths below must never appear in a row; only the unsalted digest of
+// `${kind}:${name}` may.
+const surfaceSkillName = "surface-canary-skill";
+
+const postToolUseSkill = rawInput("2026-08-01T08:50:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "Skill",
+  tool_input: { skill: `/${surfaceSkillName}`, args: "content the ledger must never keep" },
+});
+
+const preToolUseSkill = rawInput("2026-08-01T08:49:59.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PreToolUse,
+  tool_name: "Skill",
+  tool_input: { skill: surfaceSkillName },
+});
+
+const postToolUseMcp = rawInput("2026-08-01T08:50:01.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "mcp__notion__search",
+  tool_input: { query: "content the ledger must never keep" },
+});
+
+const postToolUseSourceRead = rawInput("2026-08-01T08:50:02.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "Read",
+  tool_input: { file_path: "packages/foo/src/x.ts" },
+});
+
+// Absolute path, cwd in a subdirectory, root stamped by the writer: the path is
+// classified relative to the repo root, not to cwd.
+const postToolUseHookEdit = {
+  ...rawInput("2026-08-01T08:50:03.000Z", {
+    hook_event_name: HookPulseEvent.Enum.PostToolUse,
+    tool_name: "Edit",
+    cwd: `${baseRawEventFixture.cwd}/packages/tooling`,
+    tool_input: { file_path: `${baseRawEventFixture.cwd}/.claude/hooks/law-pulse.sh` },
+  }),
+  repoRoot: baseRawEventFixture.cwd,
+};
+
+const postToolUseClaudeMdWrite = rawInput("2026-08-01T08:50:04.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "Write",
+  tool_input: { file_path: "./CLAUDE.md" },
+});
 
 const approvedToolPreToolUse = rawInput("2026-08-01T08:40:11.000Z", {
   session_id: "ccd-session-tool-approved",
@@ -832,7 +880,9 @@ describe("HookPulseV1", () => {
       expect(rawEvent).not.toHaveProperty("permission_suggestions");
       expect(rawEvent).not.toHaveProperty("message");
       expect(rawEvent).not.toHaveProperty("prompt");
-      expect(rawEvent).not.toHaveProperty("tool_input");
+      // `tool_input` survives only as its surface-locating projection; the
+      // command inside it does not.
+      expect(O.getOrThrow(rawEvent.tool_input)).not.toHaveProperty("command");
       expect(rawEvent).not.toHaveProperty("tool_response");
       expect(rawEvent).not.toHaveProperty("last_assistant_message");
       expect(canonical.waitReason).toBe("tool-permission");
@@ -1082,4 +1132,67 @@ describe("HookPulseV1", () => {
     expect(decoded).toBeInstanceOf(HookPulseV1);
     expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);
   });
+  it.effect(
+    "derives the unsalted context-surface digest on PostToolUse",
+    Effect.fn("HookPulseTest.derivesContextSurface")(function* () {
+      const decoded = yield* withSaltEnv(
+        {},
+        Effect.all(
+          {
+            skill: decodeHookPulseFromRaw(postToolUseSkill),
+            mcp: decodeHookPulseFromRaw(postToolUseMcp),
+            sourceRead: decodeHookPulseFromRaw(postToolUseSourceRead),
+            hookEdit: decodeHookPulseFromRaw(postToolUseHookEdit),
+            claudeMd: decodeHookPulseFromRaw(postToolUseClaudeMdWrite),
+            preToolUse: decodeHookPulseFromRaw(preToolUseSkill),
+          },
+          { concurrency: 1 }
+        )
+      );
+      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded.skill));
+
+      // The leading slash of a slash-command invocation is not part of the name.
+      expect(decoded.skill.surface).toEqual(O.some(yield* hashPublicTextSha256(`skill:${surfaceSkillName}`)));
+      expect(decoded.mcp.surface).toEqual(O.some(yield* hashPublicTextSha256("mcp-server:notion")));
+      expect(decoded.sourceRead.surface).toEqual(O.none());
+      expect(decoded.hookEdit.surface).toEqual(O.some(yield* hashPublicTextSha256("hook:law-pulse.sh")));
+      // CLAUDE.md is a symlink to AGENTS.md: one surface, one digest.
+      expect(decoded.claudeMd.surface).toEqual(O.some(yield* hashPublicTextSha256("agents-md:AGENTS.md")));
+      // PostToolUse owns the field, so the same skill call's PreToolUse carries none.
+      expect(decoded.preToolUse.surface).toEqual(O.none());
+      expect(serialized).not.toContain(surfaceSkillName);
+    })
+  );
+
+  it.effect(
+    "rejects surface on a non-PostToolUse event",
+    Effect.fn("HookPulseTest.rejectsMisownedSurface")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPreToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          surface: yield* hashPublicTextSha256(`skill:${surfaceSkillName}`),
+        })
+      );
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("surface");
+      expect(failure.message).toContain("PostToolUse");
+      expect(failure.message).toContain("PreToolUse");
+    })
+  );
+
+  it.effect(
+    "round-trips a surface digest through the raw-event codec as a writer stamp",
+    Effect.fn("HookPulseTest.roundTripsSurface")(function* () {
+      const decoded = yield* withSaltEnv({}, decodeHookPulseFromRaw(postToolUseSkill));
+      const raw = yield* encodeHookPulseToRaw(decoded);
+      const roundTripped = yield* decodeHookPulseFromRaw(raw);
+
+      expect(raw.surface).toBe(O.getOrThrow(decoded.surface));
+      expect(raw.event.tool_input).toBeUndefined();
+      expect(hookPulseEquivalent(roundTripped, decoded)).toBe(true);
+    })
+  );
 });

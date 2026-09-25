@@ -4,15 +4,22 @@ import {
   aggregateLawFraction,
   buildAgentEffectivenessEvalScoreReport,
   encodeAgentEffectivenessEvalScoreReportJson,
+  evaluateLaw,
   evaluateSkillOptCompletion,
   lawComponentScore,
   SkillOptTaskManifest,
 } from "@beep/repo-cli/test/AgentEffectiveness";
 import { A } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { Effect, FileSystem, Layer, Path, pipe, Ref, Sink, Stream } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { AgentEffectivenessEvalViolation } from "@beep/repo-cli/test/AgentEffectiveness";
 
 const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
@@ -61,6 +68,37 @@ const makeTask = (completion: unknown) =>
     completion,
     weights: { completion: 0.5, law: 0.5 },
   });
+
+const cleanHandle = ChildProcessSpawner.makeHandle({
+  all: Stream.empty,
+  stdout: Stream.empty,
+  stderr: Stream.empty,
+  stdin: Sink.drain,
+  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+  getInputFd: () => Sink.drain,
+  getOutputFd: () => Stream.empty,
+  isRunning: Effect.succeed(false),
+  kill: () => Effect.void,
+  pid: ChildProcessSpawner.ProcessId(1),
+  unref: Effect.succeed(Effect.void),
+});
+
+const recordingLawLayer = (spawned: Ref.Ref<ReadonlyArray<string>>) =>
+  Layer.mergeAll(
+    BunCrypto.layer,
+    NodeFileSystem.layer,
+    NodePath.layer,
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make((command) =>
+        ChildProcess.isStandardCommand(command)
+          ? Ref.update(spawned, A.append(pipe(command.command, Str.split("/"), A.lastNonEmpty))).pipe(
+              Effect.as(cleanHandle)
+            )
+          : Effect.die("unexpected piped law-lane command")
+      )
+    )
+  );
 
 const emptyLaw = {
   schemaFirst: A.empty<AgentEffectivenessEvalViolation>(),
@@ -159,5 +197,25 @@ describe("agent-effectiveness eval scorer", () => {
         );
       })
     )
+  );
+
+  it.effect("returns all three law lane results and runs tsgo after the read-only lanes", () =>
+    Effect.gen(function* () {
+      const spawned = yield* Ref.make<ReadonlyArray<string>>([]);
+      const law = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixtureDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeText(path.join(fixtureDir, "src", "Contact.ts"), "export const contact = 1;\n");
+          return yield* evaluateLaw(fixtureDir, "/repo", ["src/Contact.ts"]);
+        })
+      ).pipe(Effect.provide(recordingLawLayer(spawned)));
+      const commands = yield* Ref.get(spawned);
+
+      expect(law).toEqual(emptyLaw);
+      expect(A.sort(commands, Str.Order)).toEqual(["biome", "bun", "tsgo"]);
+      expect(A.last(commands)).toEqual(O.some("tsgo"));
+    })
   );
 });

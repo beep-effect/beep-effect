@@ -17,8 +17,9 @@ change agent behavior. Instrument it; prune empirically instead of by taste.
 
 ## Next Open Question
 
-Resume when knowledge-surface-automation Workstream C ships pruning-proposal
-machinery. Decide the A/B guidance-degraded-session question at unpark.
+Resume when `goals/harness-evidence-ledger` ships
+`bun run beep harness-ledger prune-proposals`. Decide the A/B
+guidance-degraded-session question at unpark.
 
 ## Read This First
 
@@ -26,6 +27,9 @@ machinery. Decide the A/B guidance-degraded-session question at unpark.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
 
 ## Trail
+
+- 2026-09-25: resume trigger moved to `goals/harness-evidence-ledger`
+  shipping `prune-proposals` (see `DECISIONS.md`). Still parked.
 
 - 2026-08-13: parked the empirical arm. Resume when
   knowledge-surface-automation Workstream C ships pruning-proposal machinery;
