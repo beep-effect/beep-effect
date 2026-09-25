@@ -14,6 +14,7 @@ import {
   MutableRef,
   Number as Num,
   Option as O,
+  Predicate as P,
   pipe,
   Scope,
 } from "effect";
@@ -330,12 +331,7 @@ const instrumentContextCallback =
 // store is still preferred, but a shared-worker coverage run (`isolate: false`
 // with one worker) can invoke the case callback outside that store, so the
 // trailing context is the fallback before reporting the context as missing.
-const isTestContext = (value: unknown): value is TestContext =>
-  typeof value === "object" &&
-  value !== null &&
-  "task" in value &&
-  typeof value.task === "object" &&
-  value.task !== null;
+const isTestContext = (value: unknown): value is TestContext => P.hasProperty(value, "task") && P.isObject(value.task);
 
 const instrumentCaseCallback =
   <Args extends Array<unknown>, A, E, R>(self: (...args: Args) => Effect.Effect<A, E, R>, clock: Clock.Clock) =>

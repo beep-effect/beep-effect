@@ -1,13 +1,14 @@
 import { fcRuns } from "@beep/fc-runs";
 import { it, TestContextUnavailable, TestHang } from "@beep/test-runner";
-import { makeIt } from "@beep/test-runner/test/Vitest";
-import { afterAll, expect, expectTypeOf, TestRunner, it as upstreamIt } from "@effect/vitest";
+import { instrumentMethods, makeIt } from "@beep/test-runner/test/Vitest";
+import { afterAll, beforeAll, expect, expectTypeOf, TestRunner, it as upstreamIt } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Clock, Config, ConfigProvider, Context, Duration, Effect, Layer, Logger, Option as O, Ref } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import type { Vitest } from "@effect/vitest";
+import type { Scope } from "effect";
 
 class Probe extends Context.Service<Probe, { readonly value: number }>()("@beep/test-runner/test/Vitest.test/Probe") {}
 
@@ -88,6 +89,50 @@ it.effect.each([1, 2])("passes each callback only its concrete case: %s", (value
     assertTrue(value === 1 || value === 2);
   })
 );
+
+// The instrumented each callback prefers the async-local execution store and
+// otherwise trusts the trailing Vitest context that `it.effect.each` passes.
+// `beforeAll` runs outside `aroundEach`, so the store is absent there.
+type CapturedCase = (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown, unknown, Scope.Scope>;
+let capturedCase = O.none<CapturedCase>();
+const capturingMethods = {
+  effect: {
+    each: () => (_name: string, self: CapturedCase) => {
+      capturedCase = O.some(self);
+    },
+  },
+} as unknown as Vitest.Methods<never>;
+instrumentMethods(capturingMethods, undefined).effect.each([21])("captures the instrumented case callback", ((
+  value: number
+) => Effect.succeed(value * 2)) as never);
+const runCapturedCase = (...args: ReadonlyArray<unknown>) =>
+  O.match(capturedCase, {
+    onNone: () => Effect.die("each registration did not capture its callback"),
+    onSome: (captured) => Effect.scoped(captured(...args)),
+  });
+let trailingContextValue: unknown;
+let bareRowError: unknown;
+let malformedContextError: unknown;
+beforeAll(async () => {
+  trailingContextValue = await Effect.runPromise(
+    runCapturedCase(21, {
+      task: { fullTestName: "outside > trailing context", name: "trailing context", timeout: 1_000 },
+    })
+  );
+  bareRowError = await Effect.runPromise(Effect.flip(runCapturedCase(21)));
+  malformedContextError = await Effect.runPromise(Effect.flip(runCapturedCase(21, { task: 1 })));
+});
+
+it("falls back to the trailing test context outside the execution store", () => {
+  expect(trailingContextValue).toBe(42);
+});
+
+it("reports a missing each context without a usable trailing context", () => {
+  for (const error of [bareRowError, malformedContextError]) {
+    assertTrue(TestContextUnavailable.is(error));
+    if (TestContextUnavailable.is(error)) expect(error.method).toBe("each");
+  }
+});
 
 it.effect.prop(
   "preserves generated property values and TestContext",

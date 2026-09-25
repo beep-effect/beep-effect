@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { instrumentMethods as instrumentMethodsInternal } from "../internal/VitestInstrumentation.ts";
 import { makeVitestRuntime } from "../internal/VitestRuntime.ts";
 import type { Clock } from "effect";
 
@@ -44,3 +45,35 @@ import type { Clock } from "effect";
  * @since 0.0.0
  */
 export const makeIt = (clock: Clock.Clock) => makeVitestRuntime(clock).it;
+
+/**
+ * Instruments an arbitrary Effect Vitest methods object with the package
+ * watchdog and context wiring.
+ *
+ * **Details**
+ *
+ * Tests hand in a fake methods object to capture the wrapped callbacks the
+ * instrumentation registers, then drive those callbacks directly, for example
+ * outside the async-local execution store. `undefined` selects the live clock.
+ *
+ * **Example** (Capture the instrumented each callback)
+ *
+ * ```ts
+ * import { instrumentMethods } from "@beep/test-runner/test/Vitest";
+ * import * as Effect from "effect/Effect";
+ * import type { Vitest } from "@effect/vitest";
+ *
+ * let captured: ((...args: ReadonlyArray<unknown>) => unknown) | undefined;
+ * const methods = {
+ *   effect: { each: () => (_name: string, self: typeof captured) => void (captured = self) },
+ * } as unknown as Vitest.Methods<never>;
+ * instrumentMethods(methods, undefined).effect.each([1])("captured", (() => Effect.void) as never);
+ * ```
+ *
+ * @param methods - Effect Vitest methods to wrap.
+ * @param clock - Watchdog clock, or `undefined` for the live clock.
+ * @returns The instrumented methods object.
+ * @category testing
+ * @since 0.0.0
+ */
+export const instrumentMethods = instrumentMethodsInternal;
