@@ -14,7 +14,7 @@ import {
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
 import { provideScopedLayer } from "@beep/test-utils";
-import { A, O } from "@beep/utils";
+import { A, O, P } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, Stream } from "effect";
 import { ChildProcess } from "effect/process";
@@ -401,7 +401,25 @@ esac
     yield* writeExecutable(f.path.join(f.bin, "bun"), "#!/bin/sh\nexit 0\n");
     const cli = yield* f.path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
     const ambientPath = yield* Config.String("PATH");
-    const bun = process.execPath;
+    // The CLI entry reads `Bun.argv`, so the child must be Bun even when this
+    // suite runs under Node (the coverage lane); only real Bun sets `process.versions.bun`. Resolve a real binary from the
+    // ambient PATH before the fixture's `bun` shim is prepended; a version
+    // manager shim would consult the fixture's empty HOME and fail.
+    const bun = P.isUndefined(process.versions.bun)
+      ? yield* Effect.findFirst(
+          A.map(ambientPath.split(":"), (dir) => f.path.join(dir, "bun")),
+          (candidate) =>
+            f.fs
+              .exists(candidate)
+              .pipe(
+                Effect.flatMap((exists) =>
+                  exists
+                    ? f.fs.realPath(candidate).pipe(Effect.map((real) => f.path.basename(real) === "bun"))
+                    : Effect.succeed(false)
+                )
+              )
+        ).pipe(Effect.flatMap(O.match({ onNone: () => Effect.die("no bun binary on PATH"), onSome: Effect.succeed })))
+      : process.execPath;
     const handle = yield* ChildProcess.make(bun, [cli, "worktree", "new", "topic"], {
       cwd: f.owner,
       env: { HOME: f.home, PATH: `${f.bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: f.root },
