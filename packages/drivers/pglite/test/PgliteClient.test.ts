@@ -68,21 +68,21 @@ describe("PgliteError", () => {
 describe("PgliteClient layer lifecycle", () => {
   it.effect(
     "closes the managed PGlite instance when the layer scope closes",
-    () =>
-      Effect.scopedWith((scope) =>
-        Effect.gen(function* () {
-          yield* Effect.log("PGlite phase: acquire in-process database");
-          const context = yield* Layer.buildWithScope(makeLayer(), scope);
-          const client = Context.get(context, PgliteClient);
+    Effect.fnUntraced(function* () {
+      // `Scope.close` takes a `Scope.Closeable`; `Effect.scopedWith` only hands
+      // out the read-only `Scope`, so the test owns its scope explicitly.
+      const scope = yield* Scope.make();
+      yield* Effect.log("PGlite phase: acquire in-process database");
+      const context = yield* Layer.buildWithScope(makeLayer(), scope);
+      const client = Context.get(context, PgliteClient);
 
-          yield* Effect.log("PGlite phase: explicitly close database scope");
-          yield* Scope.close(scope, Exit.void);
+      yield* Effect.log("PGlite phase: explicitly close database scope");
+      yield* Scope.close(scope, Exit.void);
 
-          yield* Effect.log("PGlite phase: verify query failure after close");
-          const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
-          expect(queryAfterClose._tag).toBe("Failure");
-        })
-      ),
+      yield* Effect.log("PGlite phase: verify query failure after close");
+      const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
+      expect(queryAfterClose._tag).toBe("Failure");
+    }),
     { timeout: 90_000 }
   );
 });
