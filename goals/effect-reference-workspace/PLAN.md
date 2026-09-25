@@ -21,8 +21,8 @@ Before running move or verification commands, set these shell variables from the
 manifest and the frozen reports. They are path parameters, not new configuration
 keys. Keep the exact R1/R6 layout and R7 fleet scope:
 
-- `refs_root`: resolved `rootDefault` from `scripts/references.json`, or the
-  `BEEP_REFERENCES_ROOT` override. Expand the manifest's literal home token against
+- `refs_root`: resolved `rootDefault` from the manifest introduced in S1 below,
+  or the `BEEP_REFERENCES_ROOT` override. Expand the manifest's literal home token against
   the operator's home directory; do not use `eval`.
 - `refs_old_effect` and `refs_old_tsgo`: the original clone roots recorded in
   `research/2026-09-25-01-current-state.md`.
