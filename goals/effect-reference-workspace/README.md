@@ -41,12 +41,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, slice S1 (manifest + provisioner) not started. Next concrete action: a Codex
-`gpt-6-astra` medium lane implements S1 from `PLAN.md` in this worktree.
+P2 Verify. S1–S3 landed on `feat/refs-workspace-impl` (Codex astra-medium lanes) and S4 ran on
+2026-09-25 with the operator present: clones moved, workspace built and checked, fleet relinked,
+`beep-refs-refresh` timer installed and seeded once. Next concrete action: confirm the deep tier
+from `~/.local/state/beep/refs/last-refresh.json` the morning of 2026-09-26, then re-point the
+timer owner to `beep-effect0` after the PR merges (see `history/2026-09-25-s4-move.md`).
 
 ## Latest Evidence
 
-Not started. P0 evidence is the three research files above.
+[`history/2026-09-25-s4-move.md`](./history/2026-09-25-s4-move.md): move, worktree repair, structural
+build (`effect/` 19937 nodes / 1679 cards, `effect-tsgo/` 5908 nodes / 1153 cards, `graft check` OK),
+fleet relink (140 of 152 checkouts fully linked; 12 vendored-directory holdouts listed), timer
+installed for 03:30, seed started 07:39 CDT. Federated and narrowed `graft ask` verified through
+`.repos/effect-workspace` and `.repos/effect`; `beep worktree new` probe linked all three.
 
 ## Notes
 

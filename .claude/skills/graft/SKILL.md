@@ -151,6 +151,16 @@ available; the guidance is identical.
 
 ## Repo notes (beep-effect)
 
+- Route Effect API questions to `graft ask "<q>" .repos/effect-workspace` to
+  federate across `effect` and `effect-tsgo`, or `graft ask "<q>" .repos/effect`
+  to narrow to Effect. `.repos/effect` and `.repos/effect-tsgo` point to the
+  child clones; `.repos/effect-workspace` points to their parent at
+  `$HOME/YeeBois/references/effect`. `scripts/setup-effect-ref.sh` provisions these
+  links from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the root.
+  The `beep-refs-refresh` timer runs nightly at 03:30 with `claude-opus-5`
+  through CLIProxyAPI, reusing `$HOME/.config/beep-graft/env`.
+  Agents may run `beep refs plan` and `beep refs install-timer --refresh`;
+  never run `beep refs refresh` or a fresh `beep refs install-timer`.
 - Edges are name-resolved from tree-sitter, not from the TypeScript compiler.
   A cross-file caller of an ambiguous name is dropped rather than guessed, so
   `graft callers` can undercount; for refactors, confirm with `graft grep`

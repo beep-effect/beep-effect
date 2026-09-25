@@ -88,6 +88,8 @@ const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
   "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
+  "Bash(bun run beep refs refresh:*)",
+  "Bash(bun run beep refs install-timer)",
   "Bash(graft init:*)",
   "Bash(graft uninstall:*)",
   "Bash(graft upgrade:*)",
@@ -599,7 +601,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "keeps checked-in Claude grants inside the exact 62-value allow domain",
+    "keeps checked-in Claude grants inside the exact 64-value allow domain",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -607,7 +609,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       const settingsText = yield* fs.readFileString(path.join(repoRoot, ".claude/settings.json"));
       const settings = yield* decodeStructInlineSchemaJson(settingsText);
 
-      assert.lengthOf(settings.permissions.allow, 62);
+      assert.lengthOf(settings.permissions.allow, 64);
       assert.include(settings.permissions.allow, "Bash(graft ask:*)");
       assert.include(settings.permissions.allow, "Bash(graft grep:*)");
       assert.include(settings.permissions.allow, "Bash(graft skeleton:*)");
@@ -621,6 +623,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
       assert.include(settings.permissions.allow, "Bash(bun run beep yeet sweep:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep research install-timers:*)");
       assert.include(settings.permissions.allow, "Bash(bun run beep graft deep install-timer --refresh:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep refs plan:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep refs install-timer --refresh:*)");
+      assert.include(settings.permissions.deny, "Bash(bun run beep refs refresh:*)");
+      assert.include(settings.permissions.deny, "Bash(bun run beep refs install-timer)");
       assert.notInclude(settings.permissions.allow, "Bash(bun run beep graft deep install-timer:*)");
       assert.include(settings.permissions.allow, "Bash(systemctl --user list-timers:*)");
       assert.include(settings.permissions.allow, "Bash(systemctl --user status beep-:*)");
