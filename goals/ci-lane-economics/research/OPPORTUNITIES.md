@@ -1019,3 +1019,20 @@ evidence, what would have prevented it). Redact for the public repo.
   a partial run can never be mistaken for an admission. Both guards ship in
   #1219 after review: the pinned bounds, and the `--preview` flag whose
   banner marks every partial read as one.
+
+## 2026-09-25 — the effect-vitest inventory ratchet keyed the guard tests by line
+
+- **Doing:** running `yeet verify` on the `--preview` guard commit for #1219
+  before the until-ready monitor could reach closeout.
+- **Evidence:** `lint:effect-vitest` failed with "7 new finding(s)" in
+  `packages/tooling/tool/cli/test/ci-lane-timings.test.ts`: the helpers
+  inserted above the existing tests shifted every line-keyed row (73 ids
+  rewritten), and the five new tests reuse the file's per-test
+  `provideScopedLayer(windowGithubLayer(commands))` idiom because the fake
+  GitHub layer closes over a per-test command log, so `it.layer` once per file
+  cannot express it. `bun run beep lint effect-vitest --write` after review;
+  no other file's rows moved.
+- **Would have prevented it:** keying inventory rows by symbol and ordinal
+  within the enclosing test rather than by line, so an insertion above existing
+  rows is a no-op, and letting a file-level harness annotation declare the
+  per-test-layer design as accepted so only genuinely new idioms count.
