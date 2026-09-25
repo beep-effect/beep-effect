@@ -30,6 +30,6 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3332
+    "no-root-package-import": 3334
   }
 }
