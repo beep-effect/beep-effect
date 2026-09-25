@@ -2280,3 +2280,11 @@ concurrent tests. Both cases mutated the same vendor state/global stubs. Keep
 normal and failure cleanup probes within the existing renderer test, preserving
 one fixture owner; do not disable concurrency across the package or loosen the
 exact kill assertion.
+
+## Schema runner-context reproduction resolved after prerequisite merge
+
+After PR #1241 landed, merge `654e80230f` incorporated the runner fix. The same
+schema package-only shared-worker coverage command now passes 725 tests across
+78 files, exit 0, with no TestContextUnavailable failures. The prior 60 failures
+remain documented above as pre-integration evidence. The integration receipt is
+`history/2026-09-25-schema-runner-integration.md`.
