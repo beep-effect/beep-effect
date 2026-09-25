@@ -1,7 +1,9 @@
 # Current state census (2026-09-25)
 
-Gathered by the grill session from the live workstation. Paths under `$HOME` are written with
-`~`. Secrets are redacted; only key names are recorded.
+Gathered by the grill session from the live workstation. Host paths under the home directory
+are written in the `$HOME/...` form (the `knowledge:refs-check` gate rejects `~/YeeBois/...` and
+`~/.local/...`); `~/.config/...` keeps the tilde as the portable convention the gate allows.
+Secrets are redacted; only key names are recorded.
 
 ## Reference clones today (`$HOME/YeeBois/dev/`)
 
