@@ -902,12 +902,16 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Remaining gates
 
-R32 is finalized complete/wet with three new qualified owners and zero dry
-credit. Preserve its execution/finalization receipts. Synchronize the next
-source snapshot with main, reconcile any new source impact, then prepare R33
-admission against the updated inventory and complete designs. Do not restart
-the completed R32 controller. No owner question remains unanswered.
+R33 is finalized complete/wet and saved by merged PR #1223. R34 was
+interrupted after 21 of 27 lane receipts and its frozen source changed;
+it receives no completed-round or dry-round credit. Preserve both rounds'
+evidence and the revalidated R34 partial corrections. Do not restart either
+controller. Prepare a fresh current-source census against the reconciled
+inventory and complete designs.
 
-P2R still requires two complete current-source dry rounds. P3 and P4 remain
-evidence-gated on census, replacement zero-finding review, and the merged
-packet-only ratification PR. No implementation or dry credit is claimed.
+Two consecutive complete current-source dry rounds remain required, followed
+by replacement independent zero-finding P3 review and a packet ratification
+PR merged by Benjamin. Then implement the reviewed designs, obtain Benjamin's
+implementation merges, run two final exact-main dry rounds, and merge the
+reflection and completed-retained closeout. No implementation or dry credit
+is claimed by the R34 recovery checkpoint.

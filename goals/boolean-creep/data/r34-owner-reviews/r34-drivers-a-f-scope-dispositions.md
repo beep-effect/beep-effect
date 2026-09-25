@@ -2,7 +2,15 @@
 
 All thirteen footer-proposed historical seed owners fall outside the >=2 Boolean recall net. One was qualified (`cosmos-backend-selection-webgl2`); twelve were D1/D2 census records. Remove those thirteen live rows without adding replacement D1/D2 records, and archive the one historical qualified design. This private audit makes no canonical edits and does not implement any historical design.
 
-The exact thirteen ids, complete declaration spans, Boolean-bearing members and explanations are in scope-dispositions.json and inventory-removals.json. historical-rows.jsonl preserves exact input records; design-archives/ preserves the Cosmos design. All five owner source files match frozen HEADd99e4e073de5139552a97ee588117af59b8251c0 and main339da1562a2ed52f73a0a693c176fc52cca9ccb6, with SHA-256 bindings in audit.json.
+The thirteen IDs, declaration spans, Boolean-bearing members and reasons
+are published in [the scope dispositions](./r34-drivers-a-f-scope-dispositions.json).
+The [parent integration receipt](../r34-partial-integration-2026-09-25.json)
+records the removals. The [withdrawn rows](../../history/inventory/2026-09-25-r34-withdrawn-rows.jsonl)
+and [archived Cosmos design](../../history/designs/2026-09-25-r34-partial-reconciliation/cosmos-backend-selection-webgl2.md)
+preserve the historical input. The full original inventory is retained in
+[the pre-reconciliation snapshot](../../history/inventory/2026-09-25-pre-r34-partial-reconciliation.jsonl).
+The five audited source files matched the frozen HEAD and main, and their
+saved bindings were revalidated before parent integration.
 
 ## Scope and source authority
 
@@ -22,6 +30,6 @@ Firecrawl.errors.ts:26 resolves optionalBoolean to OptionFromOptionalKey(S.Boole
 
 ## Independently eligible larger owner preserved
 
-BrowserExecuteShape, Firecrawl.responses.ts:337-349, has killed via optionalBoolean and required success. Thus its complete owner reaches two Boolean-bearing members. Preserve all three historical rows: firecrawl-browser-execute-shape, r24-drivers-a-f-firecrawl-browser-execute-success-error and r25-drivers-a-f-firecrawl-browser-execute-killed-error. The latter payload subclusters need not contain two Booleans individually because their real complete owner already qualifies for recall. Exact rows are copied to preserved-larger-owner-rows.jsonl and are absent from the removal list. This contrasts with the thirteen actual one-slot owners without inventing restrictions or reapproving their semantics.
+BrowserExecuteShape, Firecrawl.responses.ts:337-349, has killed via optionalBoolean and required success. Thus its complete owner reaches two Boolean-bearing members. Preserve all three historical rows: firecrawl-browser-execute-shape, r24-drivers-a-f-firecrawl-browser-execute-success-error and r25-drivers-a-f-firecrawl-browser-execute-killed-error. The latter payload subclusters need not contain two Booleans individually because their real complete owner already qualifies for recall. The three rows remain in the current inventory and in the pre-reconciliation snapshot linked above; none appears in the parent removal list. This contrasts with the thirteen actual one-slot owners without inventing restrictions or reapproving their semantics.
 
 Other lane seed families named unchanged by the footer were not expanded into this bounded audit. No blanket withdrawal is inferred from status/error correlation or from class names. No runtime/product tests, independent P3 proof or dry-round credit is claimed.
