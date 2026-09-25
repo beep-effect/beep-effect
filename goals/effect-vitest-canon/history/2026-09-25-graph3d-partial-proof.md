@@ -72,3 +72,16 @@ and browser proofs, not a causal timing comparison or hosted merge readiness.
 The merge retains main's non-graph baseline rows and the seven previously
 reviewed graph-3d cache dependency changes. Publication, exact-commit ledger
 attribution and hosted checks remain outstanding.
+
+## Final runner attribution
+
+L-OBS-01 now cites runner-adoption commit
+72ea45def6 as fixed. Strict scoped validation of all five package lenses passes
+with complete coverage and zero missing entries. The package retains its five
+reviewed live-browser EV009 exceptions.
+
+The current ratchet reports exactly two introduced findings, both in the
+unchanged refs-refresh-plan test on main. No Graph3D finding is introduced.
+PR #1272 owns that inherited ratchet repair; this wave does not relax those rows.
+GitHub PR queries still report API rate limiting despite the rate-limit endpoint
+reporting available quota, so remote readiness remains unverified.
