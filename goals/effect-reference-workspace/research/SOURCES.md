@@ -10,7 +10,7 @@
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `graft-workspace` | Workspace federation semantics | Graft (`~/YeeBois/dev/Graft`, v0.18.0) | `src/graph/workspace.ts:1-24`, `:97-101` | multi-repo mode | reference |
+| `graft-workspace` | Workspace federation semantics | Graft (`$HOME/YeeBois/dev/Graft`, v0.18.0) | `src/graph/workspace.ts:1-24`, `:97-101` | multi-repo mode | reference |
 | `graft-children` | Child discovery (no symlinks, no dot-dirs) | Graft | `src/graph/scopes.ts:329-341` | why move, not link | reference |
 | `graft-fuse` | Rank fusion across separate repos | Graft | `src/ask/fuse.ts:25-29` | federated `ask` | reference |
 | `graft-build-flags` | `--follow-nested-repos`, `--only-dir`, `--no-gitignore` | Graft | `src/cli.ts:345-369` | build policy | reference |
@@ -35,7 +35,7 @@ graft's `Dirent.isDirectory()` child discovery.
 |------|---------|-----------------|--------------|
 | Effect-TS/effect | MIT | reference-only | indexed as a workspace member; never vendored |
 | Effect-TS/tsgo | MIT (`LICENSE`, Copyright (c) 2026 Effect) | reference-only | indexed as a workspace member |
-| Graft (`~/YeeBois/dev/Graft`) | see its `LICENSE` | reference-only | CLI consumer; no code ported |
+| Graft (`$HOME/YeeBois/dev/Graft`) | see its `LICENSE` | reference-only | CLI consumer; no code ported |
 
 ## 3. External research sources
 

@@ -44,6 +44,7 @@ import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -87,6 +88,7 @@ const faultDomain = LiteralKit([
   "extra-summary",
   "unsafe-log",
   "missing-log",
+  "initial-divergence",
   "source-write",
   "dependency-source-write",
   "dependency-link-write",
@@ -203,7 +205,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       task: "lint",
       command: O.some("bun run beep:lint"),
       commandDigest: digest,
-      dependencies: id === task ? dependencyTasks : [],
+      dependencies: id === task ? selectedDependencies : [],
       configuration:
         profile && id === task
           ? CacheTaskConfiguration.make({ ...configuration, passThroughEnv: ["BIOME_CONFIG_PATH"] })
@@ -376,7 +378,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               task: "lint",
               package: O.getOrThrow(A.head(Str.split("#")(id))),
               command: fault === "wrong-command" ? "unreviewed" : "bun run beep:lint",
-              dependencies: id === task ? dependencyTasks : [],
+              dependencies: id === task ? selectedDependencies : [],
               inputs: {},
               resolvedTaskDefinition: { ...configuration, passThroughEnv: [] },
               hash: taskHash,
@@ -447,7 +449,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   });
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
-                    const dependency = A.map(dependencyTasks, (id) =>
+                    const dependency = A.map(selectedDependencies, (id) =>
                       nativeTask(id, "fedcba9876543210", fault === "dependency-hit")
                     );
                     yield* write(
@@ -459,7 +461,14 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                     );
                     if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
                     yield* corruptSource();
-                    const log = fault === "unsafe-log" ? "/fixture/private.ts\n" : "lint observation\n";
+                    const log = Match.value({ fault, guest }).pipe(
+                      Match.when({ fault: "unsafe-log" }, () => "/fixture/private.ts\n"),
+                      Match.when(
+                        { fault: "initial-divergence", guest: "/fixture-other" },
+                        () => "different lint observation\n"
+                      ),
+                      Match.orElse(() => "lint observation\n")
+                    );
                     if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
                     const progress = hit
                       ? "cache hit, replaying logs"
@@ -648,6 +657,13 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
         const failure = yield* run().pipe(Effect.flip);
         if (fault === "dependency-link-write")
           expect(failure.message).toBe("Read-only pilot package source changed during execution.");
+        if (fault === "initial-divergence") {
+          expect(failure.message).toContain("absolute-root-equivalence");
+          expect(failure.message).toContain("alternate-absolute-root");
+          expect(failure.message).toContain("logSha256");
+          expect(failure.message).not.toContain("different lint observation");
+          expect(failure.message).not.toContain(root);
+        }
         expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       })
     );

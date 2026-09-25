@@ -961,8 +961,15 @@ const runPilot = Effect.fn("CachePilot.run")(
             passed: compare(O.getOrThrow(A.get(runs, 0)), otherRoot, true),
           })
         );
-        if (A.some(checks, (check) => !check.passed))
-          return yield* CacheCommandError.new("Initial real-pilot comparisons diverged; local reuse has stopped.");
+        if (A.some(checks, (check) => !check.passed)) {
+          const failed = yield* CacheSyntheticCheck.pipe(S.Array, JsonStringCodec).encode(
+            A.filter(checks, (check) => !check.passed)
+          );
+          const observations = yield* CachePilotRun.pipe(S.Array, JsonStringCodec).encode(runs);
+          return yield* CacheCommandError.new(
+            `Initial real-pilot comparisons diverged; local reuse has stopped. Checks: ${failed}. Runs: ${observations}`
+          );
+        }
       });
       yield* runInitialComparisons();
       const baseline = O.getOrThrow(A.get(runs, 0));

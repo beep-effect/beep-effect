@@ -105,12 +105,15 @@ bun install
 Then restore any local-only files you need:
 
 - `.env`
-- `.direnv`
 - `.claude/settings.local.json`
 - `CLAUDE.local.md`
 - `.beep`
 
 By default these do **not** follow you into a fresh worktree, which is usually what we want.
+
+`.direnv/` is not on that list on purpose: it is a regenerable Nix profile cache with
+absolute symlinks, and direnv rebuilds it on first entry (the global whitelist covers
+every `beep-effect*` path, so no `direnv allow` is needed).
 
 `.idea/` needs no manual restore step: the curated project config (root
 `beep-effect.iml` with exclusions, `modules.xml`, inspection profile) is tracked in

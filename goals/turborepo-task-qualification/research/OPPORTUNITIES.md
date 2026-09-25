@@ -1754,6 +1754,19 @@ corruption setup without dropping negative cases; all 19 orchestration tests
 pass. Run local Fallow with an explicit `--base origin/main` outside Yeet:
 the root wrapper uses `BEEP_PROOF_BASE`, and an unset value fails resolution.
 
+
+### 2026-09-25 — Expanded dependencies require baseline scope before transition
+
+While excluding the newly selected pilot dependencies, `beep cache transition`
+rejected the first request: "Transition is outside the reviewed pilot scope,
+profile or epoch." The ledger was unchanged. Regenerating the reviewed baseline
+with the four-task scope before applying transitions resolved the refusal. A
+preflight showing scope membership alongside ledger revision would make this
+ordering explicit. The merged repair checkout also retained installed Turbo
+2.11.2 despite a 2.11.3 lockfile; a newly bootstrapped experiment lane resolved
+that mismatch. Clean-install proof in a separate checkout is not evidence that
+the experiment checkout itself has synchronized dependencies.
+
 ### 2026-09-25 — Fixture copies changed symlink input bytes
 
 The expanded stable pilot v19 failed before its matrix with "Read-only pilot
@@ -1769,3 +1782,13 @@ the new link resolves to the same file. Twenty focused tests passed, including a
 assertion for link retargeting; full package verification and the native
 qualification matrix remain separate pending gates. A fixture containing the
 packages' real symlink topology would have exposed this before the runtime run.
+
+### Pilot diagnostic test complexity (PR #1250)
+
+- Work: publish bounded initial-pilot divergence diagnostics.
+- Evidence: hosted Fallow audit flagged `writeObservation` in
+  `cache-pilot-orchestration.test.ts` at cognitive complexity 10 against limit 8.
+  Package audit and focused tests had passed without catching this gate.
+- Remediation: replace nested fault-selection conditionals with Effect Match;
+  retain all negative cases and rerun the exact Fallow checks.
+- Prevention: run the changed-function Fallow check before early publication.

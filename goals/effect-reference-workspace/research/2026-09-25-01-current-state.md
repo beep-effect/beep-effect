@@ -1,9 +1,11 @@
 # Current state census (2026-09-25)
 
-Gathered by the grill session from the live workstation. Paths under `$HOME` are written with
-`~`. Secrets are redacted; only key names are recorded.
+Gathered by the grill session from the live workstation. Host paths under the home directory
+are written in the `$HOME/...` form (the `knowledge:refs-check` gate rejects the tilde-relative spelling of paths under `YeeBois` and
+`.local`); `~/.config/...` keeps the tilde as the portable convention the gate allows.
+Secrets are redacted; only key names are recorded.
 
-## Reference clones today (`~/YeeBois/dev/`)
+## Reference clones today (`$HOME/YeeBois/dev/`)
 
 | Clone | Remote | Tracked files | Last commit | Worktrees | Graft |
 | --- | --- | --- | --- | --- | --- |
@@ -13,7 +15,7 @@ Gathered by the grill session from the live workstation. Paths under `$HOME` are
 | `opencode` | `git@github.com:anomalyco/opencode.git` | 7900 | 2026-09-24 | primary only | none |
 | `effect-smol` | `git@github.com:Effect-TS/effect-smol.git` | — | 2026-07-14 | — | none (excluded, R2) |
 
-## Existing `~/YeeBois/dev/effect/graft/`
+## Existing `$HOME/YeeBois/dev/effect/graft/`
 
 - `INDEX.md`: 1571 per-file wiring cards, 1182 carrying extracted symbols; no concept nodes (no
   deep tier has ever run).
@@ -44,11 +46,11 @@ Gathered by the grill session from the live workstation. Paths under `$HOME` are
 ## Fleet link census (2026-09-25)
 
 144 beep-effect checkouts (primary clones plus `*-worktrees/*`): **40 linked** to
-`~/YeeBois/dev/effect`, **104 missing** `.repos/effect`. All 30 numbered primary clones that have a
-link point at `~/YeeBois/dev/effect`. Full table: `2026-09-25-02-fleet-census.md`.
+`$HOME/YeeBois/dev/effect`, **104 missing** `.repos/effect`. All 30 numbered primary clones that have a
+link point at `$HOME/YeeBois/dev/effect`. Full table: `2026-09-25-02-fleet-census.md`.
 
 Clone roles observed: `beep-effect0` is the read-only graft owner (nightly `beep graft deep
-refresh --owner ~/YeeBois/projects/beep-effect0`); `beep-effect2`, `6`, `7`, `10`, `11`, `12`
+refresh --owner $HOME/YeeBois/projects/beep-effect0`); `beep-effect2`, `6`, `7`, `10`, `11`, `12`
 were clean on `main` at origin; `beep-effect` sat on `@slop/09-22-26`; `beep-effect4` on
 `effect-v3-main-archive`.
 
@@ -88,7 +90,7 @@ about adding the workspace routing line.
 - Timer `beep-graft-deep-refresh.timer` → `.service`, last run 2026-09-25 02:34 CDT.
 - `~/.config/beep-graft/env` keys: `GRAFT_PROVIDER=openai`, `GRAFT_BASE_URL=http://127.0.0.1:8317/v1`,
   `GRAFT_API_KEY=<redacted>`, `GRAFT_MODEL=claude-opus-5`, `GRAFT_LLM_RETRIES=12`,
-  `DO_NOT_TRACK=1`, `GRAFT_DUMP_DIR=~/.local/state/beep-graft/dump`,
+  `DO_NOT_TRACK=1`, `GRAFT_DUMP_DIR=$HOME/.local/state/beep-graft/dump`,
   `GRAFT_SYNTH_MAX_TOKENS=32768`, `GRAFT_SYNTH_JOBS=4`.
 - CLIProxyAPI `GET /v1/models` on 127.0.0.1:8317 listed `claude-opus-5` on 2026-09-25.
 - Runbook: `docs/runbooks/graft-local-recovery.md` (deep-model section, ~L225-300) documents
@@ -100,7 +102,7 @@ about adding the workspace routing line.
 
 ## Toolchain gotcha hit while creating this packet's worktree
 
-`~/YeeBois/projects/beep-effect2/.envrc` (`use flake`, modified 2026-09-25 02:08) puts a nix-built
+`$HOME/YeeBois/projects/beep-effect2/.envrc` (`use flake`, modified 2026-09-25 02:08) puts a nix-built
 `bun 1.3.13` ahead of the mise `bun 1.4.2` on PATH. Under the nix bun, `bun run beep …` dies in
 `@duckdb/node-bindings` with `libstdc++.so.6: cannot open shared object file` (the binding is a
 glibc build; the nix bun's loader does not see `/usr/lib`). The same command succeeds with
