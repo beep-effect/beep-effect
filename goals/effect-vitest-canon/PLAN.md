@@ -747,7 +747,9 @@ fc-runs and ontology-config from the existing inventory. Six ontology detector
 rows are resolved in source, two existing failure-polarity judgments are
 reasoned exceptions, and the two actionable lens findings are remediated.
 Fixing-commit references now point to e8df201fd44e62986d4a11299256102cbbd134f7.
-The baseline shrinks by six with no unrelated row changes or new findings.
+The standards/effect-vitest.inventory.jsonc ratchet baseline drops six
+EV002/EV003 rows with no unrelated changes or new findings. The package detector
+ledger retains all eight rows as six fixed receipts and two exceptions.
 
 Both full package audits and Docgen checks passed. Node timings retain the
 original baseline and current after-run/context files. Historical/current total
