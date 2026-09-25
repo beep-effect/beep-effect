@@ -13,7 +13,7 @@ Name491 rejects dot/dotdot, separators, control characters and surrounding
 whitespace; targetPath492 is nonempty without control characters. Preserve these
 exact schemas. Branch and expectedHead retain OptionFromNullOr with no default.
 
-The implication validator at Worktree.service.ts994-999 rejects branch deletion
+The implication validator at Worktree.service.ts986-991 rejects branch deletion
 without archive. The same function979-1035 now permits exact sibling or nested
 Claude worktree roots, then checks registration, canonical path and common Git
 directory. Existing request writers are interactive command888, Reap562,
@@ -63,7 +63,7 @@ service validator and all safety rechecks; only remove its implication block.
   expectedHead=None, error mapping and no new flag adapter.
 - Worktree.service.ts979-1035: retain exact nested/sibling root selection, name
   check, registration parse, realPath and common Git directory equality. Remove
-  only994-999. Calls1168/1395/1454 remain in their original order and on original
+  only986-991. Calls1168/1395/1454 remain in their original order and on original
   registered requests, never the renamed copy for managed-name validation.
 - Service1183-1196 replaces optional branch filter by mode selection; retain None
   =>false and exact archived-head compare-and-swap. Dispatch1455 uses mode match.
@@ -87,7 +87,7 @@ service validator and all safety rechecks; only remove its implication block.
 
 ## Guard-deletion accounting
 
-Delete two stored request Booleans and one implication block994-999, replace
+Delete two stored request Booleans and one implication block986-991, replace
 archive dispatch and branch selection with mode matches. Keep exactly one raw
 CLI conflict check. Delete zero path, registration, realpath, common-directory,
 authority, containment, process/exemption, quiescence or preservation checks.

@@ -7,7 +7,7 @@ SyncDataToTs.command.ts unless another path is supplied.
 
 ## Current shape
 
-Private SyncDataTargetSelection62-66 stores all:Boolean, targetId:Option<String>
+Private SyncDataTargetSelection61-65 stores all:Boolean, targetId:Option<String>
 and independent includeAuthenticated:Boolean. The target Option schema is
 S.Option(S.String), not OptionFromOptionalKey and not a nullish string. No class
 constructor defaults exist. The sole writer144 supplies all three from raw flags:
@@ -61,7 +61,7 @@ and the module's canonical identity conventions when annotating the new schemas.
 
 - Keep target/all/include-authenticated definitions29-39 and all other flag
   definitions40-56, including optional report-dir, verbose alias v and defaults.
-- Replace class62-66 with mode plus independent access policy. The raw handler
+- Replace class61-65 with mode plus independent access policy. The raw handler
   parameter bag is not a second migration owner.
 - Keep exact errors85-103: “Pass either --all or --target, but not both.”;
   “Select at least one target with --target <id> or pass --all.”; unknown-ID

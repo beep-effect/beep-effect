@@ -2,24 +2,23 @@
 
 ## Status
 
-R35 completed all 27 census lanes against an unchanged frozen source. Parent
-reconciliation verified all execution receipts and 3,956 input bindings.
-The inventory now has **735 rows: 115 qualified and 620 disqualified**, with
-zero applied. Ten out-of-scope rows were withdrawn, including six qualified
-rows; fourteen disqualified records were added. The Notification design was
-corrected and the SpeechInput dependency repaired. Original inventory rows
-and all eight affected designs are preserved in history.
+R36 completed and reconciled all 27 census lanes against source `35f8454d`
+and main `2bf1e16b`. All 3,950 frozen input bindings were verified before
+integration. The inventory now has **727 rows: 113 qualified and 614
+disqualified**, with zero applied.
 
-The existing Yeet probe/address contract remains unchanged: the proposed
-stronger restriction lacked supporting contract evidence. R35 is complete
-and wet, with no dry-round credit. See
-`data/r35-parent-integration-2026-09-25.json` and
-`data/r35-owner-reviews/README.md`.
+Ten rows outside the recall net were withdrawn, including four qualified
+rows. Two new qualified designs cover the document toolbar input and cache
+argument parser. The toolbar design preserves all 32 public helper inputs;
+the parser proposal matched 88,744 representative token sequences. These are
+design checks, not evidence of a runtime migration. Three existing designs
+were replaced or received citation updates; all seven originals are archived.
 
-PR #1223 merged the R33 checkpoint. R34 remains interrupted and source-invalid.
-The dry streak is zero. Two consecutive complete current-source dry rounds,
-replacement independent P3 review, Benjamin's ratification merge,
-implementation, and final exact-main closure remain required.
+R36 is complete and wet. The dry streak remains zero. See
+`data/r36-parent-integration-2026-09-25.json`,
+`data/r36-owner-reviews/README.md`, and the R36 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
 
 Lifecycle: `active`
 

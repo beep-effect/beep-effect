@@ -1,0 +1,22 @@
+{
+  "lane": "r36-law-practice-domain",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:58:41.806374+00:00",
+  "finished": "2026-09-25T07:00:47.625623+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-law-practice-domain.jsonl`. Confirmed 0, disqualified 0.\n\nEvery assigned root under `packages/law-practice/domain/src` was covered (`internal/generated/` excluded). HEAD is `35f8454d0414d8f79284fdc9e92c84379d919a3e`. All 25 seed clusters still match their owners, members, and classifications; nothing was withdrawn. The preamble/article/amendment mutual-exclusion notes on `ConstitutionalCitation` still have no producer or reader in this lane that would change the existing `preamble` + `inFootnote` ruling.",
+  "transcriptSha256": "b0362bfb8f34b39447443430406c9c514478d4e21fdfac7b4c162138b245c8a7",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

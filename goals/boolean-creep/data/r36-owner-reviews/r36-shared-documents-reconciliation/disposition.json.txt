@@ -1,0 +1,94 @@
+{
+  "verdict": "withdraw-two-outside-recall-d1-rows",
+  "sourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMain": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "sourceBindings": [
+    {
+      "path": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "sha256": "4ba8bec7124ed7e4e540c65dc2e256364cd5c7bb9847a0b36dc4776e115542cb",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true,
+        "32f111f3707a63168b68ed04516af800ecc3a66c": true
+      }
+    },
+    {
+      "path": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "sha256": "6bd7223acd3c8b572b92cba3a7878a4e595dc96dda24e2ebe588fb09d09eaf68",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true,
+        "32f111f3707a63168b68ed04516af800ecc3a66c": true
+      }
+    },
+    {
+      "path": "packages/documents/domain/src/values/Sync/Sync.values.ts",
+      "sha256": "e1b7e2f38f55e295d834c15f8d27a17cc277a1fcd677906ed6ba36745fb19df6",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true,
+        "32f111f3707a63168b68ed04516af800ecc3a66c": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    },
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json",
+      "sha256": "b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c"
+    },
+    {
+      "path": "goals/boolean-creep/data/r33-owner-reviews/vault-sync-status/disposition.md",
+      "sha256": "d5b957a2761b1893eff69af2bd2cd68da34b501fcec29b66225a4fccee61cd87"
+    },
+    {
+      "path": "goals/boolean-creep/data/r33-owner-reviews/vault-sync-status/withdrawal-proposal.json",
+      "sha256": "273a74ab3bb02bc2fdf484446779a0905421039b996d02e4d0ffc94b71a6f2b4"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-shared-documents.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-shared-documents.execution.json",
+      "sha256": "e2def0cf894954f69056b55d7576ff6abdd47691ebc8740d0546afbd6effa696"
+    }
+  ],
+  "withdrawIds": [
+    "r25-shared-documents-dms-mirror-probe-probed-at",
+    "r25-shared-documents-vault-sync-status-probed-at"
+  ],
+  "designDependencies": [],
+  "delta": {
+    "rows": -2,
+    "qualified": 0,
+    "disqualified": -2,
+    "designs": 0
+  },
+  "canonicalEdits": false,
+  "sourceChanges": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "graftEstimatedTokensSaved": 10727,
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "95326693af7a5705bbb411e1ba908db6d12129f5f91c41d902bf69df0185d235"
+    },
+    {
+      "path": "withdrawn-rows.jsonl",
+      "sha256": "fc5e1992370f5d03c87b02cd028099c56189833612448f4267d427c8c8e3f8f6"
+    }
+  ]
+}

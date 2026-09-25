@@ -1,0 +1,131 @@
+{
+  "verdict": "admit-one-withdrawal-and-two-metadata-updates-retain-three-firecrawl-rows",
+  "sourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "frozenMain": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "sourceBindings": [
+    {
+      "path": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "sha256": "c99371ff02fd2284ce5367b079cf59d1217bba81bd3547cecc08e19f95eec1c8",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    },
+    {
+      "path": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+      "sha256": "9749c6bcdd917fe5385578d84b4f16fce9f4fcead914567a5b94503c1c1db81c",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    },
+    {
+      "path": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    },
+    {
+      "path": "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+      "sha256": "574111d10c8e0d10884ee467cfc025c43fbe85ae73217ca3f95b8e1785043c11",
+      "matches": {
+        "35f8454d0414d8f79284fdc9e92c84379d919a3e": true,
+        "2bf1e16bbf368a962df32f912ef01b5f9860e7da": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    },
+    {
+      "path": "goals/boolean-creep/data/r34-owner-reviews/r34-drivers-a-f-scope-dispositions.md",
+      "sha256": "933445cafcee8f8f5e0e77f83bc70a6868f22cb27d2a4eb050c2c43dad07c508"
+    },
+    {
+      "path": "goals/boolean-creep/data/r34-owner-reviews/r34-drivers-a-f-scope-dispositions.json",
+      "sha256": "6350adc5a34f3e497bb6e1574ebed51c749967043e17b15b47c11a8ff8be1f19"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-drivers-a-f.jsonl",
+      "sha256": "87b8301a52baeeadbfd8817ee7bf240b1ed8099785942f035fc15a00d9a00fbd"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-drivers-a-f.execution.json",
+      "sha256": "1abd719479169c231e7e88714f55f8411c76a331aaf6c78d420eb6df2abee461"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r34-drivers-a-f-scope/audit.json",
+      "sha256": "1f80112b1acc87f6d0eb3acdc90a0edb3b31e10d6fb0c6d3508e8fcd752129aa"
+    }
+  ],
+  "r34FirecrawlBindingMatches": true,
+  "withdraw": [
+    "ai-provider-cli-claude-auth-status-payload"
+  ],
+  "retain": [
+    "r24-drivers-a-f-firecrawl-browser-execute-success-error",
+    "r24-drivers-a-f-firecrawl-monitor-search-judge-degraded-reason",
+    "r25-drivers-a-f-firecrawl-browser-execute-killed-error"
+  ],
+  "metadataUpdates": [
+    {
+      "id": "acp-patched-protocol-options",
+      "oldLine": 388,
+      "newLine": 390,
+      "reason": "Actual interface declaration moved; 390 is not first inherited Boolean."
+    },
+    {
+      "id": "drivers-cosmos-graph-config",
+      "line": 22,
+      "oldCite": "Cosmos.renderer.ts:441-446",
+      "newCite": "Cosmos.renderer.ts:445",
+      "reason": "Constructor invocation locator only; schema declaration unchanged."
+    }
+  ],
+  "designDependencies": [],
+  "delta": {
+    "rows": -1,
+    "qualified": 0,
+    "disqualified": -1,
+    "designs": 0
+  },
+  "canonicalEdits": false,
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryRoundCredit": false,
+  "graftEstimatedTokensSaved": 35129,
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "aaed72344b2fbf63da60176aca468b063547ad456785ba104b651db71d0b6860"
+    },
+    {
+      "path": "metadata-updates.json",
+      "sha256": "3943631fdc7bb3ddb2eda4dd2bdda233c6728535d123b92e268c8d0f2bc75c44"
+    },
+    {
+      "path": "proposed-inventory-updates.jsonl",
+      "sha256": "1f126ae20c416812d263ae7f0c88fd87dd72e0099b54b409febddd7c4132409a"
+    },
+    {
+      "path": "retained-rows.jsonl",
+      "sha256": "c85ac2e5c273fca417a62eb3bc1d34eea6668feb187fe7f517de4ef39c55b8b5"
+    },
+    {
+      "path": "withdrawn-rows.jsonl",
+      "sha256": "75ae6973dd5704a9bef5b3fa4325e11961400171fbaded19ae5dcf8fd5f9c352"
+    }
+  ]
+}
