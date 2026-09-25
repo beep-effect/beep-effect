@@ -3,6 +3,7 @@ import {
   FleetMirrorServiceLive,
   FleetScanOptions,
   parseProcStatStartTime,
+  WorktreeCommandError,
 } from "@beep/repo-cli/commands/Worktree";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, Str } from "@beep/utils";
@@ -463,4 +464,96 @@ describe("fleet mirror scan", () => {
       ),
     SCAN_TIMEOUT_MILLIS
   );
+
+  describe("listCheckouts", () => {
+    const listFixture = Effect.fn("FleetScanTest.listFixture")(function* (options: FleetScanOptions) {
+      const service = yield* FleetMirrorService;
+      return yield* service.listCheckouts(options);
+    });
+
+    it.live(
+      "lists every clone and linked worktree sharing the origin and skips unrelated siblings",
+      () =>
+        withScratchFleet((fixture) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const linked = path.join(fixture.tmpDir, "linked-worktree");
+            yield* runGit(fixture.alpha, ["worktree", "add", "--quiet", "--detach", linked, "HEAD"]);
+            // Siblings that are not fleet clones: a plain directory, a stray file, a checkout
+            // without an origin remote, and a checkout of an unrelated origin.
+            yield* fs.makeDirectory(path.join(fixture.fleetRoot, "plain-dir"));
+            yield* fs.writeFileString(path.join(fixture.fleetRoot, "stray.txt"), "not a clone\n");
+            const noRemote = path.join(fixture.fleetRoot, "no-remote");
+            yield* fs.makeDirectory(noRemote);
+            yield* runGit(noRemote, ["init", "--quiet"]);
+            const otherOrigin = path.join(fixture.tmpDir, "other.git");
+            yield* runGit(fixture.tmpDir, ["init", "--bare", "--quiet", otherOrigin]);
+            yield* runGit(fixture.fleetRoot, ["clone", "--quiet", otherOrigin, "unrelated"]);
+            // A symlinked clone lists the same real checkouts, which the enumeration dedupes.
+            yield* fs.symlink(fixture.alpha, path.join(fixture.fleetRoot, "zz-alpha-link"));
+
+            const checkouts = yield* listFixture(
+              FleetScanOptions.make({
+                startFrom: fixture.alpha,
+                fleetRoot: fixture.fleetRoot,
+                originUrl: `${fixture.originPath}/`,
+              })
+            );
+
+            expect(checkouts).toEqual(A.sort([fixture.alpha, fixture.beta, linked], Str.Order));
+          })
+        ),
+      SCAN_TIMEOUT_MILLIS
+    );
+
+    it.live(
+      "resolves the origin and the fleet root from the invoking checkout when neither is given",
+      () =>
+        withScratchFleet((fixture) =>
+          Effect.gen(function* () {
+            const checkouts = yield* listFixture(FleetScanOptions.make({ startFrom: fixture.beta }));
+
+            expect(checkouts).toEqual([fixture.alpha, fixture.beta]);
+          })
+        ),
+      SCAN_TIMEOUT_MILLIS
+    );
+
+    it.live(
+      "fails with a typed error when the origin cannot be resolved or the fleet root cannot be read",
+      () =>
+        withScratchFleet((fixture) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const orphan = path.join(fixture.tmpDir, "orphan");
+            yield* fs.makeDirectory(orphan);
+            yield* runGit(orphan, ["init", "--quiet"]);
+
+            const noOrigin = yield* Effect.flip(listFixture(FleetScanOptions.make({ startFrom: orphan })));
+            expect(noOrigin).toBeInstanceOf(WorktreeCommandError);
+            expect(noOrigin.message).toBe("Failed to resolve the origin URL for the current repository.");
+
+            const emptyOrigin = yield* Effect.flip(
+              listFixture(FleetScanOptions.make({ startFrom: fixture.alpha, originUrl: "" }))
+            );
+            expect(emptyOrigin.message).toBe("Failed to resolve the origin URL for the current repository.");
+
+            const missingRoot = path.join(fixture.tmpDir, "missing-fleet-root");
+            const unreadable = yield* Effect.flip(
+              listFixture(
+                FleetScanOptions.make({
+                  startFrom: fixture.alpha,
+                  fleetRoot: missingRoot,
+                  originUrl: fixture.originPath,
+                })
+              )
+            );
+            expect(unreadable.message).toBe(`Failed to read the fleet root ${missingRoot}.`);
+          })
+        ),
+      SCAN_TIMEOUT_MILLIS
+    );
+  });
 });

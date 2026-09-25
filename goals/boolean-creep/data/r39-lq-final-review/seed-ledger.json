@@ -1,0 +1,622 @@
+[
+  {
+    "id": "package-verify-step-outcome",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+    "symbol": "PackageVerifyStepResult",
+    "status": "designed",
+    "historicalLine": 152,
+    "currentLine": 152,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "laws-effect-imports-command-options",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+    "symbol": "EffectImportsCommandOptions",
+    "status": "disqualified",
+    "historicalLine": 40,
+    "currentLine": 44,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "laws-terse-effect-command-options",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+    "symbol": "TerseEffectCommandOptions",
+    "status": "disqualified",
+    "historicalLine": 85,
+    "currentLine": 91,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "laws-effect-import-rules-options",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+    "symbol": "EffectImportRulesOptions",
+    "status": "disqualified",
+    "historicalLine": 137,
+    "currentLine": 137,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "laws-terse-effect-rules-options",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+    "symbol": "TerseEffectRulesOptions",
+    "status": "disqualified",
+    "historicalLine": 35,
+    "currentLine": 35,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "quality-test-lane-selection",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "TestLaneSelectionState",
+    "status": "disqualified",
+    "historicalLine": 233,
+    "currentLine": 239,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "fallow-command-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "symbol": "FallowCommandOptions",
+    "status": "disqualified",
+    "historicalLine": 371,
+    "currentLine": 376,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "fallow-report-base-fields",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts",
+    "symbol": "FallowReportBaseFields",
+    "status": "disqualified",
+    "historicalLine": 278,
+    "currentLine": 278,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "fallow-ci-contract-diagnostics",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowCiContract.ts",
+    "symbol": "FallowCiContractDiagnosticOptions",
+    "status": "disqualified",
+    "historicalLine": 213,
+    "currentLine": 213,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "jsdoc-migrate-apply-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+    "symbol": "RunJSDocMigrateApplyOptions",
+    "status": "disqualified",
+    "historicalLine": 456,
+    "currentLine": 456,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "jsdoc-ratchet-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+    "symbol": "RunJSDocRatchetOptions",
+    "status": "disqualified",
+    "historicalLine": 673,
+    "currentLine": 674,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "qa-record-overlay-toggles",
+    "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.schemas.ts",
+    "symbol": "QaRecordOptions",
+    "status": "disqualified",
+    "historicalLine": 126,
+    "currentLine": 126,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "qa-harness-env-options",
+    "file": "packages/tooling/tool/cli/src/commands/Qa/Record.ts",
+    "symbol": "HarnessEnvOptions",
+    "status": "disqualified",
+    "historicalLine": 90,
+    "currentLine": 90,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r3-tooling-ecosystem-polarity-specifier-call",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+    "symbol": "collectSourceViolations",
+    "status": "designed",
+    "historicalLine": 273,
+    "currentLine": 273,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r3-tooling-schema-first-normalization-signals",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+    "symbol": "appendCallEntries",
+    "status": "disqualified",
+    "historicalLine": 218,
+    "currentLine": 218,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r3-tooling-schema-first-fn-eligibility",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+    "symbol": "appendFunctionEntries",
+    "status": "designed",
+    "historicalLine": 239,
+    "currentLine": 239,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r3-tooling-jsdoc-tsdoc-tag-presence",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+    "symbol": "analyzeRootPolicy",
+    "status": "disqualified",
+    "historicalLine": 1372,
+    "currentLine": 1408,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r3-tooling-fn-schema-inline-contracts",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+    "symbol": "fnSchemaEntryFromFunctionLike",
+    "status": "disqualified",
+    "historicalLine": 699,
+    "currentLine": 701,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "effect-import-rules-summary-operation",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+    "symbol": "EffectImportRulesSummary",
+    "status": "designed",
+    "historicalLine": 241,
+    "currentLine": 241,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "effect-import-source-transform-phase",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+    "symbol": "EffectImportSourceTransformSummary",
+    "status": "designed",
+    "historicalLine": 278,
+    "currentLine": 278,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "test-tsgo-synthetic-compiler-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+    "symbol": "testTsgoSyntheticConfigTemplate.compilerOptions",
+    "status": "disqualified",
+    "historicalLine": 34,
+    "currentLine": 34,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r3-tooling-lint-tagged-union-pattern-gates",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+    "symbol": "taggedUnionViolation",
+    "status": "disqualified",
+    "historicalLine": 480,
+    "currentLine": 480,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "CoverageTaskOptions",
+    "status": "disqualified",
+    "historicalLine": 250,
+    "currentLine": 256,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "coverage-baseline-write-mode",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "CoverageTaskOptions",
+    "status": "disqualified",
+    "historicalLine": 250,
+    "currentLine": 256,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "package-inventory-docgen-coverage",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+    "symbol": "PackageInventory.docgenCoverage",
+    "status": "designed",
+    "historicalLine": 1350,
+    "currentLine": 1350,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r27-cli-commands-l-q-fallow-ci-workflow-facts",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowCiContract.ts",
+    "symbol": "fallowCiContractDiagnostics",
+    "status": "disqualified",
+    "historicalLine": 296,
+    "currentLine": 296,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "effectTsgoReadmeParser",
+    "status": "disqualified",
+    "historicalLine": 363,
+    "currentLine": 363,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "runTsgoSmokeCheck.compilerOptions",
+    "status": "disqualified",
+    "historicalLine": 2820,
+    "currentLine": 3096,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "runGithubCheckLane",
+    "status": "designed",
+    "historicalLine": 1995,
+    "currentLine": 2038,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r28-cli-quality-coverage-resolved-operation",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "resolveCoverageTaskOptions",
+    "status": "designed",
+    "historicalLine": 927,
+    "currentLine": 933,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r28-cli-quality-test-lane-resolved-selection",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "parseTestLaneSelection",
+    "status": "designed",
+    "historicalLine": 319,
+    "currentLine": 324,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-allowlist-jsonc-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
+    "symbol": "parseAllowlistText.parseOptions",
+    "status": "disqualified",
+    "historicalLine": 161,
+    "currentLine": 161,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-knip-jsonc-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+    "symbol": "parseJsonc.parseOptions",
+    "status": "disqualified",
+    "historicalLine": 344,
+    "currentLine": 344,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "readGithubChecksFallowFeatureMatrix.parseOptions",
+    "status": "disqualified",
+    "historicalLine": 1284,
+    "currentLine": 1407,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "runTsgoRulesCheck.baseTsconfigParseOptions",
+    "status": "disqualified",
+    "historicalLine": 2494,
+    "currentLine": 2768,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "runTsgoRulesCheck.generatedVitestAliasesParseOptions",
+    "status": "disqualified",
+    "historicalLine": 2511,
+    "currentLine": 2785,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "runTestTsgoChecksAt.tempDirRemoveOptions",
+    "status": "disqualified",
+    "historicalLine": 2752,
+    "currentLine": 3028,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+    "symbol": "PRE_PUSH_CI_LANE_PLAN",
+    "status": "disqualified",
+    "historicalLine": 109,
+    "currentLine": 128,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-collect-output-capture-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "collectOutput.captureOptions",
+    "status": "disqualified",
+    "historicalLine": 700,
+    "currentLine": 823,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "runTestTsgoTurboTasks.captureOptions",
+    "status": "disqualified",
+    "historicalLine": 1805,
+    "currentLine": 1925,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "collectResolvedStepOutput.captureOptions",
+    "status": "disqualified",
+    "historicalLine": 2400,
+    "currentLine": 2446,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "runStepCapturedForQuarantine.captureOptions",
+    "status": "disqualified",
+    "historicalLine": 1403,
+    "currentLine": 1409,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "runTsgoRulesCheck.rootTsconfigParseOptions",
+    "status": "disqualified",
+    "historicalLine": 2503,
+    "currentLine": 2777,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "symbol": "collectWorkspaceTsconfigProfileDiagnostics.parseOptions",
+    "status": "disqualified",
+    "historicalLine": 2381,
+    "currentLine": 2624,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r30-cli-commands-l-q-purge-remove-options",
+    "file": "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts",
+    "symbol": "purgeAtRoot.removeOptions",
+    "status": "disqualified",
+    "historicalLine": 234,
+    "currentLine": 234,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "symbol": "collectAuditDiffFallbackOutput.tempDirRemoveOptions",
+    "status": "disqualified",
+    "historicalLine": 1315,
+    "currentLine": 1320,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r30-cli-commands-l-q-coverage-regression-clean-remove-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+    "symbol": "cleanCoverageRegressionOutputs.removeOptions",
+    "status": "disqualified",
+    "historicalLine": 1314,
+    "currentLine": 1314,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r30-cli-commands-l-q-check-census-overlay-compiler-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+    "symbol": "withReferenceKeepingOverlay.compilerOptions",
+    "status": "disqualified",
+    "historicalLine": 585,
+    "currentLine": 585,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "symbol": "GithubCheckLaneOutcome",
+    "status": "designed",
+    "historicalLine": 2021,
+    "currentLine": 2021,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "check-census-package-config-presence",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+    "symbol": "hasCheckOverlay",
+    "status": "disqualified",
+    "historicalLine": 752,
+    "currentLine": 752,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "coverage-baseline-write-options",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+    "symbol": "CoverageBaselineWriteOptions",
+    "status": "disqualified",
+    "historicalLine": 1450,
+    "currentLine": 1452,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "effect-vitest-function-reachability",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+    "symbol": "FunctionReachability",
+    "status": "designed",
+    "historicalLine": 842,
+    "currentLine": 842,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "effect-vitest-reachable-helper-flags",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+    "symbol": "reachableHelper",
+    "status": "designed",
+    "historicalLine": 1049,
+    "currentLine": 1049,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "laws-package-finding-policy",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.model.ts",
+    "symbol": "LawsPackageFinding",
+    "status": "disqualified",
+    "historicalLine": 73,
+    "currentLine": 73,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "effect-vitest-lint-options",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+    "symbol": "EffectVitestLintOptions",
+    "status": "disqualified",
+    "historicalLine": 1229,
+    "currentLine": 1229,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "models-catalog-availability",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+    "symbol": "CatalogAvailability",
+    "status": "disqualified",
+    "historicalLine": 868,
+    "currentLine": 921,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "models-catalog-draft",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.diff.ts",
+    "symbol": "CatalogDraft",
+    "status": "disqualified",
+    "historicalLine": 46,
+    "currentLine": 46,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "models-command-flags",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.command.ts",
+    "symbol": "ModelsCommandFlags",
+    "status": "disqualified",
+    "historicalLine": 75,
+    "currentLine": 75,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "upstream-thinking-support",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+    "symbol": "UpstreamThinkingSupport",
+    "status": "disqualified",
+    "historicalLine": 324,
+    "currentLine": 324,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "grok-model-info-flags",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+    "symbol": "GrokModelInfo",
+    "status": "disqualified",
+    "historicalLine": 706,
+    "currentLine": 753,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r33-cli-commands-l-q-effect-vitest-project-options",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts",
+    "symbol": "runEffectVitestLint.project",
+    "status": "disqualified",
+    "historicalLine": 424,
+    "currentLine": 424,
+    "citationProposalIntegrated": false,
+    "semanticFieldsUnchanged": true
+  },
+  {
+    "id": "r33-cli-commands-l-q-models-locator-xml-parser-options",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
+    "symbol": "xmlParser",
+    "status": "disqualified",
+    "historicalLine": 171,
+    "currentLine": 186,
+    "citationProposalIntegrated": true,
+    "semanticFieldsUnchanged": true
+  }
+]

@@ -22,6 +22,7 @@ import { processStartIdentityForPid } from "../../internal/repo-run/ProcessIdent
 import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.ts";
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
+import { runYeetEconomicsCommand } from "./internal/Economics.ts";
 import {
   runYeetFallowFeedback,
   runYeetFallowFixtureCheck,
@@ -1158,6 +1159,32 @@ const yeetProofReportCommand = Command.make(
   )
 );
 
+const yeetEconomicsCommand = Command.make(
+  "economics",
+  {
+    json: Flag.Boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Render the economics report as JSON (yeet-economics/v1)")
+    ),
+    branch: Flag.String("branch").pipe(
+      Flag.optional,
+      Flag.withDescription("Read only this branch's run directory instead of every run in the checkout")
+    ),
+    fleet: Flag.Boolean("fleet").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Add every sibling beep-effect* checkout, beep-effect*-worktrees lane, and clone .claude/worktrees lane under the projects root"
+      )
+    ),
+    packetDir: packetDirFlag,
+  },
+  runYeetEconomicsCommand
+).pipe(
+  Command.withDescription(
+    "Print where the checkout's proof minutes went: attempt mixes, wrapper and inner lanes, first failure, red-to-green episodes, and terminations"
+  )
+);
+
 const yeetPlanContractCheckCommand = Command.make(
   "plan-contract-check",
   {
@@ -1206,6 +1233,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetInboxCommand,
     yeetJobCommand,
     yeetProofReportCommand,
+    yeetEconomicsCommand,
     yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,

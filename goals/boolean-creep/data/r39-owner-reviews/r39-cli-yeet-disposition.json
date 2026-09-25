@@ -1,0 +1,323 @@
+{
+  "verdict": "retain-35-seeds-one-citation-correction",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "sha256": "87bf152f733ffd7e2608b5d1502aaad750e42d5d3b5eb33521fdc5b6c681d85f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts",
+      "sha256": "d49f57cbe76d3ff13b59702029e11dc3ba73565f7a5e5251adb6ee7d15f834e7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.render.ts",
+      "sha256": "6a410c5dd9077932dc5b014b2e978c6f3c4c89a6374de5c810c1b4b77dd51534"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "sha256": "5c3fbf1915d4483525db125ad722bd1a27204955d52b7bb25d4d4c3a2652420e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/index.ts",
+      "sha256": "a7a3ab8a73876bfbcc0a3902bf548412179255d3ef74c8d9fae95bad4537e693"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
+      "sha256": "be9e5bca4a76e0ee271079d1aaf33ba2b4ec7241c035b4adee6b2dae63e6319a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
+      "sha256": "2b9aec01fc6383929c88525d29ecffc6296d7e48108f4b4ce64c551f13e0fa38"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts",
+      "sha256": "af38dcea9fe5c4ba8e77c7b8254b645d01160d2ae3bf418595a2fd5b22957243"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
+      "sha256": "60f7a8e4cbc8a744034303a947bbadafa54419212ed412d52b0e282a0e313d4f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+      "sha256": "ccc0f5b3145ad2ef9b56b65622a12daea2ab84be7821807d8d9a40fb76438dc3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/FallowFeedback.ts",
+      "sha256": "bf54c585ac663c7318e6e777d0e86e23a630ce6f48309e16d6a1acf452867262"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
+      "sha256": "c658fbf9504f173994b43fc5f1958feb90561fc1eb022604d71e2880d334a863"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
+      "sha256": "78c837dfc813721aad7e32eba7b289b58780b506510b1463275c1a3b1e8d67ef"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts",
+      "sha256": "f4096e9d71d53918ff6d94d7cd89d1c0b2a29d51a5d38f8a0b421bc39e74447d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "ba7f7efc7fbac137aad9cb4fa24612f2185fc6ae7d3438b4361b3d3665fdaa18"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
+      "sha256": "b7440187fc59f9b245676dd8ae189ffdfd6355810e1a3a3e8d9597be2f81825e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+      "sha256": "a8050b6257d708eef39ce0174ab1e419de44dce63cbfd21025121881d5f9f8a5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "sha256": "b7fbd8d71072daf4665490c84ad8c9f6fd549dc3287b5be05d3deec5a7fb3d3d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts",
+      "sha256": "9ee9f1e3dba3f452c431a0ddcd4f8f4bffc3178cab0eca7c9f5605135cd42b77"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
+      "sha256": "b7bfde13361b4ca025e409860a79f5a9452048054f09d4602d5d0c2c64c69e33"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
+      "sha256": "3d5324a833414f1bab4be25f192dac5e92339fdb191bf4455c72b6ca6e34098f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts",
+      "sha256": "98fe6e710e7b04fe2b14e8354871178621995a899578f019c50766c41e51939c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueParser.ts",
+      "sha256": "f29bce08dd7001c49f806f9b79cdcea4f1acaa94c621e5b497f29aedc1f15523"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/LocalShardPoison.ts",
+      "sha256": "772f6524aca54d448312b3930558db2b4cad1b3d6a1678db42065af4644856bb"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "sha256": "a41e9b4ad7fa65b316fd0f8c09cbaa51facabf63e075b16426848f5aef02fd0d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MergedPreview.ts",
+      "sha256": "89dbf0d6155fb9af23381b9a92cd10307ebd0454c444041963624ab69b4de596"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorChecks.ts",
+      "sha256": "59fb2b9426535a595b6f64a495e40b09d5ec0de4c84fdfbe7bbf7810d028388b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+      "sha256": "21539b1741fbf4b13ed6eeff916013df24a61d5ccbde49f742ebde828f119997"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "sha256": "3f0de54becec320d7fa7dd76d3eed21580df3079b46f52cc71349069bb69f6c4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts",
+      "sha256": "d7875c33c2c4c7030bba74eee6258029b7f99b3ceda6b17c3ab42529e383053f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "sha256": "c2de8a66fd0639ef796ad0fa0749afce7426a97120572b9a7913de9bdef7477f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "sha256": "0aafba4506498844c9646055909126b50d650aef68d8a3cdf7616ae5119eb11a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+      "sha256": "646407d1f5e96d2a11fa815fdf06729a183bc68aa639000ebbc27fee84f4762d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PrSessionRegistry.ts",
+      "sha256": "30b6c38a4b74715e373af023630e575105af7ce83d9fd21ec85957eb4c0062a3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofDigest.ts",
+      "sha256": "ea57a61f2cbc893952ab4850a792a22b4da6a0d7d1660e89e6e8362f5b8144e2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofFact.ts",
+      "sha256": "6a06f47b7080f93d9aac50f085d6e9f249770df94a7c64537b6006aa21f844ad"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts",
+      "sha256": "872dfaf02bf27c4b22cbd33f9793aeb5576701fb589bc07046ffea741d848712"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts",
+      "sha256": "8db38d31083f01ee9d85aee79e2319c741420b7f6cfb62ec174a11a67b79191d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "sha256": "b1b607d4c26ead9111cf1e69188da1444efcb5c8fe2f7675a03148e0b039cd3a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+      "sha256": "558d1a70de7fa092b37b087bddab1e34c5d5104e15e7a796f97fbbd191e117e3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+      "sha256": "9bcd1b79ddb157e93b4775069765dac5d0fdf5fc15f47685758b778f3771b67b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "sha256": "4db7c0883770f62d637e522308e8474087ce7763b5e7d2134bc8584188d7d88f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+      "sha256": "02c45f50a9b0c11d83d8bb307f4c173313784efe96ce454ac798f77b90d01c75"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts",
+      "sha256": "b112126c2db1dae7638b4f8cc556aff8418d6045b31a6862017676991bb03230"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+      "sha256": "f1f67b19e7064e368e0968fb49870a74a9973a76bc68591dd5ff2881f3fb344e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
+      "sha256": "c58cdce895d361da5f0509a87ff89539742f4ea1eb89ac3a95781f476370d601"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Remediation.ts",
+      "sha256": "555c9572da97cd6f8ea4713fe17db4cb6f3dd1b31229aab646fe9f86dedf46f2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
+      "sha256": "0a47a99834090da51a9db82fe0ff84b4adc77656dd582b3db03984d45508d998"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts",
+      "sha256": "05e3784c902e26cd6ebf68b9c2a05204fe1cc882fed0c3be85c5e5def91ca33b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.schemas.ts",
+      "sha256": "9d9f7e93e91f4897ea12f8924643eeb330e435704ab454418f62a0931a51c95a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts",
+      "sha256": "c021de77416a82588f8088e359d7908ec8c32c8c9e66ce88a58f1f6e756c93a3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.schemas.ts",
+      "sha256": "33895eec1ba7e58ceb474b8221c80aa244a30b64f21dc023407031cb40738374"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "sha256": "cc12188b29f9582680eee74932bf6e3277e7fb528b5eba751e146228f2dcd3a8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewBodySignal.ts",
+      "sha256": "9bc6eec63294ce79910a8fea3f1a7c088707c5fa67e75cf1a79f96ec396500c9"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts",
+      "sha256": "bb895278d7bdc85adf6f1e769a858ff68ee12149892d9e16c90eb5fed998403a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "sha256": "145228e2d0e77f0b0309df22a034812509d9e189893e0f1a0e821c3a97c8c2c4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "sha256": "9667b5132d87560890dedfb413ba013ac73c161bf4af3d0a6db3958dfdab5b96"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "sha256": "144a32a95cc11183dd97fb13af33ad08b4b23090fde0c3923a46805c070991a8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "97b5d41c7f2c90f8ca917f50329e8a2b580b7563c300d13720d59420e55999f2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts",
+      "sha256": "cf45bf0b507ea3ebbfc8b4f1e7ff6587f418223fdcac0ad8adad063cd19d1a1a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "sha256": "15a433e966df6aa8a1be309d3437173c1cc39d9eb48257a9af2b6a8304db6987"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+      "sha256": "1b6a9c57af55378ebf5b5634f6630e27f9cf463fc43482d44659674f7174549d"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "sha256": "8c0a87b7afa9506bb31be8cca64e2802e45abd8fe62aa049645cc2a9e7b82a3b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
+      "sha256": "ef432afcb2e1b75157903ea5d528283a980ec98eb2c9efcc7f6b6241390ee464"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "sha256": "aecc554627cd6ce572e328dbc727311463646daff8ed069a5d06648984ef091b"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gates.ts",
+      "sha256": "c5bfbcce1928582027d82d05a653036d3f7cade1399183fd76999c8438ac31c8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "sha256": "ea029b5c293f8af514480ce4f4cf92d5e1c7d483e4613fe4fd85cced6c9144a7"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GhCollect.ts",
+      "sha256": "47c4df32a5e635856b560876fb84d4b919727e007147c849afe3f6f6e4edfde3"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
+      "sha256": "0175b1cca73db21be9b7c55bdbfc482eb3409f8782b6c154202a16fa1a0eb001"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/WritePlan.ts",
+      "sha256": "ee395074c39a8976ada3aa1c39aa466d791c466143f1c299837b63d73e9c380f"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25-r39-main-782aa4.seed.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-yeet.execution.json",
+      "sha256": "5b2e6f5649b982d3bd5adcbfd9f086d1cd21d01b6c5ac7cbb957a1692f0c71c5"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-cli-yeet.ndjson",
+      "sha256": "f84528955d292c0dedc06914e333f2100f50daf439b4571fd74d4f7cfda8df27"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-yeet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "86e852f9cd48b504461e82d686143f68cccd13a7e6dfd04291b842099de5c52c"
+    },
+    {
+      "path": "seed-accounting.json",
+      "sha256": "d3e03301a7bd42c6b00c9d4fd40f74b6e37126e59200c541ee7ae89490e3320e"
+    },
+    {
+      "path": "inventory-proposals.json",
+      "sha256": "19d24d66d8b0f2f8c601d1e3efe58116f6253c7204ff864968e4def61ff6d958"
+    }
+  ],
+  "rowDelta": 0,
+  "qualifiedDelta": 0,
+  "noteCorrections": 1,
+  "P3Credit": false,
+  "dryCredit": false
+}

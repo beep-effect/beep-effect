@@ -16,7 +16,12 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
-import { ensureProvenanceFooter, recordCurrentPrSession } from "./ProvenanceFooter.ts";
+import {
+  ensureProvenanceFooter,
+  isProvenanceStampFailure,
+  ProvenanceStampOutcome,
+  recordCurrentPrSession,
+} from "./ProvenanceFooter.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
@@ -284,11 +289,12 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
  * ```ts
  * import { Effect, Ref } from "effect"
  * import * as O from "effect/Option"
- * import { recordPrProvenanceStampLane } from "@beep/repo-cli/test/Yeet"
+ * import { ProvenanceStampOutcome, recordPrProvenanceStampLane } from "@beep/repo-cli/test/Yeet"
  *
  * const recorded = Effect.gen(function* () {
  *   const recorder = yield* Ref.make([])
- *   yield* recordPrProvenanceStampLane(recorder, O.none(), O.none(), O.none())
+ *   const outcome = ProvenanceStampOutcome.make({ status: "current", message: "provenance footer current for PR #42" })
+ *   yield* recordPrProvenanceStampLane(recorder, O.none(), O.none(), outcome)
  * })
  * console.log(Effect.isEffect(recorded)) // true
  * ```
@@ -296,7 +302,7 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
  * @param recorder - Mutable Ref of executed Yeet lanes.
  * @param stampStep - Optional planned provenance-stamp step to append.
  * @param prNumber - Pull-request number when GitHub supplied one.
- * @param warning - Non-fatal warning returned by footer stamping.
+ * @param outcome - Typed stamp outcome; `current` and `preserved` pass, the failure family fails the lane.
  * @returns An Effect that records passed, failed, or skipped stamp status.
  * @category diagnostics
  * @since 0.0.0
@@ -305,14 +311,12 @@ export const recordPrProvenanceStampLane = Effect.fn("Yeet.recordPrProvenanceSta
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   stampStep: O.Option<RepoPlanStep>,
   prNumber: O.Option<PrNumber>,
-  warning: O.Option<string>
+  outcome: ProvenanceStampOutcome
 ): Effect.fn.Return<void> {
   if (O.isNone(stampStep)) return;
   const skipped = O.isNone(prNumber);
-  const failed = O.isSome(warning);
-  const output = skipped
-    ? "skipped: no pull request number was available"
-    : O.getOrElse(warning, () => `provenance footer current for PR #${prNumber.value}`);
+  const failed = isProvenanceStampFailure(outcome);
+  const output = skipped ? "skipped: no pull request number was available" : outcome.message;
   yield* Ref.update(
     recorder,
     A.append(
@@ -394,7 +398,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
       "pushed",
       dependencies.registry
     );
-    const warning = O.isSome(recording)
+    const outcome = O.isSome(recording)
       ? yield* ensureProvenanceFooter(
           context,
           recording.value.repository,
@@ -402,10 +406,11 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
           capture,
           dependencies.registry
         )
-      : O.some(
-          `[yeet] provenance footer stamp skipped for PR #${existing.value.number}: session recording was unavailable`
-        );
-    yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(existing.value.number), warning);
+      : ProvenanceStampOutcome.make({
+          status: "skipped",
+          message: `[yeet] provenance footer stamp skipped for PR #${existing.value.number}: session recording was unavailable`,
+        });
+    yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(existing.value.number), outcome);
     return;
   }
 
@@ -434,10 +439,13 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
     "created",
     dependencies.registry
   );
-  const warning = O.isSome(recording)
+  const outcome = O.isSome(recording)
     ? yield* ensureProvenanceFooter(context, recording.value.repository, created.number, capture, dependencies.registry)
-    : O.some(`[yeet] provenance footer stamp skipped for PR #${created.number}: session recording was unavailable`);
-  yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(created.number), warning);
+    : ProvenanceStampOutcome.make({
+        status: "skipped",
+        message: `[yeet] provenance footer stamp skipped for PR #${created.number}: session recording was unavailable`,
+      });
+  yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(created.number), outcome);
 });
 
 /**

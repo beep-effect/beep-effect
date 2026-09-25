@@ -35,6 +35,7 @@ import {
   canUseTurboCacheSecretSession,
   configStringEqualsSync,
   configStringOption,
+  isCiSync,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
   renderTurboEnvironmentHealthWarning,
@@ -990,7 +991,7 @@ const shouldRunRepoWideSteps = (args: ReadonlyArray<string>): boolean => !A.some
 const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, isExplicitTurboAffectedOrScopeArg);
 
-const isCi = (): boolean => Bun.env.CI === "true" || configStringEqualsSync("CI", "true");
+const isCi = isCiSync;
 
 // A workstation configured for remote reads is honored; everything else falls
 // back to local-only. The decision itself lives in `internal/cli/TurboCache`

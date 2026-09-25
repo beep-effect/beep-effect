@@ -1,0 +1,182 @@
+[
+  {
+    "id": "package-verify-step-outcome",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/package-verify-step-outcome.md",
+    "originalFile": "goals/boolean-creep/designs/package-verify-step-outcome.md",
+    "originalSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+    "baseFile": "goals/boolean-creep/designs/package-verify-step-outcome.md",
+    "baseSha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+    "sha256": "792f7e5b6a07b66a429f8a83dc08b0e899fb161eba877f63ae1815e4078e5fda",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Complete source byte-identical to its authoritative R37 locator receipt. Retain 4/3 and the full Option exit-code domain, including executed success/failure with None; do not narrow from Some production writers.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "r3-tooling-ecosystem-polarity-specifier-call",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r3-tooling-ecosystem-polarity-specifier-call.md",
+    "originalFile": "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+    "originalSha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544",
+    "baseFile": "goals/boolean-creep/designs/r3-tooling-ecosystem-polarity-specifier-call.md",
+    "baseSha256": "eea72d606cd941824f958f62d34aae0f00e2a1748f4ca98921822b1531db1544",
+    "sha256": "decac8f470410f1f1a03d30e422e215e8653809edcdbf1ebec126a8b6d409117",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Complete source byte-identical to the design baseline. Retain syntactic import/require/other classification, including shadowed require; no semantic binding resolution may be added.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "r3-tooling-schema-first-fn-eligibility",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r3-tooling-schema-first-fn-eligibility.md",
+    "originalFile": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "originalSha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f",
+    "baseFile": "goals/boolean-creep/designs/r3-tooling-schema-first-fn-eligibility.md",
+    "baseSha256": "dadc2d70635921b00ea15166d67ead567f5dcb6a7066d3059bf03b089e73f27f",
+    "sha256": "799a5f744f5919c9f3766bd4bb50711f9955f69f269fd711dc8f4afaa00bb617",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Only earlier const-assertion iteration changed; appendFunctionEntries body is unchanged and moves one line. Current declaration225, selected locals238-241, reads243/246. Retain source-signal gating plus local TSX exclusion, full finding payloads and detector order.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "effect-import-rules-summary-operation",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-import-rules-summary-operation.md",
+    "originalFile": "goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+    "originalSha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+    "baseFile": "goals/boolean-creep/designs/effect-import-rules-summary-operation.md",
+    "baseSha256": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+    "sha256": "fdd3da887ddb88940f7788f1b739b009bc10d4fb9e87f8ef2ecb31c4acfc86f0",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Complete owner source byte-identical to the baseline. Retain successful-summary 4/3, independent strictFailure, all payloads/defaults and encoded property order. Raw options and pre-summary conflict diagnostics remain unrestricted request contracts.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "effect-import-source-transform-phase",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-import-source-transform-phase.md",
+    "originalFile": "goals/boolean-creep/designs/effect-import-source-transform-phase.md",
+    "originalSha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1",
+    "baseFile": "goals/boolean-creep/designs/effect-import-source-transform-phase.md",
+    "baseSha256": "e070717bf1da0c5f1e4d13da237d431cd67475ae3504f2e8c10b00d20e3869d1",
+    "sha256": "f5626ca8d7ec14bd317322739603d45ab6d301ae1e527b121aa4cc49ce9521b6",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Complete source byte-identical to baseline. Retain 4/3: clean, review-only, rewritten; rewrite-plus-review remains rewritten. Fenced replacement uses rewritten, aggregate affected includes reviews. No raw-option migration.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "package-inventory-docgen-coverage",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/package-inventory-docgen-coverage.md",
+    "originalFile": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+    "originalSha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288",
+    "baseFile": "goals/boolean-creep/designs/package-inventory-docgen-coverage.md",
+    "baseSha256": "e5eb0d52a98545671f4605956b9d062e2c33072b15848396aec90aea22ba5288",
+    "sha256": "0a53ecad8e485238b23c4b86913973b2a09ee63e86bbbb6f7231bf1d0e016dd0",
+    "cardinality": {
+      "representable": 16,
+      "legal": 10
+    },
+    "rationale": "Complete source byte-identical to authoritative R38 source. Retain 16/10, FFFF missing-package versus FFFT missing-config and all eight configured states, exact JSONC projection, full payloads and same-scan mirror write order.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+    "originalFile": "goals/boolean-creep/designs/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+    "originalSha256": "0311430f93ee31517f8802b76a1f954fe814d2d2b6ea26fada3bdfc64003bbdf",
+    "baseFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+    "baseSha256": "b0ae87bac4885ccaa516181855f52aeb3b1d7e5190873a8e271836a4acc10c94",
+    "sha256": "8f268b05feace1adb8df4503e5099bf5c9f5b8ea996d5a2960dcb3a08fdb6b6a",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Retain 4/3 pre-execution disposition; an active session can miss, and shadow still executes. Retain complete session/lane payloads. Parent payload supplement is accepted: inputPackages default [] for reused rows, full executed package scope, and preparation configuration-error wrapper. LaneProofReuse now uses Effect Crypto: index identity/virtual-tree failure remains None fallback; command/input/environment digest failures surface typed errors; staging identity failure is caught by the existing nonfatal persistence warning. Preserve Crypto requirements, sequential identity effects and source failure boundaries; do not broaden all preparation errors into cache misses.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "r28-cli-quality-coverage-resolved-operation",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r28-cli-quality-coverage-resolved-operation.md",
+    "originalFile": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+    "originalSha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d",
+    "baseFile": "goals/boolean-creep/designs/r28-cli-quality-coverage-resolved-operation.md",
+    "baseSha256": "08ec72ad8140ba79a67ce1f67ccded81296e5e7d217f8053f701e5f7ee39df9d",
+    "sha256": "b0055c7fcebbace1e6bfbae6e7f3c5deb52f570c195d198e5aee093be4a074c6",
+    "cardinality": {
+      "representable": 16,
+      "legal": 9
+    },
+    "rationale": "Retain 16/9 successful resolved domain: replaceAll implies writeBaseline; skip implies scoped. Scoped replacement and noop replacement remain supported. Raw parser/step adapters remain permissive. Preserve absent versus present-empty topology arrays, report-only rejection before noop, cleanup after noop guard and before execution, full/sharded dispatch, exact diagnostics, cache-runtime wrapping and current Crypto requirements.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "r28-cli-quality-test-lane-resolved-selection",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r28-cli-quality-test-lane-resolved-selection.md",
+    "originalFile": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+    "originalSha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e",
+    "baseFile": "goals/boolean-creep/designs/r28-cli-quality-test-lane-resolved-selection.md",
+    "baseSha256": "537a2209bdf45651cc8b6d9e8c4510a0061061dab7fee05c3a921ce5c058de3e",
+    "sha256": "7f9da28499c8b0dcd4b4c6821f194b4cc5dd26f79423a9a001d70c4ad81b6559",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Retain normalized 4/3 and raw independent false/false accumulator. Strip only one leading delimiter; consume exact selector tokens even after retained delimiters; preserve every other token in order. Preserve unit/parallel/serial failure accumulation versus aborting Effect failures and SQL acquisition/release. Keep diagnostic writer projected old JSON, current cache-runtime wrapper and Crypto requirements.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/r30-cli-commands-l-q-github-check-lane-outcome.md",
+    "originalFile": "goals/boolean-creep/designs/r30-cli-commands-l-q-github-check-lane-outcome.md",
+    "originalSha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee",
+    "baseFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-quality-design-refresh/r30-cli-commands-l-q-github-check-lane-outcome.md",
+    "baseSha256": "48966e533677827092e3762f9c67601d3e4a37e3346915e8b30b056ab92b0eee",
+    "sha256": "19258f2b483ee130706de969b444424c352a160f4bb655a0ae745a11fc37ec80",
+    "cardinality": {
+      "representable": 4,
+      "legal": 3
+    },
+    "rationale": "Retain 4/3 completed owner and full Option laneRun/session/failure payloads. Parent supplement preserves nested inputPackages/defaults and preparation mapping. Preserve Crypto-backed preparation/persistence distinctions described for the R27 companion, and fold order: reused attribution, optional journal, failures, stop latch, proof attempt. An imprecise failed ran contribution cannot persist success. Reused and stopping contributions stay distinct from ran; collect-all scheduling retains its policy.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "effect-vitest-function-reachability",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-vitest-function-reachability.md",
+    "originalFile": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+    "originalSha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2",
+    "baseFile": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+    "baseSha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2",
+    "sha256": "35f546729afb46826250f3bb5fd63701211148f2bb6dd4f4050647f5dbb5e20c",
+    "cardinality": {
+      "representable": 32,
+      "legal": 24
+    },
+    "rationale": "Complete Syntax source byte-identical to f97a89bd design binding. Retain 32/24 and monotone join: testClock implies effect, not equality. plain/outside/uncertain remain independent. Current detector boundary is Effect-based with Crypto requirement and occurrence-error mapping; preserve current stable-ID anchoring and ordered findings while migrating the graph.",
+    "unresolvedFindings": []
+  },
+  {
+    "id": "effect-vitest-reachable-helper-flags",
+    "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-lq-final-review/effect-vitest-reachable-helper-flags.md",
+    "originalFile": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+    "originalSha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3",
+    "baseFile": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+    "baseSha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3",
+    "sha256": "d4ce0985fde4866fdda40902b04150fa35ec830dcefffd7c13e17ce74cc655b3",
+    "cardinality": {
+      "representable": 16,
+      "legal": 10
+    },
+    "rationale": "Complete Syntax source byte-identical to f97a89bd design binding. Retain 16/10 present-result domain, five nonempty modes times independent shared, callback identity and None for no reachable test. Current Effect/Crypto detector boundary and its error behavior remain supported; no synchronous scanner assumption.",
+    "unresolvedFindings": []
+  }
+]

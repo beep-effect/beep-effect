@@ -1,0 +1,22 @@
+{
+  "lane": "r40-drivers-n-r",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T10:43:13.316376+00:00",
+  "finished": "2026-09-25T10:47:08.729411+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-n-r.jsonl`. Confirmed 0, disqualified 0. All 15 assigned roots were covered (88 in-scope source files).\n\nSeed owners and member clusters still match current source, and their classifications still hold, so nothing was rewritten. No seed withdrawal. Single-boolean shapes (`FileInfoOutput.exists`, `PhoenixPromptReadResult.exists`, `OnePasswordCliAccount.signedIn`, `ObsRequestStatus.result`) stay out of the net. The validator accepted the empty report.",
+  "transcriptSha256": "c58db3ac6a724a139ff86f6b76e111dfb5d857614cc0dc137ffe9689c1123c70",
+  "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a",
+  "seedSha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

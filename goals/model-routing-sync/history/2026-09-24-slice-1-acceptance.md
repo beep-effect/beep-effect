@@ -140,3 +140,35 @@ follow-up PR, which must remain open after final local and hosted verification.
 The actual configs also pass the original failing runner settings:
 `bun run coverage -- --fileParallelism=true --maxWorkers=1`, without any
 isolation CLI override. All 344 tests pass under those settings as well.
+
+## 2026-09-25 delivery and packet closeout
+
+PR [#1240](https://github.com/beep-effect/beep-effect/pull/1240) delivered the
+three approved configuration exceptions and their required patch changeset.
+Review requested that each comment describe the unconditional override; all
+three now say that every test run remains isolated because the shared config
+disables isolation during coverage. The thread was answered and resolved through
+Yeet. No test assertions, thresholds, dependencies, or runtime code changed.
+
+On head `b8a5a65bb3abfeb3a544af0c6aa2eeb125afaf81`, the canonical publisher's
+head-local proof passed all 15 cheap gates, 32 pre-push lanes, and nine
+repo-sanity lanes. All ten coverage shards passed; the aggregate coverage lane
+finished in 661 seconds. Repo-cli passed 4,582 tests across 229 files.
+The earlier Models acceptance evidence above remains unchanged.
+
+Tier 1 passed before `ready-for-heavy` was applied. All seven hosted heavy lanes
+passed, including Coverage Regression in workflow run `36117424758`. Canonical
+Yeet monitoring reported `merge-ready: yes` on that head at
+`2026-09-25T09:57:11Z`. The Vercel failures were the permitted
+`api-deployments-free-per-day` rate-limit exception.
+
+The operator merged #1240 at `2026-09-25T10:22:25Z` as
+`5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc` while the publisher's additional
+merged-preview proof was still running. The agent did not merge either #1224 or
+#1240. The operator then approved a documentation-only follow-up, left open and
+mergeable, for this acceptance receipt, reflection, and packet lifecycle.
+
+The lifecycle changes travel in that follow-up. Its own final local proof and
+canonical hosted readiness remain delivery gates; readiness of #1240 does not
+establish readiness of a later documentation commit. Slices 2 and 3 remain
+outside this completed implementation scope.

@@ -1,0 +1,43 @@
+{
+  "verdict": "accept-apps-primary-plus-coverage-and-anchor-supplements",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-apps.execution.json",
+      "sha256": "7e9b0d0ab145cc57b6123d4ecf5d3863343bcf682195bfc05baa624055daed0f"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-apps.ndjson",
+      "sha256": "dfbfcd2eac227080be270bb0add6891537c8a6ee22ae65a13ebe335f376c6ee2"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25-r39-main-782aa4.seed.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/lane-map.json",
+      "sha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/launch-included-files.json",
+      "sha256": "7b71dc0af555663b48bf00aeed2bd16fe5937916ef8cc568da9b84d0422a9ebf"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-app-anchor-audit/disposition.json",
+      "sha256": "613838bad21c465baf18190796c750833703d8ce9197a52ffecf76c5ee7faee5"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "coverage.json",
+      "sha256": "786ca538593d95c12fa098bf681422760f8d0064f144557215c699f563b617a0"
+    },
+    {
+      "path": "disposition.md",
+      "sha256": "efd208cd2f9875b04eacd05a0dd7d443fd87c4a52d6aaf6b7d1161531db25bc0"
+    }
+  ],
+  "delta": 0,
+  "P3Credit": false,
+  "dryCredit": false
+}

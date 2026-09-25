@@ -1,0 +1,93 @@
+{
+  "kind": "r39-modeling-special-file-supplement/v1",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "originMain": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "verdict": "complete-three-file-supplement-no-eligible-Boolean-owner",
+  "manifestCount": 177,
+  "typescriptCount": 175,
+  "ontologySeedCount": 2,
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/modeling/html/src/whatwg-url.d.ts",
+      "sha256": "3fd1152dd06a14a810c482f1fa4a1ea8af04d795edc565cb78c11016096cd4de",
+      "lines": 24,
+      "included": true,
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849",
+      "lines": 90,
+      "included": true,
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2",
+      "lines": 34,
+      "included": true,
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    }
+  ],
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/lane-map.json",
+      "sha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-foundation-modeling-rest.ndjson",
+      "sha256": "7d24ffc44d595378df3ebc59426826130762c4ee174e8f10d103a653e2f0c284"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-foundation-modeling-rest.execution.json",
+      "sha256": "f7dd271bd06ae09672d0d67cd5d849ac5ee830b900b50949c2e2682d4caed593"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r38-modeling-supplement/disposition.json",
+      "sha256": "d0f03414ae3edc8eff66182c6a33a5156036b17f83862681d9c95587343da33a"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "unresolvedOwnerQuestions": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "file": "primary-special-file-evidence.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "proposed-rows.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "5948e2b7364818c7c44378af7b8fa996e622b083135839ff87c84b9ff23ce3a2"
+    }
+  ]
+}
