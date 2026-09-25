@@ -92811,25 +92811,92 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/drivers/cosmos/test/CosmosProjection.test.ts:115:expect@6#1",
-      "lens": "detector",
-      "ruleId": "EV006",
+      "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:189:scoped@15#1",
+      "lens": "resource",
+      "ruleId": "EV004",
       "package": "@beep/cosmos",
       "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
-      "line": 115,
-      "endLine": 115,
-      "symbol": "expect",
-      "occurrence": "v2:5b18cda84e285ff0e58887a998c9db3552c46f7989e73dcbb217de942f27a519",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isNone(ProbeWebGl2Options.make({}).canvas)).toBe(true)",
+      "line": 189,
+      "endLine": 221,
+      "symbol": "scoped",
+      "occurrence": "v2:f83444a794f03ac78cf2b021163e2e902b1c380857fa059f8dd3f8769867f737",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { vi.stubGlobal(\"requestAnimationFrame\", undefined); yield* Effect.logInfo(\"Cosmos stage: acquire unframed renderer\"); yield* Effect.scoped( Effect.acquireReleas",
       "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional shorter renderer scope: destroy the framed handle before finally restores requestAnimationFrame and cancelAnimationFrame globals. The test scope outlives global restoration and would change release ordering."
+    },
+    {
+      "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:193:scoped@19#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/cosmos",
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "line": 193,
+      "endLine": 197,
+      "symbol": "scoped",
+      "occurrence": "v2:6548670d614fbaba2fe68c24e962da09b7475ddce4d49516cfa7b1bf02802256",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.acquireRelease(renderCosmosGraph(container, initial), (unframedHandle) => Effect.sync(() => unframedHandle.destroy()) ) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional shorter unframed scope: destroy this handle before replacing the frame globals and resetting Graphology state for the framed renderer. A whole-test scope would delay this release past the next acquisition."
+    },
+    {
+      "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:236:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/cosmos",
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "line": 236,
+      "endLine": 244,
+      "symbol": "scoped",
+      "occurrence": "v2:e7f58c32fd4ba83d5684170d39d5b4e2c1237ecc2c7efd0f443689dafa193ce9",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { yield* Effect.logInfo(\"Cosmos stage: acquire failure-path renderer\"); yield* Effect.acquireRelease(renderCosmosGraph(failureContainer, failureProjection), (han",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional failure-probe scope: release the renderer before inspecting its failure Exit and asserting exactly one vendor kill. Keeping it until test teardown would make the cleanup assertion premature."
+    },
+    {
+      "id": "EV011:packages/drivers/cosmos/test/CosmosProjection.test.ts:18:vitest-import@0#1",
+      "lens": "detector",
+      "ruleId": "EV011",
+      "package": "@beep/cosmos",
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "line": 18,
+      "endLine": 18,
+      "symbol": "vitest-import",
+      "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
+      "class": "plain-vitest-with-effect",
+      "evidence": "import { vi } from \"vitest\";",
+      "replacement": {
+        "primitive": "module.@effect/vitest",
+        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
       },
       "severity": "minor",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "Vitest 5 hoisted Graphology/Sigma vendor mocks require vi imported directly from vitest. Re-exporting vi through @effect/vitest reproducibly fails before test registration; retain the direct import rather than enabling global APIs."
     },
     {
       "id": "EV006:packages/drivers/drizzle/test/Drizzle.errors.test.ts:137:expect@4#1",
@@ -159610,27 +159677,6 @@
       "occurrence": "v2:7b87fe4e929ef1c1ada94dc668b2790d5812b2cbfd366f27848054e08bbaaba3",
       "class": "plain-vitest-with-effect",
       "evidence": "import { describe, expect, test } from \"vitest\";",
-      "replacement": {
-        "primitive": "module.@effect/vitest",
-        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV011:packages/drivers/cosmos/test/CosmosProjection.test.ts:14:vitest-import@0#1",
-      "lens": "detector",
-      "ruleId": "EV011",
-      "package": "@beep/cosmos",
-      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
-      "line": 14,
-      "endLine": 14,
-      "symbol": "vitest-import",
-      "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
-      "class": "plain-vitest-with-effect",
-      "evidence": "import { vi } from \"vitest\";",
       "replacement": {
         "primitive": "module.@effect/vitest",
         "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."

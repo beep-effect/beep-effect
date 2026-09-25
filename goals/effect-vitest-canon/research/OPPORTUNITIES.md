@@ -2264,3 +2264,19 @@ full-value `toEqual` separately; do not narrow the ProcessLike generator.
 Node reproduced the mismatch after 36 runs and three shrinks. A migration rule
 that distinguishes presence checks from payload equality semantics would prevent
 this accidental strengthening.
+
+## Cosmos hoisted vendor mocks require the direct Vitest API import
+
+Moving `vi` from `vitest` to its public `@effect/vitest` re-export caused Vitest
+5 to reject CosmosProjection before test registration: `There are some problems
+in resolving the mocks API`. The error requests a direct import or globals.
+Retain the direct vi import with an EV011 exception for hoisted Graphology/Sigma
+mocks. A detector hint that distinguishes hoisted vendor mocks from ordinary
+runner imports would prevent this non-equivalent rewrite.
+
+The added failure-cleanup probe initially ran as a separate test and observed
+three vendor kill calls instead of one: shared Vitest configuration enables
+concurrent tests. Both cases mutated the same vendor state/global stubs. Keep
+normal and failure cleanup probes within the existing renderer test, preserving
+one fixture owner; do not disable concurrency across the package or loosen the
+exact kill assertion.
