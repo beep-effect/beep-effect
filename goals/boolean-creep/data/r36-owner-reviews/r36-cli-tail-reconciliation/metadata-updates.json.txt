@@ -1,0 +1,38 @@
+[
+  {
+    "id": "worktree-list-entry-porcelain",
+    "oldLine": 54,
+    "newLine": 55
+  },
+  {
+    "id": "r25-cli-commands-r-z-worktree-list-entry-detached-branch",
+    "oldLine": 54,
+    "newLine": 55
+  },
+  {
+    "id": "sync-data-target-selection",
+    "oldLine": 61,
+    "newLine": 62
+  },
+  {
+    "id": "r27-cli-commands-r-z-sync-data-target-selection-auth",
+    "oldLine": 63,
+    "newLine": 64
+  },
+  {
+    "id": "worktree-removal-mode",
+    "evidenceOldLine": 986,
+    "evidenceNewLine": 994,
+    "declarationLine": 489
+  },
+  {
+    "id": "tsconfig-workspace-descriptor-presence",
+    "declarationLine": 966,
+    "noteCorrection": "WorkspaceDescriptor958\u2192966; other historical citations not broadly re-audited"
+  },
+  {
+    "id": "tsconfig-workspace-owner-presence",
+    "declarationLine": 966,
+    "noteCorrection": "WorkspaceDescriptor958\u2192966; other historical citations not broadly re-audited"
+  }
+]

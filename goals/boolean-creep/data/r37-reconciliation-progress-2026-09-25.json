@@ -1,0 +1,299 @@
+{
+  "round": "refresh-2026-09-25-r37-main-9a1bd3",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "complete": true,
+  "dryCredit": false,
+  "reviewedLanes": [
+    {
+      "lane": "r37-foundation-primitive",
+      "executionSha256": "e090142208c95e3899839dbf8ac065ca849dd060f8f9c8fbf79524dec8b79cc6",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Both assigned primitive roots covered; no canonical seeds. Empty validated report. Single latch, false-or-MimeType sentinel, predicate returns and type-level Boolean conditionals remain outside the complete two-Boolean owner recall net. Execution, transcript, seed and runner bindings verified; no unresolved question."
+    },
+    {
+      "lane": "r37-foundation-schema-n-z",
+      "executionSha256": "77d38e7c231631e70778b8c879c1dbc80b71f6ada218fb86da19b64ae510a74e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All54 assigned roots and82 included files covered; seven seeded clusters retain complete owners, members and D1/D2 rulings. Empty validated report, no withdrawal or unresolved source question. Execution, transcript, seed and runner bindings verified."
+    },
+    {
+      "lane": "r37-foundation-capability",
+      "executionSha256": "c7383c684d4aa38c761310b3cb7920d73a028e7f168bf1ed72406b7253afc47b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots and165 source files covered;22 scoped seeds retain owners, members and classifications. No drift, withdrawal or unresolved question. Empty validated report; execution, transcript, seed and runner bindings verified."
+    },
+    {
+      "lane": "r37-foundation-schema-a-m",
+      "executionSha256": "c946790a0f081f88b787b26a1a07f3ce30358e542148a88d423f113faee74319",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots and188 source files covered;11 seed clusters retain owners, members, locators and classifications. No missing root, withdrawal or unresolved question. Empty validated report; execution, transcript, seed and runner bindings verified."
+    },
+    {
+      "lane": "r37-drivers-g-m",
+      "executionSha256": "1e1c2f86325e8e670645bcdc516064d9dcda3734fe8866208481a1507f8728d0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All seven roots and69 included files covered; seven seeded clusters retain owners, members, anchors and D2/E4 rulings. Single-Boolean owners and callable probes excluded consistently with complete-owner recall. Empty validated report, no withdrawals or unresolved question; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-foundation-modeling-rest",
+      "executionSha256": "bbe544bd8e6cdbe87b93988b47d3c9448530b716d62205267a21979da6e24274",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All11 roots and25 seed clusters covered with unchanged classifications. Supplemental complete read of90JSON-LD and34Turtle lines closes primary non-TypeScript coverage gap:24objects/12subjects contain zero actualBoolean members. Nineinput/twooutput hashes verified; original primary report unchanged. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-drivers-n-r",
+      "executionSha256": "304ade0ff13508e16e80844e933ad9be561101c74a2228c1e0603f7bba8715dc",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All15 driver roots covered;28canonical clusters unchanged. Existing StreamState and MigrationJournalShapeRow evidence retained; singleBoolean payload/probe shapes excluded. No withdrawals or newowners. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-drivers-s-z",
+      "executionSha256": "0f39a8979ae666f7de41e5ba3442e954c62e302f3b287a5eb9bcc1d1de2b1d2f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots covered;five seeds retain completeowners andD1 classifications. No withdrawals/newclusters or unresolved question. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-foundation-ui",
+      "executionSha256": "11518de93777b17854e5bf488ca6530a64b92c12694224ad8dc5ff4c6d78d13e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allfive roots and64seed clusters covered; currentowners/classifications retained. No newrows or withdrawals. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-drivers-a-f",
+      "executionSha256": "2b05b1579b75e42eb444904652166c53cd6a520f06fdc56648da7e3c8f7e0082",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All17roots covered, seededowners retained. Independent complete locator audit retains allfiveowneranchors; firstBoolean positions are not declaration drift. Two D1notes need supportcitation502-505 instead of501-504; private replacements accepted for integration only after sourcefreeze. Nineinputbindings verified. Emptyvalidatedreport and execution/transcript/seed/runnerbindingsverified."
+    },
+    {
+      "lane": "r37-agents-workspace",
+      "executionSha256": "6e64657d39763a8a6c5048d73fe34af9a89a75b0f24b1c860d60adba7945cece",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allnine roots covered; TextInline independentmarksD1 and ScanStateE4 unchanged. SingleBoolean owners and predicates excluded. No newrows or unresolved question. Emptyvalidatedreport and execution/transcript/seed/runnerbindingsverified."
+    },
+    {
+      "lane": "r37-architecture-ecosystem-internal",
+      "executionSha256": "8f585454f67d67dd75146401d6603632975012bba20ef43461d79e4d84fb8b53",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Every assigned root, including non-TypeScript files, covered. Three canonical D1 owners unchanged; callable status predicates and projector function parameters excluded. No drift or unresolved question. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-epistemic-ontology",
+      "executionSha256": "3aaed56347f5caf011d1310a4842ad6a24a3651ec6f868a05017d465e2fca0de",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All14 lane paths and230 included source files covered;23 seeded clusters match complete owners, current writers/readers and classifications, including R36 toolbar input. No withdrawals or unresolved question. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-law-practice-domain",
+      "executionSha256": "6fb47ec819b96cf24eb9bea70243ac68f0f931bfca95c91f2b92e8ff06851823",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned domain roots covered with generated exclusions preserved. Seed owners and clusters retain classifications; no withdrawal or unresolved question. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-law-practice-runtime",
+      "executionSha256": "a19005b02b818c448844a394e3e11bf02265ce59f7c31d129278305706700a8f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allthree roots covered; PracticeKgOptions and existingSourceSpecs remainD1, closedWorldReadOnlyHints remainsD2. No newBoolean cluster, withdrawal or unresolved question. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-shared-documents",
+      "executionSha256": "129ec385ea02c3c7d2daa0188ba87ec4a72e791f43b5a4055d171259b8ce31cc",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allseven roots and220sourcefiles covered. enqueueMoveDeltas independent change axes and recordPushFailure requeue relation retained. No drift or unresolved question. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-tooling-library-observability",
+      "executionSha256": "d75adc6acfa967750f5843222e46964a6900dd15e8dabd7e9b6113f0d9a53af4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allthree roots52files covered. Reject repeated three footer withdrawals: complete owners each contain followUpFix and passed actualBooleans; qualityGate is not counted as Boolean. R36 complete-owner source/rule bindings and allthree retained rows match exactly. No new evidence supersedes that adjudication. RetainD1rows,zero delta.",
+      "sourceBindings": [
+        {
+          "file": "packages/tooling/library/ai-metrics/src/models.ts",
+          "sha256": "2dac11d497c2d23dfaad6ab052cc340abfdff2787185d11cd30ad321d8522817"
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/src/scorecard.ts",
+          "sha256": "9858b8bfcfd4e3583ee2726e50b5fbb11e8633feda8c8fec947be13107fbe5b4"
+        },
+        {
+          "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+          "sha256": "693da6ec2a00c1343fa0f800ac29d2fff7d287b829a920ae76275015eae2af3c"
+        },
+        {
+          "file": "goals/boolean-creep/SPEC.md",
+          "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+        },
+        {
+          "file": "goals/boolean-creep/DECISIONS.md",
+          "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+        }
+      ],
+      "priorAudit": {
+        "file": "goals/boolean-creep/data/r36-owner-reviews/r36-observability-reconciliation/disposition.json.txt",
+        "sha256": "73eca52f0eaa5bcc4d051269d3ec12c00ab35d5ed7ab2e3a3efceb0db72fd672"
+      }
+    },
+    {
+      "lane": "r37-tool-docgen",
+      "executionSha256": "5f99c754d424644173933bb8d07e37ece0ca6f6155731d62ea1097c1f0c2ffa5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All docgen sources and17seed owners covered; unchanged owner/classification, no drift or unresolved question. Emptyvalidatedreport;execution/transcript/seed/runnerbindingsverified."
+    },
+    {
+      "lane": "r37-tooling-library-support",
+      "executionSha256": "f1b5d4a4d5b71814a09f9a1046107d973bafec0c73197b52e545928107db89a5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Allfive assigned roots covered; seededclusters unchanged. PinnedLiteralBoolean compilerprofile remains existingD1; no withdrawal/question. Emptyvalidatedreport;execution/transcript/seed/runnerbindingsverified."
+    },
+    {
+      "lane": "r37-tooling-policy",
+      "executionSha256": "412cd4a6c3cb07314f75706c19173ba447c793e1bf5f89955097abb793cf8fe4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Both assigned roots covered with generatedsnapshot excluded. SeedD2owners unchanged; optionalLiteralfalse fields do not invent a Boolean domain. Emptyvalidatedreport;execution/transcript/seed/runnerbindingsverified."
+    },
+    {
+      "lane": "r37-cli-internal-root",
+      "executionSha256": "98fe3a7701b42af83213f60e516d88e5db31de13b290816a8b8b0afe4a88fc55",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All87 included source files and18 seeded owners covered; declarations, members, classifications and anchors unchanged. SingleBoolean-plus-payload owners and function flag parameters excluded. Empty validated report; execution/transcript/seed/runner bindings verified."
+    },
+    {
+      "lane": "r37-apps",
+      "executionSha256": "f89362d07611e3cc071a5a05dd6d240c57d0ab5a7003923713a6f750493cd50e",
+      "reportSha256": "bf5a573eb397e24b01c7e82f511ce5adb7f4f76553e98217a4868bd3892b46f4",
+      "disposition": "Allassignedroots includingRust/nonTS covered. Reject raw transcript8/4replacement: completeowner has3actualBooleans, optionalstreaming intentionally supplies finitepayloadpresence axis; empty=>None requires existing16/7. Independentfullwriter/consumer/fixture/designaudit15input3outputhashes verified. Existingrow anddesign unchanged; no otherdrift."
+    },
+    {
+      "lane": "r37-cli-commands-a-c",
+      "executionSha256": "12e741e6541d5d4a517b5c3977ee8b332a4449db4010ca5ff3c685fee3bea96c",
+      "reportSha256": "13039baf01adfbc3684dd5baf78a17c23f4720365e4b56a74f496a4885620be5",
+      "disposition": "Admit health template concrete options object D2: two actualBoolean fields mirror installedEffect HttpRouter.serve options1282-1283; consumers1311/1325 independently handle middleware logger/address logger. Neither same producertrue/true nor generatedtestoutput narrows externaldomain. Reference checkout unavailable; exact installeddependency bound. No duplicate canonicalowner. RetainTemplateContext declaration734 (747firstBoolean). Update4Drowanchors: CiLocalStepPlan2405,actualrunCaptured1968,namedCodexoptionstype122(two separatememberpairs). No qualified change. Allnine roots includingauthoredtesttemplatescovered."
+    },
+    {
+      "lane": "r37-cli-commands-d-k",
+      "executionSha256": "6726a152a7202b0c642bae580f85997a888944733f263da97d7fdee1ee2c828b",
+      "reportSha256": "f825917da66a2417f36e412097d8e2d46fa123624d97e0af1989e596ea05d5ec",
+      "disposition": "All118files covered. Independent12input7outputhash audit confirms2singleBooleanworker-sourceQownersoutside recall, archivesbothdesigns,noexternaldependency. Distinct Targets292actualtwoBoolean request admittedD1 preservingrawdiagnosticdomain. Goalsindex333metadata correction;docgen793retained."
+    },
+    {
+      "lane": "r37-cli-commands-r-z",
+      "executionSha256": "4308a5041012446302cc85afb5ab7bf79714a939487639fbdfd5a36855f39b4e",
+      "reportSha256": "823fded35d04a7243dfddc3be814dea053589085819a916912dc1c2125e9e843",
+      "disposition": "Reject two repeated excluded function parameter owners against ten unchanged R36 source/rule bindings. Correct one D1 note to actual object423/matcher393-397; all classifications retained."
+    },
+    {
+      "lane": "r37-cli-commands-l-q",
+      "executionSha256": "6e8e7363ec723a0c1696c9353c84dff2c6a57f18fe746166e3b54a3bafcfcd81",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Verified14input7output hashes; retain both4/3 qualified relations and payload semantics. Accept five row locator corrections and two complete source-map design replacements; archived originals preserved. No count delta or P3 credit."
+    },
+    {
+      "lane": "r37-cli-yeet",
+      "executionSha256": "8792da73351794248d8eba5861926ff1254264770460a8c4834265a4ae75c0da",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Complete lane covered. Nine input and three output hashes verified for final metadata audit. Retain three D1 classifications and all four public combinations; update declarations311/867/916 and stale support citations. Occupancy ruling unchanged."
+    }
+  ],
+  "pendingWithdrawals": [
+    {
+      "id": "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "ownerAudit": "r37-docgen-owner-audit",
+      "archiveDesign": true,
+      "disposition": "Complete concrete owner has sole allBoolean; Option<string> payloads do not satisfy recall."
+    },
+    {
+      "id": "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "ownerAudit": "r37-docgen-owner-audit",
+      "archiveDesign": true,
+      "disposition": "Complete concrete owner has sole allBoolean; Option<string> payloads do not satisfy recall."
+    }
+  ],
+  "pendingMetadataUpdates": [],
+  "rawDispositions": [
+    {
+      "id": "thread-transcript-load-state",
+      "disposition": "retain-existing16/7-reject-truncated8/4",
+      "ownerAudit": "r37-thread-transcript-audit"
+    },
+    {
+      "id": "r37-cli-commands-r-z-research-install-timers-options",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r37-cli-rz-parent-audit"
+    },
+    {
+      "id": "r37-cli-commands-r-z-worktree-remove-options",
+      "disposition": "excluded-function-flag-parameter",
+      "ownerAudit": "r37-cli-rz-parent-audit"
+    }
+  ],
+  "pendingOwnerAudits": [],
+  "pendingLocatorAudits": [],
+  "pendingNewDisqualified": [
+    {
+      "id": "r37-cli-commands-a-c-health-serve-log-options",
+      "proposal": "r37-cli-ac-parent-audit/proposed-additions.jsonl",
+      "sha256": "effcc8ccb2ec74284646f92a12cc97cf8b0e97a3a499b607dd02a30a7d8531e6"
+    },
+    {
+      "id": "r37-cli-commands-d-k-worker-eval-source-quality-targets",
+      "proposal": "r37-docgen-owner-audit/proposed-new-rows.jsonl",
+      "sha256": "e797bc722c5822be6176ccb785ff6c0a462a508c4234d326ce7289f24fefd2aa"
+    }
+  ],
+  "pendingDesignReplacements": [
+    {
+      "id": "package-verify-step-outcome",
+      "file": "r37-cli-lq-audit/package-verify-step-outcome.replacement.md",
+      "sha256": "ff7f8474cba70091583c9ee0b85f7defe126155541be5c8270c2f2f879822fc3",
+      "original": "r37-cli-lq-audit/package-verify-step-outcome.original.md"
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "file": "r37-cli-lq-audit/r30-cli-commands-l-q-github-check-lane-outcome.replacement.md",
+      "sha256": "1cc82bf161ed386c5c3f9d0359a8dfcd31053c5386a5d09ac86c5e596ae7adee",
+      "original": "r37-cli-lq-audit/r30-cli-commands-l-q-github-check-lane-outcome.original.md"
+    }
+  ],
+  "pendingInventoryProposals": [
+    {
+      "file": "r37-drivers-af-locator-audit/proposed-row-replacements.jsonl",
+      "sha256": "8416bd555f236e2f2828b2787bf648401d745a34211c888a7adc2c2ca01ce39f"
+    },
+    {
+      "file": "r37-cli-ac-parent-audit/proposed-row-replacements.jsonl",
+      "sha256": "073c774247a3eb72106b5f31f216db6424987fe2620c27065b826a833c4b0d2b"
+    },
+    {
+      "file": "r37-docgen-owner-audit/proposed-metadata-rows.jsonl",
+      "sha256": "061f79842737fc8a7e867affeb251936b9c27dc46b7616dfa885127e54825eed"
+    },
+    {
+      "file": "r37-cli-rz-parent-audit/proposed-row-replacements.jsonl",
+      "sha256": "2ba9eff025a6ab9db8749bd173311a12d2b3e36b993c4dd2887000056ee16cd4"
+    },
+    {
+      "file": "r37-cli-lq-audit/proposed-row-replacements.jsonl",
+      "sha256": "e7b3539c615a51abf8a452be770e302468bdef4ba6910f2fae0cd6f885102e5a"
+    },
+    {
+      "file": "r37-cli-yeet-audit/proposed-row-replacements.jsonl",
+      "sha256": "43cc981c25c4f67e92ea257b3561b1f86baf15367da0d288d782cd45e43ebdfe"
+    }
+  ],
+  "pendingNewQualified": [],
+  "designReplacementProposals": [],
+  "launchState": "terminal-exit-0",
+  "modelingSupplementSha256": "21eeebbf9fe6fe140066ea50b78bd57f867ad5b6afbe817de27037b167027e27",
+  "driversAFLocatorAuditSha256": "bf11b2832582083adab41d49719018756310ccdfc97b5f783d7e301b029660a6",
+  "threadTranscriptAuditSha256": "95c3ddb4f870004d74dda1770c10e3a4ab302e4e3d59f6dfb668abc6d65c7375",
+  "cliACAuditSha256": "e6873fe724a278664ae083cd7ca6f8a618537989ededef17f9e09adcf8e7e7f1",
+  "wetIfFinalized": true,
+  "docgenAuditSha256": "88a834afa03bd7c18f37ca03c443bde97bb61255a255b04b06415099692869dc",
+  "cliRZAuditSha256": "e730c84143d45f8efe58670c3f7aa5e84ca7137b4ae5b57823218478415feaf7",
+  "cliLQAuditSha256": "775e88a53cdbff02f28bea5e5b7f888f2b8aa56a0a325734a9cec17a191cd451",
+  "controllerExitReceipt": {
+    "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/launch-controller-exit.json",
+    "sha256": "c255a9f7742ae81f6607fe8b3002e644a64bba8e94bbf71eecb1467e61c2764c"
+  },
+  "cliYeetAuditSha256": "14316cc3f9d1ba18657459678e33179d627378a61826aaf72b901acd2f5b8931",
+  "integrationComplete": true
+}

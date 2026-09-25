@@ -2,21 +2,24 @@
 
 ## Status
 
-R33 is finalized complete/wet on 2026-09-25. All 27 primary lanes completed on
-unchanged source and main; the separate supplemental audit covers the two
-ontology seed files omitted by the primary lane. The 50 raw records reconcile
-to one new qualified owner, ClipScan, and a corrected OBS E3 design.
+R38 completed and reconciled all 27 census lanes against source `ab77f10c`
+and main `9a1bd380`. All 3,951 frozen input bindings were verified before
+integration. The inventory now has **722 rows: 106 qualified and 616
+disqualified**, with zero applied.
 
-The inventory has 747 rows: 123 qualified and 624 disqualified, with zero
-applied. Complete-owner audits withdrew 51 records outside the Boolean recall
-net, including 19 prior qualifications. The unsupported image-orientation
-design is archived and its observation pair is retained as D1. Historical
-rows and designs remain available. See `data/r33-parent-integration-2026-09-25.json`
-and the R33 round verdict.
+Five qualified owners were withdrawn because each contains only one actual
+Boolean: process cwd, branch diff, policy reading, idle reading, and prepared
+publish commit. Their original rows and designs are archived. Thirty-five
+inventory citation corrections and six design location maps preserve the
+remaining contracts; all eleven affected original designs remain in history.
+The alignment model retains its optional match payload and existing 8/4
+relation. Rust builder-method flag arguments remain outside recall.
 
-The current dry streak remains zero. Two current-source dry rounds,
-replacement independent P3 review, packet ratification merged by Benjamin,
-implementation, and final exact-main closure remain required.
+R38 is complete and wet. The dry streak remains zero. See
+`data/r38-parent-integration-2026-09-25.json`,
+`data/r38-owner-reviews/README.md`, and the R38 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
 
 Lifecycle: `active`
 

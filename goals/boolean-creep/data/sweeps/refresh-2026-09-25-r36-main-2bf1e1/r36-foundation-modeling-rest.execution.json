@@ -1,0 +1,22 @@
+{
+  "lane": "r36-foundation-modeling-rest",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 90,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:51:01.314251+00:00",
+  "finished": "2026-09-25T06:55:03.973349+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-foundation-modeling-rest.jsonl` \u2014 confirmed 0, disqualified 0. All 11 assigned roots were covered (generated `Html.meta.ts`, `Html.model.ts`, the language-tag registry, and `rdf` vocab `generated/` excluded). No new or reclassified clusters. Prompt seed lines for `createTemplateIdentity.defineProperties`, the HTML conformance locals, `parseIpv6Side`, and `RecoveryBudgetCoherenceCheck` are behind the live anchors already stored in the canonical inventory; members and D1/designed rulings still match, so nothing was withdrawn or left unresolved.\n\n\ud83c\udf31 graft saved ~270,898 tokens (~$0.18) this turn.",
+  "transcriptSha256": "28630856f8a600fb4747fa7feb05877dd58caa882307828b5d0a51d73f9dfe34",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

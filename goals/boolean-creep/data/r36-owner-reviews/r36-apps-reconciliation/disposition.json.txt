@@ -1,0 +1,45 @@
+{
+  "kind": "r36-apps-parent-owner-audit/v1",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "inputSha256": {
+    "goals/boolean-creep/data/inventory.jsonl": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "apps/practice-kg-mcp/src/smoke.ts": "03135f74063d827c5e4761e1a30964c561cbeceb4a2f60cfed4e0c388fd02905",
+    "apps/professional-desktop/src/App.tsx": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17",
+    "apps/professional-desktop/src/main.tsx": "2587ac3debbf373eb797aacd48cf9d9bffdbb04623afa4f8e0e502faac5ace8e"
+  },
+  "withdrawals": [
+    {
+      "id": "r3-apps-smoke-mkdir-recursive",
+      "reason": "Three distinct makeDirectory options objects at164-166 each contain only recursive; no sibling Boolean local or common object holds the three flags."
+    },
+    {
+      "id": "r3-apps-ontology-menu-aria-hidden",
+      "reason": "aria-hidden at674 and748 occurs on separate JSX elements in separate components; not a co-carried Boolean owner."
+    },
+    {
+      "id": "r2-apps-renderer-react-grab-gate",
+      "reason": "The gate at18 combines env.DEV with a comparison on a string env var. No reactGrabGate model or pair of Boolean locals is declared; expression operands do not invent Boolean members."
+    }
+  ],
+  "metadataUpdates": [
+    {
+      "id": "r2-apps-smoke-practice-kg-options",
+      "line": 178,
+      "kind": "object-literal",
+      "symbol": "makeFixtureBundle.options",
+      "file": "apps/practice-kg-mcp/src/smoke.ts",
+      "sourceSha256": "03135f74063d827c5e4761e1a30964c561cbeceb4a2f60cfed4e0c388fd02905"
+    },
+    {
+      "id": "r2-apps-ontology-menu-open-current",
+      "line": 720,
+      "file": "apps/professional-desktop/src/App.tsx",
+      "sourceSha256": "d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17"
+    }
+  ],
+  "retained": "OntologyMenu has actual independent open/anyCurrentlocals; constructed PracticeKgOptions owns3Booleanfields and retainsD1. Existing OntologyMenuItem props qualification retained.",
+  "dryCredit": false,
+  "P3Credit": false
+}

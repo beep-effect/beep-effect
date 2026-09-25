@@ -1,0 +1,22 @@
+{
+  "lane": "r35-foundation-capability",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:14:35.254236+00:00",
+  "finished": "2026-09-25T06:18:33.402323+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-foundation-capability.jsonl`. It contains **0 confirmed** and **0 disqualified** records, and the validator passed.\n\nAll nine assigned roots were covered (165 in-scope files). Every seeded cluster still matches its current owner, members, line, and classification, so nothing was rewritten. No seed drift and no unresolved source question. Single-boolean fields and the `ColorInfo` false-or-object sentinel stayed out of the net.",
+  "transcriptSha256": "23bcbcb7b84f69494a37ced6a412cba52ede689e07d8b78c0bed365a5601a110",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

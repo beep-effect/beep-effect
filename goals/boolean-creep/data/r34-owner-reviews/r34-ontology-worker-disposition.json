@@ -1,0 +1,22 @@
+{
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "withdraw": [
+    {
+      "id": "r2-domains-ontology-graph-worker-requeue-latches",
+      "reason": "Complete closure owner has exactly one actual Boolean (requeuedAfterFailure); three sibling Option locals and callable/Worker handles do not satisfy >=2 actual Boolean recall net. Historical 12/5 relation remains valid but does not establish recall eligibility.",
+      "archiveDesign": "goals/boolean-creep/designs/r2-domains-ontology-graph-worker-requeue-latches.md",
+      "replacementClassification": null
+    }
+  ],
+  "retain": [
+    {
+      "id": "r2-domains-ontology-auto-open-and-inferred-atoms",
+      "classification": "D1",
+      "locator": 2997,
+      "change": "line only"
+    }
+  ],
+  "independentP3Approval": false,
+  "implementation": false
+}

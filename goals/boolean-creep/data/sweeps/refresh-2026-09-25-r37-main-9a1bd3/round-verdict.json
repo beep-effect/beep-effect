@@ -1,0 +1,75 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r37-main-9a1bd3",
+  "roundNumber": 37,
+  "finalizedAt": "2026-09-25T08:01:11.534032+00:00",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMainSha": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "newQualifiedIds": [],
+  "newQualifiedCount": 0,
+  "changedQualifiedIds": [],
+  "withdrawnQualifiedIds": [
+    "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+    "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source"
+  ],
+  "newDisqualifiedIds": [
+    "r37-cli-commands-a-c-health-serve-log-options",
+    "r37-cli-commands-d-k-worker-eval-source-quality-targets"
+  ],
+  "records": 727,
+  "qualified": 111,
+  "disqualified": 616,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/execution-summary.json",
+      "sha256": "a4501aca66d20f6bd31de78bea41587bed8929eedc019999d2733b68740f3603"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/execution-audit.json",
+      "sha256": "bb6a1023b6c4ffe497070b45a0fc9048f71300054154d417d153491465eca6ac"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/lane-map.json",
+      "sha256": "faf0fb6146002315b766562d99f2e85f3d37e103159d6cbd277c5084f1a8efee"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/source-sha.txt",
+      "sha256": "8d2f279609ca1e79c228598987159a18a994c3487f00cdbdf6b1d045f5ffa831"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/launch-controller-exit.json",
+      "sha256": "c255a9f7742ae81f6607fe8b3002e644a64bba8e94bbf71eecb1467e61c2764c"
+    },
+    {
+      "file": "goals/boolean-creep/data/r37-parent-integration-2026-09-25.json",
+      "sha256": "8962a15e791efbac1f0d14cc6ac7e25333366d30a1c116190b61a1086b7d923a"
+    },
+    {
+      "file": "goals/boolean-creep/data/r37-owner-reviews/artifact-index.json",
+      "sha256": "3e76fe615ea9e343f24ffddc68a0e99d0b1317e37cc99a186d9de4f51d9f15a5"
+    },
+    {
+      "file": "goals/boolean-creep/data/r37-reconciliation-progress-2026-09-25.json",
+      "sha256": "6ac0e7d8774b64dbafb99b2e48342662fc80d8150eac38b51bd2f9a8c2d6a555"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r37-final-reconciled.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    }
+  ]
+}

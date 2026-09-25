@@ -1,0 +1,22 @@
+{
+  "lane": "r35-epistemic-ontology",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:22:32.313068+00:00",
+  "finished": "2026-09-25T06:25:57.172183+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-epistemic-ontology.jsonl`. Confirmed 0, disqualified 1. Every assigned root was covered (230 non-test TypeScript files; no non-TypeScript sources in those paths). Seed owners, members, and classifications still match current writers and readers, so nothing was withdrawn or rewritten. The anonymous `documentToolbarState` input stays out of the net under the existing ruling. No unresolved source question.",
+  "transcriptSha256": "1eb808f2290a2231766e8cf6955065ee4bd76afec6c06f4e0930fb18acc57888",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

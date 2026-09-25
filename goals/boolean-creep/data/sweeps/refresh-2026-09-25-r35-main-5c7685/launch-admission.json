@@ -1,0 +1,67 @@
+{
+  "kind": "r35-native-launch-admission",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "round": "refresh-2026-09-25-r35-main-5c7685",
+  "corpusFileCount": 3181,
+  "corpusPathsSha256": "3b8b5920c08539ccddefa54efa403502d623fc6225f3e42b2d415b75935104f1",
+  "laneCount": 27,
+  "maxConcurrentLanes": 4,
+  "inventorySha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "inventoryRecords": 731,
+  "qualifiedDesignCount": 121,
+  "files": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/launch-included-files.json",
+      "sha256": "d9f46a64495cc8b2d33060dc810a6fc728d3e336b18e9ad1f8d5ebea2d0aa378"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/launch-designs.json",
+      "sha256": "9032b384e410de45ac27b336e344a01369985845aef5d604ae2e00ac52594865"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/launch-dependencies.json",
+      "sha256": "675dd0712d9b13f2038a6aac239e8900149883755314bcabae0a166ccc1e6648"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/launch-reviewed-inputs.json",
+      "sha256": "8a49cb6fe22bcc3ce775b0e1e43b4fd178e6038566fe51063c319e0871e5a528"
+    }
+  ],
+  "validation": [
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-inventory.ts"],
+      "exitCode": 0,
+      "stdout": "inventory OK: 731 records, 731 unique ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["bun", "goals/boolean-creep/ops/validate-designs.ts"],
+      "exitCode": 0,
+      "stdout": "design coverage OK: 121 qualified ids\n",
+      "stderr": ""
+    },
+    {
+      "command": ["git", "diff", "--check", "--", "goals/boolean-creep"],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "logicalIndex": {
+    "encoding": "git ls-files --stage -z",
+    "sha256": "c3e12bb303476dfb622018c42a5c2ea6147d1f0ff39acc41f3c23811b2670a0a",
+    "entries": 29146,
+    "privateArtifact": "logical-index-entries.z"
+  },
+  "privatePlanStdoutSha256": "f159bb79f9a4e8039f522dc0b942315d975af579d6dcbc22d1eba481adf2e913",
+  "expectedLaneMapSha256": "9829abbcf40a47acd0207792f7561e379a70a7b096f14156e5ddcc0d2b9ecb3b",
+  "launcherSha256": "07a81e194dce9be02e7399861a8a2a0f605c73b0752dbc6983f50126024fd285",
+  "launcherPinsSha256": "8a49cb6fe22bcc3ce775b0e1e43b4fd178e6038566fe51063c319e0871e5a528",
+  "liveRemoteMainVerified": true,
+  "sourceAndDependenciesClean": true,
+  "untrackedOutsidePacketAbsent": true,
+  "controllerLaunchedByAdmissionCapture": false,
+  "independentP3Approval": false,
+  "dryRoundCredit": false
+}
