@@ -1,14 +1,17 @@
 {
-  "previous": "e8d7cb421aba050e8ebcf326cbe33a90ae8d850f8b9694b19dca2f07887af2c4",
+  "previous": "9aaf36a8160b33d2474d4dd636d1e9ca544545b6c440197fea7a18c163bca67d",
   "review": {
     "reviewer": "Claude Fable 5.1 (vitest cache levers, perf/vitest-cache-levers)",
-    "reason": "Accept the !.fallow/** input negation every $TURBO_DEFAULT$ task gained so untracked fallow audit residue no longer shifts task hashes between checkouts; no command, cache flag, output, dependency edge or global configuration changed.",
+    "reason": "Accept the !.fallow/** input negation every root task that hashes $TURBO_DEFAULT$ now carries (the three tasks that had no .beep negation gain both), so untracked fallow audit residue no longer shifts task hashes between checkouts; no command, cache flag, output, dependency edge or global configuration changed.",
     "basis": {
       "path": "goals/turborepo-task-qualification/research/fallow-input-exclusion-baseline-review.md",
-      "sha256": "e8ccc5c6a7a53044f39f56d538dfe9afd3e6720ceab7d2309dc03d8ef3577c5d"
+      "sha256": "f5f27387978cc4b5eb53dba5bd3e4a83ae7bc56550ce72430136eeb538be972c"
     }
   },
-  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
   "profile": "local-linux-x64-bun1.4.2",
   "epoch": "qualification-v2"
 }

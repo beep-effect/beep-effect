@@ -8,8 +8,10 @@ clean checkouts at the same commit disagreed on seven `transit` hashes
 `@beep/test-utils`, `@beep/documents-domain`, `@beep/effect-drizzle`) and on
 every task downstream of them, because one checkout carried that residue.
 
-`turbo.json` now excludes `!.fallow/**` beside `!.beep/**` in every task that
-already excluded `.beep`, and the root `.gitignore` ignores `.fallow/`. The
+`turbo.json` now excludes `!.fallow/**` beside `!.beep/**` in every root task that
+hashes `$TURBO_DEFAULT$` (the three tasks that had neither negation gain both),
+the identity package's own `turbo.json` does the same, and the root `.gitignore`
+ignores `.fallow/`. The
 reviewed baseline recorded the input sets without that negation, so
 `beep quality cache-policy` reports `configuration-drift` for every package
 computation. No command, cache flag, output declaration, dependency edge or
