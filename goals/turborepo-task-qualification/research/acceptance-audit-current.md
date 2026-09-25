@@ -25,8 +25,9 @@ the quiet real pilot retains its separate evidence.
 Semantic input closure, accepted signed comparisons and sibling receipt
 integration remain incomplete. Existing entrypoint enforcement is not newly
 classified as unimplemented merely because historical report strings still
-list it: its current-head behavior needs the appropriate implementation and
-runtime evidence. No real tuple qualifies, and no acceptance criterion is
+list it: the v23 receipt now includes ordinary CLI execution, caller-override
+rejection and profile-drift recovery checks at `8f11af6e49`. Successful cached
+key injection and the full entrypoint population remain separate obligations. No real tuple qualifies, and no acceptance criterion is
 promoted to complete by this checkpoint.
 
 Checkpoint PRs #1233 and #1250 merged on 2026-09-25. PR #1250's full

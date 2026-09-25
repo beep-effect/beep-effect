@@ -128,3 +128,39 @@ This fixture is ineligible for exact-log determinism. Do not sort or discard
 lines to hide the divergence. The result does not establish divergence for
 the quiet real lint pilot; that pilot retains its separate matrix and must
 satisfy its own log contract. No reuse was enabled by this experiment.
+
+## Ordinary-entrypoint refresh at the published checkpoint
+
+The following checks bind to `8f11af6e4980180c35c8ff3c63b13f35b3accc70`,
+not the frozen v23 experiment source. An isolated clean worktree used Bun
+1.4.2, Node 24.20.0, Turbo 2.11.3 and the frozen lockfile installation.
+Sixteen focused runtime tests passed; mock-based spawn tests remain unit
+evidence. Actual CLI checks supplied additional runtime evidence:
+
+- Both a supplied runtime key and an explicitly empty key were rejected with
+  the intended caller-override diagnostic.
+- Profile freshness passed, and `cache execute` ran identity, types, fc-runs
+  and test-runner lint successfully: four successes, zero cache hits, with
+  every native task definition retaining `cache: false`.
+- A caller profile override was rejected and produced no new native summary.
+- Changing the root `noConsole` rule from `warn` to `error` without regenerating
+  the profile was rejected as stale and produced no new native summary.
+- `cache profile --write` regenerated the profile under that changed rule.
+  The ordinary CLI then passed all four tasks uncached; all four task hashes
+  changed from the original run. The original root configuration and profile
+  were restored byte-for-byte, and the tracked worktree was clean.
+
+Positive native execution command:
+`bun run beep cache execute -- run lint --filter=@beep/identity --cache=local: --env-mode=strict --summarize`.
+
+The positive-execution archive manifest has SHA-256
+`e4dbe11f67bb69a37a28bc635770bd46ec1eeb85b524d1e95f8a5c5e6e456218`.
+The regeneration/recovery archive manifest has SHA-256
+`a0b0cf1577c7280df414c1327cbf55f0ab1624c44131c1b0f3ac1a7ac0f391d3`.
+Private archives retain the original summaries and logs; the rejection and
+restoration receipts bind their input and output digests separately.
+
+This refresh establishes these actual CLI execution and rejection paths.
+It does not reissue the frozen v23 matrices for the newer source, prove all
+entrypoint branches, establish successful cached runtime-key injection, or
+satisfy signed remote comparisons. No task reuse is enabled.
