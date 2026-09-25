@@ -27,11 +27,8 @@ import { repoProofStepDefinition } from "../../../internal/repo-run/RepoRun.proo
 import {
   githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
-  githubCheckFallowLanes,
   githubCheckLanePlan,
-  githubCheckPrePushExternalLanes,
-  githubCheckQualityLanes,
-  githubCheckRepoSanityLanes,
+  githubCheckPrePushLanes,
 } from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { DEFAULT_GATE_ORDER_SEED, orderWaveLanes } from "./WaveOrder.ts";
@@ -412,13 +409,7 @@ const changesetStatusLanesForProof = (context: RepoRunContext): ReadonlyArray<Gi
 
 const proofLanesForTier = (context: RepoRunContext, tier: YeetProofTier): ReadonlyArray<GithubCheckLaneSpec> =>
   YeetProofTier.$match(tier, {
-    full: () => [
-      ...changesetStatusLanesForProof(context),
-      ...githubCheckRepoSanityLanes(context.repoRoot),
-      ...githubCheckQualityLanes(context.repoRoot),
-      ...githubCheckFallowLanes(context.repoRoot),
-      ...githubCheckPrePushExternalLanes(context.repoRoot),
-    ],
+    full: () => githubCheckPrePushLanes(context.repoRoot, changesetStatusLanesForProof(context)),
     "cheap-gates": () => [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],
     "review-fix": A.empty<GithubCheckLaneSpec>,
   });

@@ -1,0 +1,100 @@
+{
+  "authority": "three-way cache baseline conflict review",
+  "mainRevision": "b2a654bc4347d33862d815368e7ca56a9c86da28",
+  "preservedReview": {
+    "reviewer": "turborepo-task-qualification goal executor",
+    "reason": "Preserve prior reviewed policy and remove nine obsolete AI-sync dependency edges after the typed test repair.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/ai-sync-dependency-policy-review.json",
+      "sha256": "2bd8ee3dd3c916789f9adb59098b05ea9d22a5ee6c2eb211ca787c1430f98186"
+    }
+  },
+  "integratedReview": {
+    "reviewer": "time-to-certainty D1 implementer",
+    "reason": "Declare the two goals/time-to-certainty/research JSON files the repo-cli gate-order fixture reads as test and test:property inputs.",
+    "basis": {
+      "path": "goals/time-to-certainty/research/d1-cache-review.md",
+      "sha256": "cecda540d4ab3fe6e7885c6ec1111db33763e7b9a92d9fab240cede4a4c12d74"
+    }
+  },
+  "changes": [
+    {
+      "node": 1534,
+      "oldInputs": [
+        "!.beep/**",
+        "!.fallow/**",
+        "../../../../.bun-version",
+        "../../../../.nvmrc",
+        "../../../../package.json",
+        "../../../../tsconfig.base.json",
+        "../../../../tsconfig.json",
+        "../../../../tsconfig.packages.json",
+        "../../../../turbo.json",
+        "../../../../vitest.aliases.generated.json",
+        "../../../../vitest.setup.ts",
+        "../../../../vitest.shared.ts",
+        ".env",
+        ".env.*"
+      ],
+      "newInputs": [
+        "!.beep/**",
+        "!.fallow/**",
+        "../../../../.bun-version",
+        "../../../../.nvmrc",
+        "../../../../goals/time-to-certainty/research/economics.json",
+        "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
+        "../../../../package.json",
+        "../../../../tsconfig.base.json",
+        "../../../../tsconfig.json",
+        "../../../../tsconfig.packages.json",
+        "../../../../turbo.json",
+        "../../../../vitest.aliases.generated.json",
+        "../../../../vitest.setup.ts",
+        "../../../../vitest.shared.ts",
+        ".env",
+        ".env.*"
+      ]
+    },
+    {
+      "node": 1535,
+      "oldInputs": [
+        "!.beep/**",
+        "!.fallow/**",
+        "../../../../.bun-version",
+        "../../../../.nvmrc",
+        "../../../../package.json",
+        "../../../../tsconfig.base.json",
+        "../../../../tsconfig.json",
+        "../../../../tsconfig.packages.json",
+        "../../../../turbo.json",
+        "../../../../vitest.aliases.generated.json",
+        "../../../../vitest.setup.ts",
+        "../../../../vitest.shared.ts",
+        ".env",
+        ".env.*"
+      ],
+      "newInputs": [
+        "!.beep/**",
+        "!.fallow/**",
+        "../../../../.bun-version",
+        "../../../../.nvmrc",
+        "../../../../goals/time-to-certainty/research/economics.json",
+        "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
+        "../../../../package.json",
+        "../../../../tsconfig.base.json",
+        "../../../../tsconfig.json",
+        "../../../../tsconfig.packages.json",
+        "../../../../turbo.json",
+        "../../../../vitest.aliases.generated.json",
+        "../../../../vitest.setup.ts",
+        "../../../../vitest.shared.ts",
+        ".env",
+        ".env.*"
+      ]
+    }
+  ],
+  "limits": [
+    "Preserves nine reviewed AI-sync dependency removals and integrates two repo-cli test input additions; no cache activation or qualification promotion.",
+    "Baseline projection reconciliation does not renew the source census attachment or historical runtime evidence."
+  ]
+}
