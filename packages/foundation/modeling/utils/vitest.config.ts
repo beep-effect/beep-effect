@@ -5,7 +5,9 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Package-specific overrides
+      // Runtime-boundary tests disable Node built-ins before lazy handles resolve.
+      // Earlier files must not populate those handles in the same module instance.
+      isolate: true,
     },
   })
 );
