@@ -136,7 +136,7 @@ within these constraints.
       notification.
 - [ ] No `.gitignore` in any reference clone is modified; `git -C <member> status --porcelain`
       is empty after a build.
-- [ ] R13 docs sweep landed; `rg -n "YeeBois/dev/effect|BEEP_EFFECT_CHECKOUT" --glob
+- [ ] R13 docs sweep landed; `rg -n "YeeBois/dev/effect(-tsgo)?([^-A-Za-z0-9_]|$)|BEEP_EFFECT_CHECKOUT" --glob
       '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` returns no matches (this
       packet's `research/` is inside `goals/**`, so it is excluded by construction).
 - [ ] `SPEC.md` acceptance criteria are satisfied; no unrelated refactors or formatting churn.
@@ -158,7 +158,7 @@ within these constraints.
 | Timer | `systemctl --user list-timers \| grep beep-refs-refresh` | Enabled, next run 03:30 |
 | Seed run | `journalctl --user -u beep-refs-refresh -n 80`; status file present | Exit 0 or a reported partial tier |
 | Upstream hygiene | `for m in effect effect-tsgo; do git -C ~/YeeBois/references/effect/$m status --porcelain; done` | Empty |
-| Stale-path sweep | `rg -n "YeeBois/dev/effect\|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` | No matches (exit 1) |
+| Stale-path sweep | `rg -n "YeeBois/dev/effect(-tsgo)?([^-A-Za-z0-9_]\|$)\|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` | No matches (exit 1) |
 
 ## Stop Conditions
 

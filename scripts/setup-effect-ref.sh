@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-# Provision the machine-local Effect reference checkout and link it into this
-# checkout as .repos/effect (gitignored). Agents validate Effect v4 APIs against
-# real source through this link, never training-data priors (AGENTS.md §Tool
-# Routing).
+# Provision the manifest-defined Effect reference workspace and its gitignored
+# member/workspace links. Existing reference checkouts are never modified.
 #
 # Idempotent. Safe to re-run on a fresh machine, clone, or worktree.
 #
@@ -67,33 +65,59 @@ resolve_existing_parent_path() (
   printf '%s\n' "${resolved_path}"
 )
 
-# --- Effect reference checkout (machine-local, shared across clones/worktrees) ---
-# .repos/effect is gitignored; agents read real Effect v4 source through this link.
-EFFECT_REF="${BEEP_EFFECT_CHECKOUT:-${HOME}/YeeBois/dev/effect}"
-# Canonicalize the path: a relative override would be resolved against $PWD by
-# git clone but against .repos/ by the symlink, silently naming two different
-# locations.
-EFFECT_REF="$(resolve_existing_parent_path "${EFFECT_REF}")" || die "cannot resolve BEEP_EFFECT_CHECKOUT '${BEEP_EFFECT_CHECKOUT:-}' to an absolute path"
-EFFECT_LINK="${REPO_ROOT}/.repos/effect"
-# -e not -d: a linked git worktree's .git entry is a file, and that is a valid checkout.
-if [[ ! -e "${EFFECT_REF}/.git" ]]; then
-  log "cloning Effect reference into ${EFFECT_REF}"
-  mkdir -p "$(dirname "${EFFECT_REF}")"
-  git clone --quiet https://github.com/Effect-TS/effect.git "${EFFECT_REF}"
-fi
-mkdir -p "${REPO_ROOT}/.repos"
-if [[ -L "${EFFECT_LINK}" ]]; then
-  if [[ "$(readlink "${EFFECT_LINK}")" != "${EFFECT_REF}" ]]; then
-    log "relinking .repos/effect -> ${EFFECT_REF}"
-    ln -sfn "${EFFECT_REF}" "${EFFECT_LINK}"
+# Parse before making any changes. Command substitution preserves node failures;
+# a process substitution would hide them from set -e.
+command -v node >/dev/null 2>&1 || die "node is required to read scripts/references.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANIFEST_ROWS="$(node -e '
+  const manifest = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+  const rows = [manifest.rootDefault, manifest.workspaceLink,
+    ...manifest.members.flatMap(({ name, url }) => [name, url])];
+  if (rows.some(value => typeof value !== "string" || !value || /[\r\n]/.test(value))) {
+    throw new Error("reference manifest fields must be nonempty single-line strings");
+  }
+  process.stdout.write(rows.join("\n"));
+' < "${SCRIPT_DIR}/references.json")" || die "cannot read reference manifest"
+
+link_reference() {
+  local link_name="$1" reference_path="$2"
+  local link_path="${REPO_ROOT}/${link_name}"
+  if [[ -L "${link_path}" ]]; then
+    if [[ "$(readlink "${link_path}")" != "${reference_path}" ]]; then
+      log "relinking ${link_name} -> ${reference_path}"
+      ln -sfn "${reference_path}" "${link_path}"
+    else
+      log "${link_name} already linked to ${reference_path}"
+    fi
+  elif [[ -e "${link_path}" ]]; then
+    warn "${link_name} exists and is not a symlink; remove it and re-run to link the shared checkout"
   else
-    log ".repos/effect already linked to ${EFFECT_REF}"
+    log "linking ${link_name} -> ${reference_path}"
+    ln -s "${reference_path}" "${link_path}"
   fi
-elif [[ -e "${EFFECT_LINK}" ]]; then
-  warn ".repos/effect exists and is not a symlink; remove it and re-run to link the shared checkout"
-else
-  log "linking .repos/effect -> ${EFFECT_REF}"
-  ln -s "${EFFECT_REF}" "${EFFECT_LINK}"
-fi
+}
+
+{
+  IFS= read -r ROOT_DEFAULT
+  IFS= read -r WORKSPACE_LINK
+  # Expand only the literal $HOME prefix, never arbitrary shell expressions.
+  case "${ROOT_DEFAULT}" in
+    '$HOME'/*) ROOT_DEFAULT="${HOME}/${ROOT_DEFAULT#'$HOME/'}" ;;
+  esac
+  REFERENCES_ROOT="${BEEP_REFERENCES_ROOT:-${ROOT_DEFAULT}}"
+  REFERENCES_ROOT="$(resolve_existing_parent_path "${REFERENCES_ROOT}")" || die "cannot resolve BEEP_REFERENCES_ROOT '${REFERENCES_ROOT}' to an absolute path"
+  mkdir -p "${REPO_ROOT}/.repos"
+  while IFS= read -r MEMBER_NAME && IFS= read -r MEMBER_URL; do
+    MEMBER_ROOT="${REFERENCES_ROOT}/${MEMBER_NAME}"
+    # -e not -d: linked worktrees have a .git file.
+    if [[ ! -e "${MEMBER_ROOT}/.git" ]]; then
+      log "cloning ${MEMBER_NAME} reference into ${MEMBER_ROOT}"
+      mkdir -p "${REFERENCES_ROOT}"
+      git clone --quiet "${MEMBER_URL}" "${MEMBER_ROOT}"
+    fi
+    link_reference ".repos/${MEMBER_NAME}" "${MEMBER_ROOT}"
+  done
+  link_reference "${WORKSPACE_LINK}" "${REFERENCES_ROOT}"
+} <<< "${MANIFEST_ROWS}"
 
 log "done."

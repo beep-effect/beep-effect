@@ -12,56 +12,66 @@ const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function
 
 const withTempDirectory = <A, E, R>(use: (tempDir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
-    Effect.gen(function* () {
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       return yield* fs.makeTempDirectory({ prefix: "setup-effect-ref-test-" });
-    }),
+    })(),
     use,
-    (tempDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tempDir, { force: true, recursive: true });
-      })
+    Effect.fnUntraced(function* (tempDir) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.remove(tempDir, { force: true, recursive: true });
+    })
   );
 
 describe("setup-effect-ref", () => {
-  it.effect("resolves a missing relative Effect checkout without GNU realpath", () =>
-    withTempDirectory((tempDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const ambientPath = yield* Config.String("PATH");
-        const setupScriptPath = yield* path.fromFileUrl(
-          new URL("../../../../../scripts/setup-effect-ref.sh", import.meta.url)
-        );
-        const binDir = path.join(tempDir, "bin");
-        const repoRoot = path.join(tempDir, "repo");
-        const workingDirectory = path.join(tempDir, "working");
-
-        yield* Effect.forEach(
-          [binDir, repoRoot, workingDirectory],
-          (directory) => fs.makeDirectory(directory, { recursive: true }),
-          { discard: true }
-        );
-        yield* writeExecutable(
-          path.join(binDir, "git"),
-          '#!/bin/sh\nif [ "$1" = "clone" ]; then\n  for argument do target=$argument; done\n  mkdir -p "$target/.git"\nfi\n'
-        );
-        yield* writeExecutable(
-          path.join(binDir, "realpath"),
-          "#!/bin/sh\nprintf 'realpath must not be called\\n' >&2\nexit 91\n"
-        );
-
-        const canonicalWorkingDirectory = yield* fs.realPath(workingDirectory);
-        const expectedEffectRef = path.join(canonicalWorkingDirectory, "effect-reference");
-        expect(yield* fs.exists(expectedEffectRef)).toBe(false);
-
-        const result = yield* Effect.scoped(
-          Effect.gen(function* () {
+  for (const useDefault of [false, true]) {
+    it.effect(`provisions reference links idempotently with the ${useDefault ? "default" : "relative"} root`, () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tempDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const ambientPath = yield* Config.String("PATH");
+          const setupScriptPath = yield* path.fromFileUrl(
+            new URL("../../../../../scripts/setup-effect-ref.sh", import.meta.url)
+          );
+          const binDir = path.join(tempDir, "bin");
+          const repoRoot = path.join(tempDir, "repo");
+          const workingDirectory = path.join(tempDir, "working");
+          const home = path.join(tempDir, "home");
+          const gitLog = path.join(tempDir, "git.log");
+          const realpathLog = path.join(tempDir, "realpath.log");
+          yield* Effect.forEach(
+            [binDir, repoRoot, workingDirectory, home],
+            (directory) => fs.makeDirectory(directory, { recursive: true }),
+            { discard: true }
+          );
+          yield* writeExecutable(
+            path.join(binDir, "git"),
+            [
+              "#!/bin/sh",
+              'printf "%s\\n" "$*" >> "$GIT_LOG"',
+              '[ "$1" = "clone" ] || exit 92',
+              "for argument do target=$argument; done",
+              'mkdir -p "$target/.git"',
+              "",
+            ].join("\n")
+          );
+          yield* writeExecutable(
+            path.join(binDir, "realpath"),
+            '#!/bin/sh\nprintf "called\\n" >> "$REALPATH_LOG"\nexit 91\n'
+          );
+          const canonicalTempDir = yield* fs.realPath(tempDir);
+          const expectedRoot = useDefault
+            ? path.join(canonicalTempDir, "home", "YeeBois", "references", "effect")
+            : path.join(canonicalTempDir, "working", "effect reference");
+          const run = Effect.fn("SetupEffectRefTest.run")(function* () {
             const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
               cwd: workingDirectory,
               env: {
-                BEEP_EFFECT_CHECKOUT: "missing-segment/../effect-reference",
+                HOME: home,
+                BEEP_REFERENCES_ROOT: useDefault ? "" : "missing-segment/../effect reference",
+                GIT_LOG: gitLog,
+                REALPATH_LOG: realpathLog,
                 PATH: `${binDir}:${ambientPath}`,
               },
               stdin: "ignore",
@@ -76,16 +86,70 @@ describe("setup-effect-ref", () => {
               ],
               { concurrency: "unbounded" }
             );
-            return { exitCode, stderr, stdout };
-          })
-        );
+            expect(exitCode, stderr).toBe(0);
+            return { stderr, stdout };
+          }, Effect.scoped);
+          const links = ["effect", "effect-tsgo", "effect-workspace"];
+          const assertLinks = Effect.fn("SetupEffectRefTest.assertLinks")(function* () {
+            for (const name of links) {
+              expect(yield* fs.readLink(path.join(repoRoot, ".repos", name))).toBe(
+                name === "effect-workspace" ? expectedRoot : path.join(expectedRoot, name)
+              );
+            }
+          });
+          expect((yield* run()).stderr).toBe("");
+          yield* assertLinks();
+          const clones = yield* fs.readFileString(gitLog);
+          expect(clones).toBe(
+            [
+              `clone --quiet git@github.com:Effect-TS/effect.git ${expectedRoot}/effect`,
+              `clone --quiet git@github.com:Effect-TS/tsgo.git ${expectedRoot}/effect-tsgo`,
+              "",
+            ].join("\n")
+          );
+          const before = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)));
+          const second = yield* run();
+          expect(second.stderr).toBe("");
+          expect(second.stdout).not.toContain("cloning");
+          expect(second.stdout).not.toContain("relinking");
+          yield* assertLinks();
+          expect(yield* fs.readFileString(gitLog)).toBe(clones);
+          expect(yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)))).toEqual(before);
 
-        expect(result.stderr).toBe("");
-        expect(result.exitCode, result.stderr).toBe(0);
-        expect(yield* fs.readLink(path.join(repoRoot, ".repos", "effect"))).toBe(expectedEffectRef);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          // A linked worktree has a .git file; even dirty content must survive.
+          const gitEntry = path.join(expectedRoot, "effect", ".git");
+          yield* fs.remove(gitEntry, { recursive: true });
+          yield* fs.writeFileString(gitEntry, "gitdir: elsewhere\n");
+          const dirtyFile = path.join(expectedRoot, "effect", "dirty.txt");
+          yield* fs.writeFileString(dirtyFile, "preserve me\n");
+          for (const name of links) {
+            const link = path.join(repoRoot, ".repos", name);
+            yield* fs.remove(link);
+            yield* fs.symlink(path.join(tempDir, "missing-old-target"), link);
+          }
+          expect((yield* run()).stderr).toBe("");
+          yield* assertLinks();
+          expect(yield* fs.readFileString(gitLog)).toBe(clones);
+          expect(yield* fs.readFileString(dirtyFile)).toBe("preserve me\n");
+          expect(yield* fs.readFileString(gitEntry)).toBe("gitdir: elsewhere\n");
+
+          for (const name of links) {
+            const link = path.join(repoRoot, ".repos", name);
+            yield* fs.remove(link);
+            yield* fs.makeDirectory(link);
+            yield* fs.writeFileString(path.join(link, "keep"), name);
+          }
+          const collisions = yield* run();
+          for (const name of links) {
+            expect(collisions.stderr).toContain(`.repos/${name} exists and is not a symlink`);
+            expect(yield* fs.readFileString(path.join(repoRoot, ".repos", name, "keep"))).toBe(name);
+          }
+          expect(yield* fs.readFileString(gitLog)).toBe(clones);
+          expect(yield* fs.exists(realpathLog)).toBe(false);
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer))
+    );
+  }
   it.effect("repairs blank remote-cache placeholders without replacing configured values", () =>
     withTempDirectory((tempDir) =>
       Effect.gen(function* () {

@@ -132,5 +132,5 @@ jq . ~/.local/state/beep/refs/last-refresh.json
 # upstream hygiene
 for m in effect effect-tsgo; do git -C ~/YeeBois/references/effect/$m status --porcelain; done
 # stale paths
-rg -n "YeeBois/dev/effect|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .
+rg -n "YeeBois/dev/effect(-tsgo)?([^-A-Za-z0-9_]|$)|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .
 ```
