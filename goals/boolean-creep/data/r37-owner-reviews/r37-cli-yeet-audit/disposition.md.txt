@@ -1,0 +1,11 @@
+# R37 Yeet metadata audit
+
+Retain all three D1 classifications; refresh three row anchors and evidence notes. No census, qualification, design, or semantic change.
+
+- `recordPrProvenanceStampLane`: function starts304; old309 is the signature tail. Use311, the first actual sibling Boolean declaration (second312). Complete local pair derives independently from PR-number absence and warning presence. With a stamp present, combined true remains accepted as skipped with exitCode1. Early absence-of-stamp return does not constrain the pair when recorded.
+- `YeetSettleInput`: class867–882, eight direct fields and exactly two Booleans871/876. No inheritance/spread adds flags. Conflict precedence1073 accepts either closeout value; closeout is read1104 only in the settled path. Preserve all four pairs.
+- `YeetSettleVerdict`: class916–933, seven direct fields and exactly two Booleans918/923. Public documented constructor903–910 explicitly supports settled true with default budget true924–925; sleep reader WatchMode1112–1116 gives settled precedence. The derive helper's narrower image does not redefine the public grammar. Preserve all four pairs, defaults, optional payloads and consumer behavior.
+
+Prior SweepGitState occupancy ruling remains untouched: no proposal adds mainCheckedOutElsewhere to either admitted status/address relation or the independent trio. This bounded audit does not reopen that separately supported ruling.
+
+Exact source files match frozen HEAD84058d6470137e35f108d13c7dba52129db9a301 and main9a1bd3805574bca087d4da09ece4a628038afb27. Primary transcript hash agrees with terminal execution receipt. Input/output SHA256 bindings and design-reference scan are in disposition.json. No tracked edits, runtime work, P3 or dry credit.

@@ -1,0 +1,31 @@
+# R35 observability complete-owner audit
+
+Withdraw all three reviewed seeds from the live census and archive their existing designs. No replacement D1 row or implementation is proposed. Expected delta: **three fewer records and three fewer qualified records**.
+
+Source `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`; origin/main `5c768538e434336885d324cbf56d04fc2684959b`. Exact source, inventory, rule, raw lane, execution-receipt and design hashes are in `disposition.json`. No tracked edits or ref changes were made.
+
+## AiMetricsConfigSnapshotBoundsReport
+
+Only Boolean member: `truncated`. Complete S.Class fields have no inherited field spread; truncated is the sole Boolean. Option presence and nested budget are not sibling Booleans. Empty constructor303-309 and final constructor991-998 expose the real flag/payload relation, but do not create another eligible member. Parent result nesting does not merge owner fields.
+
+Other complete-owner members: `budget` (AiMetricsConfigSnapshotBudget object; four finite numbers at192-216), `excludedNestedRootPaths` (Array<string>), `skippedOversizeFileCount` (Natural), `totalBytes` (Natural), `truncationReason` (Option of literal reason).
+
+## AiMetricsCanonicalRoot
+
+Only Boolean member: `excludedFromParentSnapshot`. Complete S.Class fields contain only one Boolean and no field-spread inheritance. makeAiMetricsCanonicalRoot597-613 derives the flag and optional parent from kind; isLinkedWorktree is a constructor local alias, not a second schema field. withFirstSeen copies the same owner and changes only timestamp. Literal alternatives/parent presence do not supply Boolean recall.
+
+Other complete-owner members: `cloneIdHash` (String), `firstSeenAtEpochMillis` (Finite), `kind` (AiMetricsRootKind two-value LiteralKit at63), `lastSeenAtEpochMillis` (Finite), `parentRootId` (optional String), `repositoryIdHash` (String), `revision` (optional String), `rootId` (String), `worktreeIdHash` (String).
+
+## configSnapshotsDataset output object arms
+
+Only Boolean member: `configSnapshotPresent`. None arm3431 has only the false flag; Some arm3432-3438 has the true flag plus four non-Boolean payloads. ForwarderSummary759-775 confirms numeric/string types. DatasetExample1534-1547 and datasetExample3332-3351 wrap/forward this output without adding Boolean members; DatasetSpec1579-1591 and datasetSpec3353-3367 add descriptions/arrays/literal/string only. Generic Record<string,unknown> acceptance does not invent actual Boolean siblings or flatten nested examples.
+
+Other complete-owner members: `archiveObjectCount` (Finite copied from forwarder), `configSnapshotId` (String copied from forwarder), `ingestRunId` (String copied from forwarder), `turnCount` (Finite copied from forwarder).
+
+## Scope and design consequences
+
+SPEC/DECISIONS require at least two actual Boolean members in the complete owner before qualification. A minimal flag/payload E3 cluster may qualify inside a larger eligible owner; this review explicitly checked for that circumstance and found none. Numeric counts, optional payload presence, literal alternatives, nested fields, and constructor aliases are not additional sibling Booleans. The existing correlations are not denied; these three owner shapes are outside this campaign net.
+
+Archive the three designs named in disposition.json with the corresponding old inventory rows in withdrawn-rows.jsonl. Exact-ID, symbol and descriptive searches across all design documents found no dependent qualified design that requires revision. The dataset design mentions serial source-file sequencing with the separate outcomes design, which remains unaffected. Preserve all runtime schemas, public accepted inputs, stored artifacts, output key omission, counters, and producer behavior. No package verification is required for this private read-only audit; no source implementation was made.
+
+This disposition supplies no independent P3, dry-round, implementation or campaign-completion credit. Preserve the raw zero-record lane report and footer as historical evidence; the native review supplies the three explicit withdrawals.

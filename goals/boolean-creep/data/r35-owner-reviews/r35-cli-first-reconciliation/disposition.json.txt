@@ -1,0 +1,263 @@
+{
+  "kind": "r35-cli-first-source-disposition/v1",
+  "createdAt": "2026-09-25T06:34:31.654383+00:00",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "lanes": [
+    "r35-cli-internal-root",
+    "r35-cli-commands-a-c"
+  ],
+  "inputSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts": "215a2a23be9968492a33c7e3309185f5bc89b7b6281e09ee679109a008057c8c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.ts": "28d2f6ba3aaa26189853635393228e9db2718c24f2cf10ca944f44774f88788f",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts": "cd599594ff4b015eb0953c81bb2b70e16e5d509492cbec9dae816d5e7b4c1e61",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "6b29c91b19b0637e9e221c360a62c53fda3ba2152fffe2d256e96384af39f664",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts": "a3df83ce53a4f71cbed5c591891a754a8128d9a16ad8666409edcae0eeea6190",
+    "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts": "9109aab6fb7d213841c93c5363c3b403a6aac083d0444ccd30c48c6b9e12fa27",
+    "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts": "fb6804442346afe5f96dc7224441ba8b9e773392f0d5ebe81fd524b52666a9d1",
+    "packages/tooling/tool/cli/src/internal/process/StepExec.ts": "f5ea05fe58ceaec33b87ac1410b55b50253dd02f85c416a7403cbaf4db01a557",
+    "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts": "b3dc86b32c11630dec93face9da62d48da8a3dc69f2f5e5467883c4c0de5c278",
+    "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": "4c9bb8831d38faafc8bca284c752ccaf34c3df36b9c12e8d46150912dac8b28d",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "goals/boolean-creep/data/inventory.jsonl": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+    "goals/boolean-creep/designs/corpus-mail-store-exception-approved-disposition.md": "f2033046f977d6f84366f617c78b2889fd6bef5e3d770895227403ca771b0924",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-internal-root.jsonl": "028d8b06bc774fc1bbb178990f37a6c2252cf0fa98f170121df7c9d80c93d62b",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-internal-root.execution.json": "bb2843271e6e4408411408967699c453590ee4233328ad511edb97ed38a7b7ec",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-commands-a-c.jsonl": "f980e5a2dc5a1e808a5c0315b8df3cef179a0582d9919a6bb96558af3df98e0a",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-commands-a-c.execution.json": "4909330d7fbf45a56c6fc1513908f79ac1c895bae5b506fca94b0c31a561a167"
+  },
+  "allReviewedSourceFilesMatchRoundFrozenInputs": true,
+  "dispositions": [
+    {
+      "rawId": "r35-cli-internal-root-git-structured-capture",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D1",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+      "line": 351,
+      "symbol": "structuredCapture",
+      "members": [
+        "extendEnv",
+        "trim"
+      ],
+      "reason": "Constructed RunCapturedStreamsOptions bag. extendEnv and trim are independent optional capture controls; this profile writes both true, and callers such as writeGitArchive pass extendEnv without trim. Trim applies only at === true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-internal-root-git-output-capture",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D1",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+      "line": 412,
+      "symbol": "runGitOutput",
+      "members": [
+        "extendEnv",
+        "trim"
+      ],
+      "reason": "Constructed runCaptured request. Environment inheritance and whitespace trim are separate RunCapturedOptions axes; this call writes both true while the type still accepts either control alone, including absence.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-internal-root-repo-command-capture",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D1",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts",
+      "line": 37,
+      "symbol": "runRepoCommand",
+      "members": [
+        "extendEnv",
+        "trim",
+        "tee"
+      ],
+      "reason": "Constructed runCaptured request. extendEnv and trim are always true; tee is spread only when the caller asks to tee, so absence stays distinct from false. RunCapturedOptions treats the three controls as independent.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-qualification-textdecoder",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "line": 61,
+      "symbol": "decodeUtf8.textDecoderOptions",
+      "members": [
+        "fatal",
+        "ignoreBOM"
+      ],
+      "reason": "Inline TextDecoder options in decodeUtf8. fatal and ignoreBOM are independent Encoding API knobs; this call sets both true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-entrypoint-textdecoder",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.ts",
+      "line": 87,
+      "symbol": "attachCacheEntrypointReview.textDecoderOptions",
+      "members": [
+        "fatal",
+        "ignoreBOM"
+      ],
+      "reason": "Inline TextDecoder options while reading an entrypoint artifact. fatal and ignoreBOM mirror independent Web Encoding API knobs, both set true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-deps-materialize-remove",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "line": 269,
+      "symbol": "materializeCacheDependencies.removeOptions",
+      "members": [
+        "recursive",
+        "force"
+      ],
+      "reason": "Inline Effect FileSystem.remove options on the failed materialization temp directory. recursive and force are independent platform-fs SDK knobs, both set true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-pilot-prepare-remove",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "line": 699,
+      "symbol": "prepareExecution.removeOptions",
+      "members": [
+        "recursive",
+        "force"
+      ],
+      "reason": "Inline Effect FileSystem.remove options clearing prior pilot run artifacts. recursive and force are independent platform-fs SDK knobs, both set true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-experiment-remove-runs",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "line": 350,
+      "symbol": "invoke.removeTurboRuns",
+      "members": [
+        "recursive",
+        "force"
+      ],
+      "reason": "Inline Effect FileSystem.remove options for the fixture .turbo/runs directory. recursive and force are independent platform-fs SDK knobs, both set true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-experiment-remove-out",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "line": 351,
+      "symbol": "invoke.removeTaskOut",
+      "members": [
+        "recursive",
+        "force"
+      ],
+      "reason": "Inline Effect FileSystem.remove options for the fixture task out directory. recursive and force are independent platform-fs SDK knobs, both set true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-commands-a-c-cache-experiment-remove-turbo",
+      "decision": "add-disqualified-distinct-site",
+      "class": "D2",
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "line": 352,
+      "symbol": "invoke.removeTaskTurbo",
+      "members": [
+        "recursive",
+        "force"
+      ],
+      "reason": "Inline Effect FileSystem.remove options for the fixture task .turbo directory. recursive and force are independent platform-fs SDK knobs, both set true.",
+      "duplicateCheck": "No canonical row at this file/symbol/member carrier. Existing same-member SDK/capture controls elsewhere are separate constructed owners. Three Cache.experiment fs.remove objects at350/351/352 have distinct destination expressions; pilot loop699 is one syntactic site, not three records."
+    },
+    {
+      "rawId": "r35-cli-internal-root-generated-file-mode-flags",
+      "decision": "reject-out-of-scope-function-flag-parameter",
+      "file": "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
+      "line": 49,
+      "owner": "assertExclusiveModeFlags input parameter",
+      "members": [
+        "write",
+        "check",
+        "onConflict"
+      ],
+      "reason": "Full declaration is export const assertExclusiveModeFlags=<E,R>(input:{readonly write:boolean;readonly check:boolean;readonly onConflict:Effect.Effect<never,E,R>}). Its E2 guard is real, but the inline annotation is solely a function flag-parameter shape excluded by SPEC Scope and DECISIONS2. Do not recast its declaration as a named data/config owner. No canonical matching row exists; no design/admission."
+    },
+    {
+      "id": "corpus-mail-store-exception-approved-disposition",
+      "decision": "withdraw-outside-recall",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
+      "line": 1118,
+      "booleanMembers": [
+        "approved"
+      ],
+      "expandedIdentityFields": {
+        "preservationRunId": "RunId string",
+        "preservationSealSha256": "Sha256Hex string",
+        "recordedAt": "RecordedAt string",
+        "runLabel": "RunLabel string",
+        "schemaVersion": "SchemaVersion literal",
+        "transformationRunId": "RunId string"
+      },
+      "otherMembers": {
+        "attemptId": "AttemptId",
+        "disposition": "optional MailDisposition literal",
+        "exceptionKind": "MailExceptionKind literal",
+        "family": "mail literal",
+        "mailScope": "MailRestorationScope literal",
+        "message": "NonEmptyString",
+        "objectId": "ObjectId",
+        "recordType": "mail-store-exception literal",
+        "retainedOutputBytes": "NonNegativeInt",
+        "retainedOutputSha256": "Sha256Hex",
+        "sourceFamily": "eml/msg/ost/pst/residue literal"
+      },
+      "reason": "Complete S.Class1118-1138 plus TransformationEvidenceIdentity.fields287-294 contains only approved:Boolean. Optional disposition is not another Boolean. Existing E3/design narrative claims an exception to the two-Boolean recall net, but SPEC/DECISIONS contain no owner-specific waiver. Withdraw and archive rather than reclassify as D1 or change runtime audit acceptance."
+    }
+  ],
+  "addDisqualifiedIds": [
+    "r35-cli-internal-root-git-structured-capture",
+    "r35-cli-internal-root-git-output-capture",
+    "r35-cli-internal-root-repo-command-capture",
+    "r35-cli-commands-a-c-cache-qualification-textdecoder",
+    "r35-cli-commands-a-c-cache-entrypoint-textdecoder",
+    "r35-cli-commands-a-c-cache-deps-materialize-remove",
+    "r35-cli-commands-a-c-cache-pilot-prepare-remove",
+    "r35-cli-commands-a-c-cache-experiment-remove-runs",
+    "r35-cli-commands-a-c-cache-experiment-remove-out",
+    "r35-cli-commands-a-c-cache-experiment-remove-turbo"
+  ],
+  "newQualifiedIds": [],
+  "withdrawIds": [
+    "corpus-mail-store-exception-approved-disposition"
+  ],
+  "rejectedRawIds": [
+    "r35-cli-internal-root-generated-file-mode-flags"
+  ],
+  "designActions": {
+    "archiveIds": [
+      "corpus-mail-store-exception-approved-disposition"
+    ],
+    "dependentQualifiedDesignChanges": [],
+    "dependencySearch": "Searched exact ID, MailStoreExceptionRecord and mail-store-exception across designs; only own design matched. No new qualified case, so no new P2 design."
+  },
+  "expectedInventoryDelta": {
+    "records": 9,
+    "qualified": -1,
+    "disqualified": 10
+  },
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationCredit": false,
+  "trackedFilesModified": false,
+  "refsMoved": false,
+  "proposalSha256": {
+    "proposed-inventory-additions.jsonl": "743ba550e1baa12b3c3216bb1db8eedea35e54feaa7cb9488f923ee508843846",
+    "withdrawn-rows.jsonl": "eec2ea161720d7db0378e96c98036d27a8f01fab340d573d0cacfcc3322f2bf9"
+  },
+  "validation": {
+    "command": "bun goals/boolean-creep/ops/validate-inventory.ts <private>/proposed-inventory-additions.jsonl",
+    "exitCode": 0,
+    "stdout": "inventory OK: 10 records, 10 unique ids"
+  }
+}

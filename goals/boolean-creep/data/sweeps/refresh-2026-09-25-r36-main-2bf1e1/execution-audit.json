@@ -1,0 +1,208 @@
+{
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMainSha": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "completedReceipts": [
+    {
+      "lane": "r36-agents-workspace",
+      "executionSha256": "9618c34ba13c4de3c4e34f6938c5f6132bc00b84c42ff18f7792a1abe109e721",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "77f7e7c2ad88ef889c0dd7e50d94d339988d6ae608bea394dffc940509b8f7d5",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-apps",
+      "executionSha256": "673c2b0c0e0902fb04047823a50a706860413a45fa351314bbe734fa37731c02",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "e7e81ea8ad9b70d120c4fe01a89f732ce9a0cebdbd05382ddcffaa6ae62495f5",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-architecture-ecosystem-internal",
+      "executionSha256": "fa30f9e7a654ef425fad7df1a0d53c86f60e80e0001c6f91b6b03f37be3f3e82",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "e650717521ddaf199bb25e5066fb17bd20c8310107b6bfb33eb3ef2b1d575c64",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-cli-commands-a-c",
+      "executionSha256": "eef7ac0e3fa9b9c71122b8f65aa1ed71a175311b0cefc9219ed71e2c6e92faff",
+      "reportSha256": "96f82557e91348a0120c68e35cd7ce78abcbdf75d7b11494c39c9a6dc4697fe4",
+      "transcriptSha256": "2f69bb504be3247548938e52e935971fc78cc42764e092f1d70cf3be7c09de54",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r36-cli-commands-d-k",
+      "executionSha256": "227e1c70acff8b841e69a7f81e404723f2fc6d658532bb9757825ad68ced5787",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "c6f1e6f4d2f24d025abbddea0c71f8cf7f8fb0f6f506613c81fe7175e081378b",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-cli-commands-l-q",
+      "executionSha256": "b512634eb4b338cd87a90d3470d174f3a8addc63310d4cfb9cfe0803b2a97e02",
+      "reportSha256": "8f6e9b74907f9b9d229f73182e517b1b9e19be3f5f981a600eae1316d4042034",
+      "transcriptSha256": "a185e4ef2832c5173ff8c792d441e696ff297efa22dd2d15fd1ce2520d3f3ed1",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r36-cli-commands-r-z",
+      "executionSha256": "3ffc598e45b7d81a03d0816e1c3a51511daef365eabed62c2f6c96bfc82aa32c",
+      "reportSha256": "4afd1eb0890d75d1eb90ab40fc6f30a328d16c812071cea999036918e939ea4f",
+      "transcriptSha256": "3540ba582a9de3242280126fc9406aac5777e65264dd1fabfd8414e1fc0d80cc",
+      "reportRecords": 2
+    },
+    {
+      "lane": "r36-cli-internal-root",
+      "executionSha256": "9ab3debd73aa66ac797cc2ccde77da9b69d8247444fb691d595e491031a6bbbf",
+      "reportSha256": "f0a89cb58640df9ce5a415508eb01c07bba19fc93be85dc59b6ddaa5f35ae605",
+      "transcriptSha256": "24fd82725b37533bebc7f71411b0da038d87caa4bdc0fa71364e979bda9709e5",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r36-cli-yeet",
+      "executionSha256": "d51cda29a4ab490bdeda5522f4a71e1ffdbf9497a072f8bbfb0672b96087caeb",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "413a9f9a9d1aaa3e15f6ca43793071435eb14f35bee56c86e7b4286c6b567d46",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-drivers-a-f",
+      "executionSha256": "1abd719479169c231e7e88714f55f8411c76a331aaf6c78d420eb6df2abee461",
+      "reportSha256": "87b8301a52baeeadbfd8817ee7bf240b1ed8099785942f035fc15a00d9a00fbd",
+      "transcriptSha256": "a9828bed0248a6a3d6d060684f9b4655b494784c686b403a5701180737cb1314",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r36-drivers-g-m",
+      "executionSha256": "387cd2ab2a3cf54ee2175fa24953efb5ba900d776561dd2e563ddb905f22ec5b",
+      "reportSha256": "734b28c48676f40de9f03c864d2801fc446e818546c64d9d9759c87ad3c71cad",
+      "transcriptSha256": "8425004eec424b1ae3e6133a63cf324aca87cafc4f37728c56ab198e52e8ddeb",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r36-drivers-n-r",
+      "executionSha256": "836cdfb3da9233dd3b2238802be97f74189bc241f5dbb67a6d81ff99821e2fd9",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "6abb973cbdbe14e14a8180b05a903d0aa2f6059d798263a5354738aab12b0eee",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-drivers-s-z",
+      "executionSha256": "92e3604bd9581577fd05f9b7c8e6ea15fc7ea432b8def865c7629a7e229b8c58",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "14ce2029c85aec779707f97e56bca68e8c8f57624417ebcf21d4b92586de8dea",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-epistemic-ontology",
+      "executionSha256": "3f65a200a12eb14026feaf3cbdd8480bdc8ac1e21e587b78e7008bda756486c0",
+      "reportSha256": "1103dd90c04901737869ca9acf1dfd36b99c87390d78eaf2d58e9736a2fe0bbb",
+      "transcriptSha256": "d4563645b6e8fe6d686426f2432d7b8458178bd64e0abf3e5216ea48e1c80095",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r36-foundation-capability",
+      "executionSha256": "441f196dd1a9ee63a3db4af5abc7389374dc9501b8470c6f974e574cbba208db",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ad3d99d2b5e50b608c86e9b79df7bbdcec4f8dcb1c978e51d8867c29df1d82b7",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-foundation-modeling-rest",
+      "executionSha256": "935150f453df327f8347d73a153e367857b02fe6ea78278f8b988b8d26388957",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "28630856f8a600fb4747fa7feb05877dd58caa882307828b5d0a51d73f9dfe34",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-foundation-primitive",
+      "executionSha256": "de34154c848837ffdde87d1e2a06762a2477039d620afab810ad8de2a2331ab8",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "7a965519ea889001995b9e872eeb215db04ef91e69ad56d92186425a9f3c9884",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-foundation-schema-a-m",
+      "executionSha256": "f8fdb933582fb8ecc7e84b3f5bdac2f4bf72f0eb972225914bb8a2e76ee246c8",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ec2eb073ba81cc19e937ba39144f5e2c787d0b8c30e50c2c444956a464091b39",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-foundation-schema-n-z",
+      "executionSha256": "795af27d0b01989f1acd8e98de7ca39efca078c1d2d0853699972a095673161b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "b7533fb6d2eaf1e49750ae10e646309bab3e07efe948faf4489b888d52fcbaf7",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-foundation-ui",
+      "executionSha256": "a1b94a437334db22614e701bcbcd21f1f14719265ebf0f30aeb0e0f144c306aa",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "603dfa9a4b8e83d7311795dde28a7fc76a23d5fc8626e73cfe93d316f04bd14e",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-law-practice-domain",
+      "executionSha256": "0af336b686f2458d8dddf7584f636a2554d9ca3043f6cfcb0efddaabdfc76f59",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "b0362bfb8f34b39447443430406c9c514478d4e21fdfac7b4c162138b245c8a7",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-law-practice-runtime",
+      "executionSha256": "eb46556b20932cbbdd9f38ff1df1ef51a4d71ba960d965d9874280bc457a2299",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "a2283d17cfd50ca15d4c8c15a2c52e756fd6eb31033de65072198e25db9c8bd2",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-shared-documents",
+      "executionSha256": "e2def0cf894954f69056b55d7576ff6abdd47691ebc8740d0546afbd6effa696",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "a5ac7ee3b857a364533ad87dd36a168f7f669eddd3038410091bf2b94d28336f",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-tool-docgen",
+      "executionSha256": "365e51d39f1fcf48d08ab6104579c165340dc5fdc540ed922e0e8e8bd37572fb",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "bda8f69ed7d508a1d4a2640ccb5287bb4edeca3e747246434800df79d4dd569b",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-tooling-library-observability",
+      "executionSha256": "4afa54771bf8c969e077f6ae27117154b25736bb229459f36d22b38018778261",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "c0976fc7a9df51d1e53ac3762b86f32b6053e100f84ce4233b52792aeacb414a",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-tooling-library-support",
+      "executionSha256": "61b7eee6a6ef8098d2e6084ebceba0a3099241366d6996b048f31395a9ab1be5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "ffad70a019ebb371866aaf91f43b76f9f2147c1dd6f9b5789d0309d21fac7aa7",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r36-tooling-policy",
+      "executionSha256": "2abb28ce13f2826cf4083b7a3b541b35dffe2502abad569615b1f4f8eb64ea94",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "dc6c6336929a0855b961e71c04758f3c06fef6b490274699e6d9f985d90bcb1f",
+      "reportRecords": 0
+    }
+  ],
+  "missingLanes": [],
+  "rawRecords": 8,
+  "complete": true,
+  "sourceStable": true,
+  "frozenBindingsVerified": 3950,
+  "controllerExitCode": 0,
+  "dryCredit": false,
+  "semanticReconciliationComplete": true,
+  "note": "All 27 lanes are reconciled. Execution receipts and 3,950 frozen input bindings were verified before integration. The bound parent receipt records accepted and rejected proposals.",
+  "reconciliationReceipt": {
+    "file": "goals/boolean-creep/data/r36-reconciliation-progress-2026-09-25.json",
+    "sha256": "b0e23fb44b455dbba70cb1b306bf1c2366dbdedc7651cdfffc40e97909b3bd35"
+  }
+}

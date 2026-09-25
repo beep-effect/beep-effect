@@ -1,0 +1,97 @@
+{
+  "kind": "r38-alignment-owner-audit/v1",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "reject-4-over3-truncation-retain-existing8-over4",
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "sha256": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "sha256": "31197db72e09d1e41ff4dcf577a66c4023bbb9c478fd3fc8bebc313fe3b48038",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "sha256": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "sha256": "31197db72e09d1e41ff4dcf577a66c4023bbb9c478fd3fc8bebc313fe3b48038"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/r2-foundation-unique-match-search.md",
+      "sha256": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r36-capability-reconciliation/disposition.json",
+      "sha256": "9a72866d560b787b7836cc9f406f6bee2533235854021b03840a4c9cb78d87c8"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-capability.ndjson",
+      "sha256": "a5c93d5b8dffe1d97b92ffacc5c0fada09a1ac6226812967ea4dea7858294b77"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-capability.execution.json",
+      "sha256": "807a018887c3dc6ff5eebe35e3ca7afacf5aaa4f990b14cde8e7a2736fbf9eb0"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-capability.jsonl",
+      "sha256": "ccb8a2f96cfcc4bc28f99bc69a1b297d3b6194ba2d473a603b4dba1fefbf411d"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "details": {
+    "actualBooleanCount": 2,
+    "payloadAxis": "match Option presence, not a Boolean for recall",
+    "representable": 8,
+    "legal": 4,
+    "priorR36SourceHash": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb",
+    "priorR36ExactSourceMatch": true
+  },
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "unresolvedOwnerQuestions": [],
+  "P3Credit": false,
+  "dryCredit": false,
+  "trackedEdits": false,
+  "outputs": [
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "8a9a6ca2e3c67aa9f73cf07115b9f573eb3f550d079088cd20e9b94288beb136"
+    },
+    {
+      "file": "retained-row.jsonl",
+      "sha256": "edd65486e48febd3a158263db8e0c0107eb88721324d3ac8b257174a9f07e9ed"
+    }
+  ]
+}

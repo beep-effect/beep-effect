@@ -1,0 +1,22 @@
+{
+  "lane": "r34-agents-workspace",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T02:24:42.303687+00:00",
+  "finished": "2026-09-25T02:26:40.180296+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/r34-agents-workspace.jsonl`\n\nConfirmed 0, disqualified 0. Validator: 0 records, OK.\n\nAll nine assigned roots were covered (149 authored `.ts` files; no non-TypeScript sources). Tests, `test/`, and `_generated` were excluded.\n\nSeed check:\n- `TextInline` `[bold, italic, code]` still shares that owner. The marks stay independent (the renderer prefers `code === true` and still accepts the other combinations). Unchanged D1, not re-emitted.\n- `ScanState` `[escaped, inBlocksArray, inString]` still shares that owner. `escaped` is only set inside `inString`, so `escaped && !inString` is never written. Unchanged E4 (8 representable, 6 legal), not re-emitted.\n- `refreshTimeline` `[refreshStarted, waiting]` is withdrawn. `refreshStarted` is one local latch; `result.waiting` belongs to `AsyncResult`, not the same owner. No other new cluster in that function.\n\nNo other eligible Boolean cluster in the lane. No unresolved source question.",
+  "transcriptSha256": "d8b7e8521f8a414fdf7594ed8dfb5d244411ada0f613ef435636d25274e922fb",
+  "runnerSha256": "d8db401443b10416f1050ee73177d43d17c459a516226969361b40537a1ca0f7",
+  "seedSha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

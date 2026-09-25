@@ -739,3 +739,20 @@ bun run beep goals index
 wc -m goals/effect-vitest-canon/GOAL.md
 git diff --check -- goals/effect-vitest-canon
 ```
+
+## 2026-09-25 — Wave A in progress
+
+The identity wave merged in PR #1216. The next dependency-ordered slice covers
+fc-runs and ontology-config from the existing inventory. Six ontology detector
+rows are resolved in source, two existing failure-polarity judgments are
+reasoned exceptions, and the two actionable lens findings are remediated.
+Fixing-commit references now point to e8df201fd44e62986d4a11299256102cbbd134f7.
+The standards/effect-vitest.inventory.jsonc ratchet baseline drops six
+EV002/EV003 rows with no unrelated changes or new findings. The package detector
+ledger retains all eight rows as six fixed receipts and two exceptions.
+
+Both full package audits and Docgen checks passed. Node timings retain the
+original baseline and current after-run/context files. Historical/current total
+reporter spans are 408.315/443.205 ms for fc-runs (8 tests) and
+392.859/274.085 ms for ontology-config (6 tests). Runtime changes prevent a
+speedup claim. Hosted checks, review closure and Benjamin's merge remain gates.

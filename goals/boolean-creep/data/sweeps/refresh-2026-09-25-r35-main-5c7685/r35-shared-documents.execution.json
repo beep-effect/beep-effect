@@ -1,0 +1,22 @@
+{
+  "lane": "r35-shared-documents",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:22:46.453207+00:00",
+  "finished": "2026-09-25T06:25:21.089783+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-shared-documents.jsonl`. Confirmed 0, disqualified 0. Validator: `inventory OK: 0 records`.\n\nAll seven assigned roots were covered (220 non-test TypeScript files; no non-TypeScript sources). No new boolean cluster of two or more members.\n\nSeed drift: nothing re-recorded. `enqueueMoveDeltas` (`parentChanged`, `nameChanged`) is still an independent pair at line 736. `recordPushFailure` (`retryable`, `requeue`) is still the same derived implication at line 1057. `DmsMirrorProbe.probedAt` and `VaultSyncStatus.probedAt` are `Option` timestamps, not boolean members, so those seeded pairs are not eligible boolean clusters; connectivity versus `disconnectReason` is already in the canonical inventory and is unchanged. No unresolved source question.",
+  "transcriptSha256": "0d2250df0548c7404f1ec02cd8a83c67c7657520df2e4a0ef1ca7d38a09d62f0",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

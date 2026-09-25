@@ -1,0 +1,22 @@
+{
+  "lane": "r35-tooling-policy",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:25:57.260439+00:00",
+  "finished": "2026-09-25T06:27:49.617040+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-tooling-policy.jsonl`\n\nConfirmed 0, disqualified 0. Both assigned roots were covered (`lint-rules/src` and `repo-configs/src`, excluding tests and `internal/eslint/generated`). Every seeded owner still matches its recorded members and classification, so nothing new or corrected was written. No seed drift and no unresolved source question. The validator accepted the empty report.",
+  "transcriptSha256": "ff4c378e6821728b4d514001b9bca7cd833f176abcf6bb66592ba0c4a9bbc9c2",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

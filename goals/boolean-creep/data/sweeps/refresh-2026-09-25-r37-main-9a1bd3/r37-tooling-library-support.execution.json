@@ -1,0 +1,22 @@
+{
+  "lane": "r37-tooling-library-support",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:41:33.099913+00:00",
+  "finished": "2026-09-25T07:44:50.697044+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-tooling-library-support.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered (`codegen-kit`, `repo-utils`, `fc-runs`, `test-utils`, `test-runner`); the source SHA matches `84058d6470137e35f108d13c7dba52129db9a301`. Seeded clusters were rechecked and left unchanged, so nothing new was written. No seed withdrawal and no unresolved source question. `CanonicalDocgenExamplesCompilerOptions` is still the pinned `S.Literal(true|false)` profile already recorded as D1.",
+  "transcriptSha256": "91f002e32f6bddd32c7c465ef6d35f69596e9d60c47030658f69442bfe5ee7d3",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

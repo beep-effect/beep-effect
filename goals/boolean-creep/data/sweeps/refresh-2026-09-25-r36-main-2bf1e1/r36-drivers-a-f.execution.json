@@ -1,0 +1,22 @@
+{
+  "lane": "r36-drivers-a-f",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:53:43.010965+00:00",
+  "finished": "2026-09-25T06:57:12.570090+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-drivers-a-f.jsonl`. Confirmed 0, disqualified 1. All 16 assigned roots were covered (99 non-generated TypeScript files).\n\nSeed drift: `AcpPatchedProtocolOptions` moved from line 388 to 390; the D1 ruling is unchanged and is the only rewritten record. Withdrawn as out of net (one Boolean plus non-Boolean fields): `AiProviderCliClaudeAuthStatusPayload` (`loggedIn` only), and the Firecrawl pairs `success`/`error`, `judgeDegraded`/`degradedReason`, and `killed`/`error`. Other seeded clusters still match current writers and readers and were not repeated. The Cosmos D2 note still cites graph construction at 441\u2013446; the live `new module.Graph` call is at line 445, and that classification did not change. No unresolved in-net source question.",
+  "transcriptSha256": "a9828bed0248a6a3d6d060684f9b4655b494784c686b403a5701180737cb1314",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

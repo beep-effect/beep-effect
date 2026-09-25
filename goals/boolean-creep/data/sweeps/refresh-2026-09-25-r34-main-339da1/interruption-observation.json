@@ -1,0 +1,35 @@
+{
+  "observedAt": "2026-09-25T05:59:46.587008+00:00",
+  "status": "interrupted-and-source-superseded",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "currentHead": "b78eb6da2ab8d1f8f64082922106472d7c326bc9",
+  "currentOriginMain": "489ea7c48803e87bb1f4f10f83cf30613ca9f3c1",
+  "controllerState": "inactive/dead; MainPID=0",
+  "completedLaneReceipts": 21,
+  "expectedLanes": 27,
+  "changedFrozenInputs": [
+    "bun.lock",
+    "packages/foundation/modeling/identity/package.json",
+    "packages/foundation/modeling/identity/src/PnLocal.ts",
+    "packages/foundation/modeling/identity/tsconfig.check.json",
+    "packages/foundation/modeling/identity/tsconfig.json",
+    "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+    "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts"
+  ],
+  "dryRoundCredit": false,
+  "completedRoundCredit": false,
+  "disposition": "Preserve partial lane artifacts and independent audits. Revalidate proposed inventory corrections against current source before integration. Require a fresh fully admitted round on current source.",
+  "publishedCheckpoint": {
+    "pr": 1223,
+    "state": "MERGED",
+    "head": "d99e4e073de5139552a97ee588117af59b8251c0"
+  },
+  "proofFailureAttribution": "Old publication proof failed during git fetch on temporary DNS resolution, before quality gates executed. P0 acknowledged environment-only; current GitHub API and git fetch succeed."
+}

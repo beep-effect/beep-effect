@@ -1,0 +1,43 @@
+{
+  "kind": "boolean-creep-authored-template-scope-correction/v1",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMainSha": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "finding": "R37-ADMISSION-001",
+  "originalAdmissionReviewSha256": "4dbc8f65743fe8e2bee941df7281fccf6bd82d2681275996980f7fab61b5bcb5",
+  "paths": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-test-app.test.tsx.hbs",
+      "sha256": "48ebad42ebbe139f929429145a01e97fb49dbe9f80f8bc10be35a2c89115cf1e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-test-health.test.ts.hbs",
+      "sha256": "64fd6ccdc79fa7c5376604166d6fc60c82faa917b815ff576a4174dd4eb987e0"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-test-App.test.tsx.hbs",
+      "sha256": "90b3832f802ad5827b0a15e54866fd3e1804cf8f87b86a2cb9748a8335e184bd"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-test-App.test.tsx.hbs",
+      "sha256": "84af18feef677c65a5fc195e8b53d4032811ac95d3262cf233aaa4cf207b8b39"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.test.json.hbs",
+      "sha256": "c180e9d9e802af650e337114af05304f29b51065e64b50cc7eb692939d23bb25"
+    }
+  ],
+  "priorCorpusFiles": 3181,
+  "correctedCorpusFiles": 3186,
+  "lanes": 27,
+  "reason": "Authored Handlebars generator inputs remain source even when they emit test code. Actual test implementations and generated outputs remain excluded.",
+  "correction": "Remove these five paths from inherited exclusions and exempt them from the filename test filter in initial enumeration and drift detection.",
+  "historicalCoverageLimitation": "Earlier 3181-file receipts omit these five authored templates from included and frozen source sets. Historical receipt bytes are preserved; they do not prove full authored-template coverage.",
+  "correctedControllerSha256": "756f615c2e1defd98c48791fe4b62cd921fa2b31e01c4fdedfb7e88ecb93e4fa",
+  "correctedPreflightPassed": true,
+  "correctedIndependentReview": "passed",
+  "launched": true,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "correctedIndependentReviewSha256": "07231a2409a8e05895faf07f1eab2ce602c991a0a0f482e99b1a72cdf753d3e3",
+  "round": "refresh-2026-09-25-r37-main-9a1bd3"
+}

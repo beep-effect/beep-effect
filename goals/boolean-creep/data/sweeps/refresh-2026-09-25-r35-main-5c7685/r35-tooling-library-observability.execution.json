@@ -1,0 +1,22 @@
+{
+  "lane": "r35-tooling-library-observability",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:25:21.877491+00:00",
+  "finished": "2026-09-25T06:28:48.996226+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-tooling-library-observability.jsonl`\n\nConfirmed 0, disqualified 0. The validator reports `inventory OK: 0 records`. Every assigned root was covered (`ai-metrics/src`, `ai-sync/src`, `qa-capture/src`), excluding tests and `ai-sync/src/_generated`. The source SHA is `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`.\n\nNo new or reclassified two-boolean cluster. Seeded owners still match their prior rulings. Line anchors drifted without a status change: `OutcomeLabel` booleans now start at `models.ts:899` (inventory `896`), `AiMetricsOutcomeLabelInput` at `scorecard.ts:200` (inventory `197`), `OutcomeLabelAnnotationRow` at `agent-effectiveness.ts:2058` (inventory `2055`), and `AiMetricsInstallInput` at `install.ts:185` (inventory `178`).\n\nThree seeds name a non-boolean beside one boolean, so they stay out of this round's net and were not rewritten: `AiMetricsConfigSnapshotBoundsReport` (`truncated` plus `truncationReason`), `AiMetricsCanonicalRoot` (`excludedFromParentSnapshot` plus `kind` and `parentRootId`), and `configSnapshotsDataset` (`configSnapshotPresent` plus `configSnapshotId`). `truncated` is still `O.isSome(truncationReason)` at `config-snapshot.ts:996`. Single-boolean shapes such as `BenchmarkRun.passed` and `AiMetricsBenchmarkRunInput.passed` were left out of the report.",
+  "transcriptSha256": "3da52a23e90e3e458f11e7e1b6bcfd99ba59ee36eb79ddfc18c56259d9ab7e2e",
+  "runnerSha256": "d10cfc3561b1ae51721442c089e8bb1fe3255daedb8fa5a74a687c0497530fb2",
+  "seedSha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

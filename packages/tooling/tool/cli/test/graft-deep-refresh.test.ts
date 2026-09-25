@@ -323,6 +323,32 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
   );
 
   it.effect(
+    "reads a clean build's meaning tally when no coverage line was printed",
+    Effect.fn(function* () {
+      // Graft prints `meaning coverage:` only on a degraded pass; a clean deep
+      // build prints the tally alone, and `.graftignore` symbols sit outside it.
+      const tally = "  meaning: 120 computed, 39000 cached, 0 stale, 0 pending, 608 excluded\n";
+      assertSome(
+        O.map(parseDeepCoverage(tally), (coverage) => [coverage.covered, coverage.total, coverage.failedFiles]),
+        [39_120, 39_120, 0]
+      );
+      // Stale and pending symbols are owed a summary, so they widen the total.
+      assertSome(
+        O.map(parseDeepCoverage("  meaning: 0 computed, 900 cached, 40 stale, 60 pending\n"), (coverage) => [
+          coverage.covered,
+          coverage.total,
+        ]),
+        [900, 1_000]
+      );
+      // The explicit coverage line still wins when both are present.
+      assertSome(
+        O.map(parseDeepCoverage(`${tally}${LOW_COVERAGE}`), (coverage) => coverage.total),
+        NonNegativeInt.make(1_000)
+      );
+    })
+  );
+
+  it.effect(
     "round-trips a complete status document through the JSON codec",
     Effect.fn(function* () {
       const status = GraftDeepRefreshStatus.make({

@@ -1,0 +1,431 @@
+{
+  "round": "refresh-2026-09-25-r35-main-5c7685",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "complete": true,
+  "dryCredit": false,
+  "reviewedLanes": [
+    {
+      "lane": "r35-foundation-primitive",
+      "executionSha256": "f0320341a6c399827367648070ba04bd6baf37b5be8686241b5b8081d86e350e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Both assigned primitive roots covered; generated paths excluded; no seeds, eligible clusters, or unclassified candidates reported. Empty validated report and transcript binding verified."
+    },
+    {
+      "lane": "r35-foundation-schema-a-m",
+      "executionSha256": "867dca83e052378f00a86fb69e6febf092b6af3fc25252ce9c6fe03bb9cfd1cf",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All188assignedfiles covered; ten seeds unchanged. Empty report, no seed drift or unresolved questions. Prior descriptor kind corrections remain retained."
+    },
+    {
+      "lane": "r35-foundation-schema-n-z",
+      "executionSha256": "80ca6f8b5f6758ebd91c2afbe2dfbf041723447bc4dc3d22a4dacff532a88e4c",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots covered; seven seeded owners retain D1/D2. Sentinel false-or-struct options, function flags and callable predicates properly excluded; no withdrawals."
+    },
+    {
+      "lane": "r35-foundation-modeling-rest",
+      "executionSha256": "7c7e84150cc7ca9bcf0c4a26f4a767602d3f019a5d0287a0a61f339993783973",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots covered;26seeds retained. Non-TypeScript seed directory search verified transcript792/797: true|false|boolean, unrestricted extension glob, completed zero matches and no stderr. Generated HTML/RDF surfaces excluded; no seed drift/questions."
+    },
+    {
+      "lane": "r35-drivers-g-m",
+      "executionSha256": "a1fc1d85e2df5f1cdbdff403fbe7a14f09d9504fbe091914cf71136553b75681",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Seven roots covered; retained GraphMessage/GraphEvent wire D2, collision-report E4 and four Three.js option D2 objects. Empty report; no withdrawals, drift or unresolved questions."
+    },
+    {
+      "lane": "r35-foundation-capability",
+      "executionSha256": "a50cea9fe8638b52be34904ed1ac90284cfc1d17b7f7178dd18d38a8adaac828",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Nine roots165files covered; all seeds retained; single-Boolean fields and false-or-object ColorInfo sentinel excluded correctly. Empty report with no seed drift or questions."
+    },
+    {
+      "lane": "r35-drivers-a-f",
+      "executionSha256": "4f2544b95e8ce85dab12910e2597cd692e17e2bad2348b3f9b02b56e81816cf4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All16roots covered. Existingowners/classes retained; no newclusters/withdrawals/questions. Parent verified logging-options declaration at282 rather than historical280; independentBooleanloggingtoggles retainD1."
+    },
+    {
+      "lane": "r35-architecture-ecosystem-internal",
+      "executionSha256": "16b2acc692439f8039a2c1e8539647e152ab95a3dd467cb977ccbffd9939feb0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Nine roots114authoredTS covered; threeD1ownersretained. Meta firstfield273 vs declaration267 is not semantic drift. Payloadsentinels and predicates properly excluded."
+    },
+    {
+      "lane": "r35-drivers-s-z",
+      "executionSha256": "c848f0d9c467bd0675aa784095d6838236b0cbe9abb7fe4f9ff763d128c123f5",
+      "reportSha256": "8d99c177afda6d210efae63a3ea47f6a63d89c3b28a742ec4ba6665d6208eee0",
+      "disposition": "Nine roots covered. Reject two SSE proposals: complete VeniceAIServerSentEvent and XAiServerSentEvent declarations carry oneBoolean done plus data payload and numeric index, no spread/inheritance addingBoolean. Prior R32/R33 withdrawals remain valid. No newinventoryrecords. WebSocket isBinary alsooneBoolean, no hold."
+    },
+    {
+      "lane": "r35-drivers-n-r",
+      "executionSha256": "c16ce0be01219c65da0c910cc4a58db5dc62ed668913814bd88bf481ce2d8332",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All15roots88TSfiles; classes retained. Graft declarations confirm existing EngineProfile53,StreamState221,EnsureQaSceneResult415,ObsRecordStatus1127,Openclaw675. Footer first-member locations are not declaration drift. DatasetLoadLinesOptions259 and PipelineProcessOptions169 corrected as metadata only; TextReadOptions checked separately."
+    },
+    {
+      "lane": "r35-agents-workspace",
+      "executionSha256": "5cf47e0b4766d4f97a97ebf753415529f1dc68f529c5b489d365a38f965a5172",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Nine roots149files complete; TextInline independent marksD1 and ScanState escaped=>inString E4 retained; no seeddrift."
+    },
+    {
+      "lane": "r35-law-practice-domain",
+      "executionSha256": "1c4b0d30c18e7e9c462ac0ebed67065d0d4ca2db7a8ac7df7f9f1c9d27bc493e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All214authoredTS domain files complete;26seedsretained; no drift, withdrawals or questions."
+    },
+    {
+      "lane": "r35-shared-documents",
+      "executionSha256": "761b6130d68c731e04ab5375d5b327eb61069ceff201e556cbe682b0edef2fe3",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Seven roots220files complete; enqueueMoveDeltas independentD1 and recordPushFailureE4retained; former timestamp/connection rows alreadywithdrawn are not readmitted. No newclusters."
+    },
+    {
+      "lane": "r35-law-practice-runtime",
+      "executionSha256": "7bba2a7a051bcf2fc6ed0d98e483ceb15fd47de82e271ef2f5f42703e86577b0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Server/tables/usecases complete;3option/hintseedsretained. Parent fullbuildPracticeKgBundleImpl scope confirms sole immediate BooleanmanifestExists; overwrite belongs to nested options owner. Withdraw crossownerD1row; no replacement."
+    },
+    {
+      "lane": "r35-epistemic-ontology",
+      "executionSha256": "2f3d5170f7bd2dc9105ca61f013aabff8bc3d74e9108b7d19d3122131c64dfa8",
+      "reportSha256": "c65c292cc736b0e1b1fe3c187bf971018f5fff8d17ab17f05c5fba90d687e331",
+      "disposition": "All230sourcefilescovered; seedsretained. Admit newD1local pair verified/approved; remove separate pendingprop from candidate members. Explicit independent domain fields documented174-183 and direct guards96-97 provefreepair. No qualified change."
+    },
+    {
+      "lane": "r35-foundation-ui",
+      "executionSha256": "9f230444b43ca0c8a14f1009bcf9663d1c81036baabbb83fe4c92bd33950d15d",
+      "reportSha256": "2ed288ae8d2d00f94889168ff834bcb41fb4b4d32f8e0795abf07c94b400bb39",
+      "disposition": "Fullraw/footer independentlyaudited,29inputs4proposals3historicalhashesparentverified. RetainTodo2/chart3/Calendar/Sidebar7rows;5scopewithdrawals(2Q3D); correctNotification3localBoolean8/6; repairSpeechInputdesignhookAPIdependency. Roundwet onqualificationchanges."
+    },
+    {
+      "lane": "r35-apps",
+      "executionSha256": "fb26deb10dff502f343c8c233453785c916d4826ec7daa433a200fdc4ae6aa92",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All132sources includingRust/nonTSassetscovered; retainedseedmodels, no newclusters/questions."
+    },
+    {
+      "lane": "r35-tooling-policy",
+      "executionSha256": "f7c88d860d0579b3f421c2c488ebb86d05e3f809914f3389553e578ea5f75a35",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Bothroots covered, generatedexcluded; seedsunchanged,emptyvalidatedreport."
+    },
+    {
+      "lane": "r35-tooling-library-support",
+      "executionSha256": "31efd806976262241ec2cd23b4faec138aaeda685751a2418eecd0cfd8febc6f",
+      "reportSha256": "47dc2f66c43d3f96c506e4effe855e51b918bc033df36ed5029a0731ca090c8e",
+      "disposition": "Allrootscovered. Acceptts-morphProjectoptionsD2member expansion skipAddingFilesFromTsConfig, verifiedconditionalspreadat491 onconstructedProject489. ExistingqualifiedOpenMode/OpenFileDescriptorunchanged."
+    },
+    {
+      "lane": "r35-tool-docgen",
+      "executionSha256": "e8f222109b636988ca0976a1e1ed093e81503639d0e18a1163ba571e17a39f6b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All docgen source covered;17seedclusters retainedD1/D2; empty validatedreport, no withdrawal/questions."
+    },
+    {
+      "lane": "r35-tooling-library-observability",
+      "executionSha256": "20999d66b60c76b7a67fa8fa2d1bb7be144565ffa274bc46b1c1eb43469f04dc",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "Fullrootscovered; independentcompleteowneraudit verifies3qualifiedsingleBooleanwithdrawals;11input+1proposalhashesparentverified. Preservehistoricalrelations/designs; noD1replacement. Reportedlocatorchanges arefirstfieldvsdeclaration,notdrift."
+    },
+    {
+      "lane": "r35-cli-commands-d-k",
+      "executionSha256": "d7842d488e1255903541f15c6ea4b3dc713379d49a9a9ff1067b81c27be29e1f",
+      "reportSha256": "454073be9b668275d48dc08a34e4cc27b66ea0c446f4a2d1d16b62954372dcf9",
+      "disposition": "Tenroots118filescovered;2distinctnewdisqualifiedsitesaccepted (runCaptured3independentcontrolsD1, genesiscleanupSDKoptionsD2). Parent verifiedwholeconstructedobjects and existinginventoryno duplicates. Graft request anchor298;3seedlocators updated privately. Noqualifiedchange."
+    },
+    {
+      "lane": "r35-cli-internal-root",
+      "executionSha256": "bb2843271e6e4408411408967699c453590ee4233328ad511edb97ed38a7b7ec",
+      "reportSha256": "028d8b06bc774fc1bbb178990f37a6c2252cf0fa98f170121df7c9d80c93d62b",
+      "disposition": "Independent complete-owner audit: accept three distinct capture D1 sites; reject assertExclusiveModeFlags as excluded inline function flag parameters. Source and proposal hashes verified. Locator claims pending separate reconciliation."
+    },
+    {
+      "lane": "r35-cli-commands-a-c",
+      "executionSha256": "4909330d7fbf45a56c6fc1513908f79ac1c895bae5b506fca94b0c31a561a167",
+      "reportSha256": "f980e5a2dc5a1e808a5c0315b8df3cef179a0582d9919a6bb96558af3df98e0a",
+      "disposition": "Independent complete-owner audit: accept seven distinct Cache SDK D2 sites; withdraw MailStoreExceptionRecord qualified row because complete spread owner has only approved Boolean. Archive design; no dependent designs. All input and proposal hashes verified."
+    },
+    {
+      "lane": "r35-cli-commands-l-q",
+      "executionSha256": "59430966b3baf10981358950b112961e65dbbfefb1c692635accbc15cf4d9e78",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All seven assigned roots,115sourcefiles and62seedowners covered; empty validated report, unchanged owners/members; no unresolved question."
+    },
+    {
+      "lane": "r35-cli-commands-r-z",
+      "executionSha256": "3780b3721906095976643c53ac3e3847364ff1fb3fc0f54e685b646d34712c6a",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "All assigned roots,93sourcefiles and39seedowners covered; empty validated report, unchanged classifications; Root and TopoSort included; no unresolved question."
+    },
+    {
+      "lane": "r35-cli-yeet",
+      "executionSha256": "f619402aec71f05fdcfe93725df207b44efa79a1f119e442352643e7f0aae36e",
+      "reportSha256": "b2677c2f032658fc6be93f2619b12ea37e22db30ee942062239d98d789944f44",
+      "disposition": "Independent full-owner audit retains admitted4/3 probe/address contract;8/5 narrowing lacks new contract authority, supported helper inputs are broader than observer image. Accept one distinct independent git-observation D1.25metadata updates;29input/3proposal hashes verified."
+    }
+  ],
+  "pendingWithdrawals": [
+    {
+      "id": "r25-law-practice-runtime-bundle-overwrite-gate",
+      "disposition": "outside-recall-net-cross-owner",
+      "archiveDesign": false,
+      "file": "packages/law-practice/server/src/PracticeKg.projections.ts",
+      "sourceSha256": "53fa6479bf7b188e0fed2b4b4ca666e0125b66b0dafa83c932d5cadfe39b8fa0",
+      "actualImmediateBooleanMembers": ["manifestExists"],
+      "note": "overwrite is options.overwrite, not a Boolean local; nested manifest corpusRootExpected belongs to a separate constructed object."
+    },
+    {
+      "id": "r2-foundation-date-picker-disabled-open",
+      "ownerAudit": "r35-ui-reconciliation",
+      "disposition": "Withdraw exact disabled/open rows: disabled belongs to props while open belongs to nested scoped state; no sibling open local is declared. DatePickerInner also has isControlled and ColorPickerInner has controlled, but neither creates the old disabled/open carrier or a constrained qualifying relation. Inherited props do not relocate nested state.open. No runtime change.",
+      "archiveDesign": false
+    },
+    {
+      "id": "r2-foundation-color-picker-disabled-open",
+      "ownerAudit": "r35-ui-reconciliation",
+      "disposition": "Withdraw exact disabled/open rows: disabled belongs to props while open belongs to nested scoped state; no sibling open local is declared. DatePickerInner also has isControlled and ColorPickerInner has controlled, but neither creates the old disabled/open carrier or a constrained qualifying relation. Inherited props do not relocate nested state.open. No runtime change.",
+      "archiveDesign": false
+    },
+    {
+      "id": "r2-foundation-emoji-picker-disabled-open",
+      "ownerAudit": "r35-ui-reconciliation",
+      "disposition": "Withdraw exact disabled/open rows: disabled belongs to props while open belongs to nested scoped state; no sibling open local is declared. DatePickerInner also has isControlled and ColorPickerInner has controlled, but neither creates the old disabled/open carrier or a constrained qualifying relation. Inherited props do not relocate nested state.open. No runtime change.",
+      "archiveDesign": false
+    },
+    {
+      "id": "r27-boolean-state-foundation-spinner-state",
+      "ownerAudit": "r35-ui-reconciliation",
+      "disposition": "Withdraw qualified row: complete SpinnerState has runOnce:Boolean and interval/timeout:number|undefined only. Optional handle presence is not another Boolean. Genuine timing constraints do not bypass the two-Boolean net. Archive its design; no runtime rewrite.",
+      "archiveDesign": true
+    },
+    {
+      "id": "r27-boolean-state-foundation-use-scribe-result-connected",
+      "ownerAudit": "r35-ui-reconciliation",
+      "disposition": "Withdraw qualified UseScribeResult row: complete interface has only isConnected:Boolean; status is a literal, error nullable string, transcripts/payloads and callable controls do not add Boolean members. Archive companion design. Repair eligible SpeechInputContextValue design to retain hook isConnected and own status promotion without this companion.",
+      "archiveDesign": true
+    },
+    {
+      "id": "ai-metrics-config-snapshot-bounds",
+      "ownerAudit": "r35-observability-reconciliation",
+      "disposition": "Complete S.Class fields have no inherited field spread; truncated is the sole Boolean. Option presence and nested budget are not sibling Booleans. Empty constructor303-309 and final constructor991-998 expose the real flag/payload relation, but do not create another eligible member. Parent result nesting does not merge owner fields.",
+      "archiveDesign": true
+    },
+    {
+      "id": "ai-metrics-canonical-root-kind",
+      "ownerAudit": "r35-observability-reconciliation",
+      "disposition": "Complete S.Class fields contain only one Boolean and no field-spread inheritance. makeAiMetricsCanonicalRoot597-613 derives the flag and optional parent from kind; isLinkedWorktree is a constructor local alias, not a second schema field. withFirstSeen copies the same owner and changes only timestamp. Literal alternatives/parent presence do not supply Boolean recall.",
+      "archiveDesign": true
+    },
+    {
+      "id": "r27-tooling-library-observability-config-snapshots-dataset-presence",
+      "ownerAudit": "r35-observability-reconciliation",
+      "disposition": "None arm3431 has only the false flag; Some arm3432-3438 has the true flag plus four non-Boolean payloads. ForwarderSummary759-775 confirms numeric/string types. DatasetExample1534-1547 and datasetExample3332-3351 wrap/forward this output without adding Boolean members; DatasetSpec1579-1591 and datasetSpec3353-3367 add descriptions/arrays/literal/string only. Generic Record<string,unknown> acceptance does not invent actual Boolean siblings or flatten nested examples.",
+      "archiveDesign": true
+    },
+    {
+      "id": "corpus-mail-store-exception-approved-disposition",
+      "ownerAudit": "r35-cli-first-reconciliation",
+      "disposition": "Complete MailStoreExceptionRecord including shared identity fields has only approved Boolean. Existing design assertion does not override binding two-Boolean recall requirement. Preserve historical design and row; no runtime change.",
+      "archiveDesign": true
+    }
+  ],
+  "pendingMetadataUpdates": [
+    {
+      "id": "drivers-acp-protocol-logging-options",
+      "line": 282,
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sourceSha256": "5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee",
+      "reason": "Current exported declaration anchor; D1 unchanged."
+    },
+    {
+      "id": "nlp-mcp-dataset-load-lines-options",
+      "line": 259,
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sourceSha256": "024369cc9269c9a24393704da6bce703761a8c9cea381079fb813b57c8f97eb0",
+      "reason": "Current class declaration anchor verified with Graft."
+    },
+    {
+      "id": "nlp-mcp-pipeline-process-options",
+      "line": 169,
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "sourceSha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91",
+      "reason": "Current class declaration anchor verified with Graft."
+    },
+    {
+      "id": "nlp-mcp-text-read-options",
+      "line": 221,
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sourceSha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e",
+      "reason": "Current exported class declaration anchor."
+    },
+    {
+      "id": "knowledge-ref-classification-input",
+      "line": 1920,
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "sourceSha256": "fbfc0aeba85c1c1f1822d363b046fd4a6f4557bd22f8a16c5e824b72eef30ec6",
+      "reason": "Current declaration/write-site anchor verified; classification unchanged."
+    },
+    {
+      "id": "knowledge-ref-candidate",
+      "line": 2326,
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "sourceSha256": "fbfc0aeba85c1c1f1822d363b046fd4a6f4557bd22f8a16c5e824b72eef30ec6",
+      "reason": "Current declaration/write-site anchor verified; classification unchanged."
+    },
+    {
+      "id": "r30-cli-commands-d-k-packet-mutation-empty-repair-root-remove-options",
+      "line": 308,
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "sourceSha256": "28ad6e2a7cc6863c8384bce6bb84d0d6e86de32015dd6e94078ce9d2eb278d9e",
+      "reason": "Current declaration/write-site anchor verified; classification unchanged."
+    },
+    {
+      "id": "r3-tooling-envconfig-unresolved-turbo-secrets",
+      "line": 620,
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sourceSha256": "7e1a6fbe8fa35b50039d2b8f1342dccd368643c41ff1a21337093c54c77eae2d",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+      "line": 864,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
+      "line": 923,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+      "line": 930,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-admission-journal-sidecar-remove-options",
+      "line": 944,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+      "sourceSha256": "4dc480b6392b3be9ade8ba4083162204e42cb713221471feef28fcfedcdaaaad",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r31-cli-internal-root-admitted-child-spawn-fields",
+      "line": 718,
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sourceSha256": "f5ea05fe58ceaec33b87ac1410b55b50253dd02f85c416a7403cbaf4db01a557",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    }
+  ],
+  "rawDispositions": [
+    {
+      "id": "r35-drivers-s-z-venice-sse-done",
+      "disposition": "outside-recall-net-single-Boolean-owner",
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sourceSha256": "0d3eb813bf472eaa0cc316fae5f4e9b687bb0c495d88461206e3c5415ea60bfa"
+    },
+    {
+      "id": "r35-drivers-s-z-xai-sse-done",
+      "disposition": "outside-recall-net-single-Boolean-owner",
+      "file": "packages/drivers/xai/src/XAi.models.ts",
+      "sourceSha256": "90617588fcb7d9040262aab8861cf5ecbab5c4f6dc426b4f27992aea74c3ed79"
+    },
+    {
+      "id": "r35-cli-internal-root-generated-file-mode-flags",
+      "disposition": "outside-recall-net-function-flag-parameters",
+      "ownerAudit": "r35-cli-first-reconciliation"
+    },
+    {
+      "id": "r29-yeet-sweep-worktree-probe-address",
+      "disposition": "reject-unsupported-strengthening-retain-existing4/3",
+      "ownerAudit": "r35-yeet-reconciliation"
+    }
+  ],
+  "pendingOwnerAudits": [],
+  "pendingLocatorAudits": [],
+  "pendingNewDisqualified": [
+    {
+      "id": "r35-epistemic-ontology-claim-evidence-review-flags",
+      "proposal": "proposed-claim-review-d1.json",
+      "sha256": "bb7b10450f799c18ed1c96af8f0cbfbd4aaefdda9c8ab3358e7128978717f462",
+      "sourceBindings": [
+        {
+          "file": "packages/epistemic/ui/src/ClaimEvidenceReview/ClaimEvidenceReviewPanel.tsx",
+          "sha256": "098f6634ed76e4c9603c34452fb39656d23f00699ba20075d0df8df23c4d5e08"
+        },
+        {
+          "file": "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.model.ts",
+          "sha256": "bf4f34b95dada3d222baf30729600e8ac1c18c4b70a0713ad4d38db2caf4e235"
+        }
+      ]
+    },
+    {
+      "ids": [
+        "r35-cli-commands-d-k-graft-deep-runner-capture-options",
+        "r35-cli-commands-d-k-genesis-seed-staging-remove-options"
+      ],
+      "proposal": "proposed-cli-d-k-disqualified.jsonl",
+      "sha256": "a4647469084c2f82366432da8c645fa6c5d888f6a239fefac5b8fa2f09422322"
+    },
+    {
+      "ids": [
+        "r35-cli-internal-root-git-structured-capture",
+        "r35-cli-internal-root-git-output-capture",
+        "r35-cli-internal-root-repo-command-capture",
+        "r35-cli-commands-a-c-cache-qualification-textdecoder",
+        "r35-cli-commands-a-c-cache-entrypoint-textdecoder",
+        "r35-cli-commands-a-c-cache-deps-materialize-remove",
+        "r35-cli-commands-a-c-cache-pilot-prepare-remove",
+        "r35-cli-commands-a-c-cache-experiment-remove-runs",
+        "r35-cli-commands-a-c-cache-experiment-remove-out",
+        "r35-cli-commands-a-c-cache-experiment-remove-turbo"
+      ],
+      "proposal": "r35-cli-first-reconciliation/proposed-inventory-additions.jsonl",
+      "sha256": "743ba550e1baa12b3c3216bb1db8eedea35e54feaa7cb9488f923ee508843846"
+    },
+    {
+      "ids": ["r35-cli-yeet-sweep-git-observations"],
+      "proposal": "r35-yeet-reconciliation/proposed-inventory-additions.jsonl",
+      "sha256": "393d3f69d0851248ba90b187f8419e8fe35b798eb1517a55030f1392fab4706b"
+    }
+  ],
+  "pendingDesignReplacements": [
+    "r3-foundation-notification-action-busy",
+    "foundation-ui-system-speech-input-connection"
+  ],
+  "pendingInventoryProposals": [
+    {
+      "file": "r35-ui-reconciliation/proposed-inventory-updates.jsonl",
+      "sha256": "bad387a77ed0d819c42ec7fe081828a47f02a875730420227cbdf50e10c15843"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-tooling-library-support.jsonl",
+      "sha256": "47dc2f66c43d3f96c506e4effe855e51b918bc033df36ed5029a0731ca090c8e"
+    },
+    {
+      "file": "r35-yeet-reconciliation/proposed-inventory-updates.jsonl",
+      "sha256": "f66494c6a4249d6446c38aa93d5a19d48c5c17a2ac3bce42beb6cfbcd84804bc"
+    }
+  ],
+  "uiAuditSha256": "aad3e4e38ba0b9e3efd8450541611161561a3daafdefa1effbb1e423181e4708",
+  "wetIfFinalized": true,
+  "observabilityLocatorAdjudication": "Reported899/200/2058/185 are firstBooleanfields. Graft declaration anchors896/197/2055/178 match existing canonical rows; no metadatachanges.",
+  "observabilityAuditSha256": "b64c626945618eecfac9ff2f26fe44fdfdd509d29a42dd714cc7c1986536e942",
+  "cliFirstAuditSha256": "fc6a8a3998063e141b8963ce1358f08dc9ebb65285bc44faed365ca5294e3d3b",
+  "controllerTerminal": {
+    "result": "success",
+    "exitCode": 0,
+    "lanes": 27,
+    "sourceStable": true,
+    "completeReconciliation": true
+  },
+  "yeetAuditSha256": "4e69feb09b63c1657e8045e05699d272b00c044b2aed00b62a4d10357045ef2f"
+}
