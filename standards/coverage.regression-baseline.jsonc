@@ -24081,6 +24081,90 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts": {
+          "lines": 20.95,
+          "statements": 20.18,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 83,
+            "statements": 87,
+            "branches": 35,
+            "functions": 39
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.errors.ts": {
+          "lines": 72.72,
+          "statements": 75,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.schemas.ts": {
+          "lines": 93.54,
+          "statements": 86.11,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 2,
+            "statements": 5,
+            "branches": 0,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.service.ts": {
+          "lines": 97.36,
+          "statements": 97.46,
+          "branches": 100,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/internal/LedgerChains.ts": {
+          "lines": 94.44,
+          "statements": 95.45,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/internal/LedgerFiles.ts": {
+          "lines": 98.07,
+          "statements": 98.14,
+          "branches": 50,
+          "functions": 95.23,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/HarnessLedger/internal/PruneWindow.ts": {
+          "lines": 98.71,
+          "statements": 97.56,
+          "branches": 62.5,
+          "functions": 96.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Image/Image.command.ts": {
           "lines": 100,
           "statements": 96.77,
