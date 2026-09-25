@@ -1747,3 +1747,9 @@ retaining uncached dependency requirements. A regression fixture using the
 current dependency graph would have exposed the integration gap earlier.
 Focused capture/orchestration suites passed 23 tests; full package verification
 is pending. Real pilot configuration and runtime evidence still need refresh.
+
+PR #1229's Fallow audit attributed a new cognitive-complexity score of 9
+(limit 8) to the orchestration test's `writeObservation`. Extracted the source
+corruption setup without dropping negative cases; all 19 orchestration tests
+pass. Run local Fallow with an explicit `--base origin/main` outside Yeet:
+the root wrapper uses `BEEP_PROOF_BASE`, and an unset value fails resolution.

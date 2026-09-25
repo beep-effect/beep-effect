@@ -425,6 +425,15 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       : 0;
                   exitCode = fixtureExitCode();
                   if (reuse && exitCode === 0) yield* write(directory, cacheFile, "fixture");
+                  const corruptSource = Effect.fn("PilotOrchestrationTest.corruptSource")(function* () {
+                    if (fault === "source-write") yield* write(identity, "src/index.ts", "unexpected write");
+                    if (fault === "dependency-source-write")
+                      yield* write(
+                        mounted(`${guest}/packages/tooling/test-kit/test-runner`),
+                        "src/index.ts",
+                        "unexpected write"
+                      );
+                  });
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
                     const dependency = A.map(dependencyTasks, (id) =>
@@ -438,13 +447,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       })
                     );
                     if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
-                    if (fault === "source-write") yield* write(identity, "src/index.ts", "unexpected write");
-                    if (fault === "dependency-source-write")
-                      yield* write(
-                        mounted(`${guest}/packages/tooling/test-kit/test-runner`),
-                        "src/index.ts",
-                        "unexpected write"
-                      );
+                    yield* corruptSource();
                     const log = fault === "unsafe-log" ? "/fixture/private.ts\n" : "lint observation\n";
                     if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
                     const progress = hit
