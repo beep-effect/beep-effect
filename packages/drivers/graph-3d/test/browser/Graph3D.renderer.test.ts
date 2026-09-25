@@ -2,7 +2,8 @@
 
 import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d";
 import { Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import { userEvent } from "vitest/browser";
 

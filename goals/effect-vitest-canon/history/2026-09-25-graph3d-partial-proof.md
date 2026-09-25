@@ -56,3 +56,19 @@ Cosmos EV004 occurrences. Cosmos source is unchanged in this checkpoint; its
 recent test-title change invalidated the occurrence identities of three already
 reviewed shorter-scope exceptions. Repair their identities in the owning Cosmos
 lane and propagate the commit. Do not refresh the repository baseline wholesale.
+
+## Browser prerequisite integrated
+
+Main integration cf4e3bd831 brings in the merged browser-context runner repair
+from PR #1262. The browser suite now imports instrumented it from
+@beep/test-runner, retaining all five live renderer cases and their assertions.
+
+`CI=true BEEP_TEST_TRACE=1 bun run test:browser` passed five tests in one file
+under Chromium (4.13 seconds reported). The original AsyncLocalStorage import
+failure no longer reproduces. Full `bun run beep quality package-verify
+@beep/graph-3d` passed: audit 9.7 seconds, docgen 3.2 seconds. These are package
+and browser proofs, not a causal timing comparison or hosted merge readiness.
+
+The merge retains main's non-graph baseline rows and the seven previously
+reviewed graph-3d cache dependency changes. Publication, exact-commit ledger
+attribution and hosted checks remain outstanding.

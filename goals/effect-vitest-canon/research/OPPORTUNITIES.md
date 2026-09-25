@@ -2337,3 +2337,11 @@ The test-only repair targets the adapter public `PgClient.makeClient` entry poin
 while retaining the real test-utils layer/retry implementation. A mock-hit assertion
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
+
+### 2026-09-25 — GitHub quota interrupts heavy-admission observation
+
+After the graph-3d browser prerequisite passed Chromium and package proof,
+`gh pr checks 1274` returned `GraphQL: API rate limit already exceeded`.
+No heavy-admission label was applied without observing the remaining Property
+Laws result. A shared quota-aware read cache would reduce duplicate PR polling
+across active workstreams; local implementation and proof can continue meanwhile.
