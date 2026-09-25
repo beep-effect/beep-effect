@@ -16,7 +16,10 @@
  * @since 0.0.0
  */
 
-import { Config, Effect, pipe } from "effect";
+import { thunk0 } from "@beep/utils/thunk";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -61,8 +64,8 @@ export const DEFAULT_FC_NUM_RUNS = 100;
  */
 export const parseFcNumRunsFloor = (raw: string | undefined): number =>
   O.match(O.flatMap(O.fromNullishOr(raw), parsePositiveInteger), {
-    onNone: () => 0,
-    onSome: (floor) => floor,
+    onNone: thunk0,
+    onSome: identity,
   });
 
 const parsePositiveInteger = (raw: string): O.Option<number> => {
