@@ -2413,3 +2413,82 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   before the ratified row-by-row re-run, or the close numbers are not comparable with the baseline and
   leave out most of the fleet. The first-failure walk stays as it is: its wrapper stop is what the
   baseline measured, and splitting it would make close M2 incomparable.
+
+## 2026-09-25 — quality:cache-policy ran unseeded after coverage since #1068
+
+- Doing: designing D1 (the pre-push ordering handoff, `research/d1-ordering-handoff.md`) and checking
+  the committed `gate-order/v1` seed against the lanes the non-main full-tier pre-push plan declares.
+- Evidence: `quality:cache-policy` is declared in the repo-sanity group as a `preflight` lane
+  (`packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts:561-567`; every line
+  number here is at d9f74d230a) but had no seed row: #1068 (2086a0a090) added it after B3 (#1006) and
+  after the A1 window closed (`measurementAsOf` 2026-09-03). `orderWaveLanes` sorts unseeded lanes
+  after every seeded one, so this policy gate ran after the 603-second `quality:coverage` lane, and
+  its missing estimate took the stop-after-red default. `test/yeet.test.ts:833` pinned it at the tail
+  of the order, and `commands/Yeet/internal/WaveOrder.ts:275-276` already recorded the same defect
+  class, fixed then for `fallow:health` alone. It was the only declared lane without a row, and no
+  row lacked a declared lane.
+- Prevention: landed in this PR (rulings 76–79). `quality:cache-policy` takes the 183 s Repo Sanity
+  proxy row with a first-red share of 0 by absence and moves from rank 31 to rank 19; fixture 1 of
+  `test/gate-order-handoff.test.ts` fails when a declared pre-push lane has no seed row or a seed row
+  names no declared lane, and its message names the file to edit and the ruling 76 seeding rule,
+  which says what row a later lane gets in the PR that adds it. The general lesson: a table keyed by
+  lane id and kept by hand beside the lane declarations drifts silently unless a test joins the two.
+
+## 2026-09-25 — the seed's JSON pointers were provenance strings nothing resolved
+
+- Doing: the same D1 design pass, reading how the seed's `durationPointer` and `firstRedPointer`
+  values are checked against `research/economics.json`.
+- Evidence: the A3 contract says "`WaveOrder.ts` reads the committed `research/economics.json` by
+  JSON pointer" (`research/a3-economics-surface.md:30-31`), but `WaveOrder.ts:8-21` imports no
+  `FileSystem`, the pointer builders at `:32-34` return strings, and the only pointer strings in
+  tests are placeholders. Resolving them by hand showed what an unchecked pointer hides:
+  `quality:jsdoc-ratchet` reads `hosted.laneRows[16]`, the `"Heavy / Doctest"` row it shares with
+  `quality:doctest` (`WaveOrder.ts:217`, `:222`), under a basis that says "for this lane family"
+  (`:27`); `quality:storybook`'s 584 s comes from one external main run (`:241`) behind the
+  `/hosted/laneRows` sentinel, so no pointer can check it; and the four absent-share rows that joined
+  the plan after the A1 window (`fallow:health`, `quality:doctest`, `quality:storybook`,
+  `repo-sanity:config-typecheck`) carry the basis "zero of 832 was observed" (`:28`) for lanes A1
+  could not have observed. Two seed rows also point at pre-ruling-28 lane ids (`pre-push:security`,
+  `pre-push:secrets`), and `laneRows[16]` has the same 82 000 ms as `laneRows[13]` (`"SAST"`), so
+  neither a count-only nor a value-only check would see a pointer that drifted to another lane.
+- Prevention: landed in this PR. Every seeded lane has a cost-source entry with a closed basis
+  (`a1-lane-row`, `a1-proxy-row`, `external-run`); fixtures 2–3 of `test/gate-order-handoff.test.ts`
+  resolve every pointer against the pinned bytes of `research/economics.json` (sha256 `37e854ef…`),
+  check that each resolved row's context or wrapper id is the source key and names exactly one row,
+  and check the 832 and 1610 populations; the five lanes that postdate the window carry a basis that
+  says so. The general lesson: a provenance string that nothing dereferences is an assertion, and it
+  decays the first time the thing it points at moves.
+
+## 2026-09-25 — the frozen A1 seed diverges from live A3 by up to ~300x and A3 lane rows merge tiers
+
+- Doing: the same D1 design pass, asking whether the `gate-order/v1` seed could be refreshed from
+  the live `yeet-economics/v1` report that A3 landed.
+- Evidence: a read-only `yeet economics --fleet` capture on 2026-09-25 (uncommitted; nothing
+  committed reproduces these numbers) put the live inner-lane P50 for `quality:lint` at 5.129 s
+  against a seed of 267 s, `quality:jsdoc-ratchet` at 279.713 s against 82 s, `quality:storybook`
+  at 1.785 s against 584 s, and the unseeded `quality:cache-policy` at 7.493 s; a scratchpad
+  counterfactual reseeded from that capture moves 30 of 32 lanes. The A3 lane rows cannot feed a
+  seed as they stand: they merge tiers (the verdict lane's phase is hard-coded `"full"`,
+  `packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:761`), keep legacy `pre-push:*`
+  ids beside `quality:*`, and carry no precision, lane class or hosted P50.
+- Prevention: not in this PR. D1 keeps the frozen seed and pins its A1 bytes (ruling 77); a reseed,
+  from live A3 or from the P4 close report, is a policy change that needs its own ruling, which must
+  first give A3 lane rows a per-tier identity and map the `pre-push:*` aliases. The general lesson:
+  two measurements of one lane that disagree by two orders of magnitude are measuring different
+  things, and neither should be substituted for the other without saying which it is.
+
+## 2026-09-25 — plan and runtime spell the pre-push lane set twice
+
+- Doing: the same D1 design pass, choosing which lane list the gate-order fixtures should join the
+  seed against.
+- Evidence: `proofLanesForTier` (`packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:413-421`)
+  and `runPrePushChecks` (`packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts:1008-1019`)
+  each spell the same five-group concatenation (changeset status, repo sanity, quality, fallow,
+  pre-push external). The plan calls `orderWaveLanes(DEFAULT_GATE_ORDER_SEED, …)` directly
+  (`Planner.ts:431`) while the runtime yields the `WaveOrder` service, so a lane added to one list
+  and not the other would print one order and run another, and no test compares them.
+- Prevention: partly landed in this PR. `githubCheckPrePushLanes` (exported from `GithubChecks.ts`)
+  now builds the list for the plan and for the gate-order fixtures, so the rendered plan and the
+  handoff cannot diverge. The runtime still assembles its own list; adopting
+  `githubCheckPrePushLanes` in `Quality.command.ts` with a runtime-parity fixture is left for a later
+  PR.

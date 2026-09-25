@@ -65,6 +65,7 @@ export {
   githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
   githubCheckLanePlan,
+  githubCheckPrePushLanes,
   githubCheckTierConcurrency,
 } from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";

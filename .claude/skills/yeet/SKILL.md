@@ -785,7 +785,9 @@ turbo work, so they are cheap to run mid-loop.
   are recorded as `not-run-early-stop`, and already-running work is never
   cancelled. `--no-fail-fast` (or the compatibility spelling `--collect-all`)
   requests the complete diagnostic picture. Fix every reported lane before
-  retrying.
+  retrying. A lane added to the pre-push plan needs a gate-order seed row and
+  cost-source entry under the time-to-certainty ruling 76 seeding rule, or
+  `gate-order-handoff.test.ts` fails.
 - Failure packets are written for proof/commit/publish/monitor step failures,
   publish-intent refusals (untracked/unstaged/partially staged paths), and
   stale-base refusals. Intent refusals print a summarized path list on stderr;

@@ -163,7 +163,8 @@ Schema first, then the service contract, then a shadow ledger, then enforcement.
   pre-push wave so the cheapest lane most likely to prove the change wrong runs first. This is the
   first body for the planner seam the ontology packet declared in its S7 projection contract; it
   ships here only as the ordering of existing lanes and hands its inputs to that packet's S8/S9
-  stages. The lane-DAG planner itself is not in scope.
+  stages (landed 2026-09-25 as a committed input document for the ontology packet's S7-v2
+  planEpisode seam, rulings 76–79). The lane-DAG planner itself is not in scope.
 
 ## Explicitly rejected
 

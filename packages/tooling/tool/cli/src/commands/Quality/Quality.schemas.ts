@@ -6,10 +6,15 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect as EffectRuntime } from "effect";
+import * as Equal from "effect/Equal";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskStep } from "../../internal/process/index.ts";
@@ -17,6 +22,7 @@ import {
   GITHUB_CHECK_MODE_VALUES,
   GithubCheckMode as GithubCheckModeSchema,
 } from "../../internal/repo-run/RepoRun.proofs.ts";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/RepoRun.proofs.ts";
@@ -1073,6 +1079,13 @@ export type GateOrderLaneClass = typeof GateOrderLaneClass.Type;
  * `costP50Seconds` is the A1 nearest-rank P50. `redProbability` is the lane's
  * share of A1 attempts with a reconstructable first actionable failure.
  *
+ * **Gotchas**
+ *
+ * `redProbability` is a first-red share, not P(red): an A1 actionable-lane
+ * count over the 832 reconstructable first failures, while the counts span the
+ * 1610 red attempts. It is a rank weight; the field name stays frozen at
+ * `gate-order/v1`.
+ *
  * **Example** (Describe a cheap precise gate)
  *
  * ```ts
@@ -1149,6 +1162,697 @@ export class GateOrderSeed extends S.Class<GateOrderSeed>($I`GateOrderSeed`)(
     description: "Versioned A1 and A4 evidence used to order the local Yeet pre-push lane set.",
   })
 ) {}
+
+/**
+ * Named D1 ordering rule applied to the gate-order seed.
+ *
+ * **Details**
+ *
+ * `gate-order-lexicographic/v1` is B3's key over the seed: seeded lanes first,
+ * `policy-preflight` before `heavy`, A1 cost P50 ascending, A1 first-red share
+ * descending, `precise` before `imprecise`, then declaration index (TTC ruling
+ * 76). Any change of key, sequence or direction is a new literal.
+ *
+ * **Example** (Recognize the shipped rule)
+ *
+ * ```ts
+ * import { GateOrderRule } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderRule.is["gate-order-lexicographic/v1"]("gate-order-lexicographic/v1")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderRule = LiteralKit(["gate-order-lexicographic/v1"]).pipe(
+  $I.annoteSchema("GateOrderRule", {
+    description: "Named D1 ordering rule over the gate-order seed (ruling 76).",
+  })
+);
+
+/**
+ * Named D1 ordering rule applied to the gate-order seed.
+ *
+ * @see {@link GateOrderRule} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderRule = typeof GateOrderRule.Type;
+
+/**
+ * Component of the D1 key that separated a lane from its predecessor.
+ *
+ * **Details**
+ *
+ * The six literals name the six comparison components of the wave order, in
+ * comparison order.
+ *
+ * **Example** (List the key components)
+ *
+ * ```ts
+ * import { GateOrderSortKey } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderSortKey.Options[0]) // "seeded"
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderSortKey = LiteralKit([
+  "seeded",
+  "lane-class",
+  "cost-p50",
+  "first-red-share",
+  "precision",
+  "declaration-index",
+]).pipe(
+  $I.annoteSchema("GateOrderSortKey", {
+    description: "Component of the D1 key that separated a lane from its predecessor.",
+  })
+);
+
+/**
+ * Component of the D1 key that separated a lane from its predecessor.
+ *
+ * @see {@link GateOrderSortKey} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderSortKey = typeof GateOrderSortKey.Type;
+
+/**
+ * Plan a gate-order handoff covers.
+ *
+ * **Gotchas**
+ *
+ * The only scope is the full pre-push tier on a non-main branch; on `main`
+ * the plan drops `quality:changeset-status`.
+ *
+ * **Example** (Recognize the non-main pre-push scope)
+ *
+ * ```ts
+ * import { GateOrderHandoffScope } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderHandoffScope.is["pre-push:non-main"]("pre-push:non-main")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderHandoffScope = LiteralKit(["pre-push:non-main"]).pipe(
+  $I.annoteSchema("GateOrderHandoffScope", {
+    description: "Plan the handoff order covers: the full pre-push tier on a non-main branch.",
+  })
+);
+
+/**
+ * Plan a gate-order handoff covers.
+ *
+ * @see {@link GateOrderHandoffScope} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderHandoffScope = typeof GateOrderHandoffScope.Type;
+
+/**
+ * Closed set of JSON pointer shapes a gate-order seed row may carry.
+ *
+ * **Details**
+ *
+ * `hosted-lane-row` and `local-wrapper-row` address one A1 duration row;
+ * `hosted-lane-array` is the external-run sentinel `/hosted/laneRows`;
+ * `first-failure-row` addresses one A1 actionable-lane count and
+ * `first-failure-absent` is the no-exact-row sentinel
+ * `/firstFailure/actionableLaneMix`.
+ *
+ * **Example** (Recognize a duration row pointer kind)
+ *
+ * ```ts
+ * import { GateOrderPointerKind } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderPointerKind.is["hosted-lane-row"]("hosted-lane-row")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderPointerKind = LiteralKit([
+  "hosted-lane-row",
+  "hosted-lane-array",
+  "local-wrapper-row",
+  "first-failure-row",
+  "first-failure-absent",
+]).pipe(
+  $I.annoteSchema("GateOrderPointerKind", {
+    description: "Closed set of JSON pointer shapes a gate-order seed row may carry.",
+  })
+);
+
+/**
+ * Closed set of JSON pointer shapes a gate-order seed row may carry.
+ *
+ * @see {@link GateOrderPointerKind} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderPointerKind = typeof GateOrderPointerKind.Type;
+
+// Anchored, non-global (stateless `exec`), no leading zeros; tried in this order, first match wins.
+const GATE_ORDER_POINTER_SHAPES: ReadonlyArray<readonly [GateOrderPointerKind, RegExp]> = [
+  ["hosted-lane-row", /^\/hosted\/laneRows\/(0|[1-9]\d*)\/p50DurationMs$/],
+  ["hosted-lane-array", /^\/hosted\/laneRows$/],
+  ["local-wrapper-row", /^\/localWrapperLanes\/(0|[1-9]\d*)\/p50DurationMs$/],
+  ["first-failure-row", /^\/firstFailure\/actionableLaneMix\/(0|[1-9]\d*)$/],
+  ["first-failure-absent", /^\/firstFailure\/actionableLaneMix$/],
+];
+
+/**
+ * Classify a gate-order seed JSON pointer into its closed pointer kind.
+ *
+ * **Details**
+ *
+ * The index is `Some` for the three row kinds and `None` for
+ * `hosted-lane-array` and `first-failure-absent`, which carry no index.
+ *
+ * **Gotchas**
+ *
+ * `None` means the pointer has an unknown shape; callers report it as a
+ * finding and never guess.
+ *
+ * **Example** (Classify a hosted duration pointer)
+ *
+ * ```ts
+ * import { classifyGateOrderPointer } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const kind = classifyGateOrderPointer("/hosted/laneRows/7/p50DurationMs")
+ * console.log(O.map(kind, ([pointerKind]) => pointerKind)) // Option.some("hosted-lane-row")
+ * ```
+ *
+ * @param pointer - JSON pointer string from a seed row.
+ * @returns The pointer kind and optional array index, or `None` for an unknown shape.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const classifyGateOrderPointer = (
+  pointer: string
+): O.Option<readonly [GateOrderPointerKind, O.Option<number>]> =>
+  A.findFirst(GATE_ORDER_POINTER_SHAPES, ([kind, shape]) =>
+    O.map(O.fromNullishOr(shape.exec(pointer)), (match) => [kind, O.map(O.fromNullishOr(match[1]), Number)] as const)
+  );
+
+/**
+ * Where a seeded lane's cost P50 comes from.
+ *
+ * **Details**
+ *
+ * `a1-lane-row` is the A1 row of the lane's own hosted context, `a1-proxy-row`
+ * a group aggregate or wrapper row shared with siblings, and `external-run` a
+ * named run outside A1 behind the `/hosted/laneRows` sentinel.
+ *
+ * **Gotchas**
+ *
+ * An `external-run` cost is not checked against A1.
+ *
+ * **Example** (Recognize a proxy cost basis)
+ *
+ * ```ts
+ * import { GateOrderCostBasis } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderCostBasis.is["a1-proxy-row"]("a1-proxy-row")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderCostBasis = LiteralKit(["a1-lane-row", "a1-proxy-row", "external-run"]).pipe(
+  $I.annoteSchema("GateOrderCostBasis", {
+    description:
+      "Where a seeded lane's cost comes from: its own A1 row, a shared A1 group or wrapper row, or a named run outside A1.",
+  })
+);
+
+/**
+ * Where a seeded lane's cost P50 comes from.
+ *
+ * @see {@link GateOrderCostBasis} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderCostBasis = typeof GateOrderCostBasis.Type;
+
+/**
+ * Kinds of disagreement between the gate-order seed, the plan and the pinned A1 document.
+ *
+ * **Details**
+ *
+ * Coverage kinds (`unseeded-lane`, `orphan-seed-row`, `cost-basis-unmapped`,
+ * `lane-class-wave-mismatch`) compare the seed with the declared plan; the
+ * pointer kinds compare seed rows with the resolved A1 values; the population
+ * and measurement kinds compare the seed's globals with the A1 document.
+ *
+ * **Example** (Recognize a coverage finding)
+ *
+ * ```ts
+ * import { GateOrderSeedFindingKind } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderSeedFindingKind.is["unseeded-lane"]("unseeded-lane")) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const GateOrderSeedFindingKind = LiteralKit([
+  "pointer-shape-unknown",
+  "duration-unresolved",
+  "duration-mismatch",
+  "duration-source-mismatch",
+  "duration-source-ambiguous",
+  "red-unresolved",
+  "red-mismatch",
+  "red-lane-mismatch",
+  "absent-red-nonzero",
+  "population-mismatch",
+  "red-attempts-mismatch",
+  "measurement-mismatch",
+  "unseeded-lane",
+  "orphan-seed-row",
+  "cost-basis-unmapped",
+  "lane-class-wave-mismatch",
+]).pipe(
+  $I.annoteSchema("GateOrderSeedFindingKind", {
+    description: "Kinds of disagreement between the gate-order seed, the plan and the pinned A1 document.",
+  })
+);
+
+/**
+ * Kinds of disagreement between the gate-order seed, the plan and the pinned A1 document.
+ *
+ * @see {@link GateOrderSeedFindingKind} for the runtime schema and literal helpers.
+ * @category policies
+ * @since 0.0.0
+ */
+export type GateOrderSeedFindingKind = typeof GateOrderSeedFindingKind.Type;
+
+const A1DurationMs = S.Int.check(S.isGreaterThanOrEqualTo(0));
+
+/**
+ * The subset of the A1 economics document the gate-order seed points into.
+ *
+ * **Details**
+ *
+ * Decodes only the fields seed pointers resolve: hosted lane rows, local
+ * wrapper rows and the first-failure populations. Excess keys are stripped,
+ * and `verification-economics/v1` itself stays owned by the A1 script.
+ *
+ * **Example** (Build a minimal source view)
+ *
+ * ```ts
+ * import { EconomicsSeedSourceView } from "@beep/repo-cli/commands/Quality"
+ *
+ * const view = EconomicsSeedSourceView.make({
+ *   schemaVersion: "verification-economics/v1",
+ *   measurementAsOf: "2026-09-03T06:29:38.367Z",
+ *   hosted: { laneRows: [{ context: "Repo Sanity", p50DurationMs: 183000, p95DurationMs: 307000 }] },
+ *   localWrapperLanes: [],
+ *   firstFailure: { attemptsWithReconstructableOuterFailure: 832, redAttempts: 1610, actionableLaneMix: [] }
+ * })
+ * console.log(view.hosted.laneRows.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsSeedSourceView extends S.Class<EconomicsSeedSourceView>($I`EconomicsSeedSourceView`)(
+  {
+    schemaVersion: S.Literal("verification-economics/v1"),
+    measurementAsOf: S.NonEmptyString,
+    hosted: S.Struct({
+      laneRows: S.Array(
+        S.Struct({ context: S.NonEmptyString, p50DurationMs: A1DurationMs, p95DurationMs: A1DurationMs })
+      ),
+    }),
+    localWrapperLanes: S.Array(
+      S.Struct({ id: S.NonEmptyString, p50DurationMs: A1DurationMs, p95DurationMs: A1DurationMs })
+    ),
+    firstFailure: S.Struct({
+      attemptsWithReconstructableOuterFailure: S.Int.check(S.isGreaterThan(0)),
+      redAttempts: S.Int.check(S.isGreaterThan(0)),
+      actionableLaneMix: S.Array(
+        S.Struct({ lane: S.NonEmptyString, attempts: S.Int.check(S.isGreaterThanOrEqualTo(0)) })
+      ),
+    }),
+  },
+  $I.annote("EconomicsSeedSourceView", {
+    description: "The subset of the A1 economics document the gate-order seed points into.",
+  })
+) {}
+
+/**
+ * JSON-string codec for {@link EconomicsSeedSourceView}.
+ *
+ * **Example** (Decode the committed A1 document)
+ *
+ * ```ts
+ * import { EconomicsSeedSourceViewJson } from "@beep/repo-cli/commands/Quality"
+ *
+ * const decode = (text: string) => EconomicsSeedSourceViewJson.decode(text)
+ * console.log(typeof decode) // "function"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const EconomicsSeedSourceViewJson = JsonStringCodec(EconomicsSeedSourceView);
+
+/**
+ * The A1 row, by context or wrapper id, a seeded lane's cost P50 is read from, and why.
+ *
+ * **Details**
+ *
+ * `sourceKey` is the A1 hosted `context` or local wrapper `id` the seed row's
+ * `durationPointer` must resolve to; it is `None` exactly for `external-run`.
+ *
+ * **Example** (Name a lane's own A1 row)
+ *
+ * ```ts
+ * import { GateOrderCostSource } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const source = GateOrderCostSource.make({ laneId: "quality:lint", costBasis: "a1-lane-row", sourceKey: O.some("Lint") })
+ * console.log(source.costBasis) // "a1-lane-row"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderCostSource extends S.Class<GateOrderCostSource>($I`GateOrderCostSource`)(
+  {
+    laneId: S.NonEmptyString,
+    costBasis: GateOrderCostBasis,
+    sourceKey: S.OptionFromNullOr(S.NonEmptyString),
+  },
+  $I.annote("GateOrderCostSource", {
+    description: "The A1 row, by context or wrapper id, a seeded lane's cost P50 is read from, and why.",
+  })
+) {}
+
+/**
+ * One disagreement between the gate-order seed, the declared plan and the pinned A1 document.
+ *
+ * **Details**
+ *
+ * `expected` and `actual` are in the pointer's unit: milliseconds, a count or
+ * a population. `detail` names the expected and resolved row or lane key.
+ *
+ * **Example** (Report an unseeded lane)
+ *
+ * ```ts
+ * import { GateOrderSeedFinding } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const finding = GateOrderSeedFinding.make({
+ *   kind: "unseeded-lane",
+ *   laneId: O.some("quality:cache-policy"),
+ *   pointer: O.none(),
+ *   expected: O.none(),
+ *   actual: O.none(),
+ *   detail: O.none()
+ * })
+ * console.log(finding.kind) // "unseeded-lane"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderSeedFinding extends S.Class<GateOrderSeedFinding>($I`GateOrderSeedFinding`)(
+  {
+    kind: GateOrderSeedFindingKind,
+    laneId: S.OptionFromNullOr(S.NonEmptyString),
+    pointer: S.OptionFromNullOr(S.NonEmptyString),
+    expected: S.OptionFromNullOr(S.Finite),
+    actual: S.OptionFromNullOr(S.Finite),
+    detail: S.OptionFromNullOr(S.NonEmptyString),
+  },
+  $I.annote("GateOrderSeedFinding", {
+    description: "One disagreement between the gate-order seed, the declared plan and the pinned A1 document.",
+  })
+) {}
+
+/**
+ * The pinned A1 document the handoff's seed was verified against.
+ *
+ * **Details**
+ *
+ * `firstFailurePopulation` is A1's
+ * `attemptsWithReconstructableOuterFailure` (832), the denominator of every
+ * seed first-red share; `firstFailureRedAttempts` is A1's `redAttempts`
+ * (1610), the population the share numerators are counted over.
+ *
+ * **Example** (Describe the pinned A1 baseline)
+ *
+ * ```ts
+ * import { GateOrderHandoffSource } from "@beep/repo-cli/commands/Quality"
+ * import { CacheEvidenceReference } from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ *
+ * const source = GateOrderHandoffSource.make({
+ *   reference: CacheEvidenceReference.make({
+ *     path: "goals/time-to-certainty/research/economics.json",
+ *     sha256: Sha256Hex.make("37e854ef859c00e4930cb1b23cfba5989a2947c121a9f0bc88c30e2fc2785230")
+ *   }),
+ *   schemaVersion: "verification-economics/v1",
+ *   measurementAsOf: "2026-09-03T06:29:38.367Z",
+ *   firstFailurePopulation: 832,
+ *   firstFailureRedAttempts: 1610
+ * })
+ * console.log(source.firstFailureRedAttempts) // 1610
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderHandoffSource extends S.Class<GateOrderHandoffSource>($I`GateOrderHandoffSource`)(
+  {
+    reference: CacheEvidenceReference,
+    schemaVersion: S.Literal("verification-economics/v1"),
+    measurementAsOf: S.NonEmptyString,
+    firstFailurePopulation: S.Int.check(S.isGreaterThan(0)),
+    firstFailureRedAttempts: S.Int.check(S.isGreaterThan(0)),
+  },
+  $I.annote("GateOrderHandoffSource", {
+    description: "The pinned A1 document the handoff's seed was verified against.",
+  })
+) {}
+
+/**
+ * One lane of the D1 pre-push order with the key that placed it and its resolved A1 sources.
+ *
+ * **Details**
+ *
+ * `rank` is the 0-based execution position; `decidedBy` is the key component
+ * that separated the lane from its predecessor and is `None` exactly at rank
+ * 0. The lane's seed row is the `seed.lanes` entry with the same `laneId`,
+ * looked up by id and never by index. Durations are the resolved A1 row's P50
+ * and P95 in milliseconds; they and `durationSourceKey` are `None` exactly for
+ * an `external-run` cost basis. `firstRedSourceLane` is the resolved A1
+ * actionable-lane key and is `Some` exactly when the seed row points at an
+ * exact `actionableLaneMix` row.
+ *
+ * **Example** (Describe the first lane)
+ *
+ * ```ts
+ * import { GateOrderHandoffLane } from "@beep/repo-cli/commands/Quality"
+ * import * as O from "effect/Option"
+ *
+ * const lane = GateOrderHandoffLane.make({
+ *   rank: 0,
+ *   laneId: "fallow:audit",
+ *   declarationIndex: 26,
+ *   decidedBy: O.none(),
+ *   redScheduling: "stop-after-red",
+ *   costBasis: "a1-proxy-row",
+ *   durationSourceKey: O.some("advisory:01-fallow-feedback"),
+ *   durationP50Ms: O.some(1863),
+ *   durationP95Ms: O.some(2978),
+ *   firstRedSourceLane: O.some("fallow:audit")
+ * })
+ * console.log(lane.rank) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderHandoffLane extends S.Class<GateOrderHandoffLane>($I`GateOrderHandoffLane`)(
+  {
+    rank: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    laneId: S.NonEmptyString,
+    declarationIndex: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    decidedBy: S.OptionFromNullOr(GateOrderSortKey),
+    redScheduling: GateRedSchedulingDecision,
+    costBasis: GateOrderCostBasis,
+    durationSourceKey: S.OptionFromNullOr(S.NonEmptyString),
+    durationP50Ms: S.OptionFromNullOr(S.Int),
+    durationP95Ms: S.OptionFromNullOr(S.Int),
+    firstRedSourceLane: S.OptionFromNullOr(S.NonEmptyString),
+  },
+  $I.annote("GateOrderHandoffLane", {
+    description: "One lane of the D1 pre-push order with the key that placed it and its resolved A1 sources.",
+  })
+) {}
+
+const issueUnless = (holds: boolean, path: ReadonlyArray<PropertyKey>, issue: string) =>
+  holds ? O.none() : O.some({ path, issue });
+
+const GateOrderHandoffCoherence = S.makeFilter(
+  (value: {
+    readonly source: GateOrderHandoffSource;
+    readonly seed: GateOrderSeed;
+    readonly lanes: ReadonlyArray<GateOrderHandoffLane>;
+  }) => {
+    const laneIds = HashSet.fromIterable(A.map(value.lanes, (lane) => lane.laneId));
+    const seedIds = HashSet.fromIterable(A.map(value.seed.lanes, (row) => row.laneId));
+    const declarationIndexes = HashSet.fromIterable(A.map(value.lanes, (lane) => lane.declarationIndex));
+    const seedRows = HashMap.fromIterable(A.map(value.seed.lanes, (row) => [row.laneId, row] as const));
+    const isExternal = (lane: GateOrderHandoffLane) => GateOrderCostBasis.is["external-run"](lane.costBasis);
+    const hasExactFirstRed = (lane: GateOrderHandoffLane) =>
+      O.exists(
+        O.flatMap(HashMap.get(seedRows, lane.laneId), (row) => classifyGateOrderPointer(row.firstRedPointer)),
+        ([kind]) => kind === "first-failure-row"
+      );
+    return A.getSomes([
+      issueUnless(
+        A.every(value.lanes, (lane, index) => lane.rank === index),
+        ["lanes"],
+        "Lane ranks must be 0..n-1 in array order."
+      ),
+      issueUnless(HashSet.size(laneIds) === value.lanes.length, ["lanes"], "Lane ids must be unique."),
+      issueUnless(
+        HashSet.size(declarationIndexes) === value.lanes.length,
+        ["lanes"],
+        "Declaration indexes must be unique."
+      ),
+      issueUnless(
+        A.every(value.lanes, (lane) => O.isNone(lane.decidedBy) === (lane.rank === 0)),
+        ["lanes"],
+        "decidedBy is None exactly at rank 0."
+      ),
+      issueUnless(
+        A.every(value.lanes, (lane) => O.isNone(lane.durationSourceKey) === isExternal(lane)),
+        ["lanes"],
+        "A lane has no resolved A1 duration row exactly when its cost basis is external-run."
+      ),
+      issueUnless(
+        HashSet.size(seedIds) === value.seed.lanes.length && Equal.equals(laneIds, seedIds),
+        ["seed", "lanes"],
+        "Every lane has exactly one seed row by laneId and every seed row names a lane."
+      ),
+      issueUnless(
+        A.every(
+          value.lanes,
+          (lane) =>
+            O.isNone(lane.durationP50Ms) === isExternal(lane) && O.isNone(lane.durationP95Ms) === isExternal(lane)
+        ),
+        ["lanes"],
+        "A lane has no resolved A1 P50 or P95 exactly when its cost basis is external-run."
+      ),
+      issueUnless(
+        A.every(value.lanes, (lane) => O.isSome(lane.firstRedSourceLane) === hasExactFirstRed(lane)),
+        ["lanes"],
+        "A lane carries a resolved A1 first-red lane exactly when its seed row points at an exact actionableLaneMix row."
+      ),
+      issueUnless(
+        value.source.measurementAsOf === value.seed.measurementAsOf,
+        ["source", "measurementAsOf"],
+        "The source and the seed carry the same A1 measurementAsOf."
+      ),
+      issueUnless(
+        value.source.firstFailurePopulation === value.seed.firstFailurePopulation,
+        ["source", "firstFailurePopulation"],
+        "The source and the seed carry the same first-failure population."
+      ),
+      issueUnless(
+        value.source.reference.path === value.seed.sourcePath,
+        ["source", "reference", "path"],
+        "The source reference names the file the seed's pointers resolve in."
+      ),
+    ]);
+  },
+  {
+    identifier: $I`GateOrderHandoffCoherence`,
+    title: "Gate-order handoff coherence",
+    description:
+      "Ranks, ids, deciding keys, resolved-source presence, source-seed agreement and the seed-to-lane bijection of a gate-order handoff.",
+  }
+);
+
+/**
+ * SPEC D1 handoff: the A1/A4 gate-order seed, its pinned source, and the pre-push order it produces.
+ *
+ * **Details**
+ *
+ * The document carries the `gate-order/v1` seed verbatim, the named order
+ * rule, the pinned A1 source and the lanes in execution order. Its committed
+ * bytes are two-space pretty JSON plus a trailing newline, written only by the
+ * repo-cli gate-order fixture's file snapshot.
+ *
+ * **Gotchas**
+ *
+ * - A seed row's `redProbability` is an A1 actionable-lane count over the 832
+ *   reconstructable first failures while the counts span 1610 red attempts:
+ *   it is a rank weight, not P(red).
+ * - Precision never decides an adjacency on today's seed; it sets
+ *   `redScheduling`.
+ * - `scope` is non-main only.
+ * - An `external-run` lane's cost is not checked against A1.
+ * - {@link GateOrderHandoffJson} encodes compact JSON, never the committed bytes.
+ *
+ * **Example** (Read the handoff schema version)
+ *
+ * ```ts
+ * import { GateOrderHandoff } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GateOrderHandoff.fields.schemaVersion.literal) // "gate-order-handoff/v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderHandoff extends S.Class<GateOrderHandoff>($I`GateOrderHandoff`)(
+  S.Struct({
+    schemaVersion: S.Literal("gate-order-handoff/v1"),
+    scope: GateOrderHandoffScope,
+    orderRule: GateOrderRule,
+    source: GateOrderHandoffSource,
+    seed: GateOrderSeed,
+    lanes: S.Array(GateOrderHandoffLane),
+  }).pipe(S.check(GateOrderHandoffCoherence)),
+  $I.annote("GateOrderHandoff", {
+    description: "SPEC D1 handoff: the A1/A4 gate-order seed, its pinned source, and the pre-push order it produces.",
+  })
+) {}
+
+/**
+ * JSON-string codec for {@link GateOrderHandoff}.
+ *
+ * **Gotchas**
+ *
+ * The codec builds `S.fromJsonString` with no options, so its encode is compact
+ * JSON and never produces the committed two-space bytes.
+ *
+ * **Example** (Decode handoff text)
+ *
+ * ```ts
+ * import { GateOrderHandoffJson } from "@beep/repo-cli/commands/Quality"
+ *
+ * const decode = (text: string) => GateOrderHandoffJson.decode(text)
+ * console.log(typeof decode) // "function"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const GateOrderHandoffJson = JsonStringCodec(GateOrderHandoff);
 
 const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 
