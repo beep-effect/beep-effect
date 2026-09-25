@@ -165,7 +165,7 @@ describe("cosmos driver projection and capability detection", () => {
   );
 
   it.effect(
-    "rebuilds the sigma graphology graph from the incoming update projection",
+    "rebuilds the sigma graphology graph on update and destroys the renderer after scope failure",
     Effect.fnUntraced(function* () {
       graphologyState.graphs.length = 0;
       graphologyState.refreshCount = 0;
