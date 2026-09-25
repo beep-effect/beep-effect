@@ -2173,6 +2173,9 @@
       ],
       "@beep/repo-cli/commands/HarnessLedger": [
         "./packages/tooling/tool/cli/src/commands/HarnessLedger/index.ts"
+      ],
+      "@beep/repo-cli/commands/Refs": [
+        "./packages/tooling/tool/cli/src/commands/Refs/index.ts"
       ]
     }
   }

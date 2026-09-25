@@ -57,12 +57,12 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -74,5 +74,6 @@
       "name": "Close",
       "status": "pending"
     }
-  ]
+  ],
+  "evidence": ["history/2026-09-25-s4-move.md"]
 }

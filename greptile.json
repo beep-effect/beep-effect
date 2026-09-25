@@ -1,4 +1,4 @@
 {
   "fileChangeLimit": 2000,
-  "ignorePatterns": ".repos/effect/**"
+  "ignorePatterns": ".repos/effect/**\n.repos/effect-tsgo/**\n.repos/effect-workspace/**"
 }
