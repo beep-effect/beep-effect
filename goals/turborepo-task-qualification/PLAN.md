@@ -1732,3 +1732,19 @@ existing step/Git suite passed 22 tests; package lint/type-check passed.
 The operational attachment accepted review 29 with 968 sources, six artifacts
 and all 13 broader obligations retained. This establishes neither arbitrary
 filename/byte fidelity nor transitive semantic closure or signed replay.
+
+### Runtime-emission triage and type-only delta review — 2026-09-25
+
+The historical 133-source drift population contains 81 TypeScript files. The
+same pinned TypeScript emitter produces identical JavaScript for 25 baseline/
+head pairs and different JavaScript for 56; no transpilation errors occurred.
+All 25 identical-output source deltas were manually reviewed: a tuple assertion,
+Crypto service requirements, an error-channel correction, and the already
+recorded admission-comment mismatch. See
+[the bounded review](./research/type-only-delta-review.json).
+
+Both revisions of all 81 sources and the compiler implementation are retained.
+Review 30 is accepted with all 13 broader obligations unchanged. This batch
+includes previously reviewed files; it is not 25 newly closed obligations.
+Emitter equality cannot establish type-level or downstream runtime equivalence,
+remove source inputs, or replace the remaining runtime-change reviews.

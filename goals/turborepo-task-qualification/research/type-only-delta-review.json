@@ -1,0 +1,328 @@
+{
+  "authority": "manual-source-delta-review-plus-single-file-emission-comparison",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "4da64bd62f6cb96dfd56c11b9d40615c68c36158",
+  "compiler": {
+    "version": "6.0.3",
+    "implementationSha256": "569177652966bd528c319171c7dd22860dbf72bde116cbc4f644f1d02bb12e39",
+    "options": {
+      "target": 99,
+      "module": 99,
+      "jsx": 1,
+      "removeComments": true,
+      "verbatimModuleSyntax": true,
+      "newLine": 1
+    }
+  },
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "sha256": "cd599594ff4b015eb0953c81bb2b70e16e5d509492cbec9dae816d5e7b4c1e61",
+      "baselineSha256": "f2af96fb109c2bed69d044fa45f8db2fa9f4f1e6cef3318dae078356fb6c91a7",
+      "emittedSha256": "427968df55ff58bcabf3863f328db41c6f629dd1d6679afef42139ea62df77b6",
+      "review": [
+        "The delta adds as const to the channel-pair tuple; this is a compile-time literal/tuple assertion, with identical emitted runtime code."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+      "sha256": "c7c32e69e58085d4fde93c76812ed0bca07640275839e188aa84603c288472ac",
+      "baselineSha256": "f6e34929b31ab2c9d9a85960344c9fe2584805602a150683a3a4a23d5b1edd52",
+      "emittedSha256": "ce31b383ecd997f1ecba71d892ba6f1cdeb109fde689f44a03d99a8056c97534",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+      "sha256": "96dbb8b7b71862c89eca3b6d8c5b8781dbf003ca189f0ddf47e313af2fa17687",
+      "baselineSha256": "3251f9ae0b8332c2ce59ce4cd56345a382595d278c7399c7d64ab0fd5d382e79",
+      "emittedSha256": "690f83fa151695dd3d5157b98370038decaae36343a27831e57f9c692c84139d",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations.",
+        "Documentation changes the described Git invocation to no-renames/NUL output, but runtime output is unchanged. The previously recorded comment/implementation discrepancy remains open; this emitter comparison corroborates only the lack of runtime change."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
+      "sha256": "749b7be435f707ecbe0c653df7160ff09309dcb0b8a2f99b5c77e2c26b9ababf",
+      "baselineSha256": "60fc6d8957d141ce9fcb52ffa631351272900753750513ce13db00d39394f33a",
+      "emittedSha256": "f46c9062052bfb4c89536ef675f8a71da1ab7da9f065ee612bd9b4672ff16f36",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "sha256": "201e8e1a463d3271c55eecf8abb2042214811f5ebc7c873b83e80cc017401297",
+      "baselineSha256": "9ef8f3ff926c778870acae9dece2e153905acfbced34c51820e7bbf76badcf5c",
+      "emittedSha256": "978dddec84b0a4b77e796264f9381f39e5fa74b11c8190818ce4b62562e6e406",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+      "sha256": "f3fe833598f8dce20c9ff69dcfca71d7b2900c11a23faf07e2a82ccb53c29af9",
+      "baselineSha256": "8ca5689638266a8dfc815ab7abdc9d107ff2df51f7b43605e0539503b4401d7c",
+      "emittedSha256": "9e984d338d64931db20bfe17658faa81a5e0e515a92359240e9bdfe04eaafce4",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "sha256": "042868a1cac5ef3907b401448e47e3123df3c13a5ccd5f886265b2500b3c53c3",
+      "baselineSha256": "88e0e5509e23451f66d585f39ee792f3f37512a0fced353018dbef87dbb8b347",
+      "emittedSha256": "0666e20e01b0d3346b5c27154e52502dd8f7719b2892b913293f401e13da3df2",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "sha256": "c0e8c8aa4b73b0be2dd9a03a35c2f00de5a1fd9407c1d27af7d9f15e7a665159",
+      "baselineSha256": "2551c8a22a43b9b272e196b5c9c440c5a01799bcfaa7b980be2cfa93cb9c64ca",
+      "emittedSha256": "05725c5ef7e631a1868a206153b4661b0f910262216be3a5b5ccfb8f354dba08",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "sha256": "0ea11d49552d7b868617869892990c445f85bd702f3ab31fa256e74673ec16fb",
+      "baselineSha256": "892c3b4f5181412a011f6dae1f2ff6bdc10da608bc724bdfae7706af27963cab",
+      "emittedSha256": "087c010910af9e8aa652ac528ce83d9c500bff60877edf5b71c7c8c52e237df3",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      "sha256": "339bdce860541101108e0431dad7429453f5f58750f3b072cc450e3af1074b34",
+      "baselineSha256": "9caa24ca778a0674b41750ded2839d0d2130482914ee057fa7aa308814b6a152",
+      "emittedSha256": "afdc549d8f06cc55ee00529b6d9ea987646a72aa802536c75d68722cc27d86f5",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "sha256": "e0dbc5b24304edc9713e9e17e07adad0d6ff3aafb27d18ecc2b00c8070fa4873",
+      "baselineSha256": "b9badcb6a3d0f77c6d2ae6509d1575c0cf50cd81f79be157708f3d42cc235a48",
+      "emittedSha256": "56cdc22e955fa2a926ee666ea2525d97d8894d83e56b1e9131395eb2aaffd93a",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts",
+      "sha256": "af38dcea9fe5c4ba8e77c7b8254b645d01160d2ae3bf418595a2fd5b22957243",
+      "baselineSha256": "75a772cf36434d84ab7cf1e4c658a30820e90c836322ee39d7ca7e78d7186c41",
+      "emittedSha256": "2917302f45ffdc6776401a85b044a271c0ec0f79389ff77d219a17571d2d22f2",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations.",
+        "attemptJournalPath also changes its declared error channel from never to YeetCommandError; this affects typed callers despite identical emitted runtime code."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
+      "sha256": "c658fbf9504f173994b43fc5f1958feb90561fc1eb022604d71e2880d334a863",
+      "baselineSha256": "c55b33172ae667c8d1f3df20247ebbfc5ca66641c19be4ec2af9ab4b51c550bc",
+      "emittedSha256": "1971b0ff6a4d33cb36ee5429b007acc448725539ca7e94f0c1713274bbb83053",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
+      "sha256": "78c837dfc813721aad7e32eba7b289b58780b506510b1463275c1a3b1e8d67ef",
+      "baselineSha256": "bc66f6c8a4eeb3843ddad85d7e2ef29ba551ac287ed8073b5d3969157bb8c4d6",
+      "emittedSha256": "d0bb23b93350505a8fe6f975ed6e6ac431c0ae662e90b6f531af47db7bbbec2e",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts",
+      "sha256": "f4096e9d71d53918ff6d94d7cd89d1c0b2a29d51a5d38f8a0b421bc39e74447d",
+      "baselineSha256": "1d8d2b9e985a7620e90e97d89c8c0ba0a5fb3b68b4ded53a60fc6e2d55f9681d",
+      "emittedSha256": "f62e88cb80424c8758dc5ac06ef26fcce599cf95d3457642a6fd523ed829aae1",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
+      "sha256": "b7440187fc59f9b245676dd8ae189ffdfd6355810e1a3a3e8d9597be2f81825e",
+      "baselineSha256": "cc4be0544a9b501075ffd1a9b8e7089b177bb71fd37f5d7009ac7c530f8e12e9",
+      "emittedSha256": "2e5c3c9c66ada3cbdb0ac97f8e93b275e216dcebc713722f05619b4c905952cf",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
+      "sha256": "b7bfde13361b4ca025e409860a79f5a9452048054f09d4602d5d0c2c64c69e33",
+      "baselineSha256": "5a746d1dcbe3cbddb0818d3b5a5a0a59ce56ced3dd71e3f6be389c381034afd2",
+      "emittedSha256": "fa7bb98890c29eb23e0ede61edf70d5e1a0afb99a279f60ae1f0cd71db25e85a",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
+      "sha256": "3d5324a833414f1bab4be25f192dac5e92339fdb191bf4455c72b6ca6e34098f",
+      "baselineSha256": "2148c81f60ec4f16b6449e1247280e11cf51c5baeab6d17521a172a9fad6f37d",
+      "emittedSha256": "5260c7e9520527d51f091704eb02d6fefe5aa8ed679a7e4eea2e854c949b3bcf",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "sha256": "a41e9b4ad7fa65b316fd0f8c09cbaa51facabf63e075b16426848f5aef02fd0d",
+      "baselineSha256": "0275b69577fcdc34dd01b79e35067ddba6a551ae7b27601be6969eaec30a8942",
+      "emittedSha256": "d6c411d3931e530d34b532d528fe70dcce21a67fc37f83d78502d50c147e57a0",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "sha256": "0aafba4506498844c9646055909126b50d650aef68d8a3cdf7616ae5119eb11a",
+      "baselineSha256": "5f7ca2f766ee56b0debcf7ee71afb9204781b8fc188e30082ac42ddbd08cccaa",
+      "emittedSha256": "c01d28d0fddf30d324bac0ef18aaed27f6c6784fbbeaaa9e8f5e98e00ddba953",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+      "sha256": "646407d1f5e96d2a11fa815fdf06729a183bc68aa639000ebbc27fee84f4762d",
+      "baselineSha256": "8ab82fe558335084558309ade4f3d1546fe6ab9b529e3856b69529e8d44e37f9",
+      "emittedSha256": "578626e0c8b11c34330a5b337a4be6288a73160dad7d9207c453e93d8b31842e",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "sha256": "4db7c0883770f62d637e522308e8474087ce7763b5e7d2134bc8584188d7d88f",
+      "baselineSha256": "266ffdf797e606923cc3997e841b7e7cf757faa3f5b374c06475a0692c92cdb6",
+      "emittedSha256": "a29f91554da2f3e0e9d80e8250126d0ea61059fe8c036d6d7114eb03d8259da4",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts",
+      "sha256": "c021de77416a82588f8088e359d7908ec8c32c8c9e66ce88a58f1f6e756c93a3",
+      "baselineSha256": "b805d1a35102b10b37ecb9b32259cfac13ea565eb09e23d1665a2f34947bf675",
+      "emittedSha256": "cdf1e41332b68f87d40c55c17023e3e1bd238e97d6ce7a83993c1ed4a4df51b7",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "97b5d41c7f2c90f8ca917f50329e8a2b580b7563c300d13720d59420e55999f2",
+      "baselineSha256": "88ec5658bf142fecb7c6c5f494ee3106a179f9f8459588c8a182e77ce0620d1a",
+      "emittedSha256": "7da26d2c3e7e1bea3291980e56944397145ebdd99f17f2bda21e7474c6a30d63",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts",
+      "sha256": "cf45bf0b507ea3ebbfc8b4f1e7ff6587f418223fdcac0ad8adad063cd19d1a1a",
+      "baselineSha256": "b6f1c1cf3fdc164579e9db6f19018fa71cf4648954852387744e127b54d7f0e6",
+      "emittedSha256": "50ef6ca586304a1d7b80837319053ff2d520fb2456c8631bed5331b0b1b7bd8a",
+      "review": [
+        "Reviewed diff adds explicit Crypto service requirements to existing Effect signatures; emitted runtime statements are unchanged under the recorded emitter. Dependency implementations, environment and effects retain separate review obligations."
+      ]
+    }
+  ],
+  "triage": {
+    "historicalChangedSources": 133,
+    "typescriptSources": 81,
+    "emissionEqual": 25,
+    "emissionDifferent": 56,
+    "diagnosticErrors": 0,
+    "runtimeChangedPaths": [
+      "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "packages/drivers/runpod/scripts/operations.renderer.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/LocalShardPoison.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MergedPreview.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofDigest.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofFact.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Remediation.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gates.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GhCollect.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
+      "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts",
+      "packages/tooling/tool/docgen/src/ProofManifest.ts",
+      "vitest.setup.ts",
+      "vitest.shared.ts"
+    ]
+  },
+  "limitations": [
+    "Single-file transpilation does not type-check, resolve imports, bundle, execute or model downstream consumers.",
+    "Identical emitted JavaScript does not establish type-level equivalence or permit excluding a source from check/build/docgen inputs.",
+    "This triages the historical drift population; it is not the full current source population or a qualification review.",
+    "This includes files whose bounded delta was already reviewed; 25 is not a count of newly closed obligations.",
+    "No type-check or runtime tests were run by this emitter comparison. No input exclusions, lifecycle promotions or signed-replay authority follow."
+  ],
+  "retention": {
+    "fileCount": 169,
+    "archiveManifestSha256": "faf4eb9c229c007e81b2e0d4f7f17f7d1f1382e4408ed57afff7f5ae4340885d"
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 30,
+    "unresolved": 13
+  }
+}

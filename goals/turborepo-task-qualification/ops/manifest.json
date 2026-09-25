@@ -345,7 +345,8 @@
     "research/generated-input-lint-controls.json",
     "research/proof-reuse-delta-review.json",
     "research/worktree-runtime-repair.json",
-    "research/process-boundary-delta-review.json"
+    "research/process-boundary-delta-review.json",
+    "research/type-only-delta-review.json"
   ],
   "agentLaunchers": [
     {
