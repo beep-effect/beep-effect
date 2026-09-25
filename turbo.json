@@ -97,6 +97,7 @@
         "$TURBO_ROOT$/infra/package.json",
         "!node_modules/**",
         "!.beep/**",
+        "!.fallow/**",
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/docs/**",
@@ -269,6 +270,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!.beep/**",
+        "!.fallow/**",
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         ".env",
@@ -317,6 +319,7 @@
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
         "!$TURBO_ROOT$/tsconfig*.json",
         "!.beep/**",
+        "!.fallow/**",
         ".env",
         ".env.*"
       ]
@@ -327,7 +330,8 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
         "!$TURBO_ROOT$/tsconfig*.json",
-        "!.beep/**"
+        "!.beep/**",
+        "!.fallow/**"
       ]
     },
     "check": {
@@ -335,6 +339,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!.beep/**",
+        "!.fallow/**",
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         ".env",
@@ -354,6 +359,7 @@
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
         "!.beep/**",
+        "!.fallow/**",
         ".env",
         ".env.*"
       ],
@@ -385,6 +391,7 @@
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
         "!.beep/**",
+        "!.fallow/**",
         ".env",
         ".env.*"
       ]
@@ -404,7 +411,8 @@
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
-        "!.beep/**"
+        "!.beep/**",
+        "!.fallow/**"
       ]
     },
     "test:integration:parallel": {
@@ -422,7 +430,8 @@
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
-        "!.beep/**"
+        "!.beep/**",
+        "!.fallow/**"
       ]
     },
     "test:integration:serial": {
@@ -434,7 +443,8 @@
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
-        "!.beep/**"
+        "!.beep/**",
+        "!.fallow/**"
       ]
     },
     "coverage": {
@@ -464,7 +474,7 @@
     "codegen": {
       "cache": false,
       "dependsOn": ["^codegen"],
-      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"]
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**", "!.fallow/**"]
     },
     "audit": {
       "cache": false,
@@ -473,7 +483,8 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/biome.jsonc",
         "$TURBO_ROOT$/vitest.shared.ts",
-        "!.beep/**"
+        "!.beep/**",
+        "!.fallow/**"
       ],
       "env": [
         "APP_ADMINS_EMAILS",
@@ -513,7 +524,13 @@
     "docgen": {
       "cache": true,
       "dependsOn": ["transit", "@beep/repo-docgen#transit"],
-      "inputs": ["$TURBO_DEFAULT$", "!.beep/**", ".env", ".env.*"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "!.fallow/**",
+        ".env",
+        ".env.*"
+      ],
       "outputs": ["docs/**", ".beep/docgen/**", ".jsdoc-loop/generated-docs/**"]
     },
     "dev": {
@@ -826,6 +843,7 @@
         "!.next/**",
         "!**/storybook-static/**",
         "!.beep/**",
+        "!.fallow/**",
         "!scratchpad/**",
         "!explorations/**",
         "!outputs/agent-reliability/**",
