@@ -2253,3 +2253,14 @@ explicit API-error attribution would prevent misclassifying quota as absent work
 The first hosted OpenClaw check failed before review with `402 Payment Required:
 Grok Build usage balance exhausted`; it produced no findings to remediate.
 Neither API availability nor the stacked PR's skipped checks establish readiness.
+
+## Colors property equality semantics during canonical assertion migration
+
+The initial `assertSome(decoded, processLike)` replacement failed on a generated
+empty environment with a null prototype. `assertSome` uses strict deep equality,
+whereas the original Vitest `toEqual` law compares its values without requiring
+that prototype. Preserve canonical Some presence assertions and the original
+full-value `toEqual` separately; do not narrow the ProcessLike generator.
+Node reproduced the mismatch after 36 runs and three shrinks. A migration rule
+that distinguishes presence checks from payload equality semantics would prevent
+this accidental strengthening.
