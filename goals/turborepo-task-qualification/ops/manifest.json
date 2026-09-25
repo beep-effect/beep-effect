@@ -357,7 +357,8 @@
     "research/quality-entrypoint-review.json",
     "research/refs-entrypoint-review.json",
     "research/refs-canonical-test-repair.json",
-    "research/scoped-resource-test-repair.json"
+    "research/scoped-resource-test-repair.json",
+    "research/refs-provider-test-repair.json"
   ],
   "agentLaunchers": [
     {

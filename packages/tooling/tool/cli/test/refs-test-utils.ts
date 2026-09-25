@@ -1,7 +1,7 @@
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import { Config, ConfigProvider, Context, Effect, FileSystem, Layer, Path } from "effect";
 
 export const writeExecutable = Effect.fn("RefsTest.writeExecutable")(function* (file: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -33,3 +33,40 @@ export const testPlatform = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(provideScopedLayer(NodeServices.layer));
 
 export const workspace = ReferenceWorkspace;
+
+/**
+ * Exposes one isolated reference fixture to its test registration.
+ *
+ * **Example** (Read the fixture)
+ * ```ts
+ * import { Effect } from "effect"
+ * Effect.isEffect(ReferenceFixture) // => true
+ * ```
+ * @category test-services
+ * @since 0.0.0
+ */
+export class ReferenceFixture extends Context.Service<ReferenceFixture, Effect.Success<ReturnType<typeof fixture>>>()(
+  "RefsTest/ReferenceFixture"
+) {}
+
+/**
+ * Acquires a fixture and its reference service for one test registration.
+ *
+ * **Details**
+ * Register this layer separately for each test. Its temporary directory lives
+ * until that registration closes; never share the mutable fixture across tests.
+ *
+ * **Example** (Inspect the fixture layer)
+ * ```ts
+ * import { Layer } from "effect"
+ * Layer.isLayer(referenceFixtureLayer) // => true
+ * ```
+ * @category test-layers
+ * @since 0.0.0
+ */
+export const referenceFixtureLayer = Layer.unwrap(
+  Effect.gen(function* () {
+    const value = yield* fixture();
+    return Layer.mergeAll(Layer.succeed(ReferenceFixture, value), value.service);
+  })
+).pipe(Layer.provideMerge(NodeServices.layer));

@@ -1907,3 +1907,14 @@ The remaining Effect/Vitest findings decrease from 18 to 16, all per-test
 layer provisions. See [the receipt](./research/scoped-resource-test-repair.json).
 The repo-cli verification remains pending. AI-sync is added to the touched
 workspace verification list; no baseline was expanded.
+
+
+### Isolated fixture providers — 2026-09-25
+
+Ten separate one-test fixture layers replace sixteen per-operation providers.
+Each registration owns its mutable fixture, config and temporary root.
+All 47 focused tests, Biome, package lint/check and the Effect/Vitest ratchet
+pass; the latter reports zero introduced findings. See
+[the receipt](./research/refs-provider-test-repair.json).
+Canonical package test-typechecking and full package verification remain
+pending; scoped success does not close exact-head repository/hosted proof.

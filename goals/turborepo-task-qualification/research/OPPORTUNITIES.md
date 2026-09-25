@@ -2078,3 +2078,10 @@ baseline was expanded to waive the findings.
 - Exhaustive command-registry traversal and a missing-binding check would have
   surfaced this gap before historical-delta review. Their semantics remain an
   explicit unresolved obligation.
+
+
+### 2026-09-25 — Use the generated package test typecheck entrypoint
+- Direct tsgo invocation against repo-cli's test config failed TS6059 because
+  its inherited rootDir excludes tests.
+- The generated package-test-typecheck script invokes the canonical synthetic
+  config builder. Read that script before selecting a direct compiler command.
