@@ -2154,3 +2154,13 @@ The canonical attachment accepted this supplemental receipt as review 53 and
 bound four previously absent helper sources: 1,018 sources, six artifacts and
 14 unresolved obligations. Transitive closure and runtime qualification remain
 incomplete.
+
+### Census refresh after PR #1270
+
+[Main source refresh](research/main-1270-source-refresh.json) pins census
+`e10cd090a8`: 144 workspaces, 3,473 nodes and 1,970 executable tasks. No nodes
+were added or removed; commands, dependencies, effective task configurations,
+root scripts and global configuration are unchanged. Input summaries changed
+for 55 nodes. Eighteen Yeet source bindings were refreshed and Converge.ts
+was newly attached. This source-only refresh explicitly leaves semantic review
+and planner reproduction open; it does not renew historical runtime evidence.

@@ -381,7 +381,8 @@
     "research/d1-planner-review.json",
     "research/proof-7877-attribution.json",
     "research/refs-entrypoint-semantics.json",
-    "research/refs-transitive-semantics.json"
+    "research/refs-transitive-semantics.json",
+    "research/main-1270-source-refresh.json"
   ],
   "agentLaunchers": [
     {
