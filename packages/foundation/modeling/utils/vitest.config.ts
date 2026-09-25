@@ -5,9 +5,9 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Keep all test runs isolated; shared config disables isolation for coverage.
+      // Runtime-boundary tests disable Node built-ins before lazy handles resolve.
+      // Earlier files must not populate those handles in the same module instance.
       isolate: true,
-      // Package-specific overrides
     },
   })
 );

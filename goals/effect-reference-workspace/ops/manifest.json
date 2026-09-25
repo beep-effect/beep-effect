@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-reference-workspace",
+    "title": "Effect Reference Workspace",
+    "status": "active",
+    "created": "2026-09-25",
+    "updated": "2026-09-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-reference-workspace",
+  "lifecycle": "active",
+  "mission": "Consolidate the Effect reference clones into ~/YeeBois/references/effect as a graft workspace with a nightly claude-opus-5 deep tier, reachable from every beep checkout via manifest-provisioned .repos links.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "grill": "2026-09-25 grill-me session (Fable 5.1); no exploration packet"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/effect-reference-workspace/README.md",
+    "goals/effect-reference-workspace/SPEC.md",
+    "goals/effect-reference-workspace/PLAN.md",
+    "goals/effect-reference-workspace/GOAL.md",
+    "goals/effect-reference-workspace/research/SOURCES.md",
+    "goals/effect-reference-workspace/research/2026-09-25-00-aligned-design.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-09-25-00-aligned-design.md",
+    "research/2026-09-25-01-current-state.md",
+    "research/2026-09-25-02-fleet-census.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-reference-workspace/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ]
+}

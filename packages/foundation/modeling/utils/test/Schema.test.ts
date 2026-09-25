@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { compileAssertion } from "@beep/utils/Schema";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Cause from "effect/Cause";
 import * as S from "effect/Schema";
