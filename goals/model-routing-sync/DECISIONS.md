@@ -64,3 +64,19 @@ This is a scoped implementation exception, not an architecture doctrine change.
 
 PR #1224 was merged by the operator before this repair began. Carry the approved
 repair and remaining packet closeout in a follow-up PR, left open and mergeable.
+
+## 2026-09-25 — Documentation closeout after operator merge
+
+**Question:** Where should the remaining packet closeout go after PR #1240 was
+merged by the operator while final local verification was still running?
+
+**Answer:** Create a documentation-only follow-up PR containing acceptance
+evidence, reflection, and lifecycle updates. Verify it and leave it open and
+mergeable. The operator selected this recommendation through Ask User Question.
+
+**Rationale:** The approved configurations are already on main. A narrow packet
+PR preserves the outstanding delivery boundary and records the evidence without
+reopening the implementation. Rejected: treating the operator merge alone as
+completion, or granting the agent permission to merge the closeout PR. Retain the
+running proof through its terminal result and verify the final documentation head.
+No design questions remain.
