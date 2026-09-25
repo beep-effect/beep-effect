@@ -22,6 +22,27 @@ is needed.
 | P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
 | P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
 
+## Local evidence checkpoint: 2026-09-25
+
+The [v23 matrix receipt](./research/local-matrix-v23.md) and
+[acceptance audit](./research/acceptance-audit-current.md) record the current
+local evidence boundary. Stable 2.11.3 and canary 2.11.5-canary.2 each pass
+67 observations, 40 checks and ten shadows at frozen source `ed2742ff4f`.
+Current scalar I/O observation and archived-source input review passed; the
+receipt records 439 repository read paths and 802 verified native inputs. Ring
+I/O interpretation remains incomplete. Five synthetic capture controls pass
+per client; repeated mixed-stream runs show two output orderings at unchanged
+task hashes and deny exact-log determinism for that fixture. Signed
+remote comparisons, semantic closure and final acceptance remain incomplete;
+P2 is still in progress and P3 has no accepted sibling receipts.
+
+Checkpoint PRs #1233 (`b757063430`) and #1250 (`0b072273c4`) include the
+main merge and reviewed unexpected-dependency fixture repair. Both have merged.
+PR #1250 has passing full local proof and a separate merge-ready monitor;
+PR #1233's saved publish job failed during PR-context monitoring. Earlier
+checkpoints below retain their own revisions and must not be read as
+current-head proof.
+
 ## Acceptance audit after host recovery: 2026-09-15
 
 Current implementation revision: `028262e8c0`. The reviewed census binds the
@@ -1552,3 +1573,22 @@ edges with caching disabled. This supplies fresh-execution prerequisites, not
 qualification. Full audit and docgen verification passed for both touched packages; see
 `research/dependency-lint-exclusion-verification.json`. Signed evidence and the
 remaining goal acceptance criteria remain open.
+
+### Local evidence and merged checkpoints: 2026-09-25
+
+PRs #1233 and #1250 have merged. The latter has a passing full local verdict
+and a separate `merge-ready: yes` monitor receipt. The former's saved publish
+job failed during PR-context monitoring; its merge does not rewrite that
+historical job as passing. See the current acceptance audit for exact heads.
+
+The frozen v23 source remains unchanged. Both client matrices, scalar I/O,
+archived-source input membership and five synthetic capture controls per
+client have retained reviews. The mixed-stream repetition reviewer omitted
+Bun's command line from its expected multiset. We preserved that attempt
+and ran the corrected expectation through the same pinned admission wrapper.
+Ten fresh runs per client produced two output orderings at unchanged task
+hashes. Independent stream/summary review and pre/post toolchain/dependency
+verification passed. This synthetic mixed-stream fixture is ineligible for
+exact-log determinism; retain that negative result without normalizing it away.
+No signed evidence or complete semantic closure is established by these
+local observations. No tuple is qualified.

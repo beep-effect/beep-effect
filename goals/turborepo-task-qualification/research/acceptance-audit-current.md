@@ -2,9 +2,45 @@
 
 This audit is incomplete by design: it records the remaining work against the
 nine SPEC acceptance criteria. A scoped pass is not whole-goal completion.
-The opening table is the historical checkpoint at
+The earlier audit table is the historical checkpoint at
 `0dca9987807d3ac2e4ae842f712522198a4ec965`. Later dated sections record
 subsequent source and runtime evidence; none promotes the pilot.
+
+
+## Latest local checkpoint: 2026-09-25
+
+The [v23 local matrix receipt](./local-matrix-v23.md) records frozen source
+`ed2742ff4ff0c837e01df0cc38b452762c9a4d89`, stable Turbo 2.11.3 and canary
+2.11.5-canary.2. Both completed 67 observations, 40 passing checks and ten
+shadow decisions. Independent receipt reconstruction passed; both report
+hashes were checked again when the compact receipt was authored.
+
+This advances the local portion of real-pilot evidence. Native scalar I/O and
+archived-source input reviews passed, with hashes retained in the v23 receipt.
+Ring I/O remains uninterpreted. Both clients passed five synthetic capture
+controls with independent retained-byte and production-parser review; repeated
+mixed-stream observations found two output orderings per client at unchanged
+task hashes. This synthetic fixture is ineligible for exact-log determinism;
+the quiet real pilot retains its separate evidence.
+Semantic input closure, accepted signed comparisons and sibling receipt
+integration remain incomplete. Existing entrypoint enforcement is not newly
+classified as unimplemented merely because historical report strings still
+list it: its current-head behavior needs the appropriate implementation and
+runtime evidence. No real tuple qualifies, and no acceptance criterion is
+promoted to complete by this checkpoint.
+
+Checkpoint PRs #1233 and #1250 merged on 2026-09-25. PR #1250's full
+local publish verdict passed at `0b072273c4`, and its separate canonical
+monitor exited zero with `merge-ready: yes`. PR #1233's saved publish verdict
+failed at `monitor:01-pr-context`; that terminal job is not a full publish
+success, even though the PR subsequently merged. The unexpected-dependency
+fixture repair passed all 20 focused tests, and package lint/type checks
+passed in both worktrees. These checkpoint PRs do not constitute the final
+implementation PR or same-PR lifecycle closeout.
+
+## Earlier audit baseline
+
+Source revision: `0dca9987807d3ac2e4ae842f712522198a4ec965`.
 
 Runtime refresh on 2026-09-21 found a changed kernel and runtime linker at the
 same source revision. The installed dependency archive is unchanged. The

@@ -1792,3 +1792,157 @@ packages' real symlink topology would have exposed this before the runtime run.
 - Remediation: replace nested fault-selection conditionals with Effect Match;
   retain all negative cases and rerun the exact Fallow checks.
 - Prevention: run the changed-function Fallow check before early publication.
+
+### 2026-09-25 — Hosted failure attribution and user-bus recovery
+
+PR #1233 coverage failed in identity, utils, and Wink from shared test state; upstream PR #1240 supplies isolation overrides for all three. Lint Policy failed because the self-hosted runner lost communication; job logs returned HTTP 404, but the check annotation retained the cause. Inspect check annotations when job logs are unavailable. The initial Yeet job cancellation returned `stop-failed` without user-bus environment; retrying with explicit XDG runtime and D-Bus settings succeeded. Always verify inactive state before mutating a checkout held by a proof; this merge ran before that verification, so the queued proof was then stopped and superseded without accepting its evidence.
+
+Early publication pushed the main-refresh commit successfully, then stopped at PR discovery on a GraphQL quota error. REST confirmed the existing draft PR had the new head. A separate detached local verification preserves forward progress without repeating publication; quota recovered on the next bounded check.
+
+### 2026-09-25 — Initial pilot divergence lacks retained diagnostics
+
+The expanded stable pilot passed installed-runtime and exact-client checks, then exited 1: `Initial real-pilot comparisons diverged`. The initial comparison guard in `Cache.pilot.ts` emits neither failed check names nor bounded run metadata; scoped cleanup removes the fixture directory. Retain safe comparison metadata before rejecting, so a long admitted run explains which invariant failed without exposing raw logs or rerunning blindly. Reuse stopped and the canary is held.
+
+### Hosted lint runner interruption, PR #1233
+
+- Work: finish the heavy lint policy gate after the other hosted jobs passed.
+- Evidence: GitHub reports “self-hosted runner lost communication”; job logs
+  return HTTP 404 and verification never reported a result.
+- Action: one targeted retry of the affected job; preserve passing jobs and
+  the independent local proof.
+- Prevention: retain runner termination and resource telemetry outside the runner.
+
+### 2026-09-25 — Heavy label applied without registered workflow
+
+The human ready-for-heavy label event on PR #1250 is present, but no
+Heavy Admit run was returned by the workflow runs API. The workflow is
+active and the PR targets main. Treat admission as requested, not running.
+GraphQL quota exhaustion also required REST status reads. A registration
+receipt tied to the label event would distinguish delayed dispatch from
+missing admission without replaying passing first-tier jobs.
+
+### 2026-09-25 — Activation bytes changed formatting as well as cache policy
+
+Stable v22 passed all nine fresh/root/concurrency executions, but its two
+cache-enabled executions exited 1. The bounded diagnostic receipt isolated
+activation-capture-equivalence and local-replay as the failures. Formatter
+round-trip evidence shows the disabled config is unchanged while the enabled
+config rewrites four arrays. Generate activation bytes by changing only the
+cache boolean, then require both sides to be formatter-stable before capturing
+the activation. The replacement passes that byte check; runtime attribution
+still requires the fresh matrix. Keep the failed v22 evidence and stop reuse.
+
+### 2026-09-25 — Hosted knowledge-reference gate blocks checkpoint
+
+PR #1233 job 108078612513 failed `knowledge:refs-check` with 32 live gated references, all in the sibling `effect-reference-workspace` packet. The failure is a policy finding, not a runner outage. Preserve the job log and compare inherited packet content before remediation; packet reference validation before publication would have caught it earlier.
+
+### 2026-09-25 — Reference binding repair exposed a semantic prerequisite
+
+The #1233 local publish proof stopped at `quality:lint-policy`: the
+`knowledge:semantic-delta` gate reported one introduced `broken-tracked-path`
+finding in the sibling reference-workspace PLAN. The earlier portability
+repair named its planned manifest as though it already existed. The repair
+now makes S1 manifest creation an explicit prerequisite to resolving the
+operator binding. Running both reference and semantic-delta checks before
+publishing the earlier prose change would have caught this sooner. No
+baseline or gate exemption is warranted.
+
+### 2026-09-25 — Quality output changed the live pilot input population
+
+Refreshing the census after the symlink repair found no added or removed graph
+nodes and no command/configuration changes, but 67 nodes had changed input
+observations. Comparing native identity lint plans exposed generated Next.js
+and Storybook manifests, Python cache ignore files, and utils build outputs
+and task logs in the proof checkout's declared input globs. The clean source
+worktrees did not contain those files. Changing exclusions or accepting the
+mismatch would conceal the observation; a dedicated clean runtime worktree at
+the same code revision instead restored exact agreement across all four pilot
+tasks. The queued dependency capture from the proof checkout was cancelled
+and replaced by one from this isolated runtime. Keep quality proof generation
+separate from qualification input capture; native plan parity is preparation,
+not a completed runtime matrix or a remote qualification.
+
+### 2026-09-25 — Keep the observation runner free of ledger edits
+
+The v23 native I/O observer exited before trace collection because its clean
+tracked-source assertion found an earlier friction note in the runner checkout.
+The note was preserved in the working goal ledger and a private backup before
+restoring the pinned runner file. Git status was then clean, and the unchanged
+observer was resubmitted through admission. Record ongoing notes in the working
+packet checkout rather than the frozen evidence runner.
+
+### 2026-09-25 — Derive probe pins from retained receipts
+
+The refreshed synthetic capture probe stopped before native execution because
+its hand-copied stable-client SHA-256 did not match. The binary matched the
+v23 activation receipt; the probe literal was wrong. The corrected expected
+value was read from that receipt, the failed attempt was retained, and the
+probe was resubmitted without relaxing the identity assertion. Derive exact
+pins from validated input receipts instead of transcribing long digests.
+
+### 2026-09-25 — Capture admission observer lost before execution
+
+The v23 synthetic capture process stopped while queued: its session handle was
+missing, no process remained in the frozen runner worktree, and no channel
+location receipts existed. The final log only recorded admission waiting.
+Preserved it as `run-interrupted-admission.log` and restarted the unchanged
+admission wrapper after checking that the two PR proof services remained live.
+A durable admitted job with a terminal receipt would distinguish interruption
+from a long queue without relying on a session handle. No failed attempt counts
+as capture evidence.
+
+The queued capture session was lost a second time before execution. Confirmed
+its missing handle and absence from the runner worktree in `/proc`; no channel
+receipts existed. Preserved `run-interrupted-admission-2.log` and moved the
+unchanged canonical admission wrapper into `qualification-capture-v23.service`
+with a two-hour runtime ceiling and retained output. Service activation is not
+a passing experiment result. This avoids session-lifetime coupling while
+preserving scheduler admission and exact toolchain/dependency checks.
+
+### 2026-09-25 — Hosted build runner lost communication
+
+PR #1233 at `b757063430` failed `Heavy / Build` with the GitHub annotation
+“The self-hosted runner lost communication with the server.” The job log
+returned HTTP 404; no compiler diagnostic was available. A scoped job retry
+returned HTTP 403 because the containing workflow was still running. Retain
+the failed status until the workflow settles and the job can be retried; do
+not infer a source defect or a successful build from this infrastructure error.
+Runner-loss recovery that queues a retry after sibling jobs settle would avoid
+manual polling.
+
+### 2026-09-25 — Capture runtime preflight rejected after admission
+
+The durable capture service reached admission but rejected the runtime before
+fixture execution: “Synthetic capture observation runtime differs from its
+preview.” No capture result is accepted. A separate admitted diagnostic retains
+the observed toolchain for comparison with the frozen preview. Per-field
+difference reporting at this boundary would identify drift without a second
+collection; do not replace the preview merely to make the guard pass.
+
+The admitted diagnostic exited zero. After normalizing Option serialization,
+only Node differed: systemd resolved v24.19.0 instead of the pinned v24.20.0.
+The original binary remained available. Relaunched the unchanged wrapper with
+the pinned Node directory first on PATH; the preview was preserved. Explicit
+PATH parity when moving an experiment into a user service prevents this
+environment-only preflight failure.
+
+### 2026-09-25 — Synthetic replay fixture included its generated log
+
+Both clients completed the capture commands, but independent review rejected
+the requested replay: it was a cache miss with a different hash. Native
+summaries showed one added input, `.turbo/turbo-probe.log`, and no changed
+existing input. The disposable fixture lacked a `.turbo/` ignore rule. Added
+that rule to both client fixtures and retained the failed observations before
+rerunning. Validate input-set stability before labeling a run as a replay.
+
+### 2026-09-25: mixed-stream reviewer omitted the runner command line
+
+The v23 repeated-output reviewer stopped on its first retained observation:
+`AssertionError` at the expected payload-line multiset. The native stream
+contained the three intended task lines plus Bun's `$ python3 emit.py` line.
+This is a reviewer expectation defect, not evidence of lost task output.
+Preserved the failed stream, summary, script and service log; the successor
+expects all four lines and writes into a distinct observation directory.
+Prevention: derive the explicit runner framing from the already-reviewed
+capture fixture before launching repeated observations. Do not normalize
+away unknown lines to make an exact-log check pass.

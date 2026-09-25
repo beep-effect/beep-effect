@@ -334,7 +334,8 @@
     "research/fc-runs-exclusion-request.json",
     "research/test-runner-exclusion-request.json",
     "research/dependency-lint-baseline-request.json",
-    "research/dependency-lint-exclusion-verification.json"
+    "research/dependency-lint-exclusion-verification.json",
+    "research/local-matrix-v23.md"
   ],
   "agentLaunchers": [
     {
@@ -396,5 +397,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1182 merged; resumed at 0be1f13d62. Stable 2.11.2 native input bytes, four file-addition controls, profile freshness and actual uncached identity/types execution pass. Historical trace paths are covered except separately attributed Git routing; fresh semantic/capture closure and signed evidence remain pending. No tuple is qualified."
+  "statusNote": "PRs #1233 and #1250 merged. Frozen v23 stable/canary local matrices, scalar I/O, native input membership and capture controls have retained evidence. Repeated synthetic mixed-stream output diverges at unchanged task hashes. Semantic closure and signed sibling evidence remain pending. No tuple is qualified."
 }
