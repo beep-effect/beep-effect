@@ -2485,12 +2485,14 @@
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
