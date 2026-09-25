@@ -1,0 +1,100 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-09-25",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-23T08:57:00-05:00",
+    "end": "2026-09-25T08:17:00-05:00",
+    "label": "America/Chicago"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-23",
+    "lastSuccessfulPr": 1215,
+    "lastSuccessfulRun": "2026-09-23T08:57:00-05:00"
+  },
+  "counts": {
+    "total": 26,
+    "window_new": 16,
+    "refute": 11,
+    "by_axis": {
+      "law": 9,
+      "effect": 8,
+      "agents": 9
+    }
+  },
+  "novelty": {
+    "window_new": 16,
+    "exclusion_url_collisions": 10,
+    "exclusion_collision_pct": 38.5,
+    "collision_urls": [
+      "https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/",
+      "https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery",
+      "https://github.com/Effect-TS/effect/pull/8336",
+      "https://www.instantdb.com/essays/instant_team_joins_openai",
+      "https://github.com/drizzle-team/drizzle-orm/issues/6162",
+      "https://github.com/evoluhq/evolu/pull/708",
+      "https://registry.npmjs.org/@rocicorp/zero",
+      "https://registry.npmjs.org/jazz-tools",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306",
+      "https://github.com/modelcontextprotocol/go-sdk/pull/1238"
+    ],
+    "window_new_collision_pct": 6.25,
+    "note": "Hard collisions are mostly intentional refute-quota re-cites (iManage/Harvey-Everlaw/Instant/drizzle/Evolu/#8336/jazz/#3306/go-sdk#1238). Zero registry URL is the sole window_new collision (canary HOLD break). Gate ≤40% pass on unique claim URLs (38.5%). Friday ~47h window after #1215 merge."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": [
+        "search_posts_all"
+      ],
+      "error": "client-not-enrolled",
+      "detail": "X connector search_posts_all: client-not-enrolled (Appropriate Level of API Access) — skipped; continued without X."
+    },
+    {
+      "source": "uspto-support",
+      "error": "js-spa-empty-shell",
+      "detail": "USPTO data.uspto.gov/support is JS SPA; WebFetch returned empty shell — used patent.dev four-field confirmation + prior support URL context."
+    },
+    {
+      "source": "local-gh",
+      "error": "unauthenticated-rate-limit-or-404",
+      "detail": "local gh / unauthenticated GitHub REST sometimes rate-limits or 404s; preferred cursor-github MCP for PR/issue status."
+    },
+    {
+      "source": "npmjs-web",
+      "error": "cloudflare-avoided",
+      "detail": "npmjs.com HTML Cloudflare avoided; used registry.npmjs.org JSON successfully."
+    }
+  ],
+  "resume_cursor": {
+    "x": null,
+    "arxiv": null,
+    "note": "Retry X when project enrollment fixed. USPTO support SPA needs browser/JS for primary text; patent.dev secondary used this run."
+  },
+  "headline_deltas": [
+    "Zero canary HOLD broken: canary.11 → canary.13 (Sep 23–24); head tip 1.11.0-head-*-20260925.",
+    "Effect tip still rc.117; #8336 rc.118 OPEN despite heavy Sep 25 main merge wave.",
+    "Legora cluster: Bradley firm-wide (Sep 23), ALI Restatements (Sep 23), Veolia (Sep 24), Brodies + Justice Connect (Sep 25).",
+    "Everlaw 2026 Adoption Report (Sep 24): 49% genAI use; billable-hour pressure; multi-agent pilots ~30%.",
+    "Harvey–Everlaw MCP still fall 2026 (not GA); iManage/TR MCP still coming soon.",
+    "SEP-2640 Tier-1 SDKs still OPEN (go#1238 / py#3485 / ts#2818 draft).",
+    "MCP Enterprise IG #3306 still OPEN/blocked.",
+    "arXiv skills wave: HEXIS FSM compile (2609.30123); DoW persistent billable state (2609.28585); Approval Laundering (2609.28586).",
+    "Progressive Skill Discovery access-control (2609.28693) + plugin-migration skill eval (2609.30120).",
+    "ARGUS employment-discrimination event KGs (2609.30184) — law×agents ontology edge.",
+    "drizzle #6162 / Evolu #708 / Instant 2027-08-31 / jazz alpha.56 / USPTO four-field — HOLDs reconfirmed."
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": true,
+    "called_cloud_agent": true
+  },
+  "written_at": "2026-09-25T08:25:00-05:00"
+}
