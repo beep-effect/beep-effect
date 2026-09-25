@@ -1,5 +1,69 @@
 # PLAN — Boolean-Creep Eradication
 
+## Source advance during R41 preparation, 2026-09-25
+
+Main `6709f713` includes PRs #1229 and #1245, changing `Cache.pilot.ts`,
+`Str.ts`, and dependency inputs. The branch includes this forward merge.
+The unlaunched R41 preparation was pinned to main `41d6c9eb` and source
+`df458c7a`; it cannot establish current-source census coverage. Preserve its
+frozen inputs and launcher reviews, then refresh the full census inputs and
+admission against current source when provider availability is confirmed.
+No census execution or dry-round credit is claimed for R41. The inventory
+remains 725 rows, with 108 qualified and 617 disqualified; zero are applied.
+
+## Source advance after R40, 2026-09-25
+
+Main `41d6c9eb` changes the CLI EnvConfig and TurboCache source files. The
+branch includes that merge, but R40's frozen source remains `e624ab45`.
+Its partial evidence is historical; completing its missing lanes would not
+establish current-source convergence. Continue with a fresh full census after
+provider availability is restored and new admission inputs pass review.
+The existing EnvConfig and TurboCache inventory records require source refresh
+in that census. Inventory counts remain 725 / 108 qualified / 617 disqualified;
+no new owner judgment, dry-round, P3, or implementation credit is claimed.
+
+
+## R40 partial census and reviewed corrections, 2026-09-25
+
+R40 stopped after provider usage exhaustion (HTTP 402), with 11 successful
+lanes, 4 failed lanes, and 12 unexecuted lanes. All 11 successful lanes were
+reconciled against historical source `e624ab45` and main `5bb7754c`.
+The original 34 execution artifacts are preserved byte-for-byte. R40 remains
+incomplete; no missing-lane recovery or round relaunch has been performed.
+
+The reviewed checkpoint has **725 rows: 108 qualified, 617 disqualified,
+zero applied**. One new writer owner is designed after bounded independent
+admission review. One qualified tour owner and one disqualified HTML attribute
+owner are withdrawn for failing the actual-Boolean recall threshold, with their
+original records preserved. Two citation/kind corrections and the DuckDB
+rollback clarification preserve behavior; both affected original designs are
+archived. The stored stream-state and new writer designs share one migration.
+
+See `data/r40-partial-reconciliation/README.md` and the R40 partial round verdict.
+The dry streak remains zero. This checkpoint grants no full P3 or implementation
+credit. Complete current-source census, two dry rounds, replacement campaign-wide
+P3 review, Benjamin's ratification merge, implementation and final exact-main
+closure remain outstanding.
+
+## R39 complete census and reconciliation, 2026-09-25
+
+R39 completed all 27 census lanes against historical source `ea3ac408` and
+main `782aa4d3`. All 3,946 frozen bindings match that exact Git source. Parent
+reconciliation finished after main advanced; this preserves historical evidence
+and grants no current-main dry credit.
+
+Two new qualified owners passed bounded independent admission review. The final
+CLI lane accounts for 62 original seeds and 12 existing qualified designs with
+no unresolved owner-contract findings. Inventory has **726 rows: 108 qualified,
+618 disqualified, zero applied**. Forty-four citation/status-note updates, two D2
+records and 15 existing-design supplements are installed with originals retained.
+
+R39 is complete and wet. The dry streak remains zero. See
+`data/sweeps/refresh-2026-09-25-r39-main-782aa4/round-verdict.json` and
+`data/r39-reconciliation-progress-2026-09-25.json`. Two current-source dry rounds,
+replacement campaign-wide P3 review, Benjamin's packet ratification merge,
+implementation and final exact-main closure remain outstanding.
+
 ## R38 complete census and reconciliation, 2026-09-25
 
 R38 completed and reconciled all 27 census lanes against source `ab77f10c`
@@ -968,12 +1032,12 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Remaining gates
 
-R38 is complete and wet, with 722 inventory rows: 106 qualified and 616
-disqualified. The dry streak remains zero. Preserve the completed rounds'
-frozen execution evidence, reconciled inventories, archived designs, and owner
-audits; do not restart their controllers. Continue the current-source census
-from the reconciled inventory and complete designs, with fresh admission inputs
-and independent review for each new round.
+R40 is incomplete: 11 successful lanes are reconciled, 4 failed, and 12 were
+not executed after provider usage exhaustion. Inventory is 725 rows: 108
+qualified and 617 disqualified, zero applied. Preserve the original execution
+artifacts and historical source bindings. Do not restart the original controller
+or count incomplete coverage as dry. Any recovery requires a separate reviewed
+admission; none is included in this checkpoint.
 
 Two consecutive complete current-source dry rounds remain required, followed
 by replacement independent zero-finding P3 review and a packet ratification

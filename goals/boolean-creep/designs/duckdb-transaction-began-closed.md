@@ -84,3 +84,9 @@ none (internal)
 # Risk & sequencing
 
 This Tier 1 change is concurrency-sensitive despite its small scope. Preserve the exact uninterruptible-mask boundaries and assign phases only after the corresponding native operation resolves. In particular, do not set `closed` before COMMIT/ROLLBACK succeeds: ensuring must still observe `open` and attempt rollback if a close operation is interrupted or fails.
+
+## R40 clarification: rollback assignment semantics
+
+Clarification: preserve the existing failure branch exactly. Its ROLLBACK runs through Effect.ignore, so a typed rollback failure is discarded and the following closed assignment still executes; the original use failure is then propagated. The replacement phase becomes closed at that same assignment point, even when native rollback returned a typed failure. A COMMIT failure, or an unignored defect or interruption that prevents either close assignment, leaves the phase open for ensuring cleanup. Preserve the current uninterruptible-mask boundaries and never move a phase assignment ahead of its existing yield. Here closed means the close branch reached its assignment, not proof that native ROLLBACK succeeded.
+
+Read the earlier open/closed lifecycle descriptions and after rollback completes instruction using the precise assignment semantics above; no change to SQL order, error suppression, cleanup retries, or cancellation behavior.

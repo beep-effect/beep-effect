@@ -1,0 +1,43 @@
+[
+  {
+    "schemaVersion": "boolean-creep-inventory/v1",
+    "id": "r39-cli-commands-a-c-package-shell-test-tsconfig",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts",
+    "line": 259,
+    "symbol": "packageShellTestTsconfigContent.compilerOptions",
+    "kind": "object-literal",
+    "members": [
+      "composite",
+      "declaration",
+      "declarationMap",
+      "incremental",
+      "noEmit",
+      "sourceMap"
+    ],
+    "status": "disqualified",
+    "disqualifier": {
+      "class": "D2",
+      "note": "Authored tsconfig.test.json text mirrors TypeScript compilerOptions. The six flags are the upstream compiler contract, same shape as the seeded CreatePackage tsconfig templates."
+    }
+  },
+  {
+    "schemaVersion": "boolean-creep-inventory/v1",
+    "id": "r39-cli-commands-a-c-package-shell-check-tsconfig",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts",
+    "line": 277,
+    "symbol": "packageShellCheckTsconfigContent.compilerOptions",
+    "kind": "object-literal",
+    "members": [
+      "composite",
+      "declaration",
+      "declarationMap",
+      "incremental",
+      "noEmit"
+    ],
+    "status": "disqualified",
+    "disqualifier": {
+      "class": "D2",
+      "note": "Authored tsconfig.check.json text mirrors TypeScript compilerOptions. Independent compiler switches copied into the generated check config, not a repo-owned phase encoding."
+    }
+  }
+]
