@@ -30,5 +30,5 @@ name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect/effect@330b7475e2135bb9bc6aad1df5d513d32299ebc1"
 ecosystem = "npm"
 ignore = true
-effectiveUntil = "2026-10-31"
+effectiveUntil = 2026-10-31T00:00:00Z
 reason = "pkg.pr.new snapshot of effect main (4.0.0-rc.117+111); GHSA-38f7-945m-qr2g is a 3.x advisory and OSV cannot version-match the URL pin. Retire at the rc.118 bump."
