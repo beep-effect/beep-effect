@@ -1946,3 +1946,21 @@ expects all four lines and writes into a distinct observation directory.
 Prevention: derive the explicit runner framing from the already-reviewed
 capture fixture before launching repeated observations. Do not normalize
 away unknown lines to make an exact-log check pass.
+
+### 2026-09-25: Bun startup requires usable sandbox device/process mounts
+
+The synthetic runtime-key fixture aborted before loading the CLI. A minimal
+Bun `console.log` reproduced exit 134 inside the read-only root sandbox, both
+with and without a private `/tmp`; the same command passed outside the sandbox.
+Adding fresh `/dev` and `/proc` mounts alongside private `/tmp` restored startup.
+Preserved all four diagnostic logs and the failed fixture before rerunning.
+This attributes the failure to the sandbox setup, not the cache-key guard;
+the combined mount repair does not identify which mount was individually
+necessary. A minimal runtime startup preflight would catch this earlier.
+
+The repaired sandbox then reached the runtime collector but failed with the
+generic census-subprocess diagnostic. Direct native query and selection passed.
+A bounded process trace identified `git rev-parse HEAD` exiting 128 because the
+new fixture had no commit. The successor creates an initial fixture commit;
+no runtime guard was weakened. Validate fixture HEAD before expensive toolchain
+fingerprinting, and retain the failing subprocess identity in bounded diagnostics.

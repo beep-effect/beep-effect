@@ -73,9 +73,8 @@ Read-review SHA-256: `367b59169c76028b1109f6d3ed4c1a5b84a0c87ef2ceea2415c142d0d0
 Write-review SHA-256: `353bd38a801d28c1a211b2f2fec93049d06078a9283605da0a1b97a292afbf5e`.
 
 Remaining acceptance work includes semantic input and capture closure beyond
-the bounded observations above, current-head validation of the
-implemented ordinary-entrypoint runtime-key enforcement, accepted signed remote
-comparisons,
+the bounded observations above, validation across the full entrypoint population,
+ordinary-entrypoint cached replay, accepted signed remote comparisons,
 census closure, adoption handoff, and the final goal closeout requirements.
 The successful local matrices do not discharge those obligations.
 
@@ -164,3 +163,23 @@ This refresh establishes these actual CLI execution and rejection paths.
 It does not reissue the frozen v23 matrices for the newer source, prove all
 entrypoint branches, establish successful cached runtime-key injection, or
 satisfy signed remote comparisons. No task reuse is enabled.
+
+## Synthetic native runtime-key injection
+
+At source `8f11af6e49`, a disposable fixture with physical installed tools ran
+through the actual Cache CLI in a network-isolated sandbox. Its synthetic task
+declared caching enabled and the runtime digest as a hashed environment input;
+all executions explicitly bypassed cache reads and writes. The real pilot's
+cache settings were unchanged.
+
+The first and repeat runs received the same computed runtime digest. Adding
+one newline to the hashed `.nvmrc` declaration changed that digest. Independent
+review of all three native summaries confirmed identical task input maps,
+unchanged native task hashes for the repeat, a changed task hash for the
+changed declaration, successful execution, and no local or remote cache hit.
+Seventeen hash-verified files retain the script, fixture inputs, logs, native
+summaries and independent review. This is synthetic injection/invalidation
+evidence; it does not prove cached replay or qualify the real pilot.
+
+Archive-manifest SHA-256:
+`148dffc3a6100c23b81b3ba33d31a3c76a15e708a7c69fa0e31390dc84be285d`.
