@@ -21,7 +21,7 @@ proof and schema-first pass; P3 hosted closeout is the remaining delivery gate; 
      schemas; fetch the upstream manifest (fallback to the raw GitHub URL); read
      `$HOME/.codex/models_cache.json`; run `cursor-agent models`; read proxy `GET /v1/models` as an
      availability overlay only (R1); decode; diff against the ledger; print drift per declared
-     target. No writes (R12). Command group `commands/Models/` in `@beep/repo-cli` (R5).
+     target. No projection writes (R12). Command group `commands/Models/` in `@beep/repo-cli` (R5).
   2. **S2 write path.** `--write` with `$HOME/.config-backups/` backups, idempotent line-anchored
      rewrites, the dirty-checkout refusal for repo targets, and the one-time prose rewrite that
      adopts `<!-- beep-models:begin -->` blocks with a `superseded:` list (R4, R7).
@@ -49,7 +49,7 @@ proof and schema-first pass; P3 hosted closeout is the remaining delivery gate; 
 ## P4 Closeout Checklist
 
 - [x] Reflection at `history/reflections/<date>-<agent>.md`; `bun run beep lint reflection-artifacts`.
-- [x] `bun run beep goals set-status model-routing-sync completed-retained` in the final PR.
+- [ ] `bun run beep goals set-status model-routing-sync completed-retained` after delivery proof, in the final PR.
 - [x] Friction receipts recorded in the active packet's opportunities ledger as they happen, not at
       closeout.
 - [x] `bun run beep goals index --write`; Atlas regenerated if `explore atlas --check` says stale.

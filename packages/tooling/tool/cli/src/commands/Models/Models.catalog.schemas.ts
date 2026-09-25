@@ -1106,9 +1106,15 @@ export class CatalogLevelsChange extends S.Class<CatalogLevelsChange>($I`Catalog
     id: ModelId,
     before: S.Array(EffortLevel),
     after: S.Array(EffortLevel),
+    upstreamBefore: CatalogModel.fields.upstreamLevels,
+    upstreamAfter: CatalogModel.fields.upstreamLevels,
+    codexBefore: CatalogModel.fields.codexLevels,
+    codexAfter: CatalogModel.fields.codexLevels,
+    grokBefore: CatalogModel.fields.grokLevels,
+    grokAfter: CatalogModel.fields.grokLevels,
   },
   $I.annote("CatalogLevelsChange", {
-    description: "One model whose normalized effort ladder differs between two snapshots.",
+    description: "One model whose normalized or source-specific effort ladders differ between two snapshots.",
   })
 ) {}
 

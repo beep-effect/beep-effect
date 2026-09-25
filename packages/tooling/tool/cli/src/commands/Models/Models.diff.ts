@@ -306,12 +306,24 @@ export const diffSnapshots: {
       A.map(([id, previousModel]) =>
         pipe(
           HashMap.get(after, id),
-          O.filter((nextModel) => !Eq.equals(previousModel.levels, nextModel.levels)),
+          O.filter(
+            (nextModel) =>
+              !Eq.equals(previousModel.levels, nextModel.levels) ||
+              !Eq.equals(previousModel.upstreamLevels, nextModel.upstreamLevels) ||
+              !Eq.equals(previousModel.codexLevels, nextModel.codexLevels) ||
+              !Eq.equals(previousModel.grokLevels, nextModel.grokLevels)
+          ),
           O.map((nextModel) =>
             CatalogLevelsChange.make({
               id,
               before: previousModel.levels,
               after: nextModel.levels,
+              upstreamBefore: previousModel.upstreamLevels,
+              upstreamAfter: nextModel.upstreamLevels,
+              codexBefore: previousModel.codexLevels,
+              codexAfter: nextModel.codexLevels,
+              grokBefore: previousModel.grokLevels,
+              grokAfter: nextModel.grokLevels,
             })
           )
         )

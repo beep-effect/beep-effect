@@ -1,4 +1,5 @@
 import {
+  CatalogModel,
   CatalogSnapshot,
   CodexModelsCache,
   catalogModelsById,
@@ -176,6 +177,29 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         O.map(A.head(levels.levelsChanged), (change): string => change.id),
         "grok-4.6"
       );
+    })
+  );
+
+  it.effect("reports each source ladder change even when normalized levels stay unchanged", () =>
+    Effect.gen(function* () {
+      const catalog = yield* ModelsCatalog;
+      const full = yield* catalog.snapshot({ home: "/home/op", offline: false });
+      strictEqual(diffSnapshots(O.some(full), full).levelsChanged.length, 0);
+      for (const source of ["upstream", "codex", "grok"] as const) {
+        const changed = CatalogSnapshot.make({
+          summary: full.summary,
+          models: A.map(full.models, (model) =>
+            model.id === "grok-4.6" ? CatalogModel.make({ ...model, [`${source}Levels`]: ["future-effort"] }) : model
+          ),
+        });
+        const changes = diffSnapshots(O.some(full), changed).levelsChanged;
+        strictEqual(changes.length, 1);
+        const change = O.getOrThrow(A.head(changes));
+        strictEqual(change.id, "grok-4.6");
+        expect(change.before).toEqual(change.after);
+        expect(change[`${source}After`]).toEqual(["future-effort"]);
+        expect(change[`${source}Before`]).not.toEqual(change[`${source}After`]);
+      }
     })
   );
 

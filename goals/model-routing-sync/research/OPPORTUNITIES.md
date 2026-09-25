@@ -66,3 +66,20 @@
   publication; historical census reports remain historical. The queued initial
   proof was cancelled before admission so the replacement proves the corrected
   commit rather than an obsolete head.
+
+## 2026-09-25 — interrupted proof and source-ladder review
+
+- The publication proof stopped at `git fetch` with temporary name-resolution
+  failure; its monitor terminated during workstation maintenance. The operator
+  confirmed the network repair, and a fresh fetch succeeded. Six newly merged
+  PRs were integrated before restarting proof; no model-routing conflicts arose.
+- Review caught that snapshot diffs compared only the merged effort ladder.
+  Source-specific validation also needs source-specific diff evidence; compare
+  all three source ladders and preserve their before/after values in the report.
+- Keep lifecycle active while final delivery remains unverified. Prepare the
+  reflection early, then synchronize final phases and lifecycle in the same PR
+  after the initial proof and hosted gates pass.
+- The review-fix audit passed all 4,580 TypeScript tests and 53 Python tests
+  before stopping on one Biome line-wrap difference in the new regression.
+  Format touched tests before starting the full audit; package quick verification
+  now confirms lint and typecheck pass.

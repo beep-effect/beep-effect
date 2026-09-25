@@ -3,13 +3,13 @@
   "initiative": {
     "id": "model-routing-sync",
     "title": "Model Routing Sync",
-    "status": "completed-retained",
+    "status": "active",
     "created": "2026-09-22",
     "updated": "2026-09-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/model-routing-sync",
-  "lifecycle": "completed-retained",
+  "lifecycle": "active",
   "mission": "One role x surface routing manifest at $HOME, projected into repo doctrine, skills, code defaults, and dotfiles from a layered model catalog.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -79,7 +79,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "complete"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

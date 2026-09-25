@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed-retained`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

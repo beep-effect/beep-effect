@@ -69,7 +69,7 @@ Locator strategy is per format; every rewrite is line-anchored and idempotent.
 | `.claude/skills/oracle/SKILL.md` | md generated block | `codex.heavy` |
 | `.claude/skills/impeccable/agents/*.toml` | toml top-level key (`model`, `model_reasoning_effort`) | `codex.heavy` x `codex-plugin` |
 | `.../Quality/internal/JSDocMigrateTitles.ts:108` | ts-literal | `jsdoc.migrate-titles` |
-| `.../Qa/JudgePack.ts` command template | line-value (`task --model ` / ` --effort ` / ` --prompt-file ` delimiters) | `qa.judge` |
+| `.../Qa/JudgePack.ts` command template | line-value (`task --model\x20` / `\x20--effort\x20` / `\x20--prompt-file\x20` delimiters; `\x20` = space) | `qa.judge` |
 | Six JSDoc example files (Qa Inventory/JudgeCheck/render, Yeet Provenance/Resume, Docgen QualityWorkerEval) | line-value (`linePrefix: " *"`, `model: "` before, `"` after) | cosmetic; docgen ratchet is the risk |
 
 ### Home targets
@@ -155,4 +155,9 @@ operator ratification of **one** Codex effort value first.
 
 ## Exception Ledger
 
-None yet.
+The operator approved five narrow external-wire `object-struct-schema` exceptions
+owned by `@beep/repo-cli`. They preserve full upstream/Codex payloads while known
+routing fields remain validated; normalized internal models remain schema classes.
+See [the settled proposal](research/2026-09-24-schema-boundary-exceptions.md) and
+[the interview decisions](DECISIONS.md). This applies the existing boundary rule
+without changing architecture doctrine.

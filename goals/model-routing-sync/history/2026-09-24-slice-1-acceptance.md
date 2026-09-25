@@ -71,7 +71,7 @@ so they cannot hide independent file drift.
 
 The operator ratified full payload fidelity, normalized-only persistence, and
 five narrow wire-schema exceptions, then requested implementation. See
-`../DECISIONS.md` and `research/2026-09-24-schema-boundary-exceptions.md`.
+`../DECISIONS.md` and `../research/2026-09-24-schema-boundary-exceptions.md`.
 `bun run beep lint schema-first` now passes with no new findings or advisories.
 A real-check regression injects synthetic account and nested extension metadata,
 then proves the persisted ledger and encoded report exclude it. Schema-derived
@@ -91,3 +91,24 @@ is intentionally left open. Slices 2 and 3 remain outside this delivery.
 Local raw logs and reports are in `.beep/model-routing-sync-audit/`. They are
 ignored and deliberately not committed; this receipt records only sanitized
 facts required to assess the acceptance contract.
+
+## 2026-09-25 review and live refresh
+
+The review follow-up adds source-specific ladder change detection and normalized
+before/after values in catalog diffs. Its regression independently changes each
+source while holding the merged ladder constant. The full test phase passed
+4,580 TypeScript tests and 53 Python tests (three skipped); one formatting issue
+in the new test stopped that audit before docgen. Biome corrected it, and package
+quick verification subsequently passed lint and typecheck. Final full proof remains
+a separate delivery gate.
+
+Fresh upstream and Codex payload round trips still equal the original JSON. A
+fresh Cursor listing preserves all 241 model IDs. The refreshed live check reports
+34 findings over 335 models from all five sources, includes the unbound Terra
+candidate, and exits 1. All 36 target hashes remain unchanged. Some operator
+settings have changed since the original seven-conflict receipt above; the new
+report observes their actual current values without adopting or rewriting them.
+
+After the formatting correction, the full package gate passed: audit 951.9
+seconds and docgen 24.6 seconds. This supersedes the formatting-only failed run
+above. The focused Models suite now contains 40 tests.
