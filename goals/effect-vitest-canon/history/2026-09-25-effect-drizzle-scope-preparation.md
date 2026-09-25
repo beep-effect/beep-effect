@@ -59,3 +59,22 @@ versus actual null. The safety finalizer then cleaned up the child. Source was
 restored byte-for-byte before final package proof; audit passed in 14.9 seconds
 and docgen in 3.3 seconds. This proves the bundle helper cancellation path, not a
 new interruption test of drizzle-kit itself. All prior assertions remain.
+
+## SQLite contention and bundle nonmutation oracles
+
+The existing concurrent SQLite update case still requires exactly one successful
+writer. It now also requires a typed failure with no defects or interruptions,
+checks VersionConflictError against the actual table, seed ID and original row
+version, and checks that the persisted row equals the successful result with
+exactly one version increment. Whole-Cause comparison initially detected span
+annotations rather than a field mismatch; explicit failure-channel and payload
+assertions retain those production annotations without mistaking them for data.
+
+The one-byte bundle regression case now captures committed baseline bytes before
+the probe and checks them again in a finalizer. The finalizer runs after child
+cleanup, including when the test body fails. The baseline and all original exit,
+first-line delta and error-text assertions remain unchanged.
+
+Final full package verification passed: audit 15.2 seconds, docgen 3.6 seconds.
+No production code, property floor, timeout or baseline file changed. The other
+saved property and instrumentation findings remain open.

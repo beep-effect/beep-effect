@@ -1,7 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Deferred from "effect/Deferred";
-import { acquireRelease, addFinalizer, fnUntraced, forkChild, never, orDie, scoped, tryPromise } from "effect/Effect";
+import {
+  acquireRelease,
+  addFinalizer,
+  fnUntraced,
+  forkChild,
+  gen,
+  never,
+  orDie,
+  scoped,
+  tryPromise,
+} from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Tuple from "effect/Tuple";
@@ -73,6 +83,14 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
   it.effect(
     "exits nonzero for an injected one-byte regression without mutating the baseline",
     fnUntraced(function* () {
+      const baselineFile = Bun.file(new URL("./bundle-size.baseline.json", import.meta.url));
+      const baselineBefore = yield* tryPromise(() => baselineFile.bytes());
+      yield* addFinalizer(() =>
+        gen(function* () {
+          const baselineAfter = yield* tryPromise(() => baselineFile.bytes());
+          expect(baselineAfter).toEqual(baselineBefore);
+        }).pipe(orDie)
+      );
       const artifact = yield* tryPromise(buildBundleConsumer);
       const baselineRawBytes = artifact.rawBytes - 1;
       const probe = yield* acquireProbe([

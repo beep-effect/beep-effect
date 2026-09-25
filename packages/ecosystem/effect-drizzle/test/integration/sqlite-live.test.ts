@@ -3,10 +3,12 @@ import { Database } from "bun:sqlite";
 import { VersionConflictError } from "@beep/effect-drizzle";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { layer as makeSqliteLayer } from "@effect/sql-sqlite-bun/SqliteClient";
-import { expect, layer } from "@effect/vitest";
+import { assert, expect, layer } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
+import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso, makeUnsafe, toDate } from "effect/DateTime";
 import {
@@ -24,7 +26,7 @@ import {
   sync,
   tryPromise,
 } from "effect/Effect";
-import { isSuccess } from "effect/Exit";
+import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
 import { effect as effectLayer, provide, provideMerge, unwrap } from "effect/Layer";
 import { getOrThrow, getOrUndefined, isNone, none, some } from "effect/Option";
@@ -487,6 +489,19 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
       expect(winner.rowVersion).toBe(2);
       expect(conflict.expectedVersion).toBe(1);
       expect(concurrentUpdates.filter(isSuccess)).toHaveLength(1);
+      const concurrentWinner = getOrThrow(findFirst(concurrentUpdates, isSuccess));
+      const concurrentLoser = getOrThrow(findFirst(concurrentUpdates, isFailure));
+      assertTrue(hasFails(concurrentLoser));
+      assertFalse(hasDies(concurrentLoser));
+      assertFalse(hasInterrupts(concurrentLoser));
+      const concurrentConflict = getOrThrow(Cause.findErrorOption(concurrentLoser.cause));
+      assert(is(VersionConflictError)(concurrentConflict));
+      expect(concurrentConflict.table).toBe(SqliteUser.sql.tableName);
+      expect(concurrentConflict.id).toBe(concurrentSeed.id);
+      expect(concurrentConflict.expectedVersion).toBe(concurrentSeed.rowVersion);
+      const persisted = yield* repository.findById(concurrentSeed.id);
+      expect(persisted).toEqual(concurrentWinner.value);
+      expect(persisted.rowVersion).toBe(concurrentSeed.rowVersion + 1);
     })
   );
 
