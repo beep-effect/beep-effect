@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "boolean-creep-public-audit-input-map/v1",
+  "purpose": "Map immutable private input names in admitted DMS/Vault audits to byte-identical public packet artifacts for review. Source paths retain their recorded sourceSha bindings.",
+  "bindings": [
+    {
+      "audit": "data/design-refresh-2026-09-22-dms-mirror-probe-connected.md",
+      "privateArtifactName": "input-inventory.jsonl",
+      "packetFile": "history/inventory/2026-09-22-pre-dms-vault-refresh.jsonl",
+      "sha256": "54567b68b5b6349d42f854462321583f5e626e63639b9835ddeb65f63eb59372"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-dms-mirror-probe-connected.md",
+      "privateArtifactName": "input-design.md",
+      "packetFile": "history/designs/2026-09-22-pre-refresh-dms-mirror-probe-connected.md",
+      "sha256": "e399b4a730d707516cc315d43229687f18eec2e18a558f19abba1a00188b2fb4"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-dms-mirror-probe-connected.md",
+      "privateArtifactName": "input-decisions.md",
+      "packetFile": "history/2026-09-22-pre-packet-migration-ruling-DECISIONS.md",
+      "sha256": "b9ad90280aa8b82394d221b6941427100c47536c53cf15496d5b15c12914d4eb"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-vault-sync-status-connected.md",
+      "privateArtifactName": "input-inventory.jsonl",
+      "packetFile": "history/inventory/2026-09-22-pre-dms-vault-refresh.jsonl",
+      "sha256": "54567b68b5b6349d42f854462321583f5e626e63639b9835ddeb65f63eb59372"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-vault-sync-status-connected.md",
+      "privateArtifactName": "input-design.md",
+      "packetFile": "history/designs/2026-09-22-pre-refresh-vault-sync-status-connected.md",
+      "sha256": "98d9fb5ed8fd96c1fa8671f555f6c9d25e46e7dbecb384b580c567680450d89d"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-vault-sync-status-connected.md",
+      "privateArtifactName": "input-decisions.md",
+      "packetFile": "history/2026-09-22-pre-packet-migration-ruling-DECISIONS.md",
+      "sha256": "b9ad90280aa8b82394d221b6941427100c47536c53cf15496d5b15c12914d4eb"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-vault-sync-push-failure-disposition.md",
+      "privateArtifactName": "inventory.before.jsonl",
+      "packetFile": "history/inventory/2026-09-22-pre-dms-vault-refresh.jsonl",
+      "sha256": "54567b68b5b6349d42f854462321583f5e626e63639b9835ddeb65f63eb59372"
+    },
+    {
+      "audit": "data/design-refresh-2026-09-22-vault-sync-push-failure-disposition.md",
+      "privateArtifactName": "design.before.md",
+      "packetFile": "history/designs/2026-09-22-pre-refresh-vault-sync-push-failure-disposition.md",
+      "sha256": "4a47803a6bf78bb984655bee6378f96aa29e3ee9958f4ec29b49eceae406e345"
+    }
+  ]
+}

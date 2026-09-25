@@ -1,0 +1,29 @@
+# R33 tail audit bindings
+
+Five raw nonadmissions and one existing out-of-net withdrawal proposal.
+
+## Inputs
+
+- `AGENTS.md`: `e72d3febf2eea6ef6cbd29300ebde44775560d4237506bb27492a0ac407ca9a9`
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- `goals/boolean-creep/DECISIONS.md`: `af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084`
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.jsonl`: `aad3df21363b4e04cb5d50b5a2e9d01c218ae3bb5b9e0e6c8b32e1dd533024a6`
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-yeet.jsonl`: `f1ff1fbb5990f3b4fe06b84b63deccff0f4b6479f3c63593fb54f728d36c006d`
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.execution.json`: `4b99e7eb2610f4a49877a66f13fe7e97e9322624faf62ad1363480d00b2b57a4`
+- `packages/tooling/tool/cli/src/commands/Research/Research.command.ts`: `632c18568d721fee75b987279a233f8c735e97f72e8c2c83af91e4fe886ae792`
+- `packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts`: `fd8245c3458c1a0e1bb3b4a246ab98aafbaba25b78e9d717438edbe5fe60e3d1`
+- `packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts`: `1c395b9af66034c2db877a1d72fcc079e7a246f0b6c313d8e31c586a60e3c3e8`
+- `packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts`: `f299a655c73e26963f8e1d495ddf4150199dad4aaaa884b377332b5ced5e2d66`
+- `packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts`: `0ecf2874735ffc7650712822ffa9034b662400d069858f20e067f65d06fee2d2`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts`: `cc12188b29f9582680eee74932bf6e3277e7fb528b5eba751e146228f2dcd3a8`
+- `packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts`: `d72e486a0dea6aa263b256527e10c6d2498a286265fc9bcf9f05f27704596b9f`
+- `packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts`: `1e7c5924b2d4e06535e43681a953c5407c6762406859521d6c1fd057285e3660`
+
+## Outputs
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/disposition.md`: `547477576b7f597359b5133da827c77cfa62715cd026914121bf0f71a5fd5c16`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/original-fleet-row.jsonl`: `68dfc02379119aaaaaa506c9720629a071644434efdff559a628ef61e877ca98`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/original-raw-five.jsonl`: `2672e421b49fbafc62f098e0fcc3d5949fe821628c41d143639dd64a9c709e6a`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/proposed-row.json`: `38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/scope-proposal.json`: `69f154335a63277c65bc523dd85974b4b83c268be062c8a06170c19aac785f36`

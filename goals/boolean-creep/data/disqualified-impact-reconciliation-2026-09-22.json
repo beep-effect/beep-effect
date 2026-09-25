@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-disqualified-impact-reconciliation.jsonl",
+    "sha256": "61f1f56bdfe47df11f3a7a916560e7983b04cb8370313d30793d91797bc08ed7"
+  },
+  "inventoryAfterSha256": "d2522f3d2e4da41b77e579f4d17355284ca9c7f9171fe3eb59856676296d98c8",
+  "reconciledDisqualifiedIds": [
+    "ci-lane-run-options",
+    "ci-local-options",
+    "ci-local-step-plan",
+    "quality-test-lane-selection",
+    "r3-tooling-envconfig-unresolved-turbo-secrets",
+    "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+    "r25-cli-commands-l-q-coverage-replace-all-scoped",
+    "coverage-baseline-write-mode",
+    "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+    "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+    "r29-cli-commands-l-q-quarantine-step-capture-options",
+    "r31-cli-commands-a-c-storybook-affected-spawn-options"
+  ],
+  "unchangedRows": 745,
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "f7165de85d59e25893341d71dbe617fae969c54bab9bcd28e1293e6b0366a674"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "c64ec0e4b0113fe376cdc8a55cff5b0db6f45da6026c8eab6271197a77d92124"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sha256": "b7e332d72aecd246b212efd037d00c99966d9b5338a39bd682380f7ed93c4156"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sha256": "91305359478f7e21fedf8d4fb2db80b6fc7116679a0dfcdfe89382ce5de6d474"
+    }
+  ],
+  "findings": [
+    {
+      "id": "ci-lane-run-options",
+      "line": 649,
+      "reason": "CiLaneRunOptions649-672 accepts the five independent controls. turboShapeArgs681-688 independently selects affected/summarize; commitlint uses last1330; repo-sanity uses changesetStatus1452; fallow uses validateEnvelopes1259. Their ownership is a general lane request, not an exclusive state."
+    },
+    {
+      "id": "ci-local-options",
+      "line": 2203,
+      "reason": "CiLocalOptions2203-2208 stores independent scope and speed controls. parseCiLocalLaneSelection2230 filters slow lanes only from fast; runCiLocal2463 separately passes affected into the step plan. All four pairs remain valid."
+    },
+    {
+      "id": "ci-local-step-plan",
+      "line": 2268,
+      "reason": "CiLocalStepPlan2268-2277 retains independent affected and onMainBranch. Writer2463 derives branch status from Git and scope from request. ciLocalLaneFlags2279-2319 independently handles scope and repo-sanity; all four pairs are legal."
+    },
+    {
+      "id": "quality-test-lane-selection",
+      "line": 233,
+      "reason": "TestLaneSelectionState233-237 is the accumulation owner. Initial265-269 is false/false; reducer309-323 independently enables each flag before the final none-selected default. All four accumulation states remain legal; resolved selection has separate ownership."
+    },
+    {
+      "id": "r3-tooling-envconfig-unresolved-turbo-secrets",
+      "line": 611,
+      "reason": "EnvConfig611-624 samples three separate config references, scrubs each independently, and OR-folds only local-only cache policy. All eight unresolved-reference combinations remain legal. No secret values were read for this source audit."
+    },
+    {
+      "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+      "line": 649,
+      "reason": "CiLaneRunOptions666-667 admits both independently, default false. proofOnlyPartitionFlags1759-1762 collects each; execution args1055 uses force, while1930 returns after proof for dryRun. Combined flags are accepted planning input, not an illegal state."
+    },
+    {
+      "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+      "line": 250,
+      "reason": "Mixed/raw CoverageTaskOptions250-258 is independently produced at638-648. coverageStepForTesting3416-3421 accepts that raw parser result without resolver admission. All four raw pairs are representable legitimate request/planning facts. Qualified resolved-operation owner separately owns execution restrictions."
+    },
+    {
+      "id": "coverage-baseline-write-mode",
+      "line": 250,
+      "reason": "Mixed/raw CoverageTaskOptions250-258 samples replaceAll and writeBaseline separately at638-648; coverageStepForTesting3416-3421 uses the raw shape. All four request/planning pairs remain valid inputs. Do not transfer resolved-operation invariants onto this raw owner."
+    },
+    {
+      "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+      "line": 1835,
+      "reason": "Actual runCaptured bag1835-1843 carries env inheritance computed independently of trim=true. StepExec RunCapturedOptions946-954 and SpawnFields441-448 allow separate optional controls; spawnFields710-717 handles env only and settleCapturedStep823 trims output. Retain D1, not external-wire D2."
+    },
+    {
+      "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+      "line": 2400,
+      "reason": "Actual runCaptured bag2400-2419 preserves independently computed extendEnv and trim=true after cache-runtime routing. StepExec spawnFields710-717 and settleCapturedStep823 consume independent axes; no relation rejects mixed pairs."
+    },
+    {
+      "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+      "line": 1403,
+      "reason": "Actual runCaptured bag1403-1415 has independently computed extendEnv and tee=true. StepExec spawnFields710-717 handles env inheritance while foldDecodedText908-938 handles tee. Separate optional controls permit all Boolean pairs; cache routing does not correlate them."
+    },
+    {
+      "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
+      "line": 1685,
+      "reason": "Actual runCaptured bag1685-1694 preserves computed extendEnv and trim=true. StepExec independently handles env inheritance710-717 and trim823. No exclusion or implication joins the controls; payload and error checks remain separate."
+    }
+  ],
+  "semanticReconciliationComplete": true,
+  "scope": "Only12 previously listed changed-path disqualified rows. No new-source or whole-corpus census claim. Source inspection only, no runtime test.",
+  "savedSubset": {
+    "sourceReceipt": "data/scaffold-worktree-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "b1f410995924d94e424b669aeabc53f8b5e8f4e19c85332f26976ebfbd49b7f4",
+    "previousPendingCount": 25,
+    "completedIds": [],
+    "pendingCount": 25,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "yeet-status-remote-check-phase",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-sync-fleet-retired-refresh.jsonl"
+}

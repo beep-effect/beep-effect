@@ -1,0 +1,114 @@
+{
+  "sourceCommit": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "method": "Exhaustive finite enumeration of source-derived writer projections; not runtime execution of private producers",
+  "axes": {
+    "kind": ["repo-path", "host-path", "goal-uri", "upstream"],
+    "booleans": ["patternContext", "pairingAmbiguous", "ungoverned"],
+    "optionPresence": ["anchor", "token", "slug", "normalized"]
+  },
+  "representable": 512,
+  "legal": 10,
+  "producerTuples": [
+    {
+      "kind": "host-path",
+      "patternContext": false,
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "anchor": true,
+      "token": true,
+      "slug": false,
+      "normalized": false
+    },
+    {
+      "kind": "host-path",
+      "patternContext": true,
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "anchor": true,
+      "token": true,
+      "slug": false,
+      "normalized": false
+    },
+    {
+      "kind": "repo-path",
+      "patternContext": false,
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "anchor": false,
+      "token": false,
+      "slug": false,
+      "normalized": true
+    },
+    {
+      "kind": "repo-path",
+      "patternContext": true,
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "anchor": false,
+      "token": false,
+      "slug": false,
+      "normalized": true
+    },
+    {
+      "kind": "repo-path",
+      "patternContext": false,
+      "pairingAmbiguous": false,
+      "ungoverned": true,
+      "anchor": false,
+      "token": false,
+      "slug": false,
+      "normalized": false
+    },
+    {
+      "kind": "repo-path",
+      "patternContext": true,
+      "pairingAmbiguous": false,
+      "ungoverned": true,
+      "anchor": false,
+      "token": false,
+      "slug": false,
+      "normalized": false
+    },
+    {
+      "kind": "goal-uri",
+      "patternContext": false,
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "anchor": false,
+      "token": false,
+      "slug": true,
+      "normalized": false
+    },
+    {
+      "kind": "goal-uri",
+      "patternContext": true,
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "anchor": false,
+      "token": false,
+      "slug": true,
+      "normalized": false
+    },
+    {
+      "kind": "goal-uri",
+      "patternContext": false,
+      "pairingAmbiguous": true,
+      "ungoverned": false,
+      "anchor": false,
+      "token": false,
+      "slug": false,
+      "normalized": false
+    },
+    {
+      "kind": "goal-uri",
+      "patternContext": true,
+      "pairingAmbiguous": true,
+      "ungoverned": false,
+      "anchor": false,
+      "token": false,
+      "slug": false,
+      "normalized": false
+    }
+  ],
+  "excludedFromCount": "Payload values, metadata, nested KnowledgeRef member/payload and its displayPath presence; this is exact on the selected eight axes, not a count of all concrete objects."
+}

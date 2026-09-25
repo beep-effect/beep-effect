@@ -1,0 +1,102 @@
+# Five Docgen complete-owner recall audits
+
+Frozen source32f111f3707a63168b68ed04516af800ecc3a66c and
+main339da1562a2ed52f73a0a693c176fc52cca9ccb6. All five existing qualified owners
+have exactly one Boolean member. None passes the >=2 actual Boolean recall gate.
+E3 flag/payload relationships and finite status projections cannot substitute
+for recall membership. Recommend withdrawal/archive, not reclassification D1/D2.
+
+## Complete declarations
+
+- **docgen-generation-outcome**: DocgenGenerationResult, Docgen.schemas.ts392-404.
+  Six own fields: packageName/packagePath strings, success:Boolean, optional
+  finite moduleCount, optional error string and optional output string. Only
+  success is Boolean; presence of error/count is not a second member.
+- **docgen-quality-package-outcome**: DocgenQualityPackageReport,
+  quality/Quality.schemas.ts486-502. Ten own fields: packageName/packagePath,
+  status, durationMs, error, timedOut, omittedPacketCount, subjects, reviews,
+  summary. Only timedOut is Boolean. status uses the literal domain at160
+  (completed/partial/failed); nullable error is string/null; arrays and nested
+  summary are not sibling Boolean members.
+- **docgen-subject-collection-outcome**: PackageSubjectCandidateResult,
+  quality/Quality.subjects.ts903-915. Four own fields: candidate array, nullable
+  error, same three-literal status, timedOut:Boolean. Exactly one Boolean.
+- **docgen-runpod-cleanup-outcome**: DocgenQualityWorkerRunpodEvalCleanup,
+  QualityWorkerRunpodEval.ts170-183. Five own fields: deleteStatus, durationMs,
+  nullable error, keepPod:Boolean and stopStatus. Both statuses use the
+  literal domain109 (completed/failed/skipped-debug-keep), not Booleans.
+- **docgen-worker-packet-review**: PacketCandidate type literal,
+  QualityWorkerEval.ts530-540. Nine fields: findingCodes array, impact number,
+  isFail:Boolean, packageName/packagePath strings, packet, review Option,
+  sourceAnchor string and subject Option. Only isFail is Boolean. Do not
+  flatten nested review fields or its Option presence into a sibling flag.
+
+No inspected declaration spreads a field map or extends another custom domain
+class hiding additional own Boolean fields. All S.Class declarations are complete
+literal field maps; PacketCandidate is a complete private type literal. A
+relation with nested payloads is not a new owner at the enclosing scope.
+
+## Disposition and preservation
+
+Archive existing designs under the five exact IDs above and preserve their
+historical rows/receipts. Do not implement their planned unions or introduce
+narrower public codecs. Existing payload relations, status values, runtime
+errors, JSON encodings, defaults and producer behavior are unchanged. These
+scope withdrawals do not assert the prior semantic relationship was false.
+
+The raw r33-cli-commands-d-k footer blanket-retains classifications and claims
+no withdrawals. These complete-owner observations contradict that scope claim.
+Keep its raw empty report and footer immutable; parent integrates the five
+withdrawals after R33 terminal and does not grant unchanged-seed dry credit.
+No replacement inventory rows/designs or owner question are warranted.
+
+No source/canonical writes, fetch, HEAD mutation, tests, remote execution,
+independent P3 or implementation credit. All five current designs and historical
+rows are preserved with hashes. Graft saved42383 tokens in one call.
+
+## Input bindings
+
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-d-k.execution.json`: `3623427e8a5d60c0e2a0ad8a6eb0399736ed0a3f072fe7722afd2f8722a9466c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-d-k.execution.json`: `3623427e8a5d60c0e2a0ad8a6eb0399736ed0a3f072fe7722afd2f8722a9466c`
+
+- `goals/boolean-creep/designs/docgen-generation-outcome.md`: `71e60fe8de89e9dd80c5ea3040efb5bb36c9d2f7174b866b2223844eda4a4e96`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/designs/docgen-generation-outcome.md`: `71e60fe8de89e9dd80c5ea3040efb5bb36c9d2f7174b866b2223844eda4a4e96`
+
+- `goals/boolean-creep/designs/docgen-quality-package-outcome.md`: `9e43563b1fd03309948285b83bf2551533defec5fca73e82ecda7ed994b0f32e`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/designs/docgen-quality-package-outcome.md`: `9e43563b1fd03309948285b83bf2551533defec5fca73e82ecda7ed994b0f32e`
+
+- `goals/boolean-creep/designs/docgen-runpod-cleanup-outcome.md`: `3d07ded4c6415ec01de8d2bd46481a550e37e8c4b46c8a9b8883ede88e69e428`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/designs/docgen-runpod-cleanup-outcome.md`: `3d07ded4c6415ec01de8d2bd46481a550e37e8c4b46c8a9b8883ede88e69e428`
+
+- `goals/boolean-creep/designs/docgen-subject-collection-outcome.md`: `229cf6b132b02e1176a9ea9ced2a315963b7cad16b065077441d163e868ca1d1`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/designs/docgen-subject-collection-outcome.md`: `229cf6b132b02e1176a9ea9ced2a315963b7cad16b065077441d163e868ca1d1`
+
+- `goals/boolean-creep/designs/docgen-worker-packet-review.md`: `e33284a639587d4c4919dd7deabd1b42bfa96b88708b0bb30be8e4d4b7b11517`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/goals/boolean-creep/designs/docgen-worker-packet-review.md`: `e33284a639587d4c4919dd7deabd1b42bfa96b88708b0bb30be8e4d4b7b11517`
+
+- `packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts`: `6a8c8072026603aa2f149ced16c9c570ad0db5b0effd4f2a8e4ca270164c8905`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts`: `6a8c8072026603aa2f149ced16c9c570ad0db5b0effd4f2a8e4ca270164c8905`
+
+- `packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts`: `4614d9f3603d0e3e0575c63f33f9a2688525acbdaf74593e22b923c41f954b06`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts`: `4614d9f3603d0e3e0575c63f33f9a2688525acbdaf74593e22b923c41f954b06`
+
+- `packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts`: `febfc733b28082b43daef844c73d1ea2dac75627f7ce5b368c803573889b5d26`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts`: `febfc733b28082b43daef844c73d1ea2dac75627f7ce5b368c803573889b5d26`
+
+- `packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts`: `4a76d791b598187897f29408ed00edfb9f03652b9a5966e395bf0ac7fc4c2dc3`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts`: `4a76d791b598187897f29408ed00edfb9f03652b9a5966e395bf0ac7fc4c2dc3`
+
+- `packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts`: `82ca325dc6881dfe72a4b736993ab417f81c1e21cccc967b8950e652d9cf56d3`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/inputs/packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts`: `82ca325dc6881dfe72a4b736993ab417f81c1e21cccc967b8950e652d9cf56d3`
+
+## Output bindings
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/historical-rows.json`: `3b0eeb0d0ae007ed147ac9ce044dd3dd7f3075ae4010de16fc919de7050de05c`
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/disposition.json`: `cc3ba6f587c0e37a43fcaacd164e76cbf9718c658782fb601add43c7e16f7407`

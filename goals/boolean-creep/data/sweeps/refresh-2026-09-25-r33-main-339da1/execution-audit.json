@@ -1,0 +1,570 @@
+{
+  "kind": "r33-private-execution-evidence-audit/v1",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "laneCount": 27,
+  "frozenBindingCount": 3977,
+  "frozenBindingDrift": [],
+  "assignedFiles": 3181,
+  "partitionOmissions": [],
+  "partitionOverlaps": [],
+  "qualifiedRawCandidates": 8,
+  "rawRecordCount": 50,
+  "issues": [],
+  "lanes": [
+    {
+      "lane": "r33-foundation-primitive",
+      "files": 30,
+      "seeds": 0,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 426,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-foundation-capability",
+      "files": 165,
+      "seeds": 23,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1466,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-foundation-modeling-rest",
+      "files": 177,
+      "seeds": 25,
+      "reportRecords": 15,
+      "qualifiedCandidates": 1,
+      "transcriptEvents": 1233,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-foundation-schema-a-m",
+      "files": 188,
+      "seeds": 11,
+      "reportRecords": 3,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1003,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-foundation-schema-n-z",
+      "files": 82,
+      "seeds": 7,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 584,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-foundation-ui",
+      "files": 218,
+      "seeds": 69,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1565,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-drivers-a-f",
+      "files": 99,
+      "seeds": 40,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1314,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-drivers-g-m",
+      "files": 68,
+      "seeds": 7,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 910,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-drivers-n-r",
+      "files": 88,
+      "seeds": 43,
+      "reportRecords": 1,
+      "qualifiedCandidates": 1,
+      "transcriptEvents": 1378,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-drivers-s-z",
+      "files": 59,
+      "seeds": 5,
+      "reportRecords": 3,
+      "qualifiedCandidates": 3,
+      "transcriptEvents": 1006,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-architecture-ecosystem-internal",
+      "files": 114,
+      "seeds": 3,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 862,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-agents-workspace",
+      "files": 149,
+      "seeds": 7,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 825,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-epistemic-ontology",
+      "files": 230,
+      "seeds": 21,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1299,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-shared-documents",
+      "files": 220,
+      "seeds": 7,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 755,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-law-practice-domain",
+      "files": 214,
+      "seeds": 25,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 731,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-law-practice-runtime",
+      "files": 91,
+      "seeds": 6,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 997,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-apps",
+      "files": 131,
+      "seeds": 73,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1939,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-tooling-library-observability",
+      "files": 52,
+      "seeds": 31,
+      "reportRecords": 17,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1402,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-tooling-library-support",
+      "files": 95,
+      "seeds": 19,
+      "reportRecords": 1,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1109,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-tooling-policy",
+      "files": 41,
+      "seeds": 23,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 923,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-tool-docgen",
+      "files": 13,
+      "seeds": 17,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 625,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-cli-internal-root",
+      "files": 87,
+      "seeds": 19,
+      "reportRecords": 2,
+      "qualifiedCandidates": 2,
+      "transcriptEvents": 1154,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-cli-commands-a-c",
+      "files": 174,
+      "seeds": 71,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1294,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-cli-commands-d-k",
+      "files": 118,
+      "seeds": 92,
+      "reportRecords": 0,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 878,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-cli-commands-l-q",
+      "files": 115,
+      "seeds": 60,
+      "reportRecords": 2,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1565,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-cli-commands-r-z",
+      "files": 93,
+      "seeds": 40,
+      "reportRecords": 4,
+      "qualifiedCandidates": 0,
+      "transcriptEvents": 1620,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    },
+    {
+      "lane": "r33-cli-yeet",
+      "files": 70,
+      "seeds": 34,
+      "reportRecords": 2,
+      "qualifiedCandidates": 1,
+      "transcriptEvents": 1179,
+      "nonJsonLines": 0,
+      "terminalEndTurn": true,
+      "promptByteReconstruction": true
+    }
+  ],
+  "nonTypeScriptIncludedFiles": [
+    {
+      "file": "apps/oip-web/src/app/favicon.ico",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/oip-web/src/app/globals.css",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/professional-desktop/src-tauri/src/lib.rs",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/professional-desktop/src-tauri/src/main.rs",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/professional-desktop/src/styles/dock.css",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/professional-desktop/src/styles/globals.css",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/todox/src/app/globals.css",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/todox/src/app/icon.svg",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "apps/todox/src/app/opengraph-image.png",
+      "lane": "r33-apps"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "lane": "r33-foundation-modeling-rest"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "lane": "r33-foundation-modeling-rest"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.css",
+      "lane": "r33-foundation-ui"
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/styles/globals.css",
+      "lane": "r33-foundation-ui"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/AGENTS.md.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/LICENSE.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/README.md.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-next.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-postcss.config.mjs.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-src-app-globals.css.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-tsconfig.next.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-next-env.d.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-next.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-src-app-globals.css.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-src-app-layout.tsx.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-src-app-page.tsx.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-tsconfig.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-vitest.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-real-AGENTS.md.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-real-README.md.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-Api.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-main.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-runtime-Layer.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-tsconfig.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-vitest.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-index.html.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-App.tsx.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-main.tsx.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-Cargo.toml.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-build.rs.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-capabilities-default.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-src-lib.rs.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-src-main.rs.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-tauri.conf.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-tsconfig.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-vite.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-vitest.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-index.html.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-postcss.config.mjs.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-App.tsx.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-main.tsx.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-styles-globals.css.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-tsconfig.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-vite.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-vitest.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/assets/tauri-icon.png",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/docgen.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/docs-index.md.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/src-index.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/stories-tsconfig.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.check.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.stories.json.hbs",
+      "lane": "r33-cli-commands-a-c"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/vitest.config.ts.hbs",
+      "lane": "r33-cli-commands-a-c"
+    }
+  ],
+  "semanticReconciliation": false,
+  "dryRoundCredit": false,
+  "independentP3Approval": false
+}

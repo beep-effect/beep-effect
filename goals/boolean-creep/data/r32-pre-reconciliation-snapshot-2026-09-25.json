@@ -1,0 +1,75 @@
+{
+  "kind": "boolean-creep-r32-pre-reconciliation-snapshot/v1",
+  "inventory": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r32-reconciliation.jsonl",
+    "sha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a"
+  },
+  "designs": [
+    {
+      "originalFile": "goals/boolean-creep/designs/r3-arch-ecosystem-internal-pg-timestamp-timezone.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r3-arch-ecosystem-internal-pg-timestamp-timezone.md",
+      "sha256": "3d327f8b92284bfd082ec3d299b136b5b231e83fe9f7d116b697958b7560f0f0"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/m365-tool-error-retryability.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/m365-tool-error-retryability.md",
+      "sha256": "46713b6b1747d1c71fb33e3ae7e0a1e5e00963371dda4d358ab79580f692abf3"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/tool-name-collision-row-truncated-digest.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/tool-name-collision-row-truncated-digest.md",
+      "sha256": "a0debf9cc1118c628ef395b063706fa6d07a2b2de57f3c8baa78a5097439f1fd"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/xai-sse-done-payload.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/xai-sse-done-payload.md",
+      "sha256": "25b4c4582dbf8f8ce4b446f332aeeef8134071de9990f0c9efa1683eb2e472bb"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/venice-sse-done-payload.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/venice-sse-done-payload.md",
+      "sha256": "aab01a3a4767ea9cdd658bfd257e78568b4d4e8110f3a6c2eac8fb3612a6c1af"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/xai-websocket-message-binary.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/xai-websocket-message-binary.md",
+      "sha256": "3b65999566416aee7105dacdb39f5b2a9cc5f1267a06e5c452dbf4df414fac9c"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/dms-mirror-probe-connected.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/dms-mirror-probe-connected.md",
+      "sha256": "617f0bb125503c1d5ab78e4d5b9be36b9831cb0e74851eb3f9ee7a9c85feb68c"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/organization-tenant-placement-bits.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/organization-tenant-placement-bits.md",
+      "sha256": "f97c02c057c1c046b88b1fd1c8065a4ffd406b4a52245c52fae1aeb88e71543f"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/contained-file-read-outcome.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/contained-file-read-outcome.md",
+      "sha256": "0e8c18e8d328cf813405c81ad8b2cac494193adbb34102ecb8bdde3bcb82949d"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r26-cli-commands-l-q-osv-ignore-expiry.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r26-cli-commands-l-q-osv-ignore-expiry.md",
+      "sha256": "1f09fc106d20ee6e66c918469f23720a1a7d2adbd63b82fa2698f4769ff01fbe"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "sha256": "df8cad007565f68009194b0cdf81fc13e22f4df4000462076967fe0c72ea7989"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r29-yeet-sweep-worktree-probe-address.md",
+      "sha256": "0420f7854fd3592261c599096e44e1d1e892f6ec0a2de8122e8be7acf27e27f2"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "file": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "sha256": "1aaca17891e36d30f1e70c9fa3de765e802c3398ee7c959d76a6742b2a682af6"
+    }
+  ],
+  "canonicalProjectionChanged": false
+}

@@ -107,8 +107,10 @@ const viewJson = (
     reviewDecision,
     state,
   });
-// The merge-base diff the scripted git answers; code-bearing unless a test says otherwise.
-const codeDiff = "packages/a/src/index.ts\n";
+// The merge-base diff the scripted git answers; code-bearing unless a test says
+// otherwise. The reader runs `git diff --name-only --no-renames -z`, so the
+// scripted answer is NUL-separated like the real one.
+const codeDiff = "packages/a/src/index.ts\0";
 
 interface CheckRowFixture {
   readonly bucket: string;
@@ -1932,7 +1934,7 @@ describe("B8 watch heavy admission", () => {
                 },
               },
             ],
-            "docs/runbooks/ci.md\ngoals/time-to-certainty/PLAN.md\n"
+            "docs/runbooks/ci.md\0goals/time-to-certainty/PLAN.md\0"
           )
         )
       )

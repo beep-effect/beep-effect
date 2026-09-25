@@ -1,0 +1,22 @@
+{
+  "lane": "r33-foundation-schema-a-m",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:34:57.959628+00:00",
+  "finished": "2026-09-25T01:38:01.057723+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-schema-a-m.jsonl`\n\nConfirmed **0**, disqualified **3**. Every assigned root was covered (188 non-test source files; HEAD `32f111f3707a63168b68ed04516af800ecc3a66c`).\n\nSeed drift, locator only, classification unchanged: `literalkit-attach-helper-descriptors` 618\u2192620, `literalkit-readonly-property` 818\u2192820, `collectEbmlEvidence` 151\u2192164 (`webm`/`matroska`). Unchanged and not re-emitted: JSON Schema `Node`, `CsvCodecOptions`, `ForceHttpsRedirectConfig`, `decodeJsoncUnknown.parse`, the three MappedLiteralKit descriptor objects, and `hasCoherentEnforcement` (derived OR/NOT aliases still match the designed record). No unresolved source question.",
+  "transcriptSha256": "34dabdd97d39d2b9b216356026bc30a4a7f9a95b60d45dfdae95abab4230fbc9",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 3 records, 3 unique ids\n"
+}

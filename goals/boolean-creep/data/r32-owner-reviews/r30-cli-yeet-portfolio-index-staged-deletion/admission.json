@@ -1,0 +1,62 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "r30-cli-yeet-portfolio-index-staged-deletion",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "feeac7201f7a1c5170c57fada30f14189297821e955a357626fb7a7193cbad43",
+  "inputBindings": [
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+      "sha256": "646407d1f5e96d2a11fa815fdf06729a183bc68aa639000ebbc27fee84f4762d"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "1c226bcf451a32c119651c50de713f1ea5683272dfebae5138ddbb080323ad43"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
+      "sha256": "78c837dfc813721aad7e32eba7b289b58780b506510b1463275c1a3b1e8d67ef"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "sha256": "f8e28831ce8ef664844b96c5eb292279d6b4d67b1ed2c9b5d8387aa652a380d2"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts",
+      "sha256": "de1cfbe8dfaaaefa06fdcb3c6d2f17a769dd0ea8224f8848e98a238f4fc0ee43"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/package.json",
+      "retainedFile": "packages/tooling/tool/cli/package.json",
+      "sha256": "ba4232534d6e5f0616dffc1574549a2b2655e6509ee2112ae4c9f00a00581847"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "retainedFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "sha256": "9850f35d5f425ed58c187f7c809dc6d5aaff1e80d67ce3f40e498d404ff06192"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "retainedFile": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "sha256": "1aaca17891e36d30f1e70c9fa3de765e802c3398ee7c959d76a6742b2a682af6"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r30-cli-yeet-portfolio-index-staged-deletion/finite-table.json",
+      "sha256": "4ec941a46e50bcbef1c0f0636ba19141ca1beb751bcdf37b511492a6df78450a"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r30-cli-yeet-portfolio-index-staged-deletion.md",
+      "sha256": "8155c8a6a376a6f55a0f6014603e5b9b537848b3198cd36d80a5df2d036d9cc2"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

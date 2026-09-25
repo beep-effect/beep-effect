@@ -1,0 +1,13 @@
+{
+  "verification": "Python SHA256 recomputation; not execution of package projection",
+  "normalized": [
+    "ecfr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_000000000g50",
+    "ecfr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0000000011bm"
+  ],
+  "length": 68,
+  "sha256Prefix8": "a06e92ed",
+  "final": "ecfr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_a06e92ed",
+  "finalLength": 64,
+  "representable": 4,
+  "legal": 3
+}

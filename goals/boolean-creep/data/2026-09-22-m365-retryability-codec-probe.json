@@ -1,0 +1,171 @@
+{
+  "rows": [
+    {
+      "reason": "absent",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "config",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "config",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "auth",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "auth",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "request encoding",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "request encoding",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "response decoding",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "response decoding",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "response status",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "response status",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "transport",
+      "retryable": true,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "transport",
+        "retryable": true,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "throttled",
+      "retryable": true,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "throttled",
+        "retryable": true,
+        "toolName": "m365_list_drives"
+      }
+    },
+    {
+      "reason": "encrypted item",
+      "retryable": false,
+      "sameBytes": true,
+      "badOldAccepted": true,
+      "badNextRejected": true,
+      "wire": {
+        "message": "Failure",
+        "operation": "listDrives",
+        "reason": "encrypted item",
+        "retryable": false,
+        "toolName": "m365_list_drives"
+      }
+    }
+  ],
+  "omittedDefault": true,
+  "classConstructed": true,
+  "tools": [
+    "m365_delta_drive_items",
+    "m365_download_drive_item_content",
+    "m365_get_event",
+    "m365_get_list_item",
+    "m365_get_message",
+    "m365_get_site",
+    "m365_list_drive_item_versions",
+    "m365_list_drives",
+    "m365_list_events",
+    "m365_list_messages",
+    "m365_list_sites"
+  ],
+  "malformed": [
+    {
+      "keys": ["message", "operation", "toolName", "reason", "retryable"],
+      "oldAccepted": false,
+      "nextAccepted": false
+    },
+    {
+      "keys": ["message", "operation", "toolName", "reason", "retryable"],
+      "oldAccepted": false,
+      "nextAccepted": false
+    },
+    {
+      "keys": ["message", "operation", "toolName", "reason", "retryable"],
+      "oldAccepted": false,
+      "nextAccepted": false
+    },
+    {
+      "keys": ["message", "operation", "toolName"],
+      "oldAccepted": false,
+      "nextAccepted": false
+    },
+    {
+      "keys": ["message", "operation", "toolName", "retryable"],
+      "oldAccepted": false,
+      "nextAccepted": false
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "boolean-creep-main-sync-observation/v1",
+  "previousSourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "sourceSha": "02f8084070af1fe3329b4c769705394a9f33b9f1",
+  "originMainSha": "02f8084070af1fe3329b4c769705394a9f33b9f1",
+  "mergeMode": "fast-forward",
+  "dirtyPacketFilesPreservedByteForByte": 265,
+  "postMergeVersionSync": "passed; Effect rc.117 unchanged",
+  "changedPaths": [
+    ".changeset/ci-lane-timings-ratified-populations.md",
+    "goals/ci-lane-economics/GOAL.md",
+    "goals/ci-lane-economics/PLAN.md",
+    "goals/ci-lane-economics/ops/manifest.json",
+    "goals/ci-lane-economics/research/admission-week-2-p95.md",
+    "goals/turborepo-task-qualification/PLAN.md",
+    "goals/turborepo-task-qualification/ops/manifest.json",
+    "goals/turborepo-task-qualification/research/OPPORTUNITIES.md",
+    "goals/turborepo-task-qualification/research/acceptance-audit-current.md",
+    "goals/turborepo-task-qualification/research/profile-closure-refresh-2026-09-22.json",
+    "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+    "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
+    "standards/effect-vitest.inventory.jsonc"
+  ],
+  "changedCorpusFiles": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "sha256": "ca84ddce9435ca9faa6ca0ccfd56cfad50706ed98f4a89c24f081af9afa3c7fc"
+    }
+  ],
+  "affectedInventoryOwnerOrEvidenceIds": [],
+  "inventorySha256": "0d8fe9a739df128f764fc060643f486c1d98a68b37739a405401ee8848d7f88e",
+  "checkedAuditSourceBindingCount": 437,
+  "auditSourceMismatches": [],
+  "auditBindingScope": "Whole-file hashes explicitly listed in current-day design-refresh audits; not inferred consumer coverage or a replacement independent review.",
+  "corpus": {
+    "corpusEqualsOriginMain": true,
+    "corpusFileCount": 3141,
+    "corpusPathsSha256": "7d4f13b09e03207bda14bd8895d3e9b828d537e02c320d6e4811b7b22e3018d4",
+    "scopeCorrectionSha256": "203f15c95554aea6dd33b24bfd95f910b6155f3732e94c5f9076a4583c1e9798",
+    "partitionCorrection": {
+      "kind": "explicit-graft-corpus-owner/v1",
+      "lane": "r32-cli-commands-d-k",
+      "addedArea": "packages/tooling/tool/cli/src/commands/Graft",
+      "classifier": {
+        "partitionModuleSha256": "8fe36cb21146d3ed0b9f00f48d9189bad38e194fbd5121e6244a197cb33b44bd",
+        "controllerSha256": "b7b9881335bddf08dd7a0b601e5d07dc3ed48e7f94a56b315d2645109302de34"
+      }
+    }
+  },
+  "laneCount": 27,
+  "privatePartitionManifestSha256": "ef7f4748988d00079c04dd47fdd2c4c5ef90c82518773df905ab816230218533",
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "remaining": [
+    "Resolve constitutional preamble and Yeet remote status owner contracts.",
+    "Complete predecessor reconciliation and fresh exact-input census admission.",
+    "Run full current-source census to two dry rounds and replacement independent P3."
+  ],
+  "meaning": "Main synchronization and bounded mechanical source/hash observation only; unchanged cited files do not prove full current-corpus audit completion.",
+  "validation": {
+    "inventory": "756 records, 756 unique ids",
+    "designCoverage": "148 qualified ids",
+    "diffCheck": "passed",
+    "goalCharacterLimit": "passed",
+    "manifestJson": "parsed",
+    "reflectionArtifacts": {
+      "exitCode": 0,
+      "blockingFindings": 0,
+      "advisoryFindings": 0
+    },
+    "dirtyScope": "266 paths, all under goals/boolean-creep"
+  }
+}

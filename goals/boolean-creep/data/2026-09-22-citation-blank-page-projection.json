@@ -1,0 +1,22 @@
+[
+  {
+    "hasBlankPage": false,
+    "pagePresent": false,
+    "legal": true
+  },
+  {
+    "hasBlankPage": false,
+    "pagePresent": true,
+    "legal": true
+  },
+  {
+    "hasBlankPage": true,
+    "pagePresent": false,
+    "legal": true
+  },
+  {
+    "hasBlankPage": true,
+    "pagePresent": true,
+    "legal": false
+  }
+]

@@ -1,0 +1,105 @@
+# R33 agents-workspace recall-gate audit
+
+Source32f111f3707a63168b68ed04516af800ecc3a66c;
+main339da1562a2ed52f73a0a693c176fc52cca9ccb6.
+Apply SPEC >=2 actual Boolean-typed members before judging E1-E4. Four existing
+rows are outside that net; this does not assert independent semantic states.
+No canonical/source edits, fetch, HEAD change or running-work interference.
+
+## receipt-fallback-draft-occupancy — withdraw qualified row
+
+Actual procedure reconcileReceiptFallbacks is Chat.atoms.ts998-1054. Its local
+sibling state includes currentDraftOccupied1019, derived through O.map, and
+mutable draftToRestore1020, initialized O.none<StreamingTurn>. The former is an
+Option<boolean> under the historical recorded inference; the latter is an
+Option<StreamingTurn>, not a Boolean. Even counting the Boolean-bearing Option
+as one optional Boolean cannot yield two actual Boolean-typed members. Do not
+count draftToRestore presence as a second member or widen scope to unrelated
+callback predicate results. The containing block also has draftAtom and retained
+array; the procedure has snapshot, decisions and unreconciledAtom. None supplies
+a second Boolean state member.
+
+The historical6/3 argument remains a finite Option-shape analysis, not a recall
+gate proof. Full block inspection confirms lazy occupancy/candidate precedence,
+serial receipt reads1001-1016, identity-based matching1022, Some assignment1032,
+concurrent appended fallback retention1044-1045, restoration1048-1051 and retained
+array write1053. Preserve all this code and the complete turn/payload behavior.
+No new type probe is necessary: both possible Option<boolean>/Option<true>
+inference outcomes leave the other member non-Boolean and fail the >=2 gate.
+Archive the existing design after terminal; do not manufacture D1 or migrate it.
+
+## runtime-activity-payload-kind — withdraw qualified row
+
+Complete RuntimeActivity in ProfessionalRuntime.contracts.ts625-644 contains
+activityId:string, activityType:RuntimeActivityType literal domain,
+artifactId:Option<RuntimeArtifactId>, principalId and spanIds:Option<Array<...>>.
+No actual Boolean member. The static encodeResult is a function, not a field
+whose type is Boolean. Literal cases and Option presence cannot supply recall
+membership even if fixture validation supports a semantic payload restriction.
+Archive the existing design; retain schema, codecs, fixtures and all payloads.
+
+## r26-agents-workspace-runtime-evidence-span-presence — withdraw D1 row
+
+Complete RuntimeEvidenceRef212-229 contains artifactId and two Option payloads,
+spanId and spanIds. No Boolean member; static encodeResult does not change that.
+Its historical independent presence cases, including empty array and both keys,
+remain relevant domain evidence but do not qualify it for this census net.
+Remove the canonical D1 row after terminal, with history retained; no substitute
+classification or narrowed public schema.
+
+## agents-chat-turn-surface — withdraw D1 row
+
+This synthetic owner names the actual streamingTurnAtom510 and turnErrorAtom554.
+Their full declarations store Option<StreamingTurn> and Option<ChatActionError>
+respectively, not Boolean state. Their Some/None combinations, independently
+retained turn and error handling, are not actual Boolean-typed atoms. Direct
+read/write search finds start947-948, error1076-1078 and1136-1137, and cleanup
+1235/1256/1263/1268; these do not alter stored types. No virtual presence owner
+or wider unrelated atom collection may replace this record.
+
+## Footer reconciliation
+
+The raw R33 execution footer correctly identifies the last three as out of net
+but wrongly retains reconcileReceiptFallbacks as 'boolean plus optional turn'.
+That phrase itself names fewer than two actual Boolean members. Preserve footer
+and raw empty report unchanged; this separate audit supplies the fourth scope
+withdrawal and records all four canonical corrections. No new user ruling is
+required to apply the existing net. No replacement designs or D1/D2 rows.
+
+All four historical inventory rows are copied privately. Two qualified designs
+are bound below for future archival; parent integrates after R33 terminal.
+This evidence contradicts any dry claim that assumes the seeded scope unchanged.
+No runtime tests, typecheck, independent P3, census dry or implementation credit.
+Graft saved33405 tokens across two calls.
+
+## Input bindings
+
+- `packages/agents/client/src/Chat.atoms.ts`: `88df970a7c96c51e5c4ab3fbd729135232a1019f657aae6a57fe7c8451170920`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/packages/agents/client/src/Chat.atoms.ts`: `88df970a7c96c51e5c4ab3fbd729135232a1019f657aae6a57fe7c8451170920`
+
+- `packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts`: `1a09dda5bd0ba25d33547cbdd664b5d05fcf171ee5338c850e4f2ef89ac065d7`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts`: `1a09dda5bd0ba25d33547cbdd664b5d05fcf171ee5338c850e4f2ef89ac065d7`
+
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+
+- `goals/boolean-creep/DECISIONS.md`: `af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/goals/boolean-creep/DECISIONS.md`: `af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084`
+
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+
+- `goals/boolean-creep/designs/receipt-fallback-draft-occupancy.md`: `d4924626241a4f36a66a083ce8b0dca49a885e0948134f1cb0075f57dc045106`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/goals/boolean-creep/designs/receipt-fallback-draft-occupancy.md`: `d4924626241a4f36a66a083ce8b0dca49a885e0948134f1cb0075f57dc045106`
+
+- `goals/boolean-creep/designs/runtime-activity-payload-kind.md`: `c09aa824a7a40236757588a42d1b44ce43b7b9f424ecbb81b2aea930c63140ef`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/goals/boolean-creep/designs/runtime-activity-payload-kind.md`: `c09aa824a7a40236757588a42d1b44ce43b7b9f424ecbb81b2aea930c63140ef`
+
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-agents-workspace.execution.json`: `51a899f48700b06c2cfebf06843e3dda502c5064c12f81d94b4c46505f9fbb78`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/inputs/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-agents-workspace.execution.json`: `51a899f48700b06c2cfebf06843e3dda502c5064c12f81d94b4c46505f9fbb78`
+
+## Output bindings
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/historical-rows.json`: `47d54c7b8d7a2d4c0f27b17cc65ec8a88e297b268951748cca67356d19b82b4e`
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/disposition.json`: `42c4ea90dc1f806b4eec2aefa100329963c4899ea1fd33296c1529940176cc11`

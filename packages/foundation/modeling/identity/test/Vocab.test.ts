@@ -1,11 +1,12 @@
+import { fcRuns } from "@beep/fc-runs";
 import { CoreVocab, mergeVocab, SemanticFoundationVocab, VocabRegistry } from "@beep/identity";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { expectTypeOf } from "vitest";
 import type { Curie, Expand, Predicate } from "@beep/identity";
 
 const decodeVocabRegistryOption = S.decodeOption(VocabRegistry);
@@ -81,21 +82,20 @@ describe("CoreVocab runtime invariants", () => {
     }
   });
 
-  it("round-trips generated vocabulary registries through their encoded shape", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(VocabRegistry)]), ([registry]) => {
-          const decoded = O.flatMap(encodeVocabRegistryOption(registry), decodeUnknownVocabRegistryOption);
+  it.prop(
+    "round-trips generated vocabulary registries through their encoded shape",
+    [Arbitrary.schema(VocabRegistry)],
+    ([registry]) => {
+      const decoded = O.flatMap(encodeVocabRegistryOption(registry), decodeUnknownVocabRegistryOption);
 
-          expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
+      expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("accepts CoreVocab through the runtime registry schema", () => {
-    expect(O.isSome(decodeVocabRegistryOption(CoreVocab))).toBe(true);
+    decodeVocabRegistryOption(CoreVocab).pipe(O.isSome, assertTrue);
   });
 });

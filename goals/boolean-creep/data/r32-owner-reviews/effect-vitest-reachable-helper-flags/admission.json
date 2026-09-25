@@ -1,0 +1,82 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "effect-vitest-reachable-helper-flags",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "fba491a8aa3ed5680e11fc8cd92584108aa1b855527dc3237d26434509e5ab1b",
+  "inputBindings": [
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "sha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "sha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
+      "sha256": "1ab2bc5f80522b16a12c8d39dd0cd7cf88d97693729eadc3a65e736553a5c3b5"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+      "sha256": "7c5f571be1ae0404b6425725a4fa2dba61847d629405b32184f23574ef66a798"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/package.json",
+      "retainedFile": "packages/tooling/tool/cli/package.json",
+      "sha256": "ba4232534d6e5f0616dffc1574549a2b2655e6509ee2112ae4c9f00a00581847"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "sha256": "baafff158d39672af2113e26404994e6ec270b32edf1dd826e9d879afcc401cc"
+    },
+    {
+      "originalFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "retainedFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "retainedFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "sha256": "9850f35d5f425ed58c187f7c809dc6d5aaff1e80d67ce3f40e498d404ff06192"
+    },
+    {
+      "originalFile": "node_modules/ts-morph/lib/ts-morph.d.ts",
+      "retainedFile": "node_modules/ts-morph/lib/ts-morph.d.ts",
+      "sha256": "f5845a852a03600100175392ca764626cff5782f4d00d24300d82b8edaddeab9"
+    },
+    {
+      "originalFile": "goals/boolean-creep/DECISIONS.md",
+      "retainedFile": "goals/boolean-creep/history/2026-09-25-pre-cache-observation-ruling-DECISIONS.md",
+      "sha256": "0718a4972d3581beaa515183559b1d7d1d8d1a6cfa8986852cf4f13c2eb8b108"
+    },
+    {
+      "originalFile": "goals/boolean-creep/SPEC.md",
+      "retainedFile": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "originalFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "retainedFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "sha256": "cedb2501fc86c4cc1948c332c1d568e404b06000794807eb3bbfac9d0d920afd"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/effect-vitest-reachable-helper-flags/finite-acceptance.json",
+      "sha256": "de8624008a9079907e8bd3858e6168f2de79456f0eb93b03ef70e0a1965b44e0"
+    },
+    {
+      "file": "goals/boolean-creep/designs/effect-vitest-reachable-helper-flags.md",
+      "sha256": "d390397faedbe9e4a98f6ca235b5dba9411c34c39000799ffb43594af87985b3"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

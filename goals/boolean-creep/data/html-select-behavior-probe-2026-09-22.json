@@ -1,0 +1,181 @@
+{
+  "abstractCount": 9331,
+  "abstractMaxLength": 5,
+  "pairs": ["true/false", "false/false", "false/true"],
+  "publicCases": [
+    {
+      "tags": [],
+      "grammar": "traditional",
+      "issues": []
+    },
+    {
+      "tags": ["option"],
+      "grammar": "traditional",
+      "issues": []
+    },
+    {
+      "tags": ["optgroup"],
+      "grammar": "traditional",
+      "issues": []
+    },
+    {
+      "tags": ["hr"],
+      "grammar": "traditional",
+      "issues": []
+    },
+    {
+      "tags": ["button"],
+      "grammar": "customizable",
+      "issues": []
+    },
+    {
+      "tags": ["div"],
+      "grammar": "invalid",
+      "issues": [
+        {
+          "path": [],
+          "rule": "elementOrder",
+          "message": "<select> must use either the traditional or customizable-select child grammar"
+        }
+      ]
+    },
+    {
+      "tags": ["button", "div"],
+      "grammar": "customizable",
+      "issues": []
+    },
+    {
+      "tags": ["button", "option"],
+      "grammar": "customizable",
+      "issues": []
+    },
+    {
+      "tags": ["button", "optgroup"],
+      "grammar": "customizable",
+      "issues": []
+    },
+    {
+      "tags": ["button", "hr"],
+      "grammar": "customizable",
+      "issues": []
+    },
+    {
+      "tags": ["button", "span"],
+      "grammar": "invalid",
+      "issues": [
+        {
+          "path": ["children.1"],
+          "rule": "contentModel",
+          "message": "<select> does not permit <span>"
+        },
+        {
+          "path": [],
+          "rule": "elementOrder",
+          "message": "<select> must use either the traditional or customizable-select child grammar"
+        }
+      ]
+    },
+    {
+      "tags": ["button", "button"],
+      "grammar": "invalid",
+      "issues": [
+        {
+          "path": [],
+          "rule": "elementOrder",
+          "message": "<select> must use either the traditional or customizable-select child grammar"
+        }
+      ]
+    },
+    {
+      "tags": ["option", "button"],
+      "grammar": "invalid",
+      "issues": [
+        {
+          "path": [],
+          "rule": "elementOrder",
+          "message": "<select> must use either the traditional or customizable-select child grammar"
+        }
+      ]
+    },
+    {
+      "tags": ["script", "template"],
+      "grammar": "traditional",
+      "issues": []
+    },
+    {
+      "tags": ["script", "button", "template", "div"],
+      "grammar": "customizable",
+      "issues": []
+    },
+    {
+      "tags": ["text"],
+      "grammar": "traditional",
+      "issues": [
+        {
+          "path": ["children.0"],
+          "rule": "contentModel",
+          "message": "<select> does not permit text children"
+        }
+      ]
+    },
+    {
+      "tags": ["foreign"],
+      "grammar": "traditional",
+      "issues": [
+        {
+          "path": ["children.0"],
+          "rule": "contentModel",
+          "message": "<select> does not permit foreign content"
+        }
+      ]
+    },
+    {
+      "tags": ["space", "comment"],
+      "grammar": "traditional",
+      "issues": []
+    },
+    {
+      "tags": ["button", "text", "div"],
+      "grammar": "customizable",
+      "issues": [
+        {
+          "path": ["children.1"],
+          "rule": "contentModel",
+          "message": "<select> does not permit text children"
+        }
+      ]
+    },
+    {
+      "tags": ["button", "foreign", "div"],
+      "grammar": "customizable",
+      "issues": [
+        {
+          "path": ["children.1"],
+          "rule": "contentModel",
+          "message": "<select> does not permit foreign content"
+        }
+      ]
+    },
+    {
+      "tags": ["text", "span"],
+      "grammar": "invalid",
+      "issues": [
+        {
+          "path": ["children.0"],
+          "rule": "contentModel",
+          "message": "<select> does not permit text children"
+        },
+        {
+          "path": ["children.1"],
+          "rule": "contentModel",
+          "message": "<select> does not permit <span>"
+        },
+        {
+          "path": [],
+          "rule": "elementOrder",
+          "message": "<select> must use either the traditional or customizable-select child grammar"
+        }
+      ]
+    }
+  ]
+}

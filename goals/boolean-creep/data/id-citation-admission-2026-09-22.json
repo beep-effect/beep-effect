@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "date": "2026-09-22",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-id-citation-admission.jsonl",
+    "sha256": "5deb7a0d9b716bc5ba734ac9bed45da6c925731cc7652ea99449e87179cf4a3f"
+  },
+  "inventoryAfterSha256": "1c0bef1c344060c1275619945d052ca5cc7b4414f48dd9f4a9c09c619477d355",
+  "newQualifiedIds": ["id-citation-pincite-inherited"],
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 129,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/id-citation-pincite-inherited.md",
+      "sha256": "f4c98640f24269503a10ca84916db9b35b44ed04d0b6ffe23b67406d2ecada9f"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-id-citation-pincite-inherited.md",
+      "sha256": "79cf1ebaaf44f2caacb07a8a2cefb3b510c6f2aede1a83455d584a7accd5838e"
+    },
+    {
+      "file": "data/id-citation-projections-2026-09-22.json",
+      "sha256": "1ff5b34d51e9551d6e264aeb8d84aa9737c1eb4ffa5e832d68464f1218c7450f"
+    }
+  ],
+  "ownerDecision": {
+    "file": "DECISIONS.md",
+    "sha256": "b9ad90280aa8b82394d221b6941427100c47536c53cf15496d5b15c12914d4eb"
+  },
+  "savedSubset": {
+    "sourceReceipt": "data/quality-task-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "f88350704cc0345fd5e9a1a4dc0a2d76df3336bb0cc3dd79b9223c20f72da154",
+    "previousPendingCount": 28,
+    "completedIds": [],
+    "pendingCount": 28,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset unchanged; Id admission outside it. Full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-supra-shortform-admission.jsonl"
+}

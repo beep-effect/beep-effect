@@ -1,0 +1,22 @@
+{
+  "lane": "r33-cli-commands-d-k",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:50:24.537204+00:00",
+  "finished": "2026-09-25T01:53:33.856594+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-d-k.jsonl` (validator: 0 records).\n\nConfirmed 0, disqualified 0. All ten assigned roots were covered (118 non-test source files at `32f111f3707a63168b68ed04516af800ecc3a66c`). Seeded clusters still match their owners and classifications; no withdrawals. Canonical inventory line numbers are stale for several of those records, and that drift does not change the adjudication. Function-parameter flag bags were left out of the net.",
+  "transcriptSha256": "082993cb6630305a1ca11dfb86ddb0f7a4a3a815e27c43c77676edf0cfe5b59c",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

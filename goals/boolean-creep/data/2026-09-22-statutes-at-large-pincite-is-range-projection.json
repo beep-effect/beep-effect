@@ -1,0 +1,22 @@
+[
+  {
+    "isRange": false,
+    "endPresent": false,
+    "legal": true
+  },
+  {
+    "isRange": false,
+    "endPresent": true,
+    "legal": false
+  },
+  {
+    "isRange": true,
+    "endPresent": false,
+    "legal": true
+  },
+  {
+    "isRange": true,
+    "endPresent": true,
+    "legal": true
+  }
+]

@@ -1,0 +1,431 @@
+{
+  "kind": "boolean-creep-round-execution-audit/v1",
+  "observedAt": "2026-09-25T01:07:32.431088+00:00",
+  "round": "refresh-2026-09-25-r32-main-28a704",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "originMainSha": "28a7045c9b353544a37733bdb46ffb2a0b6ca7bc",
+  "controllerExitCode": 0,
+  "serviceState": {
+    "activeState": "active",
+    "subState": "exited",
+    "mainPid": 0,
+    "execMainStatus": 0
+  },
+  "complete": true,
+  "sourceStable": true,
+  "includedFilesVerified": 3181,
+  "frozenFilesVerified": 3984,
+  "exactOneLaneOwnership": true,
+  "successfulLanes": 27,
+  "rawOccurrences": 53,
+  "rawQualified": 10,
+  "lanes": [
+    {
+      "lane": "r32-foundation-primitive",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-foundation-capability",
+      "exitCode": 0,
+      "reportRecords": 2,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-foundation-modeling-rest",
+      "exitCode": 0,
+      "reportRecords": 6,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-foundation-schema-a-m",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-foundation-schema-n-z",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-foundation-ui",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-drivers-a-f",
+      "exitCode": 0,
+      "reportRecords": 2,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-drivers-g-m",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-drivers-n-r",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-drivers-s-z",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-architecture-ecosystem-internal",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-agents-workspace",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-epistemic-ontology",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-shared-documents",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-law-practice-domain",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-law-practice-runtime",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-apps",
+      "exitCode": 0,
+      "reportRecords": 2,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-tooling-library-observability",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-tooling-library-support",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-tooling-policy",
+      "exitCode": 0,
+      "reportRecords": 2,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-tool-docgen",
+      "exitCode": 0,
+      "reportRecords": 0,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-cli-internal-root",
+      "exitCode": 0,
+      "reportRecords": 1,
+      "rawQualified": 1
+    },
+    {
+      "lane": "r32-cli-commands-a-c",
+      "exitCode": 0,
+      "reportRecords": 16,
+      "rawQualified": 3
+    },
+    {
+      "lane": "r32-cli-commands-d-k",
+      "exitCode": 0,
+      "reportRecords": 1,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-cli-commands-l-q",
+      "exitCode": 0,
+      "reportRecords": 9,
+      "rawQualified": 3
+    },
+    {
+      "lane": "r32-cli-commands-r-z",
+      "exitCode": 0,
+      "reportRecords": 3,
+      "rawQualified": 0
+    },
+    {
+      "lane": "r32-cli-yeet",
+      "exitCode": 0,
+      "reportRecords": 9,
+      "rawQualified": 3
+    }
+  ],
+  "bindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-primitive.execution.json",
+      "sha256": "9f053ad67e0d96d74fbb468969dec4d66aa0d5b19e611e3c326af9ddb5d17529"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-capability.execution.json",
+      "sha256": "22258ba5925e7c205d0ad127a147fb5e07a1364f4ec64f5920e51792ace2b3c0"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-capability.jsonl",
+      "sha256": "5ce960eed5da00631bfa25eb6132ceccfc8f43fd74441dfc54d5e1a923e740d5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.execution.json",
+      "sha256": "334e55a6a7a45f3e82d6c7a7c8f72a7995037f3ce36c98a5c64d48480c2d9087"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-modeling-rest.jsonl",
+      "sha256": "66c4ae52076a789b06e15fcdb7b7f08204cd2186ecac82c6237ef0ea71816a07"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-schema-a-m.execution.json",
+      "sha256": "8dd91c81461e2d0b254ddd2586834a26c1bef576e932c60e1800f5cd287be4b5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-schema-a-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-schema-n-z.execution.json",
+      "sha256": "5b4b13b7a3fa5c37805c1a4cfcf7fc8765301b448331efc385bd4dfdd741b112"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-schema-n-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-ui.execution.json",
+      "sha256": "c965cfa0d6532803d6d8d73d35969b372782043397db9cdfccb3245598ad5972"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-a-f.execution.json",
+      "sha256": "e0aa3087b3aa5d7ef44623229048e8efbb260da4b066301f4872308b53edb134"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-a-f.jsonl",
+      "sha256": "586aae168c1f558759829a07bea3302ccae7ee65aa14df405b8116c611bd818a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-g-m.execution.json",
+      "sha256": "e6b1fa268974d31c4afe0dea6328a2d647c7c3960fecd7fb1296c68e369a73a7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-g-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-n-r.execution.json",
+      "sha256": "d7027b76d42f89347ca55973181677496c407922c6da8952e4b13ba27aa60fa3"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-n-r.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-s-z.execution.json",
+      "sha256": "c4ee7312ed8787ea6b22658081df2218670931cbeb6b6c15888c1481c8750f8f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-drivers-s-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-architecture-ecosystem-internal.execution.json",
+      "sha256": "87d274f413b870a60e5baf06e396a74b7bda861ab2a2290852b4dc64e77f2eb7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-architecture-ecosystem-internal.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-agents-workspace.execution.json",
+      "sha256": "0362afe396ef06f047d08b93d77c4ed31b11dbb7280f6b62d09919d6599a234f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-agents-workspace.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-epistemic-ontology.execution.json",
+      "sha256": "cf2c84b53b18e3f5bec68e2fbe07125c2ee215d985eb16c7946e9a342a35fc6d"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-epistemic-ontology.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-shared-documents.execution.json",
+      "sha256": "bef78f9111bd629360008e508bcb5f74356f77cbeba83fd381011af8b0f539a7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-shared-documents.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-law-practice-domain.execution.json",
+      "sha256": "06279aa67dffe26fa2a9f535645073356deb35293c18dbff2d9460ed8cf116fc"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-law-practice-domain.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-law-practice-runtime.execution.json",
+      "sha256": "ad4ca500656bf819cb2054a281ee4cbf1ba5bf80468473acb207a5f137e2b158"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-law-practice-runtime.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-apps.execution.json",
+      "sha256": "375beca9a08ae5ccc55b8a30bbc87535e1c26ca3af3c0b3e9a4a93e29fbf0711"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-apps.jsonl",
+      "sha256": "faaee510b3858236edb4b956b4b2b826e7cd3370b56185c1a09cc872c461c1a9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-library-observability.execution.json",
+      "sha256": "fd016760aa7aa6b3e06d504607c31f5e4456cf2b0cc778db7a24bf7ff133a806"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-library-observability.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-library-support.execution.json",
+      "sha256": "71953ea7da73cb7647cde1f9b8b95f19cce19f3293aaaef905d896987a4965bc"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-library-support.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-policy.execution.json",
+      "sha256": "9a559211e5daadb7e17f05032f1426cf92761f1d763f108c91126a655c89e76c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-policy.jsonl",
+      "sha256": "cf161145e038e98d1bc6747aabb2ded1c2d677f72b85cf143fefd179c25fdd75"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tool-docgen.execution.json",
+      "sha256": "7118064b6ad268bbbb6a306ec8869146547ff84e381735078f8b05b93ad51951"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tool-docgen.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-internal-root.execution.json",
+      "sha256": "b4533f83e3a28ce60d7687db35c4493027a77c60ded4d1b78693e9cbafd113b5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-internal-root.jsonl",
+      "sha256": "1ec947d8b6c372739957df591435c3b24167e434aca8c6d64d83ba62d9947c29"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.execution.json",
+      "sha256": "190a60eee4d260e664189d01654f0f24c8b4205299b3987ab13cd380f612b93f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-a-c.jsonl",
+      "sha256": "b17acc0dcaf152573902329bb05b447abf41dee7601b18dd16513acb3a476047"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-d-k.execution.json",
+      "sha256": "2d25a42031aba6154ebdf027921a0d789a23422e6165ce42a77cc674987eda85"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-d-k.jsonl",
+      "sha256": "2e68fe76799fdf742e2446ef277597f9679c2af5418fdaa2aefb4e81f8febd2b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.execution.json",
+      "sha256": "66dc2c752bdd94d36692cc3ecb53eb5bcdf29fcc227522ef926fad94d574fad3"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "sha256": "cedb2501fc86c4cc1948c332c1d568e404b06000794807eb3bbfac9d0d920afd"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-r-z.execution.json",
+      "sha256": "9ab50ebe8f476b919787d14c48ef7b48aa352866e5c166f05ac858a3d4e34a32"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-r-z.jsonl",
+      "sha256": "492e7295dd827ac04d230f3988c4ec8858e8e16d97ce1775e67c22d931a137f6"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.execution.json",
+      "sha256": "d209f63bce1100dcef1a1076591aa4310c1aeead887489f84686d406630d5bb5"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "sha256": "e556d9d874518676d4ca557e2a6a0c29e31c663b7c23602d4c6ca0089ecf055a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/execution-summary.json",
+      "sha256": "3b313330dc8d657d89acab6ab56e92ae18988019384682a97389c566388c1ed7"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/launch-controller-exit.json",
+      "sha256": "9a6d0c0507345a1de17f7be21cbc21562e690da02dd049f623c8245f2f6e917e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/lane-map.json",
+      "sha256": "aa4d01dae376c4a2466be2541ed6e08eafd3b3ee61ed64467bc41c727ceef191"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/frozen-inputs.json",
+      "sha256": "14b4b5fd88a4c107ae37502c59a31d03a28beb00a0a50b1fc0ad98b67a0621bb"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/launch-created-inputs.json",
+      "sha256": "74546a6e8b04698a3e6bb255ec45e04206b9546f025290ff7181938c84de9938"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/launch-included-files.json",
+      "sha256": "506996f236c8dfa402ca63d7201c951c1dcf224503c298eab1d8ac3dc647285f"
+    }
+  ],
+  "semanticReconciliationComplete": false,
+  "independentP3Approval": false,
+  "dryRoundCredit": false
+}

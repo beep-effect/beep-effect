@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "boolean-creep-owner-net-audit/v1",
+  "sourceHead": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+  "symbol": "VaultSyncStatus",
+  "ownerLines": [
+    65,
+    116
+  ],
+  "fields": [
+    {
+      "name": "conflictItems",
+      "type": "NonNegativeInt",
+      "line": 67,
+      "booleanTyped": false
+    },
+    {
+      "name": "connected",
+      "type": "Boolean",
+      "line": 70,
+      "booleanTyped": true
+    },
+    {
+      "name": "disconnectReason",
+      "type": "Option<five-string LiteralKit>",
+      "line": 76,
+      "booleanTyped": false
+    },
+    {
+      "name": "currentItems",
+      "type": "NonNegativeInt",
+      "line": 81,
+      "booleanTyped": false
+    },
+    {
+      "name": "cursorPosition",
+      "type": "Option<NonEmptyString>",
+      "line": 84,
+      "booleanTyped": false
+    },
+    {
+      "name": "errorItems",
+      "type": "NonNegativeInt",
+      "line": 87,
+      "booleanTyped": false
+    },
+    {
+      "name": "failedOperations",
+      "type": "NonNegativeInt",
+      "line": 90,
+      "booleanTyped": false
+    },
+    {
+      "name": "openConflicts",
+      "type": "NonNegativeInt",
+      "line": 93,
+      "booleanTyped": false
+    },
+    {
+      "name": "pendingItems",
+      "type": "NonNegativeInt",
+      "line": 96,
+      "booleanTyped": false
+    },
+    {
+      "name": "probedAt",
+      "type": "Option<DateTimeUtc>",
+      "line": 101,
+      "booleanTyped": false
+    },
+    {
+      "name": "provider",
+      "type": "LiteralKit<box>",
+      "line": 106,
+      "booleanTyped": false
+    },
+    {
+      "name": "queuedOperations",
+      "type": "NonNegativeInt",
+      "line": 109,
+      "booleanTyped": false
+    }
+  ],
+  "booleanMemberCount": 1,
+  "minimumRequired": 2,
+  "inheritsOrSpreadsFields": false,
+  "disposition": "withdraw-outside-boolean-net",
+  "withdrawIds": [
+    "vault-sync-status-connected",
+    "r28-shared-documents-vault-sync-status-cursor-position"
+  ],
+  "archiveCanonicalDesigns": [
+    "goals/boolean-creep/designs/vault-sync-status-connected.md"
+  ],
+  "newInventoryRows": [],
+  "sourceChanges": false,
+  "independentP3Credit": false,
+  "dryCredit": false
+}

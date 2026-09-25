@@ -171,7 +171,11 @@ orchestrator owns schemas, contracts, and judgment.
   - [ ] C4.2 enforcement (attempt-to-attempt within pre-push) once `proof-report` reads `ready`
         and every C5 fixture is green; deletes `LaneProofReuse` and `lane-proofs.json` with a
         retirement receipt (ruling 60). Hosted reuse stays a separate decision.
-- [ ] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse.
+        Blocked on sample accumulation: the ledger is per-worktree and lanes retire after each PR
+        (receipt 2026-09-24 in OPPORTUNITIES.md; ruling 71 proposed in the C5 grill draft).
+- [x] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse — done 2026-09-24
+      (epoch and cross-profile fixtures in #1214; the changed-package tripwire, its package-scope
+      plumbing and its fixtures in this PR under rulings 68–70).
 
 ## P3 — Ordering handoff
 

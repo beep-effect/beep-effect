@@ -1,0 +1,19 @@
+{
+  "kind": "boolean-creep-main-forward-sync/v1",
+  "previousHead": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "head": "927f73052196eaa0dc6db887bb1a6d0934a9b88d",
+  "originMain": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "strategy": "merge",
+  "changedPaths": [
+    "goals/knowledge-freshness-audit/PLAN.md",
+    "goals/knowledge-freshness-audit/README.md",
+    "goals/knowledge-freshness-audit/history/packet-delivery.md",
+    "goals/knowledge-freshness-audit/history/reflections/2026-09-24-codex.md",
+    "goals/knowledge-freshness-audit/ops/manifest.json",
+    "goals/knowledge-freshness-audit/research/OPPORTUNITIES.md"
+  ],
+  "sourceCorpusChanged": false,
+  "dirtyPacketPathsBytePreserved": 148,
+  "postMergeVersionSyncExitCode": 0,
+  "meaning": "Documentation-only upstream merge; R32 remains bound to its original source. New admissions must bind current HEAD and main."
+}
