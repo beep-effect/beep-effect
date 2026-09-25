@@ -82,8 +82,7 @@ export class ReferenceMember extends S.Class<ReferenceMember>($I`ReferenceMember
  * **Example** (Inspect the manifest version)
  * ```ts
  * import { ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs"
- * import * as S from "effect/Schema"
- * const decoded = S.decodeUnknownEffect(ReferenceWorkspaceManifest)({ schemaVersion: "beep-references/v1", theme: "effect", rootDefault: "$HOME/refs", workspaceLink: ".repos/effect-workspace", members: [] })
+ * const decoded = ReferenceWorkspaceManifest.decode({ schemaVersion: "beep-references/v1", theme: "effect", rootDefault: "$HOME/refs", workspaceLink: ".repos/effect-workspace", members: [] })
  * console.log(decoded)
  * ```
  * @category models
@@ -115,7 +114,7 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
   $I.annote("ReferenceWorkspaceManifest", { description: "The on-disk beep-references/v1 manifest." })
 ) {
   /**
-   * Decodes manifest input with the shared schema.
+   * Decodes manifest input with unknown member and manifest fields rejected.
    *
    * **Example** (Use the compiled decoding codec)
    * ```ts
