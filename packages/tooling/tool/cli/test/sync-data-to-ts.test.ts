@@ -510,6 +510,26 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
     })
   );
 
+  it.effect(
+    "reports a reporters-db dataset missing from the extracted entries as a typed error",
+    Effect.fnUntraced(function* () {
+      const error = yield* decodeReportersDbSourceData({
+        "/reporters_db/data/case_name_abbreviations.json": `{}`,
+        "/reporters_db/data/journals.json": `{}`,
+        "/reporters_db/data/laws.json": `{}`,
+        "/reporters_db/data/regexes.json": `{}`,
+        "/reporters_db/data/state_abbreviations.json": `{}`,
+      }).pipe(Effect.flip);
+
+      expect(error).toMatchObject({
+        _tag: "SyncDataToTsError",
+        message: 'Missing archive entry "/reporters_db/data/reporters.json".',
+        targetId: "reporters-db",
+        file: "/reporters_db/data/reporters.json",
+      });
+    })
+  );
+
   it("separates unique aliases from context-required abbreviation reuse", () => {
     const classified = classifyVocabularyAliases([
       ["first", "First Reporter", ["Unique First", "Reused Rep."]],
