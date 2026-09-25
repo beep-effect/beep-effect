@@ -77,4 +77,19 @@ in `explorations/pr-event-awareness/MAP.md`.
   (`redAt` counts only required checks; optional P1 rows never join).
 - `bun run beep yeet job wait b3bdcfdd-8d95-43bc-8e51-e9db46186afe` re-armed on the fix
   head; its `ready` exit 0 with `merge-ready: yes` is recorded below once hosted checks settle.
-- ready: pending
+- Five more openclaw P2 threads landed across the fix heads (same-head re-arm docs, corrupt-ack
+  walk, once-per-head notices, timeline lane join); each woke `job wait` with exit 2, was fixed
+  in the next push, answered with `yeet reply` and acknowledged with `--thread-url`. Seven
+  threads total, zero unresolved.
+- `job wait` #9 (armed 19:07:34 on `f4533ebf5b`, carried across two head changes) returned
+  **exit 0 at 20:26:08** with `job b3bdcfdd-…: finished`. The monitor's closing lines on head
+  `82d14061b5`:
+  `merge-ready: yes; every hard criterion is green; awaiting the operator's merge;
+  push→ready 1h 9m 7s 978ms (pushed 2026-09-25T19:16:54.000Z, settled 2026-09-25T20:25:54.671Z,
+  closeout 2026-09-25T20:25:57.730Z, ready 2026-09-25T20:26:01.978Z)`.
+- The detached monitor process was started at 18:06 and kept the pre-fix timeline code loaded,
+  so its `push→row→ack 82d1406` line still shows the old join (`row … (+0), injected -`); the
+  corrected join is proven by `yeet-push-ack-timeline.test.ts` and `yeet-monitor-ready.test.ts`
+  and prints from the next monitor started on this branch.
+- Remaining reds on the ready head: `Vercel – oip-web`, `Vercel – todox` (rate-limited, exempt)
+  and `Fallow Advisory Envelopes` (advisory). Required matrix: 30 green.
