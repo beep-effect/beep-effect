@@ -161,3 +161,23 @@ PGlite contention test passed (one case, nine skipped, 5.35s) with
 `BEEP_TEST_TRACE=1`, but no trace lines appeared in the captured output. This
 proves runner execution, not diagnostic-output completeness. Retain the open
 observability dispositions until phase and failure-output checks are complete.
+
+## Trace capture and phase failure diagnostics
+
+The absent stdout lifecycle lines were investigated against the installed
+Effect runner: ordinary Effect tests receive TestConsole, and consolePretty
+writes through that console reference. A temporary assertion in the existing
+PGlite contention test found the lifecycle start message in TestConsole.logLines
+with BEEP_TEST_TRACE=1. The same assertion failed with BEEP_TEST_TRACE=0 and
+CI=false. Both diagnostic edits were removed, restoring the committed test
+byte-for-byte. This establishes capture behavior; it does not promise live
+stdout emission from TestConsole tests.
+
+A second temporary probe rejected the regenerate operation with a controlled
+error. The focused run failed during setup and reported
+`PGlite harness regenerate failed` with the controlled cause. The native
+migration/client path and existing tests were restored byte-for-byte afterward.
+Probe logs are retained privately as effect-drizzle-trace-capture-probe.log,
+effect-drizzle-trace-capture-negative.log and
+effect-drizzle-phase-failure-probe.log. These intentional failures are diagnostic
+controls, not green package executions or final observability-lens closure.
