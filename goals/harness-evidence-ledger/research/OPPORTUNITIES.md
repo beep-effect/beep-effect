@@ -68,3 +68,22 @@
 - **Prevention:** record a single active PR repair owner and handoff path before
   starting parallel all-PR sweeps. The second session preserved the existing edit
   and resumed only after confirming the first had stopped.
+
+## Real-clock 60 ms timeout in an inherited property test flaked the lane (2026-09-25)
+
+- **Work:** babysitting PR #1253 on head 4a1ef64428.
+- **Friction:** `Property Laws` went red on
+  `test/proof-job.test.ts > job wait wave return > returns a wave for a new
+  comment row on its own pull request, whatever head the wave record holds`
+  with `YeetCommandError: Timed out waiting for proof job`. The case waits on
+  a real-clock `timeoutMs: 60` with a 1 ms poll; the hosted property lane took
+  364 s on that run, so wall-clock jitter alone exceeds the budget. The test
+  landed with #1270 (`cafc1f8eb9`), main was green on it, and this PR touches
+  no Yeet source, so the failure is environment-only and cannot be repaired
+  from this lane. A job rerun is refused while the workflow run is still
+  queued behind the heavy cap, so the only lever was a fresh push.
+- **Evidence:** job `108288561181` in run `36201265662`; `Tests 1 failed |
+  2069 passed`.
+- **Proposal:** drive that case with `TestClock` (or a timeout in the seconds
+  range with the poll interval as the only fast knob) so the property lane
+  cannot fail on scheduler jitter; land it on main independently of #1253.
