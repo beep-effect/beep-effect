@@ -336,7 +336,8 @@
     "research/dependency-lint-baseline-request.json",
     "research/dependency-lint-exclusion-verification.json",
     "research/local-matrix-v23.md",
-    "research/nested-command-controls-current.json"
+    "research/nested-command-controls-current.json",
+    "research/lambda-zip-controls-current.json"
   ],
   "agentLaunchers": [
     {

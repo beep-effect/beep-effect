@@ -1622,3 +1622,15 @@ against disposable inputs at `32e271e543`. These establish branching, chunking,
 failure propagation and generated-source invalidation for the recorded scope.
 They do not execute browser tests or database migrations. The acceptance audit
 links the bounded receipt and states the remaining semantic obligations.
+
+### Lambda ZIP assembly controls — 2026-09-25
+
+Five isolated controls exercised the actual ZIP assembler with synthetic bundle
+bytes at `53aa105ecb`; see [the receipt](./research/lambda-zip-controls-current.json).
+Equal bytes and permissions produced identical archives. Changing permissions
+from 0644 to 0600 preserved payloads and normalized timestamps but changed ZIP
+external attributes and its digest. File mode is therefore a semantic input to
+this assembler. The undersize case failed after writing its archive; the missing
+writer case failed before archive creation. These are packaging controls only:
+no real bundle, handler, deployment or signed replay was executed. No tuple is
+qualified, and the complete nested-command obligation remains open.

@@ -1992,3 +1992,14 @@ that failed attempt. The corrected run retained the configured target arguments
 and recorded the inferior exit event explicitly; target exit 0 and the expected
 Biome completion were both required. Future debugger recipes should assert
 inferior completion, not infer it from the debugger process status.
+
+### ZIP determinism needs file-mode evidence — 2026-09-25
+
+While classifying nested commands, five isolated `package-zip.sh` controls found
+that normalized timestamps do not normalize ZIP permission metadata. Equal
+payloads with 0644 versus 0600 modes produced different archive digests. The
+undersize guard also leaves its rejected archive on disk. Evidence:
+`research/lambda-zip-controls-current.json`. Explicit mode normalization or a
+mode-bound qualification contract, and cleanup of rejected outputs, would make
+the packaging boundary easier to qualify. This observation does not authorize
+changing the deployment artifact format or prove normal builds vary modes.
