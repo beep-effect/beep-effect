@@ -32,7 +32,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, HashMap, Match } from "effect";
+import { DateTime, Effect, flow, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -40,6 +40,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetHeadRed } from "./MonitorPolicy.ts";
 import { YeetReviewThreadStateTag } from "./ReviewThreadState.ts";
 import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
@@ -132,6 +133,68 @@ export const classifyYeetCheckOutcome = (check: YeetCheckSignal): YeetCheckOutco
 };
 
 /**
+ * Normalize one optional text field of a raw `gh pr checks` record.
+ *
+ * **Details**
+ *
+ * gh renders an absent `link` or `workflow` as `""` for some check sources
+ * (plain commit statuses) and a caller may not have requested the field at
+ * all; both read as absent, and the check record stores absent as `null`
+ * ("the record has no such field"). Every collector that builds a
+ * {@link YeetWatchCheck} from a gh row uses this rule, so a failure capsule
+ * reads the same whichever loop observed the red.
+ *
+ * **Example** (An empty workflow is absent)
+ *
+ * ```ts
+ * import { yeetCheckRecordText } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(yeetCheckRecordText(""))) // null
+ * console.log(O.getOrNull(yeetCheckRecordText("Check"))) // "Check"
+ * ```
+ *
+ * @param value - The raw field as gh reported it, when it reported it.
+ * @returns The field, or `None` when it is absent or empty.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const yeetCheckRecordText = (value: string | null | undefined): O.Option<string> =>
+  O.filter(O.fromNullishOr(value), Str.isNonEmpty);
+
+/**
+ * Normalize one optional instant of a raw `gh pr checks` record.
+ *
+ * **Details**
+ *
+ * gh reports an instant it does not have as Go's zero time
+ * (`0001-01-01T00:00:00Z`): a queued check has no `completedAt`, and external
+ * status contexts (Vercel, CodeRabbit) carry neither instant. Some sources
+ * send `null` or omit the key. All of those read as absent; only a parseable
+ * instant after the Unix epoch is kept, verbatim.
+ *
+ * **Example** (Go's zero time is absent)
+ *
+ * ```ts
+ * import { yeetCheckRecordInstant } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(yeetCheckRecordInstant("0001-01-01T00:00:00Z"))) // true
+ * console.log(O.getOrNull(yeetCheckRecordInstant("2026-09-25T11:53:05Z"))) // "2026-09-25T11:53:05Z"
+ * ```
+ *
+ * @param value - The raw instant as gh reported it, when it reported it.
+ * @returns The instant, or `None` when it is absent, empty, unparseable, or gh's zero time.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const yeetCheckRecordInstant = (value: string | null | undefined): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(value),
+    O.filter((instant) => O.exists(DateTime.make(instant), (dateTime) => DateTime.toEpochMillis(dateTime) > 0))
+  );
+
+/**
  * One check within a watch snapshot: its classified outcome plus its record.
  *
  * **Details**
@@ -141,6 +204,12 @@ export const classifyYeetCheckOutcome = (check: YeetCheckSignal): YeetCheckOutco
  * failing check's record instead of a classifier pass over composite output.
  * They default (null link/workflow, empty signal) so synthetic snapshots in
  * differ tests stay terse; the collector always fills them from the live row.
+ *
+ * `startedAt` and `completedAt` are GitHub's own instants for the check; a
+ * failing check's `completedAt` is when GitHub observed the red. The status
+ * collector behind `yeet monitor --until-ready` requests and fills them; the
+ * `--watch` collector does not request them, so they stay `None` there and an
+ * encoded check without them omits both keys. They never feed a capsule.
  *
  * @category models
  * @since 0.0.0
@@ -155,11 +224,68 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
       S.withConstructorDefault(Effect.succeed(YeetCheckSignal.make({ bucket: "", state: "" })))
     ),
     workflow: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    completedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetWatchCheck", {
     description: "One PR check's name, classified outcome, and raw record within a watch snapshot.",
   })
 ) {}
+
+const instantMillis = (instant: string): number =>
+  O.getOrElse(O.map(DateTime.make(instant), DateTime.toEpochMillis), () => Number.POSITIVE_INFINITY);
+
+const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
+
+const headRedOrder: Order.Order<YeetHeadRed> = Order.mapInput(instantOrder, (red: YeetHeadRed) => red.at);
+
+/**
+ * Which required check GitHub first observed red on one head, and when.
+ *
+ * **Details**
+ *
+ * The failing required check with the earliest `completedAt`, as a
+ * {@link YeetHeadRed}: `at` is that instant and `lane` the check's name, the
+ * lane its P0 `check-failed` inbox row carries. A required red is what writes
+ * the P0 row the push → row → ack chain follows; an optional red writes a P1
+ * row and never stamps the head's red. Checks whose record carries no
+ * `completedAt` (external status contexts, a `--watch` snapshot) do not
+ * contribute; with none left the red is unknown. Equal instants keep the
+ * rollup's order.
+ *
+ * **Gotchas**
+ *
+ * `required` is GitHub's own flag, the one the inbox writer stamps P0 from. A
+ * matrix child of a required parent carries `required: false`, so its red
+ * does not stamp the head's red either.
+ *
+ * **Example** (The earliest required failing completion wins)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetFirstRed } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const red = (name: string, completedAt: string, required = true) =>
+ *   YeetWatchCheck.make({ name, outcome: "fail", required, completedAt: O.some(completedAt) })
+ * const first = yeetFirstRed([
+ *   red("Vercel", "2026-09-25T11:59:00Z", false),
+ *   red("Lint", "2026-09-25T12:05:00Z"),
+ *   red("Check", "2026-09-25T12:01:00Z")
+ * ])
+ * console.log(O.getOrNull(O.map(first, (value) => `${value.lane} ${value.at}`))) // "Check 2026-09-25T12:01:00Z"
+ * ```
+ *
+ * @param checks - One poll's checks for the head.
+ * @returns The earliest failing required check's name and `completedAt`, or `None` when no failing required check carries one.
+ * @category getters
+ * @since 0.0.0
+ */
+export const yeetFirstRed: (checks: ReadonlyArray<YeetWatchCheck>) => O.Option<YeetHeadRed> = flow(
+  A.filter((check: YeetWatchCheck) => check.required && check.outcome === YeetCheckOutcome.Enum.fail),
+  A.flatMap((check) => O.toArray(O.map(check.completedAt, (at) => YeetHeadRed.make({ at, lane: check.name })))),
+  A.sort(headRedOrder),
+  A.head
+);
 
 /**
  * One review thread within a watch snapshot: its identity and what it owes.

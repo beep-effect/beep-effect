@@ -1021,11 +1021,12 @@ describe("yeet planner", () => {
       "--json",
       "number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision",
     ]);
+    // The dry run names the seven fields the remote status collector requests.
     expect(findStep(remotePlan.steps, "status:remote-checks").args).toEqual([
       "pr",
       "checks",
       "--json",
-      "name,state,bucket",
+      "name,state,bucket,link,workflow,completedAt,startedAt",
     ]);
   });
 
