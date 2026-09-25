@@ -30,3 +30,16 @@ retry policy or time budget was added. The property covers schema positives and
 selected negatives, not exhaustive address classification.
 
 Ledger reconciliation and hosted PR closure remain separate steps.
+
+## Evidence provenance follow-up
+
+The active detector sidecar now matches current source identities in the
+standards baseline. All seven original detector dispositions are preserved in
+`2026-09-25-tailscale-original-detector-dispositions.jsonl`; together with the
+eight lens rows, these retain the original fifteen-row accounting.
+
+The current after-timing artifacts come from a second run at the committed
+migration head after merging PGlite evidence corrections. Collection-boundary
+headBefore/headAfter values identify that committed tree. The first sample ran
+on stable uncommitted source; its raw data, context and source manifest remain
+in private precommit receipts. No prior measured value was relabeled.
