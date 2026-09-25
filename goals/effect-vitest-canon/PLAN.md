@@ -746,7 +746,7 @@ The identity wave merged in PR #1216. The next dependency-ordered slice covers
 fc-runs and ontology-config from the existing inventory. Six ontology detector
 rows are resolved in source, two existing failure-polarity judgments are
 reasoned exceptions, and the two actionable lens findings are remediated.
-Fixing-commit references will be recorded after the implementation is committed.
+Fixing-commit references now point to e8df201fd44e62986d4a11299256102cbbd134f7.
 The baseline shrinks by six with no unrelated row changes or new findings.
 
 Both full package audits and Docgen checks passed. Node timings retain the
