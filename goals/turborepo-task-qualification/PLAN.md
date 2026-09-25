@@ -1836,3 +1836,16 @@ The normal census refresh retains 144 workspaces, 3473 nodes and 1970 executable
 nodes; only the repaired source binding changed. All 13 broader obligations
 remain attached. Extraction/application retain Git, filesystem, formatter and
 timestamp dependencies and writes; they are not read-only lint computations.
+
+### Package verification entrypoint — 2026-09-25
+
+Review 37 covers package selection/discovery and the shared changed-path
+mapping. Nineteen package-verifier tests and four synthetic mapping controls
+passed. Quick lint/check differs from full upstream-build/audit/docgen; missing
+scripts are skipped, not executed. Controlled shell stand-ins prove ordering
+and failure handling, not Turbo replay. See
+[the receipt](./research/package-verifier-review.json).
+
+Root policy paths map to no package, so mapping does not close root semantic
+inputs. Native quick evidence remains scoped to its actual run. All 13 broad
+census obligations remain open; no tuple lifecycle or proof ownership changed.

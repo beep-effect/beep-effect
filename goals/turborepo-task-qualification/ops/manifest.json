@@ -352,7 +352,8 @@
     "research/proof-authority-review.json",
     "research/environment-process-review.json",
     "research/hosted-closeout-review.json",
-    "research/quality-helper-review.json"
+    "research/quality-helper-review.json",
+    "research/package-verifier-review.json"
   ],
   "agentLaunchers": [
     {
