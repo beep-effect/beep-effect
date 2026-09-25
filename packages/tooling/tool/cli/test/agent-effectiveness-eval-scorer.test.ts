@@ -28,8 +28,12 @@ const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonSt
 const TestLayer = NodeServices.layer;
 const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);
 
-const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.scoped(Layer.build(TestLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+const provideLayer =
+  <ROut, E2>(layer: Layer.Layer<ROut, E2, never>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
+const provideTestLayer = provideLayer(TestLayer);
 
 const fixtureRoot = fileURLToPath(new URL("./fixtures/agent-effectiveness/scorer-pass/fixture", import.meta.url));
 const taskPath = fileURLToPath(new URL("./fixtures/agent-effectiveness/scorer-pass/task.json", import.meta.url));
@@ -252,7 +256,7 @@ describe("agent-effectiveness eval scorer", () => {
           yield* writeText(path.join(fixtureDir, "src", "Contact.ts"), "export const contact = 1;\n");
           return yield* evaluateLaw(fixtureDir, "/repo", ["src/Contact.ts"]);
         })
-      ).pipe(Effect.provide(recordingLawLayer(spawned)));
+      ).pipe(provideLayer(recordingLawLayer(spawned)));
       const commands = yield* Ref.get(spawned);
 
       expect(law).toEqual(emptyLaw);
