@@ -7,7 +7,7 @@
 
 import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
 import { NonNegativeInt } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { A, Str, thunk0 } from "@beep/utils";
 import { Clock, Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -19,6 +19,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import { materializeCacheDependencies } from "./Cache.dependencies.ts";
@@ -340,10 +341,7 @@ const classifyRun = (run: TurboRunSummary): CacheRunMode => {
 };
 
 const percentile = (values: ReadonlyArray<number>, fraction: number): number =>
-  A.match(A.sort(values, Order.Number), {
-    onEmpty: () => 0,
-    onNonEmpty: (sorted) => Math.round(sorted[Math.ceil(sorted.length * fraction) - 1] ?? 0),
-  });
+  O.getOrElse(O.map(nearestRank(values, fraction), Math.round), thunk0);
 
 const readRunFiles = Effect.fn("Cache.readRunFiles")(function* (runsDir: string) {
   const glob = new Bun.Glob("*.json");
