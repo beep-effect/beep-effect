@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/pglite",
+  "headBefore": "dd15e8c40e778490c0ff78a549e9d86c11736054",
+  "headAfter": "dd15e8c40e778490c0ff78a549e9d86c11736054",
+  "sourceManifestSha256": "dd1c34695c220cd8fc2b2dd8723d7d3cfd5ae01a8c6287ca98f745333252a2cf",
+  "rawReporterSha256": "9ee24fa922c71afbed7e7176c1c581ca8568ba9f0ef1804e6b799f8c3c2cddfc",
+  "rawLogSha256": "68bac539e4757ff0a5d34bd72a97c968b6380dfd71051a1d2ff6a6f7e8e8f976",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2",
+    "vitest": "5.0.1"
+  },
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.507930792999105,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "sampleCount": 23,
+  "maxLoad1": 25.55908203125,
+  "minimumMemAvailableGiB": 52.36945343017578,
+  "maxPressureAvg10": {
+    "cpu": 2.62,
+    "memory": 0.26,
+    "io": 0.12
+  },
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512258               512258               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512258               512258               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "registeredTestStatuses": {
+    "passed": 9,
+    "pending": 0
+  },
+  "acceptance": "Configured Node migration sample including native persistent database integration tests, not coverage or hosted proof. Workstation load recorded without adjustment. Runtime versions and test population differ from baseline; no causal speedup claimed."
+}

@@ -2827,6 +2827,7 @@
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2834,6 +2835,7 @@
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3506,14 +3508,18 @@
       {
         "from": "@beep/tailscale",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
-          "@beep/tailscale"
+          "@beep/tailscale",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
-          "@beep/tailscale"
+          "@beep/tailscale",
+          "@beep/test-runner"
         ]
       },
       {

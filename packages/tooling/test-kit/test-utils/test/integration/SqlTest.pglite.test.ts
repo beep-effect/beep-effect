@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import {
   makePgliteSqlTestLayer,
   makePgliteTestcontainerResource,
@@ -5,19 +6,17 @@ import {
   PgExternalTestDriver,
   PgliteInProcessTestDriver,
   PgliteTestcontainersTestDriver,
+  provideScopedLayer,
   SqlTestHarnessError,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
-import { beforeAll, describe, expect, it } from "@effect/vitest";
+import { beforeAll, describe, expect } from "@effect/vitest";
 import { Cause, Console, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
+import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const sharedConnectionUri = Bun.env.BEEP_TEST_DATABASE_URL;
 const hasSharedConnectionUri = sharedConnectionUri !== undefined && sharedConnectionUri !== "";
@@ -150,22 +149,54 @@ const schemaExists = Effect.fn("SqlTestIntegration.schemaExists")(function* (sch
   return A.isReadonlyArrayNonEmpty(rows);
 });
 
-const isContainerInspectable = Effect.fn("SqlTestIntegration.isContainerInspectable")(function* (containerId: string) {
-  const inspected = yield* Effect.tryPromise({
-    try: () =>
-      import("testcontainers")
-        .then(({ getContainerRuntimeClient }) => getContainerRuntimeClient())
-        .then((runtime) => runtime.container.inspect(runtime.container.getById(containerId)))
-        .then(() => true),
-    catch: () => false,
-  }).pipe(Effect.option, Effect.timeoutOption(ContainerInspectTimeout));
-
-  return pipe(
-    inspected,
-    O.flatten,
-    O.getOrElse(() => false)
+const isMissingContainer = S.is(S.Struct({ statusCode: S.Literal(404) }));
+const inspectContainer = (inspect: () => Promise<unknown>) =>
+  Effect.tryPromise({
+    try: inspect,
+    catch: (cause) =>
+      SqlTestHarnessError.make({
+        driver: "pglite-testcontainers",
+        phase: "teardown",
+        message: "Failed to inspect the test container.",
+        cause: O.some(cause),
+      }),
+  }).pipe(
+    Effect.as(true),
+    Effect.catchIf(
+      (error) => O.isSome(error.cause) && isMissingContainer(error.cause.value),
+      () => Effect.succeed(false)
+    ),
+    Effect.timeout(ContainerInspectTimeout),
+    TestClock.withLive
   );
+
+const isContainerInspectable = Effect.fn("SqlTestIntegration.isContainerInspectable")(function* (containerId: string) {
+  const runtime = yield* Effect.tryPromise({
+    try: () => import("testcontainers").then(({ getContainerRuntimeClient }) => getContainerRuntimeClient()),
+    catch: (cause) =>
+      SqlTestHarnessError.make({
+        driver: "pglite-testcontainers",
+        phase: "teardown",
+        message: "Failed to load the container inspection runtime.",
+        cause: O.some(cause),
+      }),
+  }).pipe(Effect.timeout(ContainerInspectTimeout), TestClock.withLive);
+  return yield* inspectContainer(() => runtime.container.inspect(runtime.container.getById(containerId)));
 });
+
+it.effect("recognizes only verified container absence during inspection", () =>
+  Effect.gen(function* () {
+    expect(yield* inspectContainer(() => Promise.resolve({}))).toBe(true);
+    expect(yield* inspectContainer(() => Promise.reject({ statusCode: 404 }))).toBe(false);
+    const cause = new Error("inspection transport unavailable");
+    const error = yield* inspectContainer(() => Promise.reject(cause)).pipe(Effect.flip);
+    expect(error).toBeInstanceOf(SqlTestHarnessError);
+    if (SqlTestHarnessError.is(error)) {
+      expect(error.cause).toEqual(O.some(cause));
+      expect(error.phase).toBe("teardown");
+    }
+  })
+);
 
 // The docker-free in-process driver is the default the gate selects; it needs no
 // env or container, so this block always runs and proves the default path.
@@ -378,7 +409,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
     Effect.fnUntraced(function* (ctx) {
       if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
-      const scope = yield* Scope.make();
+      const scope = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit));
       const services = yield* Layer.buildWithScope(makeSharedLayer(), scope);
       const info = Context.get(services, TestDatabaseInfo);
       const schemaName = yield* Effect.fromOption(info.schema).pipe(Effect.orDie);
@@ -392,7 +423,8 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
       yield* Scope.close(scope, Exit.void);
       const existsAfterClose = yield* schemaExists(schemaName).pipe(
         provideScopedLayer(makeExternalNoIsolationLayer(connectionUri)),
-        Effect.retry(PostCloseConnectRetryPolicy)
+        Effect.retry(PostCloseConnectRetryPolicy),
+        TestClock.withLive
       );
 
       expect(existsAfterClose).toBe(false);

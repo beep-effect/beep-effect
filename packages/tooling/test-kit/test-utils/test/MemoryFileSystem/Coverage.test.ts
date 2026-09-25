@@ -1,6 +1,7 @@
+import { it } from "@beep/test-runner";
 import * as Subject from "@beep/test-utils/MemoryFileSystem";
-import { assert, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assert } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -8,6 +9,7 @@ import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import type * as PlatformError from "effect/PlatformError";
@@ -481,7 +483,7 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
       yield* file.truncate();
       assert.strictEqual((yield* file.stat).size, BigInt(0));
       assert.strictEqual(yield* file.seek(BigInt(0), "current"), BigInt(0));
-      assert.isTrue(O.isNone(yield* file.readAlloc(1)));
+      assertNone(yield* file.readAlloc(1));
     })
   );
 
@@ -619,15 +621,25 @@ it.layer(Subject.layer)("MemoryFileSystem public operation boundaries", (it) => 
       const path = `${root}/file`;
       yield* fs.writeFileString(path, "initial");
       const first = yield* Deferred.make<void>();
+      const observed = yield* Ref.make<ReadonlyArray<Fs.WatchEvent>>([]);
       const events = yield* fs.watch(path).pipe(
+        Stream.tap((event) =>
+          Ref.updateAndGet(observed, (prefix) => A.take(A.append(prefix, event), 2)).pipe(
+            Effect.flatMap((prefix) => Effect.log("MemoryFS watch phase: awaiting two events", { observed: prefix }))
+          )
+        ),
         Stream.tap(() => Deferred.succeed(first, undefined)),
         Stream.take(2),
         Stream.runCollect,
         Effect.forkChild({ startImmediately: true })
       );
       yield* fs.writeFileString(path, "one");
+      yield* Effect.log("MemoryFS watch phase: await first delivery before second write", {
+        observed: yield* Ref.get(observed),
+      });
       yield* Deferred.await(first);
       yield* fs.writeFileString(path, "two");
+      yield* Effect.log("MemoryFS watch phase: await two deliveries", { observed: yield* Ref.get(observed) });
       assert.deepStrictEqual(A.fromIterable(yield* Fiber.join(events)), [
         { _tag: "Update", path },
         { _tag: "Update", path },
