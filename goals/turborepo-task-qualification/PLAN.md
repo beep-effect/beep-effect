@@ -1951,3 +1951,18 @@ not traversed, and this is not an execution or semantic-closure proof. See
 [the discovery inventory](./research/cli-relative-import-discovery.json).
 The attachment adds only the generated boundary file and its bounded review;
 all 14 unresolved obligations remain. No runtime evidence is renewed.
+
+### Tsconfig command and discovery boundary — 2026-09-25
+
+The tsconfig command review distinguishes default writes from check/dry-run.
+A package filter does not bound root planning or workspace discovery. Its
+external helpers depend on workspace population, canonical paths, manifest
+read outcomes and the selected Bun/Node glob backend; repeated reads are not
+a filesystem snapshot. See [the entrypoint review](./research/tsconfig-entrypoint-review.json)
+and [the discovery review](./research/tsconfig-discovery-review.json).
+
+All 15 command tests, 28 discovery/index tests and 14 package-local Glob tests
+pass. The attachment validator accepts 990 sources, six artifacts and 42 reviews,
+with all 14 unresolved obligations retained. Full planner/schema/formatter
+closure and runtime perturbation evidence remain incomplete. No cache tuple
+is promoted and historical runtime observations are not renewed.

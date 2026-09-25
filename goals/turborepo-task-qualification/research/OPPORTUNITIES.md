@@ -2093,3 +2093,10 @@ baseline was expanded to waive the findings.
 - `bun run fallow:boundaries:write` removes two obsolete permission entries;
   `bun run fallow:boundaries:check` passes. Dependency repair should refresh this
   projection alongside TypeScript references before publication.
+
+### 2026-09-25 — Root test selection omitted the Glob suite
+- Root `bunx vitest run packages/foundation/modeling/utils/test/Glob.test.ts`
+  returned `No test files found` (exit 1). The same suite run from the utils
+  package passed all 14 tests. Do not count an unselected suite as proof.
+- The executable census must retain runner project selection and package
+  working directory, alongside the literal test command.
