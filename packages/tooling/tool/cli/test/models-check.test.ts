@@ -1,5 +1,10 @@
 import {
+  CatalogModel,
+  CatalogSnapshot,
+  CodexModelsCache,
+  ModelsCatalog,
   ModelsCatalogLive,
+  ModelsCatalogSources,
   ModelsCheck,
   ModelsCheckLive,
   ModelsCheckOptions,
@@ -12,7 +17,9 @@ import {
   ModelsTargetLocation,
   resolveTargetPath,
   seedModelsManifest,
+  UpstreamCatalog,
 } from "@beep/repo-cli/commands/Models";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
@@ -80,7 +87,83 @@ const models = Layer.mergeAll(
   FixtureCatalogSources
 ).pipe(Layer.provide(platform));
 
-layer(Layer.mergeAll(platform, models))((it) => {
+layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
+  it.effect.prop(
+    "round trips schema-derived check reports",
+    [ModelsCheckReport],
+    Effect.fnUntraced(function* ([report]) {
+      expect(yield* decodeReport(yield* encodeReport(report))).toEqual(report);
+    }),
+    { arbitrary: fcRuns(16) }
+  );
+
+  it.effect("excludes raw account and extension metadata from persisted snapshots and reports", () =>
+    Effect.gen(function* () {
+      const sources = yield* ModelsCatalogSources;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const rawOnly = "__raw_only_metadata__";
+      const upstream = yield* S.decodeUnknownEffect(UpstreamCatalog)({
+        "codex-pro": [{ id: "gpt-6-astra", extension: rawOnly, thinking: { levels: ["medium"], extension: rawOnly } }],
+      });
+      const codex = yield* S.decodeUnknownEffect(CodexModelsCache)({
+        identity: { account: rawOnly },
+        models: [
+          {
+            slug: "gpt-6-astra",
+            extension: rawOnly,
+            supported_reasoning_levels: [{ effort: "medium", extension: rawOnly }],
+          },
+        ],
+      });
+      expect(codex.identity).toEqual({ account: rawOnly });
+      const { workspace, report } = yield* runCheckIn("manifest.yaml", false).pipe(
+        Effect.provideService(ModelsCatalogSources, {
+          ...sources,
+          fetchUpstream: Effect.succeed(upstream),
+          readCodexCache: () => Effect.succeedSome(codex),
+        })
+      );
+      const persisted = yield* fs.readFileString(
+        path.join(workspace.root, ".local", "state", "beep", "models", "latest.json")
+      );
+      expect(persisted).toContain("gpt-6-astra");
+      expect(persisted).not.toContain(rawOnly);
+      expect(yield* S.encodeUnknownEffect(S.fromJsonString(ModelsCheckReport))(report)).not.toContain(rawOnly);
+    })
+  );
+
+  it.effect("validates a Codex binding against its cache ladder rather than upstream levels", () =>
+    Effect.gen(function* () {
+      const catalog = yield* ModelsCatalog;
+      const snapshot = yield* catalog.snapshot({ home: "/home/op", offline: false });
+      const restricted = CatalogSnapshot.make({
+        ...snapshot,
+        models: A.map(snapshot.models, (model) =>
+          model.id === "gpt-6-astra" ? CatalogModel.make({ ...model, codexLevels: ["low"] }) : model
+        ),
+      });
+      const report = yield* runCheck("manifest.yaml").pipe(
+        Effect.provideService(ModelsCatalog, { snapshot: () => Effect.succeed(restricted) })
+      );
+      expect(kindsOf(report)).toContain("clean.toml:invalid-effort");
+      assertSome(
+        O.flatMap(
+          A.findFirst(report.findings, (entry) => entry.targetId === "clean.toml"),
+          (entry) => entry.current
+        ),
+        "gpt-6-astra"
+      );
+    })
+  );
+
+  it.effect("reports routable unbound Codex candidates without proposing hidden or already-bound slugs", () =>
+    Effect.gen(function* () {
+      const report = yield* runCheck("manifest.yaml");
+      expect(report.candidates).toEqual(["gpt-5.6-luna", "gpt-5.6-sol"]);
+    })
+  );
+
   it("resolves a manifest path against either root", () => {
     const at = (root: "home" | "repo", path: string) =>
       resolveTargetPath(ModelsTargetLocation.make({ root, path, home: "/home/op", repo: "/repo" }));
@@ -158,6 +241,13 @@ layer(Layer.mergeAll(platform, models))((it) => {
       expect(kinds).toContain("missing.file:missing-file");
       expect(kinds).toContain("missing.locator:missing-locator");
       expect(kinds).toContain("unknown.model:unknown-model");
+      assertSome(
+        O.flatMap(
+          A.findFirst(report.findings, (entry) => entry.targetId === "unknown.model"),
+          (entry) => entry.current
+        ),
+        "claude-fable-5-1"
+      );
       expect(kinds).toContain("missing.block:missing-locator");
       expect(kinds).toContain("invalid.effort:invalid-effort");
 
@@ -177,7 +267,7 @@ layer(Layer.mergeAll(platform, models))((it) => {
         O.flatMap(stale, (entry) => entry.current),
         "gpt-5.6-sol"
       );
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("round-trips the report through its encoded form", () =>

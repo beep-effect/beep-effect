@@ -6,6 +6,11 @@ P1 Implement, slice 1 landed (2026-09-22) in worktree `model-routing-sync`, bran
 `feat/model-routing-sync`. The packet was materialized from the compiled bootstrap plan. Slice 1 is
 deliberately read-only (R12); its smoke run is recorded in [`README.md`](./README.md).
 
+2026-09-24 acceptance follow-up: P2 local evidence now covers lossless external
+decoding, every conflict category, read-only hashes, missing JSDoc targets, and
+the JudgePack template. See `history/2026-09-24-slice-1-acceptance.md`. Full package
+proof and schema-first pass; P3 hosted closeout is the remaining delivery gate; S2 and S3 remain outside this goal.
+
 ## Phases
 
 - **P0 Research — complete.** Three Opus 5 exploration lanes (CLIProxyAPI catalog, `repo-cli` sync
@@ -27,10 +32,10 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
        the manifest binding names the bare `claude-fable-5-1`, so the `orchestrator x claude-code`
        row reports `stale` on a value that is arguably correct. Either the binding grows a
        context-window axis or the `json-key` locator grows a suffix-tolerant render.
-     - **`Qa/JudgePack.ts` has no slice-1 locator.** The R9 target is a `--model gpt-6-astra
+     - **`Qa/JudgePack.ts` locator — resolved in the acceptance follow-up.** The R9 target is a `--model gpt-6-astra
        --effort medium` fragment inside a template literal, not an `export const <symbol> = "…"`,
-       so the `ts-literal` grammar cannot address it. It is omitted from the seed manifest until a
-       locator tag that can reach it exists.
+       so the `ts-literal` grammar cannot address it. The read-only `line-value`
+       locator now covers both its model and effort without rewriting the template.
   3. **S3 lint + timer + shim.** Register `beep lint model-ids` with the R11 exclusions; render the
      daily `systemd --user` timer via `beep models install-timer` with the critical-notification
      drift path (R8); land the `$HOME/.local/bin/beep-models` shim (R5).
@@ -43,11 +48,11 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
 
 ## P4 Closeout Checklist
 
-- [ ] Reflection at `history/reflections/<date>-<agent>.md`; `bun run beep lint reflection-artifacts`.
-- [ ] `bun run beep goals set-status model-routing-sync completed-retained` in the final PR.
-- [ ] Friction receipts recorded in the active packet's opportunities ledger as they happen, not at
+- [x] Reflection at `history/reflections/<date>-<agent>.md`; `bun run beep lint reflection-artifacts`.
+- [x] `bun run beep goals set-status model-routing-sync completed-retained` in the final PR.
+- [x] Friction receipts recorded in the active packet's opportunities ledger as they happen, not at
       closeout.
-- [ ] `bun run beep goals index --write`; Atlas regenerated if `explore atlas --check` says stale.
+- [x] `bun run beep goals index --write`; Atlas regenerated if `explore atlas --check` says stale.
 
 ## Execution Notes
 

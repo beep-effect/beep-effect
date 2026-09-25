@@ -8,7 +8,7 @@
  * (`https://models.router-for.me/models.json`), the Codex CLI model cache
  * (`$HOME/.codex/models_cache.json`), the `cursor-agent models` listing, and a
  * running proxy's `GET /v1/models`. Upstream shapes decode permissively:
- * every field except the identifier is optional, unknown keys are ignored
+ * every field except the identifier is optional, unknown keys are preserved
  * rather than rejected, and effort-shaped strings stay raw strings so a new
  * upstream level never fails a whole snapshot. Normalization into the closed
  * {@link EffortLevel} domain happens once, when a {@link CatalogModel} is
@@ -23,6 +23,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Models/Models.catalog.schemas");
@@ -317,30 +318,39 @@ const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.Nu
  * @category models
  * @since 0.0.0
  */
-export class UpstreamThinkingSupport extends S.Class<UpstreamThinkingSupport>($I`UpstreamThinkingSupport`)(
-  {
+export const UpstreamThinkingSupport = S.StructWithRest(
+  S.Struct({
     min: looseOptional(S.Finite),
     max: looseOptional(S.Finite),
     zero_allowed: looseOptional(S.Boolean),
     dynamic_allowed: looseOptional(S.Boolean),
     levels: S.Array(S.String).pipe(looseOptional),
-  },
-  $I.annote("UpstreamThinkingSupport", {
+  }),
+  [S.Record(S.String, S.Unknown)]
+).pipe(
+  $I.annoteSchema("UpstreamThinkingSupport", {
     description: "Upstream reasoning-support block: token budget, dynamic flag, or discrete levels.",
   })
-) {}
+);
+
+/**
+ * Decoded external UpstreamThinkingSupport payload, including unrecognized fields.
+ *
+ * @see {@link UpstreamThinkingSupport} for lossless boundary decoding.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UpstreamThinkingSupport = typeof UpstreamThinkingSupport.Type;
 
 /**
  * One model entry inside an upstream provider section.
  *
  * **Details**
  *
- * `id` is the only required field; everything else is optional and unknown
- * keys are ignored by the decoder, so an upstream field this repo does not
- * consume (`config`, `supported_parameters`, `native_capabilities`, …) is
- * dropped rather than rejected. The consequence is deliberate: this schema is
- * a *reader*, and re-encoding an entry is lossy. Snapshots persist
- * {@link CatalogModel}, never this shape.
+ * `id` is the only required field. Unknown fields survive decoding and
+ * re-encoding, including nested thinking metadata (R1). This external wire
+ * boundary uses an open struct; normalized snapshots still persist only
+ * {@link CatalogModel}, never the raw payload.
  *
  * **Example** (Read an upstream entry)
  *
@@ -354,8 +364,8 @@ export class UpstreamThinkingSupport extends S.Class<UpstreamThinkingSupport>($I
  * @category models
  * @since 0.0.0
  */
-export class UpstreamModelEntry extends S.Class<UpstreamModelEntry>($I`UpstreamModelEntry`)(
-  {
+export const UpstreamModelEntry = S.StructWithRest(
+  S.Struct({
     id: S.NonEmptyString,
     object: looseOptional(S.String),
     created: looseOptional(S.Finite),
@@ -375,11 +385,22 @@ export class UpstreamModelEntry extends S.Class<UpstreamModelEntry>($I`UpstreamM
     supported_parameters: S.Array(S.String).pipe(looseOptional),
     supports_web_search: looseOptional(S.Boolean),
     thinking: looseOptional(UpstreamThinkingSupport),
-  },
-  $I.annote("UpstreamModelEntry", {
+  }),
+  [S.Record(S.String, S.Unknown)]
+).pipe(
+  $I.annoteSchema("UpstreamModelEntry", {
     description: "One model entry inside an upstream provider section; only the id is required.",
   })
-) {}
+);
+
+/**
+ * Decoded external UpstreamModelEntry payload, including unrecognized fields.
+ *
+ * @see {@link UpstreamModelEntry} for lossless boundary decoding.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UpstreamModelEntry = typeof UpstreamModelEntry.Type;
 
 /**
  * The whole upstream manifest: provider section to model entries.
@@ -496,15 +517,26 @@ export const CodexVisibilityIs = CodexVisibilityKit.is;
  * @category models
  * @since 0.0.0
  */
-export class CodexReasoningLevel extends S.Class<CodexReasoningLevel>($I`CodexReasoningLevel`)(
-  {
+export const CodexReasoningLevel = S.StructWithRest(
+  S.Struct({
     effort: S.NonEmptyString,
     description: looseOptional(S.String),
-  },
-  $I.annote("CodexReasoningLevel", {
+  }),
+  [S.Record(S.String, S.Unknown)]
+).pipe(
+  $I.annoteSchema("CodexReasoningLevel", {
     description: "One reasoning-effort rung offered for a cached Codex model slug.",
   })
-) {}
+);
+
+/**
+ * Decoded external CodexReasoningLevel payload, including unrecognized fields.
+ *
+ * @see {@link CodexReasoningLevel} for lossless boundary decoding.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CodexReasoningLevel = typeof CodexReasoningLevel.Type;
 
 /**
  * One model slug in the Codex CLI's cached model list.
@@ -526,8 +558,8 @@ export class CodexReasoningLevel extends S.Class<CodexReasoningLevel>($I`CodexRe
  * @category models
  * @since 0.0.0
  */
-export class CodexCacheEntry extends S.Class<CodexCacheEntry>($I`CodexCacheEntry`)(
-  {
+export const CodexCacheEntry = S.StructWithRest(
+  S.Struct({
     slug: S.NonEmptyString,
     display_name: looseOptional(S.String),
     description: looseOptional(S.String),
@@ -535,19 +567,31 @@ export class CodexCacheEntry extends S.Class<CodexCacheEntry>($I`CodexCacheEntry
     supported_reasoning_levels: S.Array(CodexReasoningLevel).pipe(looseOptional),
     visibility: looseOptional(S.String),
     context_window: looseOptional(S.Finite),
-  },
-  $I.annote("CodexCacheEntry", {
+  }),
+  [S.Record(S.String, S.Unknown)]
+).pipe(
+  $I.annoteSchema("CodexCacheEntry", {
     description: "One cached Codex CLI model slug with its reasoning ladder and picker visibility.",
   })
-) {}
+);
+
+/**
+ * Decoded external CodexCacheEntry payload, including unrecognized fields.
+ *
+ * @see {@link CodexCacheEntry} for lossless boundary decoding.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CodexCacheEntry = typeof CodexCacheEntry.Type;
 
 /**
  * The Codex CLI model cache at `$HOME/.codex/models_cache.json`.
  *
  * **Details**
  *
- * Only the fields this command consumes are modeled; the cache's `identity`
- * block is account-scoped and deliberately left undecoded.
+ * Known routing fields are validated; every other cache field is retained
+ * for lossless round trips. Account-scoped metadata is never projected into
+ * catalog snapshots or reports.
  *
  * **Example** (Read a cache envelope)
  *
@@ -561,17 +605,28 @@ export class CodexCacheEntry extends S.Class<CodexCacheEntry>($I`CodexCacheEntry
  * @category models
  * @since 0.0.0
  */
-export class CodexModelsCache extends S.Class<CodexModelsCache>($I`CodexModelsCache`)(
-  {
+export const CodexModelsCache = S.StructWithRest(
+  S.Struct({
     models: S.Array(CodexCacheEntry),
     client_version: looseOptional(S.String),
     etag: looseOptional(S.String),
     fetched_at: looseOptional(S.String),
-  },
-  $I.annote("CodexModelsCache", {
+  }),
+  [S.Record(S.String, S.Unknown)]
+).pipe(
+  $I.annoteSchema("CodexModelsCache", {
     description: "Codex CLI model cache envelope read from $HOME/.codex/models_cache.json.",
   })
-) {}
+);
+
+/**
+ * Decoded external CodexModelsCache payload, including unrecognized fields.
+ *
+ * @see {@link CodexModelsCache} for lossless boundary decoding.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CodexModelsCache = typeof CodexModelsCache.Type;
 
 // ── Cursor seat overlay ─────────────────────────────────────────────────────
 
@@ -927,6 +982,18 @@ export class CatalogModel extends S.Class<CatalogModel>($I`CatalogModel`)(
     provider: S.OptionFromOptionalKey(ProviderSection),
     origin: CatalogSource,
     levels: S.Array(EffortLevel),
+    upstreamLevels: S.Array(S.String).pipe(
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    codexLevels: S.Array(S.String).pipe(
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    grokLevels: S.Array(S.String).pipe(
+      S.withDecodingDefaultKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
     availability: CatalogAvailability,
   },
   $I.annote("CatalogModel", {

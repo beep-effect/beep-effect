@@ -1,5 +1,6 @@
 import {
   CatalogSnapshot,
+  CodexModelsCache,
   catalogModelsById,
   diffSnapshots,
   ModelsCatalog,
@@ -9,19 +10,84 @@ import {
   ModelsLedger,
   ModelsLedgerLive,
   mergeLayers,
+  parseCursorModelLines,
+  UpstreamCatalog,
 } from "@beep/repo-cli/commands/Models";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Option as O, Path } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { FixtureCatalogSources, readFixtureLayers } from "./helpers/models-fixtures.ts";
 
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const models = Layer.mergeAll(ModelsCatalogLive, ModelsLedgerLive, FixtureCatalogSources).pipe(Layer.provide(platform));
 
-layer(Layer.mergeAll(platform, models))((it) => {
+layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
+  it.effect.prop(
+    "preserves schema-derived upstream and Codex payloads through round trips",
+    [UpstreamCatalog, CodexModelsCache],
+    Effect.fnUntraced(function* ([upstream, codex]) {
+      expect(
+        yield* S.decodeUnknownEffect(UpstreamCatalog)(yield* S.encodeUnknownEffect(UpstreamCatalog)(upstream))
+      ).toEqual(upstream);
+      expect(
+        yield* S.decodeUnknownEffect(CodexModelsCache)(yield* S.encodeUnknownEffect(CodexModelsCache)(codex))
+      ).toEqual(codex);
+    }),
+    { arbitrary: fcRuns(16) }
+  );
+
+  it.effect("round trips unknown upstream and Codex fields, including nested reasoning metadata", () =>
+    Effect.gen(function* () {
+      const upstream = {
+        "new-provider": [
+          {
+            id: "new-model",
+            native_capabilities: { audio: true },
+            thinking: { levels: ["future-effort"], future_budget: 42 },
+          },
+        ],
+      };
+      const cache = {
+        identity: { synthetic: true },
+        models: [
+          {
+            slug: "new-model",
+            context_window: 900000,
+            future_field: ["retained"],
+            supported_reasoning_levels: [{ effort: "future-effort", future_metadata: 42 }],
+          },
+        ],
+      };
+      expect(
+        yield* S.encodeUnknownEffect(UpstreamCatalog)(yield* S.decodeUnknownEffect(UpstreamCatalog)(upstream))
+      ).toEqual(upstream);
+      expect(
+        yield* S.encodeUnknownEffect(CodexModelsCache)(yield* S.decodeUnknownEffect(CodexModelsCache)(cache))
+      ).toEqual(cache);
+    })
+  );
+
+  it("keeps Cursor seats without interpreting headings and usage tips as models", () => {
+    expect(
+      parseCursorModelLines(
+        [
+          "Available models",
+          "",
+          "auto - Auto (default)",
+          "gpt-6-astra - Astra",
+          "composer-2.5 - Composer 2.5",
+          "",
+          "Tip: use --model <id> to switch.",
+        ].join("\n")
+      )
+    ).toEqual(["auto", "gpt-6-astra", "composer-2.5"]);
+  });
+
   it.effect("merges layers into origin, provider, and availability", () =>
     Effect.gen(function* () {
       const fixtures = yield* readFixtureLayers();
@@ -44,6 +110,8 @@ layer(Layer.mergeAll(platform, models))((it) => {
       // `/v1/models` omitted astra on 2026-09-22; that must weaken proxy
       // availability without touching existence.
       strictEqual(astra.availability.proxy, false);
+      expect(astra.codexLevels).toContain("ultra");
+      expect(astra.upstreamLevels).not.toContain("ultra");
 
       // A Cursor seat id exists in no upstream section at all.
       const seat = model("composer-2.5");
@@ -58,6 +126,7 @@ layer(Layer.mergeAll(platform, models))((it) => {
       // An upstream level this repo does not model is dropped, not fatal.
       const future = model("future-model-1");
       expect([...future.levels]).toEqual(["low"]);
+      expect(future.upstreamLevels).toHaveLength(2);
     })
   );
 

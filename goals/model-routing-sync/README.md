@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -45,6 +45,15 @@ and the timer are slices 2 and 3.
 
 ## Latest Evidence
 
+- **2026-09-24 acceptance repair:** the [dated audit](history/2026-09-24-slice-1-acceptance.md)
+  covers all seven conflict categories, lossless live upstream/Codex round trips,
+  all 241 live Cursor seat IDs, and unchanged hashes for all 36 declared targets.
+  The repaired check reports 35 findings across 335 models and names unbound
+  candidates. Package quick and full verification, schema-first lint, and 39 focused tests
+  pass. The [follow-up decisions](DECISIONS.md) ratify full wire fidelity and
+  normalized-only persistence. Final Yeet/hosted closeout remains the delivery gate. The
+  [reflection](history/reflections/2026-09-24-codex.md) records the boundary-test
+  and acceptance-audit lessons.
 - **2026-09-22 slice-1 smoke run** (`beep models init` + `beep models check` against a scratch
   manifest, so the operator's `$HOME/.config/beep/` stayed untouched): **23 findings — 12
   `missing-locator`, 11 `stale` — across 318 catalog models**, with all five layers answering
