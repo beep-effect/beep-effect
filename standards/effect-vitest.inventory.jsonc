@@ -59608,6 +59608,258 @@
       "status": "open"
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:107:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 107,
+      "endLine": 107,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:60d3548e5c37d9b968c82343289c0982573f917b61b412913b3f1af2f539a835",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:129:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 129,
+      "endLine": 129,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:51d7ce7a04882c58614f00273f8ff7635a58d83693046fb26f50190cbfc45bee",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:148:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 148,
+      "endLine": 148,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:8a3828513c341a0424a274b9d12a29eef57dc419a1e81ad01701627472dcd682",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:44:provideScopedLayer@89#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 44,
+      "endLine": 44,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:c18d7e30cefd64b32a86678e71e67054c5a32d5e34269ded8ce7eebe39b9ef72",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:66:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 66,
+      "endLine": 66,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:a4c97a56fef9913592602cb33847d4e23c0ad920e539094dfda88d4d85a148cc",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:110:provideScopedLayer@16#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 110,
+      "endLine": 110,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:993fcce834105a6c887b94eca5c4e04c631726d374932b8ac140af471d37dd75",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:115:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 115,
+      "endLine": 115,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:cfdfe8c6fe7b0ac7dd1d02b5191a8f1ec58283b7e732c812467a81bab27dc006",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:14:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:dc70cb66334f174c5dbfd9f5fa6d4005cb0941c2c576dd3333ea52ade1ab14d4",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:70:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 70,
+      "endLine": 70,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:18c2229459c06d3a56cc624a04fde5900c7dd0125b79ceeee051181c9e8fe90c",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:71:provideScopedLayer@85#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 71,
+      "endLine": 71,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:870a7d8b21329d32312596029fbecc732793f6c7eae596b87a9791715be70f92",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:82:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 82,
+      "endLine": 82,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:d445488daf1ca0d90779ef48c663b89748200e17065fcb10027f253d06c75d61",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/refs-timer.test.ts:98:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "line": 98,
+      "endLine": 98,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:783a87f0cfcef92306bc008016d6e027cd962c2e19c2aef911cdf84ec411a9c5",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.service)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/research-command.test.ts:117:provideTestLayer@4#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -63693,6 +63945,90 @@
       "occurrence": "v2:314988e5197be152659a303c77597fabcc894f38ccc069754637672e7f339cd1",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Layer.fresh(FleetMirrorServiceLive))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/worktree-fleet.test.ts:351:provideScopedLayer@64#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "line": 351,
+      "endLine": 351,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:02874a17d3bb2bc112b275d1a90832836f3dcf015d2e43eda61379848e817ce7",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.config)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/worktree-fleet.test.ts:359:provideScopedLayer@57#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "line": 359,
+      "endLine": 359,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:e4ca736fbcfb10b54dab9d2b2a389d571d396d5bd4e06bca74590885138d2c5b",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.config)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/worktree-fleet.test.ts:364:provideScopedLayer@68#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "line": 364,
+      "endLine": 364,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:2bb8561facc3d80572304fcf2d52d196a8d816ed8097d20133bafbf67b193ddc",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.config)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/worktree-fleet.test.ts:377:provideScopedLayer@64#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "line": 377,
+      "endLine": 377,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:86960c698c8ff2236738b60c2b929c1648dd281d63b91ad04e6087ce49146d6d",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(f.config)",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -71621,13 +71957,13 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/library/ai-sync/test/ai-sync.test.ts:141:withTempDirectory@26#1",
+      "id": "EV003:packages/tooling/library/ai-sync/test/ai-sync.test.ts:143:withTempDirectory@26#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 141,
-      "endLine": 153,
+      "line": 143,
+      "endLine": 155,
       "symbol": "withTempDirectory",
       "occurrence": "v2:f2f46518b346817609034f7cb6f26a22c38833d528c4022da764e68105182523",
       "class": "resource-wrapper",
@@ -75115,9 +75451,9 @@
       "line": 13,
       "endLine": 24,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:554b740eb9fdd523b2944ca2f60eadb7f044bd0959a65fed199e7b8a4fd21c70",
+      "occurrence": "v2:bc4f3ebb4f231a2ec47d7205687e66e5ca7a5210d8b69ef53e6643422a0a02df",
       "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (tempDir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.fnUntraced(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory({",
+      "evidence": "<A, E, R>(use: (tempDir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory({ prefix:",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -115515,13 +115851,13 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:359:expect@10#1",
+      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:361:expect@10#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 359,
-      "endLine": 359,
+      "line": 361,
+      "endLine": 361,
       "symbol": "expect",
       "occurrence": "v2:0114796150d81a9e2739e5a87920322cf051f24bec4766b23edb859032ee9e71",
       "class": "hand-rolled-data-assertion",
@@ -115536,13 +115872,13 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:698:expect@6#1",
+      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:704:expect@6#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 698,
-      "endLine": 698,
+      "line": 704,
+      "endLine": 704,
       "symbol": "expect",
       "occurrence": "v2:2327d48fd89794010026ce5b7bf35cd1fc224fe3e0cb77e405780d0a67810f98",
       "class": "hand-rolled-data-assertion",
@@ -130354,6 +130690,69 @@
       "severity": "minor",
       "confidence": 0.55,
       "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:116:expect@6#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 116,
+      "endLine": 116,
+      "symbol": "expect",
+      "occurrence": "v2:1f24c990f6774b62c1d522639c72f3ce53a699cbb5deddca18785444b7f73a4e",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(O.isSome(status.members[0]?.coverage ?? O.none())).toBe(true)",
+      "replacement": {
+        "primitive": "utils.assertTrue",
+        "sketch": "Preserve this Option.isSome Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:117:expect@6#1",
+      "lens": "detector",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "line": 117,
+      "endLine": 117,
+      "symbol": "expect",
+      "occurrence": "v2:763012fee2353fc0f6dd7c90fe97a866f5a07c6958070822277a221a233fe89b",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(O.isNone(status.members[1]?.coverage ?? O.none())).toBe(true)",
+      "replacement": {
+        "primitive": "utils.assertNone",
+        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/refs-schemas.test.ts:20:expect@6#1",
+      "lens": "detector",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/refs-schemas.test.ts",
+      "line": 20,
+      "endLine": 20,
+      "symbol": "expect",
+      "occurrence": "v2:41e5faf88dec799d3987c07a408dd940f76e7c2280800a353a397ea5641c06c9",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(O.isNone(manifest.members[0]?.onlyDir ?? O.none())).toBe(true)",
+      "replacement": {
+        "primitive": "utils.assertNone",
+        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.95,
+      "mechanization": "detector",
       "status": "open"
     },
     {
@@ -146737,13 +147136,13 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/library/ai-sync/test/ai-sync.test.ts:106:checkEffect@24#1",
+      "id": "EV007:packages/tooling/library/ai-sync/test/ai-sync.test.ts:108:checkEffect@24#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 106,
-      "endLine": 117,
+      "line": 108,
+      "endLine": 119,
       "symbol": "checkEffect",
       "occurrence": "v2:2cfb178e65411577a03af058c880bebc51e358809c63f42dd74d4f132d141584",
       "class": "direct-arbitrary-check",
@@ -146758,13 +147157,13 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/library/ai-sync/test/ai-sync.test.ts:125:checkEffect@24#1",
+      "id": "EV007:packages/tooling/library/ai-sync/test/ai-sync.test.ts:127:checkEffect@24#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 125,
-      "endLine": 136,
+      "line": 127,
+      "endLine": 138,
       "symbol": "checkEffect",
       "occurrence": "v2:104deafa93a0faee0aa84ff20825172d1a26ce2d6fbf5ff52f890aaf073e685c",
       "class": "direct-arbitrary-check",
@@ -167423,15 +167822,15 @@
       "status": "open"
     },
     {
-      "id": "EV014:packages/tooling/library/ai-sync/test/ai-sync.test.ts:162:it.layer@0#1",
+      "id": "EV014:packages/tooling/library/ai-sync/test/ai-sync.test.ts:164:it.layer@0#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 162,
-      "endLine": 162,
+      "line": 164,
+      "endLine": 164,
       "symbol": "it.layer",
-      "occurrence": "v2:2a5d8d178c8d6397801f2fac04234cdc3ce3d6264a6e8ccbb271f3bd1d2872f6",
+      "occurrence": "v2:acc2cab6bdbd928783632c13d0d7aac9e3fe9ea6e8a785c68dce09727812a1b4",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)",
       "replacement": {
