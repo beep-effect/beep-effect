@@ -55,6 +55,14 @@ const decodeCrossOriginEmbedderPolicyHeaderEffect = S.decodeEffect(CrossOriginEm
 const decodeCrossOriginOpenerPolicyHeaderEffect = S.decodeEffect(CrossOriginOpenerPolicyHeader);
 const decodeCrossOriginResourcePolicyHeaderEffect = S.decodeEffect(CrossOriginResourcePolicyHeader);
 const encodeCrossOriginEmbedderPolicyHeaderEffect = S.encodeEffect(CrossOriginEmbedderPolicyHeader);
+const isExpectCtError = S.is(HeaderErrors.ExpectCtError);
+const isForceHttpsRedirectError = S.is(HeaderErrors.ForceHttpsRedirectError);
+const isFrameGuardError = S.is(HeaderErrors.FrameGuardError);
+const isNoOpenError = S.is(HeaderErrors.NoOpenError);
+const isNoSniffError = S.is(HeaderErrors.NoSniffError);
+const isPermissionsPolicyError = S.is(HeaderErrors.PermissionsPolicyError);
+const isPermittedCrossDomainPoliciesError = S.is(HeaderErrors.PermittedCrossDomainPoliciesError);
+const isReferrerPolicyError = S.is(HeaderErrors.ReferrerPolicyError);
 
 type HeaderLike = {
   readonly name: string;
@@ -238,12 +246,12 @@ describe("Secure header schemas", () => {
             },
           ] as const)
         ),
-        S.is(HeaderErrors.ExpectCtError),
+        isExpectCtError,
         assertTrue
       );
       pipe(
         yield* Effect.flip(ExpectCTHeader.createValue([true, { maxAge: -1 }] as never)),
-        S.is(HeaderErrors.ExpectCtError),
+        isExpectCtError,
         assertTrue
       );
     })
@@ -262,7 +270,7 @@ describe("Secure header schemas", () => {
       assertNone(yield* ForceHttpsRedirectHeader.createValue(false).pipe(Effect.orDie));
       pipe(
         yield* Effect.flip(ForceHttpsRedirectHeader.createValue([true, { maxAge: -1 }] as never)),
-        S.is(HeaderErrors.ForceHttpsRedirectError),
+        isForceHttpsRedirectError,
         assertTrue
       );
     })
@@ -310,7 +318,7 @@ describe("Secure header schemas", () => {
       pipe(yield* FrameGuardHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
       pipe(
         yield* Effect.flip(FrameGuardHeader.createValue(["allow-from", { uri: "not-a-url" }] as never)),
-        S.is(HeaderErrors.FrameGuardError),
+        isFrameGuardError,
         assertTrue
       );
     })
@@ -357,19 +365,11 @@ describe("Secure header schemas", () => {
       pipe(yield* PermittedCrossDomainPoliciesHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
       assertSome(yield* PermittedCrossDomainPoliciesHeader.createValue("all").pipe(Effect.orDie), "all");
 
-      pipe(
-        yield* Effect.flip(NoOpenHeader.createValue("invalid" as never)),
-        S.is(HeaderErrors.NoOpenError),
-        assertTrue
-      );
-      pipe(
-        yield* Effect.flip(NoSniffHeader.createValue("invalid" as never)),
-        S.is(HeaderErrors.NoSniffError),
-        assertTrue
-      );
+      pipe(yield* Effect.flip(NoOpenHeader.createValue("invalid" as never)), isNoOpenError, assertTrue);
+      pipe(yield* Effect.flip(NoSniffHeader.createValue("invalid" as never)), isNoSniffError, assertTrue);
       pipe(
         yield* Effect.flip(PermittedCrossDomainPoliciesHeader.createValue("invalid" as never)),
-        S.is(HeaderErrors.PermittedCrossDomainPoliciesError),
+        isPermittedCrossDomainPoliciesError,
         assertTrue
       );
     })
@@ -401,7 +401,7 @@ describe("Secure header schemas", () => {
           } as never,
         })
       );
-      pipe(invalid, S.is(HeaderErrors.PermissionsPolicyError), assertTrue);
+      pipe(invalid, isPermissionsPolicyError, assertTrue);
       pipe(
         yield* Effect.flip(
           decodePermissionsPolicyHeader({
@@ -462,7 +462,7 @@ describe("Secure header schemas", () => {
       );
       pipe(
         yield* Effect.flip(ReferrerPolicyHeader.createValue("unsafe-url" as never)),
-        S.is(HeaderErrors.ReferrerPolicyError),
+        isReferrerPolicyError,
         assertTrue
       );
     })

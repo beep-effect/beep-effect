@@ -37,6 +37,8 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 const encoder = new TextEncoder();
 const tailscaleStatusJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.100.100.100","fd7a:115c:a1e0::1","192.168.1.20"]}}`;
 const tailscaleStatusWithSingleIpJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.90.1.2"]}}`;
+const TailscaleStatusJsonFromString = S.fromJsonString(TailscaleStatusJson);
+const encodeTailscaleStatusJson = S.encodeEffect(TailscaleStatusJsonFromString);
 
 function mockHandle(result: { stdout?: string; stderr?: string; code?: number }) {
   return ChildProcessSpawner.makeHandle({
@@ -135,7 +137,7 @@ describe("tailscale", () => {
             ],
           }),
         });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(TailscaleStatusJson))(statusJson);
+        const encoded = yield* encodeTailscaleStatusJson(statusJson);
         const status = yield* parseTailscaleStatus(encoded);
         assert.deepEqual(status.tailnetIpv4Addresses, expected);
       }),

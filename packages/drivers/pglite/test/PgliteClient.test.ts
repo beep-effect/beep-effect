@@ -22,6 +22,10 @@ const PgliteErrorWithCauseArbitrary = Arbitrary.schema(PgliteError).pipe(
 );
 const encodePgliteError = S.encodeUnknownResult(PgliteError);
 const decodePgliteError = S.decodeUnknownResult(PgliteError);
+const encodePgliteErrorEffect = S.encodeEffect(PgliteError);
+const decodePgliteErrorEffect = S.decodeEffect(PgliteError);
+const NativeErrorInstance = S.ErrorInstance();
+const decodeNativeErrorInstance = S.decodeUnknownEffect(NativeErrorInstance);
 
 describe("PgliteError", () => {
   it("normalizes an unknown failure into the tagged driver error", () => {
@@ -50,12 +54,12 @@ describe("PgliteError", () => {
     [PgliteErrorWithCauseArbitrary],
     ([error]) =>
       Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(PgliteError)(error);
-        const decoded = yield* S.decodeEffect(PgliteError)(encoded);
-        expect(yield* S.encodeEffect(PgliteError)(decoded)).toEqual(encoded);
+        const encoded = yield* encodePgliteErrorEffect(error);
+        const decoded = yield* decodePgliteErrorEffect(encoded);
+        expect(yield* encodePgliteErrorEffect(decoded)).toEqual(encoded);
         expect(decoded.operation).toBe(error.operation);
         expect(decoded.message).toEqual(error.message);
-        const cause = yield* S.decodeUnknownEffect(S.ErrorInstance())(yield* Effect.fromOption(decoded.cause));
+        const cause = yield* decodeNativeErrorInstance(yield* Effect.fromOption(decoded.cause));
         expect(cause.name).toBe("PgliteNativeError");
         expect(cause.message).toBe(error.operation);
         expect(cause.stack).toBe("PGlite native stack");
