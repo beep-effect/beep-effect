@@ -22,6 +22,7 @@
 "@beep/chalk": patch
 "@beep/ciops": patch
 "@beep/codegen-kit": patch
+"@beep/cosmos": patch
 "@beep/colors": patch
 "@beep/db-admin": patch
 "@beep/discord": patch
