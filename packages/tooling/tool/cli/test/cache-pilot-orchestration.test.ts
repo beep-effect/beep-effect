@@ -193,7 +193,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   });
   const selectedDependencies =
     closureFault === "unexpected" ? [...dependencyTasks, "@beep/unreviewed#lint"] : dependencyTasks;
-  const nodes = A.map([task, ...selectedDependencies], (id) =>
+  const nodes = A.map(A.prepend(selectedDependencies, task), (id) =>
     CacheCensusNode.make({
       id,
       workspace: O.getOrThrow(A.head(Str.split("#")(id))),
