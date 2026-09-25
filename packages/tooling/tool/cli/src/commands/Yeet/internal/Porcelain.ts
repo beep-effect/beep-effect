@@ -28,13 +28,20 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
+import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
-import { YeetUntilMergedPolicy, yeetMonitorExitFor } from "./MonitorPolicy.ts";
+import {
+  YeetMonitorAttachment,
+  YeetUntilMergedPolicy,
+  yeetMonitorExitFor,
+  yeetMonitorPolicyConverges,
+} from "./MonitorPolicy.ts";
+import { readCurrentProofJobRecord, updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import { runGhPullRequestView } from "./PullRequest.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
@@ -113,13 +120,62 @@ interface YeetMonitorRouteDependencies {
 
 const hydrateMonitoredContext = Effect.fn("Yeet.hydrateMonitoredContext")(function* (
   options: YeetPorcelainOptions,
-  dependencies: YeetMonitorRouteDependencies
+  dependencies: YeetMonitorRouteDependencies,
+  bindPullRequest: boolean
 ) {
   const context = yield* (dependencies.hydrate ?? hydrateYeetReadOnlyContext)(options);
   const pullRequest = yield* (dependencies.view ?? runGhPullRequestView)(context);
   yield* recordMonitoredPrSession(context, pullRequest.number, dependencies.capture, dependencies.registry);
+  // Inside a detached job, bind the pull request to the job record so
+  // `yeet job wait` returns only on waves for this pull request. Outside a job
+  // this is a no-op, and a failed bind is reported, never fatal. An
+  // until-ready loop binds later, after it pins the wave record to the head
+  // it observes, so the waiter never reads the previous head's rows as new.
+  if (bindPullRequest) {
+    yield* updateProofJobBookkeeping(context.repoRoot, (launcher, jobId) =>
+      launcher.bindPullRequest(jobId, pullRequest.number)
+    );
+  }
   return context;
 });
+
+// Words a shell reads back unchanged, so the re-run can be printed verbatim.
+const plainShellWord = /^[A-Za-z0-9_./:=@%+,-]+$/u;
+
+/**
+ * The command an attached monitor's wave gate line names as its re-run.
+ *
+ * **Details**
+ *
+ * The re-run of an attached `yeet monitor --until-ready` is the command the
+ * operator ran: the CLI words after the entrypoint, behind `bun run beep`. It
+ * is `None` when those words do not start with `yeet` or a word would need
+ * shell quoting; the loop then names the canonical attached recipe.
+ *
+ * **Example** (Echo the operator's command)
+ *
+ * ```ts
+ * import { yeetAttachedMonitorRerunCommand } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const argv = ["bun", "/repo/bin.ts", "--", "yeet", "monitor", "--until-ready", "--settle-timeout", "20m"]
+ * console.log(O.getOrNull(yeetAttachedMonitorRerunCommand(argv)))
+ * // "bun run beep yeet monitor --until-ready --settle-timeout 20m"
+ * ```
+ *
+ * @param argv - The process argv: runtime, entrypoint, then the CLI words.
+ * @returns The re-run command, or `None` when it cannot be printed verbatim.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const yeetAttachedMonitorRerunCommand = (argv: ReadonlyArray<string>): O.Option<string> =>
+  O.map(
+    O.liftPredicate(
+      A.dropWhile(A.drop(argv, 2), (word) => word === "--"),
+      (words) => O.contains(A.head(words), "yeet") && A.every(words, (word) => plainShellWord.test(word))
+    ),
+    (words) => `bun run beep ${A.join(words, " ")}`
+  );
 
 /**
  * Parsed `yeet sweep` flag values. `plan` is the dry run — observe the clone,
@@ -469,17 +525,29 @@ export const runYeetMergeLoop: {
     YeetCommandError | CliReportedExit,
     Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
-    const context = yield* hydrateMonitoredContext(options, dependencies);
+    const policy =
+      dependencies.policy ??
+      YeetUntilMergedPolicy.make(
+        dependencies.settleTimeoutMs === undefined ? {} : { settleTimeoutMs: dependencies.settleTimeoutMs }
+      );
+    const context = yield* hydrateMonitoredContext(options, dependencies, !yeetMonitorPolicyConverges(policy));
+    // A detached job's comment window starts at its submit time
+    // (pr-event-awareness D32); an attached run starts it with the loop.
+    const job = yield* readCurrentProofJobRecord(context.repoRoot);
+    // Only a job's unit sets BEEP_YEET_JOB_ID, the same test that routes the
+    // loop through the job's outcome reporting.
+    const attachment = O.isSome(yield* configStringOption("BEEP_YEET_JOB_ID"))
+      ? YeetMonitorAttachment.Enum.detached
+      : YeetMonitorAttachment.Enum.attached;
     const terminal = yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {
+      attachment,
       collectStatus: dependencies.collectStatus,
+      commentsSince: O.getOrUndefined(O.map(job, (record) => record.submittedAt)),
       rulesetRead: dependencies.rulesetRead,
       closeout: dependencies.closeout,
       capture: dependencies.capture,
-      policy:
-        dependencies.policy ??
-        YeetUntilMergedPolicy.make(
-          dependencies.settleTimeoutMs === undefined ? {} : { settleTimeoutMs: dependencies.settleTimeoutMs }
-        ),
+      policy,
+      waveRerunCommand: O.getOrUndefined(yeetAttachedMonitorRerunCommand(process.argv)),
     });
     const exit = yeetMonitorExitFor(terminal);
     yield* Console.log(`[yeet] ${exit.summary}`);
@@ -551,7 +619,7 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
   YeetCommandError | CliReportedExit,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const context = yield* hydrateMonitoredContext(options, dependencies);
+  const context = yield* hydrateMonitoredContext(options, dependencies, true);
   const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {
     intervalMillis: YEET_WATCH_INTERVAL_MILLIS,
     rulesetRead: dependencies.rulesetRead,
