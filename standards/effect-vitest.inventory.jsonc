@@ -169137,6 +169137,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Intentional shorter handshake-failure scope: close the fake socket reader and acquired protocol resources before inspecting the rejected handshake error. Deferring release until whole-test teardown changes the failure observation boundary."
+    },
+    {
+      "id": "EV009:packages/tooling/test-kit/test-runner/test/Vitest.test.ts:437:it.live@0#1",
+      "lens": "resource",
+      "ruleId": "EV009",
+      "package": "@beep/test-runner",
+      "file": "packages/tooling/test-kit/test-runner/test/Vitest.test.ts",
+      "line": 437,
+      "endLine": 451,
+      "symbol": "it.live",
+      "occurrence": "v2:dc3853eead4fff4369a51e30a5425a8663a55a8380639401a3aa0f4a62eefa81",
+      "class": "unjustified-live-test",
+      "evidence": "it.live.each([ [2, 3], [2, 3], ])( \"keeps duplicate live tuple %i + %i\", (...values) => Effect.gen(function* () { expect(values).toEqual([[2, 3]]); duplicateTupleStarts += 1; if (duplicateTupleStarts",
+      "replacement": {
+        "primitive": "it.effect",
+        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The live tester API is the regression subject: duplicate tuple cases must retain per-invocation context under concurrent it.live.each. Replacing it with it.effect removes live-path coverage. Deferred barriers and yieldNow do not read or advance TestClock."
+    },
+    {
+      "id": "EV014:packages/tooling/test-kit/test-runner/test/Vitest.test.ts:413:it.layer@0#1",
+      "lens": "resource",
+      "ruleId": "EV014",
+      "package": "@beep/test-runner",
+      "file": "packages/tooling/test-kit/test-runner/test/Vitest.test.ts",
+      "line": 413,
+      "endLine": 413,
+      "symbol": "it.layer",
+      "occurrence": "v2:57e89ec6469071a1742285365287ece14fc7ca35510991479d9722c0aec149dd",
+      "class": "resource-layer-without-hook-timeout",
+      "evidence": "it.layer(CaseProbeLayer, { concurrent: true })",
+      "replacement": {
+        "primitive": "it.layer.option.timeout",
+        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This layer acquires only an in-memory Probe value and synchronous ConfigProvider/Logger services. Its release increments an in-memory counter; it performs no external I/O or clock waits. The default hook budget is sufficient; concurrent acquisition and exactly-once cleanup are the regression subjects."
     }
   ]
 }
