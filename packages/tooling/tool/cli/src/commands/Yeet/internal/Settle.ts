@@ -43,7 +43,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
 import {
   HEAVY_ADMISSION_LABEL,
   HEAVY_CONTEXT_PREFIX,
@@ -452,10 +452,15 @@ export const captureRepoCommandStrict = Effect.fn("Yeet.captureRepoCommandStrict
  * The read is `-z`, so paths arrive NUL-separated and verbatim: without it git
  * applies `core.quotePath` and a path carrying a non-ASCII byte, a quote or a
  * newline comes back C-quoted and would be mapped to the wrong package or to
- * none. Paths are therefore never trimmed — a leading or trailing space is part
- * of the name. `--no-renames` is set because rename detection reports only the
- * destination path, and a lane that verified the source path must see it change
- * too; a rename surfaces as both sides, which is a superset of the default.
+ * none. It also runs through {@link runRepoCommandCaptureRaw} rather than the
+ * default capture, because that one trims the whole buffer and merges stderr:
+ * a NUL is not whitespace, so trimming eats a leading space that belongs to the
+ * first path, and a stderr fragment carries no NUL and fuses with the record
+ * next to it. Nothing here trims a path, and a caller that injects its own
+ * capture owns that guarantee. `--no-renames` is set because rename detection
+ * reports only the destination path, and a lane that verified the source path
+ * must see it change too; a rename surfaces as both sides, which is a superset
+ * of the default.
  *
  * **Example** (Build the strict reader effect)
  *
@@ -477,14 +482,14 @@ export const captureRepoCommandStrict = Effect.fn("Yeet.captureRepoCommandStrict
  * ```
  *
  * @param context - Repo context naming the checkout and its base ref.
- * @param capture - The command capture to run `git` through; the repo capture by default.
+ * @param capture - The command capture to run `git` through; the untrimmed stdout capture by default.
  * @returns The changed paths, non-empty and unmodified.
  * @category services
  * @since 0.0.0
  */
 export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsStrict")(function* (
   context: RepoRunContext,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+  capture: typeof runRepoCommandCapture = runRepoCommandCaptureRaw
 ): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const range = `${context.base}...HEAD`;
   const output = yield* captureRepoCommandStrict({
@@ -511,6 +516,14 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
  * {@link readYeetChangedPathsStrict} for why the read is NUL-separated and
  * rename-free.
  *
+ * `-z` corrects the docs-only rule as well as the tripwire, and the correction
+ * is intended. Without it git applies `core.quotePath`, so
+ * `packages/x/README-café.md` arrived as a quoted, backslash-escaped literal
+ * that failed the heavy-admission `\.md$` test and held a head that is in fact
+ * docs-only. It now arrives unquoted and matches, so such a head skips the
+ * heavy matrix. A rename likewise now contributes both of its paths rather than
+ * only the destination, which can only widen what the rule sees.
+ *
  * **Example** (Build the reader effect)
  *
  * ```ts
@@ -531,14 +544,14 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
  * ```
  *
  * @param context - Repo context naming the checkout and its base ref.
- * @param capture - The command capture to run `git` through; the repo capture by default.
+ * @param capture - The command capture to run `git` through; the untrimmed stdout capture by default.
  * @returns The changed paths, non-empty and unmodified; empty when the diff could not be read.
  * @category services
  * @since 0.0.0
  */
 export const readYeetChangedPaths = Effect.fn("Yeet.readYeetChangedPaths")(function* (
   context: RepoRunContext,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+  capture: typeof runRepoCommandCapture = runRepoCommandCaptureRaw
 ): Effect.fn.Return<ReadonlyArray<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* readYeetChangedPathsStrict(context, capture).pipe(Effect.orElseSucceed(A.empty<string>));
 });

@@ -2340,3 +2340,53 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   evidence store whose lifetime is shorter than the sample it is meant to accumulate is a store
   that will read empty forever, and nothing in the report says so — `proof-report` printed
   `attempts 0/200` as if the work simply had not happened yet.
+
+## 2026-09-24 — shadow mode's disagreement criterion is unreachable in production
+
+- Doing: answering a review thread on #1217 that asked why failed lanes carry no package scope, and
+  checking what the shadow pass can actually observe once that answer is written down.
+- Evidence: a disagreement is `isDisagreement = isHit(row.decision) && !isPassed(row.observed)`
+  (`~/beep-effect/packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts`), so it needs a
+  lane that hit the ledger and then failed. A red lane cannot hit. `readTurboLaneDigest` folds a digest
+  only when every selected task passed or replayed from cache
+  (`.../commands/Quality/internal/TurboLaneDigest.ts` `taskPassed`, and C3's rule that "a lane never
+  records a reusable digest for a red run"), and `resolveLaneInputDigestSource`
+  (`.../commands/Quality/Tasks.ts`) short-circuits on `O.isSome(outcome.failure)` to the declared
+  digest, which every production lane tuple sets to `O.none()` (`runGithubCheckLane` in the same file,
+  `ciLocalLaneInputsForTesting` in `.../commands/Ci/CiLane.ts`). So a failed lane's key is always
+  `undeclared` and `decideAgainstFacts` refuses it as `undeclared-inputs` before any fact is read. Every
+  disagreement counter — the attempt summary's, `ProofShadowReport.disagreements` and
+  `barDisagreements`, `ProofLedger.disagreements` — is therefore structurally zero, and ruling 7's
+  `disagreements: 0` criterion in `ProofShadowEnforcementBar.ratified` is satisfied by construction
+  rather than by evidence. The only fixtures that show detection working build a failed lane *with* a
+  digest (`.../test/proof-shadow.test.ts`, the first-attempt and would-reuse-hit cases), a state
+  production never produces — which is why the gap survived C4.1 and C5 with green tests.
+- Prevention: not in this PR. Proposed as ruling 72 in `research/c5-must-fail-fixtures-grill.md` — fold
+  task hashes into the lane digest regardless of task outcome, since the Turbo hash is input-derived,
+  and resolve digest and scope on the failure branch too, keeping the recorded fact's outcome `failed`
+  (which `decideExactFact` already answers with a `prior-failed` miss, never a hit). The general lesson:
+  a safety criterion whose failure mode no production path can reach reads green forever, and a fixture
+  that reaches it through a state the system cannot produce is evidence the criterion works, not
+  evidence it is live. C4.2 must not enforce on a bar that cannot fail. Reading the tripwire's own scope
+  the same way turned up a second gap, recorded as an open question against ruling 69 in the same grill
+  draft: the changed set drops every path under no workspace, and the epoch it defers to is only six
+  named inputs, so `standards/*.jsonc`, `biome.json`, `.github/workflows/` and `scripts/` trip nothing.
+
+## 2026-09-24 — a detached proof job proves whatever tree the lane holds while an agent keeps editing it
+
+- Doing: publishing #1217 twice with
+  `bun run beep yeet publish --start-pr-early --monitor --pr --detach` while an implementer agent kept
+  working in the same lane worktree.
+- Evidence: the first job's `fallow:audit` and the second job's `quality:lint` both went red against a
+  working tree that was mid-edit rather than against the head they pushed. The second one named a biome
+  format finding in
+  `~/beep-effect-worktrees/<lane>/packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts`,
+  a file that is not in the pushed head at all — it existed only as an uncommitted edit in the lane. The
+  pushed head was fine on both gates. The reds are real findings about a tree nobody asked about, and
+  attributing them to the PR costs a triage cycle each time.
+- Prevention: not in this PR. The detached job should prove the head it pushed — a temporary worktree at
+  that commit, or an index-only checkout — rather than the live lane, or refuse to start while the lane
+  is dirty. Until then the operator serializes edits behind the proof, or reads such a red as
+  mixed-tree before attributing it. The general lesson: a proof is only evidence about a named commit
+  if the thing it measured is that commit; "ran in the lane" and "proved the head" are different
+  claims, and the job currently reports the second while doing the first.

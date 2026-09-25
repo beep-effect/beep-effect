@@ -298,9 +298,12 @@ export const workspaceForFile: {
  *
  * Every path is mapped through {@link workspaceForFile} and the names are
  * deduped and sorted, so the result is a stable set rather than an echo of the
- * input order. Paths under no workspace contribute nothing: root config is
- * already the proof epoch and documentation is not package source
- * (time-to-certainty ruling 69). Both `quality package-verify`'s auto-detect
+ * input order. Paths under no workspace contribute nothing, which is
+ * time-to-certainty ruling 69's scope rather than a claim that they are covered
+ * elsewhere: the proof epoch covers six named root inputs, documentation is not
+ * package source, and other root-level lane inputs (`standards/*.jsonc`,
+ * `biome.json`, `.github/workflows/`, `scripts/`) are a known gap open against
+ * that ruling. Both `quality package-verify`'s auto-detect
  * and the Yeet verdict writer's changed-package tripwire read the same
  * mapping, so a path can never name one package to one of them and another to
  * the other.
