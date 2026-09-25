@@ -47,8 +47,8 @@ within these constraints.
 
 - **`ReferenceMember`** — `name` (directory name under the theme root, also the `.repos/<name>`
   link name), `url` (clone URL), `tier` (`LiteralKit(["deep", "structural"])`), optional
-  `onlyDir` (repo-relative paths passed as repeated `--only-dir`), optional `branch` (default
-  `main`).
+  `onlyDir` (repo-relative paths passed as repeated `--only-dir`). No branch field: R9 refreshes
+  `main` only, so the schema cannot describe a member the refresh would always skip.
 - **`ReferenceWorkspaceManifest`** — `schemaVersion: "beep-references/v1"`, `theme` (`"effect"`),
   `rootDefault` (`"$HOME/YeeBois/references/effect"`, written with `$HOME`, resolved against the
   `home` parameter), `members: ReadonlyArray<ReferenceMember>`, `workspaceLink`
