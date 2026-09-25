@@ -1,0 +1,71 @@
+{
+  "kind": "r36-capability-owner-disposition/v1",
+  "createdAt": "2026-09-25T06:56:12.596467+00:00",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMainSha": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "inputSha256": {
+    "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts": "45e91461e7d58b144d8a99b664412d89ea8ac4f3713a2d1d9f6c936c6690d602",
+    "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb",
+    "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts": "5dd5f1850bfe3e914f638972c159e09ba3d24e88db17c315ad9f62a8e13d71f4",
+    "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts": "b00bac0173281341f9c58e4af6d1f42fa49690eb154f97e47d4e3eec47bcdfe6",
+    "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts": "f0f7370e52c6de1d010aed5f72e05a315e31896fd52213b2393a582bb180c9e0",
+    "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts": "713a63c9ee288a60dd86385a88a0e297719cf80cef784cdb91b99f2b8956e47d",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "goals/boolean-creep/data/inventory.jsonl": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+    "goals/boolean-creep/designs/r2-foundation-graph-validation-result.md": "344d9f22031f44ce6ee15dbe867942a5adb7f87fdfc7365352cee944b03cb2c0",
+    "goals/boolean-creep/designs/r2-foundation-unique-match-search.md": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-foundation-capability.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-foundation-capability.execution.json": "441f196dd1a9ee63a3db4af5abc7389374dc9501b8470c6f974e574cbba208db"
+  },
+  "sourceFilesMatchRoundFrozenBindings": true,
+  "withdrawIds": [
+    "r2-foundation-graph-validation-result"
+  ],
+  "newQualifiedIds": [],
+  "newDisqualifiedIds": [],
+  "metadataEditCount": 0,
+  "completeOwner": {
+    "symbol": "ValidationResult",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    "lines": [
+      527,
+      558
+    ],
+    "instanceFields": {
+      "errors": "required Array<String>",
+      "valid": "Boolean",
+      "warnings": "required Array<String>"
+    },
+    "booleanMembers": [
+      "valid"
+    ],
+    "inheritance": "S.Class built directly from three-field object; no domain base-class field extension or spread.",
+    "helpers": "static valid() writes true with empty errors/warnings; invalid(errors) writes false and permits empty errors; withWarnings spreads the same three-field result and replaces warnings only. Static callable valid is not an instance Boolean member.",
+    "disposition": "withdraw-outside-recall",
+    "reason": "Only one actual Boolean in complete owner. Required errors array is always present; emptiness/nonemptiness is not sibling optional payload presence or an additional Boolean. The documented errors=>!valid relation and accepted invalid([]) behavior remain real but cannot bypass the >=2Boolean recall gate."
+  },
+  "priorRulingReview": "SPEC/DECISIONS contain no ValidationResult-specific recall exception. Existing design qualifies via a coarse errors-array presence projection but does not identify a second Boolean. No wider inherited/spread owner repairs recall.",
+  "designActions": {
+    "archiveIds": [
+      "r2-foundation-graph-validation-result"
+    ],
+    "dependentDesignChanges": [],
+    "dependencySearch": "Searched ValidationResult and its exact ID across all design docs plus SPEC/DECISIONS. Matches only the owner design; no other design depends on this migration."
+  },
+  "uniqueMatchBoundary": "UniqueMatchSearch32 has ambiguous:Boolean plus match:Option. MinimalFoldMatchSearch114 extends it with exhausted:Boolean115, so the current combined qualification has a real inherited two-Boolean complete owner. This locator audit does not withdraw or re-review that design.",
+  "expectedInventoryDelta": {
+    "records": -1,
+    "qualified": -1,
+    "disqualified": 0
+  },
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationCredit": false,
+  "trackedFilesModified": false,
+  "refsMoved": false,
+  "proposalSha256": {
+    "metadata-updates.json": "a90711a99a587b4a4123e0dcd76487c8e6ddabb692641c5c092e0c1b31decee1",
+    "withdrawn-rows.jsonl": "cf4221f5d455d8ecdf86adb6b916b667bd932be3f622537abe20c535844a1a01"
+  }
+}

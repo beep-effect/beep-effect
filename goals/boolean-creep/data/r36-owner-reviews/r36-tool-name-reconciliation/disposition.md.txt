@@ -1,0 +1,19 @@
+# R36 ToolNameCollisionRow audit
+
+**Reject `r36-drivers-g-m-tool-name-collision-row-truncation` as outside the campaign recall net. No inventory addition, replacement D1, withdrawal, or new design.**
+
+Source `35f8454d0414d8f79284fdc9e92c84379d919a3e`; main `2bf1e16bbf368a962df32f912ef01b5f9860e7da`. Source bytes match R36 frozen inputs. Eight exact input hashes are recorded in disposition.json.
+
+## Complete owner
+
+ToolNameCollisionRow145-159 directly declares candidate, digest, duplicateVerdict, finalWireName, normalized, originalOperationId, source and truncated. Only truncated154 is Boolean. Digest148 is nullable string; verdict is a literal domain; names and identities are strings. No inherited/spread schema fields supply another Boolean. The enclosing report is an array/literal wrapper, not a source of sibling row flags.
+
+The raw line154 correctly names the Boolean field, while the declaration starts145. Its internal producer toolNameRow322-338 derives the flag from digest Option presence. The later row copy502-510 changes only duplicateVerdict. These facts establish an internal correlation but cannot bypass the >=2 actual Boolean owner rule. The raw4/2 figure is a coarse producer projection, not a new admission.
+
+## Supported surface and existing qualification
+
+The row is an exported schema with public make/codec behavior and a documented example128-138. Server.test.ts653 round-trips produced rows before asserting the generated flag/digest relation. That test does not establish a restriction on every independently supplied public row. Do not narrow accepted row values or introduce a codec transformation based only on the producer image.
+
+The current collision-stage record remains unchanged: collisionReportFromRows497-498 contains hasNormalizedDuplicates and hasFinalDuplicates as two real sibling locals. Those are distinct from each row, and its existing design qualifies the stage through the complete deterministic caller paths. Its design explicitly documents the one-Boolean row exclusion and no row migration dependency. Therefore this new proposal neither replaces nor expands that qualification.
+
+Preserve the raw lane report and execution receipt. Expected inventory delta is zero. No source rewrite, tracked edits, ref moves, P3 approval, implementation or dry-round credit occurred.

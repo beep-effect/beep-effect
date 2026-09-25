@@ -1,0 +1,327 @@
+{
+  "kind": "r35-yeet-owner-disposition/v1",
+  "createdAt": "2026-09-25T06:40:57.372556+00:00",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "inputSha256": {
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "goals/boolean-creep/data/inventory.jsonl": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4",
+    "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md": "6142f066feac1f4d1bce1fb8282cf87837d52d34d477331035c9b9969a6c5c5e",
+    "goals/boolean-creep/designs/yeet-merge-ready-criterion-changed.md": "229a9f5f96532c43badf1dd3bf75198305c8f7226f30b0e3f5f1bd4de89ba7e0",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-yeet.jsonl": "b2677c2f032658fc6be93f2619b12ea37e22db30ee942062239d98d789944f44",
+    "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/r35-cli-yeet.execution.json": "f619402aec71f05fdcfe93725df207b44efa79a1f119e442352643e7f0aae36e",
+    "goals/boolean-creep/data/r32-owner-reviews/r29-yeet-sweep-worktree-probe-address/admission.json": "536d71cfa45881df491cca948740e774ee8a3325708181a688627204bf94de60",
+    "goals/boolean-creep/data/r32-owner-reviews/r29-yeet-sweep-worktree-probe-address/disposition.md": "c154f93a58f5f834904e0ee913b2c7b37b20ef1ee8affa38e163f35481381f3b",
+    "goals/boolean-creep/data/r32-owner-reviews/r29-yeet-sweep-worktree-probe-address/finite-table.json": "956d740ba33e4501e19a32ac8b8055f7af32c4dce03e5fec70e0f91c8ebd645b",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts": "97b5d41c7f2c90f8ca917f50329e8a2b580b7563c300d13720d59420e55999f2",
+    "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts": "99a83ceb5e9a3a9042baf7ee8572f82de9dfb89bb273a9ff6de81537e4857d4e",
+    "packages/tooling/tool/cli/test/support/RetireFenceInvoker.ts": "60dd792ab885b47f9a41747a9a63ed00f287b77a4e50a648f2fbb29434401f5a",
+    "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts": "87bf152f733ffd7e2608b5d1502aaad750e42d5d3b5eb33521fdc5b6c681d85f",
+    "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts": "5c3fbf1915d4483525db125ad722bd1a27204955d52b7bb25d4d4c3a2652420e",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": "ba7f7efc7fbac137aad9cb4fa24612f2185fc6ae7d3438b4361b3d3665fdaa18",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts": "b7fbd8d71072daf4665490c84ad8c9f6fd549dc3287b5be05d3deec5a7fb3d3d",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts": "6ca166e2587ec88a65d96605a017030209b3aba6df4847d2ee23ac1a689722d3",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts": "872dfaf02bf27c4b22cbd33f9793aeb5576701fb589bc07046ffea741d848712",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts": "02c45f50a9b0c11d83d8bb307f4c173313784efe96ce454ac798f77b90d01c75",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts": "05e3784c902e26cd6ebf68b9c2a05204fe1cc882fed0c3be85c5e5def91ca33b",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.schemas.ts": "9d9f7e93e91f4897ea12f8924643eeb330e435704ab454418f62a0931a51c95a",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts": "bb895278d7bdc85adf6f1e769a858ff68ee12149892d9e16c90eb5fed998403a",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts": "0c7b8829b7e85bbcf8948ba798419c84c5a574ad08f622bd736aa394e63ecf69",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": "9667b5132d87560890dedfb413ba013ac73c161bf4af3d0a6db3958dfdab5b96",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": "15a433e966df6aa8a1be309d3437173c1cc39d9eb48257a9af2b6a8304db6987",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts": "1b6a9c57af55378ebf5b5634f6630e27f9cf463fc43482d44659674f7174549d",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts": "8c0a87b7afa9506bb31be8cca64e2802e45abd8fe62aa049645cc2a9e7b82a3b",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts": "ea029b5c293f8af514480ce4f4cf92d5e1c7d483e4613fe4fd85cced6c9144a7"
+  },
+  "completeOwnerBooleanMembers": [
+    "worktreeDirty",
+    "mainCheckedOutElsewhere",
+    "branchCheckedOutElsewhere",
+    "branchMergedIntoBase",
+    "lockfileMovedOnMainUpdate",
+    "statusProbeUnreliable",
+    "worktreeProbeUnreliable"
+  ],
+  "retainedQualifiedId": "r29-yeet-sweep-worktree-probe-address",
+  "retainedMembers": [
+    "worktreeProbeUnreliable",
+    "mainWorktreePath"
+  ],
+  "retainedCardinality": {
+    "representable": 4,
+    "legal": 3
+  },
+  "rawExpansionDecision": "Reject unsupported strengthening from4/3 to8/5; keep admitted existing contract",
+  "expansionReason": "R35 avoids the specific branch-occupancy counterexample, but supplies no new source or owner ruling that supersedes the admitted partial-facts planner/helper contract. Sweep class comment describes conservative observer assignments. Its observer image is not the complete accepted helper domain: held-main with no path and addressed with main-free are supported fixtures. Absence of unreliable/main-false fixture does not prove that partial input illegal. Main/branch preconditions short-circuit on unreliable before consulting occupancy. Preserve occupancy axes as admitted; no new restriction or normalization.",
+  "historicalBindingReuse": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "97b5d41c7f2c90f8ca917f50329e8a2b580b7563c300d13720d59420e55999f2",
+      "matchesPriorSourceBinding": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "sha256": "99a83ceb5e9a3a9042baf7ee8572f82de9dfb89bb273a9ff6de81537e4857d4e",
+      "matchesPriorSourceBinding": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/support/RetireFenceInvoker.ts",
+      "sha256": "60dd792ab885b47f9a41747a9a63ed00f287b77a4e50a648f2fbb29434401f5a",
+      "matchesPriorSourceBinding": true
+    }
+  ],
+  "addDisqualifiedIds": [
+    "r35-cli-yeet-sweep-git-observations"
+  ],
+  "newQualifiedIds": [],
+  "changedQualifiedSemanticIds": [],
+  "withdrawIds": [],
+  "locatorChanges": [
+    {
+      "id": "yeet-status-github-thread-mirror",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "symbol": "GhStatusReviewThread",
+      "oldLine": 353,
+      "newLine": 404,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-handler-test-plan-options",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "symbol": "BuildYeetRunPlanTestOptions",
+      "oldLine": 2013,
+      "newLine": 2221,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-run-result-commit-push",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "YeetRunResult",
+      "oldLine": 433,
+      "newLine": 430,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-verdict-commit-push",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "YeetVerdict",
+      "oldLine": 567,
+      "newLine": 568,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-quality-issue-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssue",
+      "oldLine": 238,
+      "newLine": 232,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-sweep-git-state",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "symbol": "SweepGitState",
+      "oldLine": 177,
+      "newLine": 178,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-reply-live-thread-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts",
+      "symbol": "ReplyLiveThread",
+      "oldLine": 271,
+      "newLine": 319,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-closeout-gh-review-thread",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThread",
+      "oldLine": 202,
+      "newLine": 275,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-merge-ready-criteria",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "YeetMergeReadyCriteria",
+      "oldLine": 267,
+      "newLine": 271,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-merge-ready-encoded",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "YeetMergeReadyEncoded.criteria",
+      "oldLine": 365,
+      "newLine": 367,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-ack-resolution-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "symbol": "YeetAckResolutionFlags",
+      "oldLine": 91,
+      "newLine": 92,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-monitor-command-route",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "symbol": "SelectYeetMonitorCommandRoute",
+      "oldLine": 923,
+      "newLine": 921,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-merge-ready-criterion-changed",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "symbol": "YeetMergeReadyCriterionChanged",
+      "oldLine": 357,
+      "newLine": 433,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-monitor-failed-job-flags",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "symbol": "YeetMonitorFailedJob",
+      "oldLine": 304,
+      "newLine": 313,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-inbox-list-options",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+      "symbol": "YeetInboxListOptions",
+      "oldLine": 70,
+      "newLine": 84,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r3-tooling-yeet-resume-options",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.schemas.ts",
+      "symbol": "ResumeOptions",
+      "oldLine": 179,
+      "newLine": 176,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r25-cli-yeet-pr-session-recording-result",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+      "symbol": "PrSessionRecordingResult",
+      "oldLine": 339,
+      "newLine": 344,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "symbol": "SharedOptions",
+      "oldLine": 472,
+      "newLine": 580,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "yeet-prepared-publish-commit",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "symbol": "PreparedPublishCommit",
+      "oldLine": 765,
+      "newLine": 776,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r32-cli-yeet-settle-budget-phase",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "symbol": "YeetSettleVerdict",
+      "oldLine": 785,
+      "newLine": 903,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r32-cli-yeet-settle-input-observations",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "symbol": "YeetSettleInput",
+      "oldLine": 738,
+      "newLine": 854,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r32-cli-yeet-proof-job-finalization",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts",
+      "symbol": "ProofJobFinalization",
+      "oldLine": 1166,
+      "newLine": 1162,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r32-cli-yeet-watch-thread-node",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+      "symbol": "WatchThreadNode",
+      "oldLine": 176,
+      "newLine": 173,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r32-cli-yeet-review-thread-state-input",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts",
+      "symbol": "YeetReviewThreadStateInput",
+      "oldLine": 184,
+      "newLine": 181,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    },
+    {
+      "id": "r32-cli-yeet-review-thread-state-source",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts",
+      "symbol": "YeetReviewThreadStateSource",
+      "oldLine": 225,
+      "newLine": 222,
+      "scope": "Declaration anchor only; classification and design unchanged."
+    }
+  ],
+  "knownLocatorExamples": {
+    "YeetMergeReadyCriterionChanged": {
+      "declaration": 433,
+      "firstBoolean": 444
+    },
+    "GhReviewThread": {
+      "declaration": 275,
+      "firstBoolean": 279
+    }
+  },
+  "designActions": {
+    "retain": [
+      "r29-yeet-sweep-worktree-probe-address"
+    ],
+    "replace": [],
+    "dependenciesChanged": [],
+    "note": "Existing complete4/3 design already covers supported handoff and retirement constructors. No qualifying expansion, new domain, or replacement design justified."
+  },
+  "expectedInventoryDelta": {
+    "records": 1,
+    "qualified": 0,
+    "disqualified": 1
+  },
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "implementationCredit": false,
+  "trackedEdits": false,
+  "refsMoved": false,
+  "proposalSha256": {
+    "locator-changes.json": "1f57f352c67490cdd11a89f31fb440a3d678d1d11cedaf3ac4a8086f3e90101b",
+    "proposed-inventory-additions.jsonl": "393d3f69d0851248ba90b187f8419e8fe35b798eb1517a55030f1392fab4706b",
+    "proposed-inventory-updates.jsonl": "f66494c6a4249d6446c38aa93d5a19d48c5c17a2ac3bce42beb6cfbcd84804bc"
+  },
+  "validation": [
+    {
+      "proposal": "proposed-inventory-additions.jsonl",
+      "exitCode": 0,
+      "stdout": "inventory OK: 1 records, 1 unique ids"
+    },
+    {
+      "proposal": "proposed-inventory-updates.jsonl",
+      "exitCode": 0,
+      "stdout": "inventory OK: 25 records, 25 unique ids"
+    }
+  ]
+}

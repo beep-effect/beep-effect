@@ -1,0 +1,13 @@
+# R38 alignment complete-owner audit
+
+Reject the primary row replacement; retain r2-foundation-unique-match-search unchanged at designed, members ambiguous/match/exhausted, cardinality8/4. No new row or design is needed.
+
+UniqueMatchSearch32–35 alone has one Boolean and Option<MatchedText>. MinimalFoldMatchSearch114–116 inherits both and adds exhausted:Boolean: the actual complete owner has two Booleans and one Option payload. It satisfies recall without counting Option as Boolean. Once admitted, match presence is a legitimate finite payload axis; removing it discards the existing flag/payload invariant. Line33 is the inherited Boolean field, not the extending declaration.
+
+All private producer paths support the existing four outcomes (ambiguous, exhausted, match presence): (false,false,None) none; (false,false,Some) unique; (true,false,None) ambiguous; (false,true,None) exhausted. The structural product has8 values, of which4 are legal. noMatch37 supplies false/None; findUniqueMatch39–56 returns none, a single optional match, or ambiguous/None. Exact79–80 and lesser234–243 delegate. findMinimalFold338–361 returns exhausted/noMatch354, ambiguous/None355, unique359, or none360. Its helper327–336 accumulates matches and reports ambiguity on the second match before considering exhaustion; no successful final result contains multiple matches. Some payload on either failure variant has no supported producer.
+
+The sole final consumer bestAlignedMatch458–489 checks exhaustion466 and ambiguity469 before exact473, lesser477, minimal-fold482 and fuzzy fallback. Public tests205–247 establish fail-closed ambiguity, and260–275 establishes shared budget exhaustion suppressing fallback. The private shapes have no arbitrary public constructor boundary whose legitimate inputs would be narrowed.
+
+The primary4/3 Boolean projection is a true but incomplete projection of the already designed owner. The existing design already distinguishes provisional merge control continue|ambiguous|exhausted from final none|unique(match)|ambiguous|exhausted and preserves exact/lesser subset semantics, payload and shared budget. Do not replace its payload-bearing tagged union with a payload-free pair or duplicate the same cluster. Preserve current row32 declaration anchor, E1/E2 evidence and complete design.
+
+R36's prior audit explicitly recorded the inherited two-Boolean recall boundary. Its bound source hash is compared in the JSON receipt; current source also matches frozen HEAD/main. Raw report and terminal transcript are bound separately. This closes the raw proposal with retention, not a census change, P3 or dry credit.

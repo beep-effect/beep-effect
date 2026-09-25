@@ -1,0 +1,22 @@
+{
+  "lane": "r37-foundation-primitive",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:31:58.155008+00:00",
+  "finished": "2026-09-25T07:32:40.566284+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-foundation-primitive.jsonl`\n\nConfirmed 0, disqualified 0. Validator: `inventory OK: 0 records`.\n\nBoth assigned roots were covered at `84058d6470137e35f108d13c7dba52129db9a301` (matches the source SHA). Generated files under `packages/foundation/primitive/data/src/generated/` were excluded. No seed entries in this lane, so nothing to withdraw or correct.\n\nNo owner with two or more co-carried boolean members. Left out of the net: `lookup`'s `false | MimeType` sentinel, the single `inittedMaps` latch, predicate return types, and type-level `true`/`false` conditionals in `TString.types.ts`. `MimeTypeDefinition` is `source` plus a required extensions array.",
+  "transcriptSha256": "1aec27a44599cda008c41b746734e527cdfe4a9402b94f730a7488f40bb701ce",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -1,0 +1,15 @@
+# R36 drivers-a-f bounded reconciliation
+
+Withdraw one D2 census row, retain the three challenged Firecrawl D2 payload subclusters, and apply two metadata corrections. Qualified/design counts do not change. No source edits, implementation, P3 or dry-round credit.
+
+AiProviderCliClaudeAuthStatusPayload at AiProviderCli.models.ts:456-476 is a direct four-field S.Class with no custom superclass, spread or intersection. Only loggedIn at 466 is Boolean. authMethod, email and subscriptionType are Option<NonEmptyString>; presence is not a second actual Boolean. Withdraw ai-provider-cli-claude-auth-status-payload without a fabricated D replacement. No live design references the ID or symbol.
+
+BrowserExecuteShape at Firecrawl.responses.ts:337-349 has twelve direct fields, including killed: optionalBoolean and success: S.Boolean. MonitorSearchTargetResultShape at 248-262 has eleven direct fields, including judgeDegraded and searchCompleted, both optionalBoolean. The alias at 43 resolves to S.optionalKey(S.Boolean). Neither owner inherits custom fields or spreads another record. Therefore both complete owners meet recall, and the success/error, killed/error and judgeDegraded/degradedReason subclusters remain eligible D2 census records. Optional string payloads are not counted as Boolean; eligibility comes from the other Boolean sibling in the actual owner. Existing killed/success and judgeDegraded/searchCompleted rows remain distinct member sets. No new duplicate row or qualified relation is admitted.
+
+The R34 audit explicitly preserved BrowserExecuteShape and both associated payload subclusters. Its Firecrawl.responses.ts SHA-256 exactly equals current source. R34 did not explicitly adjudicate the monitor payload pair; current complete-owner inspection independently supports retaining that pair. Existing D2 external-wire classification is preserved, without inferring legal-state restrictions from emitter samples.
+
+AcpPatchedProtocolOptions is actually declared at 390, replacing 388. It inherits the two independent optional Boolean fields of AcpProtocolLoggingOptions:282-294. Own fields at 390-398 add callbacks, logger, set, stdio and optional Effect payload only. Incoming/outgoing guards are 504/505 and fallback logger is 502. Accept the raw locator correction with a stable explanatory note.
+
+CosmosGraphConfig remains declared at 22. The new module.Graph call is at 445. Update only that D2 note citation from 441-446 to 445; retain six configuration flags and their SDK-mirror classification.
+
+SPEC recall and DECISIONS qualifier require at least two actual Boolean members in a complete scope; SPEC permits independently adjudicated clusters of one declaration. Proposed artifacts contain exact historical withdrawal, unchanged retained rows, and two complete replacement metadata rows. Source files match both frozen HEAD and origin/main. See disposition.json for exact hashes and source identities.

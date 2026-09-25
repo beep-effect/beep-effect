@@ -464,6 +464,8 @@ and never `OP_*`; plus `TERM=dumb`, `NO_COLOR=1`, `BEEP_YEET_JOB_ID`, `BEEP_YEET
 `BEEP_YEET_JOB_LOG`. The record stores the forwarded names only. The 1Password shim on `PATH`
 loads its own credential; `gh` and the SSH signer use their own stores.
 
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): the allowlist gains `CLAUDE_CODE_SESSION_ID` and `CODEX_THREAD_ID` so a detached monitor's registry rows carry the spawning session's harness and id (`explorations/pr-event-awareness` D3); the deny pattern and names-only recording are unchanged.
+
 **Ruling 40 — detaching is opt-in and fails loud.** `--detach` refuses with a `YeetCommandError`
 when the user manager is unreachable (`detectRunScopeSupport` not `active`) and never falls back
 to an attached run; it is a submit-only flag, illegal with `--plan`, and prints the job id, unit,
@@ -479,6 +481,8 @@ settle rulings recorded here. `explorations/pr-event-awareness` receives one Tra
 sources, and lane dispatch stay out of scope. Rejected: advancing the packet first (its spark is
 wider than this fix); a standalone PR train (no durable home for the settle rulings).
 
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): the heading clause is stale — the packet advanced capture → research → align → shape on 2026-09-24 (`DECISIONS.md` D1–D27) and its graduated goal owns the `--until-ready` producer extension from here. The scope clause stands as B7's scope: webhooks, push sources and lane dispatch were never built under B7, and the packet's D9 (poll kept; a receiver is a MAP gate) and D14 (no launcher) are consistent with it.
+
 **Ruling 42 (B7-2) — `--until-ready` is a third loop policy with an exit-0 terminal; exit codes
 in every mode follow the required-only census.** `--until-ready` shares the `--until-merged`
 poll loop, snapshot, and flake budget. It exits 0 on the first poll where merge-ready is `yes`;
@@ -492,6 +496,8 @@ states are one `LiteralKit` (`merged`, `closed`, `ready`, `required-red`, `settl
 `poll-error-budget`) and the exit-code table is one schema-backed table (`yeetMonitorExitFor`).
 Rejected: changing plain monitor's fail-fast default (breaks `publish --monitor`); readiness as an
 event on `--until-merged` only (no exit-0 terminal to block on).
+
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): under `--until-ready` a required red and a base conflict stop being terminal — the loop keeps polling across heads and re-pins the wave per head — and `yeet job wait` gains a second return, a distinct exit code when a new P0/P1 wave lands on the job's PR, so the blocking recipe hands control back and is re-run on the same job after the fix push. Exit 0 stays `ready`; `merged`, `closed`, `settle-timeout` and `poll-error-budget` stay terminal (pr-event-awareness D16). The exit-code table changes accordingly with the producer slice.
 
 **Ruling 43 (B7-3) — the loop composes the read-first closeout itself.** When the required
 census settles for a head that has no closeout artifact bound to that head, the loop runs the
@@ -538,6 +544,8 @@ optional. No webhooks. Rejected: row + hook only (rests on the unverified compos
 PR bar as canonical (no green event, needs the app open); P2 (session-start only) and P0 (a gate
 on good news).
 
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): the FileChanged/asyncRewake idle-wake spike was proposed and not exercised (`research/b7-implementation.md:671-672`) and is superseded by pr-event-awareness D10/D15/D20 — a probe-gated, SessionStart-spawned shell tail posts one cross-session message per new wave into its own session. The `pr-merge-ready` row and hook injection stand.
+
 **Ruling 47 (B7-7) — naming.** Flag `--until-ready`; row kind `pr-merge-ready`; settle wait
 reasons as one `LiteralKit` (`registration`, `required-pending`, `closeout-pending`,
 `settle-timeout`); the gate line always names the current reason; the head timeline stamps
@@ -551,6 +559,8 @@ AGENTS.md recipe, PLAN/rulings/receipts, measurement. PR2 (after B5 merges): the
 the skill, `pr-merge-ready` observed-ack wiring with `yeet job wait`, the FileChanged/asyncRewake
 spike result, and the scratchpad watcher's retirement receipt. Whoever lands second renumbers
 rulings via a divergence merge, never a force-push.
+
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): PR2's "FileChanged/asyncRewake spike result" deliverable is retired with the ruling 46 amendment; PR2's other deliverables shipped as #1161.
 
 **Ruling 49 (B7-5 amended) — the settle timeout bounds registration, not execution.** Ruling 45
 expired the budget "while unsettled", which included required checks that had registered and were
@@ -914,6 +924,14 @@ would never reuse across any package change, which is ruling 1's "any edit anywh
 every lane" defect by another door); a lane-id allowlist of "package lanes" (a second table to keep
 honest against the lane specs).
 
+## 2026-09-25 — pr-event-awareness amendments, round 22 (no new rulings; five amendments recorded inline under rulings 39, 41, 42, 46 and 48, proposed by the orchestrator in the 2026-09-25 pr-event-awareness grill-with-docs round, ratified by merge of that packet's producer PR)
+
+Context: `explorations/pr-event-awareness` (`DECISIONS.md` D16–D27) extends `yeet monitor
+--until-ready` into the durable PR-event producer that B7 left as one P1 row: reds and conflicts
+stop being terminal under `--until-ready`, `yeet job wait` returns on a wave, two allowlist names
+are forwarded, and the idle-wake spike is superseded. The rulings it touches are amended in place
+above rather than renumbered; the exit-code table change lands with that packet's producer slice.
+
 ## 2026-09-25 — A3 economics surface, round 23 (three rulings, proposed by the orchestrator; the merge of this PR is the lock)
 
 Context: PLAN A3 turns the A1 computation into a Yeet subcommand reading the same journals, so every
@@ -1026,3 +1044,4 @@ Amended in review round 1 of #1239 before the lock: rulings 73, 74 and 75.
   percentiles encode as `null` (`S.OptionFromNullOr`). The `Option`-returning helper at
   `Ci/LaneTimings.ts` (`nearestRank`, ~L2194) is promoted to a shared internal module and
   `Cache/Cache.command.ts` (~L342) points at it; no third copy.
+

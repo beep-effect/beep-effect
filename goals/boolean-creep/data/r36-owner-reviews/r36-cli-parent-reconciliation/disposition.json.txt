@@ -1,0 +1,23 @@
+{
+  "kind": "r36-cli-parent-owner-audit/v1",
+  "inputSha256": {
+    "goals/boolean-creep/data/inventory.jsonl": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+    "goals/boolean-creep/SPEC.md": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "goals/boolean-creep/DECISIONS.md": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts": "fb6804442346afe5f96dc7224441ba8b9e773392f0d5ebe81fd524b52666a9d1",
+    "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": "84c2962d8afbff9d4498311e60c35742e5c710b04b5951a0672f14a3c23743ce",
+    "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+    "goals/boolean-creep/designs/effect-import-rules-summary-operation.md": "e01761a96b3e74a553d684a409b169f12ca6b93b4c83f043c6b18ad899e120ee",
+    "goals/boolean-creep/designs/scheduler-admission-attempt-origin.md": "444d12dd3ed8bc58c9b651a541cb27eb173984de9904381432c6d9edf036eb48",
+    "goals/boolean-creep/designs/scheduler-promotion-tick-origin.md": "a4f114899dca8baf37fba062f245d0cab31dddd37e864dfb2e013bdf23ced46b"
+  },
+  "withdrawIds": [
+    "scheduler-admission-attempt-origin",
+    "scheduler-promotion-tick-origin"
+  ],
+  "withdrawalReason": "AdmissionAttempt1784-1787 andPromotionTick1940-1944 eachdeclare onlyoriginBusyBoolean alongside admittedOption; nestedinfo hasnumericfields+state object, no domaininheritance/spread addsBoolean. No SPEC/DECISIONSscopeexception. Their onlydesign dependencies areeachother. Preserve historical4/3relations without runtimechanges.",
+  "rejectRawFunction": "assertExclusiveModeFlags isexcludedinlinefunctionflagparameter; sourcehashmatchesR35auditedscope.",
+  "effectSummary": "Retainminimalwrite/candidate4/3; strictFailureindependentBooleanalreadyexplicitlypreservedbyexistingdesign. Addingindependentaxis changesnoinvariant anddoesnotrequireadditionalmigration. Updateclassanchor241only.",
+  "independentP3Approval": false,
+  "dryCredit": false
+}

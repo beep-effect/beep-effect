@@ -1,0 +1,98 @@
+{
+  "kind": "r38-modeling-supplement/v1",
+  "sourceHead": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "verdict": "complete-two-seed-coverage-no-eligible-owners",
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2",
+      "matches": {
+        "ab77f10cb74ad96404b05d1ab5a1d4968cef847b": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r37-modeling-supplement/disposition.json",
+      "sha256": "21eeebbf9fe6fe140066ea50b78bd57f867ad5b6afbe817de27037b167027e27"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/lane-map.json",
+      "sha256": "0aaa0c5e3363a78b3fde53e8632fb72c26371fbf150ec6ae2e5463f14acd6cd5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/r37-owner-reviews/r37-modeling-supplement/disposition.json.txt",
+      "sha256": "919a6c2a8b35c899c106953e0cf600fe87e986a91fdb4dbf15d60db9cd25cd85"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-modeling-rest.ndjson",
+      "sha256": "92795cb9ec51b8d0bac6b74a8f04191206871e33460cccae8075c138c85f0ed3"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-modeling-rest.execution.json",
+      "sha256": "3426afff346ba33c9e594e752dcb63232f9a1413ba6354e1347b490d11c19d07"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "details": {
+    "priorR37ExactHashesMatch": true,
+    "sourceLines": [
+      90,
+      34
+    ],
+    "actualBooleanMembers": 0,
+    "included": true
+  },
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "unresolvedOwnerQuestions": [],
+  "P3Credit": false,
+  "dryCredit": false,
+  "trackedEdits": false,
+  "outputs": [
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "cc18cc7272a48cbdfab6134bd327105b1a92ff552601c40d76f505fbd96eebc9"
+    }
+  ]
+}

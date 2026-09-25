@@ -1,0 +1,22 @@
+{
+  "lane": "r36-tooling-policy",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T07:02:10.027902+00:00",
+  "finished": "2026-09-25T07:03:47.907527+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-tooling-policy.jsonl`\n\nConfirmed 0, disqualified 0. Both assigned roots were covered (`lint-rules/src` and `repo-configs/src`, generated snapshot excluded). Seeded clusters still match current owners and members; no line/member drift, no withdrawals, and no unresolved source question. Single-boolean owners (for example `TypeScriptConfig.ignoreBuildErrors`, `TurbopackOptions.debugIds`, `HttpAgentOptionsConfig.keepAlive`) stay outside the net. The validator accepted the empty report.",
+  "transcriptSha256": "dc6c6336929a0855b961e71c04758f3c06fef6b490274699e6d9f985d90bcb1f",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

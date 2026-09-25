@@ -1,0 +1,198 @@
+[
+  {
+    "id": "turbo-summary-task-cache",
+    "oldLine": 50,
+    "rawLine": 48,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 48
+  },
+  {
+    "id": "ci-lane-run-options",
+    "oldLine": 649,
+    "rawLine": 658,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 658
+  },
+  {
+    "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+    "oldLine": 649,
+    "rawLine": 675,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 675
+  },
+  {
+    "id": "codex-findings-ingest-options",
+    "oldLine": 383,
+    "rawLine": 387,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 387
+  },
+  {
+    "id": "codex-findings-ingest-force-refresh",
+    "oldLine": 381,
+    "rawLine": 385,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 385
+  },
+  {
+    "id": "aimetrics-install-apply-options",
+    "oldLine": 1081,
+    "rawLine": 1086,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1086
+  },
+  {
+    "id": "aimetrics-sources-discover-options",
+    "oldLine": 1277,
+    "rawLine": 1283,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1283
+  },
+  {
+    "id": "aimetrics-forwarder-run-options",
+    "oldLine": 1722,
+    "rawLine": 1729,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1729
+  },
+  {
+    "id": "aimetrics-forwarder-timer-options",
+    "oldLine": 1828,
+    "rawLine": 1835,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1835
+  },
+  {
+    "id": "aimetrics-benchmark-run-options",
+    "oldLine": 2037,
+    "rawLine": 2072,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 2072
+  },
+  {
+    "id": "aimetrics-label-add-options",
+    "oldLine": 2211,
+    "rawLine": 2246,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 2246
+  },
+  {
+    "id": "agent-effectiveness-doctor-options",
+    "oldLine": 320,
+    "rawLine": 321,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 321
+  },
+  {
+    "id": "agent-effectiveness-eval-scorer-options",
+    "oldLine": 178,
+    "rawLine": 174,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 174
+  },
+  {
+    "id": "r3-tooling-phoenix-sync-program-options",
+    "oldLine": 412,
+    "rawLine": 413,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 413
+  },
+  {
+    "id": "corpus-organize-category-flags",
+    "oldLine": 2301,
+    "rawLine": 2304,
+    "disposition": "retain-anchor",
+    "reason": "2301 is the actual organizeCategoryFor constructed object start;2304 is its first Boolean field."
+  },
+  {
+    "id": "r26-cli-commands-a-c-validate-pst-export-acceptance-gates",
+    "oldLine": 1249,
+    "rawLine": 1264,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1264
+  },
+  {
+    "id": "r27-cli-commands-a-c-findings-manifest-capability-flags",
+    "oldLine": 95,
+    "rawLine": 154,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 154
+  },
+  {
+    "id": "r27-cli-commands-a-c-findings-manifest-completion-gate",
+    "oldLine": 99,
+    "rawLine": 157,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 156
+  },
+  {
+    "id": "r27-cli-commands-a-c-findings-manifest-sanitation",
+    "oldLine": 163,
+    "rawLine": 221,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 221
+  },
+  {
+    "id": "r28-cli-commands-a-c-eval-law-lanes-spawn-options",
+    "oldLine": 57,
+    "rawLine": 62,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 62
+  },
+  {
+    "id": "r28-cli-commands-a-c-preservation-capacity-spawn-options",
+    "oldLine": 1131,
+    "rawLine": 1136,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1136
+  },
+  {
+    "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+    "oldLine": 1968,
+    "rawLine": 1973,
+    "disposition": "retain-anchor",
+    "reason": "1968 is the actual runCaptured constructed object start;1973 is its first Boolean field."
+  },
+  {
+    "id": "codex-findings-write-request-options",
+    "oldLine": 272,
+    "rawLine": 331,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 331
+  },
+  {
+    "id": "r29-cli-commands-a-c-mode-validation-request",
+    "oldLine": 409,
+    "rawLine": 468,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 468
+  },
+  {
+    "id": "r30-cli-commands-a-c-preservation-dest-partial-exists",
+    "oldLine": 508,
+    "rawLine": 513,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 513
+  },
+  {
+    "id": "r30-cli-commands-a-c-legacy-word-dest-partial-exists",
+    "oldLine": 3772,
+    "rawLine": 3793,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 3793
+  },
+  {
+    "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
+    "oldLine": 1685,
+    "rawLine": 1823,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1823
+  },
+  {
+    "id": "corpus-pst-terminal",
+    "oldLine": 1368,
+    "rawLine": 1383,
+    "disposition": "replace-locator-preserve-full-canonical-row",
+    "acceptedLine": 1383
+  }
+]

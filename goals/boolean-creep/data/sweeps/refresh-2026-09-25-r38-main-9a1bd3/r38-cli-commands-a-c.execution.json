@@ -1,0 +1,22 @@
+{
+  "lane": "r38-cli-commands-a-c",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:19:44.525685+00:00",
+  "finished": "2026-09-25T08:25:57.273976+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 28,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-a-c.jsonl`. It holds **1 confirmed** and **27 disqualified** records, and the validator passed.\n\nEvery assigned root was covered, including Codegen (no boolean clusters) and the authored CreatePackage templates. The 28 records are anchor corrections for declarations that moved off their seed lines. Unchanged seeds were left out.\n\n`corpus-pst-terminal` is still the three-state mail terminal. Its return type is now at line 1383, and `passed: true` with `unapproved: true` is still never written. `corpus-legacy-word-terminal` and `cache-pilot-non-execution` keep their classifications. Their evidence cites (1357 and 1254) no longer land on the proving lines, which are now 1372 and 1292. No seed was withdrawn.",
+  "transcriptSha256": "475cc771734adf8496d3208dbf2bb507b993d32a1a75abd2fe1acf187a35c9da",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 28 records, 28 unique ids\n"
+}

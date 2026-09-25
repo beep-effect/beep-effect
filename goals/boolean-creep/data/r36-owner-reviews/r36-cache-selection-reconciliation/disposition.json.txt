@@ -1,0 +1,86 @@
+{
+  "verdict": "admit-one-new-E1-E4-pending-state-cluster",
+  "sourceHead": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "originMain": "2bf1e16bbf368a962df32f912ef01b5f9860e7da",
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-cli-commands-a-c.jsonl",
+      "sha256": "96f82557e91348a0120c68e35cd7ce78abcbdf75d7b11494c39c9a6dc4697fe4"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-cli-commands-a-c.execution.json",
+      "sha256": "eef7ac0e3fa9b9c71122b8f65aa1ed71a175311b0cefc9219ed71e2c6e92faff"
+    },
+    {
+      "path": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    },
+    {
+      "path": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "path": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "dab12febdd6a6a98a96eb78ada1819e2c8b0bc7391b407403478393ce2e67d49"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+      "sha256": "fb05dbfa36135c3ce30b789a7bc54d108c11f327b62a757093e45905528ffba4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-runtime.test.ts",
+      "sha256": "1f98d0f230611aff970ac67b941c30b2b58660e6806a81171221d329134f72fc"
+    },
+    {
+      "path": "node_modules/effect/src/Effect.ts",
+      "sha256": "a4b7de531f5c21b174be0db3a6d2ee10cb2ad1afd08fc74be149f99d68d7de29"
+    },
+    {
+      "path": "node_modules/effect/package.json",
+      "sha256": "5e3b27a25a53fa0b799fe2667d39b2f5371a15a8c69d21af58e9823557111e1b"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "956799a314990e1d51224758650c34f1ce2e64e44b42d29c5395631966fabd76"
+    },
+    {
+      "path": "goals/boolean-creep/ops/validate-designs.ts",
+      "sha256": "1f3a7ea87ff409b5ce591413e52507b0f69bbe68121517c33587c8bd85913e5a"
+    }
+  ],
+  "candidate": "r36-cli-commands-a-c-cache-task-selection-pending",
+  "delta": {
+    "rows": 1,
+    "qualified": 1,
+    "designs": 1
+  },
+  "duplicateIds": [],
+  "privateDesignRequiredSectionsPassed": true,
+  "transitionCases": 88744,
+  "transitionMismatches": 0,
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "2a1447201932ad23075b4f74473229a575ed6a842fa2dc6dcc412f5e0addc906"
+    },
+    {
+      "path": "proposed-rows.jsonl",
+      "sha256": "e3e1911c9ed125be558d216dca372b566738f1f0d1ccd6a83ba13f9a4b678703"
+    },
+    {
+      "path": "r36-cli-commands-a-c-cache-task-selection-pending.md",
+      "sha256": "bc2a0caa445cf346316ce9fc8090c5d7b2503dc00030c034623d3b6cfa824ad6"
+    },
+    {
+      "path": "transition-equivalence.json",
+      "sha256": "6ac1f0522ae5d047431d1d03df75948a35393c5d28bcd85301df75442680072b"
+    }
+  ]
+}

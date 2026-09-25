@@ -1611,3 +1611,29 @@ receipt binds it by hash; the existing public frozen-input and execution
 receipts retain source evidence. No scanner rule or allowlist was changed.
 Publishing the receipt instead of duplicating the full private map would have
 avoided this failed commit attempt.
+
+### R37 admission found an authored-template coverage gap
+
+The independent admission review found that the canonical
+`tsconfig-test-compiler-options` record points to the authored
+`CreatePackage/templates/tsconfig.test.json.hbs` template, but the census omitted
+it from its included-file and frozen-source lists. The R26 exclusion list and
+the controller's generic `.test.` filename filter both exclude this path.
+R37 was held before launch. Four other authored test-code templates require the
+same scope audit before correcting the filter; a seeded-owner exception alone
+would not establish complete coverage.
+
+Evidence: the R36 lane map's `excludedFiles`, the canonical inventory row, and
+the R37 private admission review. A prelaunch check requiring every in-scope
+seed owner to occur in exactly one lane's frozen included-file set would have
+caught this omission earlier. Historical execution receipts remain unchanged;
+this finding limits their coverage claim and does not award dry-round credit.
+
+### 2026-09-25 — Early publication requires explicit PR flag
+
+While publishing the completed R37 packet to existing PR #1228, the detached
+Yeet job exited before committing: `--start-pr-early requires --pr`. The publish
+help describes early push and monitoring but does not state this flag dependency.
+The terminal proof job was observed and acknowledged, then retried with `--pr`.
+Documenting the dependency beside `--start-pr-early` would prevent this failed
+submission; an existing PR can still be reused.

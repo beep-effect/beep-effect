@@ -1,0 +1,192 @@
+{
+  "kind": "r37-thread-transcript-complete-owner-audit/v1",
+  "verdict": "retain-existing16-over7-reject-incomplete8-over4",
+  "sourceHead": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMain": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "priorCorrectionSourceHead": "93217d998f851e2e93d9864e2b5315552eaa58a7",
+  "sourceBindings": [
+    {
+      "file": "apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
+      "sha256": "5a0796772c916f3050bffc4a9b150a5e5e90c022566e52537ec7dca24a32bf70",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": true
+      }
+    },
+    {
+      "file": "apps/professional-desktop/src/chat/ui/Thread.tsx",
+      "sha256": "ec3a5389bc3e06046fb8ae9aaeee1f60c041cc02c09715671f63c31a55e459ca",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": true
+      }
+    },
+    {
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "sha256": "88df970a7c96c51e5c4ab3fbd729135232a1019f657aae6a57fe7c8451170920",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": false
+      }
+    },
+    {
+      "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+      "sha256": "661b95aaf8b6bccee93924752f4b0591badb294c19b1b61d264482074c387175",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": true
+      }
+    },
+    {
+      "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "sha256": "27f524745d53a901e494b0dc5ece71b6ffa16b10374ce53ed35efb1e79e60a30",
+      "matches": {
+        "84058d6470137e35f108d13c7dba52129db9a301": true,
+        "9a1bd3805574bca087d4da09ece4a628038afb27": true,
+        "93217d998f851e2e93d9864e2b5315552eaa58a7": false
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "file": "~/YeeBois/projects/beep-effect9/apps/professional-desktop/src/chat/ui/Thread.atoms.ts",
+      "sha256": "5a0796772c916f3050bffc4a9b150a5e5e90c022566e52537ec7dca24a32bf70"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/apps/professional-desktop/src/chat/ui/Thread.tsx",
+      "sha256": "ec3a5389bc3e06046fb8ae9aaeee1f60c041cc02c09715671f63c31a55e459ca"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/packages/agents/client/src/Chat.atoms.ts",
+      "sha256": "88df970a7c96c51e5c4ab3fbd729135232a1019f657aae6a57fe7c8451170920"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/apps/professional-desktop/test/thread-transcript-view.test.ts",
+      "sha256": "661b95aaf8b6bccee93924752f4b0591badb294c19b1b61d264482074c387175"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+      "sha256": "27f524745d53a901e494b0dc5ece71b6ffa16b10374ce53ed35efb1e79e60a30"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/thread-transcript-load-state.md",
+      "sha256": "85967cc1beaef9bdb894f52b11b904f6213b445c930e405aeda8fc7d109af30c"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/designs/thread-load-state-props.md",
+      "sha256": "b0108f4f8fd0c3a63add234e1c1eb736b6d13c95c7533158ed4caa3fc1c712e9"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/r28-first-corrections-integration.json",
+      "sha256": "c040e662fb9e97f2a917a1070f935bc5759527a007944386b471044fd9685a25"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-apps.jsonl",
+      "sha256": "bf5a573eb397e24b01c7e82f511ce5adb7f4f76553e98217a4868bd3892b46f4"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-apps.execution.json",
+      "sha256": "f89362d07611e3cc071a5a05dd6d240c57d0ab5a7003923713a6f750493cd50e"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r37-main-9a1bd3/r37-apps.ndjson",
+      "sha256": "6f0370d783609a81bb7df6471f738ffac7516eda4750edfd94650b52c7aeb2d6"
+    },
+    {
+      "file": "~/YeeBois/projects/beep-effect9/node_modules/effect/src/unstable/reactivity/AsyncResult.ts",
+      "sha256": "555cd0aaf079790729591e18b4e7afd82e1cb72e4b0b7dd41c9834bc2af5358c"
+    }
+  ],
+  "actualBooleanRecallCount": 3,
+  "payloadPresenceAxis": "streaming: Option<StreamingTurn>",
+  "representable": 16,
+  "legal": 7,
+  "finiteTuples": [
+    {
+      "empty": false,
+      "failed": false,
+      "loading": false,
+      "streamingPresence": "None"
+    },
+    {
+      "empty": false,
+      "failed": false,
+      "loading": false,
+      "streamingPresence": "Some"
+    },
+    {
+      "empty": false,
+      "failed": false,
+      "loading": true,
+      "streamingPresence": "None"
+    },
+    {
+      "empty": false,
+      "failed": false,
+      "loading": true,
+      "streamingPresence": "Some"
+    },
+    {
+      "empty": false,
+      "failed": true,
+      "loading": false,
+      "streamingPresence": "None"
+    },
+    {
+      "empty": false,
+      "failed": true,
+      "loading": false,
+      "streamingPresence": "Some"
+    },
+    {
+      "empty": true,
+      "failed": false,
+      "loading": false,
+      "streamingPresence": "None"
+    }
+  ],
+  "retainedDesigns": [
+    "thread-transcript-load-state",
+    "thread-load-state-props"
+  ],
+  "rowReplacements": [],
+  "designReplacements": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "sourceEdits": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "file": "retained-row.jsonl",
+      "sha256": "a16521f49727d591cad8b4de67f434c374ba76c3cecfdd446256865990b8f962"
+    },
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "6f0670935bf1af5041abb3db868fa5f0f526bece6e61eda8bf606e6707a1990f"
+    }
+  ]
+}

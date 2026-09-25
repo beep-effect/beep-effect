@@ -1,0 +1,22 @@
+{
+  "lane": "r34-shared-documents",
+  "sourceSha": "d99e4e073de5139552a97ee588117af59b8251c0",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T02:25:53.148949+00:00",
+  "finished": "2026-09-25T02:29:48.668449+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r34-main-339da1/r34-shared-documents.jsonl`.\n\nConfirmed 0, disqualified 0. All seven assigned roots were covered (220 TypeScript files; no non-TypeScript sources). Validator: 0 records, OK.\n\nSeed check: `enqueueMoveDeltas` (`parentChanged`, `nameChanged`) is still independent D1, and `recordPushFailure.requeue` is still the same derived E4 (`requeue = retryable && attemptCount < maxAttempts`). Neither changed, so they were not rewritten. `DmsMirrorUnavailable`, `DmsMirrorProbe`, and `VaultSyncStatus` each have a single boolean (`retryable` or `connected`); `disconnectReason` and `probedAt` are options, so those three seed clusters are outside the two-boolean net and were not re-emitted. No new cluster and no unresolved source question.",
+  "transcriptSha256": "8d99b6480e59321567b36461e4a3b2fefc7d26577964114c463dd8319f36844f",
+  "runnerSha256": "d8db401443b10416f1050ee73177d43d17c459a516226969361b40537a1ca0f7",
+  "seedSha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}
