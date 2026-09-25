@@ -6225,48 +6225,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/foundation/capability/colors/test/index.test.ts:112:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 112,
-      "endLine": 130,
-      "symbol": "runSync",
-      "occurrence": "v2:1f53502bcae7dde0a388b202dab89f9e9b2c9e1026111e020eb5723c487c64dd",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect(Arbitrary.all([processLikeArbitrary]), ([processLike]) => { const encoded = encodeUnknownProcessLikeOption(processLike); expect(O.isSome(encoded)).toBe(true); if",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/colors/test/index.test.ts:138:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 138,
-      "endLine": 158,
-      "symbol": "runSync",
-      "occurrence": "v2:96f925bcba60ec850078ede937252a659ece3677229e37daabfa406cb7200f9c",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect(Arbitrary.all([processLikeArbitrary]), ([processLike]) => { expect( supportsColor({ ...processLike, env: { ...processLike.env, NO_COLOR: \"\", }, }) ).toBe(false);",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/foundation/capability/file-processing/test/FileProcessing.test.ts:135:runSync@6#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -72187,195 +72145,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:183:withTempDirectory@26#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 183,
-      "endLine": 190,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:f7916a5de9bfbf6efbfbf83560212557a48713fa45a00eb682e29089fd462db6",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ directory: import.meta.dirname, prefix:",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:194:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 194,
-      "endLine": 212,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:5c8f6b580fc0420c4405b5d33f587d0306a5563a7a372fe1185469270e11172e",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const cachePath = path.join(director",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:216:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 216,
-      "endLine": 239,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:87cc14ff500d0c9d85ebae0bbcd262ba3dcf7c6166f4b9c3086acb8891eb5096",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const cachePath = path.join(director",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:243:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 243,
-      "endLine": 261,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:e44793c7699a43b8d362576b804390ac15c4ed14f3dbfc1786066a1f116b1c4a",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const cachePath = path.join(director",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:265:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 265,
-      "endLine": 290,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:f363dd10e5540940962a6f9bb552705e8fb12b9566b2888d18a3c93331583475",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const cachePath = path.join(director",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:457:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 457,
-      "endLine": 491,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:9ebc1106ab1351549f14ddceee12911941f95afead309865cb4605d50ae2919d",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const specPath = path.join(directory",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:495:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 495,
-      "endLine": 522,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:5bd7fecf979a677de0477d010aff157a7d5da366d85b206b10588358d134dcba",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const specPath = path.join(directory",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:560:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 560,
-      "endLine": 588,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:05e80a3993df4c8bd09fff765685ab64c14f0e7a9c6faddee8462ae92e7c7318",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory: string) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const specPath = path.join(d",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:592:withTempDirectory@4#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 592,
-      "endLine": 615,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:ff69faa22d2ac7b1b275fc3cc49759afe6b9b31f9a3f3ea363dfcac66c08f573",
-      "class": "resource-wrapper",
-      "evidence": "withTempDirectory( Effect.fnUntraced(function* (directory) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const kit = yield* CodegenKit; const outputPath = path.join(directo",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts:16:provideScopedLayer@2#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -101160,90 +100929,6 @@
       "replacement": {
         "primitive": "utils.assertTrue",
         "sketch": "Preserve this Result.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/capability/colors/test/index.test.ts:105:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 105,
-      "endLine": 105,
-      "symbol": "expect",
-      "occurrence": "v2:29a71637dfbb55dc60d3313a22fa7d15ace285be10df528ca4cb56a993e796b1",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isSome(ProcessLike.decodeOption({ env: { FORCE_COLOR: \"1\" } }))).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Option.isSome Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/capability/colors/test/index.test.ts:106:expect@4#1",
-      "lens": "detector",
-      "ruleId": "EV006",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 106,
-      "endLine": 106,
-      "symbol": "expect",
-      "occurrence": "v2:0870747d24d9ea195220e68358e2d61d7fe86d9eb84694abdbaff043db6e06df",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isNone(ProcessLike.decodeOption({ stdout: { isTTY: \"yes\" } }))).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/capability/colors/test/index.test.ts:116:expect@10#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 116,
-      "endLine": 116,
-      "symbol": "expect",
-      "occurrence": "v2:ff9e2128982d1fd54a53733c5f42a2c952c503e9e58ff49b4303027945fe1073",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isSome(encoded)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Option.isSome Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/capability/colors/test/index.test.ts:121:expect@12#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 121,
-      "endLine": 121,
-      "symbol": "expect",
-      "occurrence": "v2:3ce410e8b53e98fc78d3c188404f100d568b528b2e618ef1549fd82a1a83363d",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isSome(decoded)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Option.isSome Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
       },
       "severity": "minor",
       "confidence": 0.55,
@@ -143254,48 +142939,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/foundation/capability/colors/test/index.test.ts:113:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 113,
-      "endLine": 129,
-      "symbol": "checkEffect",
-      "occurrence": "v2:1f53502bcae7dde0a388b202dab89f9e9b2c9e1026111e020eb5723c487c64dd",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect(Arbitrary.all([processLikeArbitrary]), ([processLike]) => { const encoded = encodeUnknownProcessLikeOption(processLike); expect(O.isSome(encoded)).toBe(true); if (O.isSome(encode",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/foundation/capability/colors/test/index.test.ts:139:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/colors",
-      "file": "packages/foundation/capability/colors/test/index.test.ts",
-      "line": 139,
-      "endLine": 157,
-      "symbol": "checkEffect",
-      "occurrence": "v2:96f925bcba60ec850078ede937252a659ece3677229e37daabfa406cb7200f9c",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect(Arbitrary.all([processLikeArbitrary]), ([processLike]) => { expect( supportsColor({ ...processLike, env: { ...processLike.env, NO_COLOR: \"\", }, }) ).toBe(false); expect( supports",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/foundation/capability/file-processing/test/FileProcessing.test.ts:136:checkEffect@8#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -155082,13 +154725,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:2:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:3:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/codegen-kit",
       "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 2,
-      "endLine": 2,
+      "line": 3,
+      "endLine": 3,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -155100,7 +154743,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native formatter/diff integration is the subject. CodegenKit refreshJson writes a cache file and passes its path to formatter.file; run/format and drift checks also invoke real child processes. MemoryFileSystem paths are invisible to those children. Retain NodeServices through shared instrumented layers with explicit hook budgets and per-test scoped native directories; preserve cache mismatch, warning and diff assertions."
     },
     {
       "id": "EV010:packages/tooling/library/qa-capture/test/Collector.test.ts:17:@effect/platform-node@0#1",
@@ -167379,48 +167023,6 @@
       "occurrence": "v2:2a5d8d178c8d6397801f2fac04234cdc3ce3d6264a6e8ccbb271f3bd1d2872f6",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:192:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 192,
-      "endLine": 192,
-      "symbol": "it.layer",
-      "occurrence": "v2:dc910c9bfe103a667155f6864cc48452591d9d935fde7646e4de8188f5fa9fba",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(CodegenKitRefreshTestLayer)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:294:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/codegen-kit",
-      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 294,
-      "endLine": 294,
-      "symbol": "it.layer",
-      "occurrence": "v2:dbffa95c46e63259682d4ba9fa56c95bb62c99ab3b5b95bd7293b2e67eacc578",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(CodegenKitTestLayer)",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."

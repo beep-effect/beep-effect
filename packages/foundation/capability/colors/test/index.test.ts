@@ -4,9 +4,12 @@ import browserColors, {
   createColors as createBrowserColors,
   isColorSupported as isBrowserColorSupported,
 } from "@beep/colors/Colors.browser";
+import { fcRuns } from "@beep/fc-runs";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import { constTrue } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -102,62 +105,55 @@ describe("supportsColor", () => {
   });
 
   it("decodes process-like inputs through the schema model", () => {
-    expect(O.isSome(ProcessLike.decodeOption({ env: { FORCE_COLOR: "1" } }))).toBe(true);
-    expect(O.isNone(ProcessLike.decodeOption({ stdout: { isTTY: "yes" } }))).toBe(true);
+    assertSome(
+      ProcessLike.decodeOption({ env: { FORCE_COLOR: "1" } }),
+      ProcessLike.make({ env: { FORCE_COLOR: "1" } })
+    );
+    assertNone(ProcessLike.decodeOption({ stdout: { isTTY: "yes" } }));
   });
 
-  it("round-trips generated process-like values through the schema", () => {
-    const processLikeArbitrary = Arbitrary.schema(ProcessLike);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([processLikeArbitrary]), ([processLike]) => {
-          const encoded = encodeUnknownProcessLikeOption(processLike);
+  it.prop(
+    "round-trips generated process-like values through the schema",
+    [Arbitrary.schema(ProcessLike)],
+    ([processLike]) => {
+      const encoded = encodeUnknownProcessLikeOption(processLike);
 
-          expect(O.isSome(encoded)).toBe(true);
+      assertSome(encoded.pipe(O.map(constTrue)), true);
 
-          if (O.isSome(encoded)) {
-            const decoded = ProcessLike.decodeOption(encoded.value);
+      if (O.isSome(encoded)) {
+        const decoded = ProcessLike.decodeOption(encoded.value);
+        assertSome(decoded.pipe(O.map(constTrue)), true);
 
-            expect(O.isSome(decoded)).toBe(true);
+        if (O.isSome(decoded)) {
+          expect(decoded.value).toEqual(processLike);
+        }
+      }
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-            if (O.isSome(decoded)) {
-              expect(decoded.value).toEqual(processLike);
-            }
-          }
-
-          return true;
+  it.prop(
+    "honors disable overrides for generated process-like values",
+    [Arbitrary.schema(ProcessLike)],
+    ([processLike]) => {
+      expect(
+        supportsColor({
+          ...processLike,
+          env: {
+            ...processLike.env,
+            NO_COLOR: "",
+          },
         })
-      )._tag
-    ).toBe("Passed");
-  });
-
-  it("honors disable overrides for generated process-like values", () => {
-    const processLikeArbitrary = Arbitrary.schema(ProcessLike);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([processLikeArbitrary]), ([processLike]) => {
-          expect(
-            supportsColor({
-              ...processLike,
-              env: {
-                ...processLike.env,
-                NO_COLOR: "",
-              },
-            })
-          ).toBe(false);
-          expect(
-            supportsColor({
-              ...processLike,
-              argv: A.append(processLike.argv ?? A.empty(), "--no-color"),
-            })
-          ).toBe(false);
-
-          return true;
+      ).toBe(false);
+      expect(
+        supportsColor({
+          ...processLike,
+          argv: A.append(processLike.argv ?? A.empty(), "--no-color"),
         })
-      )._tag
-    ).toBe("Passed");
-  });
+      ).toBe(false);
+    },
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("createColors", () => {
