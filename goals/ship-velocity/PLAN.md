@@ -58,7 +58,10 @@ the C5 metric correction and the new C7 item below.
   Acceptance holds: capsules land on the observing poll tick (≤ one 10s interval, inside the
   15s p95), and three reds on one head produce one session record with three queued capsules.
   Live session attach/spawn is deliberately not part of A1: attaching consumes the inbox via
-  A2's hook adapters, and spawn-when-owner-busy needs A4's leases.
+  A2's hook adapters, and spawn-when-owner-busy needs A4's leases. (2026-09-25: the 15 s p95 is
+  scoped to `--watch`'s 10 s tick; the durable `--until-ready` producer from
+  `explorations/pr-event-awareness` D24 runs on the 30 s loop at about 42 s typical worst.
+  Spawn-when-owner-busy is retired by PR #921 and that packet's D14: the woken owner dispatches.)
 - ~~A2 hook-mutex + ACK inbox (Claude deny / Codex inject / Grok tail adapters).~~ Complete:
   typed inbox/ACK porcelain is consumed by the shared hook adapter, Claude and Codex hooks, and
   the Grok tail command; P0 one-shot incident mode permits repair work and re-arms for unrelated

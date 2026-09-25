@@ -1,4 +1,34 @@
-# PR Event Awareness for Orchestrating Agents — Sources & Provenance
+# Yeet PR Events Sources and Provenance
+
+Primary and canonical ledger:
+[`explorations/pr-event-awareness/research/SOURCES.md`](../../../explorations/pr-event-awareness/research/SOURCES.md).
+This goal carries the exploration's source ledger so implementers can work
+from the goal packet without losing the original provenance. Resolve any
+disagreement in favor of the canonical exploration ledger.
+
+## Inherited research
+
+- [`BRIEF.md`](../../../explorations/pr-event-awareness/BRIEF.md) records the
+  operator-confirmed problem, appetite, solution sketch, rabbit holes and
+  no-gos (drafted and walked 2026-09-25).
+- [`MAP.md`](../../../explorations/pr-event-awareness/MAP.md) defines the
+  W1-W10 decomposition, the first vertical slice, the inherited risks and the
+  two gated re-entry candidates.
+- [`DECISIONS.md`](../../../explorations/pr-event-awareness/DECISIONS.md)
+  records D1-D38: three align rounds (2026-09-24), the doctrine, code and
+  cross-packet grill-with-docs round, and the brief walkthrough (2026-09-25),
+  with every rejected option and cite.
+- [`RESEARCH.md`](../../../explorations/pr-event-awareness/RESEARCH.md)
+  synthesizes the external landscape, the in-repo capability inventory, the
+  harness-side primitives, the first end-to-end measurement and the
+  binding-gap analysis (2026-09-24).
+- The W7 probe record will be written beside the exploration ledger under
+  `explorations/pr-event-awareness/research/` and cross-linked here.
+
+## Carried exploration ledger
+
+Everything below is the exploration ledger as of 2026-09-25, links rewritten
+for this packet's depth. Section numbers are the exploration's.
 
 <!--
 The provenance ledger for this packet. Started at capture because the
@@ -11,14 +41,14 @@ carries a claim when none exists on disk.
 - **Cluster / origin:** the time-to-certainty C3 closeout session
   (2026-09-12), where the operator was the PR-event notification path for
   PRs #1102, #1126, #1130, and #1131.
-- **Provenance:** [`../CAPTURE.md`](../CAPTURE.md) (spark, proposal,
-  assessment, live-checkout inventory); [`../RESEARCH.md`](../RESEARCH.md)
+- **Provenance:** [`../CAPTURE.md`](../../../explorations/pr-event-awareness/CAPTURE.md) (spark, proposal,
+  assessment, live-checkout inventory); [`../RESEARCH.md`](../../../explorations/pr-event-awareness/RESEARCH.md)
   (2026-09-24 external landscape, refreshed in-repo inventory, harness
   primitives, first end-to-end measurement, binding-gap verdict).
 
 ## 3. External research sources
 
-Every URL cited in [`../RESEARCH.md`](../RESEARCH.md), 2026-09-24. Vendor
+Every URL cited in [`../RESEARCH.md`](../../../explorations/pr-event-awareness/RESEARCH.md), 2026-09-24. Vendor
 documentation is reference-only: it informs a design, it is not ported.
 Repository rows state the port discipline — permissive (MIT/Apache/BSD/ISC) may
 be ported with attribution, copyleft is clean-room only, and a missing or
@@ -175,7 +205,7 @@ public source repository (reference only) while its Go SDK is MIT.
 
 ### 3g. Sources with no URL
 
-Two classes of evidence in [`../RESEARCH.md`](../RESEARCH.md) have no citable
+Two classes of evidence in [`../RESEARCH.md`](../../../explorations/pr-event-awareness/RESEARCH.md) have no citable
 URL and must be re-derived rather than trusted later:
 
 - **Observed tool schemas** in the Claude Code desktop app on the operator
@@ -197,7 +227,7 @@ Yeet internals are under
 `@beep/repo-cli`) and abbreviated to the file name. Rows carried from the
 2026-09-12 capture keep their dispositions; line numbers are the 2026-09-24
 re-read. Full tables with roles are in
-[`../RESEARCH.md`](../RESEARCH.md) §"In-Repo Capability Inventory".
+[`../RESEARCH.md`](../../../explorations/pr-event-awareness/RESEARCH.md) §"In-Repo Capability Inventory".
 
 | Brick | Path | Role for this packet | Disposition |
 |-------|------|----------------------|-------------|
@@ -259,8 +289,8 @@ re-read. Full tables with roles are in
 
 ## 5. Cross-links & provenance
 
-- This packet: [`../CAPTURE.md`](../CAPTURE.md) →
-  [`../RESEARCH.md`](../RESEARCH.md) (2026-09-24 research synthesis: external
+- This packet: [`../CAPTURE.md`](../../../explorations/pr-event-awareness/CAPTURE.md) →
+  [`../RESEARCH.md`](../../../explorations/pr-event-awareness/RESEARCH.md) (2026-09-24 research synthesis: external
   landscape, in-repo inventory, harness primitives, measurement, binding gap).
 - [`goals/ship-velocity`](../../../goals/ship-velocity/README.md) — live:
   A1 streaming watch + remediate, A2 hook-mutex + ACK inbox, A3 Stop gate,
@@ -299,9 +329,9 @@ re-read. Full tables with roles are in
   and the signed cost ceiling
   ([`research/runner-endgame-decision-record.md`](../../../goals/ci-fleet-endgame/research/runner-endgame-decision-record.md)).
   Any change to that receiver is a CI-availability decision, not a side project.
-- [`explorations/fleet-coordination`](../../fleet-coordination/README.md) —
+- [`explorations/fleet-coordination`](../../../explorations/fleet-coordination/README.md) —
   routing and lease laws for sibling checkouts, and — in
-  [`research/T3-delivery-vector.md`](../../fleet-coordination/research/T3-delivery-vector.md)
+  [`research/T3-delivery-vector.md`](../../../explorations/fleet-coordination/research/T3-delivery-vector.md)
   and `research/T6-cross-session-messaging.md` — the measured answer to this
   packet's idle-wake gap: `asyncRewake` exit 2 wakes an idle session but is
   unreachable before a session's first tool call and cannot interrupt an
