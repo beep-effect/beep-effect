@@ -43,3 +43,16 @@ migration head after merging PGlite evidence corrections. Collection-boundary
 headBefore/headAfter values identify that committed tree. The first sample ran
 on stable uncommitted source; its raw data, context and source manifest remain
 in private precommit receipts. No prior measured value was relabeled.
+
+## Pure-provider detector boundary
+
+`it.layer(SpawnFailureLayer)` at `tailscale.test.ts:228` is intentionally not an
+EV014 candidate. `detectLayerTimeout` excludes `isPureStubLayer`; that helper
+resolves the local identifier to its direct `Layer.succeed` initializer. This
+provider publishes a synchronous in-memory spawner whose call fails with the
+fixture cause; it acquires no native process or asynchronous resource. The six
+recorded EV014 exceptions instead cover factory-call layers or composed layers
+that the syntax detector cannot prove pure. A fresh canonical
+`beep lint effect-vitest --rows <private-directory>` scan confirms six EV014
+rows plus the existing EV015 row, with no SpawnFailureLayer candidate. No
+inventory suppression is needed for a site excluded by this deliberate rule.
