@@ -106,6 +106,7 @@
 "@beep/skill-contract": patch
 "@beep/storybook": patch
 "@beep/tailscale": patch
+"@beep/test-runner": patch
 "@beep/test-utils": patch
 "@beep/tika": patch
 "@beep/todox": patch
