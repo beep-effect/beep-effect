@@ -2,8 +2,9 @@
 
 ## Status
 
-Status: `P1 complete, P2 in progress` (2026-09-25). Packet landed via PR #1244; implementation on
-worktree `refs-workspace-impl` of `beep-effect2`, branch `feat/refs-workspace-impl`.
+Status: `P3 complete, P4 pending` (2026-09-25). Packet landed via PR #1244; implementation merged
+via PR #1257 (`217e308592`); lint-policy follow-up in PR #1271 (`fix/refs-lint-policy`). Evidence in
+`history/2026-09-25-p2-p3-closeout.md`.
 
 ## Phases
 
@@ -11,8 +12,8 @@ worktree `refs-workspace-impl` of `beep-effect2`, branch `feat/refs-workspace-im
 | --- | --- | --- | --- |
 | P0 Research | complete | Grill and census (2026-09-25). | `research/2026-09-25-0{0,1,2}-*.md` recorded; R1–R14 locked. |
 | P1 Implement | complete | Slices S1–S4 below, in order. | `SPEC.md` acceptance criteria met. |
-| P2 Verify | in progress | Run the verification matrix and capture evidence under `history/`. | Green, or blockers documented with command output. |
-| P3 Yeet: PR to mergeable | pending | `bun run beep yeet publish --start-pr-early --monitor --pr`; drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P2 Verify | complete | Run the verification matrix and capture evidence under `history/`. | Green, or blockers documented with command output. |
+| P3 Yeet: PR to mergeable | complete | `bun run beep yeet publish --start-pr-early --monitor --pr`; drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Closeout reflection, packet state flip. | Reflection exists and lints; README/manifest updated. |
 
 ### Operator path inputs
