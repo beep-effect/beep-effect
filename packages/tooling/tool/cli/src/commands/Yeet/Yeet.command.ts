@@ -32,6 +32,7 @@ import { validateProofJobDetach } from "./internal/Guards.ts";
 import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity, yeetProofJobRowId } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
+import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
@@ -54,9 +55,12 @@ import {
   ProofJobSubmitter,
   ProofJobSystemdResult,
   ProofJobWaitOptions,
+  ProofJobWaitOutcome,
+  proofJobSettledWaitOutcome,
   proofJobUnitName,
+  proofJobWaitExitFor,
 } from "./internal/ProofJob.ts";
-import { ProofJobLauncher, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
+import { ProofJobLauncher, ProofJobWaitResult, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
 import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
@@ -811,16 +815,23 @@ const jobWaitCommand = Command.make(
   Effect.fn("Yeet.jobWait")(function* (options) {
     const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
     const timeoutMs = Str.isEmpty(options.timeout) ? O.none<number>() : O.some(yield* durationMillis(options.timeout));
-    const record = yield* launcher.wait(options.jobId, ProofJobWaitOptions.make({ timeoutMs }));
-    yield* renderJob(record, options.json);
-    const exitCode =
-      record.phase === "terminated"
-        ? 2
-        : O.exists(record.outcome, (outcome) => outcome.verdictOutcome === "success")
-          ? 0
-          : 1;
-    if (exitCode !== 0)
-      return yield* YeetCommandError.make({ message: `Proof job ${record.jobId} ${record.phase}.`, exitCode });
+    const result = yield* launcher.wait(options.jobId, ProofJobWaitOptions.make({ timeoutMs }));
+    yield* renderJob(result.record, options.json);
+    const outcome = ProofJobWaitResult.match(result, {
+      settled: ({ record }) => Effect.succeed(proofJobSettledWaitOutcome(record)),
+      // The wave rows stay unacknowledged; the gate line names them and the
+      // re-run. JSON mode keeps stdout the record, so the line goes to stderr.
+      wave: ({ record, wave }) => {
+        const line = renderYeetPrWaveLine(wave, "job-wait", `bun run beep yeet job wait ${record.jobId}`);
+        return (options.json ? Console.error(line) : Console.log(line)).pipe(Effect.as(ProofJobWaitOutcome.Enum.wave));
+      },
+    });
+    const exit = proofJobWaitExitFor(yield* outcome);
+    if (exit.exitCode !== 0)
+      return yield* YeetCommandError.make({
+        message: `Proof job ${result.record.jobId}: ${exit.summary}.`,
+        exitCode: exit.exitCode,
+      });
   })
 );
 const jobLogsCommand = Command.make(
