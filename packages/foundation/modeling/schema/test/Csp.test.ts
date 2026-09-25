@@ -1,5 +1,7 @@
+import { fcRuns } from "@beep/fc-runs";
 import { CspDirectives } from "@beep/schema/Csp";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -20,7 +22,7 @@ describe("CspDirectives", () => {
 
         return true;
       }),
-      { arbitrary: { runs: 25 } }
+      { arbitrary: fcRuns(25) }
     );
   }
 

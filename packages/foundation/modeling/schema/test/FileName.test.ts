@@ -1,8 +1,12 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FileName } from "@beep/schema/FileName";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -34,35 +38,39 @@ describe("FileName", () => {
   it.effect(
     "rejects names without a non-empty basename before the final extension",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownFileNameEffect(".png"));
-      expect(Result.isFailure(failure1)).toBe(true);
+      const failure1 = yield* Effect.exit(decodeUnknownFileNameEffect(".png"));
+      pipe(failure1, Exit.hasFails, assertTrue);
     })
   );
 
   it.effect(
     "rejects names without a known extension segment",
     Effect.fnUntraced(function* () {
-      const failure2 = yield* Effect.result(decodeUnknownFileNameEffect("readme"));
-      expect(Result.isFailure(failure2)).toBe(true);
-      const failure3 = yield* Effect.result(decodeUnknownFileNameEffect("readme."));
-      expect(Result.isFailure(failure3)).toBe(true);
-      const failure4 = yield* Effect.result(decodeUnknownFileNameEffect("readme.unknownext"));
-      expect(Result.isFailure(failure4)).toBe(true);
+      const failure2 = yield* Effect.exit(decodeUnknownFileNameEffect("readme"));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      const failure3 = yield* Effect.exit(decodeUnknownFileNameEffect("readme."));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      const failure4 = yield* Effect.exit(decodeUnknownFileNameEffect("readme.unknownext"));
+      pipe(failure4, Exit.hasFails, assertTrue);
     })
   );
 
   it.effect(
     "rejects names containing path separators",
     Effect.fnUntraced(function* () {
-      const failure5 = yield* Effect.result(decodeUnknownFileNameEffect("bad/name.txt"));
-      expect(Result.isFailure(failure5)).toBe(true);
-      if (Result.isFailure(failure5)) {
-        expect(failure5.failure.message).toContain("File name stems must not contain /");
+      const failure5 = yield* Effect.exit(decodeUnknownFileNameEffect("bad/name.txt"));
+      pipe(failure5, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure5)) {
+        expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "File name stems must not contain /"
+        );
       }
-      const failure6 = yield* Effect.result(decodeUnknownFileNameEffect("bad\\name.txt"));
-      expect(Result.isFailure(failure6)).toBe(true);
-      if (Result.isFailure(failure6)) {
-        expect(failure6.failure.message).toContain("File name stems must not contain \\");
+      const failure6 = yield* Effect.exit(decodeUnknownFileNameEffect("bad\\name.txt"));
+      pipe(failure6, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure6)) {
+        expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "File name stems must not contain \\"
+        );
       }
     })
   );
@@ -70,10 +78,12 @@ describe("FileName", () => {
   it.effect(
     "rejects names containing embedded NUL bytes",
     Effect.fnUntraced(function* () {
-      const failure7 = yield* Effect.result(decodeUnknownFileNameEffect(`bad\u0000name.txt`));
-      expect(Result.isFailure(failure7)).toBe(true);
-      if (Result.isFailure(failure7)) {
-        expect(failure7.failure.message).toContain("File name stems must not contain embedded NUL bytes");
+      const failure7 = yield* Effect.exit(decodeUnknownFileNameEffect(`bad\u0000name.txt`));
+      pipe(failure7, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure7)) {
+        expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "File name stems must not contain embedded NUL bytes"
+        );
       }
     })
   );
@@ -87,10 +97,10 @@ describe("FileName", () => {
   it.effect(
     "reports nested field failures at the fileName key",
     Effect.fnUntraced(function* () {
-      const failure8 = yield* Effect.result(decodeFileNamePayloadEffect({ fileName: "bad/name.txt" }));
-      expect(Result.isFailure(failure8)).toBe(true);
-      if (Result.isFailure(failure8)) {
-        expect(failure8.failure.message).toContain(`at ["fileName"]`);
+      const failure8 = yield* Effect.exit(decodeFileNamePayloadEffect({ fileName: "bad/name.txt" }));
+      pipe(failure8, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure8)) {
+        expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`at ["fileName"]`);
       }
     })
   );

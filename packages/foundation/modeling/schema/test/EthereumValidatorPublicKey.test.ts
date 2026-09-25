@@ -1,8 +1,12 @@
 import { EthereumValidatorPublicKey } from "@beep/schema/EthereumValidatorPublicKey";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownEthereumValidatorPublicKeyEffect = S.decodeUnknownEffect(EthereumValidatorPublicKey);
@@ -21,26 +25,26 @@ describe("EthereumValidatorPublicKey", () => {
   it.effect(
     "rejects malformed validator public keys",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(
+      const failure1 = yield* Effect.exit(
         decodeUnknownEthereumValidatorPublicKeyEffect(Str.toUpperCase(validPublicKey))
       );
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain(
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EthereumValidatorPublicKey must be a lowercase 0x-prefixed 48-byte public key"
         );
       }
-      const failure2 = yield* Effect.result(decodeUnknownEthereumValidatorPublicKeyEffect(`0x${Str.repeat("ab", 47)}`));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain(
+      const failure2 = yield* Effect.exit(decodeUnknownEthereumValidatorPublicKeyEffect(`0x${Str.repeat("ab", 47)}`));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EthereumValidatorPublicKey must be a lowercase 0x-prefixed 48-byte public key"
         );
       }
-      const failure3 = yield* Effect.result(decodeUnknownEthereumValidatorPublicKeyEffect(`0x${Str.repeat("ag", 48)}`));
-      expect(Result.isFailure(failure3)).toBe(true);
-      if (Result.isFailure(failure3)) {
-        expect(failure3.failure.message).toContain(
+      const failure3 = yield* Effect.exit(decodeUnknownEthereumValidatorPublicKeyEffect(`0x${Str.repeat("ag", 48)}`));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure3)) {
+        expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EthereumValidatorPublicKey must be a lowercase 0x-prefixed 48-byte public key"
         );
       }

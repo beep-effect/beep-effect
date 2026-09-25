@@ -23,8 +23,10 @@ import {
   today,
   todayEffect,
 } from "@beep/schema/LocalDate";
-import { describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, Equal, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Duration, Effect, Equal, Exit, pipe } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
@@ -128,10 +130,10 @@ describe("LocalDate", () => {
         const decode = decodeUnknownLocalDate;
 
         const result0 = yield* Effect.exit(decode({ year: 2024, month: 0, day: 15 }));
-        expect(Exit.isFailure(result0)).toBe(true);
+        pipe(result0, Exit.isFailure, assertTrue);
 
         const result13 = yield* Effect.exit(decode({ year: 2024, month: 13, day: 15 }));
-        expect(Exit.isFailure(result13)).toBe(true);
+        pipe(result13, Exit.isFailure, assertTrue);
       })
     );
 
@@ -141,10 +143,10 @@ describe("LocalDate", () => {
         const decode = decodeUnknownLocalDate;
 
         const result0 = yield* Effect.exit(decode({ year: 2024, month: 6, day: 0 }));
-        expect(Exit.isFailure(result0)).toBe(true);
+        pipe(result0, Exit.isFailure, assertTrue);
 
         const result32 = yield* Effect.exit(decode({ year: 2024, month: 6, day: 32 }));
-        expect(Exit.isFailure(result32)).toBe(true);
+        pipe(result32, Exit.isFailure, assertTrue);
       })
     );
 
@@ -154,10 +156,10 @@ describe("LocalDate", () => {
         const decode = decodeUnknownLocalDate;
 
         const result0 = yield* Effect.exit(decode({ year: 0, month: 6, day: 15 }));
-        expect(Exit.isFailure(result0)).toBe(true);
+        pipe(result0, Exit.isFailure, assertTrue);
 
         const result10000 = yield* Effect.exit(decode({ year: 10000, month: 6, day: 15 }));
-        expect(Exit.isFailure(result10000)).toBe(true);
+        pipe(result10000, Exit.isFailure, assertTrue);
       })
     );
   });
@@ -220,7 +222,7 @@ describe("LocalDate", () => {
       "rejects invalid date strings",
       Effect.fnUntraced(function* () {
         const result = yield* Effect.exit(fromString("invalid"));
-        expect(Exit.isFailure(result)).toBe(true);
+        pipe(result, Exit.isFailure, assertTrue);
       })
     );
 
@@ -228,10 +230,10 @@ describe("LocalDate", () => {
       "rejects dates with invalid format",
       Effect.fnUntraced(function* () {
         const result1 = yield* Effect.exit(fromString("2024/06/15"));
-        expect(Exit.isFailure(result1)).toBe(true);
+        pipe(result1, Exit.isFailure, assertTrue);
 
         const result2 = yield* Effect.exit(fromString("06-15-2024"));
-        expect(Exit.isFailure(result2)).toBe(true);
+        pipe(result2, Exit.isFailure, assertTrue);
       })
     );
   });
@@ -283,11 +285,14 @@ describe("LocalDate", () => {
 
   describe("today", () => {
     it("returns current date", () => {
+      const before = DateTime.toDateUtc(DateTime.nowUnsafe());
       const t = today();
-      const now = DateTime.toDateUtc(DateTime.makeUnsafe(Math.trunc(performance.timeOrigin + performance.now())));
-      expect(t.year).toBe(now.getUTCFullYear());
-      expect(t.month).toBe(now.getUTCMonth() + 1);
-      expect(t.day).toBe(now.getUTCDate());
+      const after = DateTime.toDateUtc(DateTime.nowUnsafe());
+      // Midnight may fall between the operation and either observation.
+      expect([
+        [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],
+        [after.getUTCFullYear(), after.getUTCMonth() + 1, after.getUTCDate()],
+      ]).toContainEqual([t.year, t.month, t.day]);
     });
   });
 
@@ -336,12 +341,14 @@ describe("LocalDate", () => {
 
     it.live("returns real current date with live effect", () =>
       Effect.gen(function* () {
+        const before = DateTime.toDateUtc(yield* DateTime.now);
         const date = yield* todayEffect;
-        const now = DateTime.toDateUtc(yield* DateTime.now);
-        // Should be today's date (UTC)
-        expect(date.year).toBe(now.getUTCFullYear());
-        expect(date.month).toBe(now.getUTCMonth() + 1);
-        expect(date.day).toBe(now.getUTCDate());
+        const after = DateTime.toDateUtc(yield* DateTime.now);
+        // Preserve the live-clock contract even when UTC midnight intervenes.
+        expect([
+          [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],
+          [after.getUTCFullYear(), after.getUTCMonth() + 1, after.getUTCDate()],
+        ]).toContainEqual([date.year, date.month, date.day]);
       })
     );
   });
@@ -669,7 +676,7 @@ describe("LocalDate", () => {
         "rejects invalid format - wrong separator",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024/06/15"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -677,7 +684,7 @@ describe("LocalDate", () => {
         "rejects invalid format - US format",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("06-15-2024"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -685,7 +692,7 @@ describe("LocalDate", () => {
         "rejects invalid format - no separators",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("20240615"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -693,7 +700,7 @@ describe("LocalDate", () => {
         "rejects invalid format - random string",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("invalid"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -701,7 +708,7 @@ describe("LocalDate", () => {
         "rejects invalid format - empty string",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString(""));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -709,7 +716,7 @@ describe("LocalDate", () => {
         "rejects invalid month - 0",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024-00-15"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -717,7 +724,7 @@ describe("LocalDate", () => {
         "rejects year 0000",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("0000-01-15"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -725,7 +732,7 @@ describe("LocalDate", () => {
         "rejects invalid month - 13",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024-13-15"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -733,7 +740,7 @@ describe("LocalDate", () => {
         "rejects invalid day - 0",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024-06-00"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -741,7 +748,7 @@ describe("LocalDate", () => {
         "rejects invalid day - 32 for month with 31 days",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024-07-32"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -749,7 +756,7 @@ describe("LocalDate", () => {
         "rejects invalid day - 31 for month with 30 days",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024-06-31"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -757,7 +764,7 @@ describe("LocalDate", () => {
         "rejects February 29 in non-leap year",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2023-02-29"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
 
@@ -765,7 +772,7 @@ describe("LocalDate", () => {
         "rejects February 30",
         Effect.fnUntraced(function* () {
           const result = yield* Effect.exit(decodeLocalDateFromString("2024-02-30"));
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
         })
       );
     });

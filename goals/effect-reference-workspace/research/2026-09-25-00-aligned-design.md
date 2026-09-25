@@ -1,6 +1,6 @@
 # Effect reference workspace — aligned design (grill 2026-09-25)
 
-Problem: `~/YeeBois/dev/effect` is the Effect v4 source of truth that every beep-effect checkout
+Problem: `$HOME/YeeBois/dev/effect` is the Effect v4 source of truth that every beep-effect checkout
 reaches through a gitignored `.repos/effect` symlink. It carries only a structural graft index, the
 link is absent from most agent worktrees, and each further reference repo (effect-tsgo today,
 t3code / opencode later) would need its own ad hoc index, path, and refresh. The operator wants one
@@ -8,13 +8,13 @@ consolidated reference folder per theme with one graft setup, refreshed on a tim
 every beep checkout by a stable name.
 
 Evidence report: `2026-09-25-01-current-state.md` (same directory). Graft facts below cite the
-machine-local Graft checkout at `~/YeeBois/dev/Graft` (v0.18.0 installed via mise node 24.19.0).
+machine-local Graft checkout at `$HOME/YeeBois/dev/Graft` (v0.18.0 installed via mise node 24.19.0).
 
 ## Locked decisions
 
 | # | Decision | Ruling |
 | --- | --- | --- |
-| R1 | Layout | **Physically move** the clones to `~/YeeBois/references/effect/<repo>`. No symlink shim is left at `~/YeeBois/dev/effect`; stale paths fail loud. The moved primary has one linked worktree (`~/YeeBois/dev/effect-worktrees/docgen-enforce-examples`), so the move ends with `git worktree repair` run from the moved primary. |
+| R1 | Layout | **Physically move** the clones to `$HOME/YeeBois/references/effect/<repo>`. No symlink shim is left at `$HOME/YeeBois/dev/effect`; stale paths fail loud. The moved primary has one linked worktree (`$HOME/YeeBois/dev/effect-worktrees/docgen-enforce-examples`), so the move ends with `git worktree repair` run from the moved primary. |
 | R2 | Members | **`effect` and `effect-tsgo` only**, both deep tier. Adding a member is one manifest entry plus one command. `effect-smol` is excluded (last pulled 2026-07-14; effect `main` is the v4 codebase with `migration/v3-to-v4` checked in). t3code (23k tracked files, 6 worktrees) and opencode are deferred; when admitted they enter structural-only with `--only-dir` narrowed to their Effect-using packages. |
 | R3 | Graft mode | **Workspace mode** (graft auto-splits a `.git`-less folder with two or more git children: each child keeps its own `graft/`, the parent holds only `graft/workspace.json`, parent queries federate with rank fusion). Never `--follow-nested-repos` (a mega-graph only pays off when members import each other's source; t3code/opencode import `effect` from npm). No `graft init` at parent or children (it writes instruction files into upstream clones; beep denies `graft init` in `.claude/settings.json`). CLI only, no MCP server (beep decision log 2026-09-09). Build with `GRAFT_NO_GITIGNORE=1` and ignore `graft/` through each child's `.git/info/exclude`, so pull-only upstream clones never get a dirty tracked `.gitignore`. |
 | R4 | Deep model | **`claude-opus-5` through CLIProxyAPI.** Reuse `$HOME/.config/beep-graft/env` verbatim: `GRAFT_PROVIDER=openai`, `GRAFT_BASE_URL=http://127.0.0.1:8317/v1`, `GRAFT_MODEL=claude-opus-5`, `GRAFT_LLM_RETRIES=12`, `GRAFT_SYNTH_MAX_TOKENS=32768`, `GRAFT_SYNTH_JOBS=4`, `GRAFT_DUMP_DIR`, `DO_NOT_TRACK=1`. The `graft.deep` role in the model routing manifest already binds `claude-opus-5` × `proxy-workflow`. |
@@ -27,7 +27,7 @@ machine-local Graft checkout at `~/YeeBois/dev/Graft` (v0.18.0 installed via mis
 | R11 | Lanes | **Fable 5.1 orchestrates.** Implementation lanes run on **Codex `gpt-6-astra` at `medium`** (`codex exec --model gpt-6-astra -c 'model_reasoning_effort="medium"'`), matching the ratified `codex.heavy × codex-cli` binding. `claude-opus-5` is spent only on the graft deep pass. |
 | R12 | Packet | `goals/effect-reference-workspace/` from `goals/_template`, authored in a worktree of **beep-effect2** (beep-effect0 is the read-only graft owner clone and must not host lanes). Provenance: this grill, no exploration packet. Completion gate: yeet PR. |
 | R13 | Docs sweep | **Live surfaces only.** `AGENTS.md` (Tool Routing bullet; graft block gains the reference routing line), `README.md` §"First-party history vs `.repos/effect`", `standards/effect-first-development.md`, `standards/schema-first-development-prompt.md` (drop the `.repos/effect-v4` hedge), `.claude/skills/{effect-first-development,schema-first-development,atom-reactivity-specialist,graft}/SKILL.md`, `.claude/agents/effect-first-developer.md`, `docs/runbooks/graft-local-recovery.md`, `greptile.json`, `scripts/knowledge-refs-rewrite.rules.json`, and the tests `setup-effect-ref.test.ts` / `worktree-fleet.test.ts`. `explorations/**` and `goals/**` history are frozen. |
-| R14 | Home surfaces | **Operator-ratified follow-ups, not agent writes:** `~/.claude/rules/effect-coding-standards.md` (stale `.repos/effect-v4` / effect-smol pointer) and any memory pointer naming `~/YeeBois/dev/effect`. Listed in `SPEC.md`; the operator applies them. |
+| R14 | Home surfaces | **Operator-ratified follow-ups, not agent writes:** `~/.claude/rules/effect-coding-standards.md` (stale `.repos/effect-v4` / effect-smol pointer) and any memory pointer naming `$HOME/YeeBois/dev/effect`. Listed in `SPEC.md`; the operator applies them. |
 
 ## Non-negotiables
 
@@ -44,7 +44,7 @@ machine-local Graft checkout at `~/YeeBois/dev/Graft` (v0.18.0 installed via mis
   checkouts. The provider env file is read, never written.
 - Never run `graft build --deep` from an interactive agent session (AGENTS.md graft block).
 
-## Graft facts the design relies on (v0.18.0, `~/YeeBois/dev/Graft`)
+## Graft facts the design relies on (v0.18.0, `$HOME/YeeBois/dev/Graft`)
 
 | Fact | Source |
 | --- | --- |

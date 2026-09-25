@@ -1,5 +1,7 @@
 import { Semver, SemverFromString } from "@beep/schema/Semver";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -8,13 +10,13 @@ import * as S from "effect/Schema";
 const decodeSemver = S.decodeUnknownEffect(SemverFromString);
 const decodeSemverObject = S.decodeUnknownEffect(Semver);
 
-const expectDecodeFailure = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<void> =>
+const expectDecodeFailure = <A, E>(effect: Effect.Effect<A, E>, input: string): Effect.Effect<void> =>
   Effect.gen(function* () {
     const exit = yield* Effect.exit(effect);
 
-    expect(Exit.isFailure(exit)).toBe(true);
+    assertTrue(Exit.isFailure(exit), `Expected schema failure for ${input}`);
     if (Exit.isFailure(exit)) {
-      expect(O.isSome(Cause.findErrorOption(exit.cause))).toBe(true);
+      assertTrue(O.isSome(Cause.findErrorOption(exit.cause)), `Expected typed failure for ${input}`);
     }
   });
 
@@ -54,11 +56,11 @@ describe("Semver", () => {
   it.effect(
     "rejects malformed semantic version strings",
     Effect.fnUntraced(function* () {
-      yield* expectDecodeFailure(decodeSemver("1.02.0"));
-      yield* expectDecodeFailure(decodeSemver("1..2"));
-      yield* expectDecodeFailure(decodeSemver("1.2.3-01"));
-      yield* expectDecodeFailure(decodeSemver("1.2.3+"));
-      yield* expectDecodeFailure(decodeSemver("1.2.3-alpha..1"));
+      yield* expectDecodeFailure(decodeSemver("1.02.0"), 'decodeSemver("1.02.0")');
+      yield* expectDecodeFailure(decodeSemver("1..2"), 'decodeSemver("1..2")');
+      yield* expectDecodeFailure(decodeSemver("1.2.3-01"), 'decodeSemver("1.2.3-01")');
+      yield* expectDecodeFailure(decodeSemver("1.2.3+"), 'decodeSemver("1.2.3+")');
+      yield* expectDecodeFailure(decodeSemver("1.2.3-alpha..1"), 'decodeSemver("1.2.3-alpha..1")');
     })
   );
 
@@ -72,7 +74,8 @@ describe("Semver", () => {
           patch: 0,
           prerelease: [],
           build: [],
-        })
+        }),
+        "decodeSemverObject({ major: -1, minor: 0, patch: 0, prerelease: [], build: [], })"
       );
       yield* expectDecodeFailure(
         decodeSemverObject({
@@ -81,7 +84,8 @@ describe("Semver", () => {
           patch: 0,
           prerelease: ["01"],
           build: [],
-        })
+        }),
+        'decodeSemverObject({ major: 1, minor: 0, patch: 0, prerelease: ["01"], build: [], })'
       );
       yield* expectDecodeFailure(
         decodeSemverObject({
@@ -90,14 +94,15 @@ describe("Semver", () => {
           patch: 0,
           prerelease: [],
           build: [""],
-        })
+        }),
+        'decodeSemverObject({ major: 1, minor: 0, patch: 0, prerelease: [], build: [""], })'
       );
     })
   );
 
   it("parses prerelease identifiers with SemVer numeric rules", () => {
-    expect(Semver.preReleaseSegmentsFromStr("alpha.1")).toEqual(O.some(["alpha", "1"]));
-    expect(O.isNone(Semver.preReleaseSegmentsFromStr("alpha.01"))).toBe(true);
+    assertSome(Semver.preReleaseSegmentsFromStr("alpha.1"), ["alpha", "1"]);
+    pipe(Semver.preReleaseSegmentsFromStr("alpha.01"), O.isNone, assertTrue);
   });
 
   it("orders prerelease identifiers according to SemVer precedence", () => {

@@ -8,8 +8,9 @@ import {
   CurrencyCodeDataSourceUrl,
   CurrencyCodeDataValues,
 } from "@beep/data/CurrencyCodes";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { pipe } from "effect";
 
 describe("CurrencyCodes", () => {

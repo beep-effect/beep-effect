@@ -1,7 +1,9 @@
 import { fcRuns } from "@beep/fc-runs";
 import { ArrayBuf, isArrayBuf } from "@beep/schema/ArrayBuffer";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -23,9 +25,9 @@ describe("ArrayBuf", () => {
       const view = yield* Effect.exit(decodeUnknownArrayBuf(new Uint8Array([1, 2])));
       const text = yield* Effect.exit(decodeUnknownArrayBuf("AQID"));
       const shared = yield* Effect.exit(decodeUnknownArrayBuf(new SharedArrayBuffer(4)));
-      expect(Exit.isFailure(view)).toBe(true);
-      expect(Exit.isFailure(text)).toBe(true);
-      expect(Exit.isFailure(shared)).toBe(true);
+      pipe(view, Exit.isFailure, assertTrue);
+      pipe(text, Exit.isFailure, assertTrue);
+      pipe(shared, Exit.isFailure, assertTrue);
     })
   );
 
@@ -34,7 +36,7 @@ describe("ArrayBuf", () => {
       const buffer = new ArrayBuffer(4);
       buffer.transfer();
       const exit = yield* Effect.exit(decodeArrayBuf(buffer));
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -52,7 +54,7 @@ describe("ArrayBuf", () => {
     Effect.gen(function* () {
       const codec = S.toCodecJson(ArrayBuf);
       const exit = yield* Effect.exit(S.decodeEffect(codec)("not*base64!"));
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -63,22 +65,19 @@ describe("ArrayBuf", () => {
     expect(equivalence(bufferOf([1, 2]), bufferOf([1, 2, 3]))).toBe(false);
   });
 
-  it("derives an arbitrary of live buffers", () => {
+  {
     const arbitrary = Arbitrary.schema(ArrayBuf);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([buffer]) => {
-            expect(isArrayBuf(buffer)).toBe(true);
+    it.effect.prop(
+      "derives an arbitrary of live buffers",
+      [arbitrary],
+      Effect.fnUntraced(function* ([buffer]) {
+        expect(isArrayBuf(buffer)).toBe(true);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
   it("derives a schema-backed guard", () => {
     expect(isArrayBuf(new ArrayBuffer(2))).toBe(true);
