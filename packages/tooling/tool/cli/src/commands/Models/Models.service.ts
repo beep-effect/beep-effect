@@ -18,6 +18,7 @@ import { A, O, pipe } from "@beep/utils";
 import { Effect, FileSystem, Layer, Match } from "effect";
 import * as Context from "effect/Context";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { CatalogDiff } from "./Models.catalog.schemas.ts";
 import {
@@ -245,7 +246,19 @@ const bindingProblem = (
     return O.some<DriftKind>("unknown-model");
   }
 
-  const effortInvalid = O.exists(binding.effort, (effort) => !isEffortAllowedOnSurface(binding.surface, effort));
+  const levels = Match.value(binding.surface).pipe(
+    Match.whenOr("codex-cli", "codex-plugin", "jetbrains-codex", () => model.value.codexLevels),
+    Match.when("grok-cli", () => model.value.grokLevels),
+    Match.when("proxy-workflow", () => model.value.upstreamLevels),
+    Match.whenOr("claude-code", "cursor-seat", () => []),
+    Match.exhaustive
+  );
+  const effortInvalid = O.exists(
+    binding.effort,
+    (effort) =>
+      !isEffortAllowedOnSurface(binding.surface, effort) ||
+      (A.isReadonlyArrayNonEmpty(levels) && !A.contains(levels, effort))
+  );
   const effortMissing = reference.field !== "model" && O.isNone(binding.effort);
 
   return effortInvalid || effortMissing ? O.some<DriftKind>("invalid-effort") : O.none<DriftKind>();
@@ -317,7 +330,14 @@ const checkLocator = Effect.fnUntraced(function* (
   const expected = expectedFor(input);
   const upstreamProblem = bindingFinding(input, expected);
   if (O.isSome(upstreamProblem)) {
-    return upstreamProblem;
+    // Catalog availability and file drift are independent observations. Keep
+    // the actual target value visible even when a live overlay drops a model.
+    return O.some(
+      DriftFinding.make({
+        ...upstreamProblem.value,
+        current: yield* input.reader.read(input.file, input.locator),
+      })
+    );
   }
 
   if (O.isNone(expected)) {
@@ -367,6 +387,7 @@ const makeCheck = (): ModelsCheckShape => ({
       const bindings = HashMap.fromIterable(
         A.map(manifest.bindings, (entry) => [bindingKey(entry.role, entry.surface), entry] as const)
       );
+      const boundModels = HashSet.fromIterable(A.map(manifest.bindings, (binding) => binding.modelId));
 
       const findings = yield* Effect.forEach(
         manifest.targets,
@@ -412,6 +433,11 @@ const makeCheck = (): ModelsCheckShape => ({
         diff,
         diffScope: options.offline ? "suppressed-offline" : "full",
         findings,
+        candidates: pipe(
+          snapshot.models,
+          A.filter((model) => model.availability.codexCli && !HashSet.has(boundModels, model.id)),
+          A.map((model) => model.id)
+        ),
         hasDrift: A.isReadonlyArrayNonEmpty(findings),
       });
     },

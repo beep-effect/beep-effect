@@ -8,6 +8,46 @@
   ],
   "entries": [
     {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "symbol": "UpstreamThinkingSupport",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Lossless external thinking metadata boundary (R1). Open records preserve future reasoning fields and unknown levels through exact decode/encode round trips; a closed class would discard them."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "symbol": "UpstreamModelEntry",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Lossless upstream model boundary (R1). Unknown provider capabilities and future metadata must survive exact decode/encode round trips; snapshots persist only the separate normalized CatalogModel."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "symbol": "CodexReasoningLevel",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Lossless Codex effort metadata boundary (R10). Unknown ladder metadata survives exact decode/encode round trips; known effort and description fields remain validated."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "symbol": "CodexCacheEntry",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Lossless Codex model cache boundary (R1). Future model fields survive exact decode/encode round trips; known routing fields remain validated."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
+      "symbol": "CodexModelsCache",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Lossless Codex cache envelope (R1). Unknown envelope metadata survives round trips; account-scoped metadata is never projected into persisted catalog snapshots or reports."
+    },
+    {
       "file": "apps/oip-web/src/content/OipSeo.ts",
       "symbol": "oipTwitterHandle",
       "kind": "schema-policy-advisory",
