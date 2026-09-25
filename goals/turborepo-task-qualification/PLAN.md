@@ -2112,3 +2112,20 @@ handoff tests pass. The attachment accepts 1014 sources, six historical
 planner artifacts and 50 reviews, preserving all 14 broader obligations.
 See [the review](./research/d1-entrypoint-review.json). Current planner parity,
 complete semantic coverage and signed remote evidence remain unproven.
+
+### D1 planner reproduction and proof attribution — 2026-09-25
+
+Explicit local and hosted environments reproduce the finite planner scenarios.
+The CI/Quality projections are equal to their prior versions. Ten Yeet scenarios
+per environment move only `quality:cache-policy` earlier; lane inventories and
+all other projected values remain equal. The attachment accepts 1014 sources,
+six artifacts and 51 reviews, retaining 14 obligations. See
+[the planner comparison](./research/d1-planner-review.json). These pure calls
+do not execute lanes or prove exhaustive interpreter behavior.
+
+The earlier full proof ended at lint-policy with 14 inline-schema errors and
+one actionable host-path finding. All four affected files match main;
+PR #1272 remains open for the inline-schema repairs and the host-path finding
+belongs to the Effect/Vitest inventory.
+[The attribution](./research/proof-7877-attribution.json) preserves this as
+a failed proof, with current-head verification still required.

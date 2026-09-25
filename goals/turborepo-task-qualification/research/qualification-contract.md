@@ -22,11 +22,13 @@ Two repo-cli test configurations gained the D1 economics/handoff JSON inputs;
 configuration are unchanged. This live census is not an atomic filesystem
 snapshot. See [the D1 source review](./d1-entrypoint-review.json).
 
-The validated attachment now binds 1,014 sources, six historical planner artifacts
-and 50 reviews, retaining 14 broader obligations. Scoped npm tool paths are accepted
+The validated attachment now binds 1,014 sources, six planner artifacts
+and 51 reviews, retaining 14 broader obligations. Scoped npm tool paths are accepted
 without relaxing containment, symlink rejection or digest checks. The pure
 policy API remains `@beep/repo-configs/cache`; source attachment does not grant
-qualification or authorize activation.
+qualification or authorize activation. The [D1 planner comparison](./d1-planner-review.json)
+renews four finite local/hosted projections; the two other artifacts retain
+their historical pins.
 
 The [v23 receipt](./local-matrix-v23.md) keeps stable Turbo 2.11.3 and canary
 2.11.5-canary.2 results separate at their frozen source. Each has 67 local
