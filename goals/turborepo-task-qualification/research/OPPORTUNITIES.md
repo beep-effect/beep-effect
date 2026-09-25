@@ -2062,3 +2062,9 @@ repair; five still match byte for byte. Inventory-aware checks when the source
 tests land would prevent a later qualification proof inheriting this red.
 The attribution is retained with the process-boundary archive. No inventory
 baseline was expanded to waive the findings.
+
+- 2026-09-25: While reviewing the JSDoc migration hash delta, two public
+  examples still dereferenced Effects as direct results after the Crypto
+  migration (`JSDocMigrateExtract.ts`). Repaired both examples; bounded docgen
+  and direct example controls pass. Updating caller examples in the same API
+  migration would prevent this documentation drift.

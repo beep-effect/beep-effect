@@ -1822,3 +1822,17 @@ and the hosted-checks gate remaining unknown. See
 GitHub observations are mutable and collected across separate requests; write
 intents remain explicit remote effects. Local parser or fixture success cannot
 replace fresh hosted proof. All 13 broader census obligations remain open.
+
+### Quality helper deltas and Effect examples — 2026-09-25
+
+Review 36 covers coverage-row formatting, JSDoc annotation detection and
+migration extraction/apply deltas. Two stale examples of Effectful hashing and
+extraction now provide Crypto and execute the returned programs. Controls
+return one record and match an independent SHA256 digest. All 312 focused
+tests, package lint/check and bounded docgen passed. See
+[the receipt](./research/quality-helper-review.json).
+
+The normal census refresh retains 144 workspaces, 3473 nodes and 1970 executable
+nodes; only the repaired source binding changed. All 13 broader obligations
+remain attached. Extraction/application retain Git, filesystem, formatter and
+timestamp dependencies and writes; they are not read-only lint computations.

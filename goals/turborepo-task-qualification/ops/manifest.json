@@ -351,7 +351,8 @@
     "research/proof-ledger-shadow-review.json",
     "research/proof-authority-review.json",
     "research/environment-process-review.json",
-    "research/hosted-closeout-review.json"
+    "research/hosted-closeout-review.json",
+    "research/quality-helper-review.json"
   ],
   "agentLaunchers": [
     {
