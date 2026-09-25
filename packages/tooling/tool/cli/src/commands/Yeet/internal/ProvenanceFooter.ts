@@ -48,11 +48,13 @@ const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
  *
  * **Details**
  *
- * `skipped` means no write was attempted, `yielded` means contention outlasted
- * the reconcile bound, and `drifted` means the post-write readback did not
- * match what was written: either the non-footer body changed or the expected
- * footer is missing. None of them proves the footer absent; all of them mean
- * the stamp could not vouch for it, so the publish lane fails.
+ * `skipped` means the stamp stopped before it could confirm anything: no
+ * registry rows, no session record, or a GitHub call failed, which can happen
+ * after a write has already gone out. `yielded` means contention outlasted the
+ * reconcile bound, and `drifted` means the post-write readback did not match
+ * what was written: either the non-footer body changed or the expected footer
+ * is missing. None of them proves the footer absent; all of them mean the
+ * stamp could not vouch for it, so the publish lane fails.
  *
  * **Example** (Classify a stamp status)
  *
