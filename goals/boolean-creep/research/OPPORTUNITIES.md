@@ -3,6 +3,19 @@
 Receipts recorded at the moment of friction (repo law: friction is a
 first-class output). Public repo: paths relative, no secrets, no session ids.
 
+## 2026-09-24 — transient remote check stopped census dispatch
+
+- **Doing:** dispatching R32 after successful exact-input capture.
+- **Evidence:** the final `git ls-remote --exit-code origin refs/heads/main` returned exit128; a separate retry returned the pinned main SHA. The systemd service was not found, no dispatch-command receipt existed, and no R32 output directory existed.
+- **Recovery:** retained the failed pre-dispatch capture privately, then repeated full admission rather than bypassing remote freshness.
+- **Prevention:** distinguish pre-dispatch network failure from a live service before retrying; preserve all attempt evidence.
+
+## 2026-09-24 — stale census partition missed two new source areas
+
+- **Doing:** preparing R32 after owner-contract resolution.
+- **Evidence:** read-only `durable-sweep-v8.py 32 --plan` failed its exact-one-owner assertion on `packages/tooling/test-kit/test-runner/src/internal/VitestRuntime.ts`; bounded diagnostic found 20 unassigned files across test-runner and CLI Models.
+- **Prevention:** re-derive complete current-source coverage before every admission and preserve exact-one-owner assertions; update the explicit lane map when new package/command roots land.
+
 ## 2026-09-22 — decoded test helper had an external diagnostic writer
 
 - **Doing:** refreshing the normalized test-lane selection design after main
@@ -1535,3 +1548,18 @@ owner question now asks for the availability/check/draft contract. Evidence:
 public-contract citation before deriving legal cardinality would have prevented
 the unsupported five-phase proposal and repeated review. No implementation or
 dry-round credit follows from the hold.
+
+## R32 proposals conflated producer coverage with complete-owner contracts, 2026-09-25
+
+During R32 reconciliation, source checks rejected several raw cardinality
+claims before admission. `FunctionReachability` has a supported live-only
+state (32/24, not 32/16); a documented `YeetSettleVerdict.make` call combines
+settled with the default true budget flag; and existing Sweep fixtures
+contradict the proposed checkout-flag expansion. Several historical records
+also failed the two-Boolean recall net when their complete owners were read.
+Evidence: `data/r32-reconciliation-progress-2026-09-24.json` and the immutable
+R32 lane reports. A mandatory full-owner field inventory, explicit counterexample
+search across constructors/defaults/fixtures, and separation of successful
+producer outputs from exported contracts would prevent these repeated
+misclassifications. Corrections remain reconciliation work, not implementation
+or dry-round credit.

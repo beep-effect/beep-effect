@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "boolean-creep-r31-final-reconciliation/v1",
+  "historicalSourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "finalizationSourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "rawOccurrencesAccounted": 36,
+  "historicalSettledReceipt": "data/r31-settled-parent-integration.json",
+  "historicalExecutionBindingsVerified": 57,
+  "terminalLaneReceiptsVerified": 27,
+  "ownerDispositions": [
+    {
+      "id": "id-citation-pincite-inherited",
+      "disposition": "qualified-contract-reconciled",
+      "decision": "2026-09-22 inherited pincite stable-ID ruling"
+    },
+    {
+      "id": "supra-citation-pincite-inherited",
+      "disposition": "qualified-contract-reconciled",
+      "decision": "2026-09-22 inherited pincite stable-ID ruling"
+    },
+    {
+      "id": "short-form-case-citation-pincite-inherited",
+      "disposition": "qualified-contract-reconciled",
+      "decision": "2026-09-22 inherited pincite stable-ID ruling"
+    },
+    {
+      "id": "constitutional-citation-preamble",
+      "disposition": "nonAdmittedSourceFinding",
+      "contractResolved": true,
+      "reason": "Static mutual exclusion has no E1-E4 evidence; not D1/D2."
+    }
+  ],
+  "unresolvedOwnerQuestions": [],
+  "reconciliationComplete": true,
+  "historicalInventory": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-24-r31-final-reconciled.jsonl",
+    "sha256": "1269405a2384eab7e4cfa97a35e515d7f678a9439b51ac9272e457629552232f"
+  },
+  "meaning": "R31 settled projection plus three resolved inherited-pincite admissions, cited at historical source. Not current-source inventory. Later source/design refresh is not R31 credit.",
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationCredit": false
+}

@@ -1,0 +1,208 @@
+{
+  "sourceHead": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "selectedCluster": {
+    "representable": 4,
+    "legal": 3,
+    "rows": [
+      {
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "supportedSelectedContract": true,
+        "target": "unaddressed"
+      },
+      {
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "supportedSelectedContract": true,
+        "target": "addressed"
+      },
+      {
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "supportedSelectedContract": true,
+        "target": "unreliable"
+      },
+      {
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "supportedSelectedContract": false,
+        "target": null
+      }
+    ]
+  },
+  "expandedClusterCheck": {
+    "axisCount": 4,
+    "representable": 16,
+    "preservedByMinimalDesign": 12,
+    "rawR32Admitted": 9,
+    "rows": [
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": true
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": false,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": true
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": false,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": false,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": true
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": false,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": false,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": false
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": false,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": true
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "None",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": true,
+        "admittedByRawR32Expansion": true,
+        "producerProjectionNecessaryConditions": true
+      },
+      {
+        "mainCheckedOutElsewhere": true,
+        "branchCheckedOutElsewhere": true,
+        "worktreeProbeUnreliable": true,
+        "mainWorktreePath": "Some(path)",
+        "legacySchemaAdmissible": true,
+        "preservedByMinimalDesign": false,
+        "admittedByRawR32Expansion": false,
+        "producerProjectionNecessaryConditions": false
+      }
+    ],
+    "note": "12 is only selected-contract x independent occupancy projection, not whole-owner cardinality. Producer conditions are necessary static conditions, not exhaustive reachability proof."
+  },
+  "payloadDomain": "All S.NonEmptyString paths, including whitespace-only and shell metacharacters; no new normalization.",
+  "proofKind": "Static source/contract enumeration, not executed runtime tests."
+}

@@ -1,5 +1,14 @@
 # Campaign resumed after PR #1176 — 2026-09-22
 
+R32 is finalized complete/wet on 2026-09-25: 27 successful lanes, 3,181 corpus
+files, source-stable execution, and all 53 raw records reconciled. Inventory is
+778 rows /142 qualified /636 disqualified (16 historical reviewed, 126 designed,
+zero applied). Three new owners are designed, including the owner-authorized
+CachePilotNonExecution grammar (64/27); ten qualified and eight disqualified
+historical rows were archived outside the recall net. See the R32 round verdict
+and `data/r32-parent-integration-2026-09-25.json`. Dry streak is zero; independent
+P3, packet ratification, implementation and final exact-main closure remain.
+
 Benjamin confirmed PR #1176 merged. GitHub records squash
 `dc852c92efdd7d259e3983ec30cd19cb9b4fd65d`; all seven review threads were
 resolved. The merged branch was swept, local main updated, and the obsolete
@@ -10,10 +19,14 @@ Campaign work continues on `codex/boolean-creep-refresh-2026-09-22`. The
 [source-impact receipt](./data/source-impact-2026-09-22.json) records the
 current 3,139-file corpus and bounded path comparison against the September 14
 resumption base. See [PLAN.md](./PLAN.md) for current work; the dated sections
-below preserve the earlier checkpoints. The inherited-pincite ruling is recorded; the constitutional preamble decision remains open.
+below preserve the earlier checkpoints. The inherited-pincite ruling is recorded; both remaining owner questions were resolved and adjudicated on 2026-09-24.
 GATE 2, independent review and implementation remain evidence-gated.
 
-Latest continuation: 2026-09-22 main synchronization: fast-forwarded to `02f8084070af1fe3329b4c769705394a9f33b9f1` with all 265 dirty packet paths preserved byte-for-byte; post-merge version sync passed. Receipt: `data/main-sync-02f808-2026-09-22.json`. The one changed corpus file is `Ci/LaneTimings.ts`; no inventory owner/evidence path changed, and all 437 explicitly recorded source hash bindings checked still match. Partition remains 3,141 files /27 lanes. This is mechanical continuity evidence, not current census or P3 approval. Inventory remains 756 rows /148 qualified /608 disqualified, zero applied; constitutional preamble and remote status contracts remain held.
+Earlier launch observation: R32 was verified active/running on source `f97a89bdfdc5bc71b69aab09b8d425591698d42a` / main `28a7045c9b353544a37733bdb46ffb2a0b6ca7bc`: 3,181 files, 27 lanes, four concurrent lanes. Admission and created-input verification passed. Two pre-controller network failures were retained. Results require terminal and semantic reconciliation; no dry or P3 credit. See `data/r32-launch-observation-2026-09-24.json`.
+
+Earlier continuation: 2026-09-24 owner resolution: both contract questions are settled. Remote status is re-admitted at 12/5 with all 31 current fields; constitutional citation is resolved as a non-admitted finding because static exclusion supplies no E1–E4 evidence (36/21 finite domain retained). Current inventory: 757 rows /149 qualified /608 disqualified; zero applied. R31 is finalized wet, with no dry credit. Corrected R32 partition covers 3,181 files in 27 lanes, including 20 newly assigned files; read-only predecessor preflight passes. Exact-input launcher review/binding remains before launch. Receipts: data/owner-readmission-2026-09-24.json, data/r31-final-reconciliation-2026-09-24.json and data/r32-preparation-2026-09-24.json.
+
+Earlier continuation: 2026-09-22 main synchronization: fast-forwarded to `02f8084070af1fe3329b4c769705394a9f33b9f1` with all 265 dirty packet paths preserved byte-for-byte; post-merge version sync passed. Receipt: `data/main-sync-02f808-2026-09-22.json`. The one changed corpus file is `Ci/LaneTimings.ts`; no inventory owner/evidence path changed, and all 437 explicitly recorded source hash bindings checked still match. Partition remains 3,141 files /27 lanes. This is mechanical continuity evidence, not current census or P3 approval. Inventory remains 756 rows /148 qualified /608 disqualified, zero applied; constitutional preamble and remote status contracts remain held.
 
 Earlier continuation: 2026-09-22 tooling/tmpfs refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`: ecosystem call-kind and prepared publish retain 4/3; private tmpfs candidate and observation domains retain 312/13 and 72/14, preserving full payloads, sequential observations and fresh safety checks. Receipt: `data/tooling-tmpfs-refresh-2026-09-22.json`. Inventory remains 756 rows: 148 qualified (16 historical reviewed, 132 designed), 608 disqualified, zero applied. Only the remote-status contract hold remains in the dated subset; constitutional preamble remains a separate hold. The full current-source backlog remains uncounted. No census dry credit, independent P3 approval or implementation credit.
 

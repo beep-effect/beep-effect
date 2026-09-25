@@ -1,5 +1,14 @@
 # PLAN — Boolean-Creep Eradication
 
+R32 is finalized complete/wet on 2026-09-25: 27 successful lanes, 3,181 corpus
+files, source-stable execution, and all 53 raw records reconciled. Inventory is
+778 rows /142 qualified /636 disqualified (16 historical reviewed, 126 designed,
+zero applied). Three new owners are designed, including the owner-authorized
+CachePilotNonExecution grammar (64/27); ten qualified and eight disqualified
+historical rows were archived outside the recall net. See the R32 round verdict
+and `data/r32-parent-integration-2026-09-25.json`. Dry streak is zero; independent
+P3, packet ratification, implementation and final exact-main closure remain.
+
 Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 [`DECISIONS.md`](./DECISIONS.md).
 
@@ -18,6 +27,10 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 | P5 | Exact-main dryness and close | pending | Two dry rounds, reflection, and `completed-retained` closeout are merged to `main`. |
 
 ## Current lane
+
+Earlier launch observation: R32 was verified active/running on source `f97a89bdfdc5bc71b69aab09b8d425591698d42a` / main `28a7045c9b353544a37733bdb46ffb2a0b6ca7bc`: 3,181 files, 27 lanes, four concurrent lanes. Admission and created-input verification passed. Two pre-controller network failures were retained. Results require terminal and semantic reconciliation; no dry or P3 credit. See `data/r32-launch-observation-2026-09-24.json`.
+
+2026-09-24 owner resolution: both contract questions are settled. Remote status is re-admitted at 12/5 with all 31 current fields; constitutional citation is resolved as a non-admitted finding because static exclusion supplies no E1–E4 evidence (36/21 finite domain retained). Current inventory: 757 rows /149 qualified /608 disqualified; zero applied. R31 is finalized wet, with no dry credit. Corrected R32 partition covers 3,181 files in 27 lanes, including 20 newly assigned files; read-only predecessor preflight passes. Exact-input launcher review/binding remains before launch. Receipts: data/owner-readmission-2026-09-24.json, data/r31-final-reconciliation-2026-09-24.json and data/r32-preparation-2026-09-24.json.
 
 2026-09-22 main synchronization: fast-forwarded to `02f8084070af1fe3329b4c769705394a9f33b9f1` with all 265 dirty packet paths preserved byte-for-byte; post-merge version sync passed. Receipt: `data/main-sync-02f808-2026-09-22.json`. The one changed corpus file is `Ci/LaneTimings.ts`; no inventory owner/evidence path changed, and all 437 explicitly recorded source hash bindings checked still match. Partition remains 3,141 files /27 lanes. This is mechanical continuity evidence, not current census or P3 approval. Inventory remains 756 rows /148 qualified /608 disqualified, zero applied; constitutional preamble and remote status contracts remain held.
 
@@ -852,32 +865,14 @@ jq . goals/boolean-creep/ops/manifest.json
 test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 ```
 
-## Blockers
+## Remaining gates
 
-Two owner-contract questions remain unanswered:
-
-1. `constitutional-citation-preamble`: may `preamble: Some(false)` coexist
-   with article or amendment, or must preamble be absent when a locator exists?
-2. `yeet-status-remote-check-phase`: must available imply checked, and must
-   present draft metadata imply both available and checked?
-
-The three inherited-pincite holds were resolved by Benjamin's stable-ID ruling
-and their current designs were admitted. Their historical R31 hold file remains
-unchanged; the current dispositions are indexed in
-[`data/r31-owner-hold-reconciliation-2026-09-22.json`](./data/r31-owner-hold-reconciliation-2026-09-22.json).
-Remote status was withdrawn into a separate explicit hold, without D1 credit.
-
-Read-only preflight at `02f8084070af1fe3329b4c769705394a9f33b9f1` confirms that
-R32 cannot launch until R31 reconciliation is finalized and a fresh reviewed
-admission bundle is bound. See
-[`data/preflight-gates-02f808-2026-09-22.json`](./data/preflight-gates-02f808-2026-09-22.json).
-No census or model process was launched. After the rulings, re-audit and admit
-or disqualify each complete owner from its supported contract, finalize the
-predecessor, then prepare exact-input admission. Do not treat absence of an
-answer as a contract choice.
+R32 is finalized complete/wet with three new qualified owners and zero dry
+credit. Preserve its execution/finalization receipts. Synchronize the next
+source snapshot with main, reconcile any new source impact, then prepare R33
+admission against the updated inventory and complete designs. Do not restart
+the completed R32 controller. No owner question remains unanswered.
 
 P2R still requires two complete current-source dry rounds. P3 and P4 remain
-evidence-gated on that census, replacement zero-finding review, and the merged
-packet-only ratification PR. The branch currently has no committed difference
-from origin/main; the pending work is uncommitted and confined to this packet.
-The historical scratchpad-commit warning does not describe this branch.
+evidence-gated on census, replacement zero-finding review, and the merged
+packet-only ratification PR. No implementation or dry credit is claimed.

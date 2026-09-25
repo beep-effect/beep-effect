@@ -82,5 +82,6 @@
   "censusLaunched": false,
   "dryCredit": false,
   "independentP3Approval": false,
-  "implementationStarted": false
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-24-pre-owner-readmission.jsonl"
 }

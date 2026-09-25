@@ -2,6 +2,15 @@
 
 ## Status
 
+R32 is finalized complete/wet on 2026-09-25: 27 successful lanes, 3,181 corpus
+files, source-stable execution, and all 53 raw records reconciled. Inventory is
+778 rows /142 qualified /636 disqualified (16 historical reviewed, 126 designed,
+zero applied). Three new owners are designed, including the owner-authorized
+CachePilotNonExecution grammar (64/27); ten qualified and eight disqualified
+historical rows were archived outside the recall net. See the R32 round verdict
+and `data/r32-parent-integration-2026-09-25.json`. Dry streak is zero; independent
+P3, packet ratification, implementation and final exact-main closure remain.
+
 Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)

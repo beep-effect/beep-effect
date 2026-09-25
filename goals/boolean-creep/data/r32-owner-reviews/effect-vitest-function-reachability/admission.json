@@ -1,0 +1,77 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "effect-vitest-function-reachability",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "abc748cbe4465adf89049adf27eaeceed50b367f0fe19092bc662ff4ff28dc25",
+  "inputBindings": [
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "sha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "sha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "sha256": "baafff158d39672af2113e26404994e6ec270b32edf1dd826e9d879afcc401cc"
+    },
+    {
+      "originalFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "retainedFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+    },
+    {
+      "originalFile": "packages/foundation/modeling/schema/src/LiteralKit/index.ts",
+      "retainedFile": "packages/foundation/modeling/schema/src/LiteralKit/index.ts",
+      "sha256": "af4c673a808fd2b76b5b4757e0b6ffcdce874710dbe1efd16a2d292ad0078593"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "retainedFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "sha256": "9850f35d5f425ed58c187f7c809dc6d5aaff1e80d67ce3f40e498d404ff06192"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "retainedFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "sha256": "453a48b8a697d251d4d15edb49c5ef765b543a3c4c8c5db2209084671109adb2"
+    },
+    {
+      "originalFile": "goals/boolean-creep/DECISIONS.md",
+      "retainedFile": "goals/boolean-creep/history/2026-09-25-pre-cache-observation-ruling-DECISIONS.md",
+      "sha256": "0718a4972d3581beaa515183559b1d7d1d8d1a6cfa8986852cf4f13c2eb8b108"
+    },
+    {
+      "originalFile": "goals/boolean-creep/SPEC.md",
+      "retainedFile": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "originalFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "retainedFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "sha256": "cedb2501fc86c4cc1948c332c1d568e404b06000794807eb3bbfac9d0d920afd"
+    },
+    {
+      "originalFile": "standards/architecture/07-non-slice-families.md",
+      "retainedFile": "standards/architecture/07-non-slice-families.md",
+      "sha256": "fc1736d8f1e6c9e3fb90a1a59779964f44f46f0138a2f0326ce4ade75b821f4b"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/effect-vitest-function-reachability/finite-acceptance.json",
+      "sha256": "7b8a671f2bcbc449c41438b3a9a61d51e3b0b0b3530cc38a8713c699ab73c2ac"
+    },
+    {
+      "file": "goals/boolean-creep/designs/effect-vitest-function-reachability.md",
+      "sha256": "35545bd73a89abcf74812ea5d6cea6df9dfd054398ebb9127918de44f688ebb2"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

@@ -175,3 +175,58 @@ This resolves the public-domain ambiguity recorded in
 `data/goals-packet-migration-contract-hold-2026-09-22.md`. Re-derive the full
 finite domain and restore the owner only with a corrected design and evidence.
 The ruling supplies no independent P3, implementation or dry-round credit.
+
+## 2026-09-24 constitutional citation and remote status rulings
+
+Benjamin settled both remaining owner-contract holds through the documented
+interview and explicitly authorized implementation of the resulting plan.
+
+For ConstitutionalCitation, allow `preamble: Some(false)` alongside an article
+or amendment locator. Preserve false versus absence through the compatibility
+codec. Article plus amendment is invalid; `preamble: Some(true)` with either
+locator is invalid. Add no unrelated section, clause, or payload restrictions.
+
+For YeetStatusRemote, `available: true` requires `checked: true`. Present
+`isDraft`, including false, requires both available and checked. An available,
+checked summary may omit draft status. The supported (available, checked, draft)
+combinations are (false, false, absent), (false, true, absent),
+(true, true, absent), (true, true, false), and (true, true, true). Rejection of
+the other seven combinations is an explicitly authorized contract restriction.
+Preserve unrelated fields/defaults, artifact and CLI JSON boundaries, and each
+consumer's existing policy for unknown draft status. Do not normalize unknown
+draft to false globally.
+
+These are owner-specific rulings, not architecture-wide doctrine. Re-audit each
+complete owner against current source, refresh qualification and compatibility
+designs, and require finite-domain and round-trip tests before implementation.
+Historical hold receipts remain historical; these rulings confer no census dry
+credit, independent P3 approval, GATE 2 transition, or implementation credit.
+
+## 2026-09-25 — Cache non-execution observation grammar
+
+Benjamin authorizes a consistent public grammar for `CachePilotNonExecution`,
+resolving the complete-owner contract question found during R32. This is an
+owner-specific restriction on previously accepted values, not architecture-wide
+doctrine or a claim that current producer coverage defines public legality.
+
+- `selectedExecutionObserved` requires `summaryPresent`.
+- For `reason = absent-script`, `passed` is exactly equivalent to no selected
+  execution, zero exit code, and a present summary.
+- For the three configuration-refusal reasons, `passed` requires no selected
+  execution, a nonzero exit code, and an absent summary. A failed record remains
+  supported when those visible prerequisites hold: the stored stderr hash cannot
+  establish that the diagnostic matched.
+- Preserve arbitrary nonempty IDs, all four reason values, integer exit codes,
+  both hashes, and the existing encoded fields. Do not require ID equality with
+  reason and do not introduce a diagnostic witness field.
+
+The reason (4) × exit-zero/nonzero (2) × three Booleans (8) projection therefore
+has 64 representable strata and 27 supported strata. This count abstracts exit
+integers and hash payloads; it is not a claim that native execution reaches every
+stratum. Compatibility design must preserve payloads and the specified failed
+records while rejecting the other 37 strata.
+
+The original R32 8/6 proposal is superseded: it missed the summary implication
+and reason-specific pass conditions. Qualification/design, independent review,
+ratification, runtime implementation, and exact-main closeout remain separate
+evidence gates. No source implementation is authorized ahead of those gates.
