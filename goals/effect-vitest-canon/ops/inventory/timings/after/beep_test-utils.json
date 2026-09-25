@@ -1,0 +1,151 @@
+{
+  "package": "@beep/test-utils",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T14:51:11.204440+00:00",
+  "totalMs": 19874.048583984375,
+  "testCount": 255,
+  "files": [
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
+      "ms": 42.566650390625,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Entity.test.ts",
+      "ms": 2.21923828125,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/FileSystemConformance.bun.test.ts",
+      "ms": 53.70556640625,
+      "tests": 36
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/FileSystemConformance.node.test.ts",
+      "ms": 45.00390625,
+      "tests": 36
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/FileSystemWriteCompatibility.test.ts",
+      "ms": 7.1611328125,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Layer.test.ts",
+      "ms": 11.866943359375,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Schema.test.ts",
+      "ms": 9.219970703125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.equivalence.test.ts",
+      "ms": 1.6640625,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts",
+      "ms": 1093.17333984375,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "ms": 3018.1005859375,
+      "tests": 19
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SystemTemp.test.ts",
+      "ms": 5.55810546875,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
+      "ms": 19258.048583984375,
+      "tests": 15
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.test.ts",
+      "ms": 2.021728515625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Characterization.test.ts",
+      "ms": 67.23388671875,
+      "tests": 18
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Conformance.test.ts",
+      "ms": 69.948486328125,
+      "tests": 36
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Coverage.test.ts",
+      "ms": 489.496337890625,
+      "tests": 27
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/MemoryFileSystem.test.ts",
+      "ms": 176.018798828125,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "ms": 3633.046630859375,
+      "tests": 9
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
+      "testName": "instrumented Vitest runtime uses the body log and concrete name when the live watchdog interrupts a frozen TestClock",
+      "ms": 5744.516936999999
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
+      "testName": "instrumented Vitest runtime gates lifecycle output while preserving trace success and failure outcomes",
+      "ms": 2346.942932
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
+      "testName": "instrumented Vitest runtime keeps tiny positive budgets below the task timeout and honors disabled timeouts",
+      "ms": 1523.71972
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
+      "testName": "instrumented Vitest runtime resets property lifecycle, deadline, and last-log state for repeats and retries",
+      "ms": 1444.1132399999988
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "testName": "PGLite Testcontainers SQL test driver starts a PGLite Testcontainers database and runs select 1 through SqlClient",
+      "ms": 1401.256332
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "testName": "PGLite Testcontainers SQL test driver stops and removes the PGLite container when the layer scope closes",
+      "ms": 1302.0465089999998
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "testName": "SqlTest wraps Docker-free in-process hook failures in typed harness errors",
+      "ms": 1251.9413610000001
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+      "testName": "SqlTest keeps explicit in-process mode authoritative over an external database environment value",
+      "ms": 1035.0702440000005
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts",
+      "testName": "SqlTest offline coverage uses auto-selected in-process PGLite with no database environment",
+      "ms": 1028.7328670000006
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+      "testName": "PGLite in-process SQL test driver runs select 1 and CRUD through the in-process driver",
+      "ms": 913.9811730000001
+    }
+  ]
+}
