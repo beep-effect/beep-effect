@@ -33,7 +33,7 @@ spent only by the graft deep pass. Prepend the mise bun to PATH in every lane th
    `test/setup-effect-ref.test.ts`. Env override `BEEP_REFERENCES_ROOT` replaces
    `BEEP_EFFECT_CHECKOUT` (accept the old name for one release with a deprecation warning).
 2. **S2 `beep refs` + worktree hook** (Codex lane). Schemas
-   (`Refs.schemas.ts`: `ReferenceMember`, `ReferenceWorkspaceManifest`, `MemberRefreshOutcome`,
+   (`Refs.schemas.ts`: `ReferenceMember`, `ReferenceWorkspaceManifest`, `MemberRefreshOutcome`, `MemberRefreshReport`,
    `RefsRefreshStatus`) → `Refs.errors.ts` → `ReferenceWorkspace` service (`Refs.service.ts`,
    `Context.Service`, `home` parameter, `HashMap` by member name) → `Refs.command.ts`
    (`plan`, `refresh --root --jobs`, `install-timer --owner --on-calendar --bun-path --refresh
