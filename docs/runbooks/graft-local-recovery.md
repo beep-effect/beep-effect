@@ -487,9 +487,12 @@ them, so `graft grep` and `graft callers` keep seeing every symbol. The syntax
 is a gitignore subset (`*`, `**`, `?`, `#` comments, a trailing `/`); a
 pattern without a leading `/` matches at any depth, and a trailing `/` or
 `/**` matches only that path and its descendants. The rule file's hash is
-recorded in the graph fingerprint, so editing it alone counts as drift for the
-query-time refresh, and `graft check` reports a symbol still `excluded` after
-its rule was removed as pending. A rule file that exists but cannot be read
+recorded in the graph fingerprint (read once per build, so the matcher and
+the recorded hash always describe the same rules), so editing it alone counts
+as drift for the query-time refresh; `graft check` reports the same policy
+drift as a changed `.graftignore` until a `graft build` records the new rules,
+and reports a symbol still `excluded` after its rule was removed as pending. A
+rule file that exists but cannot be read
 fails the build rather than silently ignoring nothing. The list is honoured
 only by a dist that carries the `util-deep-ignore` patch family, which
 `apply-dist-patches.sh --check` verifies.
