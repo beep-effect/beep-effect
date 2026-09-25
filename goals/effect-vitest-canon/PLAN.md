@@ -756,3 +756,16 @@ original baseline and current after-run/context files. Historical/current total
 reporter spans are 408.315/443.205 ms for fc-runs (8 tests) and
 392.859/274.085 ms for ontology-config (6 tests). Runtime changes prevent a
 speedup claim. Hosted checks, review closure and Benjamin's merge remain gates.
+
+
+## 2026-09-25 — Utils Wave B published early
+
+PR #1245 contains the utils scope, assertion, property, flake and instrumented
+runner migration plus the explicitly approved curried Str repair. The 63-row
+scoped ledger has 55 fixed findings and eight exceptions; 25 fixes predate this
+wave. The utils baseline drops from 29 entries to six explicit exceptions, with
+zero introduced detector findings. Full package proof, Node tests and package
+coverage pass (189 tests across 16 files), and all 15 cheap gates pass. Timing
+records preserve source hashes and workstation pressure; runtime/test-population
+changes preclude a causal speedup claim. Hosted checks, review closure and the
+runner prerequisite merge remain pending. This is not goal completion.

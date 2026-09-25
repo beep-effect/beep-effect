@@ -1,9 +1,10 @@
+import { it } from "@beep/test-runner";
 import * as FileSystem from "@beep/utils/FileSystem";
 import { GlobError } from "@beep/utils/Glob";
 import * as NodeUrl from "@beep/utils/NodeUrl";
 import * as Path from "@beep/utils/Path";
 import { EmptyStructError } from "@beep/utils/Struct";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, identity } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";

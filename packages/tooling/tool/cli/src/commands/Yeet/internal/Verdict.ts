@@ -167,9 +167,11 @@ export class YeetVerdictLane extends S.Class<YeetVerdictLane>($I`YeetVerdictLane
     startedAt: OptionalVerdictString,
     endedAt: OptionalVerdictString,
     inputDigest: NullableInputDigest,
+    parentLaneId: S.optionalKey(S.String),
   },
   $I.annote("YeetVerdictLane", {
-    description: "One planned yeet lane with its execution status and repair command.",
+    description:
+      "One planned yeet lane with its execution status and repair command; an inner lane names the wrapper lane that ran it.",
   })
 ) {}
 
@@ -744,10 +746,14 @@ const laneRunRepairCommand = (
       )
     : O.none<string>();
 
+// `parentLaneId` is the wrapper whose inner-lane report recorded this lane
+// (`QualityTaskLaneRunReport.parentLaneId`; `laneRunsForWrapper` keeps only the
+// reports naming it), so the economics surface can split the two populations.
 const laneFromQualityTaskRun = (
   lane: QualityTaskLaneRun,
   tier: O.Option<YeetProofTier>,
-  repairCommand: O.Option<string>
+  repairCommand: O.Option<string>,
+  parentLaneId: string
 ): YeetVerdictLane =>
   YeetVerdictLane.make({
     id: lane.id,
@@ -758,6 +764,7 @@ const laneFromQualityTaskRun = (
     inputDigest: lane.inputDigest,
     startedAt: lane.startedAt,
     endedAt: lane.endedAt,
+    parentLaneId,
     ...O.getSomesStruct({
       durationMs: lane.durationMs,
       exitCode: lane.exitCode,
@@ -774,7 +781,7 @@ const innerLanesForWrapper = (
   const runs = laneRunsForWrapper(reports, wrapperLaneId);
   const siblingLabels = laneRunLabels(runs);
   return A.map(runs, (lane) =>
-    laneFromQualityTaskRun(lane, tier, laneRunRepairCommand(lane, siblingLabels, wrapperOutput))
+    laneFromQualityTaskRun(lane, tier, laneRunRepairCommand(lane, siblingLabels, wrapperOutput), wrapperLaneId)
   );
 };
 

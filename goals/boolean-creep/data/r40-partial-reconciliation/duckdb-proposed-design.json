@@ -1,0 +1,10 @@
+{
+  "id": "duckdb-transaction-began-closed",
+  "originalSha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77",
+  "proposedSha256": "8b0bab86da531e270cce38a0b2473a266208d63244a737f5b16ca7f905e8759e",
+  "reviewSha256": "02882a4da5526217a1ff1bd8d78222153686b8eff9f1c1ecfefa61e760a2fe0f",
+  "proposedFile": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/proposed-designs/duckdb-transaction-began-closed.md",
+  "canonicalEdited": false,
+  "behaviorChange": false,
+  "P3Credit": false
+}

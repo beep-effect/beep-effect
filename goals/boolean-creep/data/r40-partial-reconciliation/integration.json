@@ -1,0 +1,205 @@
+{
+  "kind": "r40-partial-reviewed-integration/v1",
+  "originalSourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "recordedMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "preparedAgainstHead": "58c4c805a2f80998ef5d3f752ba7dce12879ca80",
+  "roundComplete": false,
+  "counts": {
+    "before": 726,
+    "after": 725,
+    "qualified": 108,
+    "disqualified": 617,
+    "applied": 0,
+    "successfulLanes": 11,
+    "failedLanes": 4,
+    "notExecutedLanes": 12,
+    "reviewedSuccessfulLanes": 11
+  },
+  "inventory": {
+    "file": "goals/boolean-creep/data/inventory.jsonl",
+    "sha256": "4b7e97420b6c67b9eb09f60a85578b492997041161d22a0014453c64312f2f07"
+  },
+  "originalInventoryArchive": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-r40-before-partial-integration.jsonl",
+    "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+  },
+  "originalDesignArchives": [
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r40-partial-reconciliation/duckdb-transaction-began-closed.md",
+      "sha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r40-partial-reconciliation/tour-state-open-payload.md",
+      "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82"
+    }
+  ],
+  "removedIds": [
+    "html-standard-global-boolean-attributes",
+    "tour-state-open-payload"
+  ],
+  "citationChangedIds": [
+    "nlp-mcp-text-stream-options",
+    "openclaw-telegram-channel-document-flags"
+  ],
+  "newQualifiedId": "r40-drivers-openai-compat-stream-choice-writer",
+  "newQualifiedStatus": "designed",
+  "modifiedExistingDesign": "duckdb-transaction-began-closed",
+  "reviewArtifactIndex": {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/artifact-index.json",
+    "sha256": "0a10203a5834a3d1ec631ad16ff3d0fc4c0ed6f2813bd1e2441f30975d5c0fb8"
+  },
+  "immutableExecutionArtifacts": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/execution-summary.json",
+      "sha256": "00392d5408ce76a0424b4d2a08253e1b14f8060469c3fbfb068742ae0fb90404"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/frozen-inputs.json",
+      "sha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/lane-map.json",
+      "sha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-agents-workspace.execution.json",
+      "sha256": "c97fa8037aa6cc96ff06963f1bf26efaef685df3f60d105c16814fba7fa50127"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-agents-workspace.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-architecture-ecosystem-internal.execution.json",
+      "sha256": "ad3cd840d7332b0eb13bb64d44f2e279f986a1d5a35922354a9a593058bd22b4"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-architecture-ecosystem-internal.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-a-f.execution.json",
+      "sha256": "3ad4e8fb3e71bfff5082831bfe28e2cb40cc447c8c768f3479101301bd46f55b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-a-f.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-g-m.execution.json",
+      "sha256": "f7a17c36f1219c8dac538ec01f704573b2bab9bc4741cc51c93b108a71a94e80"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-g-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-n-r.execution.json",
+      "sha256": "fc2ab6fc60940b59b1f1bd0e707f6a12dacabd3d9996051cfad5392909b7f418"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-n-r.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-s-z.execution.json",
+      "sha256": "5a962bed59ecb5a239bd81a087a29b6578baaea635cbcb4850f4829bac28c213"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-drivers-s-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-epistemic-ontology.execution.json",
+      "sha256": "3239ac4842f0d9f0b622abcb11428e868c96e7b6a082263592b124446406c1ee"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-epistemic-ontology.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-capability.execution.json",
+      "sha256": "78491ca240f62133d03f3242ab74bf4fbd812bb32721ba9f7115b3de39f1c914"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-capability.jsonl",
+      "sha256": "146d1ba4770f9418d6270580452d8150b61e24cc5903e4e68f3c9f44445ab48c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-modeling-rest.execution.json",
+      "sha256": "c0fbc02fc64541b4a9549f3fe2a6ea7ca7e1b17a7b0b4e7dc46f3314985429a8"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-primitive.execution.json",
+      "sha256": "1996250e0a50413e056bb8a985a8d0febe6153632bf504d312b46caa88f776d9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-schema-a-m.execution.json",
+      "sha256": "1dd461eb92abe1d26e40c1be531109e039be3a1488472c5b3dce5fd631945d79"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-schema-a-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-schema-n-z.execution.json",
+      "sha256": "f41874d0bf9ada2a97e95dcf153320a53db5c0dca9bd623f33338b7ba4c3d140"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-schema-n-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-ui.execution.json",
+      "sha256": "16d3fbf3eade25da539420524044bee420e12768d4f2cb8073f19f3a747c89da"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-law-practice-domain.execution.json",
+      "sha256": "d961dcea1740062a08b11a872872f7902b246cadcd37246242849187c99df535"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-law-practice-domain.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-shared-documents.execution.json",
+      "sha256": "41a5cbf5098fe46421f11eb09098459b53c8c1804aa18bfb21d35a3c95ac92f9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-shared-documents.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/source-sha.txt",
+      "sha256": "9e539316d0616bf4606dacc25466903c8858dcf1026dfe6f81780ba195e28739"
+    }
+  ],
+  "historicalHashPolicy": "Receipt input/output hashes bind their original snapshots. Sanitized private paths are provenance labels. Do not rewrite historical hashes to current installed bytes; artifact-index binds final formatted public receipt bytes.",
+  "draftProvenance": "The writer-admission directory retains exact reviewed proposal/design bytes and historical hashes. The installed canonical design has mechanically normalized required headings, public references and completed bounded-admission wording; mechanicalNormalization binds both versions. Canonical inventory record objects equal the approved candidate; unchanged original rows retain exact historical line bytes. Full P3 remains pending.",
+  "credits": {
+    "P3": false,
+    "dryRound": false,
+    "implementation": false
+  },
+  "recovery": "None executed or authorized by this integration. Preserve original failed and skipped lanes; do not restart the round.",
+  "mechanicalNormalization": {
+    "file": "goals/boolean-creep/data/r40-partial-reconciliation/mechanical-normalization.json",
+    "sha256": "a53dc32311f5444b317c7a3b8d0a8be6a1bec82a2a3c67a446bf9be5b15591a2"
+  },
+  "admittedWriterDesign": {
+    "file": "goals/boolean-creep/designs/r40-drivers-openai-compat-stream-choice-writer.md",
+    "sha256": "132532e69638804043c821f2919585cb61ed5da2b81892e7f35fb7dbb14598ba"
+  }
+}

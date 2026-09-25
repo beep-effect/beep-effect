@@ -1,0 +1,1328 @@
+{
+  "reviewKind": "independent-read-only-lane-reconciliation",
+  "round": "refresh-2026-09-25-r40-main-5bb775",
+  "lane": "r40-drivers-n-r",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "currentHead": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "bindings": {
+    "laneMapSha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03",
+    "frozenInputsSha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83",
+    "inventorySha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc",
+    "inventoryMatchesFrozen": true,
+    "executionSha256": "fc2ab6fc60940b59b1f1bd0e707f6a12dacabd3d9996051cfad5392909b7f418",
+    "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reportBytes": 0,
+    "transcriptSha256": "c58db3ac6a724a139ff86f6b76e111dfb5d857614cc0dc137ffe9689c1123c70",
+    "transcriptMatchesExecution": true,
+    "terminalEventSha256": "5cb1f20396ecb38a89c635eb0ab5c1a104ace78d7f98a9cc311c83f2b1100d50",
+    "terminalEventHashEncoding": "canonical sorted compact JSON of final NDJSON row",
+    "specSha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087",
+    "decisionsSha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084",
+    "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+    "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+    "runnerSha256": "ed35606fece056d1918b7bbd657b37e0239c34f7e2668e23651610c805d5ec6a"
+  },
+  "terminal": {
+    "exitCode": 0,
+    "stopReason": "end_turn",
+    "terminalNdjsonLine": 1442,
+    "reportValidationExitCode": 0,
+    "reportValidationNdjsonLine": 1265,
+    "shapeValidationNotSemanticProof": true
+  },
+  "coverage": {
+    "assignedRoots": 15,
+    "assignedFiles": 88,
+    "transcriptEnumerationNdjsonLine": 111,
+    "enumeratedFiles": 88,
+    "enumerationMatchesFrozen": true,
+    "allAssignedFileHashesMatchFrozen": true,
+    "sourceFiles": [
+      {
+        "file": "packages/drivers/n3/src/N3.errors.ts",
+        "sha256": "efe2e0e226da19303fdd4afade4abacb573e0c501f7d0b23b87eef50c83dc3fb"
+      },
+      {
+        "file": "packages/drivers/n3/src/N3.service.ts",
+        "sha256": "cb9dddf7de44e1f0ecfd3e52ba11322a70982566ffcdb9eafdc318efb99d3a0d"
+      },
+      {
+        "file": "packages/drivers/n3/src/index.ts",
+        "sha256": "a87b247423cd220765d605e012ffdaee1002a4c211cbb0b42d326ce4b8b3a81a"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/Server.ts",
+        "sha256": "4bbf693a8fcdb34a9cb9f1c5aed1f1cab780dfa57ba87d59767315ebc6f0fe79"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+        "sha256": "024369cc9269c9a24393704da6bce703761a8c9cea381079fb813b57c8f97eb0"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+        "sha256": "c761d62805d4c5faaedd73c9867b4793082f5dc2859b6b26840a8d74bc98fc67"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+        "sha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+        "sha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
+        "sha256": "851e229c9406d8ed6da18f4e9cb115d53c689dbdcb75d7f5d24b93911cb60f32"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+        "sha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/bin.ts",
+        "sha256": "78872cd69bb5ef7dc15027f1e57767495d85d61ede9a8d9c1451d0c2ea87ec15"
+      },
+      {
+        "file": "packages/drivers/nlp-mcp/src/index.ts",
+        "sha256": "989148213ff9e20df7034bd981d7abb7fac5db2077d772b50949cffd3f2cacb3"
+      },
+      {
+        "file": "packages/drivers/obs/src/Obs.errors.ts",
+        "sha256": "1999b1ac7e737de2feecaf0e80f33853e4e80828a7d382a7d7c88208850aefd2"
+      },
+      {
+        "file": "packages/drivers/obs/src/Obs.models.ts",
+        "sha256": "c03b059ce35aea46ed77d340f9b30ecbcc028e0801851b072b64b2fb7d4e2050"
+      },
+      {
+        "file": "packages/drivers/obs/src/Obs.service.ts",
+        "sha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac"
+      },
+      {
+        "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+        "sha256": "72668ac65ff9a96e59c57bd7e4d520657026d55bd382aa7edc67593ffd6fc702"
+      },
+      {
+        "file": "packages/drivers/obs/src/ObsProtocol.service.ts",
+        "sha256": "74d0f65d3452d09305e7e28a2ab97b6302df2277bedcbc90b59253dc362219d6"
+      },
+      {
+        "file": "packages/drivers/obs/src/index.ts",
+        "sha256": "cd987ef1f1d7adb46ca2f8084ad9129520f8eb84f32a69654dbb794bf0dd497f"
+      },
+      {
+        "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
+        "sha256": "0c41ab842cc812e09eafcf015c2a7bbc6a48e7a44b471ba8f90dbc1bec58b6da"
+      },
+      {
+        "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.models.ts",
+        "sha256": "31ccd6e6d1c9d35801429c614f80c45294f426308c73aef13ffa4b57ea8f267f"
+      },
+      {
+        "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.service.ts",
+        "sha256": "1be07e9bed0debba7d0a06c5f3b4b1df0d8b0387425dfecbc149d0ade225fcce"
+      },
+      {
+        "file": "packages/drivers/onepassword-cli/src/index.ts",
+        "sha256": "d47cb654a29610312b41e014a155a505b287d9c57d3b044da43f21cd05140620"
+      },
+      {
+        "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+        "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36"
+      },
+      {
+        "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+        "sha256": "e56e42b7d92e7bc6b8f818f12bcd2bb0cf92476b2d09f1469a72b88dcb58594f"
+      },
+      {
+        "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+        "sha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479"
+      },
+      {
+        "file": "packages/drivers/openai-compat/src/index.ts",
+        "sha256": "82b3ddb6139e39c4d6b0618c4c57c035e9d4e84d33de98794a67f6e33c0b36a3"
+      },
+      {
+        "file": "packages/drivers/openai/src/OpenAi.config.ts",
+        "sha256": "2a5d05a376d0959a4500fc1c76fdfb76c0f652bf428f2ed8f1b69af1f6f0735d"
+      },
+      {
+        "file": "packages/drivers/openai/src/OpenAi.errors.ts",
+        "sha256": "60ba2e47d369ad41543118f2b73a303c6cc6edf6e40193840c30a521c8f8b832"
+      },
+      {
+        "file": "packages/drivers/openai/src/OpenAi.service.ts",
+        "sha256": "55ef112b35265824c12f443221830a20c3da81f64d5a75c936d43d08cdb9eb3c"
+      },
+      {
+        "file": "packages/drivers/openai/src/index.ts",
+        "sha256": "8c1ee17a048f92e4191bd856cc9548ac2cb1f1f2886801181ae5f1d4f89de51d"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/Openclaw.config.ts",
+        "sha256": "5c01e20c9628ee0bc73063ec94d97e4d3a3c8c2f239201d7da1042c91d22c2aa"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/Openclaw.errors.ts",
+        "sha256": "0d1dbe314e60aa4ceddda258f795727bf348f040c3ce07a41aa54035b9017d11"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+        "sha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+        "sha256": "eea86725c680356eaa38a1f66d7571ed64a944dd56197f68b688ec8ab8721052"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
+        "sha256": "55d176882446604984a36f1fd8e65db93ad6e24ddfd346781047a01f23c2c97c"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/OpenclawProbe.service.ts",
+        "sha256": "25c9964fcbe2846a8a55111425bba236b74d78f069513ae53691cd59e721bb26"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+        "sha256": "d29685834098895e62ff905bdbc94e9dc76fb3007c38033a6d24085845ebb053"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/OpenclawSystemd.service.ts",
+        "sha256": "8d93931ec952bc94590bcd087562aeb186da6fb4182da22b56ce34c9733d25ea"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/index.ts",
+        "sha256": "47c74699af6415ae5ee9bb34de7df674f2d19ddbee5341142d6907841748ec57"
+      },
+      {
+        "file": "packages/drivers/openclaw/src/internal/spawn.ts",
+        "sha256": "a03b347978466f1566c0bcc16040a0ba137ee60ae951816a67907d0616acf5b8"
+      },
+      {
+        "file": "packages/drivers/oxigraph/src/Oxigraph.errors.ts",
+        "sha256": "49c1a03ead9d52e2a53ee7d71a2e72f92831efed2843e73edd6b21e9ab05f9ee"
+      },
+      {
+        "file": "packages/drivers/oxigraph/src/Oxigraph.sparql.ts",
+        "sha256": "feff9bf857d3fe6d4ea6f69811f70a771511ee3adc8fb00a76adacdcf987287f"
+      },
+      {
+        "file": "packages/drivers/oxigraph/src/index.ts",
+        "sha256": "7a49ec90ca51d5e81d5bb65893bfcad096c1e9ede1fcca7822f7b72f5b96fcc1"
+      },
+      {
+        "file": "packages/drivers/oxigraph/src/vendor.d.ts",
+        "sha256": "e7acae7f38b057c890a2ab5a06ec4f434f895b080dc4e2a3e8a1ac76a9b68e3a"
+      },
+      {
+        "file": "packages/drivers/pacer/src/CsoAuth.models.ts",
+        "sha256": "90cb90b6039656f2f99d1f260230f460f707ec8d69fdb731378b3cfbc54071f5"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.config.ts",
+        "sha256": "56037e9876ece56ac24904248b1a9bc6cdeb23fb9266e427453e008bd77cbc54"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.errors.ts",
+        "sha256": "85aeefec25ab33ce9aaa9d0d8cdb3a7b3c6b34be56b0c050272ea95c200d0d4b"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.http.ts",
+        "sha256": "08191db6d485a46c2df14b61722c914068b593aa487ccef18440ee7f0734135b"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.layer.ts",
+        "sha256": "f8ee15b5eea2d5d6a00549586eb8424594f8e997f1fd8458a9c0ba908ebf0b4d"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.mock-data.ts",
+        "sha256": "13599863ab7536563f8c8b50464393ae818b6159d958b1f0b2c8789bd86e88fe"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.mock.ts",
+        "sha256": "5cf830cbfdf74f9b62331c0030025e369bce74390e670dc1e076c2ca43ecfc45"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pacer.tokens.ts",
+        "sha256": "85cd39f3a2a49d939e159c3d3de0b1e41b54f328da95fdea9b4e850cc6f4f483"
+      },
+      {
+        "file": "packages/drivers/pacer/src/PacerAuth.service.ts",
+        "sha256": "57b1e8da716877674d92737f938b59daec0fbff03aaa5bc0c9e1d1bea6b3ba26"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pcl.api.ts",
+        "sha256": "88331475d15eee3ee090e7ce95429868ae02c556ac25be58becaec7c8088130c"
+      },
+      {
+        "file": "packages/drivers/pacer/src/Pcl.models.ts",
+        "sha256": "64696d135b14b304fb95d8708b17772f24b3928e78c77f41c1ffcc999ed11647"
+      },
+      {
+        "file": "packages/drivers/pacer/src/PclClient.service.ts",
+        "sha256": "7c3c27b7e4be912257f418019e8148798128f217bfd671997d8b46078c61c5ad"
+      },
+      {
+        "file": "packages/drivers/pacer/src/index.ts",
+        "sha256": "d972e1f80a79d48e62d8bb40aba4fef32a7a7c4f04221cd65df593ec444940d4"
+      },
+      {
+        "file": "packages/drivers/pglite/src/Pglite.errors.ts",
+        "sha256": "9c0b0b0912144f65eb6eead223fb824b2e067e1978fa4bfb0982c532c9c9d744"
+      },
+      {
+        "file": "packages/drivers/pglite/src/Pglite.test-layer.ts",
+        "sha256": "fc58b938457d4253c9790443e2dd587ca2317161c1f35914062a88ebcb6641d9"
+      },
+      {
+        "file": "packages/drivers/pglite/src/PgliteClient.service.ts",
+        "sha256": "15855a1e71fa81b5330a226e96921e70cfb01918e71e0e74e708f1ab0227b74d"
+      },
+      {
+        "file": "packages/drivers/pglite/src/index.ts",
+        "sha256": "db6d71c753404cb90b6f8bbda1c5c49e2161b49ae056fb3665b19a9554d8747f"
+      },
+      {
+        "file": "packages/drivers/phoenix/src/Phoenix.config.ts",
+        "sha256": "b9bfe4ba6638804ab495054a80bf3bed5c8478405de49e3b25677e2718b25ffd"
+      },
+      {
+        "file": "packages/drivers/phoenix/src/Phoenix.errors.ts",
+        "sha256": "2f4db57ed4414075b15e1a4bfc095a693bc3666f60c7a4220397ed98bd4d0240"
+      },
+      {
+        "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+        "sha256": "d65c1297be41c3378bae043e6bda17d02f5a8e1bb8acf1067af597935c8bb8f2"
+      },
+      {
+        "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+        "sha256": "79c92d2c3fdaefefd1ce4f9b2296e29095b1dbbed176f1c0acbeeb638d9548e7"
+      },
+      {
+        "file": "packages/drivers/phoenix/src/index.ts",
+        "sha256": "b806d75e7f79febc99672e16c5b338f0f5963b061da129b64363bab186733ca3"
+      },
+      {
+        "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+        "sha256": "95852de434c01fbb56a94352588070b8e81a1afa150b66aae2a260ac5976bb36"
+      },
+      {
+        "file": "packages/drivers/postgres/src/PostgresClient.service.ts",
+        "sha256": "ffa4fbd89f22e2edcb30e12dc220d6dffdcba35c2ad0a86900daf0a9e1a619aa"
+      },
+      {
+        "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+        "sha256": "2ee671188369194ff7d6695a489d0853251774e30293e07d647070dc17aded49"
+      },
+      {
+        "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+        "sha256": "71f074e09ffa63c350b8c09a0224dc3ac53c2733cebe7234f9556706bc859e66"
+      },
+      {
+        "file": "packages/drivers/postgres/src/PostgresInterop.models.ts",
+        "sha256": "b22de2812fceb838a7ee296d91f949e9327b8bafdd99d6ff110f1010fcf3edaf"
+      },
+      {
+        "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+        "sha256": "435225bd064b6f8ec8b319b0250077cdffa9596746acd29c20d40276e432ac27"
+      },
+      {
+        "file": "packages/drivers/postgres/src/index.ts",
+        "sha256": "7b47453f769e59d52affa33fa8b86ef2a015134e82bd6ca213cf5ba5230569d8"
+      },
+      {
+        "file": "packages/drivers/postgres/src/internal/PostgresDiagnosticGuards.ts",
+        "sha256": "b0f9a261fd9563b4047a71e72f2f953cf5ed9c8d0099c73499a4ceb51220355e"
+      },
+      {
+        "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+        "sha256": "401a7aaa35fd77edc6879d8177c3873822838c268ec1421106e98352af8c6d55"
+      },
+      {
+        "file": "packages/drivers/pretext/src/Pretext.models.ts",
+        "sha256": "9a0bec88800fe309d3f790976203b85d73191b66d2500d905570c5d4395b59be"
+      },
+      {
+        "file": "packages/drivers/pretext/src/PretextCapture.service.ts",
+        "sha256": "03502fd429ff320c95725cd0f9878aacf898e597dbb5b18bbbe8f0147e147786"
+      },
+      {
+        "file": "packages/drivers/pretext/src/PretextCapture.test-layer.ts",
+        "sha256": "108c86256c3a063a9a6b83bda706e219614510ff1dd61f8d56975c2093dc6aa5"
+      },
+      {
+        "file": "packages/drivers/pretext/src/browser.ts",
+        "sha256": "4948a0e12d38ba9eac882fa4c832ae99abd6b156f0ed41450a1f27b63e601e4f"
+      },
+      {
+        "file": "packages/drivers/pretext/src/index.ts",
+        "sha256": "802f8ec6e40772f1004c20a156ba6fd2c2417e021437916236619b4a9db479d5"
+      },
+      {
+        "file": "packages/drivers/rdf-canonize/src/adapters/canonicalization.ts",
+        "sha256": "339cce940bc14916e3b4059e8b4d834953d6aeb41f6e895a557a0ed0fdd40adf"
+      },
+      {
+        "file": "packages/drivers/rdf-canonize/src/index.ts",
+        "sha256": "ac0509443c44fc5f4576a516a822c5392c5957ecd3ecc290c75f38e0c2c42f99"
+      },
+      {
+        "file": "packages/drivers/rdf-canonize/src/rdf-canonize.d.ts",
+        "sha256": "619943b49db95c8515e6f76f026f891d603818510c35c150ff499396801cfeda"
+      },
+      {
+        "file": "packages/drivers/runpod/src/Runpod.config.ts",
+        "sha256": "8ce08b7330ff4aed2a9bee03d904bc0defa5cf1a6ad28cf961acaed166c8fbd1"
+      },
+      {
+        "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+        "sha256": "2d31328c4e0c2d525329d922480a9cb7d67ab7ee62cfc61276ad35280c4d20ea"
+      },
+      {
+        "file": "packages/drivers/runpod/src/Runpod.service.ts",
+        "sha256": "689802362f0dd9e3ad8251d1b366cba24813fd10dbc8caeac52b4a2b3cf84392"
+      },
+      {
+        "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+        "sha256": "208bd71595e1556bf9b4e7e34246d32d1032a7cb032519d69246ec0f4b03acf5"
+      },
+      {
+        "file": "packages/drivers/runpod/src/index.ts",
+        "sha256": "610ced43e468bf48080d4fe753a778694cc735954ada07205bd67ee651b4f626"
+      }
+    ],
+    "freshWholeLaneSearch": true,
+    "independentSearch": "All88 frozen source files scanned for raw/defaulted/optional/literal Boolean fields and inferred locals; complete owners inspected for all28 seeds; broad lexical hits triaged as functions, single fields, wire mirrors, configs, or tracked state. Not a compiler-proof scan.",
+    "seedCount": 28,
+    "qualifiedSeeds": 3,
+    "seedDispositions": [
+      {
+        "id": "pretext-engine-profile",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "pretext-engine-profile",
+          "file": "packages/drivers/pretext/src/Pretext.models.ts",
+          "line": 53,
+          "symbol": "EngineProfile",
+          "kind": "schema-struct",
+          "members": [
+            "carryCJKAfterClosingQuote",
+            "breakKeepAllAfterPunctuation",
+            "preferPrefixWidthsForBreakableRuns",
+            "preferEarlySoftHyphenBreak"
+          ],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Mirrors upstream pretext EngineProfile (v0.0.8 src/measurement.ts); also D1 \u2014 independent layout-quirk toggles where all combinations are legal."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 4,
+        "completeOwnerBooleanValuedMembers": 4,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [53, 64],
+        "completeOwnerReview": "Four actual Boolean layout quirks plus numeric lineFitEpsilon; external EngineProfile mirrored. Defaults/producers do not narrow accepted profile domain.",
+        "sourceSha256": "9a0bec88800fe309d3f790976203b85d73191b66d2500d905570c5d4395b59be",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-stream-state",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-stream-state",
+          "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+          "line": 221,
+          "symbol": "StreamState",
+          "kind": "schema-struct",
+          "members": ["finished", "textEnded", "textStarted"],
+          "status": "reviewed",
+          "evidence": [
+            {
+              "class": "E4",
+              "cite": {
+                "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+                "line": 822
+              },
+              "note": "text-end is only emitted when textStarted && !textEnded; textEnded is unreachable without textStarted."
+            },
+            {
+              "class": "E2",
+              "cite": {
+                "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+                "line": 846
+              },
+              "note": "Readers branch on textStarted vs not to emit text-start; finished short-circuits the wrap-up path and never treats ended-without-start as a case."
+            }
+          ],
+          "cardinality": {
+            "representable": 8,
+            "legal": 6
+          },
+          "storage": "stored",
+          "exposure": "internal",
+          "targetShape": "literalkit",
+          "tier": 1,
+          "notes": "Text span is a 3-phase machine (none|open|closed) plus an independent finish latch; !started && ended is illegal. Native P2 refresh source/main0be1f13d62fa00cb65e34ff69ec99043380f8d81: full8/6 relation retained. Public callbacks admit arbitrary valid chunk sequences; finished remains independent, including idle/open finished witnesses. Preserve same incoming phase for all choices in chunk, late/duplicate end behavior, complete tool/usage/reason payloads and onHalt semantics. No runtime/P3/implementation credit."
+        },
+        "disposition": "retain-existing-qualified",
+        "clusterBooleanValuedMembers": 3,
+        "completeOwnerBooleanValuedMembers": 3,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [221, 248],
+        "completeOwnerReview": "Stored textStarted/textEnded relation 8/6 holds; finished independent. Full writer 826-924 and onHalt 818-824 read. Text ended implies started; all six states have schema-valid chunk-sequence witnesses. Additional writer-local implication requires distinct disposition below.",
+        "sourceSha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479",
+        "locatorCorrection": null,
+        "designSha256": "7fb0cf6a0becf1dde711db6241568946d360dd8f328ed7a4f174884839abd5ca",
+        "existingReviewedStatusIsNotFreshP3": true
+      },
+      {
+        "id": "drivers-migration-journal-shape-row",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-migration-journal-shape-row",
+          "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+          "line": 349,
+          "symbol": "MigrationJournalShapeRow",
+          "kind": "schema-struct",
+          "members": ["exists", "hasName"],
+          "status": "reviewed",
+          "evidence": [
+            {
+              "class": "E2",
+              "cite": {
+                "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+                "line": 473
+              },
+              "note": "if !exists return empty; else if !hasName take the legacy journal path; else the named-column path. Combined-true is only the modern path; !exists && hasName is never handled."
+            },
+            {
+              "class": "E4",
+              "cite": {
+                "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+                "line": 476
+              },
+              "note": "hasName is only inspected after exists is true; a name column cannot exist without the table."
+            }
+          ],
+          "cardinality": {
+            "representable": 4,
+            "legal": 3
+          },
+          "storage": "derived",
+          "exposure": "internal",
+          "targetShape": "literalkit",
+          "tier": 1,
+          "notes": "information_schema projection of missing | legacy-un-named | current-named journal."
+        },
+        "disposition": "retain-existing-qualified",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [349, 354],
+        "completeOwnerReview": "Private SQL projection over same schema/table at 452-465; hasName implies exists. Ordered 473/476 dispatch supports 4/3. Keep SQL CASE/schema/reader atomic and preserve error/no-row behavior.",
+        "sourceSha256": "71f074e09ffa63c350b8c09a0224dc3ac53c2733cebe7234f9556706bc859e66",
+        "locatorCorrection": null,
+        "designSha256": "88d6a4725cb90304f1ab2266c78ee3f6c45269ae39772a752b2fad56bec29c80",
+        "existingReviewedStatusIsNotFreshP3": true
+      },
+      {
+        "id": "drivers-pcl-page-info",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-pcl-page-info",
+          "file": "packages/drivers/pacer/src/Pcl.models.ts",
+          "line": 144,
+          "symbol": "PageInfo",
+          "kind": "schema-struct",
+          "members": ["first", "last"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Representative PACER Case Locator pagination wire block; first&&last is a legal single-page combo and the shape mirrors the PCL/Spring page contract."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [137, 150],
+        "completeOwnerReview": "Optional Boolean first/last are external pagination fields; None and true/false preserved. All actual Boolean combinations including first+last remain meaningful.",
+        "sourceSha256": "64696d135b14b304fb95d8708b17772f24b3928e78c77f41c1ffcc999ed11647",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-openclaw-channel-health",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-openclaw-channel-health",
+          "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+          "line": 594,
+          "symbol": "OpenclawChannelHealth",
+          "kind": "schema-struct",
+          "members": ["connected", "restartPending", "running"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Representative OpenClaw CLI health/status JSON projection for this file; connected/restartPending/running (and OpenclawChannelAccountStatus configured/enabled/probeOk/running) are independently reported upstream facts."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 3,
+        "completeOwnerBooleanValuedMembers": 3,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [592, 613],
+        "completeOwnerReview": "Three optional Boolean wire facts plus tokenSource/tokenStatus payloads. No local domain grammar imposed.",
+        "sourceSha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-openai-compat-chat-completion-request",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-openai-compat-chat-completion-request",
+          "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+          "line": 850,
+          "symbol": "OpenAiCompatChatCompletionRequest",
+          "kind": "schema-struct",
+          "members": ["parallel_tool_calls", "stream"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "OpenAI-compatible Chat Completions wire request; stream and parallel_tool_calls are independent provider knobs."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [831, 885],
+        "completeOwnerReview": "Complete request has two optional Boolean fields; stream_options is an optional record, not another Boolean. External provider knobs.",
+        "sourceSha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-ensure-qa-scene-result",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-ensure-qa-scene-result",
+          "file": "packages/drivers/obs/src/Obs.models.ts",
+          "line": 415,
+          "symbol": "EnsureQaSceneResult",
+          "kind": "schema-struct",
+          "members": ["inputCreated", "sceneCreated"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent idempotent-create receipts; scene and input may each already exist or be created in any combination."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [415, 447],
+        "completeOwnerReview": "Complete public result has inputCreated/sceneCreated plus names and optional restoreToken. Four scene/global-input combinations are independently supported. Do not import local E3 alias into returned owner.",
+        "sourceSha256": "c03b059ce35aea46ed77d340f9b30ecbcc028e0801851b072b64b2fb7d4e2050",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-obs-record-status",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-obs-record-status",
+          "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+          "line": 1127,
+          "symbol": "ObsRecordStatus",
+          "kind": "schema-struct",
+          "members": ["outputActive", "outputPaused"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Representative obs-websocket GetRecordStatus payload for this protocol file; outputActive/outputPaused are copied from the OBS wire contract."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [1127, 1160],
+        "completeOwnerReview": "OBS wire record fields outputActive/outputPaused plus counters/timecode; no local transformation authorized.",
+        "sourceSha256": "72668ac65ff9a96e59c57bd7e4d520657026d55bd382aa7edc67593ffd6fc702",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-read-lines-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-read-lines-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 579,
+          "symbol": "ReadLinesOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent line-normalization flags; trim and skipEmpty compose freely."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [566, 592],
+        "completeOwnerReview": "Two optional Boolean normalization controls; encoding/window/tail values independent payloads. Omission and all Boolean settings accepted.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-text-stats-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-text-stats-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 653,
+          "symbol": "TextStatsOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent line-normalization flags for text stats."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [648, 663],
+        "completeOwnerReview": "Two optional Boolean line processing controls compose independently.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-sample-lines-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-sample-lines-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 715,
+          "symbol": "SampleLinesOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent line-normalization flags for sampling."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [710, 725],
+        "completeOwnerReview": "Two optional Boolean line processing controls compose independently.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-read-jsonl-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-read-jsonl-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 780,
+          "symbol": "ReadJsonlOptions",
+          "kind": "schema-struct",
+          "members": ["collectErrors", "skipInvalid"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent parse-policy flags; skip-invalid and collect-errors may both be on."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [774, 787],
+        "completeOwnerReview": "collectErrors selects validation/error collection path; skipInvalid selects stream parse behavior. All combinations accepted, including overlapping/redundant policy choices; maxRecords independent.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-load-lines-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-load-lines-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 1025,
+          "symbol": "LoadLinesOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent line-normalization flags for file/URL load."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [1017, 1034],
+        "completeOwnerReview": "skipEmpty/trim independent optional controls; timeout/maxLines payloads not Booleans.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-process-file-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-process-file-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 1206,
+          "symbol": "ProcessFileOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "stopOnError"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent pipeline controls; stopOnError is reserved and does not mask skipEmpty."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [1199, 1217],
+        "completeOwnerReview": "skipEmpty active, stopOnError explicitly reserved for future stages; inactive option is accepted independently, not evidence of exclusivity.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-filter-lines-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-filter-lines-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 1272,
+          "symbol": "FilterLinesOptions",
+          "kind": "schema-struct",
+          "members": ["caseInsensitive", "invert"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent grep-style flags; case folding and inversion compose freely."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [1266, 1281],
+        "completeOwnerReview": "case folding and inverted predicate compose freely in StreamingHandlers 195-208; maxLines independent.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "drivers-extract-matches-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "drivers-extract-matches-options",
+          "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+          "line": 1336,
+          "symbol": "ExtractMatchesOptions",
+          "kind": "schema-struct",
+          "members": ["caseInsensitive", "fullLines"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent extract-policy flags; case folding and full-line emission are orthogonal."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [1330, 1347],
+        "completeOwnerReview": "fullLines branch still applies caseInsensitive regex flag in either mode, proving independent controls.",
+        "sourceSha256": "438e4c1f999e9b8de8ffffd96e861af7351b8e791c8b33434ef97b4b17e32746",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "openclaw-channel-account-status",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "openclaw-channel-account-status",
+          "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+          "line": 675,
+          "symbol": "OpenclawChannelAccountStatus",
+          "kind": "schema-struct",
+          "members": [
+            "configured",
+            "connected",
+            "enabled",
+            "probeOk",
+            "running"
+          ],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "OpenClaw CLI channels-status --probe --json projection; configured/connected/enabled/probeOk/running are independently reported upstream facts, not a flattened local state machine."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 5,
+        "completeOwnerBooleanValuedMembers": 5,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [675, 710],
+        "completeOwnerReview": "configured/enabled/running direct, connected/probeOk optional Booleans; probeError and token strings independent wire payloads. Preserve entire external projection.",
+        "sourceSha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "nlp-mcp-dataset-load-lines-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "nlp-mcp-dataset-load-lines-options",
+          "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+          "line": 259,
+          "symbol": "DatasetLoadLinesOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent line-normalization flags wrapped as BoolKeyDefaultFalse; trim and skipEmpty compose freely."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [259, 274],
+        "completeOwnerReview": "Default-false skipEmpty/trim compose independently; timeout is numeric.",
+        "sourceSha256": "024369cc9269c9a24393704da6bce703761a8c9cea381079fb813b57c8f97eb0",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "nlp-mcp-text-read-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "nlp-mcp-text-read-options",
+          "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+          "line": 221,
+          "symbol": "TextReadOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent per-line processing toggles; skipEmpty and trim compose freely and are the shared defaults for the streaming helpers."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [221, 236],
+        "completeOwnerReview": "Default-false skipEmpty/trim independent; encoding is literal payload.",
+        "sourceSha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "nlp-mcp-text-stream-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "nlp-mcp-text-stream-options",
+          "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+          "line": 251,
+          "symbol": "TextStreamOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "trim"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Spreads TextReadOptions.fields; skipEmpty and trim remain independent windowed-read toggles, not exclusive states."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [253, 266],
+        "completeOwnerReview": "Complete owner inherits both actual Boolean fields through TextReadOptions.fields at255; maxLines/skip numeric. Canonical locator251 is stale JSDoc; use253 declaration.",
+        "sourceSha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e",
+        "locatorCorrection": 253,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "nlp-mcp-pipeline-process-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "nlp-mcp-pipeline-process-options",
+          "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+          "line": 169,
+          "symbol": "PipelineProcessOptions",
+          "kind": "schema-struct",
+          "members": ["skipEmpty", "stopOnError"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent pipeline controls; stopOnError is reserved and does not mask skipEmpty. All 4 combinations are legal."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [169, 185],
+        "completeOwnerReview": "Default-false skipEmpty and reserved stopOnError are accepted independently; current no-effect status does not restrict domain.",
+        "sourceSha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "openai-compat-language-model-config",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "openai-compat-language-model-config",
+          "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+          "line": 106,
+          "symbol": "OpenAiCompatLanguageModelConfig",
+          "kind": "schema-struct",
+          "members": ["parallelToolCalls", "strictJsonSchema"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent provider request knobs: optional parallel-tool-call preference vs default-on strict JSON schema. All combinations are legal."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [98, 124],
+        "completeOwnerReview": "Optional Boolean parallelToolCalls and default-true strictJsonSchema configure separate provider features. Other Option-valued numeric/string fields are payloads.",
+        "sourceSha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "pretext-detect-engine-family",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "pretext-detect-engine-family",
+          "file": "packages/drivers/pretext/src/browser.ts",
+          "line": 75,
+          "symbol": "detectEngineProfile.engineFamily",
+          "kind": "sibling-state",
+          "members": ["isSafari", "isChromium"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Independent overlapping metadata predicates. Safari excludes EdgiOS/ but not Edg/, while Chromium accepts Edg/. Apple vendor plus Safari/ and Edg/ yields both true and EngineProfile preserves both sets of effects. All four combinations are accepted; no E1-E4 invariant or cardinality gap. See data/design-refresh-2026-09-08-pretext-audit.md."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [64, 87],
+        "completeOwnerReview": "Safari excludes EdgiOS/ but not Edg/; Apple vendor + Safari/ + Edg/ realizes both predicates. Independent metadata observations support all four combinations.",
+        "sourceSha256": "4948a0e12d38ba9eac882fa4c832ae99abd6b156f0ed41450a1f27b63e601e4f",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "openclaw-telegram-channel-document-flags",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "openclaw-telegram-channel-document-flags",
+          "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+          "line": 126,
+          "symbol": "telegramChannelDocument",
+          "kind": "type-literal",
+          "members": ["configWrites", "enabled"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "OpenClaw Telegram channel config.json wire fields emitted by the deployment renderer; configWrites and enabled are independent channel settings in the external configuration surface."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [123, 134],
+        "completeOwnerReview": "Returned config object has configWrites=false125 and enabled=true127 plus independent configuration payload. Upstream document mirror. Current kind type-literal is wrong; object-literal and locator125 or123 are precise.",
+        "sourceSha256": "d29685834098895e62ff905bdbc94e9dc76fb3007c38033a6d24085845ebb053",
+        "locatorCorrection": 125,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+          "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+          "line": 675,
+          "symbol": "OpenclawChannelAccountStatus",
+          "kind": "schema-struct",
+          "members": ["probeOk", "probeError"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Separate cluster from the already-recorded configured/connected/enabled/probeOk/running set. probeOk and optional probeError are copied independently from the channels-status --json probe section (same wire fields as OpenclawChannelProbeWire); the live-acceptance reader ANDs ok-true with error-none and does not flatten a local exclusive phase."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 1,
+        "completeOwnerBooleanValuedMembers": 5,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [675, 710],
+        "completeOwnerReview": "Cluster has one Boolean-valued probeOk and a string Option probeError; complete owner has five Boolean-valued fields, satisfying recall without inventing a Boolean from error presence. Same external probe projection, preserved D2.",
+        "sourceSha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "r25-drivers-n-r-openai-compat-chat-completion-stream-options",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "r25-drivers-n-r-openai-compat-chat-completion-stream-options",
+          "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+          "line": 862,
+          "symbol": "OpenAiCompatChatCompletionRequest",
+          "kind": "schema-struct",
+          "members": ["stream", "stream_options"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D2",
+            "note": "Separate cluster from the already-recorded parallel_tool_calls/stream pair. stream and optional stream_options are OpenAI Chat Completions wire fields; makeRequest/makeStreamingRequest populate them together, which mirrors the provider rule that stream_options is only sent with stream:true, not a flattened local phase."
+          }
+        },
+        "disposition": "retain-existing-D2",
+        "clusterBooleanValuedMembers": 1,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [831, 885],
+        "completeOwnerReview": "Cluster stream+stream_options is one Boolean and optional record payload; complete owner has parallel_tool_calls as second actual Boolean. Wire mirror remains D2.",
+        "sourceSha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "r25-drivers-n-r-stream-state-finished-finish-reason",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "r25-drivers-n-r-stream-state-finished-finish-reason",
+          "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+          "line": 221,
+          "symbol": "StreamState",
+          "kind": "schema-struct",
+          "members": ["finished", "finishReason"],
+          "status": "disqualified",
+          "disqualifier": {
+            "class": "D1",
+            "note": "Separate cluster from the already-recorded finished/textEnded/textStarted span machine. finished is an emission latch; finishReason is independently copied from chunk finish_reason. Empty-choices wrap-up can finish without a reason, and a reason can arrive before usage completes the finish."
+          }
+        },
+        "disposition": "retain-existing-D1",
+        "clusterBooleanValuedMembers": 1,
+        "completeOwnerBooleanValuedMembers": 3,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [221, 248],
+        "completeOwnerReview": "Cluster finished+finishReason is one Boolean plus Option<string>; complete owner has three Booleans. Usage-only wrap-up can finish absent reason and reason can arrive before usage, so independent relation remains valid.",
+        "sourceSha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479",
+        "locatorCorrection": null,
+        "designSha256": null,
+        "existingReviewedStatusIsNotFreshP3": false
+      },
+      {
+        "id": "obs-qa-scene-provisioning",
+        "canonicalRecord": {
+          "schemaVersion": "boolean-creep-inventory/v1",
+          "id": "obs-qa-scene-provisioning",
+          "file": "packages/drivers/obs/src/Obs.service.ts",
+          "line": 179,
+          "symbol": "ensureQaScene",
+          "kind": "sibling-state",
+          "members": ["sceneExists", "existingSettings", "inputCreated"],
+          "status": "designed",
+          "evidence": [
+            {
+              "class": "E3",
+              "cite": {
+                "file": "packages/drivers/obs/src/Obs.service.ts",
+                "line": 188
+              },
+              "note": "Two actual Boolean locals sceneExists179 and inputCreated188 coexist in the generator scope. inputCreated is exactly O.isNone(existingSettings184); keep independent sceneExists. sceneCreated exists only on returned result and is excluded from this owner."
+            }
+          ],
+          "cardinality": {
+            "representable": 8,
+            "legal": 4
+          },
+          "storage": "derived",
+          "exposure": "internal",
+          "targetShape": "option-literal",
+          "tier": 1,
+          "notes": "R33 correction bound to HEAD32f111f3707a63168b68ed04516af800ecc3a66c/main339da1562a2ed52f73a0a693c176fc52cca9ccb6. Complete local owner meets SPEC recall; E3 alias qualifies independently of scene axis. Preserve existing Option source; remove local inputCreated and redundant second Option dispatch. Keep exported EnsureQaSceneResult independent Boolean receipts and OBS protocol untouched. Supersedes private overstrict D1 scope ruling and historical cross-owner16/4 design; no P3 or dry-round credit."
+        },
+        "disposition": "retain-existing-qualified",
+        "clusterBooleanValuedMembers": 2,
+        "completeOwnerBooleanValuedMembers": 2,
+        "recallThresholdMetByCompleteOwner": true,
+        "ownerSpan": [172, 226],
+        "completeOwnerReview": "Same generator scope has sceneExists179/inputCreated188; existingSettings184 Option presence supplies cardinality axis, not Boolean recall. inputCreated equals None, 8/4. Branch-local inputAttached203 excluded; public result has separate independent Boolean receipts. Corrected Option-match design preserves exact effect ordering and errors.",
+        "sourceSha256": "f734404307ddbc9af8ece93d505bec65759ceeecd880bc324717bfd18d04feac",
+        "locatorCorrection": null,
+        "designSha256": "c267e1bfca096aec077586202b56b2ff9d7ee3d81acfa3f9daa2899a791c05bd",
+        "existingReviewedStatusIsNotFreshP3": false
+      }
+    ],
+    "nonSeedDispositions": [
+      {
+        "owners": [
+          "FileInfoOutput",
+          "PhoenixPromptReadResult",
+          "OnePasswordCliAccount",
+          "ObsRequestStatus",
+          "JsonlReadOptions",
+          "DatasetLoadJsonlOptions",
+          "RunpodRequest"
+        ],
+        "disposition": "single-Boolean owner below recall; payload presence not counted as Boolean"
+      },
+      {
+        "owners": [
+          "OpenclawProbe predicates",
+          "OpenclawRender schema predicates",
+          "DatasetLoader URL predicates",
+          "rdf-canonize failure predicates",
+          "PclClient predicates"
+        ],
+        "disposition": "Boolean-returning functions are not Boolean state members"
+      },
+      {
+        "owner": "OpenclawCliShape agentTurn/channelsStatus options",
+        "disposition": "Separate nested owners each have one Boolean; no cross-owner pooling"
+      },
+      {
+        "owner": "PretextCapture.test-layer profile literal",
+        "disposition": "Test-layer fixture mirrors EngineProfile; no source-of-truth new qualification"
+      }
+    ]
+  },
+  "newQualifiedCandidates": [
+    {
+      "proposedId": "openai-compat-stream-writer-finish-latch",
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "symbol": "makeStreamChoiceParts",
+      "kind": "sibling-state",
+      "line": 896,
+      "members": ["shouldFinish", "textStarted", "textEnded", "finished"],
+      "actualBooleanMembers": 4,
+      "evidence": [
+        {
+          "class": "E4",
+          "line": 913,
+          "note": "finished = state.finished || shouldFinish enforces shouldFinish => finished."
+        },
+        {
+          "class": "E4",
+          "line": 907,
+          "note": "text-end emission requires incoming or same-choice text-start; accumulating textEnded implies accumulating textStarted."
+        }
+      ],
+      "cardinality": {
+        "representable": 16,
+        "legal": 9
+      },
+      "storage": "derived",
+      "exposure": "internal",
+      "tier": 1,
+      "targetRecommendation": "Reuse existing StreamTextPhase design for text pair; remove local finished alias and project state.finished || shouldFinish only in returned existing StreamState owner. No extra stored enum required.",
+      "distinction": "The class owner drivers-stream-state is correctly 8/6; this is its distinct writer generator-local four-Boolean scope. Parent decides separate inventory ID versus an explicit expanded complete-writer adjudication; do not silently duplicate existing text-state record.",
+      "designGap": "Current design replaces textStarted/textEnded but retains shouldFinish and finished locals; residual 4/3 implication remains. Needs explicit P2 correction/disposition before no-new-qualified claim.",
+      "finiteReceipt": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/drivers-n-r-stream-writer-finite.json",
+      "finiteReceiptSha256": "0ec8ef8412cf079baf43fbacb8287c034ee239b59c84e6ce614bedf63b17d9bd",
+      "proofLimit": "Source-derived abstract closure with valid choice text/finish and usage presence combinations, not an executed Effect/schema/runtime test."
+    }
+  ],
+  "findings": [
+    {
+      "id": "stream-writer-local-implication",
+      "severity": "qualified-owner-design-omission",
+      "note": "Four-Boolean writer scope has16/9 reachable tuples; existing text-phase design would leave shouldFinish=>finished pair. Raw zero report missed this scope disposition; not a clean no-new-qualified result."
+    },
+    {
+      "id": "text-stream-options-locator",
+      "severity": "citation-drift",
+      "note": "Canonical line251 is @since JSDoc; declaration253 and inherited fields255. D1 remains valid."
+    },
+    {
+      "id": "telegram-document-kind-locator",
+      "severity": "citation-kind-drift",
+      "note": "telegramChannelDocument returns object literal123-134, not type literal; canonical126 is dmPolicy. Boolean fields125 and127. D2 remains valid."
+    },
+    {
+      "id": "historical-design-bindings",
+      "severity": "provenance-only",
+      "note": "Three designs cite historical source hashes and inherited statuses. Current comparison supports existing qualification but is not replacement independent P3."
+    }
+  ],
+  "rawEmptyClassification": "Exit-zero empty delta report with complete file enumeration but missed writer-local qualified relation and citation defects; not a semantic clean/no-new-qualified result.",
+  "credit": {
+    "dryRound": false,
+    "P3": false,
+    "Gate2": false,
+    "implementation": false
+  },
+  "mutations": "Only private receipts; source/design/inventory/parent-progress untouched and no proofs or services launched."
+}

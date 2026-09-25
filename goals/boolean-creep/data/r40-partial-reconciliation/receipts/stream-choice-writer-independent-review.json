@@ -1,0 +1,364 @@
+{
+  "kind": "r40-stream-choice-writer-independent-admission-review/v1",
+  "createdAt": "2026-09-25T11:04:52.958206+00:00",
+  "proposedId": "r40-drivers-openai-compat-stream-choice-writer",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "recordedMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "disposition": "approved-for-bounded-campaign-admission",
+  "admissionApproved": true,
+  "findingCount": 0,
+  "findings": [],
+  "inputHashes": [
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/stream-choice-writer-proposal/bindings.json",
+      "sha256": "2ceb0a9e2a0f4081dbb1e9bc7444769557cf41366108daaae2ff9334a1545537"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36"
+    },
+    {
+      "file": "goals/boolean-creep/designs/drivers-stream-state.md",
+      "sha256": "7fb0cf6a0becf1dde711db6241568946d360dd8f328ed7a4f174884839abd5ca"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/ops/validate-inventory.ts",
+      "sha256": "f1a02edfa18248538c5afda3f83ed2738cc74130df46292abd3c83dc232aa32e"
+    },
+    {
+      "file": ".claude/skills/schema-first-development/SKILL.md",
+      "sha256": "bcd55b12b37c7d1d334351b52c2571558faa85ca5977261bb5861623e323eeb5"
+    },
+    {
+      "file": ".claude/skills/schema-first-development/references/repo-laws.md",
+      "sha256": "d508b33b5e207ebf846cbd6756d2417c481f23e1df3dae277bfa7871f0aa97e9"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/drivers-n-r-stream-writer-finite.json",
+      "sha256": "0ec8ef8412cf079baf43fbacb8287c034ee239b59c84e6ce614bedf63b17d9bd"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/drivers-n-r-review.json",
+      "sha256": "f422613c9ffabef9dc0b973988dc81e9bdf1d1448457b14826b909dd0dc7611c"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/staged-only-r40-backup/frozen-inputs.json",
+      "sha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/staged-only-r40-backup/lane-map.json",
+      "sha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/staged-only-r40-backup/r40-drivers-n-r.execution.json",
+      "sha256": "fc2ab6fc60940b59b1f1bd0e707f6a12dacabd3d9996051cfad5392909b7f418"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/stream-choice-writer-proposal/r40-drivers-openai-compat-stream-choice-writer.proposed.jsonl",
+      "sha256": "e7b59a8fe66eab073142c4f2c56cdf40e57d73a9c7aa79c4e1c35262385fbb36"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/stream-choice-writer-proposal/r40-drivers-openai-compat-stream-choice-writer.design.md",
+      "sha256": "8f878ce720d802e4a4e4d821197ada189db185df653e0ff7b05dd6c2642f0111"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r40-reconciliation/stream-choice-writer-proposal/validation.json",
+      "sha256": "4bab224cc8dfb260f0dae726a6cb1cacbe1e967ff61bc30633a2057e6f751485"
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "sha256": "ed1d3d076f7f92b21b19eee7b2c11f848715541ff5326ce09950f3f037d8d25a"
+    }
+  ],
+  "manifestInputOutputHashCount": 17,
+  "allManifestHashesMatch": true,
+  "sourceBindings": [
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "6a16aa7aae8d67d3a00160b4375859454ea6d4b3b2b79cc579adee95015cb479",
+      "matchesOriginalSource": true
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36",
+      "matchesOriginalSource": true
+    }
+  ],
+  "independence": "Reviewer did not author this row, design or finite proof. This independently checks supplied admission inputs; no blanket P3 approval.",
+  "ownerReview": {
+    "scope": "makeStreamChoiceParts generator826-925",
+    "actualBooleanLocals": [
+      "shouldFinish",
+      "textStarted",
+      "textEnded",
+      "finished"
+    ],
+    "excludedScopes": "Nested per-choice hasFinish belongs to callback; incoming StreamState is separate stored class. Arrays, Options and tool records are payloads.",
+    "recallPass": true,
+    "deduplication": "No canonical matchingID or file/symbol/member-set. Existing drivers-stream-state owns private stored3Boolean class,8/6; proposed record owns4Boolean local derived scope,16/9. Shared text-phase implementation must be counted once.",
+    "representable": 16,
+    "reachable": 9,
+    "upperBoundProof": "By induction frominitialfalsefalse, an emittedtext-end requires incomingstarted or same-choice textparts containingtext-start, so ended=>started persists. finished=state.finished||shouldFinish gives shouldFinish=>finished. Eachpair admits3values, giving9upperbound for arbitrary choice counts. Successful tools cannot add text-start/text-end outside these text rules. Failed effects do not return completed writer tuples.",
+    "witnessProof": "All9 traces replayed independently. They attain entire implication partition. Empty/multiple choices, retained usage and reason, and finish-only-before-text samechunk remain allowed schema inputs.",
+    "witnessReplays": [
+      {
+        "expectedTuple": [false, false, false, false],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [],
+              "usage": false
+            },
+            "outputPartTypes": [],
+            "nextAbstractState": [false, false, false, false, false],
+            "localTuple": [false, false, false, false]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [false, false, false, true],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [],
+              "usage": true
+            },
+            "outputPartTypes": ["finish"],
+            "nextAbstractState": [false, false, true, true, false],
+            "localTuple": [true, false, false, true]
+          },
+          {
+            "input": {
+              "choices": [],
+              "usage": false
+            },
+            "outputPartTypes": [],
+            "nextAbstractState": [false, false, true, true, false],
+            "localTuple": [false, false, false, true]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [false, true, false, false],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [
+                {
+                  "text": true,
+                  "finish": false
+                }
+              ],
+              "usage": false
+            },
+            "outputPartTypes": ["text-start", "text-delta"],
+            "nextAbstractState": [true, false, false, false, false],
+            "localTuple": [false, true, false, false]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [false, true, false, true],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [],
+              "usage": true
+            },
+            "outputPartTypes": ["finish"],
+            "nextAbstractState": [false, false, true, true, false],
+            "localTuple": [true, false, false, true]
+          },
+          {
+            "input": {
+              "choices": [
+                {
+                  "text": true,
+                  "finish": false
+                }
+              ],
+              "usage": false
+            },
+            "outputPartTypes": ["text-start", "text-delta"],
+            "nextAbstractState": [true, false, true, true, false],
+            "localTuple": [false, true, false, true]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [false, true, true, false],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [
+                {
+                  "text": true,
+                  "finish": true
+                }
+              ],
+              "usage": false
+            },
+            "outputPartTypes": ["text-start", "text-delta", "text-end"],
+            "nextAbstractState": [true, true, false, false, true],
+            "localTuple": [false, true, true, false]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [false, true, true, true],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [],
+              "usage": true
+            },
+            "outputPartTypes": ["finish"],
+            "nextAbstractState": [false, false, true, true, false],
+            "localTuple": [true, false, false, true]
+          },
+          {
+            "input": {
+              "choices": [
+                {
+                  "text": true,
+                  "finish": true
+                }
+              ],
+              "usage": false
+            },
+            "outputPartTypes": ["text-start", "text-delta", "text-end"],
+            "nextAbstractState": [true, true, true, true, true],
+            "localTuple": [false, true, true, true]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [true, false, false, true],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [],
+              "usage": true
+            },
+            "outputPartTypes": ["finish"],
+            "nextAbstractState": [false, false, true, true, false],
+            "localTuple": [true, false, false, true]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [true, true, false, true],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [
+                {
+                  "text": false,
+                  "finish": true
+                },
+                {
+                  "text": true,
+                  "finish": false
+                }
+              ],
+              "usage": true
+            },
+            "outputPartTypes": ["text-start", "text-delta", "finish"],
+            "nextAbstractState": [true, false, true, true, true],
+            "localTuple": [true, true, false, true]
+          }
+        ]
+      },
+      {
+        "expectedTuple": [true, true, true, true],
+        "matches": true,
+        "replay": [
+          {
+            "input": {
+              "choices": [
+                {
+                  "text": true,
+                  "finish": true
+                }
+              ],
+              "usage": true
+            },
+            "outputPartTypes": [
+              "text-start",
+              "text-delta",
+              "text-end",
+              "finish"
+            ],
+            "nextAbstractState": [true, true, true, true, true],
+            "localTuple": [true, true, true, true]
+          }
+        ]
+      }
+    ],
+    "closureCheck": {
+      "abstractStateOrder": [
+        "textStarted",
+        "textEnded",
+        "finished",
+        "usagePresent",
+        "finishReasonPresent"
+      ],
+      "reachableAbstractStates": 12,
+      "localTuples": 9,
+      "chunkAbstractions": 42,
+      "choicesPerEnumeratedChunk": [0, 1, 2],
+      "phaseTransitionAgreement": true,
+      "limits": "Independent Python source-derived abstract replay/closure; not executed schema/service tests. Arbitrary choice-count upperbound is separately proved by implications; finite witnesses establish all9 reachability."
+    }
+  },
+  "migrationReview": {
+    "reuse": "Single existing StreamTextPhase; no additional9state enum, no new public domain.",
+    "uniqueDeletion": "Delete finished alias at913 and return state.finished||shouldFinish directly at918. Immutable input and unchanged local are read atsame synchronous construction withno intervening Effectboundary.",
+    "sharedDeletion": "Text accumulators901-912 andread coherence changes belong to existing stored-state design; migrateonce and avoiddoublecount.",
+    "independentState": "Keep storedfinished independent of textphase; retain shouldFinish policylocal andnestedhasFinish.",
+    "guards": "No claim that required finishpolicy/usage/reason/nonempty predicates disappear. Added credit limited to redundant projection binding; shared coherence deletions remain with existingdesign."
+  },
+  "preservationReview": {
+    "order": "Eachchoice reads sameincoming textstate; tools/reason mutatechoice-by-choice, then flattenparts, appendfinishpart, derivephase, return samepayloadreferences.",
+    "lateAndRepeated": "Continue afterfinished; no perchoice textphaseupdate. Closedphase counts aspreviouslystarted for inlineend, butonlyopen counts foronHalt syntheticend. Preserve repeatedstarts/ends acrossmultiplechoices andlatechunks.",
+    "payloadAndErrors": "Active tool map/index/id/name/argument strings, fullusage payload/details, finishreason, emittedIDs/deltas/parts remain unchanged. Toolcompletion failures, providererrors/interruption andmapAccumEffect/onHalt placement remain unchanged.",
+    "encoding": "Private derived local cleanup only. Publicprovider schema/callback/wireJSON unchanged; no compatibility aliases orcodecchanges.",
+    "supportedInputs": "Publicschemas permit empty/multiple choices, nonempty content, optionalfinishreason andusage. Do not restrict atypical providerordering. Localreachable tuple restriction is notdecoderinput restriction."
+  },
+  "testReview": {
+    "existingSuite": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+    "existingDesignLocations": ["390-434", "436-494"],
+    "requiredCases": "All9witnesssequences withorderedfullpayload assertions; repeatedfinish, late text, empty/multiple choices, delayed/retainedusage/reason, toolaccumulation/error, providerfailure/interruption andonHalt. Shareexisting textphase characterization instead of duplicating tests or exposingprivatestate.",
+    "runtimeTestsRun": false,
+    "implementationVerificationStillRequired": true
+  },
+  "unresolvedQuestions": [],
+  "canonicalEdited": false,
+  "P3Credit": false,
+  "dryCredit": false,
+  "implementationCredit": false
+}

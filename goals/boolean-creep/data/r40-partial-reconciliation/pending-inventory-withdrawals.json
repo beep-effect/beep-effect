@@ -1,0 +1,73 @@
+[
+  {
+    "row": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "html-standard-global-boolean-attributes",
+      "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+      "line": 1867,
+      "symbol": "StandardGlobalAttributes",
+      "kind": "schema-struct",
+      "members": ["autofocus", "headingreset", "inert", "itemscope"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "WHATWG global boolean attributes on the HTML AST overlay; independently present presence-booleans mirroring the specification, not a domain phase."
+      }
+    },
+    "reviewSha256": "fdd9824dd2c09a3554f4ea65ee8263d8619b06a62f5f7d65540fcd3199cb2129",
+    "reason": "Complete owner uses true|empty-string presence encodings, not Boolean-typed fields.",
+    "parentAccepted": true,
+    "integrated": false
+  },
+  {
+    "row": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "tour-state-open-payload",
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "line": 38,
+      "symbol": "TourState",
+      "kind": "type-literal",
+      "members": ["isOpen", "activeTourId"],
+      "status": "designed",
+      "evidence": [
+        {
+          "class": "E3",
+          "cite": {
+            "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+            "line": 292
+          },
+          "note": "Successful start writes isOpen true with activeTourId; close and finish use closedTourState with isOpen false and a null id."
+        },
+        {
+          "class": "E1",
+          "cite": {
+            "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+            "line": 61
+          },
+          "note": "The closed and open writers never construct an open state without an id or a closed state with an id."
+        }
+      ],
+      "cardinality": {
+        "representable": 4,
+        "legal": 2
+      },
+      "storage": "stored",
+      "exposure": "internal",
+      "targetShape": "tagged-union",
+      "tier": 1,
+      "notes": "Current-corpus refresh admission; open owns tour id and step index, closed owns neither."
+    },
+    "reviewSha256": "bf449b95c00fa5fac1da82f9330f42d1f9538b16f572fff6958093c44072bb04",
+    "reason": "Complete TourState owner has only one Boolean; nullable ID and numeric index do not satisfy recall.",
+    "designArchives": [
+      {
+        "file": "goals/boolean-creep/designs/tour-state-open-payload.md",
+        "sha256": "016ce30d984695b06d51f7bf32fbed8d9bc8a861d65c3297754ecef2654eee82",
+        "unchangedSinceR39": true,
+        "disposition": "archive-on-withdrawal"
+      }
+    ],
+    "parentAccepted": true,
+    "integrated": false
+  }
+]

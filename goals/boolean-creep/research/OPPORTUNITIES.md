@@ -1637,3 +1637,94 @@ help describes early push and monitoring but does not state this flag dependency
 The terminal proof job was observed and acknowledged, then retried with `--pr`.
 Documenting the dependency beside `--start-pr-early` would prevent this failed
 submission; an existing PR can still be reused.
+
+### 2026-09-25 — Early publication rejects amend-based resumption
+
+After committing R39 reconciliation and merging newly advanced main for PR
+#1246, an early-publication retry with `--amend --no-edit` terminated before
+proof or push. The CLI reported that `--start-pr-early` cannot be combined with
+`--amend` or `--no-edit`. The help lists these flags separately without that
+constraint. The terminal job was observed and acknowledged. A documented
+resume path for an already-committed, unverified head would avoid this failed
+submission while retaining full proof after an early push.
+
+### 2026-09-25 — Format public receipts before binding their bytes
+
+R40 predecessor verification detected three R39 public artifact mismatches:
+commit formatting compacted JSON arrays after their hashes had been captured. Semantic comparison against the sanitized private
+original proved the receipt content unchanged. The artifact hash and enclosing
+verdict binding were refreshed after formatting. Format receipts first, then
+build binding manifests from the final bytes and recheck them after committing.
+Evidence: `data/r39-owner-reviews/artifact-index.json` and the R39 round verdict.
+
+### 2026-09-25 — R40 provider exhaustion and evidence coverage corrections
+
+R40 stopped with `HTTP 402` after 11 successful lanes; 4 lanes failed and 12
+were not executed. Successful evidence was reconciled without retrying the
+controller or treating incomplete coverage as dry. A provider-balance preflight
+and bounded, reviewed missing-lane recovery would avoid a redundant full sweep.
+Evidence: the R40 execution summary and partial round verdict.
+
+The modeling footer counted 187 files and 26 seeds, while its assigned manifest
+contains 177 files and 25 seeds; ten enumerated files were excluded generated
+surfaces. The UI scan covered 216 TypeScript files but omitted two included CSS
+files. Full non-TypeScript supplements closed the coverage gaps. Derive footer
+counts from the admitted manifest and require a per-extension coverage ledger.
+Complete-owner checks also found two existing records below the actual-Boolean
+recall threshold; semantic presence fields must not substitute for Boolean types.
+Evidence: `data/r40-partial-reconciliation/receipts/`.
+
+### 2026-09-25 — Check design sections and preserve unchanged inventory lines
+
+The R40 integration preparation checked that all qualified design paths existed
+but did not run the canonical design-surface validator. After installation,
+`bun goals/boolean-creep/ops/validate-designs.ts` reported seven missing section
+headings in the new writer design. The reviewed content was present under draft
+headings; publication also retained private relative references. The canonical
+design now uses the required headings and public receipt links, with the exact
+reviewed draft preserved and mechanical normalization recorded separately.
+
+The candidate inventory serializer also rewrote unchanged rows, producing a
+large formatting diff. Reusing each unchanged row's original bytes reduced the
+inventory change to two withdrawals, two corrections, and one addition without
+changing any candidate record object. Preparation should validate the assembled
+design surface and compare row-level byte changes before claiming the bundle is
+ready. Both canonical validators now pass. Evidence:
+`data/r40-partial-reconciliation/mechanical-normalization.json`.
+
+### 2026-09-25 — Source movement supersedes pending historical recovery
+
+While the R40 recovery runner was being prepared after provider HTTP 402,
+main advanced through PR #1232 and changed EnvConfig.ts and TurboCache.ts.
+The runner's live-main guard refused the changed revision. Preserve the
+partial round and reusable runner tests, but use a fresh full census for
+current-source convergence. Check provider availability before starting a
+round and minimize the delay between runner admission and census execution.
+
+### 2026-09-25 — Source moves while credit and proof remain queued
+
+A live-main read returned `6709f713` while R41 launcher review was pending.
+PRs #1229 and #1245 changed runtime source and dependency inputs, superseding
+the unlaunched preparation pinned to `41d6c9eb`. The queued publication proof
+was cancelled before merging main; its terminal result was observed. Preserve
+launcher review work separately from source admission so a source refresh can
+reuse proven execution behavior without claiming stale census coverage.
+
+### 2026-09-25 — Package subpath mistaken for a relative document target
+
+PR #1246 Heavy / Lint Policy failed its knowledge reference and semantic-delta
+checks on the Bun report design's unqualified VersionSync package subpath.
+The checker treated it as a path relative to the design directory. The design
+now names the full package subpath and tracked repository target. Preserve
+historical receipt hashes and bind this mechanical correction separately.
+Run both knowledge checks on refreshed design prose before publication.
+
+### 2026-09-25 — Inherited live reference paths block unrelated PRs
+
+PR #1246's knowledge refs check reports 32 live host-path findings in the
+Effect reference workspace packet. The same check against main at `eaa9ac640c`
+reports identical debt. The live packet now names the configured root and
+explicit operator path inputs; its frozen census, layout rulings, manifest
+default, and move preconditions remain intact. Run the whole-tree reference
+check before merging new goal packets to avoid spreading this failure to
+unrelated branches.

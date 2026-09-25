@@ -18,6 +18,12 @@ readiness and was merged by the operator before implementation of these
 exceptions. Deliver the exceptions and final packet closeout in a follow-up PR,
 left open and mergeable. The agreed scope is recorded in `DECISIONS.md`.
 
+2026-09-25 final packet closeout: the operator also merged #1240 after its
+head-local proof and hosted readiness passed, while merged-preview verification
+continued. The approved documentation-only follow-up carries final acceptance,
+reflection, and lifecycle updates. Leave that PR open and verify its final head
+through Yeet before reporting the goal complete.
+
 ## Phases
 
 - **P0 Research — complete.** Three Opus 5 exploration lanes (CLIProxyAPI catalog, `repo-cli` sync
@@ -56,7 +62,7 @@ left open and mergeable. The agreed scope is recorded in `DECISIONS.md`.
 ## P4 Closeout Checklist
 
 - [x] Reflection at `history/reflections/<date>-<agent>.md`; `bun run beep lint reflection-artifacts`.
-- [ ] `bun run beep goals set-status model-routing-sync completed-retained` after delivery proof, in the final PR.
+- [x] `bun run beep goals set-status model-routing-sync completed-retained` in the final packet PR; final-head delivery proof remains the handoff gate.
 - [x] Friction receipts recorded in the active packet's opportunities ledger as they happen, not at
       closeout.
 - [x] `bun run beep goals index --write`; Atlas regenerated if `explore atlas --check` says stale.
