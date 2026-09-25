@@ -18,17 +18,21 @@ Current phase: P3 repair path. Two admission windows are denied:
 The repair path is signed in `research/repair-decision-2.md`. Moves: #1195
 (`Test Unit` shard split: `repo-cli` becomes `repo-cli-1`/`repo-cli-2` via
 an optional `shard {index,total}` partition field; free hosted runners stay
-the placement) merged 2026-09-22; #1194 (refs-check quiet listing) in
-flight. `Lint Policy` is measured, not repaired, here; its wall-clock debt
-is handed to `goals/time-to-certainty` C4 and the window-3 verdict decides
-whether C4 is pulled forward. Do not add a shard or a fleet move without a
-new signed decision.
+the placement) merged 2026-09-22T12:49Z; #1194 (refs-check quiet listing)
+merged 2026-09-22T16:34Z. `Lint Policy` is measured, not repaired, here; its
+wall-clock debt is handed to `goals/time-to-certainty` C4 and the window-3
+verdict decides whether C4 is pulled forward. Do not add a shard or a fleet
+move without a new signed decision.
 
-After the last of the two merges, census the first complete half-open UTC
-week that starts after it with exactly:
+Window 3 is the first complete half-open UTC week that starts after the last
+merge: `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`. Do not census it
+before 2026-09-30T00:00Z; a run over a partial window is a preview and never
+an admission. The command enforces that: `--window` refuses an `--until` in
+the future or a span under seven days unless `--preview` is passed, and
+preview output carries a banner that never admits. Census it with exactly:
 
 ```sh
-bun run beep ci lane-timings --window --workflow check.yml --event all --since <week-start>Z --until <week-end>Z --markdown
+bun run beep ci lane-timings --window --workflow check.yml --event all --since 2026-09-23T00:00:00Z --until 2026-09-30T00:00:00Z --markdown
 ```
 
 The command resolves the ruleset history version effective strictly before
@@ -43,9 +47,9 @@ rejects the census until it is added to the table and PLAN.
 
 Write `research/admission-week-3-p95.md` from the emitted tables with the
 verdict for every required lane, the Lint and Test Unit effective p95 values,
-and the pickup tripwire (breach above 5m00s). Admit only when every required
-p95 is below 20m00s, the pickup tripwire does not breach, and the context-set
-check passes.
+the two `repo-cli` halves reported separately, and the pickup tripwire
+(breach above 5m00s). Admit only when every required p95 is below 20m00s,
+the pickup tripwire does not breach, and the context-set check passes.
 
 Close in order: mark PLAN P3 complete, complete the manifest lifecycle, run
 `/reflect ci-lane-economics`, then fire `ci-fleet-endgame` P6. Until a census
