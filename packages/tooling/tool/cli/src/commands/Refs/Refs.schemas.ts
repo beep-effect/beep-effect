@@ -106,6 +106,35 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
   $I.annote("ReferenceWorkspaceManifest", { description: "The on-disk beep-references/v1 manifest." })
 ) {
   /**
+   * Decodes manifest input with the shared schema.
+   *
+   * **Example** (Use the compiled decoding codec)
+   * ```ts
+   * import { ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs"
+   * import { Effect } from "effect"
+   * Effect.isEffect(ReferenceWorkspaceManifest.decode({ schemaVersion: "beep-references/v1", theme: "effect", rootDefault: "$HOME/refs", workspaceLink: ".repos/effect-workspace", members: [] })) // => true
+   * ```
+   * @category decoding
+   * @since 0.0.0
+   */
+  static readonly decode = S.decodeEffect(ReferenceWorkspaceManifest);
+
+  /**
+   * Serializes a validated manifest to JSON.
+   *
+   * **Example** (Use the compiled encoding codec)
+   * ```ts
+   * import { ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs"
+   * import { Effect } from "effect"
+   * const encoded = ReferenceWorkspaceManifest.decodeJson("{}").pipe(Effect.flatMap(ReferenceWorkspaceManifest.encodeJson))
+   * Effect.isEffect(encoded) // => true
+   * ```
+   * @category encoding
+   * @since 0.0.0
+   */
+  static readonly encodeJson = S.encodeEffect(S.fromJsonString(ReferenceWorkspaceManifest));
+
+  /**
    * Reads on-disk JSON with unknown member and manifest fields rejected.
    *
    * **Example** (Prepare strict JSON decoding)
@@ -201,7 +230,36 @@ export class RefsRefreshStatus extends S.Class<RefsRefreshStatus>($I`RefsRefresh
     workspaceCheck: ReferenceWorkspaceCheck,
   },
   $I.annote("RefsRefreshStatus", { description: "One report per manifest member and the workspace check." })
-) {}
+) {
+  /**
+   * Decodes a saved reference refresh receipt.
+   *
+   * **Example** (Use the compiled decoding codec)
+   * ```ts
+   * import { RefsRefreshStatus } from "@beep/repo-cli/commands/Refs"
+   * import { Effect } from "effect"
+   * Effect.isEffect(RefsRefreshStatus.decodeJson("{}")) // => true
+   * ```
+   * @category decoding
+   * @since 0.0.0
+   */
+  static readonly decodeJson = S.decodeEffect(S.fromJsonString(RefsRefreshStatus));
+
+  /**
+   * Serializes a reference refresh receipt to JSON.
+   *
+   * **Example** (Use the compiled encoding codec)
+   * ```ts
+   * import { RefsRefreshStatus } from "@beep/repo-cli/commands/Refs"
+   * import { Effect } from "effect"
+   * const encoded = RefsRefreshStatus.decodeJson("{}").pipe(Effect.flatMap(RefsRefreshStatus.encodeJson))
+   * Effect.isEffect(encoded) // => true
+   * ```
+   * @category encoding
+   * @since 0.0.0
+   */
+  static readonly encodeJson = S.encodeEffect(S.fromJsonString(RefsRefreshStatus));
+}
 
 /**
  * Validated paths and calendar used to render a reference refresh timer.
@@ -223,7 +281,21 @@ export class RefsTimerOptions extends S.Class<RefsTimerOptions>($I`RefsTimerOpti
     bunPath: SystemdUnitPath,
   },
   $I.annote("RefsTimerOptions", { description: "Unit-safe owner, root, home, calendar and Bun executable." })
-) {}
+) {
+  /**
+   * Validates timer input before rendering systemd units.
+   *
+   * **Example** (Use the compiled decoding codec)
+   * ```ts
+   * import { RefsTimerOptions } from "@beep/repo-cli/commands/Refs"
+   * import { Effect } from "effect"
+   * Effect.isEffect(RefsTimerOptions.decode({ owner: "/checkout", root: "/refs", home: "/home/op", calendar: "*-*-* 03:30:00", bunPath: "/usr/bin/bun" })) // => true
+   * ```
+   * @category decoding
+   * @since 0.0.0
+   */
+  static readonly decode = S.decodeEffect(RefsTimerOptions);
+}
 
 /**
  * A rendered systemd unit ready for installation.
