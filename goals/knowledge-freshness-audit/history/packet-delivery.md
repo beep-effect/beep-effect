@@ -44,11 +44,29 @@ The full detached Yeet proof passed on 2026-09-24 at 23:07 UTC, including
 preflight, policy, type checks, doctests, and selected coverage. Publication
 reused that proof and created [PR #1218](https://github.com/beep-effect/beep-effect/pull/1218)
 at commit `516a1dd4159e8a480dba6bca0a593ea8036457fd`. Hosted admission confirmed
-the docs-only route. Hosted closeout remains pending.
+the docs-only route. The following checkpoint records hosted closeout.
 
 Hosted review identified that rerunning the mutating repair command could
 reintroduce source edits. PLAN now makes the post-repair scope check explicit
 and separates one-time repair from repeatable packet validation.
 
-The final PR URL and exact-head proof belong in the delivery receipt. Planning
-PR completion updates P0 only; P1-P5 remain pending and lifecycle stays paused.
+## Planning delivery checkpoint
+
+At commit `4113553f291d3e37a5ea1dbbe0b9841fb5bed052`, the detached
+`yeet monitor --until-ready` job exited 0 with `merge-ready: yes` on
+2026-09-24 at 23:24 UTC. Required checks passed; both repair-scope review
+threads were answered and resolved through Yeet. The full publication command
+subsequently exited 0, including CLI coverage and merged-preview CI parity.
+
+P0 is complete. P1-P5 remain pending, both lifecycle fields remain paused, and
+no paid Jev calls or corpus remediation have run. GitHub records PR #1218 as
+merged at 2026-09-24 23:38 UTC, after the merge-ready checkpoint and while
+local parity proof was still running. This task did not issue the merge.
+The full publication command finished successfully afterward. Audit activation
+remains a separate action.
+
+This closeout update is subject to fresh exact-diff local proof and exact-head
+hosted monitoring before handoff. The PR checks and Yeet closeout artifacts
+bind that final result to the publication head; this committed historical
+receipt names the already-observed checkpoint rather than a self-referential
+future commit hash.

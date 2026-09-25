@@ -11,7 +11,7 @@
   "packetPath": "goals/knowledge-freshness-audit",
   "lifecycle": "paused",
   "mission": "Audit repository claims against explicit authority and evidence, reconcile customized upstream skills, and verify targeted repairs.",
-  "statusNote": "Authored-but-not-started linked campaign. P0 delivers the planning PR; explicit operator activation opens P1 reporting. Audited-content mutation follows the corresponding report and false-positive review. Planning PR readiness is not audit completion.",
+  "statusNote": "Planning packet delivered in PR #1218; campaign remains authored-but-not-started. Explicit operator activation opens P1 reporting. Audited-content mutation follows the corresponding report and false-positive review. Planning PR readiness is not audit completion.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -60,7 +60,7 @@
     {
       "id": "P0",
       "name": "Planning packet: research, review, and docs-only PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",

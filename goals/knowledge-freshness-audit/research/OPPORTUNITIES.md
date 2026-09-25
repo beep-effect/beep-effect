@@ -74,3 +74,15 @@ Resolution: read the public Markdown over HTTPS and retain source URLs and
 observation date. Retrieval failure must stay distinct from a negative claim
 judgment. An alternate public-text fetch avoids treating reader limitations as
 missing evidence.
+
+## Repeated proof cost for packet closeout
+
+- Work: publish a docs-only goal packet, address review, and record delivery.
+- Evidence: the review-fix publication selected CLI coverage, which passed in
+  about 11 minutes, then ran merged-preview CI parity with another JSDoc scan.
+  Proof reuse requires the exact commit and diff fingerprint, so a later
+  lifecycle receipt cannot reuse the preceding full proof unchanged.
+- Prevention candidate: evaluate a documented packet-closeout proof contract
+  with explicit goal-schema, content, and dependency obligations. Preserve
+  current gates until that contract is implemented and reviewed; this packet
+  does not authorize bypassing them.

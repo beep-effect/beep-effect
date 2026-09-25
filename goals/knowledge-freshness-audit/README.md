@@ -44,8 +44,9 @@ bounded to $5 during audit execution; no API trial belongs in P0.
 
 ## Current phase
 
-P0 authors and reviews this packet, validates it, and publishes a docs-only PR
-through Yeet to mergeable. P1-P5 remain pending while the campaign is paused.
+P0 delivered this reviewed packet in [PR #1218](https://github.com/beep-effect/beep-effect/pull/1218).
+The delivery history records the observed merge-ready checkpoint. P1-P5 remain
+pending while the campaign is paused.
 The first execution action is to refresh the census at a recorded Git revision
 and check the parent initiative's current capabilities before adding tooling.
 

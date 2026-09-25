@@ -7,7 +7,7 @@ explicit audit activation. [SPEC.md](./SPEC.md) is normative.
 
 | Phase | Status | Work | Exit |
 | --- | --- | --- | --- |
-| P0 | in-progress | Research, author, review, and publish the planning packet | Docs-only PR reaches mergeable and remains open; audit stays paused |
+| P0 | complete | Research, author, review, and publish the planning packet | Docs-only PR reaches mergeable and remains open; audit stays paused |
 | P1 | pending | Freeze census; build/reuse read-only extraction and evidence reports | All surface families accounted for; initial report and extraction-quality review recorded |
 | P2 | pending | Verify claims and evaluate optional Jev pilot | Typed determinations and reviewed evidence; Jev admitted or explicit fallback |
 | P3 | pending | Reconcile skills and repair confirmed discrepancies | Approved report scope, preserved customization, before/after proof |
