@@ -3508,14 +3508,18 @@
       {
         "from": "@beep/tailscale",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
-          "@beep/tailscale"
+          "@beep/tailscale",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
-          "@beep/tailscale"
+          "@beep/tailscale",
+          "@beep/test-runner"
         ]
       },
       {
