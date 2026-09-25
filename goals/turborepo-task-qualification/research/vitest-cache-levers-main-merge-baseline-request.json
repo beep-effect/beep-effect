@@ -1,0 +1,17 @@
+{
+  "previous": "3bf114a3c795fa087aec8dce23de9d25c02d5e574779ad77a129a52e768418d9",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (vitest cache levers, perf/vitest-cache-levers main merge)",
+    "reason": "Accept the merged projection after merging main into perf/vitest-cache-levers: it carries both the !.fallow/** input negation this branch already accepted and the @beep/fc-runs and @beep/test-runner identity dependency edges main accepted in PR #1216; no command, cache flag, output or global configuration changed beyond those two reviews.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/vitest-cache-levers-main-merge-baseline-review.md",
+      "sha256": "4fa728d0699b87ae6a0e17efcdb7dab8134ee2812f21d6fd7d6c6a80a6910ce7"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

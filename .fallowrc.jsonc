@@ -115,6 +115,8 @@
     // Browser QA operators copy this documented harness template beside the app
     // under test; it is a distributed resource, not workspace-owned source.
     ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs",
+    // Self-contained HTML teaching courses; lesson pages load assets via <script src>.
+    ".claude/teaching/**",
     "goals/**",
     "scratchpad/**",
     "infra/ci-runners/sdks/**",

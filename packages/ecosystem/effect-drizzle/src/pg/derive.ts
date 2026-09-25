@@ -14,6 +14,12 @@
  * - Declarations (Date, Uint8Array, Option, …), heterogeneous unions, and
  *   everything else DO NOT derive: explicit column metadata is required.
  *   Ambiguity is a loud error, never a silent fallback.
+ * - Explicit metadata on a declaration is checked against the carrier named
+ *   by the declaration's `representation` annotation: `effect/schema/Date`
+ *   carries `date`, `effect/schema/Uint8Array` carries `bytes`, and
+ *   {@link NumberDeclarationRepresentation} carries `number` (a declared
+ *   number that keeps `NaN` and the infinities). Any other declaration has
+ *   no SQL carrier and fails model construction.
  *
  * Nullability never derives a column: `Null` union members are stripped (they
  * feed `.notNull()` instead), and an encoded `Undefined` is rejected — SQL
@@ -39,7 +45,14 @@ import {
 } from "effect/Array";
 import { equals } from "effect/Equal";
 import { dual, flow } from "effect/Function";
-import { orElse as matchOrElse, tag as matchTag, type as matchType, withReturnType } from "effect/Match";
+import {
+  orElse as matchOrElse,
+  tag as matchTag,
+  type as matchType,
+  value as matchValue,
+  when as matchWhen,
+  withReturnType,
+} from "effect/Match";
 import { fromUndefinedOr, getOrElse, map as mapOption, none, some as someOption } from "effect/Option";
 import { hasProperty, isBigInt, isBoolean, isNumber, isString, isTagged, not } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
@@ -52,7 +65,7 @@ import { stringLiteralValues as collectStringLiteralValues } from "../core/liter
 import * as PgColumn from "./Column.ts";
 import type { Option } from "effect/Option";
 import type { Top } from "effect/Schema";
-import type { AST, Check } from "effect/SchemaAST";
+import type { AST, Check, Declaration } from "effect/SchemaAST";
 import type { EntityIdLike as EntityIdLikeType } from "../core/entity-id.ts";
 import type * as Field from "../core/Field.ts";
 
@@ -269,6 +282,65 @@ export const arrayElementAST: {
  */
 const encodedAST = flow(selectSchemaOf, flow(getStruct("ast"), toEncoded));
 
+/**
+ * Representation annotation that gives a declared number schema the `number`
+ * SQL carrier.
+ *
+ * **When to use**
+ *
+ * Use when a number field is modeled as a declaration, such as an
+ * `S.declare(P.isNumber)` schema that keeps `NaN` and the infinities, and the
+ * field must persist in a number column.
+ *
+ * **Details**
+ *
+ * Declarations never derive a column, so the field still names its column
+ * with explicit metadata such as `doublePrecision()`. Model construction
+ * checks that column against the carrier of the encoded schema. A declaration
+ * carrying this annotation carries `number`; a declaration without a known
+ * representation fails with `DeriveColumnError`.
+ *
+ * **Gotchas**
+ *
+ * The annotation is trusted, not verified: only attach it to a declaration
+ * whose guard admits JavaScript numbers and nothing else.
+ *
+ * **Example** (Store a declared number in a double-precision column)
+ *
+ * ```ts
+ * import { Model } from "@beep/effect-drizzle"
+ * import { doublePrecision, NumberDeclarationRepresentation } from "@beep/effect-drizzle/pg"
+ * import * as P from "effect/Predicate"
+ * import * as S from "effect/Schema"
+ *
+ * const AnyNumber = S.declare(P.isNumber, { representation: NumberDeclarationRepresentation })
+ *
+ * class Reading extends Model<Reading>("Reading")({
+ *   value: AnyNumber.pipe(doublePrecision()),
+ * }) {}
+ *
+ * Reading.sql.columns.value.column.kind // => "doublePrecision"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const NumberDeclarationRepresentation = {
+  id: "@beep/effect-drizzle/pg/Number",
+  payload: null,
+} as const;
+
+const declarationCarrierTag = (declaration: Declaration): PgColumn.CarrierTag =>
+  matchValue(
+    hasProperty(declaration.annotations?.representation, "id") ? declaration.annotations.representation.id : undefined
+  ).pipe(
+    withReturnType<PgColumn.CarrierTag>(),
+    matchWhen("effect/schema/Date", () => "date"),
+    matchWhen("effect/schema/Uint8Array", () => "bytes"),
+    matchWhen(NumberDeclarationRepresentation.id, () => "number"),
+    matchOrElse(() => fail("(unknown)", declaration._tag, "Encoded declaration has no SQL carrier."))
+  );
+
 const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
   matchType<AST>().pipe(
     withReturnType<PgColumn.CarrierTag>(),
@@ -289,15 +361,7 @@ const atomicCarrierTag = (node: AST): PgColumn.CarrierTag =>
         ? (typeof literal as "string" | "number" | "bigint" | "boolean")
         : fail("(unknown)", node._tag, "Encoded literal has no SQL carrier.")
     ),
-    matchTag("Declaration", (declaration) =>
-      hasProperty(declaration.annotations?.representation, "id") &&
-      declaration.annotations.representation.id === "effect/schema/Date"
-        ? "date"
-        : hasProperty(declaration.annotations?.representation, "id") &&
-            declaration.annotations.representation.id === "effect/schema/Uint8Array"
-          ? "bytes"
-          : fail("(unknown)", node._tag, "Encoded declaration has no SQL carrier.")
-    ),
+    matchTag("Declaration", declarationCarrierTag),
     matchOrElse(() => fail("(unknown)", node._tag, "Encoded AST has no SQL carrier."))
   )(node);
 

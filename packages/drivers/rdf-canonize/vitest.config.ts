@@ -5,6 +5,9 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
+      // Tests here mock modules, stub globals, or change the working directory; keep every file in
+      // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
+      isolate: true,
       // Package-specific overrides
       // The rdf-canonize-backed tests load the real module (vi.importActual) and
       // canonicalize schema-derived datasets; cold-cache CI runs exceed the 5000ms
