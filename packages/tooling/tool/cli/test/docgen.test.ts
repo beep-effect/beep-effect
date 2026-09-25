@@ -114,25 +114,6 @@ const DOCTEST_FIXTURE_DIR = new URL("./fixtures/doctest/", import.meta.url).path
 const DOCTEST_FIXTURE_PACKAGE = "packages/doctest-fixture";
 const decodeDoctestReport = S.decodeUnknownEffect(S.fromJsonString(DoctestReport));
 
-const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {
-  const previousValue = Bun.env[name];
-  if (value === undefined) {
-    delete Bun.env[name];
-  } else {
-    Bun.env[name] = value;
-  }
-
-  try {
-    return use();
-  } finally {
-    if (previousValue === undefined) {
-      delete Bun.env[name];
-    } else {
-      Bun.env[name] = previousValue;
-    }
-  }
-};
-
 const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" }));
 
