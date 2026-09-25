@@ -1,0 +1,15 @@
+# R37 drivers-a-f bounded owner/locator audit
+
+Reject all five footer-proposed line-anchor changes. They confuse correct owner anchors with subsequent Boolean fields. Three ACP source files are byte-identical to frozen R36 HEAD, current R37 HEAD and main. No declaration drift occurred.
+
+- AcpProtocolLoggingOptions is declared at282; first Boolean logIncoming is284, followed by logOutgoing287. Keep282.
+- clientProtocol is the RpcClient.Protocol.of object beginning841. Its supportsAck851 and supportsTransferables852 are fields. Keep841.
+- serverProtocol is the RpcServer.Protocol.of object beginning856. supportsAck868 is the first Boolean; supportsNotifications869 is the second, followed by two other capabilities. Keep856.
+- Client actual makeAcpPatchedProtocol object begins472. The nested getSomesStruct begins475 and holds Option-valued inputs at477/478; those values become independently optional Boolean properties on the outer object through the spread. Keep472, not477.
+- Agent corresponding outer object begins317; nested getSomesStruct320 receives flags322/323. Keep317, not322.
+
+The last two canonical notes accurately distinguish the actual constructed owner from its Option-valued extraction input. Their shared support citation alone is stale: AcpProtocol.service.ts logger fallback is502 and incoming/outgoing independent guards are504/505. Replace :501-504 with :502-505 in exactly those two notes. These are real stale cite corrections, not declaration moves or changes since R36. The existing client/agent options notes already cite477-478/322-323 correctly, and patched-options note already cites502/504-505. Preserve all members, statuses and disqualifications.
+
+No live design references these audited ACP owners or IDs, so there are no design citation dependencies. The two complete proposed row replacements change only the note substring; all five inventory line anchors remain unchanged. Delta0rows/0qualified/0designs. The primary raw report is empty and remains untouched. Exact source, primary transcript/receipt, inventory and rule hashes are recorded in disposition.json; transcript binding matches the primary receipt.
+
+This is a bounded owner/locator audit only. No tracked edits, ref changes, launch, implementation, P3 or dry-round credit.

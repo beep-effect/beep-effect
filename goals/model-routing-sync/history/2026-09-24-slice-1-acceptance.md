@@ -118,3 +118,25 @@ Hosted test typechecking then identified six already-typed inputs decoded with
 `package-test-typecheck` command passes, as do package quick verification and all
 32 tests in the selected catalog/check/locator files. Runtime implementation and
 serialization behavior are unchanged from the successful full package audit.
+
+## 2026-09-25 approved coverage follow-up
+
+The operator approved package-local coverage isolation for wink, utils, and
+identity through Ask User Question, then requested implementation. Each package's
+normal `bun run coverage` now passes without an isolation CLI override: wink
+47 tests, utils 182 tests, identity 115 tests (344 total). Package quick
+verification passes lint and check for all three after building their dependency
+outputs in the fresh worktree. Assertions, thresholds, shared runner defaults,
+dependencies, and runtime interfaces are unchanged.
+
+The Models-only codec hoist previously passed root Oxlint, all 40 Models tests,
+test typechecking, package quick verification, and all 15 Yeet cheap gates.
+The monitor for PR #1224 reported `merge-ready: yes` on head `f51f9e53d1` before
+the operator merged it. Its remaining local full-proof job was stopped when the
+merged PR required a new delivery branch; it is not counted as completed proof.
+The approved coverage exceptions and final packet closeout now travel in a
+follow-up PR, which must remain open after final local and hosted verification.
+
+The actual configs also pass the original failing runner settings:
+`bun run coverage -- --fileParallelism=true --maxWorkers=1`, without any
+isolation CLI override. All 344 tests pass under those settings as well.

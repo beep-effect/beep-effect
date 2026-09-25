@@ -1,0 +1,30 @@
+{
+  "verdict": "retain-three-D-classifications-correct-two-anchors-one-note",
+  "inputs": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "sha256": "28ad6e2a7cc6863c8384bce6bb84d0d6e86de32015dd6e94078ce9d2eb278d9e"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-d-k.execution.json",
+      "sha256": "eb8f57814143cc197fc981565a1954013e77b0af5f9e722fc867262167ab06b2"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-cli-commands-d-k.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "details": "Readcomplete restore260-275 anddiscard300-310. backupPresent267/currentPresent269 independent existence facts;backupRemaining305/failedRemaining306 independent residuefacts. remove308alreadycanonical butsupportnote298stale. PreserveD1/D2,defaults,errorfallthrough,shortcircuit andSDKoptions;noqualifiedchange.",
+  "outputs": [
+    {
+      "file": "proposed-row-replacements.jsonl",
+      "sha256": "0cf7346e0fd318ee419277287e6b54466318a92b3bb29516adfa3d7bd72b5cc2"
+    }
+  ],
+  "dryCredit": false,
+  "P3Credit": false
+}

@@ -1,0 +1,77 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r35-main-5c7685",
+  "roundNumber": 35,
+  "finalizedAt": "2026-09-25T06:44:59.210868+00:00",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "newQualifiedIds": [],
+  "newQualifiedCount": 0,
+  "changedQualifiedIds": ["r3-foundation-notification-action-busy"],
+  "withdrawnQualifiedIds": [
+    "ai-metrics-canonical-root-kind",
+    "ai-metrics-config-snapshot-bounds",
+    "corpus-mail-store-exception-approved-disposition",
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-boolean-state-foundation-use-scribe-result-connected",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence"
+  ],
+  "withdrawnDisqualifiedIds": [
+    "r2-foundation-color-picker-disabled-open",
+    "r2-foundation-date-picker-disabled-open",
+    "r2-foundation-emoji-picker-disabled-open",
+    "r25-law-practice-runtime-bundle-overwrite-gate"
+  ],
+  "records": 735,
+  "qualified": 115,
+  "disqualified": 620,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/execution-summary.json",
+      "sha256": "5e76fa657c4f614a10c5aa1f3b3e2175b3e0e4ea29f22c147b18f9e9818000d2"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/execution-audit.json",
+      "sha256": "6128f563d4181ac3371b721fba1ec5a1042c91ad0591e1eec86bdedf28867bcc"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/lane-map.json",
+      "sha256": "9829abbcf40a47acd0207792f7561e379a70a7b096f14156e5ddcc0d2b9ecb3b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r35-main-5c7685/source-sha.txt",
+      "sha256": "3dd3cae1d7fa077a70269c4c950ca43b0b884274e2bea34d3dfe726dc57c439b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r35-parent-integration-2026-09-25.json",
+      "sha256": "985b3792b81c73fd012087e076bdf59eca655ee9220f7e8194760eb93a79c644"
+    },
+    {
+      "file": "goals/boolean-creep/data/r35-owner-reviews/artifact-index.json",
+      "sha256": "2c6ce6fa2f946c34ac2cd01f1e08d84332e30de7501d8d37fef1060f53292e34"
+    },
+    {
+      "file": "goals/boolean-creep/data/r35-reconciliation-progress-2026-09-25.json",
+      "sha256": "92704e6da63fb4c708e33b640f7c4a990a95b997622908bc5ba861014bf249f7"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r35-final-reconciled.jsonl",
+      "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+    }
+  ]
+}

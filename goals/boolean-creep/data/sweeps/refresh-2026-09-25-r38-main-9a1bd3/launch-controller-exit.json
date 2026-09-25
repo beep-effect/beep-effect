@@ -1,0 +1,9 @@
+{
+  "kind": "r38-controller-process-exit",
+  "controllerExitCode": 0,
+  "executionSummaryExists": true,
+  "executionSummarySha256": "e4e5b357014cc9ca9d68a34b4eae4d0381c4c761fccd37351e31269955f89080",
+  "nativeCoverageReconciliationStillRequired": true,
+  "independentP3Approval": false,
+  "dryRoundCredit": false
+}

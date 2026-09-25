@@ -1,0 +1,209 @@
+{
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "originMainSha": "9a1bd3805574bca087d4da09ece4a628038afb27",
+  "completedReceipts": [
+    {
+      "lane": "r37-agents-workspace",
+      "executionSha256": "6e64657d39763a8a6c5048d73fe34af9a89a75b0f24b1c860d60adba7945cece",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "aab166ab98e5cb113b34267a63f8741d5632e0fa7755e0045992f1b12b12807f",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-apps",
+      "executionSha256": "f89362d07611e3cc071a5a05dd6d240c57d0ab5a7003923713a6f750493cd50e",
+      "reportSha256": "bf5a573eb397e24b01c7e82f511ce5adb7f4f76553e98217a4868bd3892b46f4",
+      "transcriptSha256": "6f0370d783609a81bb7df6471f738ffac7516eda4750edfd94650b52c7aeb2d6",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r37-architecture-ecosystem-internal",
+      "executionSha256": "8f585454f67d67dd75146401d6603632975012bba20ef43461d79e4d84fb8b53",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "e6b4ae34a7b9b6b5ba1a14ea3cb3c75a3247e0bbac90cf706dab1971be37784d",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-cli-commands-a-c",
+      "executionSha256": "12e741e6541d5d4a517b5c3977ee8b332a4449db4010ca5ff3c685fee3bea96c",
+      "reportSha256": "13039baf01adfbc3684dd5baf78a17c23f4720365e4b56a74f496a4885620be5",
+      "transcriptSha256": "9e67ac9c679ae4e87b2a177619177cf5c42e146268e33cd2a35a51ca08880fca",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r37-cli-commands-d-k",
+      "executionSha256": "6726a152a7202b0c642bae580f85997a888944733f263da97d7fdee1ee2c828b",
+      "reportSha256": "f825917da66a2417f36e412097d8e2d46fa123624d97e0af1989e596ea05d5ec",
+      "transcriptSha256": "c495d2c8aa587ace18d14fcbab346bfe61b9ffc79a1e021bd534a29be04bb38a",
+      "reportRecords": 1
+    },
+    {
+      "lane": "r37-cli-commands-l-q",
+      "executionSha256": "6e8e7363ec723a0c1696c9353c84dff2c6a57f18fe746166e3b54a3bafcfcd81",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "642b7976c053b2059f7df784c58df75282b6d18b73f33b9a1a70dcc9cb4ea456",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-cli-commands-r-z",
+      "executionSha256": "4308a5041012446302cc85afb5ab7bf79714a939487639fbdfd5a36855f39b4e",
+      "reportSha256": "823fded35d04a7243dfddc3be814dea053589085819a916912dc1c2125e9e843",
+      "transcriptSha256": "2b901bd7d4fc83974daa2b79e24764b68272116f3e1df3829f0e7a66bc7301a7",
+      "reportRecords": 2
+    },
+    {
+      "lane": "r37-cli-internal-root",
+      "executionSha256": "98fe3a7701b42af83213f60e516d88e5db31de13b290816a8b8b0afe4a88fc55",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "3d1a435e52e3ff9979572275a9bfefc55f882d12e002c0dbaf42f1e97e9620df",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-cli-yeet",
+      "executionSha256": "8792da73351794248d8eba5861926ff1254264770460a8c4834265a4ae75c0da",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "3ddc4e7b6c6910341186c04b0286b7b1f701a8e24dc892aba2bcf60a890a8924",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-drivers-a-f",
+      "executionSha256": "2b05b1579b75e42eb444904652166c53cd6a520f06fdc56648da7e3c8f7e0082",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "a1a5dd4c77cd20219e857e2b8258a1fd1bd3bd4c8fe9583dab7315af5f65cd15",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-drivers-g-m",
+      "executionSha256": "1e1c2f86325e8e670645bcdc516064d9dcda3734fe8866208481a1507f8728d0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "2d8c9b1e06de9648b2a9d2ca0bd0af5208b87bd0fce80a1b2796216a7c399a7d",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-drivers-n-r",
+      "executionSha256": "304ade0ff13508e16e80844e933ad9be561101c74a2228c1e0603f7bba8715dc",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "44e62e843fe5f2eb26b1524a7b0ad3f26b172fdb429cf19da1d31802efab838e",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-drivers-s-z",
+      "executionSha256": "0f39a8979ae666f7de41e5ba3442e954c62e302f3b287a5eb9bcc1d1de2b1d2f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "a4644e6a914339395aeb52468b0060650f498a9698f9f3ea3a83f8d48fc7c4ed",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-epistemic-ontology",
+      "executionSha256": "3aaed56347f5caf011d1310a4842ad6a24a3651ec6f868a05017d465e2fca0de",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "c512c851f0cd201ccadc326b401c88583d3ff708d5e44a3361db74ae65298111",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-foundation-capability",
+      "executionSha256": "c7383c684d4aa38c761310b3cb7920d73a028e7f168bf1ed72406b7253afc47b",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "1cd38d82b83b2fc62a404600b63aad2b6a3ba4d62cc24dadb637eae80b60b156",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-foundation-modeling-rest",
+      "executionSha256": "bbe544bd8e6cdbe87b93988b47d3c9448530b716d62205267a21979da6e24274",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "7d92b42df2d1e62aec1891bda51204c5acfff14fc0094d7aa2b37fc59ef772e9",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-foundation-primitive",
+      "executionSha256": "e090142208c95e3899839dbf8ac065ca849dd060f8f9c8fbf79524dec8b79cc6",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "1aec27a44599cda008c41b746734e527cdfe4a9402b94f730a7488f40bb701ce",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-foundation-schema-a-m",
+      "executionSha256": "c946790a0f081f88b787b26a1a07f3ce30358e542148a88d423f113faee74319",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "2ae3f124cec7d3b036184de48e6b825bbce91a317dd9cdff27a6668661306342",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-foundation-schema-n-z",
+      "executionSha256": "77d38e7c231631e70778b8c879c1dbc80b71f6ada218fb86da19b64ae510a74e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "b1a601fbb04512f9d2b94f416f2a0c1314a1531b7e94372ed4a73fcba0f2a0a9",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-foundation-ui",
+      "executionSha256": "11518de93777b17854e5bf488ca6530a64b92c12694224ad8dc5ff4c6d78d13e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "8daf945cbcf4dacbb086987fe6c6b28536eb2615d3fb988a60c113a575c19ee3",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-law-practice-domain",
+      "executionSha256": "6fb47ec819b96cf24eb9bea70243ac68f0f931bfca95c91f2b92e8ff06851823",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "cfa1b9fd4a11b0a448b7434679a8ac6703faa95aa46dda7e6c7438b37ccd0a64",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-law-practice-runtime",
+      "executionSha256": "a19005b02b818c448844a394e3e11bf02265ce59f7c31d129278305706700a8f",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "e72a77760eaa41cc19b49935950ffc017d4b96014cb3b2d3641c68c734ad024b",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-shared-documents",
+      "executionSha256": "129ec385ea02c3c7d2daa0188ba87ec4a72e791f43b5a4055d171259b8ce31cc",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "2ed3df6c4666eee1566f5fe90ff502007453eddcf3459da6bfb6fe8b5d288d21",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-tool-docgen",
+      "executionSha256": "5f99c754d424644173933bb8d07e37ece0ca6f6155731d62ea1097c1f0c2ffa5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "adcffffbc8fa9807ad0afbbad3df8bdb93e1a68f95fc6b7faf0159c6a3d50aac",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-tooling-library-observability",
+      "executionSha256": "d75adc6acfa967750f5843222e46964a6900dd15e8dabd7e9b6113f0d9a53af4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "105e1f3b7a1a7574aeca174a8dc90fd27b4432ff7bec756f0bc9d69cedd030bd",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-tooling-library-support",
+      "executionSha256": "f1b5d4a4d5b71814a09f9a1046107d973bafec0c73197b52e545928107db89a5",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "91f002e32f6bddd32c7c465ef6d35f69596e9d60c47030658f69442bfe5ee7d3",
+      "reportRecords": 0
+    },
+    {
+      "lane": "r37-tooling-policy",
+      "executionSha256": "412cd4a6c3cb07314f75706c19173ba447c793e1bf5f89955097abb793cf8fe4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "be68ddab3075bda611d24675e783a6f3d119eddae968bac2de41cb382ebcf212",
+      "reportRecords": 0
+    }
+  ],
+  "missingLanes": [],
+  "rawRecords": 5,
+  "executionComplete": true,
+  "sourceStable": true,
+  "frozenBindingsVerified": 3953,
+  "controllerExitCode": 0,
+  "dryCredit": false,
+  "semanticReconciliationComplete": true,
+  "note": "All27 lanes reconciled;3953 frozen bindings verified immediately before integration. Owner evidence records all accepted and rejected proposals.",
+  "complete": true,
+  "reconciliationReceipt": {
+    "file": "goals/boolean-creep/data/r37-reconciliation-progress-2026-09-25.json",
+    "sha256": "6ac0e7d8774b64dbafb99b2e48342662fc80d8150eac38b51bd2f9a8c2d6a555"
+  }
+}

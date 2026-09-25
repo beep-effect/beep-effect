@@ -1,0 +1,22 @@
+{
+  "lane": "r37-cli-commands-r-z",
+  "sourceSha": "84058d6470137e35f108d13c7dba52129db9a301",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T07:47:47.407287+00:00",
+  "finished": "2026-09-25T07:51:42.523555+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r37-main-9a1bd3/r37-cli-commands-r-z.jsonl`. It contains **1 confirmed** and **1 disqualified** record. Every assigned root was covered, including `Root.ts` and `TopoSort`, which have no boolean carriers.\n\nSeed classifications still hold and were not re-emitted. `worktreeResidueReason` is now constructed at `Worktree.service.ts:423` (previously 297) and remains D1. `WorktreeRemovalRequest.exemptInvokerSession` is an independent optional third axis, not part of the archive/deleteBranch implication. `FleetEpochTarget` is one boolean plus a nullable SHA, so it stays outside the net. `turboOnly` is still an independent filter on the three VersionSync option bags.",
+  "transcriptSha256": "2b901bd7d4fc83974daa2b79e24764b68272116f3e1df3829f0e7a66bc7301a7",
+  "runnerSha256": "67379b2964d0fec01b6eb3a98d0aab3669a2ed0de77aff61c1f1fb3908238701",
+  "seedSha256": "686254d544299534c5639de06dec281400ff684ebd8ec2cac5c14b4bee6bd9a5",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

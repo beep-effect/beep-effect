@@ -1,0 +1,22 @@
+{
+  "lane": "r36-drivers-g-m",
+  "sourceSha": "35f8454d0414d8f79284fdc9e92c84379d919a3e",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "fde666344ec9b421713d1a5b241f258ce2824bc07805d4464aff44f1882a85dd",
+  "started": "2026-09-25T06:54:13.435532+00:00",
+  "finished": "2026-09-25T06:56:25.086259+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 1,
+  "qualifiedCandidates": 1,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r36-main-2bf1e1/r36-drivers-g-m.jsonl`\n\nConfirmed 1, disqualified 0. All seven assigned roots were covered (`govinfo` generated `Govinfo.gen.ts` excluded). Seed owners still match current source and their prior rulings (Graph message/event D2, collision-stage E4, four Three.js option objects D2); no withdrawals or unresolved source questions. The new record is `ToolNameCollisionRow` `truncated`/`digest`.",
+  "transcriptSha256": "8425004eec424b1ae3e6133a63cf324aca87cafc4f37728c56ab198e52e8ddeb",
+  "runnerSha256": "9711efe7851a96b6e6d4a12ffb945ebd90b1e4b7351eee8bbf6f93fa19760536",
+  "seedSha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 1 records, 1 unique ids\n"
+}

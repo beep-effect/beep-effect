@@ -1,0 +1,9 @@
+# R38 modeling non-TypeScript coverage supplement
+
+Complete read of both included authored seeds: legal-intake.jsonld90lines and legal-intake.ttl34lines. Neither contains an eligible Boolean owner; no rows are proposed.
+
+The JSON-LD context defines namespace prefixes only, with no Boolean coercions. The root ConceptScheme, eleven graph nodes and nested IRI references contain strings, arrays, IDs and type labels; there are no JSON Boolean values or Boolean datatype declarations. Each actual object was inspected without flattening graph nodes or nested reference objects into one owner.
+
+Turtle has twelve subjects: one ConceptScheme and eleven Concept instances. Predicates express title, labels, definition, broader/inScheme/top-concept/close-match relations and path/root text. Objects are IRIs or string literals, including language-tagged labels. There are no true/false or typed Boolean literals, Boolean property declarations, Boolean restrictions, or inherited Boolean fields. Draft/filed/received/privileged are concept labels, not Boolean flags. No synthetic isDraft/isFiled predicates are inferred.
+
+Both exact hashes match the complete R37 supplemental audit, and were re-read for this source-forward R38 receipt. Both match frozen current HEAD/main and occur in the R38 includedFiles manifest. The R38 primary report/execution/transcript are bound in JSON; this independent read supplies complete coverage for these two files without extending that claim to any other lane root. No scope exclusions are changed. No E1–E4 cluster meets the two-actual-Boolean recall threshold; no new D row is fabricated. No P3 or dry credit.

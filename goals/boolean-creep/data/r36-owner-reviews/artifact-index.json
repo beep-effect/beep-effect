@@ -1,0 +1,303 @@
+[
+  {
+    "ownerAudit": "r36-apps-reconciliation",
+    "originalFile": "r36-apps-reconciliation/disposition.json",
+    "originalSha256": "0dc437898a7a4671e3c12759ab2ae312d0d598b9571cbae30e4168b67e61c6b4",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-apps-reconciliation/disposition.json.txt",
+    "publishedSha256": "0dc437898a7a4671e3c12759ab2ae312d0d598b9571cbae30e4168b67e61c6b4"
+  },
+  {
+    "ownerAudit": "r36-apps-reconciliation",
+    "originalFile": "r36-apps-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "76ce21d4c0d5c70cf449f097c8acac70a7f134b3248d6358591858ac23a0ce75",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-apps-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "76ce21d4c0d5c70cf449f097c8acac70a7f134b3248d6358591858ac23a0ce75"
+  },
+  {
+    "ownerAudit": "r36-cache-selection-reconciliation",
+    "originalFile": "r36-cache-selection-reconciliation/disposition.json",
+    "originalSha256": "cac0f644314c61aecc3fb44f801bd619cfa95061c73e2ff17ce52a364061feb2",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cache-selection-reconciliation/disposition.json.txt",
+    "publishedSha256": "cac0f644314c61aecc3fb44f801bd619cfa95061c73e2ff17ce52a364061feb2"
+  },
+  {
+    "ownerAudit": "r36-cache-selection-reconciliation",
+    "originalFile": "r36-cache-selection-reconciliation/disposition.md",
+    "originalSha256": "2a1447201932ad23075b4f74473229a575ed6a842fa2dc6dcc412f5e0addc906",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cache-selection-reconciliation/disposition.md.txt",
+    "publishedSha256": "2a1447201932ad23075b4f74473229a575ed6a842fa2dc6dcc412f5e0addc906"
+  },
+  {
+    "ownerAudit": "r36-cache-selection-reconciliation",
+    "originalFile": "r36-cache-selection-reconciliation/proposed-rows.jsonl",
+    "originalSha256": "e3e1911c9ed125be558d216dca372b566738f1f0d1ccd6a83ba13f9a4b678703",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cache-selection-reconciliation/proposed-rows.jsonl.txt",
+    "publishedSha256": "e3e1911c9ed125be558d216dca372b566738f1f0d1ccd6a83ba13f9a4b678703"
+  },
+  {
+    "ownerAudit": "r36-cache-selection-reconciliation",
+    "originalFile": "r36-cache-selection-reconciliation/r36-cli-commands-a-c-cache-task-selection-pending.md",
+    "originalSha256": "bc2a0caa445cf346316ce9fc8090c5d7b2503dc00030c034623d3b6cfa824ad6",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cache-selection-reconciliation/r36-cli-commands-a-c-cache-task-selection-pending.md.txt",
+    "publishedSha256": "bc2a0caa445cf346316ce9fc8090c5d7b2503dc00030c034623d3b6cfa824ad6"
+  },
+  {
+    "ownerAudit": "r36-cache-selection-reconciliation",
+    "originalFile": "r36-cache-selection-reconciliation/transition-equivalence.json",
+    "originalSha256": "6ac1f0522ae5d047431d1d03df75948a35393c5d28bcd85301df75442680072b",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cache-selection-reconciliation/transition-equivalence.json.txt",
+    "publishedSha256": "6ac1f0522ae5d047431d1d03df75948a35393c5d28bcd85301df75442680072b"
+  },
+  {
+    "ownerAudit": "r36-capability-reconciliation",
+    "originalFile": "r36-capability-reconciliation/disposition.json",
+    "originalSha256": "9a72866d560b787b7836cc9f406f6bee2533235854021b03840a4c9cb78d87c8",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-capability-reconciliation/disposition.json.txt",
+    "publishedSha256": "9a72866d560b787b7836cc9f406f6bee2533235854021b03840a4c9cb78d87c8"
+  },
+  {
+    "ownerAudit": "r36-capability-reconciliation",
+    "originalFile": "r36-capability-reconciliation/disposition.md",
+    "originalSha256": "be147f6d1e161819332c19e3006459690da2360aeddc47d7b18987e4162c90d0",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-capability-reconciliation/disposition.md.txt",
+    "publishedSha256": "be147f6d1e161819332c19e3006459690da2360aeddc47d7b18987e4162c90d0"
+  },
+  {
+    "ownerAudit": "r36-capability-reconciliation",
+    "originalFile": "r36-capability-reconciliation/metadata-updates.json",
+    "originalSha256": "a90711a99a587b4a4123e0dcd76487c8e6ddabb692641c5c092e0c1b31decee1",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-capability-reconciliation/metadata-updates.json.txt",
+    "publishedSha256": "a90711a99a587b4a4123e0dcd76487c8e6ddabb692641c5c092e0c1b31decee1"
+  },
+  {
+    "ownerAudit": "r36-capability-reconciliation",
+    "originalFile": "r36-capability-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "cf4221f5d455d8ecdf86adb6b916b667bd932be3f622537abe20c535844a1a01",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-capability-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "cf4221f5d455d8ecdf86adb6b916b667bd932be3f622537abe20c535844a1a01"
+  },
+  {
+    "ownerAudit": "r36-cli-parent-reconciliation",
+    "originalFile": "r36-cli-parent-reconciliation/disposition.json",
+    "originalSha256": "436bd120afc1f329c130b42aeafae781933d3ebf571ad9b180d6ce30ffea2d04",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-parent-reconciliation/disposition.json.txt",
+    "publishedSha256": "436bd120afc1f329c130b42aeafae781933d3ebf571ad9b180d6ce30ffea2d04"
+  },
+  {
+    "ownerAudit": "r36-cli-parent-reconciliation",
+    "originalFile": "r36-cli-parent-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "8c49a869059fde6314ecbe795263557426e6da1cda1cdf22ed2b63ec4ef7c3ee",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-parent-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "8c49a869059fde6314ecbe795263557426e6da1cda1cdf22ed2b63ec4ef7c3ee"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/disposition.json",
+    "originalSha256": "56be450e0c72c19110a5439459022858326eec99d41d7792f18e79e1f19af257",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/disposition.json.txt",
+    "publishedSha256": "56be450e0c72c19110a5439459022858326eec99d41d7792f18e79e1f19af257"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/disposition.md",
+    "originalSha256": "6f127d0537abba16c0b75862e6555cc42cfcf09559c339ce0092484e18ad3c31",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/disposition.md.txt",
+    "publishedSha256": "6f127d0537abba16c0b75862e6555cc42cfcf09559c339ce0092484e18ad3c31"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/metadata-updates.json",
+    "originalSha256": "cdc1cda50788c7d82ed21c90d93a61da518722c68bdd4f91cbb8bb2d15346f69",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/metadata-updates.json.txt",
+    "publishedSha256": "cdc1cda50788c7d82ed21c90d93a61da518722c68bdd4f91cbb8bb2d15346f69"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/owner-dispositions.json",
+    "originalSha256": "574b37d9e5cba551641188631b18b964c04e6b5db3f73aefccd53ad923c136c7",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/owner-dispositions.json.txt",
+    "publishedSha256": "574b37d9e5cba551641188631b18b964c04e6b5db3f73aefccd53ad923c136c7"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/proposed-inventory-updates.jsonl",
+    "originalSha256": "fe3dcf558e946d3f07856e966c9938a202214f96fed8e02a56601c5d6842b23f",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/proposed-inventory-updates.jsonl.txt",
+    "publishedSha256": "fe3dcf558e946d3f07856e966c9938a202214f96fed8e02a56601c5d6842b23f"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/sync-data-target-selection.metadata-replacement.md",
+    "originalSha256": "23d667cc57a2efa2b16e63e87c1147a4eefe5b1fa3dc2bb2a441ec32d52119f1",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/sync-data-target-selection.metadata-replacement.md.txt",
+    "publishedSha256": "23d667cc57a2efa2b16e63e87c1147a4eefe5b1fa3dc2bb2a441ec32d52119f1"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "311be4afdd60cb5458d1849fa34eb3a277f87523c3c1ee1ea288d25b5caa74df",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "311be4afdd60cb5458d1849fa34eb3a277f87523c3c1ee1ea288d25b5caa74df"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/worktree-fleet-epoch-target.archived-design.md",
+    "originalSha256": "ad2d00d8625ae0b41e5ce1adc97a6802b5d4d674314d057e02a8c15b48e75919",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/worktree-fleet-epoch-target.archived-design.md.txt",
+    "publishedSha256": "ad2d00d8625ae0b41e5ce1adc97a6802b5d4d674314d057e02a8c15b48e75919"
+  },
+  {
+    "ownerAudit": "r36-cli-tail-reconciliation",
+    "originalFile": "r36-cli-tail-reconciliation/worktree-removal-mode.metadata-replacement.md",
+    "originalSha256": "34e5b095ba1a17d79b1fac861544087fd052de3fbc4f553ccce4b14cce5453d6",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-cli-tail-reconciliation/worktree-removal-mode.metadata-replacement.md.txt",
+    "publishedSha256": "34e5b095ba1a17d79b1fac861544087fd052de3fbc4f553ccce4b14cce5453d6"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/compatibility-table.json",
+    "originalSha256": "5c840f9a0f2828806019cc46e45b4f4cb78c5ae32536d0196407fe1de8b8032d",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/compatibility-table.json.txt",
+    "publishedSha256": "5c840f9a0f2828806019cc46e45b4f4cb78c5ae32536d0196407fe1de8b8032d"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/design-validation.json",
+    "originalSha256": "b22500128cb39134a952b0a6bf35f44749bbf463c923b35fc25f26647b3db6e3",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/design-validation.json.txt",
+    "publishedSha256": "b22500128cb39134a952b0a6bf35f44749bbf463c923b35fc25f26647b3db6e3"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/disposition.json",
+    "originalSha256": "121433a5c434c4f060e1524eab42c53d1280c8e0083108b58b1a676601a1b09a",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/disposition.json.txt",
+    "publishedSha256": "121433a5c434c4f060e1524eab42c53d1280c8e0083108b58b1a676601a1b09a"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/disposition.md",
+    "originalSha256": "56b85682577deeb5fa0623edc52c4880f07bc6c6715b3d2712f69cb6dfa72a15",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/disposition.md.txt",
+    "publishedSha256": "56b85682577deeb5fa0623edc52c4880f07bc6c6715b3d2712f69cb6dfa72a15"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/document-toolbar-busy-disabled.replacement.md",
+    "originalSha256": "d884d0709fcb163cdf32955eb25f9b4ea724a7585dcee37b3773d89aa8d131ba",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/document-toolbar-busy-disabled.replacement.md.txt",
+    "publishedSha256": "d884d0709fcb163cdf32955eb25f9b4ea724a7585dcee37b3773d89aa8d131ba"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/proposed-rows.jsonl",
+    "originalSha256": "5542460d03f15925050ccd2f229aa35008ffb6f962798229006baf5c4dfb69d4",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/proposed-rows.jsonl.txt",
+    "publishedSha256": "5542460d03f15925050ccd2f229aa35008ffb6f962798229006baf5c4dfb69d4"
+  },
+  {
+    "ownerAudit": "r36-document-toolbar-reconciliation",
+    "originalFile": "r36-document-toolbar-reconciliation/r36-epistemic-ontology-document-toolbar-input.md",
+    "originalSha256": "49d5ed42d938299f25d442b77bcc23d2b3a89fe6688d913694bcedc6007338bf",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-document-toolbar-reconciliation/r36-epistemic-ontology-document-toolbar-input.md.txt",
+    "publishedSha256": "49d5ed42d938299f25d442b77bcc23d2b3a89fe6688d913694bcedc6007338bf"
+  },
+  {
+    "ownerAudit": "r36-drivers-a-f-reconciliation",
+    "originalFile": "r36-drivers-a-f-reconciliation/disposition.json",
+    "originalSha256": "1025eeccd52f88249927db306d33bf198ae4a05624944bccbca913b79599acd6",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-drivers-a-f-reconciliation/disposition.json.txt",
+    "publishedSha256": "9de081b723a3b0f3b348bba90a2a7d07247071f1966870536542d4e3fda8fafb"
+  },
+  {
+    "ownerAudit": "r36-drivers-a-f-reconciliation",
+    "originalFile": "r36-drivers-a-f-reconciliation/disposition.md",
+    "originalSha256": "aaed72344b2fbf63da60176aca468b063547ad456785ba104b651db71d0b6860",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-drivers-a-f-reconciliation/disposition.md.txt",
+    "publishedSha256": "aaed72344b2fbf63da60176aca468b063547ad456785ba104b651db71d0b6860"
+  },
+  {
+    "ownerAudit": "r36-drivers-a-f-reconciliation",
+    "originalFile": "r36-drivers-a-f-reconciliation/metadata-updates.json",
+    "originalSha256": "3943631fdc7bb3ddb2eda4dd2bdda233c6728535d123b92e268c8d0f2bc75c44",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-drivers-a-f-reconciliation/metadata-updates.json.txt",
+    "publishedSha256": "3943631fdc7bb3ddb2eda4dd2bdda233c6728535d123b92e268c8d0f2bc75c44"
+  },
+  {
+    "ownerAudit": "r36-drivers-a-f-reconciliation",
+    "originalFile": "r36-drivers-a-f-reconciliation/proposed-inventory-updates.jsonl",
+    "originalSha256": "1f126ae20c416812d263ae7f0c88fd87dd72e0099b54b409febddd7c4132409a",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-drivers-a-f-reconciliation/proposed-inventory-updates.jsonl.txt",
+    "publishedSha256": "1f126ae20c416812d263ae7f0c88fd87dd72e0099b54b409febddd7c4132409a"
+  },
+  {
+    "ownerAudit": "r36-drivers-a-f-reconciliation",
+    "originalFile": "r36-drivers-a-f-reconciliation/retained-rows.jsonl",
+    "originalSha256": "c85ac2e5c273fca417a62eb3bc1d34eea6668feb187fe7f517de4ef39c55b8b5",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-drivers-a-f-reconciliation/retained-rows.jsonl.txt",
+    "publishedSha256": "c85ac2e5c273fca417a62eb3bc1d34eea6668feb187fe7f517de4ef39c55b8b5"
+  },
+  {
+    "ownerAudit": "r36-drivers-a-f-reconciliation",
+    "originalFile": "r36-drivers-a-f-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "75ae6973dd5704a9bef5b3fa4325e11961400171fbaded19ae5dcf8fd5f9c352",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-drivers-a-f-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "75ae6973dd5704a9bef5b3fa4325e11961400171fbaded19ae5dcf8fd5f9c352"
+  },
+  {
+    "ownerAudit": "r36-observability-reconciliation",
+    "originalFile": "r36-observability-reconciliation/disposition.json",
+    "originalSha256": "73eca52f0eaa5bcc4d051269d3ec12c00ab35d5ed7ab2e3a3efceb0db72fd672",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-observability-reconciliation/disposition.json.txt",
+    "publishedSha256": "73eca52f0eaa5bcc4d051269d3ec12c00ab35d5ed7ab2e3a3efceb0db72fd672"
+  },
+  {
+    "ownerAudit": "r36-observability-reconciliation",
+    "originalFile": "r36-observability-reconciliation/disposition.md",
+    "originalSha256": "3c5e230b6266ebccdf2afa72f040776bb74f3732d8e5672ff65c2a3648004816",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-observability-reconciliation/disposition.md.txt",
+    "publishedSha256": "3c5e230b6266ebccdf2afa72f040776bb74f3732d8e5672ff65c2a3648004816"
+  },
+  {
+    "ownerAudit": "r36-observability-reconciliation",
+    "originalFile": "r36-observability-reconciliation/retained-rows.jsonl",
+    "originalSha256": "43f5af7fdb910cc2b0c4986904563c12cd27d0759615633f255c725820b820cb",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-observability-reconciliation/retained-rows.jsonl.txt",
+    "publishedSha256": "43f5af7fdb910cc2b0c4986904563c12cd27d0759615633f255c725820b820cb"
+  },
+  {
+    "ownerAudit": "r36-shared-documents-reconciliation",
+    "originalFile": "r36-shared-documents-reconciliation/disposition.json",
+    "originalSha256": "1384bedc8c7ae2ec6395b5170f69aafa481cc801b4ee885db9263b9b93b38599",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-shared-documents-reconciliation/disposition.json.txt",
+    "publishedSha256": "1384bedc8c7ae2ec6395b5170f69aafa481cc801b4ee885db9263b9b93b38599"
+  },
+  {
+    "ownerAudit": "r36-shared-documents-reconciliation",
+    "originalFile": "r36-shared-documents-reconciliation/disposition.md",
+    "originalSha256": "95326693af7a5705bbb411e1ba908db6d12129f5f91c41d902bf69df0185d235",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-shared-documents-reconciliation/disposition.md.txt",
+    "publishedSha256": "95326693af7a5705bbb411e1ba908db6d12129f5f91c41d902bf69df0185d235"
+  },
+  {
+    "ownerAudit": "r36-shared-documents-reconciliation",
+    "originalFile": "r36-shared-documents-reconciliation/withdrawn-rows.jsonl",
+    "originalSha256": "fc5e1992370f5d03c87b02cd028099c56189833612448f4267d427c8c8e3f8f6",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-shared-documents-reconciliation/withdrawn-rows.jsonl.txt",
+    "publishedSha256": "fc5e1992370f5d03c87b02cd028099c56189833612448f4267d427c8c8e3f8f6"
+  },
+  {
+    "ownerAudit": "r36-tool-name-reconciliation",
+    "originalFile": "r36-tool-name-reconciliation/disposition.json",
+    "originalSha256": "beff7090e6453dd7a6e149b43725bba97786198ac4a069c2950bd5304e83946e",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-tool-name-reconciliation/disposition.json.txt",
+    "publishedSha256": "beff7090e6453dd7a6e149b43725bba97786198ac4a069c2950bd5304e83946e"
+  },
+  {
+    "ownerAudit": "r36-tool-name-reconciliation",
+    "originalFile": "r36-tool-name-reconciliation/disposition.md",
+    "originalSha256": "dd8d2c73147281ab7addedd3b056b1d5be64ff5f437c450bab6151b360a68270",
+    "publishedFile": "goals/boolean-creep/data/r36-owner-reviews/r36-tool-name-reconciliation/disposition.md.txt",
+    "publishedSha256": "dd8d2c73147281ab7addedd3b056b1d5be64ff5f437c450bab6151b360a68270"
+  }
+]
