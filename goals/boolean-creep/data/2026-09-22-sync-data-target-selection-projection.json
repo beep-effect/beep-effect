@@ -1,0 +1,50 @@
+[
+  {
+    "all": false,
+    "targetPresent": false,
+    "includeAuthenticated": false,
+    "legal": false
+  },
+  {
+    "all": false,
+    "targetPresent": false,
+    "includeAuthenticated": true,
+    "legal": false
+  },
+  {
+    "all": false,
+    "targetPresent": true,
+    "includeAuthenticated": false,
+    "legal": true
+  },
+  {
+    "all": false,
+    "targetPresent": true,
+    "includeAuthenticated": true,
+    "legal": true
+  },
+  {
+    "all": true,
+    "targetPresent": false,
+    "includeAuthenticated": false,
+    "legal": true
+  },
+  {
+    "all": true,
+    "targetPresent": false,
+    "includeAuthenticated": true,
+    "legal": true
+  },
+  {
+    "all": true,
+    "targetPresent": true,
+    "includeAuthenticated": false,
+    "legal": false
+  },
+  {
+    "all": true,
+    "targetPresent": true,
+    "includeAuthenticated": true,
+    "legal": false
+  }
+]

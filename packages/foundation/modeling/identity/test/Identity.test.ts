@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { BaseIdentityInput, make } from "@beep/identity";
 import {
   $AgentsDomainId,
@@ -9,13 +10,14 @@ import {
   $SchemaId,
   $WorkspaceDomainId,
 } from "@beep/identity/packages";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { describe, expect, it } from "vitest";
 
 const decodeBaseIdentityInputOption = S.decodeOption(BaseIdentityInput);
 const decodeUnknownBaseIdentityInputOption = S.decodeUnknownOption(BaseIdentityInput);
@@ -47,26 +49,25 @@ describe("@beep/identity", () => {
   });
 
   it("normalizes package constructor bases through the schema codec", () => {
-    expect(decodeBaseIdentityInputOption("@beep/my-pkg")).toEqual(O.some("my-pkg"));
-    expect(decodeBaseIdentityInputOption("@my-pkg")).toEqual(O.some("my-pkg"));
+    assertSome(decodeBaseIdentityInputOption("@beep/my-pkg"), "my-pkg");
+    assertSome(decodeBaseIdentityInputOption("@my-pkg"), "my-pkg");
     expect(make("my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
     expect(make("@beep/my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
   });
 
-  it("round-trips generated base constructor input values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BaseIdentityInput)]), ([base]) => {
-          const decoded = O.flatMap(encodeBaseIdentityInputOption(base), decodeUnknownBaseIdentityInputOption);
+  it.prop(
+    "round-trips generated base constructor input values",
+    [Arbitrary.schema(BaseIdentityInput)],
+    ([base]) => {
+      const decoded = O.flatMap(encodeBaseIdentityInputOption(base), decodeUnknownBaseIdentityInputOption);
 
-          expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
+      expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("chains create for single-segment composition", () => {
     const $SchemaId = make("beep").$BeepId.create("schema");

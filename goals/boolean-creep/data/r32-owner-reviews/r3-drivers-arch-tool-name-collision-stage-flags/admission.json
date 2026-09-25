@@ -1,0 +1,107 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "r3-drivers-arch-tool-name-collision-stage-flags",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "0e801a27ad96a87ca2a336c3ad3e1812cebb71bbf29cdcf66a8cbbd9504dcf8f",
+  "inputBindings": [
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "sha256": "3b2294360e6d1b50f42005402726beb17104ada129a26939e8c83d4f8feceb75"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/Tools.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/Tools.ts",
+      "sha256": "2d5340e5d2134b69be9dbbec6320c6027c1f6987c76472638838857642fea92d"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/Handlers.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/Handlers.ts",
+      "sha256": "a7b0e94873d44c89a3569a203b07f8eedb9d70d96b8e267c7749434150443a87"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/Server.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/Server.ts",
+      "sha256": "c0a761eb5f58e7668ce67e9bd91d7f579c184a0eb1431dd7c9ffde74132168b8"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/bin.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/bin.ts",
+      "sha256": "dc3cfadbe5efc5f752c0b528512cc37abe52116993b465126116847de9eb568b"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/index.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/index.ts",
+      "sha256": "934bf85165474e042d89e1eae8076c41d3e98a07b1a1dbdf0a85ace8df43600b"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/scripts/generate.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/scripts/generate.ts",
+      "sha256": "53684abc8b9f434feb17d8438606f5ea295405a8a7f0000d358ab509780cc1f5"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/src/_generated/tool-name-collision-report.json",
+      "retainedFile": "packages/drivers/gov-legal-mcp/src/_generated/tool-name-collision-report.json",
+      "sha256": "2a6d73fb1379a3321b890be6ff3a487395d5ece0ca2ede829758fcdb3cd4fe1e"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "sha256": "2f66f013f88d9f4748dd45f3a695f6f963df0cf85dfd51556ff01624b7283df5"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "retainedFile": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "sha256": "73f5cf7ce8eb31d2bedbe7eb8ee97bf45b6ba4dfd353cbf55bab60af9bffdc58"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/package.json",
+      "retainedFile": "packages/drivers/gov-legal-mcp/package.json",
+      "sha256": "ff44f168f06e6f7ceb9cb4afbef99579f9fc4070641fa9f99eb27862d5f308a5"
+    },
+    {
+      "originalFile": "packages/drivers/gov-legal-mcp/README.md",
+      "retainedFile": "packages/drivers/gov-legal-mcp/README.md",
+      "sha256": "3251126afd8f1738e7811fea4b8e093bed90770c6489765a027063fcb620d30c"
+    },
+    {
+      "originalFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "retainedFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/src/Effect.ts",
+      "retainedFile": ".repos/effect/packages/effect/src/Effect.ts",
+      "sha256": "e7edbbf8f68afc9ea35f12b4ac08c57483caedd36a4b797da99bdb329f08716f"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/src/Result.ts",
+      "retainedFile": ".repos/effect/packages/effect/src/Result.ts",
+      "sha256": "3f9ca0b6ee2d3c14266201f4d7fc34ea844385b8fc266b91f27e6c546613abc8"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "retainedFile": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "sha256": "df8cad007565f68009194b0cdf81fc13e22f4df4000462076967fe0c72ea7989"
+    },
+    {
+      "originalFile": "goals/boolean-creep/data/inventory.jsonl",
+      "retainedFile": "goals/boolean-creep/history/inventory/2026-09-25-pre-r32-reconciliation.jsonl",
+      "sha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r3-drivers-arch-tool-name-collision-stage-flags/witness.json",
+      "sha256": "76e471b57054da6cba48b138dc94efba8c1dc4be077ab31058114d570c85c711"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-drivers-arch-tool-name-collision-stage-flags.md",
+      "sha256": "55b954178f12e18e54c91a4c3967316de65c4d4c422f8ae9d5bfe16e97a3166d"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

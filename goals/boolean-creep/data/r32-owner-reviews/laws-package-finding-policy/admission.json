@@ -1,0 +1,62 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "laws-package-finding-policy",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "336864c346d5d2ea74a7b61f9c5af61059ce9c72f16169c6ef935541c8a5cc81",
+  "inputBindings": [
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.model.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.model.ts",
+      "sha256": "0a9419d262d84c32ae0b65c8bbfe535fa2fe04748962e6b6f7a675afd78b20d5"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
+      "sha256": "e25c50aa6e4a52d61cab9da36035fc3efd21982aff7782c78bc95f6e08717ae7"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "sha256": "811fb1a59b624398bbf188e6a06931d7b361bec4f4c470c95a126d7ab2ed602f"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/laws-package.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/laws-package.test.ts",
+      "sha256": "4d2f102142550897ba8d22aa031faa9a446934f6d2c9649f6cbeb92c6d229e07"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/package.json",
+      "retainedFile": "packages/tooling/tool/cli/package.json",
+      "sha256": "ba4232534d6e5f0616dffc1574549a2b2655e6509ee2112ae4c9f00a00581847"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "retainedFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "sha256": "453a48b8a697d251d4d15edb49c5ef765b543a3c4c8c5db2209084671109adb2"
+    },
+    {
+      "originalFile": "goals/boolean-creep/DECISIONS.md",
+      "retainedFile": "goals/boolean-creep/history/2026-09-25-pre-cache-observation-ruling-DECISIONS.md",
+      "sha256": "0718a4972d3581beaa515183559b1d7d1d8d1a6cfa8986852cf4f13c2eb8b108"
+    },
+    {
+      "originalFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "retainedFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-l-q.jsonl",
+      "sha256": "cedb2501fc86c4cc1948c332c1d568e404b06000794807eb3bbfac9d0d920afd"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/laws-package-finding-policy/finite-table.json",
+      "sha256": "7288b67a8662098adb59b44d1b5880c2a56228a0ae08ba02ccf1514d61a5a19d"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/laws-package-finding-policy/disposition.md",
+      "sha256": "f3593ade2f960edb3dc278beb47faca926b491fc8d8f04118a8b79aac24e3aa7"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "boolean-creep-private-execution-bindings/v1",
+  "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-execution-audit/input-bindings.json",
+  "sha256": "837d0070ddf13ee9da93f970547a59f5f6d2987c958ab8ecfff0d64f8315000a",
+  "retainedPrivately": true,
+  "verifiedBy": "execution-audit.json",
+  "promptReconstructions": 27,
+  "frozenFileBindings": 3977,
+  "note": "The full private map includes prompt, transcript and runner identities. Public frozen-inputs.json, launch receipts and lane execution receipts retain source bindings. A redundant map copy was removed after file-path/SHA256 pairs triggered false secret-scanner matches; no source hash, runner evidence or scanner configuration was changed."
+}

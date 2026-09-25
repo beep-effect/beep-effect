@@ -1,0 +1,378 @@
+{
+  "schemaVersion": "boolean-creep-finite-projection/v1",
+  "representable": 36,
+  "legal": 21,
+  "rejected": 15,
+  "scope": "finite design projection only; not implemented schema proof",
+  "rows": [
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": null,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Unspecified",
+        "inFootnote": null,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": null,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Unspecified",
+        "inFootnote": false,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": null,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Unspecified",
+        "inFootnote": true,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": false,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Unspecified",
+        "inFootnote": null,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": false,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Unspecified",
+        "inFootnote": false,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": false,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Unspecified",
+        "inFootnote": true,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": true,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Preamble",
+        "inFootnote": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": true,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Preamble",
+        "inFootnote": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": false,
+      "preamble": true,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Preamble",
+        "inFootnote": true
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": null,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Amendment",
+        "inFootnote": null,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": null,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Amendment",
+        "inFootnote": false,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": null,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Amendment",
+        "inFootnote": true,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": false,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Amendment",
+        "inFootnote": null,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": false,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Amendment",
+        "inFootnote": false,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": false,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Amendment",
+        "inFootnote": true,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": true,
+      "inFootnote": null,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": true,
+      "inFootnote": false,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": false,
+      "amendmentPresent": true,
+      "preamble": true,
+      "inFootnote": true,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": null,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Article",
+        "inFootnote": null,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": null,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Article",
+        "inFootnote": false,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": null,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Article",
+        "inFootnote": true,
+        "nonPreamble": null
+      }
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": false,
+      "inFootnote": null,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Article",
+        "inFootnote": null,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": false,
+      "inFootnote": false,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Article",
+        "inFootnote": false,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": false,
+      "inFootnote": true,
+      "accepted": true,
+      "targetProjection": {
+        "kind": "Article",
+        "inFootnote": true,
+        "nonPreamble": false
+      }
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": true,
+      "inFootnote": null,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": true,
+      "inFootnote": false,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": false,
+      "preamble": true,
+      "inFootnote": true,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": null,
+      "inFootnote": null,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": null,
+      "inFootnote": false,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": null,
+      "inFootnote": true,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": false,
+      "inFootnote": null,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": false,
+      "inFootnote": false,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": false,
+      "inFootnote": true,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": true,
+      "inFootnote": null,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": true,
+      "inFootnote": false,
+      "accepted": false,
+      "targetProjection": null
+    },
+    {
+      "articlePresent": true,
+      "amendmentPresent": true,
+      "preamble": true,
+      "inFootnote": true,
+      "accepted": false,
+      "targetProjection": null
+    }
+  ]
+}

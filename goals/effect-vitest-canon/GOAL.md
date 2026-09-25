@@ -1,11 +1,15 @@
+> Current operator instruction: remediate the existing legitimate inventory now;
+> inventory newer main changes after that backlog is exhausted. P2 is authorized
+> on this basis. See PLAN.md for the execution order and preserved proof limits.
+
 > Update, 2026-09-10: PR #1060 merged. Main is integrated at 92fcea6; the installed contract is Effect / @effect/vitest 4.0.0-rc.113 at immutable tag commit d3b837aee836f35d625d55205f7d6e61305fc198. Repair the breaking APIs, refresh affected contracts and proofs, and bring PR #1067 to merge-ready. Prior rc.112 evidence stays historical. See history/2026-09-10-pr1067-rc113-integration.md.
 
 > Resumed by Benjamin on 2026-09-09 to bring PR #1067 to verified mergeable state. Preserve the remaining phase and merge-authorization gates. See history/2026-09-09-pr1067-resume.md.
 
 # GOAL: Canonical Effect Vitest idioms across every test
 
-Operate in the existing effect-vitest-canon sibling worktree on
-feat/effect-vitest-canon. Preserve the original checkout and unrelated work.
+Operate in the effect-vitest-p1-reconcile sibling worktree on
+codex/effect-vitest-p1-reconcile. Preserve the original checkout and unrelated work.
 Read goals/effect-vitest-canon/{README,SPEC,PLAN,DECISIONS}.md and
 ops/manifest.json, then AGENTS.md and the required skills.
 

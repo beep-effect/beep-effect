@@ -1,0 +1,170 @@
+[
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "producerObserved": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "producerObserved": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "producerObserved": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "producerObserved": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "producerObserved": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "producerObserved": true
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "producerObserved": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "producerObserved": false
+  }
+]

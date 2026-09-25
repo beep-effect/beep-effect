@@ -1,0 +1,60 @@
+{
+  "axes": [
+    "sceneExists",
+    "existingSettings presence",
+    "inputCreated"
+  ],
+  "representable": 8,
+  "legal": 4,
+  "rows": [
+    {
+      "sceneExists": false,
+      "existingSettings": "None",
+      "inputCreated": false,
+      "legal": false
+    },
+    {
+      "sceneExists": false,
+      "existingSettings": "None",
+      "inputCreated": true,
+      "legal": true
+    },
+    {
+      "sceneExists": false,
+      "existingSettings": "Some",
+      "inputCreated": false,
+      "legal": true
+    },
+    {
+      "sceneExists": false,
+      "existingSettings": "Some",
+      "inputCreated": true,
+      "legal": false
+    },
+    {
+      "sceneExists": true,
+      "existingSettings": "None",
+      "inputCreated": false,
+      "legal": false
+    },
+    {
+      "sceneExists": true,
+      "existingSettings": "None",
+      "inputCreated": true,
+      "legal": true
+    },
+    {
+      "sceneExists": true,
+      "existingSettings": "Some",
+      "inputCreated": false,
+      "legal": true
+    },
+    {
+      "sceneExists": true,
+      "existingSettings": "Some",
+      "inputCreated": true,
+      "legal": false
+    }
+  ],
+  "excluded": "sceneCreated is returned-owner field; inputAttached exists only in Some branch."
+}

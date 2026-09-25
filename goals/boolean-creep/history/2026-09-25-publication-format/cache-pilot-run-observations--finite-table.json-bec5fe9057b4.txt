@@ -1,0 +1,85 @@
+{
+  "sourceHead": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "axes": [
+    "nativeRuntimeKeyObserved",
+    "cacheEnabled",
+    "sourceTreeUnchanged"
+  ],
+  "representable": 8,
+  "schemaAdmissible": 8,
+  "qualifyingLegalGapEstablished": false,
+  "rows": [
+    {
+      "nativeRuntimeKeyObserved": false,
+      "cacheEnabled": false,
+      "sourceTreeUnchanged": false,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": true,
+      "producerReachability": "rejected before CachePilotRun.make",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": false,
+      "cacheEnabled": false,
+      "sourceTreeUnchanged": true,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": false,
+      "producerReachability": "not established",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": false,
+      "cacheEnabled": true,
+      "sourceTreeUnchanged": false,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": true,
+      "producerReachability": "rejected before CachePilotRun.make",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": false,
+      "cacheEnabled": true,
+      "sourceTreeUnchanged": true,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": false,
+      "producerReachability": "not established",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": true,
+      "cacheEnabled": false,
+      "sourceTreeUnchanged": false,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": true,
+      "producerReachability": "rejected before CachePilotRun.make",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": true,
+      "cacheEnabled": false,
+      "sourceTreeUnchanged": true,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": false,
+      "producerReachability": "not established",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": true,
+      "cacheEnabled": true,
+      "sourceTreeUnchanged": false,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": true,
+      "producerReachability": "rejected before CachePilotRun.make",
+      "basis": "static schema audit; not an executed codec test"
+    },
+    {
+      "nativeRuntimeKeyObserved": true,
+      "cacheEnabled": true,
+      "sourceTreeUnchanged": true,
+      "exportedSchemaAdmissible": true,
+      "excludedBySourceTreeProducerGuard": false,
+      "producerReachability": "not established",
+      "basis": "static schema audit; not an executed codec test"
+    }
+  ]
+}

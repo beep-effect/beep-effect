@@ -1,0 +1,22 @@
+[
+  {
+    "materialized": false,
+    "shaPresent": false,
+    "legal": true
+  },
+  {
+    "materialized": false,
+    "shaPresent": true,
+    "legal": true
+  },
+  {
+    "materialized": true,
+    "shaPresent": false,
+    "legal": false
+  },
+  {
+    "materialized": true,
+    "shaPresent": true,
+    "legal": true
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "basis": "Static schema, generic JSON round-trip test contract, and independent consumer branches. No executed runtime proof; no assertion that random test sampled every tuple.",
+  "representable": 4,
+  "supported": 4,
+  "scannerSubset": 3,
+  "rows": [
+    {
+      "advisory": false,
+      "strictFailure": false,
+      "acceptedByCurrentSchema": true,
+      "serializedUnchangedByDeclaredRoundTripContract": true,
+      "emittedByCurrentScanner": true,
+      "lintAdvisoryLog": "false",
+      "lintFailureExit": false
+    },
+    {
+      "advisory": false,
+      "strictFailure": true,
+      "acceptedByCurrentSchema": true,
+      "serializedUnchangedByDeclaredRoundTripContract": true,
+      "emittedByCurrentScanner": true,
+      "lintAdvisoryLog": "false",
+      "lintFailureExit": true
+    },
+    {
+      "advisory": true,
+      "strictFailure": false,
+      "acceptedByCurrentSchema": true,
+      "serializedUnchangedByDeclaredRoundTripContract": true,
+      "emittedByCurrentScanner": true,
+      "lintAdvisoryLog": "true",
+      "lintFailureExit": false
+    },
+    {
+      "advisory": true,
+      "strictFailure": true,
+      "acceptedByCurrentSchema": true,
+      "serializedUnchangedByDeclaredRoundTripContract": true,
+      "emittedByCurrentScanner": false,
+      "lintAdvisoryLog": "true",
+      "lintFailureExit": true
+    }
+  ]
+}

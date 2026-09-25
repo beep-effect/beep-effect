@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-yeet-state-refresh.jsonl",
+    "sha256": "23e70595917673b3d8f708303e50b7f6adbb9b751b8a51a3270edc0e312f8e01"
+  },
+  "inventoryAfterSha256": "3d40765bc7eab25890f7a116fbb3ce9b77c7e704c4b0c09c660a767bbc1cc23f",
+  "refreshedIds": [
+    "yeet-merge-ready-verdict",
+    "yeet-merge-ready-criterion-changed"
+  ],
+  "heldIds": ["yeet-status-remote-check-phase"],
+  "holdReason": "Public remote-summary exclusions are not established by producer coverage; owner question pending. Withdrawal is neither D1 nor completed design.",
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 132,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/yeet-merge-ready-verdict.md",
+      "sha256": "409ea30a0f891b0da72bb34ec41b3de29a66310510196f6960e3a25dfd9d4c96"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-yeet-merge-ready-verdict.md",
+      "sha256": "1929c157cc97c6403810c2e463740214ef3bf5fc1c52a3f0048971f375d41b91"
+    },
+    {
+      "file": "data/2026-09-22-yeet-merge-ready-verdict-projection.json",
+      "sha256": "05fce595339106b1728dfd95571c64e2348c4a5dd53d115202c628c669bf3ff5"
+    },
+    {
+      "file": "designs/yeet-merge-ready-criterion-changed.md",
+      "sha256": "229a9f5f96532c43badf1dd3bf75198305c8f7226f30b0e3f5f1bd4de89ba7e0"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-yeet-merge-ready-criterion-changed.md",
+      "sha256": "622f27170c721758482878e1bbed504f9e08b380a631d201ec6c3291fd70c073"
+    },
+    {
+      "file": "data/yeet-status-remote-contract-hold-2026-09-22.md",
+      "sha256": "facca5da87da524ec90053229798e5b007b43dd4018829fac783e61784771bfd"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-yeet-status-remote-check-phase.md",
+      "sha256": "fafb144826a5d2fd1600e78e37b801adea2d25d17b0755231b1a38ec99a81057"
+    },
+    {
+      "file": "data/2026-09-22-yeet-status-remote-check-phase-projection.json",
+      "sha256": "b36d53b389f55ca0e73c91d16c8ea555162f7e4c8d021aff437e22e359971762"
+    }
+  ],
+  "verifiedHashBindings": 38,
+  "savedSubset": {
+    "sourceReceipt": "data/worker-arch-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "89915ad34ba7d45071414b20521f32b7557bb5af58ca745ad304aa7e5563f94d",
+    "previousPendingCount": 7,
+    "completedIds": [
+      "yeet-merge-ready-verdict",
+      "yeet-merge-ready-criterion-changed"
+    ],
+    "pendingCount": 5,
+    "pendingIds": [
+      "yeet-status-remote-check-phase",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "yeet-prepared-publish-commit",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; held remote owner remains pending. Full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-tooling-tmpfs-refresh.jsonl"
+}

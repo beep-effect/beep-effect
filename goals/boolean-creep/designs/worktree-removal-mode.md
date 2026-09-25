@@ -1,68 +1,132 @@
 # worktree-removal-mode
 
-Native P2 design refresh before R29, bound to merged source HEAD
-`f03850b762e41217b5a0c26f26041daee490a070` / main
-`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
-and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
-Independent P3 review and implementation acceptance remain pending.
+P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, 2026-09-22.
+Preserves designed4/3, Tier1 internal owner. Independent P3 remains pending.
 
-Owner `WorktreeRemovalRequest` at `packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:305`,
-with members `archive`, `deleteBranch`.
-Storage/exposure: stored/internal; target: literalkit.
+## Current shape
 
-The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
-[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
-[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
-The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/worktree-removal-mode.md) is preserved.
-Keep complete decoded exports, typed request diagnostics, public constructor and
-helper input domains, encoded keys/defaults/omission and full independent payloads
-as specified below. Paths beginning `src/` or `test/` are relative to
-`packages/tooling/tool/cli/` unless the design states otherwise.
+WorktreeRemovalRequest in Worktree.schemas.ts489-513 stores archive/deleteBranch
+Booleans alongside name, targetPath, mainCheckout, branch, expectedHead and the
+new independent optional exemptInvoker/exemptInvokerSession fields. All paths
+below are relative to packages/tooling/tool/cli/ unless otherwise stated.
+Name491 rejects dot/dotdot, separators, control characters and surrounding
+whitespace; targetPath492 is nonempty without control characters. Preserve these
+exact schemas. Branch and expectedHead retain OptionFromNullOr with no default.
 
-# Current shape
+The implication validator at Worktree.service.ts986-991 rejects branch deletion
+without archive. The same function979-1035 now permits exact sibling or nested
+Claude worktree roots, then checks registration, canonical path and common Git
+directory. Existing request writers are interactive command888, Reap562,
+Yeet/internal/Retire252 and fenced copy1403. The last changes only targetPath.
 
-`src/commands/Worktree/Worktree.schemas.ts:305-319` exports WorktreeRemovalRequest with archive/deleteBranch Booleans beside name, targetPath, mainCheckout, branch and expectedHead. The incoming name schema rejects dot/dotdot, separators, control characters and surrounding whitespace; targetPath is nonempty without control characters. Keep both exact schemas. Branch is OptionFromNullOr(string); expectedHead is OptionFromNullOr(GitObjectId); neither gains a default or a narrower payload.
+## Cardinality gap
 
-The interactive writer at Worktree.command.ts:838-846 forwards raw flags. The reaper writer at Reap.service.ts:562-574 always requests archive and deletion with an authorized HEAD. The fenced copy at Worktree.service.ts:1038 changes only targetPath. Incoming validateRemovalRequest:695-747 now owns both the flag implication and target-security checks. This is an exported resolved operation owner; the raw function flag parameters remain outside this record.
+Archive/deleteBranch has4 representable and3 legal tuples:00 remove/keep,
+10 archive/keep,11 archive/delete, with01 rejected. Branch=None is legitimate
+for all modes and yields no deletion. Expected-head authority is independent.
+The new exemption policy inputs do not constrain the mode: their archive-only
+operational consumption does not imply illegal combinations. Optional session
+inference has absent/false/true strata and explicit proof has absent/present;
+all six are accepted for each legal mode, yielding24/18 for this expanded finite
+projection. Explicit proof takes precedence even when its marker cannot be
+proven. Do not absorb or erase that policy as Boolean-creep credit here.
 
-# Cardinality gap
+## Target schema
 
-The pair represents four tuples; three operations are legitimate: false/false removes a clean tree and keeps the branch, true/false archives and keeps the branch, true/true archives then conditionally deletes the optional branch. False/true is rejected at Worktree.service.ts:702-707. This E4 relation is unchanged by incoming security work. Missing branch is still legitimate for all three modes and produces no branch deletion.
+Add annotated WorktreeRemovalMode=LiteralKit(["remove","archive",
+"archive-and-delete-branch"]) with same-name Type in the existing schema module.
+Replace only archive/deleteBranch with mode on WorktreeRemovalRequest. Retain
+all seven sibling fields and complete schemas/default/omission semantics. Use
+schema-derived matching; preserve LiteralKit helper statics using the repository
+annotation pattern. No Boolean aliases or extra compatibility decoded bag.
 
-# Target schema
+At the interactive adapter preserve context resolution, name validation,
+registered-root ambiguity refusal, target existence and registration diagnostics
+in that order. After those checks and before request construction888, reject raw
+false/true with the exact existing message and selected targetPath, then collapse
+the three pairs once. Raw CLI flags and rendering's archive parameter remain.
+Reap and Yeet retirement construct archive-and-delete-branch directly. Keep the
+service validator and all safety rechecks; only remove its implication block.
 
-Use named annotated schema classes for payload-bearing cases, a LiteralKit for each finite discriminator domain, and schema-derived matching through `S.toTaggedUnion`. Keep schemas in the existing owner module and preserve complete payload types. Exact local Effect v4 references: `.repos/effect/packages/effect/SCHEMA.md:3135-3163`, `src/Schema.ts:5366-5390` (`decodeTo`), `:6105` (`toTaggedUnion`), `:1868` (`encodeUnknownEffect`), `:12848-12851` (`OptionFromNullOr`), and `src/SchemaTransformation.ts:333-340` (fallible bidirectional transformations). The local reference hashes are in the impact receipt; these API references are separate from corpus source pins.
+## Migration inventory
 
-Define exported annotated `WorktreeRemovalMode = LiteralKit(["remove", "archive", "archive-and-delete-branch"])` with its same-name runtime type in Worktree.schemas.ts. Replace only archive/deleteBranch with mode on the existing request class. Retain all five sibling fields and their exact schemas, annotations and supported decoded constructor semantics. Update its public example to a mode constructor.
+- Worktree.schemas.ts489-513 and example474: mode and exact existing payloads.
+  Keep exemptInvoker:optionalKey(WorktreeInvokerExemption) and
+  exemptInvokerSession:optionalKey(Boolean), including explicit proof precedence.
+- Worktree.command.ts50,845-903: name decoder remains schema-derived; preserve
+  sibling/nested registered selection, ambiguous names, missing target and
+  unregistered target errors. Insert conflict rejection after registration before
+  request construction; keep renderWorktreeRemovalReceipt(receipt,options.archive).
+- Reap.service.ts562: keep authorized expectedHead and branch Option.
+- Yeet/internal/Retire.ts252: new writer absent from old design; preserve movement
+  to owning clone, session marker acquisition and explicit WorktreeInvokerExemption,
+  expectedHead=None, error mapping and no new flag adapter.
+- Worktree.service.ts979-1035: retain exact nested/sibling root selection, name
+  check, registration parse, realPath and common Git directory equality. Remove
+  only986-991. Calls1168/1395/1454 remain in their original order and on original
+  registered requests, never the renamed copy for managed-name validation.
+- Service1183-1196 replaces optional branch filter by mode selection; retain None
+  =>false and exact archived-head compare-and-swap. Dispatch1455 uses mode match.
+- Service1372-1445 keeps dirty-submodule checks, authority check before fencing,
+  residue containment before rename, original-request validation, fenced copy1403,
+  rollback, capture, post-capture quiescence, preservation on late writers or
+  removal failure, prune and final branch deletion in the same order.
+- Service1269-1324 exemption handling stays intact: explicit proof overrides
+  session inference; missing/unproven marker does not fall back to a broader
+  inferred exemption. Keep full ancestry/marker predicates and holder scans.
+- Worktree/index.ts wildcard schema/service exports and package exports retain
+  the migrated request. Service interface and test helper request inputs migrate;
+  no new raw Boolean compatibility overload. Package root exports the command;
+  the commands/Worktree subpath exposes schemas/services. No separately named
+  testkit file was found; local test helper factories are enumerated below.
+- Worktree command test constructors848,879,912,1008,1043,1128,1192,1237,1289,
+  1302,1355,1390,1423,1568,1620,1696,1762,1790,1829,1871,1923 (21 sites) and
+  reap test497 migrate. Deliberate invalid request1008 becomes adapter conflict
+  coverage retaining target-survival assertions. Service fixtures that carry
+  exemption fields must preserve them. Recheck callers at implementation head.
 
-At the interactive adapter, decode the hardened name, check target existence and exact registered entry, then check the raw false/true conflict immediately before request construction. Keep the exact conflict error message and targetPath from Worktree.service.ts:704-705. This preserves incoming precedence: context/NUL parse, invalid name, missing target, unregistered target, flag conflict, then service target-security validation. Collapse the three legal pairs once. Keep raw CLI flags and receipt rendering's archive function parameter. Service dispatch uses the LiteralKit matcher; only archive-and-delete-branch enables optional branch deletion. No compatibility Boolean aliases.
+## Guard-deletion accounting
 
-# Migration inventory
+Delete two stored request Booleans and one implication block986-991, replace
+archive dispatch and branch selection with mode matches. Keep exactly one raw
+CLI conflict check. Delete zero path, registration, realpath, common-directory,
+authority, containment, process/exemption, quiescence or preservation checks.
+The old instruction to remove validateRemovalRequest wholesale is not valid.
+Do not remove safety calls merely because the mode is now valid by construction.
 
-- Worktree.schemas.ts:265-319: preserve security and authority Details, migrate class fields/example and add mode in this existing leaf module.
-- Worktree.command.ts:42,803-849: retain schema-derived name decoder, all three target diagnostics, raw flags and rendering at848; insert the single raw conflict guard after836 and before838.
-- Worktree.command.ts command descriptors and renderWorktreeRemovalReceipt remain public compatibility surfaces. Preserve flag spellings/default false, messages and presentation API.
-- Reap.service.ts:562-574: construct archive-and-delete-branch and preserve authorized expectedHead. Reap's new NUL parser at636-643 remains effectful and maps failure before assessment.
-- Worktree.service.ts:695-747: remove only the implication block702-707. Keep validateRemovalRequest itself, its FileSystem/Path/ChildProcess requirements, schema-derived name validation, managed-root equality718, registration727, canonical path732 and common-directory equality744, with exact typed diagnostics.
-- Worktree.service.ts:880,1030,1089: preserve all three validation calls and their order. Validate the original registered request before legacy deletion and immediately before archive fencing. Do not validate the renamed fenced copy against the original managed-name rule.
-- Worktree.service.ts:894-908: replace deleteBranch filtering with mode matching; preserve None branch=>false and exact archived-HEAD compare-and-swap.
-- Worktree.service.ts:980-1094: carry mode through fenced copy1038; retain safety validation before exhaustive service dispatch, authority checks, residue root, atomic fence, rollback, post-capture quiescence, prune and deletion order.
-- Worktree.service.ts:253-259,619-632: preserve sanitized refName in residueRoot and containment refusal. These incoming fixes are not Boolean-coherence guards.
-- Worktree/index.ts:69,76 and CLI package wildcard source exports expose the schema/service. Migrate decoded source consumers atomically; root src/index.ts exports command rather than every schema. No additional aliases.
-- Incoming constructors: command838, reaper562, service fenced-copy1038, sixteen worktree-command.test.ts constructions at690,721,754,806,841,926,990,1035,1087,1100,1153,1188,1227,1274,1316,1368, and worktree-reap.test.ts:497, plus schema example290. The prior design's twelve command-test count is stale. Migrate the sixteen test constructions by their existing pair except the one deliberately invalid service request at806, which becomes adapter conflict coverage; preserve the original rejection/target-survival assertion.
+## Encoded-side impact
 
-# Guard-deletion accounting
+Internal resolved request: no persisted request object or user-printed request
+format was found. Migrate its exported decoded constructor and schema consumers
+atomically under the campaign internal-domain policy. Preserve every sibling
+field's existing encoding, especially nullable Options and omitted exemption
+fields; do not claim blanket compatibility for arbitrary external request JSON.
+CLI flags/default false, exact messages, receipts, archive refs, residue paths,
+manifest content and Git operands remain unchanged. Release policy is assessed
+when implementing; exported TypeScript status alone does not mandate a bump.
 
-Delete two stored request Booleans and the single implication guard at702-707. Replace the archive dispatch1090 and deletion selection898 with mode matches. Keep one raw conflict check at the adapter. Delete zero target-security, filesystem, registration, canonical-directory, authority, containment, process, quiescence or preservation guards. The old instruction to delete validateRemovalRequest wholesale is expressly withdrawn; all three calls remain.
+## Test impact
 
-# Encoded-side impact
+Run full four-pair adapter matrix with invalid name, ambiguous registered roots,
+missing target and unregistered target precedence. Verify legitimate00/10/11
+with branch Some/None and expectedHead Some/None. Retain direct service safety
+fixtures for mismatched names, symlinks, foreign common directories, unregistered
+repos, sibling and nested lanes. Preserve archive/dirty/submodule/rollback,
+exact-head deletion, post-capture writers and cleanup-failure fixtures.
 
-Tier 1 internal decoded request. No request object is persisted or printed. The public TypeScript constructor shape migrates atomically under the campaign rider; no encoded compatibility alias is required. Preserve incoming accepted name/path inputs and every other payload; do not restore the pre-hardening broader path grammar. CLI flags/defaults, receipts, branchDeleted values, archive refs, sanitized residue destinations, manifests and Git operands remain exactly incoming behavior.
+Retain explicit-proof and inferred-session tests, including both policy inputs,
+unproven marker, chain-top fallback, sibling holders and archive capture timing.
+No actual removal or mutable filesystem behavior proof is run for this P2 audit.
+The private finite table proves only mode cardinality, not service security.
+After implementation run focused worktree-command/worktree-reap and Yeet retire
+coverage plus `bun run beep quality package-verify @beep/repo-cli`, then campaign
+and Yeet gates. Local Effect/Schema and LiteralKit source remain the API authority.
 
-# Test impact
+## Risk
 
-At implementation time retain NUL/hostile-path parser tests290-344, archive traversal-plan expectation243-251, command invalid/missing/unregistered diagnostics602-646, detached/dirty command behavior648-678, name mismatch680-707, symlink709-740, foreign common-directory742-777, and unregistered repository827-858. Add raw flag matrix with conflict precedence under invalid/missing/unregistered names. Migrate remaining request fixtures, preserve reaper authorized HEAD assertions459-518 and the managed-root fixture repo-worktrees at69-72. Preserve dirty-submodule, residue, rename/rollback, exact-HEAD, quiescence and cleanup-failure tests. Run focused Worktree tests and required CLI package verification only during implementation; no tests ran for this private P2 audit.
-
-# Risk
-
-The incoming validator contains safety checks that cannot be absorbed into the mode type. Removing the whole function or moving its rechecks would weaken target authorization. Land in the ordered Tier 1E tooling batch, with shared Worktree files edited serially. Independent P3 review must verify the exact incoming security sequence and raw-input diagnostics before implementation.
+Current main added nested roots and an explicit retirement writer with exemption
+proof. Applying the old five-payload design would drop authorization context.
+Moving raw conflict checks earlier would change existing diagnostic precedence;
+removing validator calls would weaken authorization. Keep shared Worktree edits
+serial in Tier1 tooling batches. This proposal gives no independent P3,
+implementation, full-corpus or dry-round credit.

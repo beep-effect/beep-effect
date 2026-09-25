@@ -1,0 +1,146 @@
+# R33 Apps scope audit
+
+Frozen source32f111f3707a63168b68ed04516af800ecc3a66c;
+main339da1562a2ed52f73a0a693c176fc52cca9ccb6.
+Twelve named canonical owners fail the >=2 actual Boolean member/co-owned state
+recall gate. Scope determinations below come from complete current declarations
+and exact constructed objects, not footer assertions alone.
+
+## Sidecar readiness — one qualified withdrawal
+
+`r26-apps-sidecar-ipc-ready-latch` names Sidecar.ipcReady. Complete Rust Sidecar
+struct447-452 has ipc_ready:Arc<AtomicBool>, pending_closed:Arc<Mutex<Option<...>>>,
+pending_stdout_frames:Arc<Mutex<Vec<String>>> and process:SidecarProcess. Only
+ipc_ready is Boolean state. Setup ipc1426 is a separate local, consumed to
+initialize the nested struct's only Boolean member1530. It does not become a
+Sidecar field. Constructor1529-1534 preserves precisely those four fields.
+
+Bridge signature1025-1032 receives ipc:bool as a function flag parameter and
+Sidecar by reference; cloned readiness1034 does not merge setup-local ipc with
+Sidecar members into one new owner. Function parameters are excluded separately.
+Do not re-anchor this stable ID to the bridge or setup and retain its old4/3
+count. Shared enum/lifecycle owners elsewhere are unrelated. Archive its existing
+design after R33 terminal; preserve all runtime initialization/replay behavior.
+
+## One-Boolean and predicate owners — six D1 withdrawals
+
+- `sidecar-transport-ipc-token`: complete SidecarTransport29-39 has ipc:Boolean
+  plus Option<NonEmptyString> rpcSessionToken; static decoder is a function.
+- `r25-apps-hero-video-state-playing-element`: complete HeroVideoState56-66 has
+  nullable DOM element and playing:Boolean, with null/false defaults. No second
+  Boolean. Keep the distinct HeroClipLayer multi-Boolean playback owner intact.
+- `r25-apps-streaming-turn-view-active`: complete props190-196 contain
+  streaming:Option<StreamingTurn> and turnActive:boolean only. Option presence
+  is not a Boolean member; function-parameter scope does not rescue it.
+- `r2-apps-ipc-spike-mount-gates`: exact canonical ID is plural gates, despite
+  footer shorthand. JSX852 combines transport.ipc with hasIpcSpikeFlag(), a
+  predicate function255-256. There is no two-member observation carrier or
+  bound sibling Boolean state. Do not count a predicate call as a member.
+- `r2-apps-dms-mirror-disconnected-bits`: disconnected uses
+  DmsMirrorUnavailable.make25-29 with retryable:false, provider and reason;
+  disconnectedProbe63 uses separate DmsMirrorProbe.make with connected:false,
+  optional disconnectReason and provider. Enclosing Effect values/layers do not
+  co-own two Boolean state members. These are different model objects.
+- `r3-apps-editor-proof-document-markdown-flags`: TaskItem.make at41 contains
+  checked plus children; separate Table.make44-54 contains headerRow plus
+  children. Their containing document tree is not a flat two-Boolean owner.
+
+The above original D1 explanations may describe valid independent behavior, but
+none overrides the recall gate. Preserve source, defaults, codecs, Option/null
+payloads and runtime effects unchanged. No replacement D1/D2 is proposed.
+
+## Five metric-option D2 withdrawals
+
+Each listed object is a separate Metric.counter options argument with only
+incremental:Boolean (sometimes a description string). Module bindings are
+Metric values, not sibling Boolean atoms. The suffix incrementalMetrics is an
+analytical grouping, not a concrete owner with the listed own fields:
+
+- `r3-apps-chat-orchestrator-incremental-metrics`: ChatOrchestrator292-311,
+  seven counters; description+incremental or incremental alone.
+- `r3-apps-ontology-orchestrator-incremental-metrics`: OntologyOrchestrator35-38,
+  four independent single-field option objects.
+- `r3-apps-intake-orchestrator-incremental-metrics`: DocumentIntakeOrchestrator20-23,
+  four such objects.
+- `r3-apps-vault-sync-orchestrator-incremental-metrics`: VaultSyncOrchestrator25-28,
+  four such objects.
+- `r3-apps-tauri-ipc-incremental-metrics`: TauriIpcSocket54-61, eight such objects;
+  this canonical row is included even though it is not named Orchestrator.
+
+Upstream SDK mirroring can justify D2 only after the candidate passes the net;
+these complete options objects each fail it. Withdraw all five census rows,
+retain metrics and options exactly. No design files belong to these D2 rows.
+
+## Nearby retained scope
+
+This audit does not withdraw `r2-apps-hero-clip-playback`: HeroClipLayer binds
+playing225 and posterHidden229 alongside active/layered props216/218, so it is
+a different multi-Boolean owner from HeroVideoState. This is a scope-retention
+observation, not renewed cardinality/P3 approval. Likewise no blanket removal
+of all HeroVideo rows is authorized. Unrequested cross-node ARIA groupings are
+not silently decided by this bounded audit.
+
+## Reconciliation and limits
+
+Raw R33 footer correctly flags these classes of scope drift. Preserve its empty
+report and footer byte-for-byte; parent records all twelve exact IDs separately.
+One qualified design requires historical archive, eleven D1/D2 rows do not have
+qualified designs to replace. No source/canonical mutation, fetch, HEAD change,
+runtime tests, Rust build, browser QA, independent P3 or dry credit.
+Graft savings64163 tokens across two calls.
+
+## Input bindings
+
+- `apps/oip-web/src/components/HeroVideo.tsx`: `e794854408bf5c76eb73c9a25a021c760ff1f082282ba0021c48990c2b9f469d`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/oip-web/src/components/HeroVideo.tsx`: `e794854408bf5c76eb73c9a25a021c760ff1f082282ba0021c48990c2b9f469d`
+
+- `apps/professional-desktop/src-tauri/src/lib.rs`: `38cb7dbd02f08ba866fc589e8ba24f894f6659dc4cae818715ecfa05ab76b4b5`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src-tauri/src/lib.rs`: `38cb7dbd02f08ba866fc589e8ba24f894f6659dc4cae818715ecfa05ab76b4b5`
+
+- `apps/professional-desktop/src/App.tsx`: `d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/App.tsx`: `d29376441f5566e197291c37478ca21bac2dc8f2d0bf2c253525ba6b2de5ec17`
+
+- `apps/professional-desktop/src/chat/ChatOrchestrator.ts`: `804677782939274969d42d92d86a7a996e337d2a827caf9da3a33355e7363ad9`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/chat/ChatOrchestrator.ts`: `804677782939274969d42d92d86a7a996e337d2a827caf9da3a33355e7363ad9`
+
+- `apps/professional-desktop/src/chat/ui/Thread.tsx`: `ec3a5389bc3e06046fb8ae9aaeee1f60c041cc02c09715671f63c31a55e459ca`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/chat/ui/Thread.tsx`: `ec3a5389bc3e06046fb8ae9aaeee1f60c041cc02c09715671f63c31a55e459ca`
+
+- `apps/professional-desktop/src/editor-proof/EditorProof.atoms.ts`: `2e7d002e334d25a048a764690dcac8c65f55094b4f1470be677f0dc072090f86`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/editor-proof/EditorProof.atoms.ts`: `2e7d002e334d25a048a764690dcac8c65f55094b4f1470be677f0dc072090f86`
+
+- `apps/professional-desktop/src/intake/DocumentIntakeOrchestrator.ts`: `20aa913eb1ad67f1519143b547b9dab936502e48dce5fbbd38fe2aa2fe5a976c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/intake/DocumentIntakeOrchestrator.ts`: `20aa913eb1ad67f1519143b547b9dab936502e48dce5fbbd38fe2aa2fe5a976c`
+
+- `apps/professional-desktop/src/ontology/OntologyOrchestrator.ts`: `81f4052fc2b5f5e925f3ceebc2653ad435f72075e68b5e99d1f995d7587fe93b`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/ontology/OntologyOrchestrator.ts`: `81f4052fc2b5f5e925f3ceebc2653ad435f72075e68b5e99d1f995d7587fe93b`
+
+- `apps/professional-desktop/src/sync/DmsMirrorDisconnected.ts`: `440ea4b7dbc6b8ecc98c1a1cd59a29f2ee4ed7807b7ebe48bdbb8f608f874716`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/sync/DmsMirrorDisconnected.ts`: `440ea4b7dbc6b8ecc98c1a1cd59a29f2ee4ed7807b7ebe48bdbb8f608f874716`
+
+- `apps/professional-desktop/src/sync/VaultSyncOrchestrator.ts`: `e9b28d0cb9b960087f550e9f74a6be0e13fa810fa2aad1d6dc55a527ac5732c4`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/sync/VaultSyncOrchestrator.ts`: `e9b28d0cb9b960087f550e9f74a6be0e13fa810fa2aad1d6dc55a527ac5732c4`
+
+- `apps/professional-desktop/src/transport/SidecarTransport.ts`: `c331eeb810a3b0a361a0fd03470e9e58465402aa155623fcfb8454efad653754`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/transport/SidecarTransport.ts`: `c331eeb810a3b0a361a0fd03470e9e58465402aa155623fcfb8454efad653754`
+
+- `apps/professional-desktop/src/transport/TauriIpcSocket.ts`: `afc1d2f678efd43f0f059a7d340f1caee3dc79b8330fdd908beb9dbac2f56768`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/apps/professional-desktop/src/transport/TauriIpcSocket.ts`: `afc1d2f678efd43f0f059a7d340f1caee3dc79b8330fdd908beb9dbac2f56768`
+
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-apps.execution.json`: `3703d19856c5c9c9b3c0c5668b7464ef12efa449782caab9cfd17aeec7466f59`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-apps.execution.json`: `3703d19856c5c9c9b3c0c5668b7464ef12efa449782caab9cfd17aeec7466f59`
+
+- `goals/boolean-creep/designs/r26-apps-sidecar-ipc-ready-latch.md`: `abca4ccceaba750f91806fae24d1b6532005d938629b40ec38d615f181bd0951`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/inputs/goals/boolean-creep/designs/r26-apps-sidecar-ipc-ready-latch.md`: `abca4ccceaba750f91806fae24d1b6532005d938629b40ec38d615f181bd0951`
+
+## Output bindings
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/historical-rows.json`: `70ebe610c447cf25a0f5b3fcb3642aa0c298b371dc3126b95bfff0c79bf78c42`
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/disposition.json`: `54bd8910af6ad47546d14672a3b9aa9a80eea68665585d96ad0d832806436278`

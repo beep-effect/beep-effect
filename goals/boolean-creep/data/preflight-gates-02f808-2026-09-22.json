@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "boolean-creep-preflight-gates/v1",
+  "sourceSha": "02f8084070af1fe3329b4c769705394a9f33b9f1",
+  "inventorySha256": "0d8fe9a739df128f764fc060643f486c1d98a68b37739a405401ee8848d7f88e",
+  "checks": [
+    {
+      "mode": "controller --preflight-only",
+      "exitCode": 1,
+      "reason": "Finalize exactly one preceding round before launching the next census.",
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c58cb861523616fb363c497ca2bd3c5510af06c206ca2c95a8e211d6a22c9af4"
+    },
+    {
+      "mode": "launcher check",
+      "exitCode": 1,
+      "reason": "R32 launcher is unbound; finalize R31 and create fresh reviewed admission pins.",
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c74f78cbe9dc39e90ee72c882ee88fbcb77ec30ff768957d43cb549c2124cf3b"
+    }
+  ],
+  "openOwnerDecisions": [
+    "constitutional-citation-preamble",
+    "yeet-status-remote-check-phase"
+  ],
+  "resolvedHistoricalCitationHolds": [
+    "id-citation-pincite-inherited",
+    "supra-citation-pincite-inherited",
+    "short-form-case-citation-pincite-inherited"
+  ],
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "blockingAudit": "First dedicated gate audit after completing available dated-subset refreshes and merging current main. Awaiting owner contract answers; no goal-blocked status asserted."
+}

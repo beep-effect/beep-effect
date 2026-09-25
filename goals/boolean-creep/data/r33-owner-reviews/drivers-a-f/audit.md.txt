@@ -1,0 +1,104 @@
+# R33 drivers-a-f full-owner correction
+
+Source HEAD32f111f3707a63168b68ed04516af800ecc3a66c; main339da1562a2ed52f73a0a693c176fc52cca9ccb6.
+No tracked edits, fetch, HEAD change, proof interruption or runtime execution.
+
+## Withdrawal: FolderResolution
+
+Exact qualified ID: r3-drivers-arch-folder-resolution-blocked-provider.
+Complete private type BoxProvisioningPlanner.ts67-71 owns actionKey:Sha256Hex,
+blocked:boolean and providerId:Option<BoxProviderId>. **Only one actual Boolean**.
+The Option presence projection does not become a second Boolean member. Under
+SPEC's >=2 actual-Boolean recall net, withdraw this qualified row and archive its
+existing design after R33 terminal. Do not convert it to D1 or D2.
+
+The historical semantic4/3 argument still describes private resolution behavior,
+but cannot bypass the recall gate. Its current concrete writers are unresolved
+helper119-126, root helper128-134 and folder-action storage549-553. The old E2
+cite132 points at root Some(provider), not a blocked read. Correct blocked
+short circuit is dependentAction173. Other readers are collaboration331,
+webhook378, capability425 and parent candidate/action511/522. The current
+planner factors resolveFolder500-504 and rootFolder/unresolvedFolder; prior
+canonical migration sections incorrectly locate these constructions inline.
+
+Resolved nonroot still requires one observed candidate and exactly one adoption
+matching logical key, expected provider and expected parent: folderAction240-321.
+Missing/duplicate authorization or multiple candidates blocks, and provider
+extraction543 remains safe Option from Noop, with matched IDs544-547. No new
+restriction or implementation is proposed, and public action/provider codecs
+remain unchanged. Historical design should be preserved as history, not refreshed
+into a currently admitted design.
+
+## Withdrawal: ActionBaseInput
+
+Exact ID: r25-drivers-a-f-box-action-base-destructive-provider.
+Complete named type73-84 has one actual Boolean destructive; providerId is an
+Option, as are digest/etag payloads; tags/state/kind are literals, dependencies
+an array and logicalKey a branded string. Withdraw its existing D1 census row
+as outside recall net, not as a classification change to another D category.
+The forwarding helper102-117 independently copies destructive109 and provider114,
+but that does not create a second Boolean on the owner. Its enclosing function
+parameter is not a substitute scope. No runtime or domain narrowing follows.
+
+## Retained ACP D2 rows
+
+These are D2, not D1. clientProtocol object opens AcpProtocol.service.ts841;
+its capability fields start851 (supportsAck) and852 (supportsTransferables).
+serverProtocol object opens856; capability fields868-871 are supportsAck,
+supportsNotifications, supportsSpanPropagation and supportsTransferables.
+Use object-opening anchors841/856 in the proposed rows; retain member anchors
+in this audit to explain the footer's851/868 values. Existing literal values
+and class remain unchanged. They are direct RpcClient.Protocol.of and
+RpcServer.Protocol.of upstream service shapes. Consumers provide those upstream
+protocol services from AcpAgent403/411 and AcpClient547/555. Neither Boolean
+correlation nor a private alternative domain is inferred from current defaults.
+
+## Frozen evidence handling
+
+R33 footer says no withdrawal and seed classifications hold. Current complete-owner
+inspection contradicts that scope conclusion for the two Box rows. Preserve raw
+footer and its hashes unchanged; parent records these corrections separately and
+invalidates any dry claim requiring no seed withdrawals. No replacement qualified
+row/design is supplied. Historical row values are saved privately alongside
+proposed retained D2 rows and machine-readable withdrawal disposition.
+
+## Verification limits
+
+Graft exhaustive owner/member searches plus complete type and writer/reader
+inspection support these findings. No package tests, Box calls, schema execution,
+P3 review or census dry credit are claimed. Source changes beyond these exact
+hashes require rebinding. Graft saved58331 tokens across two calls.
+
+## Input bindings
+
+- `packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts`: `f397be093e26ab47bc6178019709ea22d59a62d631d4858902640c9e898c5abb`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts`: `f397be093e26ab47bc6178019709ea22d59a62d631d4858902640c9e898c5abb`
+
+- `packages/drivers/acp/src/AcpProtocol.service.ts`: `5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/packages/drivers/acp/src/AcpProtocol.service.ts`: `5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee`
+
+- `packages/drivers/acp/src/AcpAgent.service.ts`: `77b2ebe107883442ea9b2987ece19d11fb63f6718aee106ad29bfc286f1aa6ac`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/packages/drivers/acp/src/AcpAgent.service.ts`: `77b2ebe107883442ea9b2987ece19d11fb63f6718aee106ad29bfc286f1aa6ac`
+
+- `packages/drivers/acp/src/AcpClient.service.ts`: `b4947b815dc00bdc6f4a4649c65c399823cd2ab874b8fe68e66385dee1c8d3c6`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/packages/drivers/acp/src/AcpClient.service.ts`: `b4947b815dc00bdc6f4a4649c65c399823cd2ab874b8fe68e66385dee1c8d3c6`
+
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+
+- `goals/boolean-creep/designs/r3-drivers-arch-folder-resolution-blocked-provider.md`: `4df5e3e9f8c81b2837f061bd111f9c0785117292d6b3ab6fafa1217ee36159dd`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/goals/boolean-creep/designs/r3-drivers-arch-folder-resolution-blocked-provider.md`: `4df5e3e9f8c81b2837f061bd111f9c0785117292d6b3ab6fafa1217ee36159dd`
+
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-a-f.execution.json`: `de54bf46fd902cece3f252d5146b90c7eff8c41b9e0ea9c00d0b238d237076a8`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/inputs/goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-a-f.execution.json`: `de54bf46fd902cece3f252d5146b90c7eff8c41b9e0ea9c00d0b238d237076a8`
+
+## Output bindings
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/historical-rows.json`: `9fe465b278b7fe7bdd69cfbebdd46151c921e0a390d227fe60b1c5e57bd512cb`
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/proposed-d2-rows.json`: `527dfb5863a19aaf271e60cb3c3d093a1759d5aae579c5dd85e006ab3d64d06d`
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/disposition.json`: `9edf53a3500c949022493b2535213e42d56cb580c4d641610bdbfc49394af7ec`

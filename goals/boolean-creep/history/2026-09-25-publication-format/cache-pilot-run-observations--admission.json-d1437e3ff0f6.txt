@@ -1,0 +1,72 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "cache-pilot-run-observations",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "cfb496624b144be4bfff918d03c78585bc61126b55b04b1b9c1d4c4a607967a6",
+  "inputBindings": [
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "786b1a39528da31f68a5ec4d0580c2d903e1af19d52313f14af208feab58e00a"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "6b29c91b19b0637e9e221c360a62c53fda3ba2152fffe2d256e96384af39f664"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "sha256": "604726648fc9d74ba9d89a410f5b3cc95b7fcc4a897960556c89cdb9e9f34293"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "11446080842615a3a1c724bef294716c0d1dd8495bfcd69a8ccf5102a28e8795"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "3c457378c4f401218365013355754c2685ae680625c2d5152205d38741b146d0"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "sha256": "1925c62507dbdecd3f977e9e12cbec7cfe2ae7d7a8dd3b89e08fb1d15799a468"
+    },
+    {
+      "originalFile": "goals/boolean-creep/SPEC.md",
+      "retainedFile": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "originalFile": "goals/boolean-creep/DECISIONS.md",
+      "retainedFile": "goals/boolean-creep/history/2026-09-25-pre-cache-observation-ruling-DECISIONS.md",
+      "sha256": "0718a4972d3581beaa515183559b1d7d1d8d1a6cfa8986852cf4f13c2eb8b108"
+    },
+    {
+      "originalFile": "goals/turborepo-task-qualification/research/runtime-key-verification.md",
+      "retainedFile": "goals/turborepo-task-qualification/research/runtime-key-verification.md",
+      "sha256": "0f549bd177b03a978b44ba80f03ccedbd1c354a3a8acb62aac1d5d4c67819127"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "retainedFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "sha256": "453a48b8a697d251d4d15edb49c5ef765b543a3c4c8c5db2209084671109adb2"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/finite-table.json",
+      "sha256": "bec5fe9057b4bdb13e12e5690d34d9505d8703b8904f8b83f4d9be10d0972fa1"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/disposition.md",
+      "sha256": "ffa7a914d120656fbbdbe451d0f955382c17095f3925f257ceee309d4950052c"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

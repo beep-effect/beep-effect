@@ -2,7 +2,9 @@
 
 This audit is incomplete by design: it records the remaining work against the
 nine SPEC acceptance criteria. A scoped pass is not whole-goal completion.
-Source revision: `0dca9987807d3ac2e4ae842f712522198a4ec965`.
+The opening table is the historical checkpoint at
+`0dca9987807d3ac2e4ae842f712522198a4ec965`. Later dated sections record
+subsequent source and runtime evidence; none promotes the pilot.
 
 Runtime refresh on 2026-09-21 found a changed kernel and runtime linker at the
 same source revision. The installed dependency archive is unchanged. The
@@ -111,12 +113,75 @@ undecoded, and semantic-input completeness and signed transport remain open.
 
 ## Execution order and ownership
 
+### Current census and replay boundary
+
+The refreshed census at `3f1d2a8a087d845ff53b17498270b8086d7fc40a`
+uses Turbo 2.11.2 and contains 143 workspaces, 3,449 graph nodes and 1,957
+executable nodes. The canonical attachment accepted 778 source identities,
+six embedded artifacts and 22 reviews. Its SHA-256 is
+`bba55aa472a35460127e48ec9727668ffa28b0b150853cc1b381c16e83b2e139`.
+All 48 changed historical source identities have review coverage. Negative
+controls rejected stale source hashes, stale artifact hashes, a missing command
+group family and a repeated source path. This verifies attachment validation;
+the eight unresolved semantic and runtime obligations remain open.
+
+The current stable pilot stopped at its initial comparison gate after detecting
+divergence. It produced no completed matrix receipt, and further reuse
+experiments stopped. A bounded diagnostic retained eleven observations: all
+three fresh pairs, concurrent fresh execution and cross-root execution agree.
+The cache-enabled producer and replay both exit 1, and the replay is another
+fresh execution rather than a cache hit. Their selected task emits 138 log
+bytes, compared with 53 bytes in successful uncached runs. The dependency exits
+0 throughout, and all observations retain unchanged package sources. These
+results located the failure in cache-enabled selected-task execution. The retained
+log then identified `biome check .` as the failing command. The enabled fixture
+had reformatted compact JSON arrays as well as changing the cache flag. A
+corrected projection changes only that flag, has identical decoded JSON, and
+matches Biome's formatter output exactly. The canonical activation preview
+accepted it. With that correction, all seven initial checks pass across eleven
+observations: the producer exits 0, replay is a local hit with exit 0, and both
+retain the same 53-byte task log as the uncached runs. This attributes the
+observed failure to fixture formatting. The diagnostic deliberately stops at
+the initial gate.
+
+Recovery review on 2026-09-24 found the completed corrected stable receipt at
+that recorded source revision: 67 observations, 40 passing checks and ten shadow
+decisions. Independent review reconstructed the runtime identity and verified
+fresh/replay, perturbation and non-execution relationships. The receipt SHA-256 is
+`5fd5c37eff9e784406a069b8b17796b8df374f05d1c67bb03960e5fd80fac6a8`.
+The original process exit is unavailable; the retained receipt and its independent
+review supply the evidence. Raw archives and signed transport were not validated.
+The matching canary completed with exit 0. Combined independent review passed
+for stable 2.11.2 and canary 2.11.3-canary.3: each has 67 observations, 40 passing
+checks and ten shadow decisions, with separate reconstructed runtime identities.
+The canary receipt SHA-256 is
+`b063583e0273882b55d29a007ddefffa15289b939fd99284a49a15f8ca1975c7`.
+The review validates retained comparison relationships; it does not validate raw
+archives or signed transport. Ten original input/result/reviewer files were
+archived and hash-verified outside the worktree.
+These results describe the recorded source and toolchain, not newer main commits.
+
+The follow-up CLI test repairs passed full package verification: audit 835.9s
+and docgen 22.7s, exit 0. Exact-head Yeet and hosted coverage acceptance remain
+pending for this branch. Main subsequently incorporated PR #1201, whose hosted
+Coverage Regression check passed. It includes the same error-path tests and a
+recorded baseline row for the source-only runtime module. After fast-forwarding
+to `28a7045c9b`, this lane retains those upstream tests and drops its duplicates;
+no local baseline change or new compiled-execution claim is made. Frozen-lockfile
+installation passed. The earlier package proof describes its pre-sync source.
+
+### Next dependency steps
+
 1. Qualification continues local semantic-input, read/write and capture closure,
    and maps mandatory negative cases to retained evidence. The current source
    review and a handful of external-file perturbations do not prove closure.
 2. Conformance and trust own the signed receipt formats, producer/auth/signature
    verdicts and passing signed fixture/lab boundary. Both local packets remain
-   paused. Starting those goals is a separate pending operator decision; this
+   paused. A 2026-09-24 search inspected 133 local Beep clones/worktrees and
+   found 128 sibling packet copies, all paused, with no receipt or acceptance
+   artifact candidates in those packets. The recent Codex task list supplied no
+   identified sibling producer. This is a bounded search, not proof that no
+   private receipt exists elsewhere. Starting those goals is a separate pending operator decision; this
    packet must not fabricate their contracts or evidence.
 3. Once those accepted milestones exist, qualification validates original bytes,
    provenance and exact tuple/pin bindings, completes signed comparisons, and
@@ -128,3 +193,184 @@ The historical `remaining` strings inside pilot receipts are immutable run
 metadata. They are not a live task list: later entrypoint enforcement has its
 own evidence. This audit and the current qualification contract state the
 current boundary without rewriting historical receipts.
+
+## External read-path disposition: 2026-09-24
+
+The retained positive scalar-read inventory contains twenty paths outside the
+repository. Nine are the linker detector and shared-library targets present in
+the recorded runtime fingerprint. One is the governed Git exclusion input;
+one is the worktree `commondir` routing file. The remaining nine are procfs
+paths: process mappings, cgroups, memory information, overcommit policy and CPU
+statistics. They remain unresolved runtime-state dependencies. Fingerprint
+membership proves a recorded binding, not live byte equality or semantic closure.
+
+A fresh streaming pass verified the original compressed trace digest and
+correlated successful exec and procfs-open events. Bun opens overcommit policy
+and process maps; the Node launcher opens process maps, cgroup and memory
+information; native Biome opens overcommit policy, maps and cgroup state.
+Additional task IDs open CPU statistics; this pass does not reconstruct their
+thread ancestry or establish why those values are used. No buffer payloads are
+published. The private disposition digest is
+`7f36bf87b3a57b5c5bb1b05c357dccf57397c77c4d853e1832d3fe5a9796e312`;
+four input/review files are retained in the verified external evidence archive.
+
+Next, correlate these runtime reads with pinned runtime sources and run bounded
+resource-state perturbations before classifying any procfs value as non-semantic.
+Stable replay agreement alone cannot discharge that obligation.
+
+### Pinned runtime source attribution
+
+The exact Biome 2.5.6 tag is `@biomejs/biome@2.5.6`, resolving to
+`1139f1ca8a0f11b5d84dc7b415c2a4ab6fc0ef03`. Its CLI selects jemalloc on
+Linux with glibc; mimalloc is conditional on Windows. The lockfile-pinned
+`tikv-jemalloc-sys` archive passed its recorded SHA-256 check. Its
+`os_overcommits_proc` implementation reads overcommit policy and its initialization
+uses the result to select `MAP_NORESERVE`. This is source-correlated allocator
+behavior, not a captured call-stack attribution or semantic-invariance proof.
+
+Node v24.20.0 initialization derives V8 defaults from total and cgroup-constrained
+memory. Six fresh-run controls completed through admission with ordinary,
+512 MiB and 64 GiB sandbox-visible memory metadata, two runs per case. They did
+not alter host limits. All six executions exited 0 with empty stdout and identical
+53-byte stderr. The wrapper completed with exit 0 after dependency and full
+toolchain postchecks. Independent review verified twelve raw streams, both
+memory files, six unique case/repeat identities and the script digest. The
+receipt SHA-256 is
+`d96d51cf056cfee01fad20a6b8f4c72402f575c8b53dcfb3cdcaf1d98f547219`.
+Twenty-one raw/input/review files are retained in a hash-verified archive.
+The controls do not trace consumption of each injected value and do not change
+cgroup or physical memory limits, CPU state or process mappings. Those limits
+remain explicit; this bounded agreement does not establish semantic closure.
+The canary matrix also completed; its independent review is recorded above.
+
+Fourteen source and attribution files are hash-verified in the private archive.
+The attribution digest is
+`6a12f04d3baa5a112b207d06b30932a87494b0bc802d6a168ae30cac39a46fdc`.
+Pinned sources: [Biome allocator selection](https://github.com/biomejs/biome/blob/1139f1ca8a0f11b5d84dc7b415c2a4ab6fc0ef03/crates/biome_cli/src/main.rs),
+[Biome lockfile](https://github.com/biomejs/biome/blob/1139f1ca8a0f11b5d84dc7b415c2a4ab6fc0ef03/Cargo.lock),
+and [Node initialization](https://github.com/nodejs/node/blob/v24.20.0/src/api/environment.cc).
+
+The exact fingerprinted glibc binary supplies a candidate CPU-read attribution.
+Its `get_nprocs` first tries `/sys/devices/system/cpu/online`; a zero helper result
+branches to a helper that opens `/proc/stat`. The capture sandbox does not mount
+`/sys`. Direct disassembly and referenced string bytes establish this binary
+path. The completed stack capture below connects it to the observed calls.
+The installed package's source revision did not resolve through the queried
+mirror; no nearby source is substituted. Five retained binary-review artifacts
+have attribution digest
+`a7d07fdc31c6686c93c48b717964e7a082cc5b14742a98e79cda322e0e1b75dc`.
+
+### Completed procfs stack capture
+
+The path-filtered capture completed with exit 0 and passed dependency/toolchain
+postchecks. Independent byte review verified the compressed and expanded trace
+and both streams, joining ten unfinished calls with no unmatched remainder.
+It records six CPU-statistics opens, five process-map opens, 76 cgroup opens,
+one memory-information open and three overcommit-policy opens.
+
+All six captured `/proc/stat` opens carry `get_nprocs+0x25` at the disassembled
+return address and `pthread_getattr_np+0x10b`. Four of five map opens also carry
+`pthread_getattr_np`. This confirms those observed caller paths; it does not
+classify their effects as semantically irrelevant. Sixty-seven event stacks
+reach the frame cap. Unvalidated nearest-symbol labels in stripped Node and
+Biome frames must not be treated as resolved function identities.
+
+The full stderr is 211 bytes: 158 bytes of exact strace path-resolution notices
+followed by the expected 53-byte task log. The reviewer validates that complete
+sequence and records that full stderr differs from an untraced run. No unknown
+lines are discarded. Twelve raw/input/reviewer artifacts are archived and
+hash-verified; review digest:
+`9872ec860455d38796054b9cf40a0f23ef8477c27d0cf3487e83c509c5f96857`.
+
+Ten retained Node trace offsets now resolve inside exact ELF function bounds
+using its recorded load base and fingerprinted binary. They connect memory reads
+to `node::NewIsolate`, `uv_get_constrained_memory`, `uv_get_total_memory` and
+`uv__read_proc_meminfo`; the mapping paths resolve to V8 stack-start discovery
+and `ParseProcSelfMaps` / `OS::RemapPages`. These bounded symbol matches replace
+misleading nearest-symbol labels in the trace. They establish function identity,
+not semantic invariance. Biome's binary exposes no symbol table, and five sampled
+Bun offsets have no bounded symbol match. Their caller names remain unresolved.
+
+### Completed overcommit-policy controls
+
+Six admitted fresh executions used sandbox-visible overcommit-policy values
+`0`, `1` and `2`, each against valid source and a private syntax-error mutation.
+All three valid cases exited 0; all three invalid cases exited 1. Within each
+group, stdout and stderr matched byte-for-byte. Stdout was empty throughout;
+valid stderr was 53 bytes and invalid stderr was 138 bytes. Host overcommit
+policy and physical memory limits were unchanged.
+
+The wrapper completed with exit 0 and verified dependency materialization and
+the full observed toolchain before and after. Independent review checked twelve
+raw streams, six trace digests, all three injected metadata files and the probe
+script digest. Every case contains three positive reads of the policy path by
+three distinct process IDs, returning five bytes in total. No unfinished trace
+calls remained. The reviewer also rejected four synthetic corruptions, including
+an empty trace with a matching digest; those controls test the reviewer and are
+not runtime evidence.
+
+Twenty-eight raw/input/review files are retained in a hash-verified private
+archive. Receipt SHA-256:
+`2efc4fbf13e80e2c30733d1830400f5d2362b6c27167f1056494dbacd1df8839`.
+Review SHA-256:
+`a27e3ae7cb4bfcb3a9b86f9392ea557184b8f458b257a5651aab5d61d5ce0904`.
+These controls establish bounded agreement with verified policy reads. They do
+not prove every allocator branch, actual host-policy behavior, complete runtime
+input closure or signed remote replay. No qualification tuple is promoted.
+
+### Follow-up census obligation disposition
+
+The immutable census attachment lists eight unresolved obligations. One is the
+specific stop for the initial pilot divergence; the corrected stable and canary
+matrices above resolve that stop for their recorded profile. It is no longer
+current work to re-attribute that same formatting failure. A separate disposition
+binds the original census digest and both corrected receipt digests, preserving
+the original attachment. Its SHA-256 is
+`1854b69d7285246ca41263de64ca210b65142dd49dbe68174deb548e41bf0f4d`.
+
+Seven broader obligations remain open: candidate semantic/capture and signed
+comparisons; nested-command semantics; candidate runtime evidence beyond source
+identity; hosted workflow/action/status ownership; dynamic entrypoint branches
+and external verdicts; downstream parser interpretation; and dynamic planner
+runtime outcomes. The completed controls narrow these obligations but do not
+discharge them. Five disposition and supporting evidence files are retained in
+a hash-verified private archive.
+
+### Static shell-expression classification
+
+The nested-command inventory's 21 uninterpreted definitions now have a bounded
+shell review, with every command checked against its manifest at the fixed
+source revision. Eight Fallow definitions expand a quoted `BEEP_PROOF_BASE`
+argument and name report destinations; eight Portless definitions launch
+persistent shell children. The remaining definitions comprise the identity
+check's output suppression, infra's literal-output build placeholder, a Lambda
+working-directory and short-circuit chain, and two Storybook definitions using
+Git-root substitution and cross-workspace globbing (one requests source writes).
+These are nested definitions, not 21 newly discovered executable graph nodes.
+
+The review records input and effect obligations for each definition. It does not
+execute services, install Lambda dependencies, equate literal output with a
+build artifact, or infer downstream runtime closure from shell syntax. Thirteen
+review/input files are archived with verified hashes. Review SHA-256:
+`ccc3ced91fd0cf0b5c549e4f1add0115d484d5d1786f2bbd3c50f954e7058eb7`.
+The broader nested-command obligation remains open pending its downstream
+semantic evidence; the original inventory is unchanged.
+
+### Standalone Lambda command boundary
+
+The infra test chain changes into its standalone Lambda workspace, installs with
+a frozen lockfile, then runs type checking, Bun tests, bundle smoke and ZIP
+checking in a short-circuit sequence. The reviewed compiler config requests
+no emit and includes source and test TypeScript. Bundle checking deletes the
+local build directory, emits three CommonJS bundles and imports each to check
+that its handler export is a function. It does not invoke those handlers; module
+import effects and individual test effects still need their owning evidence.
+
+ZIP checking deletes a fixed `turbo-cache-zip-check` directory under `TMPDIR`
+(default `/tmp`), copies three bundle files to handler names, sets timestamps,
+creates an archive and checks its size before printing its digest. Concurrent
+checks require isolated temp roots. These source observations do not establish
+archive determinism across environments, deployed behavior or signed replay.
+No part of the chain was executed for this review. Six review/source files are
+archived with verified hashes; review SHA-256:
+`37353cfd13052e1d7d2601fac515cc055e63e94c8da8fc5405ade76f36ce2c51`.

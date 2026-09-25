@@ -1,0 +1,2169 @@
+{
+  "binaryRepresentable": 128,
+  "binaryLegal": 27,
+  "equalityAwareStrata": 432,
+  "coherentStrata": 27,
+  "scope": "finite algebra not codec/runtime evidence",
+  "rows": [
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, false, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "absent", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, false, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "unequal", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, true, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, true, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["absent", "equal", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, false, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "absent", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, false, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "unequal", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, true, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, true, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["unequal", "equal", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, false, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "absent", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, false, true, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "unequal", "equal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, true, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "absent"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, true, false, false],
+      "legal": true
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "unequal"],
+      "bits": [true, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [false, true, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, false, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, false, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, false, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, false, true, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, true, false, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, true, false, true],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, true, true, false],
+      "legal": false
+    },
+    {
+      "probes": ["equal", "equal", "equal"],
+      "bits": [true, true, true, true],
+      "legal": true
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-sync-fleet-retired-refresh.jsonl",
+    "sha256": "d2522f3d2e4da41b77e579f4d17355284ca9c7f9171fe3eb59856676296d98c8"
+  },
+  "inventoryAfterSha256": "54567b68b5b6349d42f854462321583f5e626e63639b9835ddeb65f63eb59372",
+  "refreshedIds": [
+    "sync-data-target-selection",
+    "worktree-fleet-epoch-target",
+    "create-package-retired-name-reconciliation"
+  ],
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 131,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/sync-data-target-selection.md",
+      "sha256": "1465c0d9ddf9254ff77a7a013fa49e6ca149ebcf61c93201329f15c3f035fc4a"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-sync-data-target-selection.md",
+      "sha256": "c73b86c97e02a48cbbf0584beeba68333c3e539c1ee23a7cf11f1fd3b6acc0f6"
+    },
+    {
+      "file": "data/2026-09-22-sync-data-target-selection-projection.json",
+      "sha256": "16114d94392fbbcb77253b2c1384dede4e247edde30d5db9ae0a60803dfa0eaa"
+    },
+    {
+      "file": "designs/worktree-fleet-epoch-target.md",
+      "sha256": "ad2d00d8625ae0b41e5ce1adc97a6802b5d4d674314d057e02a8c15b48e75919"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-worktree-fleet-epoch-target.md",
+      "sha256": "1b1a6ddc8e47131e0bc11f4ff45238733c56172860e85e384d8ad856c9cfd326"
+    },
+    {
+      "file": "data/2026-09-22-worktree-fleet-epoch-target-projection.json",
+      "sha256": "733051ee87a115a4a89878373ea4f5f5bfe5eebef6e4867025f91700a0d1d55e"
+    },
+    {
+      "file": "designs/create-package-retired-name-reconciliation.md",
+      "sha256": "418aec7efa52592a8f05f1da2d72a8b11b773a8575fd3c855a4aef73d457ef0b"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-create-package-retired-name-reconciliation.md",
+      "sha256": "f413a28780db94438dc059ff0b67b9b8f30d8417fbecbffd4d753a867fb95fc2"
+    }
+  ],
+  "verifiedHashBindings": 38,
+  "savedSubset": {
+    "sourceReceipt": "data/disqualified-impact-reconciliation-2026-09-22.json",
+    "sourceReceiptSha256": "50a50844546e57c0ee557ce87aefc29229ed0a4dbe88c976e4990cd9bdaff1d5",
+    "previousPendingCount": 25,
+    "completedIds": [
+      "sync-data-target-selection",
+      "worktree-fleet-epoch-target",
+      "create-package-retired-name-reconciliation"
+    ],
+    "pendingCount": 22,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "yeet-status-remote-check-phase",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "vault-sync-push-failure-disposition",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-dms-vault-refresh.jsonl"
+}

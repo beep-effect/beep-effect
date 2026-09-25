@@ -1,285 +1,256 @@
 # Instance
 
-- id: `yeet-status-remote-check-phase` (stable existing id; expanded members)
-- source: `8f266b878445ca8a7f751f9248da428a4dde39a1`
-- corpus source: `663904610cce2a38c06b0619a8c414646b69361c`
-- file:line: `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:206`
-- symbol: `YeetStatusRemote`
-- members: `available`, `checked`, `isDraft`
-- classification: E1/E4; stored; persisted; literalkit; Tier 2 singleton
-- native source receipt: `../data/design-refresh-2026-09-09-r27-cli-seed-drift.md`
-- independent census: `../data/sweeps/refresh-2026-09-09-r27-main-663904/r27-cli-yeet-contract-correction1.jsonl`
-  and its completed `.execution.json`
-- design handoff: `../data/design-refresh-2026-09-09-r27-remote-status-design.md`
-- prior exact design: `../history/designs/2026-09-09-r27-pre-draft-axis-yeet-status-remote-check-phase.md`
+- id: `yeet-status-remote-check-phase`
+- source: `3ba9c6bc603e73732ba18e40a29781ac87156a41`
+- file:line: `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts:244`
+- symbol: `YeetStatusRemote`; members: `available`, `checked`, `isDraft`
+- classification: E4; stored; persisted; literalkit; Tier 2 singleton
+- authority: `DECISIONS.md`, 2026-09-24 constitutional citation and remote status rulings
 
-The completed independent correction confirms this expanded 12/5 contract.
-It is a census correction, not P3 approval. This design does not advance
-canonical inventory status or authorize implementation before packet gates.
-References to `Status.ts`, `Handler.ts`, and `MonitorLoop.ts` below are under
-`packages/tooling/tool/cli/src/commands/Yeet/internal/`; `test/...` is relative
-to `packages/tooling/tool/cli/`.
+This is a full current-owner P2 proposal following the explicit owner ruling.
+The seven exclusions are authorized contract restrictions, not conclusions from
+producer reachability. The historical hold remains accurate for its date.
+No source implementation, independent P3, dry census, or GATE 2 credit is claimed.
+File references below are under `packages/tooling/tool/cli/` unless qualified.
 
 # Current shape
 
-`YeetStatusRemote` at `Status.ts:206` is a public schema class with required
-`available` and `checked` booleans (`:208`–`:209`) and exact optional
-`isDraft: S.optionalKey(S.Boolean)` (`:213`). Draft has three states: absent,
-false, true. There are no defaults for these three encoded fields. The app
-authors availability/checking around its GitHub call; the different
-`GhStatusPullRequest` at `:313` is the driver mirror with required isDraft.
-
-The current remote schema has 25 fields, in this encoded order:
+`src/commands/Yeet/internal/Status.ts:244-281` exports an S.Class with **31 fields**.
+Three are the selected axes: required `available` and `checked`, and exact
+optional `isDraft`. No selected field has a default. The encoded field order is:
 
 ```text
-available, checked, detail, checkCount, failingCheckCount, isDraft,
-mergeStateStatus, mergeable, number, pendingCheckCount, requiredCheckCount,
-failingRequiredCheckCount, pendingRequiredCheckCount, optionalCheckCount,
-failingOptionalCheckCount, pendingOptionalCheckCount,
+available, checked, detail, checks, checkCount, failingCheckCount, isDraft,
+labels, mergeStateStatus, mergeable, number, pendingCheckCount,
+requiredCheckCount, failingRequiredCheckCount, pendingRequiredCheckCount,
+optionalCheckCount, failingOptionalCheckCount, pendingOptionalCheckCount,
 unresolvedReviewThreadCount, unresolvedReviewThreads, unresolvedThreads,
-headSha, rerunFailedCommand, rerunFailedDecision, reviewDecision, state, url
+followUpThreadCount, followUpThreads, acknowledgedThreadCount,
+acknowledgedThreads, headSha, rerunFailedCommand, rerunFailedDecision,
+reviewDecision, state, url
 ```
 
-All 22 non-selected siblings survive. `detail` is required `S.String`.
-The eleven optional finite numbers are `checkCount`, `failingCheckCount`,
-`number`, `pendingCheckCount`, `requiredCheckCount`,
-`failingRequiredCheckCount`, `pendingRequiredCheckCount`, `optionalCheckCount`,
-`failingOptionalCheckCount`, `pendingOptionalCheckCount`, and
-`unresolvedReviewThreadCount`. None gains an integer, nonnegative, presence,
-or cross-count constraint. Optional strings are `mergeStateStatus`,
-`mergeable`, `rerunFailedCommand`, `rerunFailedDecision`, `reviewDecision`,
-`state`, and `url`. `unresolvedReviewThreads` is an optional string array.
-`unresolvedThreads` is an optional-key `Option<Array<YeetStatusReviewThread>>`
-with None constructor default; `headSha` is the same Option/default
-arrangement for a string. Thread payloads and their own optional fields and
-defaults also remain unchanged.
+All **28 independent siblings** survive. Required detail accepts all strings.
+The thirteen optional finite numbers are checkCount, failingCheckCount, number,
+pendingCheckCount, requiredCheckCount, failingRequiredCheckCount,
+pendingRequiredCheckCount, optionalCheckCount, failingOptionalCheckCount,
+pendingOptionalCheckCount, unresolvedReviewThreadCount, followUpThreadCount,
+and acknowledgedThreadCount. Do not impose positivity, integrality, matching
+array lengths, phase presence, or cross-count relationships.
 
-`YeetStatusSnapshot.remote` nests the schema at `:275`; snapshot version
-is `yeet-status/v1` at `:277`, codec `YeetStatusSnapshotJson` at `:311`, and
-writer `:1386`. A second boundary at `Handler.ts:1251` prints the decoded
-snapshot through generic `printCommandJson`, bypassing the artifact codec.
-Both output representations must be accounted for.
+The seven optional strings are mergeStateStatus, mergeable, rerunFailedCommand,
+rerunFailedDecision, reviewDecision, state and url. unresolvedReviewThreads
+remains an optional array of strings. checks retains YeetSettleCheck elements;
+labels retains strings. Both retain existing empty-array key and constructor
+defaults. unresolvedThreads, followUpThreads, acknowledgedThreads and headSha
+retain their OptionFromOptionalKey codecs and None constructor defaults.
+Each nested review thread at Status.ts:215-229 preserves required threadId,
+author and excerpt, and optional-key Options path, finite line and finite
+commentDatabaseId with their existing defaults. No new thread restrictions.
+
+The previous 27-field hold predates four new follow-up/acknowledgement fields.
+Readiness now counts unresolved plus follow-up threads at Status.ts:1388-1401;
+acknowledgements remain advisory. Preserve these current semantics.
+
+Status.ts:311-336 nests remote in the full snapshot, including timeline,
+mergeReady, staleGates and unprovenGates. Artifact encoding uses
+YeetStatusSnapshotJson at :359 and writeYeetStatusSnapshot at :1806.
+Handler.ts:1421 instead passes a decoded snapshot to generic printCommandJson.
+The distinct serializers are both supported output boundaries.
 
 # Cardinality gap
 
-The product is `2 × 2 × 3 = 12`, with exactly **five** supported states.
+The old schema represents 2 × 2 × 3 = **12** tuples. The owner explicitly requires
+available => checked and present draft => available AND checked. Exactly five
+are legal. Draft absence remains distinct from false. Independent payloads do
+not change this projection and remain unrestricted by phase.
 
-| Phase | available | checked | isDraft | Evidence |
-| --- | --- | --- | --- | --- |
-| skipped | false | false | absent | `Status.ts:858`–`:862`; triage test `:166`. |
-| checked-absent | false | true | absent | No-PR and truncated-output constructors at `Status.ts:926`–`:937`. |
-| checked-present-draft-unknown | true | true | absent | Legacy rendering at `test/yeet-status-triage.test.ts:153`–`:161`, check summaries at `:458`/`:471`, actual artifact writer at `test/yeet-artifact-writers.test.ts:355`–`:377`. |
-| checked-present-not-draft | true | true | false | Live constructor at `Status.ts:972`–`:976`; `openRemote` fixture at `test/yeet-status-triage.test.ts:93`. |
-| checked-present-draft | true | true | true | Same live constructor; explicit draft test at `test/yeet-status-triage.test.ts:358`–`:374`. |
+| available | checked | isDraft | Result / phase |
+| --- | --- | --- | --- |
+| false | false | absent | skipped |
+| false | false | false | reject |
+| false | false | true | reject |
+| false | true | absent | checked-absent |
+| false | true | false | reject |
+| false | true | true | reject |
+| true | false | absent | reject |
+| true | false | false | reject |
+| true | false | true | reject |
+| true | true | absent | checked-present-draft-unknown |
+| true | true | false | checked-present-not-draft |
+| true | true | true | checked-present-draft |
 
-Seven unsupported triples are available/unchecked with any draft state,
-plus each unavailable phase with either Boolean draft value. E1 is the
-explicit writer family. E4 is availability implying checked and a produced
-draft value implying checked-present. Legacy unknown draft is an exercised
-operation, not merely a permissive arbitrary schema value.
-
-`deriveYeetMergeReady` reads `remote.isDraft === false` at `Status.ts:1117`.
-Unknown and true draft both fail `notDraft`, but remain different encoded
-states. Not-draft does not mean merge-ready: all other criteria still run.
-The bounded audit establishes no relations between phase and the 22 other
-payload fields.
+Corroborating writer family: Status.ts:1197 (skipped), :1265 and :1272 (checked absent),
+:1310 (checked present with view.isDraft). E4 is the explicit owner contract in
+DECISIONS, corroborated by readiness :1473-1478 and rendering :1686.
+Those readers and producers alone were insufficient to exclude historical schema
+inputs. E1 exclusive-write qualification is not claimed: the skipped constructor
+does not establish mutual exclusion. The current exported codec accepts all
+twelve tuples; the owner ruling supplies the normative E4 phase implications.
 
 # Target schema
 
-Define the schema-owned payload-free domain:
+Retain ownership in the existing tooling CLI Status module. No new package,
+shared-kernel promotion or general-purpose schema concept is needed.
+Define annotated `YeetStatusRemotePhase = LiteralKit([...])` with exactly the
+five accepted labels above, no inline `as const`, and derived same-name type.
+Use the existing canonical LiteralKit primitive; namespace-first imports apply
+when consuming multi-member @beep/schema concepts. Preserve kit helpers after
+annotation using its supported primitive rather than hand-copying statics.
 
-```ts
-const YeetStatusRemotePhase = LiteralKit([
-  "skipped",
-  "checked-absent",
-  "checked-present-draft-unknown",
-  "checked-present-not-draft",
-  "checked-present-draft",
-])
-```
+A private annotated S.Class `YeetStatusRemoteValue` owns phase plus the exact
+28 sibling fields. All three old selected axes disappear from decoded business
+state. No available/checked/isDraft getters, duplicate draft Option, redundant
+booleans or compatibility domain alias remain. The five phases require no
+distinct sibling payloads, so a LiteralKit field is sufficient.
 
-Annotate the kit and expose its same-name derived type. A private annotated
-`S.Class` named `YeetStatusRemoteValue` contains required `phase` plus exactly
-the 22 sibling fields above. Remove **all three** selected axes from the
-decoded model. Do not retain an independent optional isDraft, available,
-checked, draft Option, cached predicate or compatibility getter beside phase.
-The five values establish no different payload requirements, so a LiteralKit
-field is appropriate rather than five tagged payload classes.
+A private encoded-boundary S.Class `YeetStatusRemoteEncoded` retains the exact
+31-field legacy layout, schemas, order and defaults. Reuse a single private
+sibling field definition when deriving both classes; do not fork sibling shapes.
+The business constructor is Value, not the legacy flat class.
 
-Retain a private encoded-boundary class `YeetStatusRemoteEncoded` with the
-exact current 25 fields, order, codecs and defaults. It is not the business
-constructor. Define one schema-owned phase transformation: fallible decode
-accepts exactly the five table rows and builds `YeetStatusRemoteValue`;
-encode uses `YeetStatusRemotePhase.$match` for the exact inverse. Both
-copy all non-selected siblings without stronger validation or normalization.
-Explicitly exclude the replaced keys instead of spreading a whole old value
-into the new model or a whole phase model into the encoded representation.
+The exported `YeetStatusRemote` becomes a compatibility codec and same-name Type:
+`YeetStatusRemoteEncoded.pipe(S.decodeTo(S.toType(YeetStatusRemoteValue), mapping))`.
+S.toType is required because the mapping already receives decoded Option values;
+its target must not attempt OptionFromOptionalKey a second time. A schema-owned
+fallible decode maps the five tuples and rejects the other seven through
+SchemaGetter.transformEffect and SchemaIssue.InvalidValue. Encode uses
+SchemaGetter.transform and kit-derived matching for the total inverse. Both
+explicitly omit replaced fields rather than spreading legacy axes into Value
+or leaking phase into output. Defaulting and scalar validation remain at the
+legacy boundary before phase selection. Missing required flags, explicit null,
+and explicit undefined retain the exact existing field validation behavior.
 
-Export the codec `YeetStatusRemote` and its same-name Type alias:
+Current Effect reference: Schema.ts:2500 (toType), :5439-5470 (decodeTo),
+SchemaGetter.ts:742 (transformEffect), :702 (transform), SchemaIssue.ts:747
+(InvalidValue). **transformOrFail from the historical design is absent from
+the current SchemaGetter API** and must not be reused. The current API accepts
+Effect success/failure getters with ParseOptions. This is inspected API evidence,
+not a compiled or executed implementation proof.
 
-```text
-YeetStatusRemoteEncoded
-  .pipe(S.decodeTo(S.toType(YeetStatusRemoteValue), remotePhaseTransformation))
-```
+Derive a second private boundary codec from S.toType(YeetStatusRemoteEncoded)
+through the exact same mapping to S.toType(Value). Its Encoded is the old decoded
+remote with runtime Options; it restores generic CLI JSON input without changing
+artifact output. A narrow internal printYeetStatusCommandJson encodes only
+snapshot.remote with that codec, reconstructs the snapshot with remote at its
+existing property position, and delegates to the unchanged printCommandJson.
+Do not replace CLI output with whole-snapshot artifact encoding. The separate
+readiness design may also adapt mergeReady: when both owners land, compose both
+bounded projections once in this printer, without serializing either twice.
 
-`S.toType` is intentional: the transformation receives already decoded
-`unresolvedThreads` and `headSha` Options. Its target Encoded must be the
-Value class's Type, not an optional-key representation that would require a
-second Option conversion. Use `SchemaGetter.transformOrFail` for decode,
-returning `SchemaIssue.InvalidValue` for unsupported triples, and
-`SchemaGetter.transform` for the total five-phase inverse. Legacy scalar/key
-validation runs before tuple selection. Exact optional-key input does not
-silently accept explicit undefined or null as absence.
-
-The generic command JSON boundary needs the same inverse at the *old decoded
-value* level. Derive a second private boundary codec by replacing only the
-source of this same transformation with `S.toType(YeetStatusRemoteEncoded)`.
-Its Type remains the phase model; its Encoded is the old remote value with
-runtime Options. This is a supported separate output contract, not a second
-truth table or domain alias. An internal `printYeetStatusCommandJson` export
-used by Handler encodes `snapshot.remote` through this boundary, replaces
-only remote at its existing snapshot property position, and calls the
-existing `printCommandJson`. All other snapshot values and generic
-serialization behavior remain unchanged. Do not silently route the whole
-CLI value through `YeetStatusSnapshotJson`, which would also change existing
-Option representations on that output.
-
-Migrate every legacy `.make` call; do not preserve or reattach the old flat
-constructor API on the codec. Source producers use private Value construction;
-public examples and external test fixtures use Effect/Result decoding of
-legitimate encoded input. No `.fields` consumer was found, and no old class
-alias is needed. Export the phase kit/type through the existing Yeet facade;
-keep Value/encoded classes and transformation private. Export the command
-printer only for its actual Handler and focused test consumers.
-
-Exact local Effect v4 basis: `.repos/effect/packages/effect/src/Schema.ts:2490`
-defines Type-side extraction; `:5366`–`:5385` defines source-Type to
-target-Encoded transformation; `SchemaGetter.ts:612` defines fallible getters;
-`SchemaIssue.ts:747` gives `InvalidValue(annotations, input, options)`.
-This composition is a design specification, not an executed prototype.
+Export phase kit/type through the existing Yeet facade so consumers and tests
+can name phases. Keep Value, Encoded and mapping private. Replace all public
+YeetStatusRemote.make examples/fixtures with legitimate Effect or Result decode;
+do not add an old-shape `.make` shim. Export the command printer only internally
+for Handler and the focused test facade when needed. All new exported symbols
+require the repository's titled Example/Details JSDoc and identity annotations.
 
 # Migration inventory
 
-| Surface | Required migration or preservation |
+| Current site | Required migration / preservation |
 | --- | --- |
-| `Status.ts:192`–`:237` | Add kit/Value/encoded schemas and shared bidirectional mapping; migrate example and remove all three decoded axes. |
-| `:245`–`:311` | Update snapshot examples; nest the compatibility codec; retain every snapshot field, version, mergeReady Option, gate defaults and JSON codec. |
-| `:858`–`:862` | Construct skipped through Value and preserve exact detail. |
-| `:926`–`:937` | Construct checked-absent for both nonzero-exit and truncated-output paths, preserving distinct detail strings. |
-| `:939`–`:998` | Keep GitHub decode, check partitions, thread pagination/triage, head binding and rerun collection. Required `view.isDraft` selects known-not-draft or known-draft; preserve all payloads/omissions. Live collection does not invent unknown draft. |
-| `:1006`–`:1049` | Keep sibling-based readiness helpers: required counts, merge/review status, thread count and closeout/head binding. |
-| `:1108`–`:1127` | Three checked-present phases enter readiness derivation; skipped/checked-absent return None. Only checked-present-not-draft yields notDraft true. Preserve dual call forms and criterion order. |
-| `:1130`–`:1163` | Retain command priority: verdict repair, dirty-worktree publish, checked-absent PR creation, checked-present remote guidance, fallback verify/remote. Unknown draft reaches remote guidance. |
-| `:1181`–`:1219` | Collect the new decoded snapshot and derive nextCommand/mergeReady without changing outer fields. |
-| `:1231`–`:1240` | Only skipped short-circuits to checks-not-checked. Every checked phase keeps required-partition, then legacy-unsplit, then missing-count precedence. Do not suppress counts on checked-absent. |
-| `:1281`–`:1297` | Present phases render threads; others render not-checked. Preserve nonempty structured-triage preference and legacy-string fallback. |
-| `:1349`–`:1368` | Only skipped prints remote-not-checked; all checked phases print original detail. Preserve line order, gate/readiness and rerun text. |
-| `:1386`–`:1399` | Preserve artifact schema encoding, error mapping, path/directory behavior and one trailing newline. |
-| `:1416`–`:1430` | Preserve dual `yeetStatusNextCommandForTesting` with new decoded type. |
-| `Handler.ts:1248`–`:1253` | Replace direct generic printing of the phase snapshot with the bounded command printer; retain YeetCommandError context and injected/chunked stdout. |
-| `Handler.ts:1055`, `:1069`–`:1108`, `:1217` | Preserve status writing/rendering, mergeReady propagation, rerun suffix and unresolved-review enforcement. Sibling readers must not gain phase-based filtering. |
-| `MonitorLoop.ts:964`–`:1007` | Preserve snapshot write/render, merged/closed detection from remote.state, headSha and failed-check rerun planning. Phase is not PR lifecycle state. |
-| `src/commands/Yeet/index.ts:21`–`:44` | Preserve codec/snapshot/readiness/render exports and add phase kit/type. Do not export boundary or Value classes. |
-| `src/test/Yeet.test-kit.ts:8` | Existing facade forwarding carries public exports; explicitly expose the command printer only if needed for focused boundary tests. Tests remain package-alias imports. |
+| Status.ts:235-281 | Replace public class and example with the codec, phase and private models. |
+| Status.ts:289-359 | Update snapshot example; retain all outer fields, timeline, defaults, version and JSON codec. |
+| Status.ts:1197 | Construct skipped Value, preserving detail. |
+| Status.ts:1252-1346 | Construct checked-absent on each no-PR/truncated branch; checked-present known draft from view; preserve GitHub decode, check summarization, full triage including follow-ups/acknowledgements, head binding, rerun guidance and omissions. |
+| Status.ts:1360-1410 | Preserve independent checks, merge/review policy, outstanding count and closeout/head binding. |
+| Status.ts:1472-1489 | Present-phase membership replaces flags; only not-draft phase supplies notDraft=true. Preserve dual forms and all independent criteria. |
+| Status.ts:1495-1551 | Preserve thread-only-blocker rule and command priority: repair, dirty publish, checked-absent PR creation, present remote guidance, fallback. |
+| Status.ts:1571-1609 | Collect snapshot with phase model; retain next-command and readiness computation and all outer fields. |
+| Status.ts:1619-1628 | Only skipped short-circuits checks rendering; checked-absent may still have count payloads. Preserve required/legacy/no-count precedence. |
+| Status.ts:1685-1716 | Present-phase membership replaces compound guard; preserve structured unresolved/legacy fallback and separate follow-up and acknowledgement sections. |
+| Status.ts:1768-1788 | Replace checked conditional by skipped predicate; all checked phases display original detail. Preserve exact line order. |
+| Status.ts:1806-1819 | Retain artifact error mapping, path, writing and newline. |
+| Status.ts:1875-1888 | Retain dual test helper with migrated type. |
+| Handler.ts:1089-1092,1126-1145 | Preserve rerun suffix and count-based unresolved+follow-up enforcement; acknowledgement is advisory; payload lists alone cannot waive counts. |
+| Handler.ts:1408-1426 | Keep artifact write first, human comment replay only outside JSON, and use narrow JSON projector at :1421. Keep current YeetCommandError message. |
+| MonitorLoop.ts:1042-1050 | Convert draft using phase kit: true only for checked-present-draft. All other legal phases retain existing local false fallback, including unknown. |
+| MonitorLoop.ts:1085-1109,1127,1170-1203,1293-1337,1373-1377,1403-1440 | Preserve checks/labels admission, registered census, head identity, lifecycle terminals, announcement and rerun policy. Do not gate independent sibling observations by phase. |
+| src/commands/Yeet/index.ts:33; src/test/Yeet.test-kit.ts | Preserve facade and codec type; expose phase and focused printer through lawful existing paths. |
+| test/yeet-status-triage.test.ts | Migrate openRemote :86-119 and make fixtures :160,:181,:201,:214,:283,:350,:474,:593,:615,:634,:692,:822,:835, including unknown-draft rendering and readiness. |
+| test/yeet-artifact-writers.test.ts:354 | Migrate whole-snapshot fixture and extend exact artifact coverage across all phases. |
+| test/yeet.test.ts:168-171,2533-2604 | Keep decode/encode helpers; replace make fixtures; retain full codecs and rendering/command coverage. |
+| test/yeet-monitor-ready.test.ts:60-116 | Migrate remote fixture; preserve admission, check census and readiness behavior. |
+| test/yeet-settle.test.ts:71,186-214,903-920,959,1168 | Migrate decoding/fixtures and updates; preserve arbitrary independent sibling updates and settling. |
 
-Graft direct symbol search, Status API/field search, source-wide snapshot
-search and Handler/MonitorLoop field searches found these consumers. A
-complementary repository source search found no additional app consumer or
-remote `.fields` use. The empty class caller graph was not treated as proof
-of no consumers. Generic command printing was found by following the parent
-snapshot.
+Search combined exhaustive symbol and selected-field queries, caller closure,
+parent snapshot consumers, source-wide field confirmation and facade inspection.
+The empty class caller graph is not evidence of no consumers. No remote.fields
+consumer or additional source selected-axis consumer was found. Refresh this
+inventory if any source hash changes before implementation.
 
 # Guard-deletion accounting
 
-| Old obligation | Concrete deletion/replacement |
-| --- | --- |
-| Independent fields at `Status.ts:208`, `:209`, `:213`. | Remove all three from Value; one LiteralKit phase carries five states. Legacy axes exist only in actual boundary schemas. |
-| Four constructions at `:858`, `:926`, `:933`, `:972`. | Delete available/checked assignments and copied draft field; select one phase. |
-| `!remote.checked || !remote.available` at `:1112` and `:1282`. | Delete both compound implication guards; use kit-derived membership in the three present phases. |
-| `remote.isDraft === false` at `:1117`. | Remove the redundant draft read; derive notDraft exclusively from checked-present-not-draft. Unknown never passes. |
-| Reconstruction at `:1157`–`:1158`. | Replace both Boolean conditions with phase matching, retaining command priority. |
-| `!remote.checked` at `:1232` and checked ternary at `:1358`. | Replace both with the skipped phase guard; keep independent payload checks. |
-
-The boundary contains the sole five-tuple compatibility validation. Preserve
-process/truncation handling, count/review fallbacks, head binding, criterion
-ordering and merge-ready checks: these represent independent facts.
+- Remove available, checked and isDraft from Value; they exist only in actual
+  encoded/legacy-runtime boundaries, whose mapping is the sole tuple validator.
+- Delete four producer families' paired flag assignments and live draft copy;
+  choose one phase, keeping every independent sibling.
+- Delete Status.ts:1473 and :1686 compound availability/checking guards; replace
+  with derived present-phase membership.
+- Delete :1478 draft-false comparison; use not-draft phase. Unknown still fails.
+- Replace :1545/:1546 reconstruction with checked-absent/present membership,
+  retaining ordering and exact guidance.
+- Replace :1620 and :1778 checked observations with skipped membership.
+- Replace MonitorLoop.ts:1047 optional draft fallback with known-draft membership.
+  This is consumer-specific behavior, not global unknown-to-false normalization.
+- No credit for deleting payload checks, defaulting, review count/array fallback,
+  current-head tests, first-criterion ordering, census binding, process errors,
+  admission policy, or settlement conditions: those represent independent facts.
 
 # Encoded-side impact
 
-Artifacts retain required encoded available/checked, optional isDraft, all
-22 sibling codecs/defaults, current property order and `yeet-status/v1`.
-Phase never appears in remote JSON. Unknown draft is omitted, not false or
-null. The seven unsupported triples reject with a schema issue; do not
-normalize them or strip supplied known keys. Missing required flags still
-fail; exact optional-key validation remains.
+All five supported tuples retain legacy encoding: required available/checked and
+omitted/false/true draft exactly. Phase never leaks. Seven tuples now reject by
+explicit ruling, with no silent normalization or stripping supplied known keys.
+All 28 siblings remain legal in all five phases as before; preserve negative and
+fractional finite counts, zeros/absence, empty strings/arrays, unknown enum-like
+strings, nested threads and None versus Some(empty array). No payload constraint
+follows merely from observed producer output.
 
-No new payload ownership is inferred. All siblings remain accepted on any
-of the five phases where the old schema accepted them. Checked-absent with
-supplied counts still follows the old renderer; thread/rerun/state payloads
-are not stripped. Preserve None versus Some(empty array), absent versus zero,
-empty strings, finite numeric domains, full thread records and head hashes.
-
-Command output is a separate established serializer:
-`Handler.ts:1251` -> `src/internal/cli/Json.ts:296` -> unknown-value JSON.
-Its adapter restores the old decoded remote through the shared inverse and
-then uses the same printer. Phase cannot leak; old runtime Option
-representations remain on this boundary, and outer snapshot serialization
-is unchanged. Aligning generic output with artifact encoding would be
-separate work; this migration must not silently do it. Preserve
-`CommandJsonOutput` injection, bounded UTF-8 output, compact JSON and one
-trailing newline.
-
-Compare pre/post canonical remote encodings, full artifact bytes and captured
-full CLI JSON bytes independently. Preserve errors, artifact location,
-snapshot version, test-kit exports and public error channels. No artifact
-rewrite, version bump, dependency change or GitHub request change is needed.
+Keep `yeet-status/v1`, all outer snapshot fields including timeline, JSON key
+order and newline behavior. Artifact Options encode through the schema. Generic
+CLI output receives restored runtime Options through the shared inverse and
+keeps current unknown-value JSON semantics, output injection and chunk handling.
+Preserve existing field defaults rather than promising omission where the old
+codec already materialized defaults. Compare against the old encoder's canonical
+output, not identity on noncanonical input bytes. No artifact rewrite or version
+bump is required for this owner-authorized restriction.
 
 # Test impact
 
-1. Exercise all 12 tuples through the public codec: five exact round trips
-   and seven rejections. Assert phase, exact omission/false/true, no decoded
-   legacy axes, no encoded phase and no new defaults. Include explicit
-   undefined/null and missing-required-key failures where old schemas reject.
-2. Round-trip minimal/full sibling payloads, all check partitions, legacy
-   counts, optional zero/empty strings, None/Some(empty and populated triage),
-   all thread fields and headSha. Retain unusual accepted phase/payload
-   combinations; do not restrict beyond the audited triple.
-3. Migrate `test/yeet-status-triage.test.ts:80`–`:113`, `:153`, `:166`,
-   `:176`, `:295`, `:344`, `:358`, `:458`, `:471` and its JSON test.
-   Preserve legacy unknown-draft rendering. With every other readiness
-   criterion satisfied, false may pass while unknown/true fail not-draft;
-   skipped/checked-absent yield None. Retain first-blocker order, exact-head
-   closeout binding, dual calls, command priority and checked-absent counts.
-4. Migrate `test/yeet.test.ts:154`, `:157`, `:2272`, `:2304`, `:2336`,
-   `:2343`, retaining codec helpers, repair guidance, dirty-worktree publish,
-   threads and rerun behavior. Use supported codec decoding for fixtures;
-   do not expose Value merely to preserve old `.make` calls.
-5. Extend real `test/yeet-artifact-writers.test.ts:355`–`:377` fixtures to
-   all five phases. Compare bytes/newline/version and decode with
-   `YeetStatusSnapshotJson`; retain no-runtime-Option artifact assertions.
-6. Capture `CommandJsonOutput` on the actual status-JSON path before/after.
-   Compare exact bytes for all five phases, Option-rich remote and all outer
-   fields, including payload above 64 KiB. Artifact tests do not prove generic
-   CLI compatibility. Keep Handler and monitor sibling/terminal/rerun tests
-   without live GitHub operations.
-
-Derive phase guards/arbitraries/equivalence from kit/Value schemas. Tests
-import `@beep/repo-cli/test/Yeet` or the existing JSON helper alias. At
-implementation handoff run full `bun run beep quality package-verify @beep/repo-cli`
-and the packet's Yeet proof workflow. This design-only pass runs no product
-or package tests.
+1. Enumerate all twelve tuples through public decode: five accept and round-trip;
+   seven reject. Verify phase, absence versus false/true, no decoded old axes,
+   no encoded phase, missing flags and existing explicit undefined/null behavior.
+2. Derive Value arbitraries/equivalence from production schemas. Round-trip minimal
+   and maximal sibling data across every phase, checks/labels defaults, all four
+   Options, None and Some(empty/nonempty), negative/fractional/zero counts,
+   empty strings, legacy arrays, nested optional thread fields and timeline.
+3. Preserve readiness: skipped/checked-absent yield None; unknown and draft fail
+   notDraft; only explicit non-draft can pass that criterion. Preserve all other
+   criteria, criterion order, head binding and thread-follow-up gating.
+4. Preserve Monitor admission: unknown draft and absent remote yield local false,
+   draft=true yields true, with labels/changed paths unchanged. Independently test
+   settled-check census, absent head, merged/closed terminal and rerun behavior.
+5. Capture actual artifact bytes and real Handler status JSON bytes independently
+   for all phases with rich Options and outer fields. Retain generic stdout
+   injection, payload above64KiB, compact serialization and exactly one newline.
+   Generic output must never be justified by artifact-only tests.
+6. Preserve rendering and command priority including checked-absent count payloads,
+   follow-up sections versus acknowledgements, thread-only remediation guidance,
+   dirty-worktree precedence, and non-JSON comment replay without JSON pollution.
+7. After GATE2 and authorized implementation, run owning CLI checks/tests,
+   `bun run beep lint schema-first`, exported-doc `bun run docgen:local`, and
+   `bun run beep quality package-verify @beep/repo-cli`, followed by campaign Yeet
+   proof. No package tests were run for this design-only proposal.
 
 # Risk
 
-Land as one Tier 2 singleton under this stable id after fresh P3 review of
-the independently confirmed expanded triple. The old three-phase design is
-archived byte-for-byte; its old review cannot approve the new draft axis.
-This lane changes no source, inventory or lifecycle status.
-
-Principal risks are treating missing draft as false, retaining an independent
-decoded draft axis, dropping sibling payloads and leaking phase through
-untyped CLI JSON. Both output codecs share one inverse, with separate exact
-byte fixtures required before apply. This is not the separate
-`yeet-merge-ready-verdict` migration: preserve that carrier's codec/criteria
-and change only how notDraft is derived here. Refresh citations/consumers
-when source moves.
+Tier2 singleton after fresh independent P3. Existing historical reviews cannot
+approve current fields, Effect API, or the newly authorized public restriction.
+Main risks are globally treating unknown draft as false, loss of the four new
+triage fields, using outdated transformOrFail, double-converting Options,
+leaking phase into generic JSON, or narrowing independent siblings. Acceptance
+requires current-source finite proof and independent whole-boundary fixtures.
+The separate readiness model remains a separate owner; integrate its bounded
+JSON projection once if it lands first. No dependency on unapproved source work
+is assumed. Re-audit at the eventual implementation head.

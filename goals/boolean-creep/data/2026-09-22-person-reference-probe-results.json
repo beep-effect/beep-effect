@@ -1,0 +1,113 @@
+{
+  "scope": "Extracted actual collect_references body with synthetic detector dependencies; no media or models executed",
+  "representable": 28,
+  "legal": 7,
+  "results": [
+    {
+      "case": "unreadable",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 0,
+        "reason": "unreadable-image"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n"
+    },
+    {
+      "case": "aligner-error",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 0,
+        "reason": "aligner-confidence-failed"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n[photo-face] aligner-confidence-failed: reference.jpg: fixture\n"
+    },
+    {
+      "case": "aligner-face",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 0,
+        "reason": "aligner-confidence-failed"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n[photo-face] aligner-confidence-failed: reference.jpg: rejected 1/1 detected faces; minimum=0.100000\n"
+    },
+    {
+      "case": "no-face",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 0,
+        "reason": "no-face"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n"
+    },
+    {
+      "case": "multiple",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 2,
+        "reason": "multiple-faces"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n"
+    },
+    {
+      "case": "missing",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 1,
+        "detectionScore": 0.731235,
+        "reason": "missing-embedding"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n"
+    },
+    {
+      "case": "invalid",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": false,
+        "faceCount": 1,
+        "detectionScore": 0.731235,
+        "reason": "invalid-embedding"
+      },
+      "embeddingCount": 0,
+      "names": [],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n"
+    },
+    {
+      "case": "accepted",
+      "row": {
+        "sourceName": "reference.jpg",
+        "sourcePath": "fixture/reference.jpg",
+        "accepted": true,
+        "faceCount": 1,
+        "detectionScore": 0.731235
+      },
+      "embeddingCount": 1,
+      "names": ["reference.jpg"],
+      "stderr": "[photo-face] reference 1/1: reference.jpg\n"
+    }
+  ]
+}

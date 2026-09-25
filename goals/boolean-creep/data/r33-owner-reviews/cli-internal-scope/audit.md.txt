@@ -1,0 +1,28 @@
+# CLI internal complete-owner scope audit bindings
+
+No runtime or P3 credit; disposition in disposition.md.
+
+## Inputs
+
+- `AGENTS.md`: `e72d3febf2eea6ef6cbd29300ebde44775560d4237506bb27492a0ac407ca9a9`
+- `goals/boolean-creep/SPEC.md`: `9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087`
+- `goals/boolean-creep/DECISIONS.md`: `af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084`
+- `goals/boolean-creep/data/inventory.jsonl`: `b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c`
+- `goals/boolean-creep/designs/r28-cli-internal-root-tmpfs-discovered-classified-skip.md`: `b12f8348c2ed6fb17f159066057328204a925d18c62b4a76e2c26b5e6bc36bab`
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-internal-root.jsonl`: `97d9d2ba4520eec7992fda9f87e861a57ef571c375084512445430c9b853702a`
+- `goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-internal-root.execution.json`: `38dfca5e3079501811e77478aec9bdc627ef32e88a567485ab101550ba124467`
+- `goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json`: `b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c`
+- `goals/boolean-creep/data/r32-parent-integration-2026-09-25.json`: `3fdc0858076bbb8ef5c9697cdad536f66d985200224dfe9a1c48860410e88c22`
+- `packages/tooling/tool/cli/src/internal/cli/FsGuards.ts`: `535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39`
+- `packages/tooling/tool/cli/src/internal/github/GhSchema.ts`: `e6bef695d72de8457ab396b9038b55a96ab3aad0f9a1094506b331198ba4eb3e`
+- `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts`: `3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125`
+- `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts`: `bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08`
+
+## Outputs
+
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/original-rows.jsonl`: `a585a4337d20459315a075abedc1dae1492d95eaf466761d46dc49a84260925f`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/original-discovered-candidate-design.md`: `b12f8348c2ed6fb17f159066057328204a925d18c62b4a76e2c26b5e6bc36bab`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/original-r33-raw-rows.jsonl`: `97d9d2ba4520eec7992fda9f87e861a57ef571c375084512445430c9b853702a`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/scope-proposal.json`: `c5e21d41531adc91aca716605bc4de757a84634a7ac168af509b00ce604a2491`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/proposed-row.json`: `38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed`
+- Private `~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/disposition.md`: `6f7b1c9081102013edf600136787dc496c618139f208b2ee79f3c169f6ddbf80`

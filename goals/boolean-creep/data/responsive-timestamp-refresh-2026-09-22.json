@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "boolean-creep-bounded-design-refresh/v1",
+  "date": "2026-09-22",
+  "sourceSha": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-responsive-timestamp-refresh.jsonl",
+    "sha256": "9c4eaaf326b781e0b6239b197098e82e25aa394c70da15225f5a2e4d8704c8d3"
+  },
+  "inventoryAfterSha256": "41bd12478546af93581a4ef6d1dc3493aae50930d49c3fcb254d43845f903171",
+  "changedIds": [
+    "html-img-sizes-disposition",
+    "html-link-imagesizes-disposition",
+    "r3-arch-ecosystem-internal-pg-timestamp-timezone"
+  ],
+  "unchangedRows": 750,
+  "qualificationChanged": false,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 127,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/html-img-sizes-disposition.md",
+      "sha256": "6b41d50342b07d7bfc90205e1a2c8e666bb524fbdf1fff3bba347de2d8315ec2"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-html-img-sizes-disposition.md",
+      "sha256": "5408ccaf6bd2641522aedc4585cc582c3d70209a5b05f72927ffc50b699f20c7"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-html-img-sizes-disposition.md",
+      "sha256": "23ded1598ee230897597475fab3ba8d16e9af425156248740fc9a0cf1c9a952a"
+    },
+    {
+      "file": "designs/html-link-imagesizes-disposition.md",
+      "sha256": "cb58e03337163903f6b537916ebc2ab409bad309de055f176b08b6dede17e85f"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-html-link-imagesizes-disposition.md",
+      "sha256": "7743dfae911f4ea3899c7e0ee413a54569bc28c91a919908bfc24e1aa900f556"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-html-link-imagesizes-disposition.md",
+      "sha256": "8d2e3b006e3aef0995b4046fb629a872fb1d4366ac7fb930fd4cf41eb295311e"
+    },
+    {
+      "file": "designs/r3-arch-ecosystem-internal-pg-timestamp-timezone.md",
+      "sha256": "3d327f8b92284bfd082ec3d299b136b5b231e83fe9f7d116b697958b7560f0f0"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-r3-arch-ecosystem-internal-pg-timestamp-timezone.md",
+      "sha256": "841575a18d3bb7144d3763fcc89fe5b21f7d26f91fb0f424e3b3103cb64955bf"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r3-arch-ecosystem-internal-pg-timestamp-timezone.md",
+      "sha256": "4a84970b2449fdbd2db7423a16381104b48edb034bb4c0d5becc9b87cdfe7fd4"
+    },
+    {
+      "file": "data/2026-09-22-html-img-probe.md",
+      "sha256": "e24d6b369024ce16c9c59863b49cd5684f9952642c0c54870bda8cf7e0b58425"
+    },
+    {
+      "file": "data/2026-09-22-html-img-probe.rerun.stdout.json",
+      "sha256": "4c9d78d406ccad4ab6d62cbd964b22d8434959b759a2a53a7405735153184124"
+    },
+    {
+      "file": "data/2026-09-22-html-link-probe.md",
+      "sha256": "b358d12907634129647959078ce0d11ba3bb87b4aa94fe7f56007bbae8967774"
+    },
+    {
+      "file": "data/2026-09-22-html-link-probe.json",
+      "sha256": "f04925b2376c6836a5068f9bfc6dc63f7d5d620acd0fe763848a958eab5e60a3"
+    },
+    {
+      "file": "data/2026-09-22-pg-timestamp-behavior-probe.json",
+      "sha256": "689f53520fd750e2cff8378f8df928104931ca87dabda33c5de00a0244b17890"
+    }
+  ],
+  "savedSubset": {
+    "sourceReceipt": "data/html-design-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "c3143e1b6b5a71da30ec8a085c9dc8232a6c9b463212543618aeeddaab693d94",
+    "previousPendingCount": 38,
+    "completedIds": [
+      "html-img-sizes-disposition",
+      "html-link-imagesizes-disposition",
+      "r3-arch-ecosystem-internal-pg-timestamp-timezone"
+    ],
+    "pendingCount": 35,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "contained-file-read-outcome",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "files-worker-score-thresholds",
+      "files-person-reference-disposition",
+      "m365-tool-error-retryability",
+      "vault-sync-push-failure-disposition",
+      "receipt-fallback-draft-occupancy",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "meaning": "Saved September14 subset only; whole current-source backlog remains uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "parentIntegration": {
+    "adjustments": [
+      "Normalized timestamp Encoded-side impact heading to validator contract; semantic text unchanged.",
+      "Published HTML probes as Markdown code blocks; link absolute imports normalized to root-relative paths and effect/Option. Both published probes rerun through bun stdin and outputs compared equal to saved JSON."
+    ],
+    "validation": [
+      "inventory: 753 unique records",
+      "design coverage: 145 qualified IDs",
+      "reflection-artifacts: 0 blocking, 0 advisory",
+      "receipt SHA256 bindings, GOAL length, manifest JSON and diff whitespace passed"
+    ],
+    "probes": {
+      "imgAstFixtures": 40,
+      "linkAstFixtures": 32,
+      "timestampGuardCombinations": 8,
+      "timestampPublicOptionCases": 9
+    },
+    "limits": "Baseline probes only; no implementation, package verification, new census, independent P3 or GATE 2 credit."
+  },
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-read-receipt-m365-refresh.jsonl"
+}

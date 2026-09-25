@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "boolean-creep-owner-hold-reconciliation/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "historicalHold": {
+    "file": "data/r31-law-owner-holds.json",
+    "sha256": "7cbe7672b22d89925f48ece3f57b8175bc233bcdc22555af7379d9e6736857fa"
+  },
+  "decisionSnapshotIndex": {
+    "file": "data/decision-snapshot-index-2026-09-22.json",
+    "sha256": "8c98cb00df21bb846970b910f7fd20c5ac0ac473f6b373ed6961e3c4fe931d59"
+  },
+  "inventoryAtObservation": {
+    "file": "data/inventory.jsonl",
+    "sha256": "23e70595917673b3d8f708303e50b7f6adbb9b751b8a51a3270edc0e312f8e01"
+  },
+  "owners": [
+    {
+      "id": "id-citation-pincite-inherited",
+      "disposition": "qualified-design-admitted",
+      "status": "designed",
+      "cardinality": {
+        "representable": 8,
+        "legal": 5
+      },
+      "receipt": {
+        "file": "data/id-citation-admission-2026-09-22.json",
+        "sha256": "9ea1705c5f18cdf7e73f2cb62b822a55c8328e8e18f4f028ce651fd3a6a01dda"
+      },
+      "design": {
+        "file": "designs/id-citation-pincite-inherited.md",
+        "sha256": "f4c98640f24269503a10ca84916db9b35b44ed04d0b6ffe23b67406d2ecada9f"
+      },
+      "independentP3Approval": false
+    },
+    {
+      "id": "supra-citation-pincite-inherited",
+      "disposition": "qualified-design-admitted",
+      "status": "designed",
+      "cardinality": {
+        "representable": 8,
+        "legal": 5
+      },
+      "receipt": {
+        "file": "data/supra-shortform-admission-2026-09-22.json",
+        "sha256": "d06f68ca93f6b8345cc02e21100235492f28de4a5025f8f5b778ae9c1bfee00b"
+      },
+      "design": {
+        "file": "designs/supra-citation-pincite-inherited.md",
+        "sha256": "a4888213ed060f06c9de4a91d078a773b152d0a4079cc2fe9ee297ba4b809b16"
+      },
+      "independentP3Approval": false
+    },
+    {
+      "id": "short-form-case-citation-pincite-inherited",
+      "disposition": "qualified-design-admitted",
+      "status": "designed",
+      "cardinality": {
+        "representable": 8,
+        "legal": 5
+      },
+      "receipt": {
+        "file": "data/supra-shortform-admission-2026-09-22.json",
+        "sha256": "d06f68ca93f6b8345cc02e21100235492f28de4a5025f8f5b778ae9c1bfee00b"
+      },
+      "design": {
+        "file": "designs/short-form-case-citation-pincite-inherited.md",
+        "sha256": "e6b890fa8c189788f8f8edafe6003888c5cfd2e4e54af94482e9dcc955f1a441"
+      },
+      "independentP3Approval": false
+    },
+    {
+      "id": "constitutional-citation-preamble",
+      "disposition": "hold-contract-unresolved",
+      "inCanonicalInventory": false,
+      "remainingDecision": "May preamble Some(false) coexist with article or amendment, or must preamble be absent when either locator is present?",
+      "answered": false,
+      "nextAction": "Obtain owner ruling, then verify complete current-source owner and compatibility before qualification/design admission."
+    }
+  ],
+  "resolvedCount": 3,
+  "unresolvedCount": 1,
+  "r31Finalized": false,
+  "censusAdmissionGranted": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "meaning": "Current disposition index supplements the immutable historical hold; it is not controller finalization or launch admission."
+}

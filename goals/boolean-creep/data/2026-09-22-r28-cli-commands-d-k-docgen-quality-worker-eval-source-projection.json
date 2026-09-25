@@ -1,0 +1,50 @@
+[
+  {
+    "all": false,
+    "inputPresent": false,
+    "packagePresent": false,
+    "legal": false
+  },
+  {
+    "all": false,
+    "inputPresent": false,
+    "packagePresent": true,
+    "legal": true
+  },
+  {
+    "all": false,
+    "inputPresent": true,
+    "packagePresent": false,
+    "legal": true
+  },
+  {
+    "all": false,
+    "inputPresent": true,
+    "packagePresent": true,
+    "legal": false
+  },
+  {
+    "all": true,
+    "inputPresent": false,
+    "packagePresent": false,
+    "legal": true
+  },
+  {
+    "all": true,
+    "inputPresent": false,
+    "packagePresent": true,
+    "legal": false
+  },
+  {
+    "all": true,
+    "inputPresent": true,
+    "packagePresent": false,
+    "legal": false
+  },
+  {
+    "all": true,
+    "inputPresent": true,
+    "packagePresent": true,
+    "legal": false
+  }
+]

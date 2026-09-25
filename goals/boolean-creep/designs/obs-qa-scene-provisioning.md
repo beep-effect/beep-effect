@@ -1,62 +1,46 @@
-# Instance
+# OBS provisioning local alias — corrected P2 design
 
-- id: `obs-qa-scene-provisioning`
-- source: `7440cb8c4302ce64b87860069a464bafbf65f576`
-- corpus source: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/drivers/obs/src/Obs.service.ts:179`
-- symbol: `ensureQaScene`
-- members: `sceneExists`, `sceneCreated`, `existingSettings`, `inputCreated`
-- evidence: E1/E2/E3 at `Obs.service.ts:179-195,211-224` — scene creation is the inverse of scene existence, while input creation is exactly the absence of existing settings; the two provisioning axes are independent.
+Source HEAD32f111f3707a63168b68ed04516af800ecc3a66c/main339da1562a2ed52f73a0a693c176fc52cca9ccb6. Stable id obs-qa-scene-provisioning. Owner ensureQaScene, Obs.service.ts:172-226. Eligibility and exhaustive8/4table are in disposition.md and finite-table.json; source bindings in audit.json. This supersedes historical cross-owner16/4 and private D1; no implementation authorization/credit is implied.
 
-# Current shape
+## Current shape
 
-`ensureQaScene` reads `GetSceneList`, stores `sceneExists`, creates the requested scene only when it is false, and returns `sceneCreated: !sceneExists` (`Obs.service.ts:172-182,219-225`). It separately decodes `GetInputSettings` into `existingSettings: Option<ObsInputSettingsInfo>`, stores `inputCreated: O.isNone(existingSettings)`, branches on the boolean, matches the Option again to obtain settings, and returns the boolean (`Obs.service.ts:184-215,219-225`).
+sceneExists179 is a Boolean scene-list observation. existingSettings184 is Option<ObsInputSettingsInfo> from a separate global lookup, with only resource-not-found converted to None. inputCreated188 duplicates Option absence. Both Booleans coexist in this local scope; E3 qualifies the alias, while sceneExists is independent. inputAttached203 exists only in the Some branch. EnsureQaSceneResult.inputCreated/sceneCreated415-447 are separate independent receipt fields and remain unchanged.
 
-`EnsureQaSceneResult` is an exported decoded TypeScript class schema with independent `inputCreated` and `sceneCreated` receipts plus names and an optional restore token (`Obs.models.ts:387-447`). The sole production consumer reads only the names (`packages/tooling/tool/cli/src/commands/Qa/Record.ts:341-379`). Tests read both receipts at `test/Obs.service.test.ts:101-218`. No explicit result JSON encoder/decoder, persisted artifact, CLI receipt output, or external OBS protocol mapping exists.
+## Cardinality gap
 
-# Cardinality gap
+The complete local projection sceneExists × existingSettings presence × inputCreated represents eight tuples. Four are legal because inputCreated equals O.isNone(existingSettings); sceneExists remains independent. The exhaustive finite-table.json records all eight. sceneCreated belongs only to the returned owner, and branch-local inputAttached is excluded. The exported result Boolean pair independently retains all four combinations.
 
-The current full owner has two independent correlations. Treating Option presence as the input payload axis, the four binary axes represent 16 coarse tuples. Four are legal:
+## Target schema
 
-| sceneExists | sceneCreated | existingSettings | inputCreated | meaning |
-| --- | --- | --- | --- | --- |
-| true | false | Some | false | existing scene, existing input |
-| true | false | None | true | existing scene, newly created input |
-| false | true | Some | false | newly created scene, existing input |
-| false | true | None | true | newly created scene, newly created input |
+Keep the existing schema-defined ObsInputSettingsInfo payload and its Option as the sole local input-provisioning source. No new enum, stored phase, public schema or duplicate tag is needed (DECISIONS derived-source rider). Preserve sceneExists and its existing scene creation branch. Replace inputCreated/if(inputCreated) plus the later O.match with one O.match(existingSettings) that returns Effect<ObsInputSettingsInfo>:
 
-The scene values must be complements because the same observation controls `CreateScene` and is negated in the return. The input values must be complements because `inputCreated` is `O.isNone(existingSettings)`. Scene lookup and global-input lookup are separate OBS requests, so the two dispositions remain independent and all four cross-product rows are supported by the algorithm.
+- None: issue CreateInput with the exact existing request fields, then readInputSettings(request.inputName) and return the decoded settings.
+- Some(settings): perform the unchanged GetSceneItemList decode, inputAttached calculation and optional CreateSceneItem repair, then return the original settings.
 
-`inputAttached` at `Obs.service.ts:203-208` is not another sibling axis. It is computed only in the existing-input branch and distinguishes an input already attached to the target scene from one that needs `CreateSceneItem`. Combined true with `inputCreated` is uncomputed, not an impossible tuple in a simultaneous carrier.
+Bind the resulting required settings, derive restoreToken using the existing filtered lookup, and issue SetCurrentProgramScene at the same point. Construct the existing EnsureQaSceneResult with inputCreated: O.isNone(existingSettings), sceneCreated: !sceneExists and unchanged names/restoreToken. This inline projection belongs only to the returned receipt owner; do not reintroduce a local inputCreated alias or retain duplicate dispatch. Both result Booleans remain freely constructible exactly as today.
 
-# Target schema
+Effect reference verified locally: .repos/effect/packages/effect/src/Option.ts:344 and403 exposes isNone and match; use the actual repository Effect API when implementing. Existing schema source is retained rather than introducing a domain model for an already represented Option.
 
-Add one annotated `ObsProvisioningDisposition` LiteralKit with `already-present | created`. Replace `EnsureQaSceneResult.sceneCreated` and `.inputCreated` with independent `sceneDisposition` and `inputDisposition` fields of that shared literal type. Reusing a value vocabulary does not merge the independent scene and input facts.
+## Migration inventory
 
-In `ensureQaScene`, classify scene-list membership directly into `sceneDisposition` and match it to issue `CreateScene`. Match `existingSettings` once: the None arm creates the input, rereads its settings, and returns `{ disposition: "created", settings }`; the Some arm performs the existing attachment check and returns `{ disposition: "already-present", settings }`. Use a small internal tagged result for those two input arms because they carry the settings payload. Construct `EnsureQaSceneResult` with the two dispositions and derive `restoreToken` from the now-required settings. Do not retain boolean getters, aliases, or compatibility projections.
+- Obs.service.ts:179-182 scene branch retained;184-215 consolidate input handling into one Option match;217-225 preserve output and operation sequence.
+- Obs.models.ts:415-447 exported result unchanged, including schema defaults and optional restore token handling. No constructor/decoder narrowing, enum migration or compatibility codec.
+- ObsProtocol models and protocol requests remain external wire contracts unchanged; readInputSettings166-169 decoding/error behavior retained.
+- packages/tooling/tool/cli/src/commands/Qa/Record.ts:350 consumer calls ensureQaScene and reads names; no migration required.
+- packages/drivers/obs/test/Obs.service.test.ts:101-218 existing receipt assertions and request observations remain valid; extend meaningful mixed-case/error-order coverage only during implementation.
 
-# Migration inventory
+## Guard-deletion accounting
 
-- `packages/drivers/obs/src/Obs.models.ts:387-447` — define/export the annotated disposition LiteralKit, replace both result booleans with `sceneDisposition` and `inputDisposition`, and update the example and descriptions.
-- `packages/drivers/obs/src/Obs.service.ts:172-182` — replace `sceneExists` and its negated branch with the scene disposition carried through to the result.
-- `Obs.service.ts:184-215` — remove `inputCreated`, match `existingSettings` once into created/existing payload cases, preserve `CreateInput`, attachment repair, and the new-input settings reread.
-- `Obs.service.ts:217-225` — preserve `SetCurrentProgramScene`, result field ordering conventions, names, and restore token; return both literal dispositions.
-- `packages/tooling/tool/cli/src/commands/Qa/Record.ts:341-379` — no behavioral change; its name-only reads remain valid.
-- `packages/drivers/obs/test/Obs.service.test.ts:101-218` — migrate receipt assertions to dispositions and add both mixed scene/input cases.
-- Package docs generated from the changed JSDoc update through the normal docgen path during implementation; do not hand-edit generated files.
+Delete local inputCreated188, its if/else dispatch189-209 and the second settings recovery match211-214. One Option match expresses the same behavior; retain branch-local attachment Boolean and all error handling. Preserve the output receipt projection and independent scene branch rather than replacing independent facts with arbitrary literals.
 
-# Guard-deletion accounting
+## Encoded-side impact
 
-Delete `sceneExists`, `if (!sceneExists)`, `sceneCreated: !sceneExists`, `inputCreated`, `if (inputCreated)`, the second `O.match(existingSettings)` used only to recover the payload after branching on its derived bit, and both decoded boolean fields. Replace them with literal/tagged case matches. Do not add boolean getters or deprecated aliases. Keep branch-local `inputAttached`, because it controls a real attachment repair within the existing-input case and has no correlated sibling field.
+Tier 1 private refactor with internal exposure. No persisted, wire, or decoded public change. Preserve EnsureQaSceneResult and its freely constructible independent Boolean receipts. No compatibility codec or public schema migration is required.
 
-# Encoded-side impact
+## Test impact
 
-None. This is an atomic decoded TypeScript migration authorized by the execution rider in `DECISIONS.md:79-82`. `EnsureQaSceneResult` has no actual persisted, wire, RPC, or CLI encoding consumer; its export and constructor JSDoc alone do not require a compatibility codec. Update all known repository constructors, tests, and reads in the same implementation PR. OBS protocol request/response codecs are external wire mirrors and remain unchanged.
+Required implementation verification covers all four scene/global-input combinations, Some attached/unattached paths, None settings reread, request short-circuit failures, restore-token filtering and final SetCurrentProgramScene. Existing receipt assertions remain valid. Run @beep/obs package verification in the implementation lane; this P2 audit runs no product tests and earns no P3 credit.
 
-# Test impact
+## Risk
 
-Cover all four independent scene/input disposition combinations. Preserve exact request order and assertions for new scene/input, existing scene/input, and attaching an existing global input. Add mixed cases proving a new scene with an existing input performs `CreateScene` then the attachment lookup/action, while an existing scene with a missing input performs `CreateInput` and skips `CreateSceneItem`. Assert settings reread for a created input, restore-token behavior, `SetCurrentProgramScene`, and failure short-circuiting at each request boundary. Add schema construction/guard coverage for both disposition literals. No live OBS session is required.
-
-# Risk and sequencing
-
-Tier 1 decoded API migration local to `@beep/obs`, with the QA CLI consumer and tests updated atomically. Preserve operation order: `GetSceneList`, optional `CreateScene`, `GetInputSettings`, optional `CreateInput` or item-list/attach, settings reread for a new input, then `SetCurrentProgramScene`. Do not change retry or error behavior, collapse the independent scene/input axes, expose `inputAttached`, or modify external OBS protocol models.
+The main risk is reordering effects or swallowing errors. Preserve ordering GetSceneList -> optional CreateScene -> GetInputSettings -> CreateInput/readback OR item-list/optional attach -> SetCurrentProgramScene. Existing settings must not be fetched twice. None errors after input creation must propagate unchanged. Preserve the independent scene observation and branch-local attachment behavior.

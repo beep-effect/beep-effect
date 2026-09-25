@@ -1,0 +1,15 @@
+{
+  "sequenceCount": 1555,
+  "maxLength": 4,
+  "alphabet": [
+    "--unit",
+    "--integration",
+    "--",
+    "",
+    "--affected",
+    "--concurrency=2"
+  ],
+  "resolvedPairs": ["01", "10", "11"],
+  "exactOrderedArgs": true,
+  "authority": "Current exported parser only; no subprocess execution or full package tests."
+}

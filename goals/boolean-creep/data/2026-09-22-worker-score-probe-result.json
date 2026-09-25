@@ -1,0 +1,51 @@
+{
+  "epsilon": 0.000001,
+  "thresholdPairs": 78,
+  "scoreCases": 1464,
+  "dispositionComparisons": 122976,
+  "states": [
+    {
+      "bits": "0001",
+      "score": -1,
+      "review": 0,
+      "match": 5e-324,
+      "band": "below-review"
+    },
+    {
+      "bits": "1011",
+      "score": 0,
+      "review": 0,
+      "match": 5e-324,
+      "band": "overlapping-bands"
+    },
+    {
+      "bits": "1110",
+      "score": 1,
+      "review": 0,
+      "match": 5e-324,
+      "band": "above-match"
+    },
+    {
+      "bits": "0011",
+      "score": -0.000001,
+      "review": 0,
+      "match": 1e-12,
+      "band": "review-band"
+    },
+    {
+      "bits": "1010",
+      "score": 0.000001000001,
+      "review": 0,
+      "match": 1e-12,
+      "band": "match-band"
+    },
+    {
+      "bits": "0010",
+      "score": 0.0000010000000002220446,
+      "review": 0,
+      "match": 0.1,
+      "band": "between-bands"
+    }
+  ],
+  "limitations": "Extracted current predicates and seven disposition branches; finite bounded samples, not full report pipeline or implementation tests."
+}

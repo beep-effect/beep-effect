@@ -1,0 +1,62 @@
+{
+  "base": "7536a751b40b8560706dfe8cfa451591b11b025d",
+  "head": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "bindings": {
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
+      "before": "e813f6de7fde4bb1588dd8b87dce37e7d0bac03f5b9eafa84cd974df4b33320b",
+      "after": "c64ec0e4b0113fe376cdc8a55cff5b0db6f45da6026c8eab6271197a77d92124"
+    },
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": {
+      "before": "f157e55b9b5c2fe40aebb7609cc6a1c2199110d6fc6ace28c18b3394da1343f6",
+      "after": "9ab84576de8a94dec07f35d0b483f4e92dcafafec3f17437e8db96eb10fdc515"
+    },
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": {
+      "before": "83ecc7398db34c8db8f47fdd602b63059cb7c053dbdbf47a665bb02b77194c38",
+      "after": "83ecc7398db34c8db8f47fdd602b63059cb7c053dbdbf47a665bb02b77194c38"
+    },
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts": {
+      "before": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f",
+      "after": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f"
+    }
+  },
+  "tasksDesignAnchorMap": {
+    "249": 250,
+    "257": 258,
+    "966": 967,
+    "973": 974,
+    "637": 638,
+    "647": 648,
+    "3400": 3410,
+    "3414": 3424,
+    "855": 856,
+    "948": 949,
+    "863": 864,
+    "867": 868,
+    "678": 679,
+    "688": 689,
+    "871": 872,
+    "875": 876,
+    "926": 927,
+    "945": 946,
+    "860": 861,
+    "862": 863,
+    "649": 650,
+    "913": 914,
+    "914": 915,
+    "947": 948,
+    "2486": 2496,
+    "2504": 2514,
+    "3278": 3288,
+    "3310": 3320,
+    "3338": 3348,
+    "3371": 3381,
+    "3478": 3488,
+    "3525": 3535
+  },
+  "testAnchorMap": {
+    "3825": 3844,
+    "3856": 3875,
+    "6838": 6864,
+    "6854": 6880
+  }
+}

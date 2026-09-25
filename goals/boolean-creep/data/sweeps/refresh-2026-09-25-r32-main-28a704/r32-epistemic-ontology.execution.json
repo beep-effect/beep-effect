@@ -1,0 +1,22 @@
+{
+  "lane": "r32-epistemic-ontology",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T00:48:44.896593+00:00",
+  "finished": "2026-09-25T00:51:58.553991+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-epistemic-ontology.jsonl`\n\nConfirmed 0, disqualified 0. All 14 assigned roots were covered (230 non-test source files). HEAD matches `f97a89bdfdc5bc71b69aab09b8d425591698d42a`.\n\nSeed classifications still hold. Two anchors moved without a member or contract change: `projectOntologyGraph` fold writes are at `Session.visualizer.ts:1265` and `:1315` (seed cited 1241), and `ontologyAutoOpenAttemptedAtom` is declared at `Session.atoms.ts:2997` (seed cited 2985). No withdrawals and no unresolved source question. The validator accepted the empty report.",
+  "transcriptSha256": "0ca67d425a619d68b8afb85c19fe868dc23b1c3514b073f222dc01555d116008",
+  "runnerSha256": "aa44ba577e1b7204b1c85a0549dec38d8afaa068dc269d06b86150e89fc633b4",
+  "seedSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

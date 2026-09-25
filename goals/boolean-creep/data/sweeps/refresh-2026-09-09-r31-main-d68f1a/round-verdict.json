@@ -1,0 +1,103 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-09-r31-main-d68f1a",
+  "roundNumber": 31,
+  "finalizedAt": "2026-09-25T00:32:31.698859+00:00",
+  "sourceSha": "4509872869eb87071250c67717769260f850bcf5",
+  "originMainSha": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+  "finalizationSourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "rawOccurrenceDispositions": 36,
+  "newQualifiedIds": [
+    "statutes-at-large-pincite-is-range",
+    "id-citation-pincite-inherited",
+    "supra-citation-pincite-inherited",
+    "short-form-case-citation-pincite-inherited"
+  ],
+  "newQualifiedCount": 4,
+  "changedQualifiedIds": [],
+  "withdrawnQualifiedIds": [],
+  "nonAdmittedSourceFindings": [
+    "goals/boolean-creep/data/constitutional-owner-disposition-2026-09-24.md"
+  ],
+  "records": 754,
+  "qualified": 150,
+  "disqualified": 604,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "1269405a2384eab7e4cfa97a35e515d7f678a9439b51ac9272e457629552232f",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/execution-summary.json",
+      "sha256": "365fed9bda401eac78866481d3d4fdaafdbb4e93940296e5214450868b68dc6e"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/lane-map.json",
+      "sha256": "097b43d8d4160894439329111625e9161160690f1332150750f43836f4889464"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/source-sha.txt",
+      "sha256": "ce4b0494650b2e496df39e88d7c6bfca696a9a97cd76cc3871d1f73d4ebda6b9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/execution-audit.json",
+      "sha256": "4d205f4b356202597d2c4c06cb71594135b97422d9a3b396055783058c71d347"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-09-r31-main-d68f1a/reconciliation-progress.json",
+      "sha256": "471f12996d410fba66e5fdaf2e1dd85be0814e6b105dcae9a4f87ed6f9fa9479"
+    },
+    {
+      "file": "goals/boolean-creep/data/r31-settled-parent-integration.json",
+      "sha256": "05bd5820847a72f31a4f586e913516fd79a5f6304468f0f81ded79c39c0f972e"
+    },
+    {
+      "file": "goals/boolean-creep/data/r31-law-owner-holds.json",
+      "sha256": "7cbe7672b22d89925f48ece3f57b8175bc233bcdc22555af7379d9e6736857fa"
+    },
+    {
+      "file": "goals/boolean-creep/data/id-citation-admission-2026-09-22.json",
+      "sha256": "4454197d698c4ee887230a18da547d179db6d42d02e98baf58da275e1ffcc1b9"
+    },
+    {
+      "file": "goals/boolean-creep/data/supra-shortform-admission-2026-09-22.json",
+      "sha256": "d06f68ca93f6b8345cc02e21100235492f28de4a5025f8f5b778ae9c1bfee00b"
+    },
+    {
+      "file": "goals/boolean-creep/data/constitutional-owner-audit-2026-09-24.md",
+      "sha256": "ee79f4404551f6c56cd94c5780d49b8d139187d8203b92d2d9cdc97959db9018"
+    },
+    {
+      "file": "goals/boolean-creep/data/constitutional-owner-disposition-2026-09-24.md",
+      "sha256": "544ca1c3c3ff7be2b1c430d2da189e722c3821b9761e58aa09d2852c76f8b9d4"
+    },
+    {
+      "file": "goals/boolean-creep/data/constitutional-acceptance-2026-09-24.json",
+      "sha256": "58714d5f0f571e73894decbffeba4a275255267eda83518b6b281a774370d773"
+    },
+    {
+      "file": "goals/boolean-creep/data/r31-final-reconciliation-2026-09-24.json",
+      "sha256": "2662f804f73e4fcc479e71dfce67e7d855a632fecf2a8b058da19e6b29c28d45"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-24-r31-final-reconciled.jsonl",
+      "sha256": "1269405a2384eab7e4cfa97a35e515d7f678a9439b51ac9272e457629552232f"
+    },
+    {
+      "file": "goals/boolean-creep/history/2026-09-24-r31-finalization-DECISIONS.md",
+      "sha256": "0718a4972d3581beaa515183559b1d7d1d8d1a6cfa8986852cf4f13c2eb8b108"
+    }
+  ],
+  "note": "Historical source-stable execution finalized retrospectively after owner rulings. Four former D1 records qualified; constitutional finding not admitted. No current-source dryness claim."
+}

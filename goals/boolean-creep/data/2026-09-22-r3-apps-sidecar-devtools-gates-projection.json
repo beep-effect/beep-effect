@@ -1,0 +1,30 @@
+[
+  {
+    "requested": false,
+    "local": false,
+    "allowed": true,
+    "enabled": false,
+    "warn": false
+  },
+  {
+    "requested": false,
+    "local": true,
+    "allowed": true,
+    "enabled": false,
+    "warn": false
+  },
+  {
+    "requested": true,
+    "local": false,
+    "allowed": false,
+    "enabled": false,
+    "warn": true
+  },
+  {
+    "requested": true,
+    "local": true,
+    "allowed": true,
+    "enabled": true,
+    "warn": false
+  }
+]

@@ -1,0 +1,117 @@
+{
+  "scope": "Finite projection arithmetic from audited successful producer constraints; not runtime resolver tests.",
+  "rows": [
+    {
+      "replaceAll": false,
+      "scoped": false,
+      "skip": false,
+      "writeBaseline": false,
+      "legal": true
+    },
+    {
+      "replaceAll": false,
+      "scoped": false,
+      "skip": false,
+      "writeBaseline": true,
+      "legal": true
+    },
+    {
+      "replaceAll": false,
+      "scoped": false,
+      "skip": true,
+      "writeBaseline": false,
+      "legal": false
+    },
+    {
+      "replaceAll": false,
+      "scoped": false,
+      "skip": true,
+      "writeBaseline": true,
+      "legal": false
+    },
+    {
+      "replaceAll": false,
+      "scoped": true,
+      "skip": false,
+      "writeBaseline": false,
+      "legal": true
+    },
+    {
+      "replaceAll": false,
+      "scoped": true,
+      "skip": false,
+      "writeBaseline": true,
+      "legal": true
+    },
+    {
+      "replaceAll": false,
+      "scoped": true,
+      "skip": true,
+      "writeBaseline": false,
+      "legal": true
+    },
+    {
+      "replaceAll": false,
+      "scoped": true,
+      "skip": true,
+      "writeBaseline": true,
+      "legal": true
+    },
+    {
+      "replaceAll": true,
+      "scoped": false,
+      "skip": false,
+      "writeBaseline": false,
+      "legal": false
+    },
+    {
+      "replaceAll": true,
+      "scoped": false,
+      "skip": false,
+      "writeBaseline": true,
+      "legal": true
+    },
+    {
+      "replaceAll": true,
+      "scoped": false,
+      "skip": true,
+      "writeBaseline": false,
+      "legal": false
+    },
+    {
+      "replaceAll": true,
+      "scoped": false,
+      "skip": true,
+      "writeBaseline": true,
+      "legal": false
+    },
+    {
+      "replaceAll": true,
+      "scoped": true,
+      "skip": false,
+      "writeBaseline": false,
+      "legal": false
+    },
+    {
+      "replaceAll": true,
+      "scoped": true,
+      "skip": false,
+      "writeBaseline": true,
+      "legal": true
+    },
+    {
+      "replaceAll": true,
+      "scoped": true,
+      "skip": true,
+      "writeBaseline": false,
+      "legal": false
+    },
+    {
+      "replaceAll": true,
+      "scoped": true,
+      "skip": true,
+      "writeBaseline": true,
+      "legal": true
+    }
+  ]
+}
