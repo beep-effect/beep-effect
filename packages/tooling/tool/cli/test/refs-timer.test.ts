@@ -1,3 +1,4 @@
+import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -10,7 +11,7 @@ describe("reference refresh timer", () => {
       const f = yield* fixture();
       const units = yield* workspace
         .use((service) => service.renderTimerUnits(f.home, f.root, "*-*-* 03:30:00", "/opt/bun runtime/bun"))
-        .pipe(Effect.provide(f.service));
+        .pipe(provideScopedLayer(f.service));
       expect(units[0]?.text).toBe(
         [
           "[Unit]",
@@ -66,8 +67,8 @@ describe("reference refresh timer", () => {
       yield* writeExecutable(shim, "#!/bin/sh\nexit 0\n");
       yield* workspace
         .use((service) => service.installTimer(f.home, f.root, "*-*-* 04:20:00", "/old/bun"))
-        .pipe(Effect.provide(f.service));
-      yield* workspace.use((service) => service.refreshTimer(f.home, O.none())).pipe(Effect.provide(f.service));
+        .pipe(provideScopedLayer(f.service));
+      yield* workspace.use((service) => service.refreshTimer(f.home, O.none())).pipe(provideScopedLayer(f.service));
       const unitDir = f.path.join(f.home, ".config/systemd/user");
       const serviceText = yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.service"));
       expect(serviceText).toContain(`ExecStart="${shim}"`);
@@ -76,7 +77,9 @@ describe("reference refresh timer", () => {
       expect(yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"))).toContain(
         "OnCalendar=*-*-* 04:20:00"
       );
-      const removed = yield* workspace.use((service) => service.uninstallTimer(f.home)).pipe(Effect.provide(f.service));
+      const removed = yield* workspace
+        .use((service) => service.uninstallTimer(f.home))
+        .pipe(provideScopedLayer(f.service));
       expect(removed).toHaveLength(2);
       expect(yield* f.fs.readDirectory(unitDir)).toEqual([]);
       expect(yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"))).toBe(
@@ -92,7 +95,7 @@ describe("reference refresh timer", () => {
       );
       const missing = yield* workspace
         .use((service) => service.refreshTimer(f.home, O.none()))
-        .pipe(Effect.provide(f.service), Effect.result);
+        .pipe(provideScopedLayer(f.service), Effect.result);
       expect(missing._tag).toBe("Failure");
     }, testPlatform)
   );
@@ -104,12 +107,12 @@ describe("reference refresh timer", () => {
       for (const unsafe of ["/bad\npath", "/bad%h", '/bad"path', "/bad$HOME"]) {
         const result = yield* workspace
           .use((service) => service.renderTimerUnits(f.home, unsafe, "*-*-* 03:30:00", "/bin/bun"))
-          .pipe(Effect.provide(f.service), Effect.result);
+          .pipe(provideScopedLayer(f.service), Effect.result);
         expect(result._tag).toBe("Failure");
       }
       const missing = yield* workspace
         .use((service) => service.installTimer(f.home, f.root, "*-*-* 03:30:00", "/bin/bun"))
-        .pipe(Effect.provide(f.service), Effect.result);
+        .pipe(provideScopedLayer(f.service), Effect.result);
       expect(missing._tag).toBe("Failure");
       expect(yield* f.fs.exists(f.path.join(f.home, ".config/systemd"))).toBe(false);
     }, testPlatform)

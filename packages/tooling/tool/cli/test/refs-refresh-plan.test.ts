@@ -1,4 +1,5 @@
 import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
+import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -40,7 +41,7 @@ describe("reference planning and refresh", () => {
     Effect.fnUntraced(function* () {
       const f = yield* fixture();
       const missing = f.path.join(f.temp, "absent");
-      const plan = yield* workspace.use((service) => service.plan(f.home, missing)).pipe(Effect.provide(f.service));
+      const plan = yield* workspace.use((service) => service.plan(f.home, missing)).pipe(provideScopedLayer(f.service));
       expect(A.join(plan, "\n")).toContain("clone git@github.com:Effect-TS/effect.git");
       expect(A.join(plan, "\n")).toContain("--deep --allow-partial -j 16");
       expect(yield* f.fs.exists(missing)).toBe(false);
@@ -62,7 +63,7 @@ describe("reference planning and refresh", () => {
       }
       const status = yield* workspace
         .use((service) => service.refresh(f.home, f.root, 3))
-        .pipe(Effect.provide(f.service));
+        .pipe(provideScopedLayer(f.service));
       expect(status.members.map((report) => report.outcome)).toEqual(["skipped-dirty", "skipped-off-branch"]);
       const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
       expect(log).not.toContain("pull");
@@ -70,7 +71,7 @@ describe("reference planning and refresh", () => {
       expect(log).not.toContain("graft effect-tsgo ");
       expect(log).toContain("graft references build env=1");
       expect(log).toContain(`check ${f.root}`);
-      const saved = yield* S.decodeUnknownEffect(S.fromJsonString(RefsRefreshStatus))(
+      const saved = yield* S.decodeEffect(S.fromJsonString(RefsRefreshStatus))(
         yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))
       );
       expect(saved.members).toEqual(status.members);
@@ -103,7 +104,7 @@ describe("reference planning and refresh", () => {
       yield* f.fs.writeFileString(f.path.join(f.root, "effect", "advance"), "");
       const status = yield* workspace
         .use((service) => service.refresh(f.home, f.root, 3))
-        .pipe(Effect.provide(f.service));
+        .pipe(provideScopedLayer(f.service));
       expect(status.members.map((report) => report.outcome)).toEqual(["pulled", "unchanged"]);
       const exclude = yield* f.fs.readFileString(f.path.join(f.root, "effect", ".git", "info", "exclude"));
       expect(exclude).toBe("graft/\n.graft/\n.ignore\n");
@@ -125,7 +126,7 @@ describe("reference planning and refresh", () => {
       for (const name of ["effect", "effect-tsgo"]) yield* f.fs.makeDirectory(f.path.join(f.root, name));
       const status = yield* workspace
         .use((service) => service.refresh(f.home, f.root, 2))
-        .pipe(Effect.provide(f.service));
+        .pipe(provideScopedLayer(f.service));
       expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
       expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git ");
     }, testPlatform)
@@ -144,7 +145,7 @@ describe("reference planning and refresh", () => {
       }
       const status = yield* workspace
         .use((service) => service.refresh(f.home, f.root, 2))
-        .pipe(Effect.provide(f.service));
+        .pipe(provideScopedLayer(f.service));
       expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "build-failed"]);
       expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(true);
     }, testPlatform)

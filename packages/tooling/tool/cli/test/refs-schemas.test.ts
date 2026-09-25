@@ -25,12 +25,8 @@ describe("reference manifest schemas", () => {
     it.effect(
       `rejects invalid member ${R.keys(extra)[0]}`,
       Effect.fnUntraced(function* () {
-        const result = yield* ReferenceMember.decode({
-          name: "effect",
-          url: "upstream",
-          tier: "deep",
-          ...extra,
-        }).pipe(Effect.result);
+        const input: unknown = { name: "effect", url: "upstream", tier: "deep", ...extra };
+        const result = yield* ReferenceMember.decode(input).pipe(Effect.result);
         expect(result._tag).toBe("Failure");
       })
     );

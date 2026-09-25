@@ -12,10 +12,10 @@ const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function
 
 const withTempDirectory = <A, E, R>(use: (tempDir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
-    Effect.fnUntraced(function* () {
+    Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       return yield* fs.makeTempDirectory({ prefix: "setup-effect-ref-test-" });
-    })(),
+    }),
     use,
     Effect.fnUntraced(function* (tempDir) {
       const fs = yield* FileSystem.FileSystem;

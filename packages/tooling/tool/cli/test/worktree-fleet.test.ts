@@ -13,6 +13,7 @@ import {
   rankContestedPaths,
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
+import { provideScopedLayer } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, Stream } from "effect";
@@ -347,7 +348,7 @@ describe("worktree reference linking", () => {
       const f = yield* fixture();
       const target = f.path.join(f.temp, "new-worktree");
       yield* f.fs.makeDirectory(target);
-      const lines = yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config));
+      const lines = yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config));
       expect(lines).toHaveLength(3);
       for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
         const link = f.path.join(target, ".repos", name);
@@ -355,12 +356,12 @@ describe("worktree reference linking", () => {
         yield* f.fs.remove(link);
         yield* f.fs.symlink(f.path.join(f.temp, "missing"), link);
       }
-      expect(yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config))).toEqual(lines);
+      expect(yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config))).toEqual(lines);
       const collision = f.path.join(target, ".repos/effect");
       yield* f.fs.remove(collision);
       yield* f.fs.makeDirectory(collision);
       yield* f.fs.writeFileString(f.path.join(collision, "keep"), "preserve");
-      const preserved = yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config));
+      const preserved = yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config));
       expect(preserved[0]).toContain("warning:");
       expect(yield* f.fs.readFileString(f.path.join(collision, "keep"))).toBe("preserve");
     }, testPlatform)
@@ -373,7 +374,7 @@ describe("worktree reference linking", () => {
       yield* f.fs.remove(f.root, { recursive: true });
       const target = f.path.join(f.temp, "new-worktree");
       yield* f.fs.makeDirectory(target);
-      const lines = yield* linkReferences(f.owner, target).pipe(Effect.provide(f.config));
+      const lines = yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config));
       expect(lines[0]).toContain("warning: Reference root is missing");
       expect(yield* f.fs.exists(f.path.join(target, ".repos"))).toBe(false);
     }, testPlatform)
