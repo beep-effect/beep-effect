@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-25T17:58:08.599Z
+Generated: 2026-09-25T18:33:06.379Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2900 |
-| publicExports | 20483 |
+| publicModules | 2905 |
+| publicExports | 20505 |
 | openModules | 377 |
-| openExports | 3095 |
+| openExports | 3097 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3333 |
+| exampleImportFindings | 3335 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3332 |
+| no-root-package-import | 3334 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -171,7 +171,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
 | 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 276 | 2358 | 47 | 288 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2380 | 47 | 290 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 3 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -3868,6 +3868,7 @@ Export findings:
 - `src/commands/Quality/Quality.render.ts:113` `printQualityProfileDetection` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.schemas.ts:445` `decodePackageJsonDocument` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.schemas.ts:844` `decodeGithubChecksFallowFeatureMatrix` (const) - 1 example import violation(s)
+- `src/commands/Refs/Refs.service.ts:107` `ReferenceWorkspace` (class) - 1 example import violation(s)
 - `src/commands/Research/Research.command.ts:403` `runResearchInstallTimers` (const) - 1 example import violation(s)
 - `src/commands/Research/Research.schemas.ts:243` `ResearchHistorySiftOptions` (class) - 1 example import violation(s)
 - `src/commands/Research/Research.schemas.ts:276` `ResearchHistorySiftSummary` (class) - 1 example import violation(s)
@@ -3934,12 +3935,13 @@ Export findings:
 - `src/commands/VersionSync/VersionSync.command.ts:50` `versionSyncCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:330` `parseProcStatStartTime` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:448` `FleetMirrorService` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:347` `resolveWorktreeContext` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:405` `addWorktree` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:452` `copyLocalFiles` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:550` `worktreeDoctorReportForContext` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:833` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.command.ts:1023` `worktreeCommand` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:350` `resolveWorktreeContext` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:408` `addWorktree` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:455` `copyLocalFiles` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:553` `worktreeDoctorReportForContext` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:722` `linkReferences` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:876` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.command.ts:1066` `worktreeCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:204` `WorktreeUpstreamVerdict` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:312` `WorktreeResidueManifest` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:393` `WorktreeSessionMarker` (class) - 1 example import violation(s)
@@ -3968,13 +3970,13 @@ Export findings:
 - `src/index.ts:46` `export * from "./drift.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:137` `export * from "./validation.ts";` (re-export) - 1 example import violation(s)
 - `src/schemas.ts:89` `NormalizedAgentInstructionDocument` (const) - 1 example import violation(s)
-- `src/validation.ts:406` `validateRepoConfig` (const) - 1 example import violation(s)
-- `src/validation.ts:449` `validateRepoSafetyPolicy` (const) - 1 example import violation(s)
-- `src/validation.ts:490` `validateDogfoodConfig` (const) - 1 example import violation(s)
-- `src/validation.ts:518` `validateDogfoodConfigs` (const) - 1 example import violation(s)
-- `src/validation.ts:544` `defaultRepoRoot` (const) - 1 example import violation(s)
-- `src/validation.ts:572` `validateCurrentCheckoutDogfood` (const) - 1 example import violation(s)
-- `src/validation.ts:601` `validateCurrentCheckoutDogfoodConfigs` (const) - 1 example import violation(s)
+- `src/validation.ts:410` `validateRepoConfig` (const) - 1 example import violation(s)
+- `src/validation.ts:453` `validateRepoSafetyPolicy` (const) - 1 example import violation(s)
+- `src/validation.ts:494` `validateDogfoodConfig` (const) - 1 example import violation(s)
+- `src/validation.ts:522` `validateDogfoodConfigs` (const) - 1 example import violation(s)
+- `src/validation.ts:548` `defaultRepoRoot` (const) - 1 example import violation(s)
+- `src/validation.ts:576` `validateCurrentCheckoutDogfood` (const) - 1 example import violation(s)
+- `src/validation.ts:605` `validateCurrentCheckoutDogfoodConfigs` (const) - 1 example import violation(s)
 
 ### @beep/nlp-mcp
 
