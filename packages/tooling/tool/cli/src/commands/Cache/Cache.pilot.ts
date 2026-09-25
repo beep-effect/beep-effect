@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
@@ -69,6 +70,10 @@ const identityDirectory = "packages/foundation/modeling/identity";
 const typesDirectory = "packages/foundation/primitive/types";
 const identityTask = "@beep/identity#lint";
 const typesTask = "@beep/types#lint";
+const additionalDependencyDirectories: Readonly<Record<string, string>> = {
+  "@beep/fc-runs#lint": "packages/tooling/test-kit/fc-runs",
+  "@beep/test-runner#lint": "packages/tooling/test-kit/test-runner",
+};
 const captureBound = OutputBound.make({ maxChars: 1024 * 1024, truncatedNotice: "[pilot capture overflow]" });
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
@@ -107,6 +112,7 @@ class PilotRoot extends S.Class<PilotRoot>($I`PilotRoot`)(
     gitFile: S.NonEmptyString,
     identity: S.NonEmptyString,
     types: S.NonEmptyString,
+    additionalPackages: S.Record(S.String, S.String),
     before: S.String,
     after: S.String,
     rootFiles: S.Record(S.String, S.String),
@@ -216,8 +222,15 @@ const validatePilotClosure = Effect.fn("CachePilot.validateClosure")(function* (
   if (!A.contains(selectedNode.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST"))
     return yield* CacheCommandError.new("The pilot must declare BEEP_CACHE_TOOLCHAIN_DIGEST as a hashed input.");
   const dependencyNodes = A.filter(current.source.configuration.nodes, (node) => node.id !== identityTask);
-  if (A.some(dependencyNodes, (node) => node.id !== typesTask || node.configuration.cache))
-    return yield* CacheCommandError.new("Pilot dependencies must be limited to fresh, unqualified types lint.");
+  if (
+    A.some(
+      dependencyNodes,
+      (node) => (node.id !== typesTask && !R.has(additionalDependencyDirectories, node.id)) || node.configuration.cache
+    )
+  )
+    return yield* CacheCommandError.new(
+      "Pilot dependencies must be limited to fresh, unqualified types, fc-runs and test-runner lint."
+    );
   return dependencyNodes;
 });
 
@@ -361,7 +374,18 @@ const runPilot = Effect.fn("CachePilot.run")(
       const types = path.join(directory, "types");
       yield* fs.copy(path.join(source, identityDirectory), identity);
       yield* fs.copy(path.join(source, typesDirectory), types);
-      for (const packageRoot of [identity, types]) {
+      const additionalPackages = yield* Effect.forEach(
+        R.toEntries(additionalDependencyDirectories),
+        Effect.fn("CachePilot.prepareDependency")(function* ([task, relative]) {
+          if (!A.contains(expectedDependencies, task)) return O.none();
+          const target = path.join(directory, "dependencies", relative);
+          yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+          yield* fs.copy(path.join(source, relative), target);
+          return O.some(Tuple.make(relative, target));
+        }),
+        { concurrency: 1 }
+      ).pipe(Effect.map((entries) => R.fromEntries(A.getSomes(entries))));
+      for (const packageRoot of [identity, types, ...R.values(additionalPackages)]) {
         if (yield* fs.exists(path.join(packageRoot, ".turbo")))
           return yield* CacheCommandError.new("Clean pilot source unexpectedly contains runtime outputs.");
         yield* fs.makeDirectory(path.join(packageRoot, ".turbo"));
@@ -379,6 +403,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         directory,
         identity,
         types,
+        additionalPackages,
         gitFile,
         before,
         after,
@@ -401,6 +426,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     });
     const mountSource = Effect.fn("CachePilot.mountSource")(function* (fixture: PilotRoot, guest: string) {
       const replacements: Readonly<Record<string, string>> = {
+        ...fixture.additionalPackages,
         ...fixture.rootFiles,
         ".git": fixture.gitFile,
         node_modules: path.join(dependencies.directory, "node_modules"),
@@ -444,6 +470,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         [typesDirectory, "types-log"],
       ] as const)
         mounts.push("--bind", path.join(fixture.directory, name), path.join(guest, directory, ".turbo"));
+      for (const relative of R.keys(fixture.additionalPackages))
+        mounts.push(
+          "--bind",
+          path.join(fixture.directory, "dependency-logs", relative),
+          path.join(guest, relative, ".turbo")
+        );
       for (const parent of A.reverse(parents)) mounts.push("--remount-ro", parent);
       return mounts;
     });
@@ -457,6 +489,8 @@ const runPilot = Effect.fn("CachePilot.run")(
         return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
       for (const name of ["run", "identity-log", "types-log", "cache"])
         yield* fs.makeDirectory(path.join(fixture.directory, name), { recursive: true });
+      for (const relative of R.keys(fixture.additionalPackages))
+        yield* fs.makeDirectory(path.join(fixture.directory, "dependency-logs", relative), { recursive: true });
       return yield* runCapturedStreams({
         command: "/usr/bin/bwrap",
         args: [
@@ -695,7 +729,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       return replayLogMatches;
     });
     const prepareExecution = Effect.fn("CachePilot.prepareExecution")(function* (fixture: PilotRoot, enabled: boolean) {
-      for (const name of ["run", "identity-log", "types-log"])
+      for (const name of ["run", "identity-log", "types-log", "dependency-logs"])
         yield* fs.remove(path.join(fixture.directory, name), { recursive: true, force: true });
       if (fixture.omitChild) yield* fs.remove(path.join(fixture.identity, "turbo.json"), { force: true });
       else yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
@@ -725,7 +759,11 @@ const runPilot = Effect.fn("CachePilot.run")(
     ) {
       const expectedProfile = yield* profileObservation(guest);
       yield* prepareExecution(fixture, enabled);
-      const beforeTrees = yield* Effect.all([snapshot(fixture.identity), snapshot(fixture.types)], { concurrency: 2 });
+      const beforeTrees = yield* Effect.forEach(
+        [fixture.identity, fixture.types, ...R.values(fixture.additionalPackages)],
+        snapshot,
+        { concurrency: 2 }
+      );
       const captured = yield* invoke(
         fixture,
         guest,
@@ -761,7 +799,11 @@ const runPilot = Effect.fn("CachePilot.run")(
       yield* validateDependencyObservations(fixture, dependencies);
       const selected = A.filter(summary.tasks, (task) => task.taskId === identityTask);
       if (selected.length > 1) return yield* CacheCommandError.new("Native pilot summary repeated the selected task.");
-      const afterTrees = yield* Effect.all([snapshot(fixture.identity), snapshot(fixture.types)], { concurrency: 2 });
+      const afterTrees = yield* Effect.forEach(
+        [fixture.identity, fixture.types, ...R.values(fixture.additionalPackages)],
+        snapshot,
+        { concurrency: 2 }
+      );
       const sourceTreeUnchanged = S.toEquivalence(S.Array(Sha256Hex))(beforeTrees, afterTrees);
       if (!sourceTreeUnchanged)
         return yield* CacheCommandError.new("Read-only pilot package source changed during execution.");

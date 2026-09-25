@@ -1733,3 +1733,17 @@ of the same ref then exited 0, permitting one verification retry. The first
 attempt is not a quality failure or a pass; its cause remains unconfirmed.
 Retaining bounded, sanitized fetch stderr would distinguish transport and
 authentication failures without a separate diagnostic invocation.
+
+### Pilot fixture dependency growth after main integration
+
+Identity's new test-runner and fc-runs development dependencies expand its
+`^lint` graph. The current native Turbo 2.11.2 plan includes both tasks, while
+the pilot validator admits only fresh types lint and its fixture owns only
+identity/types task-log mounts. The validator stops this graph before sandbox
+execution; no sandbox failure is claimed.
+
+The repair extends the explicit fixture boundary and source-write checks while
+retaining uncached dependency requirements. A regression fixture using the
+current dependency graph would have exposed the integration gap earlier.
+Focused capture/orchestration suites passed 23 tests; full package verification
+is pending. Real pilot configuration and runtime evidence still need refresh.

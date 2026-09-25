@@ -72,6 +72,12 @@ const identityDirectory = "packages/foundation/modeling/identity";
 const typesDirectory = "packages/foundation/primitive/types";
 const task = "@beep/identity#lint";
 const dependencyTask = "@beep/types#lint";
+const additionalDirectories: Readonly<Record<string, string>> = {
+  "@beep/fc-runs#lint": "packages/tooling/test-kit/fc-runs",
+  "@beep/test-runner#lint": "packages/tooling/test-kit/test-runner",
+};
+const dependencyTasks = [dependencyTask, ...R.keys(additionalDirectories)];
+const closureFaultDomain = LiteralKit(["none", "cached", "unexpected"]);
 const faultDomain = LiteralKit([
   "none",
   "remote-hit",
@@ -82,6 +88,7 @@ const faultDomain = LiteralKit([
   "unsafe-log",
   "missing-log",
   "source-write",
+  "dependency-source-write",
   "missing-selected",
   "library-mismatch",
   "version-mismatch",
@@ -122,7 +129,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   fault: typeof faultDomain.Type = "none",
   requestedLinker: CacheRuntimeLinkerSnapshot = linker,
   profile: typeof S.Boolean.Type = false,
-  observeProfile: typeof S.Boolean.Type = true
+  observeProfile: typeof S.Boolean.Type = true,
+  closureFault: typeof closureFaultDomain.Type = "none"
 ) {
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
@@ -149,7 +157,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const writeSourceRoot = Effect.fnUntraced(function* (directory: string) {
     for (const [relative, text] of R.toEntries(rootFiles)) yield* write(directory, relative, text);
     if (profile) yield* writeCacheIdentityLintProfile(directory);
-    for (const packageDirectory of [identityDirectory, typesDirectory]) {
+    for (const packageDirectory of [identityDirectory, typesDirectory, ...R.values(additionalDirectories)]) {
       yield* write(directory, `${packageDirectory}/src/index.ts`, "export const fixture = 1;\n");
       yield* write(directory, `${packageDirectory}/README.md`, "Fixture\n");
       yield* write(directory, `${packageDirectory}/package.json`, '{"scripts":{"lint":"bun run beep:lint"}}');
@@ -183,18 +191,20 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     tree,
     tools: {},
   });
-  const nodes = A.map([task, dependencyTask] as const, (id) =>
+  const selectedDependencies =
+    closureFault === "unexpected" ? [...dependencyTasks, "@beep/unreviewed#lint"] : dependencyTasks;
+  const nodes = A.map([task, ...selectedDependencies], (id) =>
     CacheCensusNode.make({
       id,
-      workspace: id === task ? "@beep/identity" : "@beep/types",
+      workspace: O.getOrThrow(A.head(Str.split("#")(id))),
       task: "lint",
       command: O.some("bun run beep:lint"),
       commandDigest: digest,
-      dependencies: id === task ? [dependencyTask] : [],
+      dependencies: id === task ? dependencyTasks : [],
       configuration:
         profile && id === task
           ? CacheTaskConfiguration.make({ ...configuration, passThroughEnv: ["BIOME_CONFIG_PATH"] })
-          : configuration,
+          : CacheTaskConfiguration.make({ ...configuration, cache: closureFault === "cached" && id !== task }),
       inputCount: NonNegativeInt.make(0),
       inputsDigest: digest,
     })
@@ -207,7 +217,10 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     workspaces: A.map(nodes, (node) =>
       CacheCensusWorkspace.make({
         name: node.workspace,
-        directory: node.id === task ? identityDirectory : typesDirectory,
+        directory:
+          node.id === task
+            ? identityDirectory
+            : O.getOrElse(R.get(additionalDirectories, node.id), () => typesDirectory),
         scripts: { lint: "bun run beep:lint" },
       })
     ),
@@ -331,6 +344,12 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             );
             const identity = mounted(`${guest}/${identityDirectory}`);
             const types = mounted(`${guest}/${typesDirectory}`);
+            for (const relative of R.values(additionalDirectories)) {
+              const overlay = mounted(`${guest}/${relative}`);
+              expect(yield* fs.readFileString(path.join(overlay, "src/index.ts"))).toBe("export const fixture = 1;\n");
+              const logMount = mounted(`${guest}/${relative}/.turbo`);
+              expect(yield* fs.exists(logMount)).toBe(true);
+            }
             const directory = path.dirname(identity);
             const label = path.basename(directory);
             if (profile) {
@@ -349,9 +368,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             const nativeTask = (id: string, taskHash: string, hit = false, code = 0) => ({
               taskId: id,
               task: "lint",
-              package: id === task ? "@beep/identity" : "@beep/types",
+              package: O.getOrThrow(A.head(Str.split("#")(id))),
               command: fault === "wrong-command" ? "unreviewed" : "bun run beep:lint",
-              dependencies: id === task ? [dependencyTask] : [],
+              dependencies: id === task ? dependencyTasks : [],
               inputs: {},
               resolvedTaskDefinition: { ...configuration, passThroughEnv: [] },
               hash: taskHash,
@@ -408,16 +427,24 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   if (reuse && exitCode === 0) yield* write(directory, cacheFile, "fixture");
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
-                    const dependency = nativeTask(dependencyTask, "fedcba9876543210", fault === "dependency-hit");
+                    const dependency = A.map(dependencyTasks, (id) =>
+                      nativeTask(id, "fedcba9876543210", fault === "dependency-hit")
+                    );
                     yield* write(
                       directory,
                       "run/runs/run.json",
                       yield* encodeJson({
-                        tasks: fault === "missing-selected" ? [dependency] : [selected, dependency],
+                        tasks: fault === "missing-selected" ? dependency : [selected, ...dependency],
                       })
                     );
                     if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
                     if (fault === "source-write") yield* write(identity, "src/index.ts", "unexpected write");
+                    if (fault === "dependency-source-write")
+                      yield* write(
+                        mounted(`${guest}/packages/tooling/test-kit/test-runner`),
+                        "src/index.ts",
+                        "unexpected write"
+                      );
                     const log = fault === "unsafe-log" ? "/fixture/private.ts\n" : "lint observation\n";
                     if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
                     const progress = hit
@@ -587,6 +614,17 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(result._tag).toBe("Passed");
     })
   );
+
+  for (const closureFault of closureFaultDomain.omitOptions(["none"])) {
+    it.effect(
+      `rejects ${closureFault} dependencies before creating an experiment`,
+      Effect.fnUntraced(function* () {
+        const { root, fs, path, run } = yield* fixture("none", linker, false, true, closureFault);
+        expect(Result.isFailure(yield* run().pipe(Effect.result))).toBe(true);
+        expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+      })
+    );
+  }
 
   for (const fault of faultDomain.omitOptions(["none"])) {
     it.effect(
