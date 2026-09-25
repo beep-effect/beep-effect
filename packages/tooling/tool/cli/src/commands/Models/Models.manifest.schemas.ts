@@ -450,7 +450,7 @@ const LocatorFieldKit = LiteralKit(["model", "effort", "model-effort-suffix"]);
  * exactly one value, so the field is part of the selector rather than implied.
  * `$HOME/.codex/config.toml` needs two locators over the same
  * `codex.heavy x codex-cli` binding — one `model` and one `effort` — while a
- * `proxy-workflow` target writes the single fused token `gpt-6-astra(xhigh)`,
+ * `proxy-workflow` target writes the single fused token `gpt-6-astra(medium)`,
  * which is `model-effort-suffix`. A `cursor-seat` target writes `model`
  * alone, because the seat id already bakes the effort in.
  *
