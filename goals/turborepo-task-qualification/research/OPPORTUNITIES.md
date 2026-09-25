@@ -1766,3 +1766,19 @@ ordering explicit. The merged repair checkout also retained installed Turbo
 2.11.2 despite a 2.11.3 lockfile; a newly bootstrapped experiment lane resolved
 that mismatch. Clean-install proof in a separate checkout is not evidence that
 the experiment checkout itself has synchronized dependencies.
+
+### 2026-09-25 — Fixture copies changed symlink input bytes
+
+The expanded stable pilot v19 failed before its matrix with "Read-only pilot
+inputs or configuration differ from the live census." A native Turbo 2.11.3
+read-only sandbox matched the source plan when package links were preserved.
+Repeating the copy through the runtime's `node:fs` `cp` changed exactly the
+`CLAUDE.md` inputs in `@beep/fc-runs#lint` and `@beep/test-runner#lint`: their
+relative `AGENTS.md` links became absolute host paths. Effect's filesystem
+copy uses that default. The fixture now copies links verbatim through the
+filesystem service, and integrity snapshots hash link text without following
+it. Regression fixtures retain relative links and reject retargeting even when
+the new link resolves to the same file. Twenty focused tests passed, including an exact source-integrity failure
+assertion for link retargeting; full package verification and the native
+qualification matrix remain separate pending gates. A fixture containing the
+packages' real symlink topology would have exposed this before the runtime run.
