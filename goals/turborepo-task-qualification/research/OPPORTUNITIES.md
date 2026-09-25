@@ -1683,3 +1683,52 @@ the installed client; it did not establish a package-version mismatch. Use the
 same inference-disabled invocation as the pilot runner for exact-pin preflights.
 The initial diagnosis and correction remain in private retained preparation
 evidence; no canary matrix was executed with a substituted version.
+
+### Optional coverage can fail after readiness is announced
+
+PR #1193's readiness monitor exited successfully while optional coverage was
+still running. That job later failed on `LaneTimings.ts` and `Cache.runtime.ts`;
+both sources and the coverage baseline were byte-identical to the PR base.
+The repository's no-failing-CI closeout rule still requires remediation. Treat
+monitor readiness as a snapshot and inspect all remaining jobs before closeout.
+The cache-runtime log identified untested client-read failure and binary-override
+rejection paths; focused tests now exercise those paths without lowering floors.
+
+### Signing failure interrupted a clean base merge
+
+While merging main before the coverage repair, the configured signing helper
+reported `Could not connect to socket`. Agent-side `op-doctor` passed; repeating
+the commit with the user-session runtime environment still failed. Preserve the
+pending merge and avoid changing signing policy. A signing-route health check
+before commit would distinguish this publication dependency from proof admission.
+# Initial comparison diagnostics need bounded original logs
+
+The private current-profile diagnostic retained eleven observations and isolated
+failure to the cache-enabled producer and replay, both exiting 1. It retained
+the failing task's 138-byte log digest but not the original bytes before scoped
+fixture cleanup. That was insufficient to attribute the error and required a
+second admitted diagnostic. Preserve bounded task logs after the existing
+canary/path safety checks, alongside comparison rows, whenever a diagnostic
+stops before a full receipt can be written. Metadata equality is not a substitute
+for the original failure diagnostic.
+
+The follow-up retained the selected-task log: `biome check .` failed, while
+the package script suppressed its diagnostic streams. The activation fixture
+generator had expanded compact JSON arrays while enabling the cache flag.
+Formatting that artifact reproduces exactly a projection that changes only
+`cache: false` to `cache: true`; their decoded JSON is identical. Validate
+fixture formatting before runtime admission when the computation checks its own
+configuration files. The corrected initial-comparison rerun passed all seven
+checks: producer exit 0, replay local hit with exit 0, and identical logs.
+That establishes attribution for this failure and permits the full local pilot
+to resume; it does not establish complete qualification.
+
+# Fetch failure obscured checkpoint verification diagnosis
+
+On 2026-09-24, `bun run beep yeet verify --tier cheap-gates` stopped
+before its checks because the `origin/main` fetch exited 128. Its log retained
+the command and exit code but no underlying Git diagnostic. An explicit fetch
+of the same ref then exited 0, permitting one verification retry. The first
+attempt is not a quality failure or a pass; its cause remains unconfirmed.
+Retaining bounded, sanitized fetch stderr would distinguish transport and
+authentication failures without a separate diagnostic invocation.
