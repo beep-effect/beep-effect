@@ -112,3 +112,9 @@ report observes their actual current values without adopting or rewriting them.
 After the formatting correction, the full package gate passed: audit 951.9
 seconds and docgen 24.6 seconds. This supersedes the formatting-only failed run
 above. The focused Models suite now contains 40 tests.
+
+Hosted test typechecking then identified six already-typed inputs decoded with
+`decodeUnknownEffect`. Those test-only calls now use `decodeEffect`; the separate
+`package-test-typecheck` command passes, as do package quick verification and all
+32 tests in the selected catalog/check/locator files. Runtime implementation and
+serialization behavior are unchanged from the successful full package audit.

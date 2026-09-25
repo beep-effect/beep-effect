@@ -103,10 +103,10 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const rawOnly = "__raw_only_metadata__";
-      const upstream = yield* S.decodeUnknownEffect(UpstreamCatalog)({
+      const upstream = yield* S.decodeEffect(UpstreamCatalog)({
         "codex-pro": [{ id: "gpt-6-astra", extension: rawOnly, thinking: { levels: ["medium"], extension: rawOnly } }],
       });
-      const codex = yield* S.decodeUnknownEffect(CodexModelsCache)({
+      const codex = yield* S.decodeEffect(CodexModelsCache)({
         identity: { account: rawOnly },
         models: [
           {

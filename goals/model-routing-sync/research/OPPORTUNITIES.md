@@ -83,3 +83,8 @@
   before stopping on one Biome line-wrap difference in the new regression.
   Format touched tests before starting the full audit; package quick verification
   now confirms lint and typecheck pass.
+- Hosted Heavy / Check caught six `preferTypedSchemaDecoder` errors in the
+  new tests after package audit passed. Package audit does not include the
+  separate test typecheck lane. Use typed `decodeEffect` for already typed
+  payloads and run `package-test-typecheck` alongside focused tests before
+  publication; do not weaken the diagnostic or relabel it as environmental.

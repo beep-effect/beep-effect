@@ -32,12 +32,12 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
     "preserves schema-derived upstream and Codex payloads through round trips",
     [UpstreamCatalog, CodexModelsCache],
     Effect.fnUntraced(function* ([upstream, codex]) {
-      expect(
-        yield* S.decodeUnknownEffect(UpstreamCatalog)(yield* S.encodeUnknownEffect(UpstreamCatalog)(upstream))
-      ).toEqual(upstream);
-      expect(
-        yield* S.decodeUnknownEffect(CodexModelsCache)(yield* S.encodeUnknownEffect(CodexModelsCache)(codex))
-      ).toEqual(codex);
+      expect(yield* S.decodeEffect(UpstreamCatalog)(yield* S.encodeUnknownEffect(UpstreamCatalog)(upstream))).toEqual(
+        upstream
+      );
+      expect(yield* S.decodeEffect(CodexModelsCache)(yield* S.encodeUnknownEffect(CodexModelsCache)(codex))).toEqual(
+        codex
+      );
     }),
     { arbitrary: fcRuns(16) }
   );
@@ -64,12 +64,12 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
           },
         ],
       };
-      expect(
-        yield* S.encodeUnknownEffect(UpstreamCatalog)(yield* S.decodeUnknownEffect(UpstreamCatalog)(upstream))
-      ).toEqual(upstream);
-      expect(
-        yield* S.encodeUnknownEffect(CodexModelsCache)(yield* S.decodeUnknownEffect(CodexModelsCache)(cache))
-      ).toEqual(cache);
+      expect(yield* S.encodeUnknownEffect(UpstreamCatalog)(yield* S.decodeEffect(UpstreamCatalog)(upstream))).toEqual(
+        upstream
+      );
+      expect(yield* S.encodeUnknownEffect(CodexModelsCache)(yield* S.decodeEffect(CodexModelsCache)(cache))).toEqual(
+        cache
+      );
     })
   );
 
