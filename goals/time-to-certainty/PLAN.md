@@ -196,7 +196,11 @@ orchestrator owns schemas, contracts, and judgment.
 
 ## P4 — Close
 
-- [ ] A3 yeet economics surface prints the report at closeout.
+- [x] A3 yeet economics surface prints the report at closeout — done 2026-09-25 (rulings 73–75):
+      `bun run beep yeet economics [--json] [--branch <b>] [--fleet] [--packet-dir <dir>]` prints the
+      `yeet-economics/v1` report (attempt mixes, wrapper and inner lanes as separate populations, first
+      failure, red-to-green episodes, terminations, the M4 fingerprint-repeat proxy, data quality) and
+      `yeet closeout` prints its five-line branch summary.
 - [ ] A1 re-run at close; M1–M5 compared with the P0 baseline.
 - [ ] Closeout reflection, status flip, final PR to Yeet merge-ready; merge subject cites the
       packet slug.

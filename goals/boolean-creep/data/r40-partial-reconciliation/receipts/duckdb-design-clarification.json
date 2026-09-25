@@ -1,0 +1,38 @@
+{
+  "reviewKind": "narrow-design-wording-clarification",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "source": {
+    "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+    "sha256": "678ef629f5faee38272d1aa33d63c0465c856dc2364ebda3d63acd1deeb50fb0",
+    "lines": [374, 375, 377, 384, 387, 388, 392, 393]
+  },
+  "design": {
+    "file": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+    "sha256": "c9490de0c064ee6e52331433c2902426e4bf697b981cac318f60d5309e30cd77"
+  },
+  "effectReference": {
+    "head": "07861527770e33f8b7e2561a00eb7af99baf0435",
+    "files": [
+      {
+        "file": ".repos/effect/packages/effect/src/Effect.ts",
+        "sha256": "e7edbbf8f68afc9ea35f12b4ac08c57483caedd36a4b797da99bdb329f08716f",
+        "line": 4251
+      },
+      {
+        "file": ".repos/effect/packages/effect/src/internal/effect.ts",
+        "sha256": "9d5aa0718935ae52fce439b611f7eebf3fc6a655c6782f1efac8af3e40320547",
+        "line": 3496
+      }
+    ]
+  },
+  "finding": "Risk wording says COMMIT/ROLLBACK must succeed before closed assignment; failure branch ignores typed ROLLBACK failure and still assigns closed. Preserve that existing behavior.",
+  "recommendedAppend": "Clarification: preserve the existing failure branch exactly. Its ROLLBACK runs through Effect.ignore, so a typed rollback failure is discarded and the following closed assignment still executes; the original use failure is then propagated. The replacement phase becomes closed at that same assignment point, even when native rollback returned a typed failure. A COMMIT failure, or an unignored defect or interruption that prevents either close assignment, leaves the phase open for ensuring cleanup. Preserve the current uninterruptible-mask boundaries and never move a phase assignment ahead of its existing yield. Here closed means the close branch reached its assignment, not proof that native ROLLBACK succeeded.",
+  "recommendedRelatedWording": "Read the earlier open/closed lifecycle descriptions and after rollback completes instruction using the precise assignment semantics above; no change to SQL order, error suppression, cleanup retries, or cancellation behavior.",
+  "credit": {
+    "P3": false,
+    "dryRound": false,
+    "implementation": false
+  },
+  "mutations": "Private receipt only; design and source unchanged."
+}

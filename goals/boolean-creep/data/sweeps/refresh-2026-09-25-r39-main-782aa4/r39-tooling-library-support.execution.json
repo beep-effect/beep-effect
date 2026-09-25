@@ -1,0 +1,22 @@
+{
+  "lane": "r39-tooling-library-support",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:55:36.264421+00:00",
+  "finished": "2026-09-25T08:58:22.486690+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tooling-library-support.jsonl`\n\nConfirmed 0, disqualified 0. Validator: 0 records, inventory OK.\n\nEvery assigned root was covered (`codegen-kit`, `repo-utils`, `fc-runs`, `test-utils`, `test-runner`), at `ea3ac40867e4f292b7f0708b156231f0462ddcd9`. All 20 seeded owners still match the current source and the canonical inventory (members, lines, D1/D2/designed classifications). No seed withdrawals, no line drift, no unresolved source question.",
+  "transcriptSha256": "ed8d2dbd381aea3cf69f928016b3773bc50084868b50f06ebde06ee9db1ef6bf",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

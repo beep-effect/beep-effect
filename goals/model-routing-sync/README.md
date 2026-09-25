@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,7 +34,7 @@ knows both what exists upstream and what is routable on this box.
 
 ## Current Phase
 
-P1 Implement. **Slice 1 landed**: the `beep models` command group is registered with three
+P4 Closeout. **Slice 1 landed**: the `beep models` command group is registered with three
 read-only subcommands — `check` (the default), `catalog`, and `init`, which seeds a manifest only
 when none exists. It decodes the upstream catalog plus the Codex cache, the Grok cache,
 `cursor-agent models`, and the proxy availability overlay, diffs against the home ledger, and
@@ -44,6 +44,16 @@ ledger under `$HOME/.local/state/beep/models/` (R6), the optional `--report-dir`
 and the timer are slices 2 and 3.
 
 ## Latest Evidence
+
+- **2026-09-25 delivery:** PRs [#1224](https://github.com/beep-effect/beep-effect/pull/1224)
+  and [#1240](https://github.com/beep-effect/beep-effect/pull/1240) were merged
+  by the operator. Models now has 40 passing tests; the three approved package
+  configurations pass all 344 coverage tests without a CLI isolation override.
+  The coverage repair's head-local full proof and hosted merge-readiness gates
+  passed. The [acceptance receipt](history/2026-09-24-slice-1-acceptance.md) records
+  exact commits and the separate final documentation-PR gate. The
+  [closeout reflection](history/reflections/2026-09-25-codex.md) records runner
+  isolation, changeset, and delivery-handoff lessons.
 
 - **2026-09-24 acceptance repair:** the [dated audit](history/2026-09-24-slice-1-acceptance.md)
   covers all seven conflict categories, lossless live upstream/Codex round trips,
