@@ -125,6 +125,8 @@ export class ModelsCatalogSources extends Context.Service<ModelsCatalogSources, 
 export const parseCursorModelLines = (output: string): ReadonlyArray<string> =>
   pipe(
     Str.split(output, "\n"),
+    A.map(Str.trim),
+    A.filter(Str.includes(" - ")),
     A.map((line) => Str.trim(pipe(Str.split(line, " - "), A.headNonEmpty))),
     A.filter(Str.isNonEmpty)
   );
