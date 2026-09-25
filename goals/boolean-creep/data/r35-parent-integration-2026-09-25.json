@@ -1,0 +1,205 @@
+{
+  "kind": "boolean-creep-r35-parent-integration/v1",
+  "sourceSha": "68d03db9ba11d3ef7f846aa8d547ff54c1ba5625",
+  "originMainSha": "5c768538e434336885d324cbf56d04fc2684959b",
+  "inventoryBefore": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-pre-r35-reconciliation.jsonl",
+    "sha256": "127da91de2e94a53abf52c53cdc57b42ea9aa93780571aa80f2d2407759061c4"
+  },
+  "inventoryAfter": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-25-r35-final-reconciled.jsonl",
+    "sha256": "171ed883024d42a99e564afeed7caa76d4fd15f168324203f6f7ec2f7f7b666c"
+  },
+  "records": 735,
+  "qualified": 115,
+  "disqualified": 620,
+  "withdrawnIds": [
+    "ai-metrics-canonical-root-kind",
+    "ai-metrics-config-snapshot-bounds",
+    "corpus-mail-store-exception-approved-disposition",
+    "r2-foundation-color-picker-disabled-open",
+    "r2-foundation-date-picker-disabled-open",
+    "r2-foundation-emoji-picker-disabled-open",
+    "r25-law-practice-runtime-bundle-overwrite-gate",
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-boolean-state-foundation-use-scribe-result-connected",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence"
+  ],
+  "withdrawnQualifiedIds": [
+    "ai-metrics-canonical-root-kind",
+    "ai-metrics-config-snapshot-bounds",
+    "corpus-mail-store-exception-approved-disposition",
+    "r27-boolean-state-foundation-spinner-state",
+    "r27-boolean-state-foundation-use-scribe-result-connected",
+    "r27-tooling-library-observability-config-snapshots-dataset-presence"
+  ],
+  "newQualifiedIds": [],
+  "changedQualifiedIds": ["r3-foundation-notification-action-busy"],
+  "designReplacements": [
+    "r3-foundation-notification-action-busy",
+    "foundation-ui-system-speech-input-connection"
+  ],
+  "archivedDesigns": [
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/ai-metrics-canonical-root-kind.md",
+      "sha256": "8b044426ecadf4a9ad602a066dd0439991b7667f3079635711d8b1bd193f5573"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/ai-metrics-config-snapshot-bounds.md",
+      "sha256": "6ab40f465a8b45df06ab00fa96ea21ea60e7251101799282135fc2ff2515d8e7"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/corpus-mail-store-exception-approved-disposition.md",
+      "sha256": "f2033046f977d6f84366f617c78b2889fd6bef5e3d770895227403ca771b0924"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/foundation-ui-system-speech-input-connection.md",
+      "sha256": "2c9397fd6b25ebffabd8c8f6939c154ef3083cf3282e1f920e8042dc95189cfc"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/r27-boolean-state-foundation-spinner-state.md",
+      "sha256": "b4e85ca55268012858b241d7adbded00eed209c75fdc3d0ca5b2c71bb67c8bd7"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/r27-boolean-state-foundation-use-scribe-result-connected.md",
+      "sha256": "f67a9a7c64d057e5881f8b08fddbf059894c6c2585e55ae5175aa144f3c62ec2"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/r27-tooling-library-observability-config-snapshots-dataset-presence.md",
+      "sha256": "f7ae29d4ff81796dd0dc6fa9bfa6f36826ff962f122eccea21653590762ac4ee"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-25-r35-reconciliation/r3-foundation-notification-action-busy.md",
+      "sha256": "1a9933365b385787ca56e928789047745896655198412a2f78d58c6ac89b0aa8"
+    }
+  ],
+  "metadataUpdates": [
+    {
+      "id": "drivers-acp-protocol-logging-options",
+      "line": 282,
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sourceSha256": "5796d5a788b14160b11328c3aedeaa485fb3e715b0c5dadf94e1f144af2a93ee",
+      "reason": "Current exported declaration anchor; D1 unchanged."
+    },
+    {
+      "id": "nlp-mcp-dataset-load-lines-options",
+      "line": 259,
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sourceSha256": "024369cc9269c9a24393704da6bce703761a8c9cea381079fb813b57c8f97eb0",
+      "reason": "Current class declaration anchor verified with Graft."
+    },
+    {
+      "id": "nlp-mcp-pipeline-process-options",
+      "line": 169,
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "sourceSha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91",
+      "reason": "Current class declaration anchor verified with Graft."
+    },
+    {
+      "id": "nlp-mcp-text-read-options",
+      "line": 221,
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sourceSha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e",
+      "reason": "Current exported class declaration anchor."
+    },
+    {
+      "id": "knowledge-ref-classification-input",
+      "line": 1920,
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "sourceSha256": "fbfc0aeba85c1c1f1822d363b046fd4a6f4557bd22f8a16c5e824b72eef30ec6",
+      "reason": "Current declaration/write-site anchor verified; classification unchanged."
+    },
+    {
+      "id": "knowledge-ref-candidate",
+      "line": 2326,
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "sourceSha256": "fbfc0aeba85c1c1f1822d363b046fd4a6f4557bd22f8a16c5e824b72eef30ec6",
+      "reason": "Current declaration/write-site anchor verified; classification unchanged."
+    },
+    {
+      "id": "r30-cli-commands-d-k-packet-mutation-empty-repair-root-remove-options",
+      "line": 308,
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
+      "sourceSha256": "28ad6e2a7cc6863c8384bce6bb84d0d6e86de32015dd6e94078ce9d2eb278d9e",
+      "reason": "Current declaration/write-site anchor verified; classification unchanged."
+    },
+    {
+      "id": "r3-tooling-envconfig-unresolved-turbo-secrets",
+      "line": 620,
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sourceSha256": "7e1a6fbe8fa35b50039d2b8f1342dccd368643c41ff1a21337093c54c77eae2d",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+      "line": 864,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
+      "line": 923,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+      "line": 930,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "sourceSha256": "3a3225181ceb71b7e23bd26a255bf1db10d7f22509c6cb14707a854cb9c09125",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r28-cli-internal-root-admission-journal-sidecar-remove-options",
+      "line": 944,
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+      "sourceSha256": "4dc480b6392b3be9ade8ba4083162204e42cb713221471feef28fcfedcdaaaad",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    },
+    {
+      "id": "r31-cli-internal-root-admitted-child-spawn-fields",
+      "line": 718,
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sourceSha256": "f5ea05fe58ceaec33b87ac1410b55b50253dd02f85c416a7403cbaf4db01a557",
+      "reason": "Current declaration or constructed call-site anchor verified through Graft; classification unchanged."
+    }
+  ],
+  "rawDispositions": [
+    {
+      "id": "r35-drivers-s-z-venice-sse-done",
+      "disposition": "outside-recall-net-single-Boolean-owner",
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sourceSha256": "0d3eb813bf472eaa0cc316fae5f4e9b687bb0c495d88461206e3c5415ea60bfa"
+    },
+    {
+      "id": "r35-drivers-s-z-xai-sse-done",
+      "disposition": "outside-recall-net-single-Boolean-owner",
+      "file": "packages/drivers/xai/src/XAi.models.ts",
+      "sourceSha256": "90617588fcb7d9040262aab8861cf5ecbab5c4f6dc426b4f27992aea74c3ed79"
+    },
+    {
+      "id": "r35-cli-internal-root-generated-file-mode-flags",
+      "disposition": "outside-recall-net-function-flag-parameters",
+      "ownerAudit": "r35-cli-first-reconciliation"
+    },
+    {
+      "id": "r29-yeet-sweep-worktree-probe-address",
+      "disposition": "reject-unsupported-strengthening-retain-existing4/3",
+      "ownerAudit": "r35-yeet-reconciliation"
+    }
+  ],
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "applied": 0,
+  "publicationEvidencePending": false,
+  "ownerAuditIndex": {
+    "file": "goals/boolean-creep/data/r35-owner-reviews/artifact-index.json",
+    "sha256": "2c6ce6fa2f946c34ac2cd01f1e08d84332e30de7501d8d37fef1060f53292e34"
+  },
+  "parentReconciliation": {
+    "file": "goals/boolean-creep/data/r35-reconciliation-progress-2026-09-25.json",
+    "sha256": "92704e6da63fb4c708e33b640f7c4a990a95b997622908bc5ba861014bf249f7"
+  }
+}

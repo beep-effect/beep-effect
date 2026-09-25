@@ -2,19 +2,24 @@
 
 ## Status
 
-R34 was interrupted after 21 of 27 lane receipts. The workstation recovery
-found changed frozen inputs, so R34 receives no completed-round or dry credit.
-The preserved findings were revalidated against the updated checkout: 45
-input and artifact bindings matched. Sixteen out-of-scope rows were archived,
-including two qualifications; three descriptor kinds and one locator were
-corrected. The inventory now has 731 rows: 121 qualified and 610 disqualified,
-with zero applied. Historical rows and both withdrawn designs are retained.
-See `data/r34-partial-integration-2026-09-25.json`.
+R35 completed all 27 census lanes against an unchanged frozen source. Parent
+reconciliation verified all execution receipts and 3,956 input bindings.
+The inventory now has **735 rows: 115 qualified and 620 disqualified**, with
+zero applied. Ten out-of-scope rows were withdrawn, including six qualified
+rows; fourteen disqualified records were added. The Notification design was
+corrected and the SpeechInput dependency repaired. Original inventory rows
+and all eight affected designs are preserved in history.
 
-PR #1223 merged the R33 checkpoint. The dry streak remains zero. A fresh
-current-source census, two consecutive dry rounds, independent P3 review,
-Benjamin's ratification merge, implementation, and final exact-main closure
-remain required.
+The existing Yeet probe/address contract remains unchanged: the proposed
+stronger restriction lacked supporting contract evidence. R35 is complete
+and wet, with no dry-round credit. See
+`data/r35-parent-integration-2026-09-25.json` and
+`data/r35-owner-reviews/README.md`.
+
+PR #1223 merged the R33 checkpoint. R34 remains interrupted and source-invalid.
+The dry streak is zero. Two consecutive complete current-source dry rounds,
+replacement independent P3 review, Benjamin's ratification merge,
+implementation, and final exact-main closure remain required.
 
 Lifecycle: `active`
 

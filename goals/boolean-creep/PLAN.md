@@ -1,20 +1,25 @@
 # PLAN — Boolean-Creep Eradication
 
-## R34 interruption and partial reconciliation, 2026-09-25
+## R35 complete census and reconciliation, 2026-09-25
 
-R34 was interrupted after 21 of 27 lane receipts. The workstation recovery
-found changed frozen inputs, so R34 receives no completed-round or dry credit.
-The preserved findings were revalidated against the updated checkout: 45
-input and artifact bindings matched. Sixteen out-of-scope rows were archived,
-including two qualifications; three descriptor kinds and one locator were
-corrected. The inventory now has 731 rows: 121 qualified and 610 disqualified,
-with zero applied. Historical rows and both withdrawn designs are retained.
-See `data/r34-partial-integration-2026-09-25.json`.
+R35 completed all 27 census lanes against an unchanged frozen source. Parent
+reconciliation verified all execution receipts and 3,956 input bindings.
+The inventory now has **735 rows: 115 qualified and 620 disqualified**, with
+zero applied. Ten out-of-scope rows were withdrawn, including six qualified
+rows; fourteen disqualified records were added. The Notification design was
+corrected and the SpeechInput dependency repaired. Original inventory rows
+and all eight affected designs are preserved in history.
 
-PR #1223 merged the R33 checkpoint. The dry streak remains zero. A fresh
-current-source census, two consecutive dry rounds, independent P3 review,
-Benjamin's ratification merge, implementation, and final exact-main closure
-remain required.
+The existing Yeet probe/address contract remains unchanged: the proposed
+stronger restriction lacked supporting contract evidence. R35 is complete
+and wet, with no dry-round credit. See
+`data/r35-parent-integration-2026-09-25.json` and
+`data/r35-owner-reviews/README.md`.
+
+PR #1223 merged the R33 checkpoint. R34 remains interrupted and source-invalid.
+The dry streak is zero. Two consecutive complete current-source dry rounds,
+replacement independent P3 review, Benjamin's ratification merge,
+implementation, and final exact-main closure remain required.
 
 ## R33 reconciliation, 2026-09-25
 
@@ -902,16 +907,14 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Remaining gates
 
-R33 is finalized complete/wet and saved by merged PR #1223. R34 was
-interrupted after 21 of 27 lane receipts and its frozen source changed;
-it receives no completed-round or dry-round credit. Preserve both rounds'
-evidence and the revalidated R34 partial corrections. Do not restart either
-controller. Prepare a fresh current-source census against the reconciled
-inventory and complete designs.
+R35 is complete and wet. Preserve its frozen execution evidence, reconciled
+inventory, archived designs, and owner audits. Do not restart the controller.
+Publish this checkpoint, refresh main, and prepare the next current-source
+census against the reconciled inventory and complete designs.
 
 Two consecutive complete current-source dry rounds remain required, followed
 by replacement independent zero-finding P3 review and a packet ratification
 PR merged by Benjamin. Then implement the reviewed designs, obtain Benjamin's
 implementation merges, run two final exact-main dry rounds, and merge the
-reflection and completed-retained closeout. No implementation or dry credit
-is claimed by the R34 recovery checkpoint.
+reflection and completed-retained closeout. This checkpoint claims neither
+implementation nor dry-round credit.

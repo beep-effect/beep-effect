@@ -8,11 +8,16 @@
   - E1 at `packages/foundation/ui-system/ui/src/components/speech-input.tsx:236,288-290` — `isConnecting` and `isConnected` are projections of the same `scribe.status`; the upstream connected projection is `use-scribe.ts:371`.
   - E2 at `packages/foundation/ui-system/ui/src/components/speech-input.tsx:371-383` — the three icon branches reconstruct connecting, connected, and idle from the pair.
 
-R35 scope correction proposal against source
-`68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`, main
-`5c768538e434336885d324cbf56d04fc2684959b`. The hook-result companion is
-withdrawn because its complete owner contains only one Boolean. This eligible
-two-Boolean context remains qualified. Independent P3 review remains pending.
+P2 coordination refresh against source
+`8f266b878445ca8a7f751f9248da428a4dde39a1` and corpus
+`origin/main@663904610cce2a38c06b0619a8c414646b69361c`. The prior
+review referenced source `7440cb8c4302ce64b87860069a464bafbf65f576`
+and corpus `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`; it does not
+certify this expanded coordinated scope. Fresh independent review is
+required with
+`r27-boolean-state-foundation-use-scribe-result-connected` before Tier 1C
+implementation. Source evidence is recorded in
+`data/design-refresh-2026-09-09-r27-boolean-ui-carriers.md`.
 
 # Current shape
 
@@ -52,10 +57,10 @@ imported from `@elevenlabs/client`. Promote that existing canonical owner to a
 strings and the existing type export; the new value export makes construction
 and guards schema-owned without creating a second family.
 
-This context design owns the shared status promotion once, plus its context
-and component-reader changes. Preserve UseScribeResult.isConnected and its
-return projection as an existing public hook API. The one-Boolean hook-result
-owner is outside the census recall net and is not a separate qualification.
+The newly qualified hook-result companion owns implementing this shared
+promotion once. This design owns the context and component-reader changes.
+Both land together; the former instruction to retain the hook's redundant
+`isConnected` property is superseded by the companion's separate 6/3 proof.
 
 ```ts
 import { $UiId } from "@beep/identity"
@@ -133,8 +138,8 @@ becoming connecting.
   same-name type; retain and update both value/type JSDoc examples.
 - `packages/foundation/ui-system/ui/src/hooks/use-scribe.ts:154-160,223-352,365-374`
   — use `ScribeStatus.Enum.*` for every idle/connecting/connected write and
-  retain the hook-result convenience projection at 371, optionally expressing
-  its same comparison through the kit guard. Do not change connection control flow.
+  remove the hook-result convenience projection at 371 under the companion
+  design. Do not change any surrounding connection control flow.
 - `packages/foundation/ui-system/ui/src/components/speech-input.tsx:19` —
   import the canonical `ScribeStatus` value for guards and its same-name type
   through the existing subpath.
@@ -151,13 +156,17 @@ becoming connecting.
   transcript clearing, and unmount disconnect while changing only context
   projection.
 - `packages/foundation/ui-system/ui/src/hooks/use-scribe.ts:207-374` — retain
-  this hook as the sole owner of connection state; this context migration
-  promotes the status domain but preserves the result property.
+  this hook as the sole owner of connection state; the companion replaces
+  status literals with kit values and removes the duplicate result property.
 
-Preserve the hook-result member and return projection at use-scribe.ts:140
-and371. The context consumes status directly; changing its two known direct
-scribe.isConnected reads to status guards does not authorize removing the
-exported convenience property. No extra compatibility getter is introduced.
+`packages/foundation/ui-system/ui/src/hooks/use-scribe.ts:140` and `:371`
+are now explicitly owned by the new hook-result design. Remove that upstream
+property in the same Tier 1C change as this context migration. The only
+direct `scribe.isConnected` readers are this component's lines 289 and
+316; exhaustive current source/subpath searches found no other executable
+hook caller. Neither design leaves a Boolean compatibility getter. This
+is an exported decoded hook-result change even though no additional
+in-repo consumer was found.
 
 # Guard-deletion accounting
 
@@ -169,9 +178,9 @@ exported convenience property. No extra compatibility getter is introduced.
   hand-authored literal union; the same-name type now derives from
   `ScribeStatus.Type`.
 
-The hook-result member and return projection at `use-scribe.ts:140,371`
-remain and earn no deletion credit. Status promotion and source edits are
-implemented and counted once. No request-id,
+The companion separately accounts for deletion of the hook-result member
+and return projection at `use-scribe.ts:140,371`. Shared status promotion
+and shared source edits are implemented and counted once. No request-id,
 settlement, callback-order, or connection cleanup guard is deleted.
 
 # Encoded-side impact
@@ -179,9 +188,9 @@ settlement, callback-order, or connection cleanup guard is deleted.
 No persisted or wire schema changes. Preserve SDK configuration and event
 payloads, token inputs, nullable error values, transcript event shapes,
 the exact three status strings, and all public component props/callbacks.
-The exported decoded hook result retains its `isConnected` convenience
-property and exact Boolean behavior. Only this component's context representation
-and its reads migrate; no encoded compatibility alias is necessary.
+The coordinated hook-result migration removes an exported decoded
+`isConnected` convenience property; the component's two known direct
+readers migrate atomically. No encoded compatibility alias is necessary.
 
 # Test impact
 
@@ -233,9 +242,9 @@ handoff. No package tests or browser recording ran in this P2 refresh.
 
 # Risk
 
-Land this derived context migration in Tier 1C. Add `status` to the context,
-promote the one existing upstream status owner, retain the hook convenience
-property, and migrate
+Land this derived context migration together with the separately qualified
+hook-result case in Tier 1C. Add `status` to the context, promote the one
+existing upstream owner, remove the hook convenience property, and migrate
 every writer and compound child atomically. No second vocabulary or
 unrelated hook overhaul is needed. The main risks are changing start
 invalidation, settlement-dependent error behavior, or callback timing while

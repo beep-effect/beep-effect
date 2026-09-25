@@ -1,17 +1,18 @@
 # Instance
 
 - id: `r3-foundation-notification-action-busy`
-- exact source SHA: `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`
-- corpus source SHA: `5c768538e434336885d324cbf56d04fc2684959b`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line: `packages/foundation/ui-system/ui/src/components/notification-card.tsx:315`
 - symbol: `NotificationCard.action`
-- members: `isLoading`, `isExecuted`, `showLoading`
+- members: `type`, `executed`, `isLoading`, `isExecuted`, `showLoading`,
+  `disabled`
 - evidence:
   - E4 at `notification-card.tsx:315-320` — `isLoading` is the per-action
     `loadingActionId` match, `isExecuted` projects the optional Boolean, and
     `showLoading` is exactly loading outside the modal action type.
-  - Consumer at `notification-card.tsx:326` — button disablement is loading
-    or executed; preserve it, but do not count a JSX expression as a sibling local.
+  - E4 at `notification-card.tsx:326` — button disablement is exactly loading
+    or executed, so every enabled busy tuple is unreachable.
 
 The stable ID expands the earlier two-local D1 record and supersedes the raw
 round-26 `r26-foundation-ui-notification-action-show-loading` ID. Replacement
@@ -45,20 +46,33 @@ remain intact:
 
 # Cardinality gap
 
-The actual coexisting locals are isLoading, isExecuted and showLoading. They
-represent 8 Boolean tuples; 6 are legal. showLoading implies isLoading,
-while execution remains independent. The legal tuples in that order are
-000, 010, 100, 110, 101 and 111. Nonloading yields showLoading=false;
-modal loading also yields false; nonmodal loading yields true.
+The complete finite cluster includes all four declared action-type alternatives
+and all three decoded `executed` alternatives, rather than only the three raw
+booleans found by round 26. Four derived booleans then give
+`4 × 3 × 2⁴ = 192` representable combinations. Exactly
+`4 × 3 × 2 = 24` are legal: action type and decoded executed state remain
+independent, while the per-action loading match is independent and determines
+all four Boolean projections together with type and execution.
 
-Action type is a four-value literal and executed is an Option<Boolean> on
-the separate source action. Neither is a Boolean local in this owner.
-The disabled JSX expression is a consumer, not another local declaration.
-The previous192/24 count combined these separate source and consumer surfaces
-and is superseded. Preserve all source alternatives and payloads without
-padding the local cluster. None and Some(false) may alias in presentation but
-must remain distinct encoded inputs. The current five-presentation target
-below remains behaviorally appropriate for the six legal local tuples.
+The narrower `isLoading,isExecuted,showLoading` projection remains 8/6, but it
+omits the public source alternatives and inline `disabled` output. Adding
+`disabled` still produces six distinct Boolean tuples:
+
+| isLoading | isExecuted | showLoading | disabled | source class |
+| --- | --- | --- | --- | --- |
+| false | false | false | false | idle, executed None or Some(false) |
+| false | true | false | true | executed without loading |
+| true | false | false | true | modal loading |
+| true | true | false | true | modal loading plus executed |
+| true | false | true | true | nonmodal loading |
+| true | true | true | true | nonmodal loading plus executed |
+
+`loadingActionId` remains an optional card-level selector rather than a finite
+member of this per-action cluster. Undefined and a nonmatching ID are
+observationally identical for the current action, while arbitrary ID contents
+and which sibling action matches are separate list-level facts. `isLoading` is
+the exact finite projection consumed here. Action ID, label, style, card status,
+callbacks, and sibling-action count are independent.
 
 # Target schema
 
@@ -218,10 +232,9 @@ and recorded browser QA. Formal P3 review remains required before apply.
 
 # Qualification recommendation
 
-Retain stable ID `r3-foundation-notification-action-busy` as designed with
-members `isLoading`, `isExecuted`, `showLoading`, cardinality 8/6,
-`storage=derived`, `exposure=internal`, `targetShape=literalkit`, and Tier 1.
-Loading and execution remain independent, but showLoading implies loading.
-Preserve discovery history and the raw report. Do not count source fields
-or JSX consumers as local Boolean members. This corrected P2 proposal grants
-no independent P3, implementation, or dry-round credit.
+Promote the stable `r3-foundation-notification-action-busy` record with the
+six-member full cluster above, cardinality 192/24, `storage=derived`,
+`exposure=internal`, `targetShape=literalkit`, and Tier 1. Preserve the former
+D1 note as discovery history: loading and execution remain independently
+combinable. Supersede the raw round-26 ID because `showLoading` and `disabled`
+are derived presentation aliases over that independent source state.

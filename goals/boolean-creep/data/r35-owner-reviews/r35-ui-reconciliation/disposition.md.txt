@@ -1,0 +1,41 @@
+# R35 UI source audit
+
+Source `68d03db9ba11d3ef7f846aa8d547ff54c1ba5625`; main `5c768538e434336885d324cbf56d04fc2684959b`. No source/track edits, P3 approval, implementation, or dry credit.
+
+## Todo
+
+Reject consolidation. Raw ten-Boolean projection1024/232 is arithmetically correct, but SPEC permits independently adjudicated relations in one declaration. Existing due16/7 and metadata128/64 constrain distinct outputs and share only a real input; no duplicate cluster. priority contributes four declared alternatives, not Boolean recall. Preserve independent selection/description. Existing LiteralKit designs remain preferable to unspecified full-owner tagged-union proposal.
+
+## Chart
+
+Reject all three proposed D1 replacements. Each complete props owner has hideIndicator and nestLabel Booleans, satisfying recall. Minimal indicator/nestLabel relation is6/5; private sole writer excludes dot/true. hideIndicator is independent and retained. D1 on the different two-Boolean projection does not refute this relation. No enum counted as a Boolean. Exact source equals R28 source.
+
+## Notification
+
+Accept three actual local members and8/6. Preserve source type/Option values and inline disabled consumer. Corrected design retains five presentation cases and encoded Option distinctions. Independent P3 still required.
+
+## Pickers
+
+Withdraw exact disabled/open rows: disabled belongs to props while open belongs to nested scoped state; no sibling open local is declared. DatePickerInner also has isControlled and ColorPickerInner has controlled, but neither creates the old disabled/open carrier or a constrained qualifying relation. Inherited props do not relocate nested state.open. No runtime change.
+
+## Calendar
+
+Retain D1. Calendar inherits React.ComponentProps<typeof DayPicker>, including optional showOutsideDays and showWeekNumber (installed declaration lines194/201), defaults the former at42, and reads props.showWeekNumber at113. All supplied Boolean pairs and omission remain independent; no declaration disappearance.
+
+## Spinner
+
+Withdraw qualified row: complete SpinnerState has runOnce:Boolean and interval/timeout:number|undefined only. Optional handle presence is not another Boolean. Genuine timing constraints do not bypass the two-Boolean net. Archive its design; no runtime rewrite.
+
+## Scribe
+
+Withdraw qualified UseScribeResult row: complete interface has only isConnected:Boolean; status is a literal, error nullable string, transcripts/payloads and callable controls do not add Boolean members. Archive companion design. Repair eligible SpeechInputContextValue design to retain hook isConnected and own status promotion without this companion.
+
+## Sidebar
+
+Retain qualified minimal open/state4/2 relation and separate D1 flags record. Full context has open/openMobile/isMobile actual Booleans. Its sole producer derives state from open at189 and co-carries both at191. Independent mobile axes stay untouched; literal is not counted as Boolean.
+
+## Proposed integration
+
+Update NotificationCard from proposed-inventory-updates.jsonl. Archive/remove the five rows in withdrawn-rows.jsonl, including two qualified designs. Retain both TodoItem designs, all three chart designs and shared family, Calendar D1, and Sidebar qualification. Install the two private corrected design proposals only after parent review. Expected delta: five fewer records, two fewer qualified records; no new qualified IDs. Preserve raw R35 report unchanged.
+
+Every reviewed source/rule/report/design input and proposal hash is in disposition.json. TodoItem, NotificationCard and chart source bytes match R28 exactly; historical proof was reused only after current-byte verification. Notification membership correction does not authorize changing rendering or Option encodings. The speech proposal removes the obsolete companion dependency and retains public hook isConnected.
