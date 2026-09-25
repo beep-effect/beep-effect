@@ -1,0 +1,61 @@
+{
+  "package": "@beep/cosmos",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T13:02:57.800170+00:00",
+  "totalMs": 5948.4365234375,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/drivers/cosmos/test/Cosmos.equivalence.test.ts",
+      "ms": 1.323974609375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "ms": 37.4365234375,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection selects cosmos only when WebGL2 is available",
+      "ms": 29.857248000000254
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection generates deterministic typed-array graph projections",
+      "ms": 29.606581999999435
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection preserves every projection buffer for generated production options",
+      "ms": 29.56972500000029
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection normalizes synthetic graph counts without a parallel defaults object",
+      "ms": 29.554952000000412
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection models an omitted WebGL canvas as Option none",
+      "ms": 29.541411000000153
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection rebuilds the sigma graphology graph on update and destroys the renderer after scope failure",
+      "ms": 7.436449000000721
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection probes explicit canvases without depending on the host WebGL runtime",
+      "ms": 4.418308000000252
+    },
+    {
+      "file": "packages/drivers/cosmos/test/Cosmos.equivalence.test.ts",
+      "testName": "Cosmos declared-field equivalence treats field-equal CosmosDriverError instances as equivalent and field-different ones as distinct",
+      "ms": 1.3240710000000036
+    }
+  ]
+}

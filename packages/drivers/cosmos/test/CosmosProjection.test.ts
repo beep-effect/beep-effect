@@ -8,9 +8,13 @@ import {
   SyntheticOntologyGraphOptions,
   selectCosmosBackend,
 } from "@beep/cosmos";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { fcRuns } from "@beep/fc-runs";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure, assertNone } from "@effect/vitest/utils";
+import { Cause, Effect } from "effect";
 import * as O from "effect/Option";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { vi } from "vitest";
 
 const graphologyState = vi.hoisted(
@@ -21,9 +25,11 @@ const graphologyState = vi.hoisted(
       readonly nodeKeys: () => ReadonlyArray<string>;
     }>;
     refreshCount: number;
+    killCount: number;
   } => ({
     graphs: [],
     refreshCount: 0,
+    killCount: 0,
   })
 );
 
@@ -63,7 +69,9 @@ vi.mock("sigma", () => ({
       graphologyState.refreshCount += 1;
     }
 
-    kill(): void {}
+    kill(): void {
+      graphologyState.killCount += 1;
+    }
   },
 }));
 
@@ -97,6 +105,32 @@ describe("cosmos driver projection and capability detection", () => {
     })
   );
 
+  it.prop(
+    "preserves every projection buffer for generated production options",
+    [
+      Arbitrary.schema(SyntheticOntologyGraphOptions).pipe(
+        Arbitrary.map((options) =>
+          SyntheticOntologyGraphOptions.make({
+            nodeCount: options.nodeCount % 65,
+            edgeCount: options.edgeCount % 129,
+            seed: options.seed % 2_147_483_648,
+          })
+        )
+      ),
+    ],
+    ([options]) => {
+      const first = generateSyntheticOntologyProjection(options);
+      const second = generateSyntheticOntologyProjection(options);
+
+      expect(first.nodeCount).toBe(second.nodeCount);
+      expect(first.edgeCount).toBe(second.edgeCount);
+      expect(first.nodeIds).toEqual(second.nodeIds);
+      expect(first.pointPositions).toEqual(second.pointPositions);
+      expect(first.links).toEqual(second.links);
+    },
+    { arbitrary: fcRuns(100) }
+  );
+
   it.effect("normalizes synthetic graph counts without a parallel defaults object", () =>
     Effect.sync(() => {
       const projection = generateSyntheticOntologyProjection(
@@ -112,7 +146,7 @@ describe("cosmos driver projection and capability detection", () => {
 
   it.effect("models an omitted WebGL canvas as Option none", () =>
     Effect.sync(() => {
-      expect(O.isNone(ProbeWebGl2Options.make({}).canvas)).toBe(true);
+      assertNone(ProbeWebGl2Options.make({}).canvas);
     })
   );
 
@@ -131,7 +165,7 @@ describe("cosmos driver projection and capability detection", () => {
   );
 
   it.effect(
-    "rebuilds the sigma graphology graph from the incoming update projection",
+    "rebuilds the sigma graphology graph on update and destroys the renderer after scope failure",
     Effect.fnUntraced(function* () {
       graphologyState.graphs.length = 0;
       graphologyState.refreshCount = 0;
@@ -152,29 +186,65 @@ describe("cosmos driver projection and capability detection", () => {
       const container = globalThis.document.createElement("div");
 
       try {
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            vi.stubGlobal("requestAnimationFrame", undefined);
+            yield* Effect.logInfo("Cosmos stage: acquire unframed renderer");
+            yield* Effect.scoped(
+              Effect.acquireRelease(renderCosmosGraph(container, initial), (unframedHandle) =>
+                Effect.sync(() => unframedHandle.destroy())
+              )
+            );
+
+            graphologyState.graphs.length = 0;
+            graphologyState.refreshCount = 0;
+            vi.stubGlobal("requestAnimationFrame", (_callback: FrameRequestCallback) => 1);
+            vi.stubGlobal("cancelAnimationFrame", (_handle: number) => undefined);
+
+            yield* Effect.logInfo("Cosmos stage: acquire framed renderer");
+            const handle = yield* Effect.acquireRelease(renderCosmosGraph(container, initial), (handle) =>
+              Effect.sync(() => handle.destroy())
+            );
+            const graph = graphologyState.graphs[0];
+
+            expect(graph?.nodeKeys()).toEqual(["n1", "n2"]);
+            expect(graph?.edgeKeys()).toEqual(["e0"]);
+
+            yield* Effect.logInfo("Cosmos stage: update projection");
+            handle.update(next);
+
+            expect(graph?.clearCount()).toBe(1);
+            expect(graph?.nodeKeys()).toEqual(["n10", "n20", "n30"]);
+            expect(graph?.edgeKeys()).toEqual(["e0", "e1"]);
+            expect(graphologyState.refreshCount).toBe(2);
+          })
+        );
+      } finally {
+        vi.unstubAllGlobals();
+      }
+
+      yield* Effect.sync(() => {
+        graphologyState.killCount = 0;
+      });
+      const failureContainer = globalThis.document.createElement("div");
+      const failureProjection = generateSyntheticOntologyProjection(
+        SyntheticOntologyGraphOptions.make({ nodeCount: 2, edgeCount: 1, seed: 42 })
+      );
+
+      try {
         vi.stubGlobal("requestAnimationFrame", undefined);
-        const unframedHandle = yield* renderCosmosGraph(container, initial);
-        unframedHandle.destroy();
+        const exit = yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* Effect.logInfo("Cosmos stage: acquire failure-path renderer");
+            yield* Effect.acquireRelease(renderCosmosGraph(failureContainer, failureProjection), (handle) =>
+              Effect.sync(() => handle.destroy())
+            );
+            return yield* Effect.fail("scope cleanup probe");
+          })
+        ).pipe(Effect.exit);
 
-        graphologyState.graphs.length = 0;
-        graphologyState.refreshCount = 0;
-        vi.stubGlobal("requestAnimationFrame", (_callback: FrameRequestCallback) => 1);
-        vi.stubGlobal("cancelAnimationFrame", (_handle: number) => undefined);
-
-        const handle = yield* renderCosmosGraph(container, initial);
-        const graph = graphologyState.graphs[0];
-
-        expect(graph?.nodeKeys()).toEqual(["n1", "n2"]);
-        expect(graph?.edgeKeys()).toEqual(["e0"]);
-
-        handle.update(next);
-
-        expect(graph?.clearCount()).toBe(1);
-        expect(graph?.nodeKeys()).toEqual(["n10", "n20", "n30"]);
-        expect(graph?.edgeKeys()).toEqual(["e0", "e1"]);
-        expect(graphologyState.refreshCount).toBe(2);
-
-        handle.destroy();
+        assertExitFailure(exit, Cause.fail("scope cleanup probe"));
+        expect(graphologyState.killCount).toBe(1);
       } finally {
         vi.unstubAllGlobals();
       }

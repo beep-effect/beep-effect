@@ -41295,195 +41295,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:104:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 104,
-      "endLine": 143,
-      "symbol": "withObs",
-      "occurrence": "v2:d569794c86606af08a1241eb98e3273a3863c3be936521320bdb67f1261ce9b5",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { CreateInput: () => Ref.set(inputExists, true).pipe(Effect.as(O.some({ inputUuid: \"uuid-1\", sceneItemId: 1 }))), GetInputSettings: () => Ref.get(inputExists).pipe( Effect.flatMap((exists) =>",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:150:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 150,
-      "endLine": 178,
-      "symbol": "withObs",
-      "occurrence": "v2:465598ed26df98a1e9913a34d39d24f866ed35351687870fec5bdf8a8ca503a3",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { GetInputSettings: () => Effect.succeedSome({ inputKind: \"pipewire-screen-capture-source\", inputSettings: { RestoreToken: \"portal-token-2\" }, }), GetSceneItemList: () => Effect.succeedSome({",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:185:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 185,
-      "endLine": 217,
-      "symbol": "withObs",
-      "occurrence": "v2:be2ef78eaf0e35bccf2c1d1606b5d1ec8577dce579ce6f0427656532cf4403f4",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { CreateSceneItem: () => Effect.succeedSome({ sceneItemId: 7 }), GetInputSettings: () => Effect.succeedSome({ inputKind: \"pipewire-screen-capture-source\", inputSettings: { RestoreToken: \"port",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:224:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 224,
-      "endLine": 248,
-      "symbol": "withObs",
-      "occurrence": "v2:b58660b8b214786602d18bd9dcfbe95bd834d19990b67e2d6fa6baf684b51693",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { StartRecord: (_, publish) => publish( ObsRecordStateChangedEvent.make({ outputActive: true, outputPath: O.none(), outputState: \"OBS_WEBSOCKET_OUTPUT_STARTED\", }) ).pipe(Effect.as(O.none<Unk",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:255:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 255,
-      "endLine": 270,
-      "symbol": "withObs",
-      "occurrence": "v2:02bc3746c2d47e4166563974892926b91d598aa42b10ab45a3bf38f8b47499e5",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { StopRecord: (_, publish) => publish( ObsRecordStateChangedEvent.make({ outputActive: false, outputPath: O.some(\"/tmp/beep-qa-video/from-event.mkv\"), outputState: \"OBS_WEBSOCKET_OUTPUT_STOPP",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:277:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 277,
-      "endLine": 294,
-      "symbol": "withObs",
-      "occurrence": "v2:ab9d52440cab37778c164f5a5dace34aa3e5cc9f032c4f96488a80a4d2a37868",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { GetRecordStatus: () => Effect.succeedSome({ outputActive: true, outputBytes: 1024, outputDuration: 1500, outputPaused: false, outputTimecode: \"00:00:01.500\", }), }, Effect.fnUntraced(functi",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:301:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 301,
-      "endLine": 312,
-      "symbol": "withObs",
-      "occurrence": "v2:4067dc17333c5cb257d0989453408ea1701fe8e002ebf3d46b991e19ae9c21da",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { GetRecordStatus: () => Effect.succeed(O.none<UnknownRecord>()), }, Effect.fnUntraced(function* (obs) { const error = yield* obs.recordStatus.pipe(Effect.flip); assert(ObsError.is(error)); e",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/Obs.service.test.ts:77:withObs@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 77,
-      "endLine": 96,
-      "symbol": "withObs",
-      "occurrence": "v2:fe21a25adf3c5aab1ee5500e62eff152683daabadde46a909737956351a0c258",
-      "class": "unresolved-layer-provide",
-      "evidence": "withObs( { GetVersion: () => Effect.succeedSome({ availableRequests: [], obsVersion: \"32.1.2\", obsWebSocketVersion: \"5.5.2\", platform: \"ubuntu\", platformDescription: \"CachyOS Linux\", rpcVersion: 1, su",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/drivers/obs/test/integration/Obs.live.test.ts:53:provide@14#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
-      "line": 53,
-      "endLine": 53,
-      "symbol": "provide",
-      "occurrence": "v2:7115c9dd07640b759807bf8ca8b85df195d27d48b2233503a45cabf995376a50",
-      "class": "unresolved-layer-provide",
-      "evidence": "Effect.provide(context)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts:732:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -71115,27 +70926,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/drivers/obs/test/Obs.service.test.ts:59:withObs@16#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/Obs.service.test.ts",
-      "line": 59,
-      "endLine": 68,
-      "symbol": "withObs",
-      "occurrence": "v2:cbd698c4d11621095d386e062368d27a2317e6c0f31b8bcaa747eb23460dec57",
-      "class": "resource-wrapper",
-      "evidence": "<A2, E>( handlers: Partial<Record<ObsRequestType, StubHandler>>, use: (obs: ObsShape, calls: Effect.Effect<ReadonlyArray<RecordedRequest>>) => Effect.Effect<A2, E> ): Effect.Effect<A2, E, Scope.Scope>",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts:67:provideScopedLayer@2#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -78729,48 +78519,6 @@
       "occurrence": "v2:d16855d6faf73e3dd4b450f726a2e77946aa3d2d0cf426da1e22b3983596ed22",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/drivers/obs/test/ObsProtocol.test.ts:203:scoped@27#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
-      "line": 203,
-      "endLine": 210,
-      "symbol": "scoped",
-      "occurrence": "v2:dd752fb091aac31e5f046d46d29c11b7ce7d80ea3944667fceaec5ada6f75875",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const server = yield* makeFakeObsServer({ authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }), }); return yield* ObsProtocol.co",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/drivers/obs/test/ObsProtocol.test.ts:223:scoped@27#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
-      "line": 223,
-      "endLine": 234,
-      "symbol": "scoped",
-      "occurrence": "v2:65ef6e92ec0c8f3f10262b86d2bd6c6b525e071150b5d8297d6a4136780a8f3b",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const server = yield* makeFakeObsServer({ authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }), rejectIdentifyWithCloseCode: 400",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -93166,25 +92914,92 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/drivers/cosmos/test/CosmosProjection.test.ts:115:expect@6#1",
-      "lens": "detector",
-      "ruleId": "EV006",
+      "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:189:scoped@15#1",
+      "lens": "resource",
+      "ruleId": "EV004",
       "package": "@beep/cosmos",
       "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
-      "line": 115,
-      "endLine": 115,
-      "symbol": "expect",
-      "occurrence": "v2:5b18cda84e285ff0e58887a998c9db3552c46f7989e73dcbb217de942f27a519",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isNone(ProbeWebGl2Options.make({}).canvas)).toBe(true)",
+      "line": 189,
+      "endLine": 221,
+      "symbol": "scoped",
+      "occurrence": "v2:2ac4af0e56fc313fe04fb4e2c3589d65a05810176e70dc49d829edb6e27e8024",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { vi.stubGlobal(\"requestAnimationFrame\", undefined); yield* Effect.logInfo(\"Cosmos stage: acquire unframed renderer\"); yield* Effect.scoped( Effect.acquireReleas",
       "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional shorter renderer scope: destroy the framed handle before finally restores requestAnimationFrame and cancelAnimationFrame globals. The test scope outlives global restoration and would change release ordering."
+    },
+    {
+      "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:193:scoped@19#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/cosmos",
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "line": 193,
+      "endLine": 197,
+      "symbol": "scoped",
+      "occurrence": "v2:b76ac36e120d83baf08f45ab187d7d3a980e4fb8ccc8fe1438a8a391bf3dc6c0",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.acquireRelease(renderCosmosGraph(container, initial), (unframedHandle) => Effect.sync(() => unframedHandle.destroy()) ) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional shorter unframed scope: destroy this handle before replacing the frame globals and resetting Graphology state for the framed renderer. A whole-test scope would delay this release past the next acquisition."
+    },
+    {
+      "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:236:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/cosmos",
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "line": 236,
+      "endLine": 244,
+      "symbol": "scoped",
+      "occurrence": "v2:f846b8a396a4d5d3eca1be5fd273f8d4228c6ef15d04c880b4f204f2e196dbd8",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { yield* Effect.logInfo(\"Cosmos stage: acquire failure-path renderer\"); yield* Effect.acquireRelease(renderCosmosGraph(failureContainer, failureProjection), (han",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional failure-probe scope: release the renderer before inspecting its failure Exit and asserting exactly one vendor kill. Keeping it until test teardown would make the cleanup assertion premature."
+    },
+    {
+      "id": "EV011:packages/drivers/cosmos/test/CosmosProjection.test.ts:18:vitest-import@0#1",
+      "lens": "detector",
+      "ruleId": "EV011",
+      "package": "@beep/cosmos",
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "line": 18,
+      "endLine": 18,
+      "symbol": "vitest-import",
+      "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
+      "class": "plain-vitest-with-effect",
+      "evidence": "import { vi } from \"vitest\";",
+      "replacement": {
+        "primitive": "module.@effect/vitest",
+        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
       },
       "severity": "minor",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "Vitest 5 hoisted Graphology/Sigma vendor mocks require vi imported directly from vitest. Re-exporting vi through @effect/vitest reproducibly fails before test registration; retain the direct import rather than enabling global APIs."
     },
     {
       "id": "EV006:packages/drivers/drizzle/test/Drizzle.errors.test.ts:137:expect@4#1",
@@ -148987,27 +148802,6 @@
       "status": "open"
     },
     {
-      "id": "EV009:packages/drivers/obs/test/integration/Obs.live.test.ts:32:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
-      "line": 32,
-      "endLine": 56,
-      "symbol": "it.live",
-      "occurrence": "v2:c090396fc8a25728045a3dcc398ce1b096e68e3cbb6ff42fd0453bc3cebf6d7e",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"connects to the live obs-websocket, verifies the version, and reads record status\", Effect.fnUntraced(function* () { const password = yield* Config.option(Config.Redacted(\"OBS_WEBSOCKET_PASS",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV009:packages/drivers/tika/test/Tika.server.test.ts:516:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
@@ -160103,27 +159897,6 @@
       "status": "open"
     },
     {
-      "id": "EV011:packages/drivers/cosmos/test/CosmosProjection.test.ts:14:vitest-import@0#1",
-      "lens": "detector",
-      "ruleId": "EV011",
-      "package": "@beep/cosmos",
-      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
-      "line": 14,
-      "endLine": 14,
-      "symbol": "vitest-import",
-      "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
-      "class": "plain-vitest-with-effect",
-      "evidence": "import { vi } from \"vitest\";",
-      "replacement": {
-        "primitive": "module.@effect/vitest",
-        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV011:packages/drivers/n3/test/N3TurtleCodec.test.ts:9:vitest-import@0#1",
       "lens": "detector",
       "ruleId": "EV011",
@@ -163789,27 +163562,6 @@
       "occurrence": "v2:30d35eff5ee33035f43855b6f9c9fa31cb5dd32eabc692a4d5ad8e60eb758058",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(TestLayer)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/obs/test/ObsProtocol.test.ts:148:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/obs",
-      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
-      "line": 148,
-      "endLine": 148,
-      "symbol": "it.layer",
-      "occurrence": "v2:5e4596a56ccd82d1e85f180c8f4868ce333371ebbb10c201dc698572388c35a6",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(NodeCrypto.layer)",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
@@ -169341,6 +169093,50 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV004:packages/drivers/obs/test/ObsProtocol.test.ts:206:scoped@27#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/obs",
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "line": 206,
+      "endLine": 214,
+      "symbol": "scoped",
+      "occurrence": "v2:cf784903784d6fc3c102fdf116d27cc5a828bfd18ba7c31b3011e5f73bc6df81",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const server = yield* makeFakeObsServer({ authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }), }); yield* Effect.log(\"OBS proto",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional shorter handshake-failure scope: close the fake socket reader and acquired protocol resources before inspecting the rejected handshake error. Deferring release until whole-test teardown changes the failure observation boundary."
+    },
+    {
+      "id": "EV004:packages/drivers/obs/test/ObsProtocol.test.ts:227:scoped@27#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/obs",
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "line": 227,
+      "endLine": 239,
+      "symbol": "scoped",
+      "occurrence": "v2:14197fd88404c0da6f3b098e0e50eaad152f5850accc41472118ca571881ac2a",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const server = yield* makeFakeObsServer({ authentication: ObsAuthChallenge.make({ challenge: DOC_CHALLENGE, salt: DOC_SALT }), rejectIdentifyWithCloseCode: 400",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Intentional shorter handshake-failure scope: close the fake socket reader and acquired protocol resources before inspecting the rejected handshake error. Deferring release until whole-test teardown changes the failure observation boundary."
     }
   ]
 }

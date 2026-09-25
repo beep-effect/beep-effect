@@ -2265,6 +2265,22 @@ Node reproduced the mismatch after 36 runs and three shrinks. A migration rule
 that distinguishes presence checks from payload equality semantics would prevent
 this accidental strengthening.
 
+## Cosmos hoisted vendor mocks require the direct Vitest API import
+
+Moving `vi` from `vitest` to its public `@effect/vitest` re-export caused Vitest
+5 to reject CosmosProjection before test registration: `There are some problems
+in resolving the mocks API`. The error requests a direct import or globals.
+Retain the direct vi import with an EV011 exception for hoisted Graphology/Sigma
+mocks. A detector hint that distinguishes hoisted vendor mocks from ordinary
+runner imports would prevent this non-equivalent rewrite.
+
+The added failure-cleanup probe initially ran as a separate test and observed
+three vendor kill calls instead of one: shared Vitest configuration enables
+concurrent tests. Both cases mutated the same vendor state/global stubs. Keep
+normal and failure cleanup probes within the existing renderer test, preserving
+one fixture owner; do not disable concurrency across the package or loosen the
+exact kill assertion.
+
 ## Schema runner-context reproduction resolved after prerequisite merge
 
 After PR #1241 landed, merge `654e80230f` incorporated the runner fix. The same
@@ -2272,3 +2288,13 @@ schema package-only shared-worker coverage command now passes 725 tests across
 78 files, exit 0, with no TestContextUnavailable failures. The prior 60 failures
 remain documented above as pre-integration evidence. The integration receipt is
 `history/2026-09-25-schema-runner-integration.md`.
+
+## Stack merge resolution must fail closed
+
+During runner integration, the cache baseline's synthetic merge-base blob
+contained conflict markers and could not decode as JSON. The resolution command
+lacked fail-fast shell handling, so later staging and commit steps still ran.
+The unpublished merge was corrected and amended before any push; verification
+compared the real parent projections and preserved the eight codegen-only
+dependency changes. Use fail-fast sequencing and validate both JSON and conflict
+markers before staging. Existing commit hooks did not reject these markers.
