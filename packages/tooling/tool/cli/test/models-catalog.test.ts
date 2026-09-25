@@ -24,6 +24,11 @@ import * as S from "effect/Schema";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { FixtureCatalogSources, readFixtureLayers } from "./helpers/models-fixtures.ts";
 
+const decodeUpstream = S.decodeEffect(UpstreamCatalog);
+const encodeUpstream = S.encodeUnknownEffect(UpstreamCatalog);
+const decodeCodex = S.decodeEffect(CodexModelsCache);
+const encodeCodex = S.encodeUnknownEffect(CodexModelsCache);
+
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const models = Layer.mergeAll(ModelsCatalogLive, ModelsLedgerLive, FixtureCatalogSources).pipe(Layer.provide(platform));
 
@@ -32,12 +37,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
     "preserves schema-derived upstream and Codex payloads through round trips",
     [UpstreamCatalog, CodexModelsCache],
     Effect.fnUntraced(function* ([upstream, codex]) {
-      expect(yield* S.decodeEffect(UpstreamCatalog)(yield* S.encodeUnknownEffect(UpstreamCatalog)(upstream))).toEqual(
-        upstream
-      );
-      expect(yield* S.decodeEffect(CodexModelsCache)(yield* S.encodeUnknownEffect(CodexModelsCache)(codex))).toEqual(
-        codex
-      );
+      expect(yield* decodeUpstream(yield* encodeUpstream(upstream))).toEqual(upstream);
+      expect(yield* decodeCodex(yield* encodeCodex(codex))).toEqual(codex);
     }),
     { arbitrary: fcRuns(16) }
   );
@@ -64,12 +65,8 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
           },
         ],
       };
-      expect(yield* S.encodeUnknownEffect(UpstreamCatalog)(yield* S.decodeEffect(UpstreamCatalog)(upstream))).toEqual(
-        upstream
-      );
-      expect(yield* S.encodeUnknownEffect(CodexModelsCache)(yield* S.decodeEffect(CodexModelsCache)(cache))).toEqual(
-        cache
-      );
+      expect(yield* encodeUpstream(yield* decodeUpstream(upstream))).toEqual(upstream);
+      expect(yield* encodeCodex(yield* decodeCodex(cache))).toEqual(cache);
     })
   );
 

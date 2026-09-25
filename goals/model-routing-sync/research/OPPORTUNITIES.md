@@ -88,3 +88,13 @@
   separate test typecheck lane. Use typed `decodeEffect` for already typed
   payloads and run `package-test-typecheck` alongside focused tests before
   publication; do not weaken the diagnostic or relabel it as environmental.
+- Hosted policy lint also enforces module-scope schema compilation, which the
+  package lint subset does not cover. Hoisted the new test codecs and ran root
+  Oxlint explicitly: it passes, along with all 40 Models tests, test typechecking,
+  and package quick verification.
+- Coverage failed outside Models in wink (invalid string length), utils (private
+  error equivalence), and identity (missing instrumented test context). The same
+  failures reproduce locally with files identical to current main; adding only
+  the command-line `--isolate` flag makes all three package coverage runs pass.
+  A three-config isolation proposal is prepared separately from the scoped
+  Models changes; do not refresh coverage thresholds to hide the failures.

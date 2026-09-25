@@ -33,6 +33,10 @@ import {
 } from "./helpers/models-fixtures.ts";
 import type { DriftKind } from "@beep/repo-cli/commands/Models";
 
+const decodeUpstream = S.decodeEffect(UpstreamCatalog);
+const decodeCodex = S.decodeEffect(CodexModelsCache);
+const encodeReportJson = S.encodeUnknownEffect(S.fromJsonString(ModelsCheckReport));
+
 const encodeReport = S.encodeUnknownEffect(ModelsCheckReport);
 const decodeReport = S.decodeUnknownEffect(ModelsCheckReport);
 
@@ -103,10 +107,10 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const rawOnly = "__raw_only_metadata__";
-      const upstream = yield* S.decodeEffect(UpstreamCatalog)({
+      const upstream = yield* decodeUpstream({
         "codex-pro": [{ id: "gpt-6-astra", extension: rawOnly, thinking: { levels: ["medium"], extension: rawOnly } }],
       });
-      const codex = yield* S.decodeEffect(CodexModelsCache)({
+      const codex = yield* decodeCodex({
         identity: { account: rawOnly },
         models: [
           {
@@ -129,7 +133,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       );
       expect(persisted).toContain("gpt-6-astra");
       expect(persisted).not.toContain(rawOnly);
-      expect(yield* S.encodeUnknownEffect(S.fromJsonString(ModelsCheckReport))(report)).not.toContain(rawOnly);
+      expect(yield* encodeReportJson(report)).not.toContain(rawOnly);
     })
   );
 
