@@ -462,13 +462,13 @@ every `graft` invocation dies at startup with `No native build was found`.
 If an install already skipped it, resolve the installed package root and rebuild:
 
 ```sh
-graft_package="$(dirname "$(dirname "$(readlink -f "$(command -v graft)")")")"
+graft_package="$(npm root -g --prefix "$HOME/.local")/@nanonets/graft"
 (cd "$graft_package" && npm rebuild tree-sitter-kotlin)
 ```
 
-The executable resolves to `dist/cli.js`, so two `dirname` calls reach the package
-root. Derive it from the executable instead of hardcoding a home-relative install
-path: the knowledge-refs check rejects live external-mirror paths in this runbook.
+Resolve the package from the same user-local npm prefix used for installation.
+`command -v graft` can select a mise shim, whose location does not identify the
+installed package root.
 Keep exactly one `graft` on the machine: a second copy installed into a mise node
 global shadows this one on the systemd unit's PATH and the preflight then reads
 the wrong version.
