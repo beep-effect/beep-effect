@@ -10,7 +10,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
 import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { changedPackageNamesForPaths, collectWorkspaces } from "../../Quality/internal/PackageVerify.ts";
@@ -35,7 +35,7 @@ import { ProofLedger } from "./ProofLedger.ts";
 import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
 import type { Crypto, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetAttemptStarted } from "./AttemptJournal.ts";
 import type { ProofEpoch, ProofReuseDecision } from "./ProofFact.ts";
@@ -597,18 +597,30 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
  * **Details**
  *
  * The change is the branch's own diff against its base
- * (`git diff --name-only <base>...HEAD`) unioned with the working tree the
- * attempt verified — every staged, unstaged and untracked path, read from one
- * `git status --porcelain=v1 -z --untracked-files=all` snapshot so a path the
- * attempt ran against cannot fall out of the set between collection and
- * mapping. Each path maps to the deepest workspace containing it; paths under
- * no workspace contribute nothing, because root config is already the proof
- * epoch (ruling 4) and documentation is not package source.
+ * (`git diff --name-only --no-renames -z <base>...HEAD`) unioned with the
+ * working tree the attempt verified — every staged, unstaged and untracked
+ * path, read from one `git status --porcelain=v1 -z --untracked-files=all`
+ * snapshot so a path the attempt ran against cannot fall out of the set between
+ * collection and mapping. Both reads take stdout untrimmed, because trimming
+ * the buffer eats the leading space of a `-z` status record and merging stderr
+ * fuses a NUL-less fragment into the record beside it. Each path maps to the
+ * deepest workspace containing it, resolved against the canonical checkout path
+ * so a symlinked root still matches; paths under no workspace contribute
+ * nothing, which is ruling 69's scope and not a claim that they are covered
+ * elsewhere. Six root inputs are covered, by the epoch rather than the tripwire
+ * (`bun.lock`, `.bun-version`, `.nvmrc`, `turbo.json`, `tsconfig.base.json` and
+ * the policy pack's manifest), and documentation is not package source. Other
+ * root-level lane inputs — `standards/*.jsonc`, `biome.json`,
+ * `.github/workflows/`, `scripts/` — are in no workspace and in no epoch
+ * component, so a change to one trips nothing: a known gap, open against
+ * ruling 69.
  *
- * It never fails: a failed or truncated git read, or a workspace list that
- * could not be resolved, yields `unavailable` carrying the reason, and the
- * tripwire then fails closed for every lane with a package scope. The verdict
- * writer logs the outcome and proceeds either way.
+ * It never fails. Five things yield `unavailable` carrying their reason: a
+ * checkout path that cannot be canonicalised, a workspace list that could not
+ * be resolved, a workspace list that resolved cleanly but names nothing, and a
+ * failed or truncated read of either git command. The tripwire then fails
+ * closed for every lane with a package scope, and the verdict writer logs the
+ * outcome and proceeds either way.
  *
  * **Example** (Build the reader effect)
  *
@@ -630,14 +642,14 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
  * ```
  *
  * @param context - Repo context naming the checkout and its base ref.
- * @param capture - The command capture to run `git` through; the repo capture by default.
+ * @param capture - The command capture to run `git` through; the untrimmed stdout capture by default.
  * @returns The changed package set, or why it could not be read.
  * @category services
  * @since 0.0.0
  */
 export const changedPackagesForAttempt = Effect.fn("Yeet.changedPackagesForAttempt")(function* (
   context: RepoRunContext,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+  capture: typeof runRepoCommandCapture = runRepoCommandCaptureRaw
 ): Effect.fn.Return<
   ProofChangedPackages,
   never,
@@ -712,12 +724,17 @@ const laneInputScopes = (
  * lanes never reach the tripwire: the ledger refuses them as
  * `undeclared-inputs` first.
  *
- * A failed lane also carries an empty scope, because `resolveLaneInputDigest`
- * short-circuits on failure before it reads any Turbo digest. Nothing is lost:
- * every production lane tuple declares no digest, so a failed lane's key is
- * `undeclared` and the ledger refuses it as `undeclared-inputs` before the
- * tripwire runs. A lane whose digest the executor declared has no Turbo ledger
- * to derive a scope from on either outcome.
+ * A failed lane also carries an empty scope, and so does a lane whose digest the
+ * executor declared. Neither is short of a ledger — every wrapper step is given
+ * one, and it is removed afterwards whether or not it was read. The scope is
+ * discarded because `resolveLaneInputDigestSource` returns at its
+ * `declared`-or-`failure` short-circuit before reading it. In production the
+ * declared digest is always `None` and Turbo folds no digest for a red run, so a
+ * failed lane's key is `undeclared` and the ledger refuses it as
+ * `undeclared-inputs` before the tripwire runs. That is why the tripwire never
+ * sees a failed lane — not that nothing is lost by it: a red run recording no
+ * digest is also why a hit-versus-failed disagreement cannot arise in
+ * production (proposed ruling 72, open).
  *
  * **Example** (A scoped lane trips on its own package)
  *

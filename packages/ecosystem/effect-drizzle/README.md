@@ -249,7 +249,7 @@ Kit constructor deriving dialect-bound model, entity, and table builders.
 **Signature**
 
 ```ts
-declare const make: { <const Defaults extends FieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends FieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(dialect: D, build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): DialectKit<D, Defaults>; }
+declare const make: { <const Defaults extends FieldsInput>(build: (pg: PgToolkit) => PgKitConfig<Defaults>): (dialect: "pg") => PgKit<Defaults>; <const Defaults extends FieldsInput>(build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): (dialect: "sqlite") => SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): (dialect: D) => DialectKit<D, Defaults>; <const Defaults extends FieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends FieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(dialect: D, build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): DialectKit<D, Defaults>; }
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L32)
@@ -280,7 +280,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const Dialect: Dialect
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L63)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L69)
 
 ##### EntityFactory
 
@@ -292,7 +292,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const EntityFactory: EntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L64)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L70)
 
 ##### FieldExcept
 
@@ -340,7 +340,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgKit: PgKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L65)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L71)
 
 ##### PgKitConfig
 
@@ -352,7 +352,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgKitConfig: PgKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L66)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L72)
 
 ##### PgKitExtension
 
@@ -364,7 +364,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgKitExtension: PgKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L67)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L73)
 
 ##### PgToolkit
 
@@ -376,7 +376,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const PgToolkit: PgToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L68)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L74)
 
 ##### SqliteEntityFactory
 
@@ -388,7 +388,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteEntityFactory: SqliteEntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L69)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L75)
 
 ##### SqliteKit
 
@@ -400,7 +400,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteKit: SqliteKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L70)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L76)
 
 ##### SqliteKitConfig
 
@@ -412,7 +412,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteKitConfig: SqliteKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L71)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L77)
 
 ##### SqliteKitExtension
 
@@ -424,7 +424,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteKitExtension: SqliteKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L72)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L78)
 
 ##### SqliteToolkit
 
@@ -436,7 +436,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const SqliteToolkit: SqliteToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L73)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L79)
 
 ##### ValidateCollision
 
@@ -448,7 +448,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const ValidateCollision: ValidateCollision<Defaults, Own>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L74)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L80)
 
 ##### ValidateMergedFields
 
@@ -460,7 +460,7 @@ Public kit configuration and result types for both supported SQL dialects.
 declare const ValidateMergedFields: ValidateMergedFields<Defaults, Own, Effective>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L75)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L81)
 
 ##### VariantField
 
@@ -493,7 +493,7 @@ Shared model constructors and variant helpers exposed by the root entrypoint.
 **Signature**
 
 ```ts
-declare const fieldEvolve: { <Self extends Field<any> | Top, const Mapping extends Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(f: Mapping): (self: Self) => Field<Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; <Self extends Field<any> | Top, const Mapping extends Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(self: Self, f: Mapping): Field<Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; }
+declare const fieldEvolve: FieldEvolve
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L41)
@@ -519,7 +519,7 @@ Optimistic repository constructor and conflict error.
 **Signature**
 
 ```ts
-declare const makeRepository: { <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; <const Id extends string>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): <const M extends RepositoryModel>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>; }
+declare const makeRepository: { <const Id extends string>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): <const M extends RepositoryModel>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>; <const M extends RepositoryModel, const Id extends IdKey<M>>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>; <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; }
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L27)
@@ -536,7 +536,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const AnyModel: AnyModel
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L82)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L88)
 
 ##### ColumnsOf
 
@@ -548,7 +548,31 @@ Shared model inference types exposed by the root entrypoint.
 declare const ColumnsOf: ColumnsOf<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L83)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L89)
+
+##### DefaultSqlExpr
+
+Public column-metadata types used to describe defaults, uniqueness, and references.
+
+**Signature**
+
+```ts
+declare const DefaultSqlExpr: DefaultSqlExpr<Carrier>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L58)
+
+##### DefaultValue
+
+Public column-metadata types used to describe defaults, uniqueness, and references.
+
+**Signature**
+
+```ts
+declare const DefaultValue: DefaultValue<Encoded>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L58)
 
 ##### EffectiveSchema
 
@@ -560,7 +584,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const EffectiveSchema: EffectiveSchema<I>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L84)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L90)
 
 ##### FieldInput
 
@@ -584,7 +608,19 @@ Shared model inference types exposed by the root entrypoint.
 declare const FieldsInput: FieldsInput
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L85)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L91)
+
+##### IsUniqueKey
+
+Public column-metadata types used to describe defaults, uniqueness, and references.
+
+**Signature**
+
+```ts
+declare const IsUniqueKey: IsUniqueKey<M>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L58)
 
 ##### ModelClass
 
@@ -596,7 +632,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const ModelClass: ModelClass<Self, F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L86)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L92)
 
 ##### PatchedField
 
@@ -610,6 +646,18 @@ declare const PatchedField: Patched<I, Patch>
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L51)
 
+##### References
+
+Public column-metadata types used to describe defaults, uniqueness, and references.
+
+**Signature**
+
+```ts
+declare const References: References<TableName, ColumnName>
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L58)
+
 ##### Repository
 
 Repository result and version-column types.
@@ -620,7 +668,7 @@ Repository result and version-column types.
 declare const Repository: Repository<M, Id>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L57)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L63)
 
 ##### Statics
 
@@ -632,7 +680,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const Statics: Statics<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L87)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L93)
 
 ##### ValidateFields
 
@@ -644,7 +692,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const ValidateFields: ValidateFields<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L88)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L94)
 
 ##### Variant
 
@@ -656,7 +704,7 @@ Shared model inference types exposed by the root entrypoint.
 declare const Variant: "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L89)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L95)
 
 ##### VersionKey
 
@@ -668,7 +716,7 @@ Repository result and version-column types.
 declare const VersionKey: VersionKey<M>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L57)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L63)
 
 ##### isUniqueKey
 
@@ -681,48 +729,6 @@ declare const isUniqueKey: (meta: Meta) => boolean
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L17)
-
-#### utils
-
-##### DefaultSqlExpr
-
-**Signature**
-
-```ts
-declare const DefaultSqlExpr: DefaultSqlExpr<Carrier>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
-
-##### DefaultValue
-
-**Signature**
-
-```ts
-declare const DefaultValue: DefaultValue<Encoded>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
-
-##### IsUniqueKey
-
-**Signature**
-
-```ts
-declare const IsUniqueKey: IsUniqueKey<M>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
-
-##### References
-
-**Signature**
-
-```ts
-declare const References: References<TableName, ColumnName>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/index.ts#L52)
 
 ### Kit constructor — `@beep/effect-drizzle`
 
@@ -780,10 +786,10 @@ kit.pg.integer // => PostgreSQL integer combinator
 **Signature**
 
 ```ts
-declare const make: { <const Defaults extends PgFieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends SqliteFieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(dialect: D, build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): DialectKit<D, Defaults>; }
+declare const make: { <const Defaults extends PgFieldsInput>(build: (pg: PgToolkit) => PgKitConfig<Defaults>): (dialect: "pg") => PgKit<Defaults>; <const Defaults extends SqliteFieldsInput>(build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): (dialect: "sqlite") => SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): (dialect: D) => DialectKit<D, Defaults>; <const Defaults extends PgFieldsInput>(dialect: "pg", build: (pg: PgToolkit) => PgKitConfig<Defaults>): PgKit<Defaults>; <const Defaults extends SqliteFieldsInput>(dialect: "sqlite", build: (sqlite: SqliteToolkit) => SqliteKitConfig<Defaults>): SqliteKit<Defaults>; <const D extends Dialect, const Defaults extends DialectFields<D>>(dialect: D, build: (toolkit: DialectToolkit<D>) => DialectConfig<D, Defaults>): DialectKit<D, Defaults>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L139)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L129)
 
 #### type-level
 
@@ -814,7 +820,7 @@ type PostgreSQL = Extract<Dialect, "pg"> // => "pg"
 type Dialect = "pg" | "sqlite"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L66)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L68)
 
 ##### EntityFactory
 
@@ -826,7 +832,7 @@ PostgreSQL kit configuration and result types.
 declare const EntityFactory: EntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L23)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L25)
 
 ##### PgKit
 
@@ -838,7 +844,7 @@ PostgreSQL kit configuration and result types.
 declare const PgKit: PgKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L24)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L26)
 
 ##### PgKitConfig
 
@@ -850,7 +856,7 @@ PostgreSQL kit configuration and result types.
 declare const PgKitConfig: PgKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L25)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L27)
 
 ##### PgKitExtension
 
@@ -862,7 +868,7 @@ PostgreSQL kit configuration and result types.
 declare const PgKitExtension: PgKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L26)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L28)
 
 ##### PgToolkit
 
@@ -874,7 +880,7 @@ PostgreSQL kit configuration and result types.
 declare const PgToolkit: PgToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L27)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L29)
 
 ##### SqliteEntityFactory
 
@@ -886,7 +892,7 @@ SQLite kit configuration and result types.
 declare const SqliteEntityFactory: SqliteEntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L36)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L38)
 
 ##### SqliteKit
 
@@ -898,7 +904,7 @@ SQLite kit configuration and result types.
 declare const SqliteKit: SqliteKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L37)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L39)
 
 ##### SqliteKitConfig
 
@@ -910,7 +916,7 @@ SQLite kit configuration and result types.
 declare const SqliteKitConfig: SqliteKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L38)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L40)
 
 ##### SqliteKitExtension
 
@@ -922,7 +928,7 @@ SQLite kit configuration and result types.
 declare const SqliteKitExtension: SqliteKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L39)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L41)
 
 ##### SqliteToolkit
 
@@ -934,7 +940,7 @@ SQLite kit configuration and result types.
 declare const SqliteToolkit: SqliteToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L40)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L42)
 
 ##### ValidateCollision
 
@@ -946,7 +952,7 @@ PostgreSQL kit configuration and result types.
 declare const ValidateCollision: ValidateCollision<Defaults, Own>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L28)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L30)
 
 ##### ValidateMergedFields
 
@@ -958,7 +964,7 @@ PostgreSQL kit configuration and result types.
 declare const ValidateMergedFields: ValidateMergedFields<Defaults, Own, Effective>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L29)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/kit.ts#L31)
 
 ### PostgreSQL entrypoint — `@beep/effect-drizzle/pg`
 
@@ -990,6 +996,20 @@ declare const default: <const Value>(value: Value) => <I extends Input>(input: I
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L19)
 
+#### constants
+
+##### NumberDeclarationRepresentation
+
+Representation annotation that gives a declared number schema the `number` carrier.
+
+**Signature**
+
+```ts
+declare const NumberDeclarationRepresentation: { readonly id: "@beep/effect-drizzle/pg/Number"; readonly payload: null; }
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L24)
+
 #### factories
 
 ##### make
@@ -1002,7 +1022,7 @@ Creates a PostgreSQL-bound effect-drizzle kit.
 declare const make: <const Defaults extends FieldsInput>(build: (pg: PgToolkit) => PgKitConfig<Defaults>) => PgKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L29)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L34)
 
 #### projections
 
@@ -1016,7 +1036,7 @@ PostgreSQL schema assembly constructor and error.
 declare const SchemaAssemblyError: typeof SchemaAssemblyError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L34)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L39)
 
 ##### schema
 
@@ -1028,7 +1048,7 @@ PostgreSQL schema assembly constructor and error.
 declare const schema: <const Models extends ModelRecord>(models: Models & ValidateSchema<Models>) => Assembly<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L34)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L39)
 
 ##### toPgTable
 
@@ -1037,10 +1057,10 @@ Projects one effect-drizzle model into a PostgreSQL Drizzle table.
 **Signature**
 
 ```ts
-declare const toPgTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M>, enums?: EnumRegistry) => TableOf<M>
+declare const toPgTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M> | undefined, enums?: Readonly<Record<string, EnumInstance>> | undefined) => TableOf<M>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L39)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L44)
 
 #### tables
 
@@ -1054,7 +1074,7 @@ Re-exports all named exports from the "./extras.ts" module as `Table`.
 export * as Table from "./extras.ts"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L24)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L29)
 
 #### type-level
 
@@ -1068,7 +1088,7 @@ PostgreSQL table projection inference types.
 declare const AdditionalExtras: AdditionalExtras<M>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L76)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L81)
 
 ##### Assembly
 
@@ -1080,7 +1100,7 @@ PostgreSQL schema assembly inference types.
 declare const Assembly: Assembly<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L65)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L70)
 
 ##### Bigint
 
@@ -1092,7 +1112,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Bigint: Bigint<Mode>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### BuilderFor
 
@@ -1104,7 +1124,7 @@ PostgreSQL table projection inference types.
 declare const BuilderFor: BuilderFor<I>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L77)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L82)
 
 ##### BuildersOf
 
@@ -1116,7 +1136,7 @@ PostgreSQL table projection inference types.
 declare const BuildersOf: BuildersOf<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L78)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L83)
 
 ##### Custom
 
@@ -1128,7 +1148,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Custom: Custom<SqlType>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### EntityFactory
 
@@ -1140,7 +1160,7 @@ PostgreSQL kit configuration and result types.
 declare const EntityFactory: EntityFactory<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L52)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L57)
 
 ##### Integer
 
@@ -1152,7 +1172,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Integer: Integer<Ident>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### Jsonb
 
@@ -1164,7 +1184,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Jsonb: { readonly _tag: "jsonb"; readonly dialect: "pg"; readonly kind: "jsonb"; readonly ident: "jsonb"; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### ModelRecord
 
@@ -1176,7 +1196,7 @@ PostgreSQL schema assembly inference types.
 declare const ModelRecord: ModelRecord
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L66)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L71)
 
 ##### Numeric
 
@@ -1188,7 +1208,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Numeric: Numeric<Precision, Scale>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### PgKit
 
@@ -1200,7 +1220,7 @@ PostgreSQL kit configuration and result types.
 declare const PgKit: PgKit<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L53)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L58)
 
 ##### PgKitConfig
 
@@ -1212,7 +1232,7 @@ PostgreSQL kit configuration and result types.
 declare const PgKitConfig: PgKitConfig<Defaults>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L54)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L59)
 
 ##### PgKitExtension
 
@@ -1224,7 +1244,7 @@ PostgreSQL kit configuration and result types.
 declare const PgKitExtension: PgKitExtension<Defaults, More>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L55)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L60)
 
 ##### PgToolkit
 
@@ -1236,7 +1256,7 @@ PostgreSQL kit configuration and result types.
 declare const PgToolkit: PgToolkit
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L56)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L61)
 
 ##### RelationsConfig
 
@@ -1248,7 +1268,7 @@ PostgreSQL schema assembly inference types.
 declare const RelationsConfig: RelationsConfig<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L67)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L72)
 
 ##### Serial
 
@@ -1260,7 +1280,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Serial: { readonly _tag: "serial"; readonly dialect: "pg"; readonly kind: "serial"; readonly ident: "integer"; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### TableOf
 
@@ -1272,7 +1292,7 @@ PostgreSQL table projection inference types.
 declare const TableOf: TableOf<M>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L79)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L84)
 
 ##### TablesOf
 
@@ -1284,7 +1304,7 @@ PostgreSQL schema assembly inference types.
 declare const TablesOf: TablesOf<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L68)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L73)
 
 ##### Text
 
@@ -1296,7 +1316,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Text: { readonly _tag: "text"; readonly dialect: "pg"; readonly kind: "text"; readonly ident: "text"; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### Timestamp
 
@@ -1308,7 +1328,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Timestamp: Timestamp<Mode, Timezone>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ##### ValidateCollision
 
@@ -1320,7 +1340,7 @@ PostgreSQL kit configuration and result types.
 declare const ValidateCollision: ValidateCollision<Defaults, Own>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L57)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L62)
 
 ##### ValidateMergedFields
 
@@ -1332,7 +1352,7 @@ PostgreSQL kit configuration and result types.
 declare const ValidateMergedFields: ValidateMergedFields<Defaults, Own, Effective>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L58)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L63)
 
 ##### ValidateSchema
 
@@ -1344,7 +1364,7 @@ PostgreSQL schema assembly inference types.
 declare const ValidateSchema: ValidateSchema<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L69)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L74)
 
 ##### Varchar
 
@@ -1356,7 +1376,7 @@ PostgreSQL column metadata types retained by downstream declaration emit.
 declare const Varchar: Varchar<L>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/index.ts#L51)
 
 ### PostgreSQL kit — `@beep/effect-drizzle/pg`
 
@@ -1730,7 +1750,7 @@ BigInt.pipe(bigint("bigint")).meta.column?.kind // => "bigint"
 declare const bigint: { (mode: "number"): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.bigint('number') requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Bigint<"number">; }>; (mode: "bigint"): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, bigint, "pg.bigint('bigint') requires a bigint-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Bigint<"bigint">; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L868)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L869)
 
 ##### bigserial
 
@@ -1756,7 +1776,7 @@ Int.pipe(bigserial("number")).meta.hasDefault // => true
 declare const bigserial: { (mode: "number"): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.bigserial('number') requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Bigserial<"number">; readonly hasDefault: true; }>; (mode: "bigint"): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, bigint, "pg.bigserial('bigint') requires a bigint-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Bigserial<"bigint">; readonly hasDefault: true; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L685)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L686)
 
 ##### boolean
 
@@ -1777,7 +1797,7 @@ Boolean.pipe(boolean()).meta.column?.kind // => "boolean"
 declare const boolean: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, boolean, "pg.boolean requires a boolean-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Bool; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L914)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L915)
 
 ##### bytea
 
@@ -1798,7 +1818,7 @@ Uint8Array.pipe(bytea()).meta.column?.kind // => "bytea"
 declare const bytea: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, Uint8Array, "pg.bytea requires a Uint8Array-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Bytea; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L963)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L964)
 
 ##### char
 
@@ -1833,7 +1853,7 @@ String.check(isLengthBetween(2, 2)).pipe(char()).meta.column?.kind // => "char"
 declare const char: { (): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Char; }>; <const Length extends number>(length: Length): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.char requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Char<Length>; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L589)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L590)
 
 ##### columnName
 
@@ -1858,7 +1878,7 @@ String.pipe(columnName("legacy_name")).meta.columnName // => "legacy_name"
 declare const columnName: <const N extends string>(name: N & ValidateSqlName<N, "pg.columnName requires a lowercase SQL identifier">) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly columnName: N; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1709)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1713)
 
 ##### date
 
@@ -1892,7 +1912,7 @@ String.pipe(date()).meta.column?.kind // => "date"
 declare const date: { (): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.date (string mode) requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.DateColumn<"string">; }>; (options: { readonly mode: "date"; }): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, Date, "pg.date (date mode) requires a Date-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.DateColumn<"date">; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L540)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L541)
 
 ##### default
 
@@ -1904,7 +1924,7 @@ Named export for the PostgreSQL literal-default combinator.
 declare const default: <const Value>(value: Value) => <I extends Field.Input>(input: I & ValidateDefaultValue<I, Value> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultValue<Value>; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1421)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1425)
 
 ##### defaultExpr
 
@@ -1937,7 +1957,7 @@ String.pipe(defaultExpr(sql<string>`'active'`)).meta.hasDefault // => true
 declare const defaultExpr: <Carrier>(expression: SQL<Carrier>) => <I extends Field.Input>(input: I & ValidateExpression<I, Carrier> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultSqlExpr<Carrier>; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1450)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1454)
 
 ##### defaultNow
 
@@ -1967,7 +1987,7 @@ String.pipe(timestamp(), defaultNow()).meta.hasDefault // => true
 declare const defaultNow: () => <I extends Field.Input>(input: I & ValidateTimestamp<I> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultNow; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1494)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1498)
 
 ##### default_
 
@@ -1997,7 +2017,7 @@ String.pipe(defaultValue("active")).meta.hasDefault // => true
 declare const default_: <const Value>(value: Value) => <I extends Field.Input>(input: I & ValidateDefaultValue<I, Value> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultValue<Value>; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1407)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1411)
 
 ##### doublePrecision
 
@@ -2018,7 +2038,7 @@ Finite.pipe(doublePrecision()).meta.column?.kind // => "doublePrecision"
 declare const doublePrecision: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.doublePrecision requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.DoublePrecision; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L831)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L832)
 
 ##### enum
 
@@ -2030,7 +2050,7 @@ Named export for the PostgreSQL enum combinator.
 declare const enum: { (): <I extends Field.Input>(input: I & ValidateEnum<I>) => Field.Patched<I, { readonly column: PgColumn.Enum<"", EnumValue<I>>; }>; <const Name extends string>(name: Name & ValidateSqlName<Name, "pg.enum name must be a lowercase SQL identifier">): <I extends Field.Input>(input: I & ValidateEnum<I>) => Field.Patched<I, { readonly column: PgColumn.Enum<Name, EnumValue<I>>; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L425)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L424)
 
 ##### enum_
 
@@ -2071,7 +2091,7 @@ Literals(["draft", "active"]).pipe(pgEnum("status")).meta.column?.kind
 declare const enum_: { (): <I extends Field.Input>(input: I & ValidateEnum<I>) => Field.Patched<I, { readonly column: PgColumn.Enum<"", EnumValue<I>>; }>; <const Name extends string>(name: Name & ValidateSqlName<Name, "pg.enum name must be a lowercase SQL identifier">): <I extends Field.Input>(input: I & ValidateEnum<I>) => Field.Patched<I, { readonly column: PgColumn.Enum<Name, EnumValue<I>>; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L398)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L397)
 
 ##### generated
 
@@ -2104,7 +2124,7 @@ String.pipe(generated(sql<string>`lower(name)`)).meta.generated._tag // => "sqlE
 declare const generated: <Carrier>(expression: SQL<Carrier>) => <I extends Field.Input>(input: I & ValidateExpression<I, Carrier> & ValidateNotDefaulted<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly generated: Meta.GeneratedSqlExpr<Carrier>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1649)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1653)
 
 ##### identity
 
@@ -2141,7 +2161,7 @@ Int.pipe(integer(), identity()).meta.identity // => "always"
 declare const identity: <const K extends "always" | "byDefault" = "always">(kind?: K) => <I extends Field.Input>(input: I & ValidateIdentity<I> & ValidateNotDefaulted<I> & ValidateNotGenerated<I> & ValidateNotVersion<I> & ValidateNotArray<I>) => Field.Patched<I, K extends "always" ? { readonly identity: K; readonly generated: Meta.GeneratedIdentityAlways; } : { readonly identity: K; readonly hasDefault: true; readonly generated: false; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1358)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1362)
 
 ##### index
 
@@ -2180,7 +2200,7 @@ field.meta.indexed // => { name: undefined, unique: false }
 declare const index: (options?: { readonly name?: string; }) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly indexed: { readonly name: string | undefined; readonly unique: false; }; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1239)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1243)
 
 ##### integer
 
@@ -2207,7 +2227,7 @@ Int.pipe(integer()).meta.column?.kind // => "integer"
 declare const integer: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.integer requires a number-encoded schema">) => Field.Patched<I, { readonly column: IntegerColumn<I>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L773)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L774)
 
 ##### json
 
@@ -2233,7 +2253,7 @@ Struct({ ok: Boolean }).pipe(json()).meta.column?.ident // => "json"
 declare const json: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, object, "pg.json requires an object- or array-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Json; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L613)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L614)
 
 ##### jsonb
 
@@ -2259,7 +2279,7 @@ Struct({ theme: String }).pipe(jsonb()).meta.column?.kind // => "jsonb"
 declare const jsonb: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, object, "pg.jsonb requires an object- or array-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Jsonb; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L941)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L942)
 
 ##### numeric
 
@@ -2287,7 +2307,7 @@ String.pipe(numeric(10, 2)).meta.column?.kind // => "numeric"
 declare const numeric: { (): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Numeric<undefined, undefined>; }>; <const Precision extends number>(precision: Precision): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, undefined>; }>; <const Precision extends number, const Scale extends number>(precision: Precision, scale: Scale): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Numeric<Precision, Scale>; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L497)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L495)
 
 ##### primaryKey
 
@@ -2313,7 +2333,7 @@ String.pipe(primaryKey()).meta.primaryKey // => true
 declare const primaryKey: () => <I extends Field.Input>(input: I & Field.ValidateNonNullable<I, "primaryKey() forbids a nullable schema \u2014 a primary key cannot admit null"> & ValidateNotArray<I>) => Field.Patched<I, { readonly primaryKey: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1180)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1184)
 
 ##### real
 
@@ -2339,7 +2359,7 @@ Number.pipe(real()).meta.column?.ident // => "real"
 declare const real: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.real requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Real; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L640)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L641)
 
 ##### references
 
@@ -2348,10 +2368,10 @@ Attaches a foreign-key target and referential actions to a field.
 **Signature**
 
 ```ts
-declare const references: <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(id: Id, options?: Options & ValidateReferenceName<Options>) => <I extends Field.Input>(input: I & ValidateReferenceActions<NoInfer<I>, Options>) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id">; }>
+declare const references: <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(id: Id, options?: (Options & ValidateReferenceName<Options>) | undefined) => <I extends Field.Input>(input: I & ValidateReferenceActions<NoInfer<I>, Options>) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id">; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1787)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1799)
 
 ##### serial
 
@@ -2377,7 +2397,7 @@ Int.pipe(serial()).meta.hasDefault // => true
 declare const serial: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.serial requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Serial; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L892)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L893)
 
 ##### smallint
 
@@ -2402,7 +2422,7 @@ Int.pipe(smallint()).meta.column?.kind // => "smallint"
 declare const smallint: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.smallint requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Smallint; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L807)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L808)
 
 ##### smallserial
 
@@ -2423,7 +2443,7 @@ Int.pipe(smallserial()).meta.hasDefault // => true
 declare const smallserial: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, number, "pg.smallserial requires a number-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Smallserial; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L708)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L709)
 
 ##### text
 
@@ -2445,7 +2465,7 @@ field.meta.column?.kind // => "text"
 declare const text: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.text requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Text; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L183)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L182)
 
 ##### timestamp
 
@@ -2477,7 +2497,7 @@ String.pipe(timestamp()).meta.column?.kind // => "timestamp"
 declare const timestamp: { <const TZ extends boolean = true>(options?: { readonly mode?: "string"; readonly withTimezone?: TZ; }): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.timestamp (string mode) requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Timestamp<"string", TZ>; }>; <const TZ extends boolean = true>(options: { readonly mode: "date"; readonly withTimezone?: TZ; }): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, Date, "pg.timestamp (date mode) requires a Date-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Timestamp<"date", TZ>; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1008)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1009)
 
 ##### unique
 
@@ -2498,7 +2518,7 @@ String.pipe(unique()).meta.unique // => true
 declare const unique: () => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly unique: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1204)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1208)
 
 ##### uniqueIndex
 
@@ -2536,7 +2556,7 @@ field.meta.indexed // => { name: undefined, unique: true }
 declare const uniqueIndex: (options?: { readonly name?: string; }) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly indexed: { readonly name: string | undefined; readonly unique: true; }; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1277)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1281)
 
 ##### unsafeCustom
 
@@ -2566,7 +2586,7 @@ String.pipe(unsafeCustom("tsvector")).meta.column?.ident // => "custom<tsvector>
 declare const unsafeCustom: <const SqlType extends string>(sqlType: SqlType) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly column: PgColumn.Custom<SqlType>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L451)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L450)
 
 ##### unsafeDefaultSql
 
@@ -2595,7 +2615,7 @@ String.pipe(unsafeDefaultSql("current_user")).meta.hasDefault // => true
 declare const unsafeDefaultSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1527)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1531)
 
 ##### unsafeGeneratedSql
 
@@ -2624,7 +2644,7 @@ String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated._tag // => "unsafe
 declare const unsafeGeneratedSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotDefaulted<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly generated: Meta.UnsafeGeneratedSql; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1681)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1685)
 
 ##### uuid
 
@@ -2650,7 +2670,7 @@ String.pipe(uuid()).meta.column?.kind // => "uuid"
 declare const uuid: () => <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.uuid requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Uuid; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L738)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L739)
 
 ##### varchar
 
@@ -2693,7 +2713,7 @@ field.meta.column?.kind // => "varchar"
 declare const varchar: { (): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.varchar requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Varchar; }>; <const L extends number>(length: L): <I extends Field.Input>(input: I & Field.ValidateEncoded<I, string, "pg.varchar requires a string-encoded schema">) => Field.Patched<I, { readonly column: PgColumn.Varchar<L>; }>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L342)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L341)
 
 ##### version
 
@@ -2730,7 +2750,7 @@ Int.pipe(integer(), defaultValue(1), version()).meta.version // => true
 declare const version: () => <I extends Field.Input>(input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateVersionSchema<I> & Field.ValidateNonNullable<I, "version() forbids a nullable schema"> & ValidateNotArray<I>) => Field.Patched<I, { readonly version: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1586)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1590)
 
 ### PostgreSQL table extras — `@beep/effect-drizzle/pg`
 
@@ -2763,7 +2783,7 @@ type Made = ReturnType<typeof Table.Check.make> // => tagged check node
 declare const Check: { make: TaggedEnum.ConstructorFrom<{ readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }, "_tag">; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L421)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L419)
 
 ##### CompositePrimaryKey
 
@@ -2787,7 +2807,7 @@ type Made = ReturnType<typeof Table.CompositePrimaryKey.make> // => tagged compo
 declare const CompositePrimaryKey: { make: TaggedEnum.ConstructorFrom<{ readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }, "_tag">; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L365)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L363)
 
 ##### CompositeUnique
 
@@ -2811,7 +2831,7 @@ type Made = ReturnType<typeof Table.CompositeUnique.make> // => tagged composite
 declare const CompositeUnique: { make: TaggedEnum.ConstructorFrom<{ readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }, "_tag">; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L349)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L347)
 
 ##### Index
 
@@ -2835,7 +2855,7 @@ type Made = ReturnType<typeof Table.Index.make> // => tagged index node
 declare const Index: { make: TaggedEnum.ConstructorFrom<{ readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; }, "_tag">; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L381)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L379)
 
 ##### Node
 
@@ -2856,7 +2876,7 @@ Table.Node.is(node) // => true
 declare const Node: { $is: <Tag extends "compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql">(tag: Tag) => (u: unknown) => u is Extract<{ readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, { readonly _tag: Tag; }>; $match: { <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(cases: Cases): (value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, cases: Cases): Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; }; is: (value: unknown) => value is Node; match: { <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(cases: Cases): (value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly using: PgIndexMethod | undefined; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, cases: Cases): Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; }; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L508)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L506)
 
 ##### UniqueIndex
 
@@ -2888,7 +2908,7 @@ console.log(user.email.name)
 declare const UniqueIndex: { make: TaggedEnum.ConstructorFrom<{ readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }, "_tag">; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L405)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L403)
 
 ##### UnsafeCheckSql
 
@@ -2913,7 +2933,7 @@ console.log(node._tag) // "unsafeCheckSql"
 declare const UnsafeCheckSql: { make: TaggedEnum.ConstructorFrom<{ readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, "_tag">; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L438)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L436)
 
 ##### check
 
@@ -2947,7 +2967,7 @@ Table.check("positive_count")(sql<boolean>`count > 0`)._tag // => "check"
 declare const check: { <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">): (expression: SQL<boolean>) => Check; <const Name extends string>(expression: SQL<boolean>, name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">): Check; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L696)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L742)
 
 ##### compositePrimaryKey
 
@@ -2973,10 +2993,10 @@ const extras: Table.Callback<{ leftId: typeof Int; rightId: typeof Int }> =
 **Signature**
 
 ```ts
-declare const compositePrimaryKey: <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>) => CompositePrimaryKey
+declare const compositePrimaryKey: { <const Columns extends CompositeColumns>(columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">) => CompositePrimaryKey; <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>): CompositePrimaryKey; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L587)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L596)
 
 ##### compositeUnique
 
@@ -2997,10 +3017,10 @@ const extras: Table.Callback<{ first: typeof String; last: typeof String }> =
 **Signature**
 
 ```ts
-declare const compositeUnique: <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>) => CompositeUnique
+declare const compositeUnique: { <const Columns extends CompositeColumns>(columns: Columns & ValidateDistinctColumns<Columns>): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">) => CompositeUnique; <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>): CompositeUnique; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L559)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L557)
 
 ##### index
 
@@ -3035,10 +3055,10 @@ const extras: Table.Callback<{ email: typeof String }> = (columns) => [
 **Signature**
 
 ```ts
-declare const index: <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: { readonly using?: PgIndexMethod; readonly where?: SQL<boolean>; }) => Index
+declare const index: { <const Columns extends NonEmptyColumns>(columns: Columns & ValidateDistinctColumns<Columns>, options?: IndexOptions): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">) => Index; <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: IndexOptions): Index; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L624)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L646)
 
 ##### uniqueIndex
 
@@ -3065,10 +3085,10 @@ console.log(extras)
 **Signature**
 
 ```ts
-declare const uniqueIndex: <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: { readonly where?: SQL<boolean>; }) => UniqueIndex
+declare const uniqueIndex: { <const Columns extends NonEmptyColumns>(columns: Columns & ValidateDistinctColumns<Columns>, options?: UniqueIndexOptions): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">) => UniqueIndex; <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: UniqueIndexOptions): UniqueIndex; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L660)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L695)
 
 ##### unsafeCheckSql
 
@@ -3098,10 +3118,10 @@ Table.unsafeCheckSql("positive_count", "count > 0")._tag
 **Signature**
 
 ```ts
-declare const unsafeCheckSql: <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">, value: string) => UnsafeCheckSql
+declare const unsafeCheckSql: { (value: string): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">) => UnsafeCheckSql; <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">, value: string): UnsafeCheckSql; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L730)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L779)
 
 #### guards
 
@@ -3138,7 +3158,7 @@ Table.isNode(candidate) // => true
 declare const isNode: (value: unknown) => value is Node
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L491)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L489)
 
 #### mappers
 
@@ -3166,7 +3186,7 @@ Table.emit(Table.unsafeCheckSql("positive_count", "count > 0"))
 declare const emit: (node: Node) => PgTableExtraConfigValue
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L820)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L882)
 
 #### models
 
@@ -3200,7 +3220,7 @@ Table.Check.make({
 type Check = Extract<Node, { readonly _tag: "check" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L302)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L300)
 
 ##### CompositePrimaryKey (type alias)
 
@@ -3229,7 +3249,7 @@ const extras: Table.Callback<{ leftId: typeof Int; rightId: typeof Int }> =
 type CompositePrimaryKey = Extract<Node, { readonly _tag: "compositePrimaryKey" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L226)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L224)
 
 ##### CompositeUnique (type alias)
 
@@ -3258,7 +3278,7 @@ const extras: Table.Callback<{ first: typeof String; last: typeof String }> =
 type CompositeUnique = Extract<Node, { readonly _tag: "compositeUnique" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L204)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L202)
 
 ##### Index (type alias)
 
@@ -3290,7 +3310,7 @@ const extras: Table.Callback<{ email: typeof String }> = (columns) => [
 type Index = Extract<Node, { readonly _tag: "index" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L251)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L249)
 
 ##### Node (type alias)
 
@@ -3335,7 +3355,7 @@ Table.Node.match(node, {
 type Node = TaggedEnum<NodeDefinition>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L182)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L180)
 
 ##### UniqueIndex (type alias)
 
@@ -3368,7 +3388,7 @@ console.log(extras)
 type UniqueIndex = Extract<Node, { readonly _tag: "uniqueIndex" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L277)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L275)
 
 ##### UnsafeCheckSql (type alias)
 
@@ -3404,7 +3424,7 @@ Table.UnsafeCheckSql.make({
 type UnsafeCheckSql = Extract<Node, { readonly _tag: "unsafeCheckSql" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L331)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L329)
 
 #### projections
 
@@ -3430,7 +3450,7 @@ type BoundColumns<F> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L100)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L98)
 
 #### tables
 
@@ -3457,7 +3477,7 @@ type BoundColumn<I, Name> = ExtraConfigColumn & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L79)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L77)
 
 ##### Callback (type alias)
 
@@ -3487,7 +3507,7 @@ type Callback<F> = (
 ) => ReadonlyArray<Node>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L537)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/extras.ts#L535)
 
 ### PostgreSQL models — `@beep/effect-drizzle/pg`
 
@@ -3517,7 +3537,7 @@ Compile-time diagnostic returned when `Model` omits its self type.
 type MissingSelfGeneric = `Missing \`Self\` generic — use \`class Self extends EffectDrizzle.Model<Self>(identifier)({ ... }) {}\``
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L322)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L333)
 
 ##### ModelInvariantError
 
@@ -3529,7 +3549,7 @@ Internal dialect re-export of the shared model invariant error.
 declare const ModelInvariantError: typeof ModelInvariantError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L59)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L70)
 
 #### factories
 
@@ -3576,7 +3596,7 @@ Object.keys(User.insert.fields) // => ["name"]
 declare const Model: <Self = never, const Identifier extends string = string>(identifier: Identifier & ValidateDerivedSqlName<Identifier, "Model identifier derives an invalid PostgreSQL table name">) => <const F extends FieldsInput>(fields: F & ValidateFields<F>, annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>, extras?: TableExtras.Callback<F>) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L794)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L808)
 
 #### models
 
@@ -3614,7 +3634,7 @@ export interface AnyModel extends CoreAnyModel {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L409)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L420)
 
 ##### ColumnsOf (type alias)
 
@@ -3643,7 +3663,7 @@ type ColumnsOf<F> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L137)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L148)
 
 ##### EffectiveSchema (type alias)
 
@@ -3682,7 +3702,7 @@ type EffectiveSchema<I> = Field.SchemaFrom<I> extends VariantSchema.Field.Any
       : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L199)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L210)
 
 ##### FieldExcept
 
@@ -3694,7 +3714,7 @@ Shared variant helpers exposed by the PostgreSQL model surface.
 declare const FieldExcept: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Exclude<"update", Keys[number]> | Exclude<"insert", Keys[number]> | Exclude<"select", Keys[number]> | Exclude<"json", Keys[number]> | Exclude<"jsonCreate", Keys[number]> | Exclude<"jsonUpdate", Keys[number]>]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L47)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L58)
 
 ##### FieldOnly
 
@@ -3706,7 +3726,7 @@ Shared variant helpers exposed by the PostgreSQL model surface.
 declare const FieldOnly: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Keys[number]]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L48)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L59)
 
 ##### FieldsInput (interface)
 
@@ -3735,7 +3755,7 @@ export interface FieldsInput {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L82)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L93)
 
 ##### ModelClass (type alias)
 
@@ -3769,7 +3789,7 @@ type ModelClass<Self, F> = VariantSchema.Class<
 } & Statics<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L378)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L389)
 
 ##### Statics (interface)
 
@@ -3804,7 +3824,7 @@ export interface Statics<F extends FieldsInput> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L347)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L358)
 
 ##### Variant
 
@@ -3816,7 +3836,7 @@ Shared variant helpers exposed by the PostgreSQL model surface.
 declare const Variant: { is: { select: (value: unknown) => value is "select"; insert: (value: unknown) => value is "insert"; update: (value: unknown) => value is "update"; json: (value: unknown) => value is "json"; jsonCreate: (value: unknown) => value is "jsonCreate"; jsonUpdate: (value: unknown) => value is "jsonUpdate"; }; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L50)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L61)
 
 ##### VariantField
 
@@ -3828,7 +3848,7 @@ Shared variant helpers exposed by the PostgreSQL model surface.
 declare const VariantField: <const A extends VariantSchema.Field.ConfigWithKeys<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(config: A & { readonly [K in Exclude<keyof A, "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">]: never; }) => VariantSchema.Field<A>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L51)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L62)
 
 ##### extract
 
@@ -3840,7 +3860,7 @@ Shared variant helpers exposed by the PostgreSQL model surface.
 declare const extract: { <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">(variant: V): <A extends VariantSchema.Struct<any>>(self: A) => VariantSchema.Extract<V, A, V extends "select" ? true : false>; <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate", A extends VariantSchema.Struct<any>>(self: A, variant: V): VariantSchema.Extract<V, A, V extends "select" ? true : false>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L46)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L57)
 
 ##### fieldEvolve
 
@@ -3849,10 +3869,10 @@ Shared variant helpers exposed by the PostgreSQL model surface.
 **Signature**
 
 ```ts
-declare const fieldEvolve: { <Self extends VariantSchema.Field<any> | Top, const Mapping extends Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(f: Mapping): (self: Self) => VariantSchema.Field<Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; <Self extends VariantSchema.Field<any> | Top, const Mapping extends Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(self: Self, f: Mapping): VariantSchema.Field<Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; }
+declare const fieldEvolve: FieldEvolve
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L49)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L60)
 
 #### validation
 
@@ -3896,7 +3916,7 @@ type ValidateFields<F> = {
     : unknown)
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L299)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/model.ts#L310)
 
 ### PostgreSQL schema assembly — `@beep/effect-drizzle/pg`
 
@@ -3996,7 +4016,7 @@ getTableName(assembly.tables.user) // => "user"
 declare const schema: <const Models extends ModelRecord>(models: Models & ValidateSchema<Models>) => Assembly<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L648)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L647)
 
 #### models
 
@@ -4032,7 +4052,7 @@ export interface Assembly<Models extends ModelRecord> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L313)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L312)
 
 ##### ModelRecord (interface)
 
@@ -4063,7 +4083,7 @@ export interface ModelRecord {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L121)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L120)
 
 ##### RelationsConfig (type alias)
 
@@ -4091,7 +4111,7 @@ type RelationsConfig<Models> = (
 ) => RelationsBuilderConfig<TablesOf<Models>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L288)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L287)
 
 #### projections
 
@@ -4116,7 +4136,7 @@ type TablesOf<Models> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L264)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L263)
 
 #### validation
 
@@ -4162,7 +4182,7 @@ type ValidateSchema<Models> = [SchemaFailures<Models>] extends [never]
   : SchemaFailures<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L245)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L244)
 
 ### PostgreSQL table projection — `@beep/effect-drizzle/pg`
 
@@ -4295,7 +4315,7 @@ type AdditionalExtras<M> = (
 ) => ReadonlyArray<PgTableExtraConfigValue>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/table.ts#L377)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/table.ts#L373)
 
 ##### TableOf (type alias)
 
@@ -4363,10 +4383,10 @@ getTableName(toPgTable(User)) // => "user"
 **Signature**
 
 ```ts
-declare const toPgTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M>, enums?: EnumRegistry) => TableOf<M>
+declare const toPgTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M> | undefined, enums?: Readonly<Record<string, PgColumn.EnumInstance>> | undefined) => TableOf<M>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/table.ts#L442)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/table.ts#L436)
 
 ### PostgreSQL column descriptors — `@beep/effect-drizzle/pg`
 
@@ -4384,7 +4404,7 @@ PostgreSQL scalar or array depth.
 type ArrayDimension = Meta.ArrayDimension
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L92)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L89)
 
 ##### ArrayDimensionString (type alias)
 
@@ -4396,7 +4416,7 @@ Drizzle-supported PostgreSQL array suffix.
 type ArrayDimensionString = "[]" | "[][]" | "[][][]" | "[][][][]" | "[][][][][]"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L100)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L97)
 
 ##### DimensionOf (type alias)
 
@@ -4416,7 +4436,7 @@ type DimensionOf<Suffix> = Suffix extends "[]"
         : 5
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L108)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L105)
 
 ##### EntityIdIdent (type alias)
 
@@ -4428,7 +4448,7 @@ Storage identity for a number-encoded entity id.
 type `entityId<"${TableName}">` = `entityId<"${TableName}">`
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L146)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L143)
 
 ##### ResolveName (type alias)
 
@@ -4440,7 +4460,7 @@ Resolve a field-derived enum name without widening its literals.
 type ResolveName<C, Key> = C extends Enum<"", infer Value> ? Enum<Key, Value> : C
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1096)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1091)
 
 ##### Spec (type alias)
 
@@ -4452,7 +4472,7 @@ Complete PostgreSQL descriptor algebra exposed through public field inference.
 type Spec = TaggedEnum<SpecDefinition>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L238)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L235)
 
 #### type-level
 
@@ -4476,7 +4496,7 @@ type ArrayCarrier<Carrier, Dimensions> = Dimensions extends 0
           : ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Carrier>>>>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1156)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1151)
 
 ##### Bigint (type alias)
 
@@ -4493,7 +4513,7 @@ type Bigint<Mode> = Omit<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L379)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L376)
 
 ##### Bigserial (type alias)
 
@@ -4510,7 +4530,7 @@ type Bigserial<Mode> = Omit<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L334)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L331)
 
 ##### Bool (type alias)
 
@@ -4522,7 +4542,7 @@ PostgreSQL boolean descriptor carried by `boolean()` fields.
 type Bool = Extract<Spec, { readonly _tag: "boolean" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L405)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L402)
 
 ##### Bytea (type alias)
 
@@ -4534,7 +4554,7 @@ PostgreSQL byte-array descriptor carried by `bytea()` fields.
 type Bytea = Extract<Spec, { readonly _tag: "bytea" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L433)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L430)
 
 ##### CarrierOf (type alias)
 
@@ -4574,7 +4594,7 @@ type CarrierOf<C> = C extends Text | Varchar | Uuid | Enum | Char | Numeric
                     : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1200)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1195)
 
 ##### Char (type alias)
 
@@ -4588,7 +4608,7 @@ type Char<Length> = Omit<Extract<Spec, { readonly _tag: "char" }>, "length"> & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L311)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L308)
 
 ##### Custom (type alias)
 
@@ -4603,7 +4623,7 @@ type Custom<SqlType> = Omit<
 > & { readonly ident: `custom<${SqlType}>`; readonly sqlType: SqlType }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L276)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L273)
 
 ##### CustomBuilder (type alias)
 
@@ -4615,7 +4635,7 @@ Drizzle builder type produced for a custom PostgreSQL descriptor.
 type CustomBuilder = ReturnType<ReturnType<typeof customType<{ data: unknown; driverData: unknown }>>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L538)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L535)
 
 ##### DateColumn (type alias)
 
@@ -4632,7 +4652,7 @@ type DateColumn<Mode> = Omit<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L299)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L296)
 
 ##### DoublePrecision (type alias)
 
@@ -4644,7 +4664,7 @@ PostgreSQL double-precision descriptor carried by `doublePrecision()` fields.
 type DoublePrecision = Extract<Spec, { readonly _tag: "doublePrecision" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L398)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L395)
 
 ##### Enum (type alias)
 
@@ -4663,7 +4683,7 @@ type Enum<Name, Value> = Omit<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L262)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L259)
 
 ##### EnumInstance (type alias)
 
@@ -4675,7 +4695,7 @@ Drizzle enum instance retained by PostgreSQL schema assembly.
 type EnumInstance = PgEnum<[string, ...string[]]>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L505)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L502)
 
 ##### IdentityKind (type alias)
 
@@ -4687,7 +4707,7 @@ PostgreSQL integer families that support generated identities.
 type IdentityKind = "integer" | "smallint" | "bigint"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1174)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1169)
 
 ##### Integer (type alias)
 
@@ -4704,7 +4724,7 @@ type Integer<Ident> = Omit<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L360)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L357)
 
 ##### Json (type alias)
 
@@ -4716,7 +4736,7 @@ PostgreSQL JSON descriptor carried by `json()` fields.
 type Json = Extract<Spec, { readonly _tag: "json" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L320)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L317)
 
 ##### Jsonb (type alias)
 
@@ -4728,7 +4748,7 @@ PostgreSQL JSONB descriptor carried by `jsonb()` fields.
 type Jsonb = Extract<Spec, { readonly _tag: "jsonb" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L412)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L409)
 
 ##### Numeric (type alias)
 
@@ -4743,7 +4763,7 @@ type Numeric<Precision, Scale> = Omit<Extract<Spec, { readonly _tag: "numeric" }
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L286)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L283)
 
 ##### Real (type alias)
 
@@ -4755,7 +4775,7 @@ PostgreSQL real-number descriptor carried by `real()` fields.
 type Real = Extract<Spec, { readonly _tag: "real" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L327)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L324)
 
 ##### Serial (type alias)
 
@@ -4767,7 +4787,7 @@ PostgreSQL serial descriptor carried by `serial()` fields.
 type Serial = Extract<Spec, { readonly _tag: "serial" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L391)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L388)
 
 ##### Smallint (type alias)
 
@@ -4779,7 +4799,7 @@ PostgreSQL smallint descriptor carried by `smallint()` fields.
 type Smallint = Extract<Spec, { readonly _tag: "smallint" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L372)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L369)
 
 ##### Smallserial (type alias)
 
@@ -4791,7 +4811,7 @@ PostgreSQL smallserial descriptor carried by `smallserial()` fields.
 type Smallserial = Extract<Spec, { readonly _tag: "smallserial" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L346)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L343)
 
 ##### StorageIdent (type alias)
 
@@ -4805,7 +4825,7 @@ type StorageIdent<C, Dimensions> = Dimensions extends 0
   : `array<${IdentOf<C>},${Dimensions}>`
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1127)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L1122)
 
 ##### Text (type alias)
 
@@ -4817,7 +4837,7 @@ PostgreSQL text descriptor carried by `text()` fields.
 type Text = Extract<Spec, { readonly _tag: "text" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L246)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L243)
 
 ##### Timestamp (type alias)
 
@@ -4836,7 +4856,7 @@ type Timestamp<Mode, Timezone> = Omit<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L419)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L416)
 
 ##### Uuid (type alias)
 
@@ -4848,7 +4868,7 @@ PostgreSQL UUID descriptor carried by `uuid()` fields.
 type Uuid = Extract<Spec, { readonly _tag: "uuid" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L353)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L350)
 
 ##### Varchar (type alias)
 
@@ -4862,7 +4882,7 @@ type Varchar<L> = Omit<Extract<Spec, { readonly _tag: "varchar" }>, "length"> & 
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L253)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/Column.ts#L250)
 
 ### PostgreSQL column derivation — `@beep/effect-drizzle/pg`
 
@@ -4881,10 +4901,67 @@ experiment's fatal flaw was two derivation algorithms that disagreed):
 - Declarations (Date, Uint8Array, Option, …), heterogeneous unions, and
   everything else DO NOT derive: explicit column metadata is required.
   Ambiguity is a loud error, never a silent fallback.
+- Explicit metadata on a declaration is checked against the carrier named
+  by the declaration's `representation` annotation: `effect/schema/Date`
+  carries `date`, `effect/schema/Uint8Array` carries `bytes`, and
+  `NumberDeclarationRepresentation` carries `number` (a declared
+  number that keeps `NaN` and the infinities). Any other declaration has
+  no SQL carrier and fails model construction.
 
 Nullability never derives a column: `Null` union members are stripped (they
 feed `.notNull()` instead), and an encoded `Undefined` is rejected — SQL
 absence must be represented as `null` in selected rows.
+
+#### constants
+
+##### NumberDeclarationRepresentation
+
+Representation annotation that gives a declared number schema the `number`
+SQL carrier.
+
+**When to use**
+
+Use when a number field is modeled as a declaration, such as an
+`S.declare(P.isNumber)` schema that keeps `NaN` and the infinities, and the
+field must persist in a number column.
+
+**Details**
+
+Declarations never derive a column, so the field still names its column
+with explicit metadata such as `doublePrecision()`. Model construction
+checks that column against the carrier of the encoded schema. A declaration
+carrying this annotation carries `number`; a declaration without a known
+representation fails with `DeriveColumnError`.
+
+**Gotchas**
+
+The annotation is trusted, not verified: only attach it to a declaration
+whose guard admits JavaScript numbers and nothing else.
+
+**Example** (Store a declared number in a double-precision column)
+
+```ts
+import { Model } from "@beep/effect-drizzle"
+import { doublePrecision, NumberDeclarationRepresentation } from "@beep/effect-drizzle/pg"
+import * as P from "effect/Predicate"
+import * as S from "effect/Schema"
+
+const AnyNumber = S.declare(P.isNumber, { representation: NumberDeclarationRepresentation })
+
+class Reading extends Model<Reading>("Reading")({
+  value: AnyNumber.pipe(doublePrecision()),
+}) {}
+
+Reading.sql.columns.value.column.kind // => "doublePrecision"
+```
+
+**Signature**
+
+```ts
+declare const NumberDeclarationRepresentation: { readonly id: "@beep/effect-drizzle/pg/Number"; readonly payload: null; }
+```
+
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L328)
 
 #### errors
 
@@ -4898,7 +4975,7 @@ Error raised when an encoded schema AST cannot determine one SQL column.
 declare const DeriveColumnError: typeof DeriveColumnError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L65)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L78)
 
 #### guards
 
@@ -4912,7 +4989,7 @@ Test unknown input for EntityId schema statics.
 declare const isEntityIdLike: <I>(input: I) => input is I & EntityIdLikeShape
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L81)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L94)
 
 #### models
 
@@ -4926,7 +5003,7 @@ Static EntityId metadata consumed by PostgreSQL derivation.
 type EntityIdLike = EntityIdLikeType
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L88)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L101)
 
 ##### ResolvedColumn (type alias)
 
@@ -4948,7 +5025,7 @@ type ResolvedColumn<I> = Field.MetaFrom<I>["column"] extends undefined
       : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L150)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L163)
 
 ##### SelectSchemaOf (type alias)
 
@@ -4960,7 +5037,7 @@ Select-side schema type of an input; variant fields contribute `select`.
 type SelectSchemaOf<Sch> = Sch extends VariantSchema.Field<infer Config> ? (Config extends { readonly select: infer Sel } ? Sel : never) : Sch
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L102)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/derive.ts#L115)
 
 ### SQLite entrypoint — `@beep/effect-drizzle/sqlite`
 
@@ -5087,7 +5164,7 @@ Shared model constructors and variant helpers for SQLite models.
 **Signature**
 
 ```ts
-declare const fieldEvolve: { <Self extends Field<any> | Top, const Mapping extends Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(f: Mapping): (self: Self) => Field<Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; <Self extends Field<any> | Top, const Mapping extends Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(self: Self, f: Mapping): Field<Self extends Field<infer S extends Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; }
+declare const fieldEvolve: FieldEvolve
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/index.ts#L38)
@@ -5125,7 +5202,7 @@ Projects one effect-drizzle model into a SQLite Drizzle table.
 **Signature**
 
 ```ts
-declare const toSqliteTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M>) => TableOf<M>
+declare const toSqliteTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M> | undefined) => TableOf<M>
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/index.ts#L52)
@@ -6135,10 +6212,10 @@ Attaches a foreign-key target and referential actions to a field.
 **Signature**
 
 ```ts
-declare const references: <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(id: Id, options?: Options) => <I extends Field.Input>(input: I & ValidateReferenceActions<NoInfer<I>, Options>) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id">; }>
+declare const references: <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(id: Id, options?: Options | undefined) => <I extends Field.Input>(input: I & ValidateReferenceActions<NoInfer<I>, Options>) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id">; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L950)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L958)
 
 ##### text
 
@@ -6346,7 +6423,7 @@ Table.Node.is(node) // => true
 declare const Node: { $is: <Tag extends "compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql">(tag: Tag) => (u: unknown) => u is Extract<{ readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }, { readonly _tag: Tag; }> | Extract<{ readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, { readonly _tag: Tag; }>; $match: { <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(cases: Cases): (value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, cases: Cases): Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; }; is: (value: unknown) => value is Node; match: { <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(cases: Cases): (value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; <Cases extends { readonly compositeUnique: (args: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly compositePrimaryKey: (args: { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; }) => any; readonly index: (args: { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly uniqueIndex: (args: { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; }) => any; readonly check: (args: { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; }) => any; readonly unsafeCheckSql: (args: { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }) => any; }>(value: { readonly _tag: "compositeUnique"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "compositePrimaryKey"; readonly name: string; readonly columns: CompositeColumns; } | { readonly _tag: "index"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "uniqueIndex"; readonly name: string; readonly columns: NonEmptyColumns; readonly where: SQL<boolean> | undefined; } | { readonly _tag: "check"; readonly name: string; readonly expression: SQL<boolean>; } | { readonly _tag: "unsafeCheckSql"; readonly name: string; readonly sql: string; }, cases: Cases): Unify<ReturnType<Cases["compositeUnique" | "compositePrimaryKey" | "index" | "uniqueIndex" | "check" | "unsafeCheckSql"]>>; }; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L356)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L354)
 
 ##### check
 
@@ -6380,7 +6457,7 @@ Table.check("positive_count")(sql<boolean>`count > 0`)._tag // => "check"
 declare const check: { <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">): (expression: SQL<boolean>) => Check; <const Name extends string>(expression: SQL<boolean>, name: Name & ValidateSqlName<Name, "Table.check name must be a lowercase SQL identifier">): Check; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L517)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L565)
 
 ##### compositePrimaryKey
 
@@ -6405,10 +6482,10 @@ const extras: Table.Callback<{ leftId: typeof Int; rightId: typeof Int }> =
 **Signature**
 
 ```ts
-declare const compositePrimaryKey: <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>) => CompositePrimaryKey
+declare const compositePrimaryKey: { <const Columns extends CompositeColumns>(columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">) => CompositePrimaryKey; <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>): CompositePrimaryKey; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L428)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L437)
 
 ##### compositeUnique
 
@@ -6429,10 +6506,10 @@ const extras: Table.Callback<{ first: typeof String; last: typeof String }> =
 **Signature**
 
 ```ts
-declare const compositeUnique: <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>) => CompositeUnique
+declare const compositeUnique: { <const Columns extends CompositeColumns>(columns: Columns & ValidateDistinctColumns<Columns>): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">) => CompositeUnique; <const Name extends string, const Columns extends CompositeColumns>(name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>): CompositeUnique; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L402)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L400)
 
 ##### index
 
@@ -6460,10 +6537,10 @@ const extras: Table.Callback<{ email: typeof String }> = (columns) => [
 **Signature**
 
 ```ts
-declare const index: <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: { readonly where?: SQL<boolean>; }) => Index
+declare const index: { <const Columns extends NonEmptyColumns>(columns: Columns & ValidateDistinctColumns<Columns>, options?: IndexOptions): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">) => Index; <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: IndexOptions): Index; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L457)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L479)
 
 ##### uniqueIndex
 
@@ -6490,10 +6567,10 @@ console.log(extras)
 **Signature**
 
 ```ts
-declare const uniqueIndex: <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: { readonly where?: SQL<boolean>; }) => UniqueIndex
+declare const uniqueIndex: { <const Columns extends NonEmptyColumns>(columns: Columns & ValidateDistinctColumns<Columns>, options?: UniqueIndexOptions): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">) => UniqueIndex; <const Name extends string, const Columns extends NonEmptyColumns>(name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">, columns: Columns & ValidateDistinctColumns<Columns>, options?: UniqueIndexOptions): UniqueIndex; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L487)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L523)
 
 ##### unsafeCheckSql
 
@@ -6523,10 +6600,10 @@ Table.unsafeCheckSql("positive_count", "count > 0")._tag
 **Signature**
 
 ```ts
-declare const unsafeCheckSql: <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">, value: string) => UnsafeCheckSql
+declare const unsafeCheckSql: { (value: string): <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">) => UnsafeCheckSql; <const Name extends string>(name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">, value: string): UnsafeCheckSql; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L550)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L601)
 
 #### guards
 
@@ -6562,7 +6639,7 @@ Table.isNode(candidate) // => true
 declare const isNode: (value: unknown) => value is Node
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L339)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L337)
 
 #### mappers
 
@@ -6590,7 +6667,7 @@ Table.emit(Table.unsafeCheckSql("positive_count", "count > 0"))
 declare const emit: (node: Node) => SQLiteTableExtraConfigValue
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L633)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L697)
 
 #### models
 
@@ -6620,7 +6697,7 @@ type Node = Table.Check // => tagged typed-check descriptor
 type Check = Extract<Node, { readonly _tag: "check" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L266)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L264)
 
 ##### CompositePrimaryKey (type alias)
 
@@ -6644,7 +6721,7 @@ type Node = Table.CompositePrimaryKey // => tagged compositePrimaryKey descripto
 type CompositePrimaryKey = Extract<Node, { readonly _tag: "compositePrimaryKey" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L206)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L204)
 
 ##### CompositeUnique (type alias)
 
@@ -6668,7 +6745,7 @@ type Node = Table.CompositeUnique // => tagged compositeUnique descriptor
 type CompositeUnique = Extract<Node, { readonly _tag: "compositeUnique" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L189)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L187)
 
 ##### Index (type alias)
 
@@ -6692,7 +6769,7 @@ type Node = Table.Index // => tagged index descriptor
 type Index = Extract<Node, { readonly _tag: "index" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L223)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L221)
 
 ##### Node (type alias)
 
@@ -6737,7 +6814,7 @@ Table.Node.match(node, {
 type Node = TaggedEnum<NodeDefinition>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L172)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L170)
 
 ##### UniqueIndex (type alias)
 
@@ -6766,7 +6843,7 @@ console.log(extras)
 type UniqueIndex = Extract<Node, { readonly _tag: "uniqueIndex" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L245)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L243)
 
 ##### UnsafeCheckSql (type alias)
 
@@ -6798,7 +6875,7 @@ type Node = Table.UnsafeCheckSql // => tagged raw-SQL check descriptor
 type UnsafeCheckSql = Extract<Node, { readonly _tag: "unsafeCheckSql" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L291)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L289)
 
 #### projections
 
@@ -6824,7 +6901,7 @@ type BoundColumns<F> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L99)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L97)
 
 #### tables
 
@@ -6851,7 +6928,7 @@ type BoundColumn<I, Name> = SQLiteColumn & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L79)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L77)
 
 ##### Callback (type alias)
 
@@ -6881,7 +6958,7 @@ type Callback<F> = (
 ) => ReadonlyArray<Node>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L380)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/extras.ts#L378)
 
 ### SQLite models — `@beep/effect-drizzle/sqlite`
 
@@ -6902,7 +6979,7 @@ Internal dialect re-export of the shared model invariant error.
 declare const ModelInvariantError: typeof ModelInvariantError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L49)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L50)
 
 #### factories
 
@@ -6948,7 +7025,7 @@ Object.keys(User.insert.fields) // => ["name"]
 declare const Model: <Self = never, const Identifier extends string = string>(identifier: Identifier & ValidateDerivedSqlName<Identifier, "Model identifier derives an invalid SQLite table name">) => <const F extends FieldsInput>(fields: F & ValidateFields<F>, annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L725)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L729)
 
 #### models
 
@@ -6985,7 +7062,7 @@ export interface AnyModel extends CoreAnyModel {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L355)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L356)
 
 ##### FieldExcept
 
@@ -6997,7 +7074,7 @@ Shared variant helpers exposed by the SQLite model surface.
 declare const FieldExcept: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Exclude<"update", Keys[number]> | Exclude<"insert", Keys[number]> | Exclude<"select", Keys[number]> | Exclude<"json", Keys[number]> | Exclude<"jsonCreate", Keys[number]> | Exclude<"jsonUpdate", Keys[number]>]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L38)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L39)
 
 ##### FieldOnly
 
@@ -7009,7 +7086,7 @@ Shared variant helpers exposed by the SQLite model surface.
 declare const FieldOnly: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Keys[number]]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L39)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L40)
 
 ##### FieldsInput (interface)
 
@@ -7037,7 +7114,7 @@ export interface FieldsInput {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L71)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L72)
 
 ##### ModelClass (type alias)
 
@@ -7069,7 +7146,7 @@ type ModelClass<Self, F> = VariantSchema.Class<
 > & { readonly [Va in Variant]: VariantSchema.Extract<Va, VariantSchema.Struct<UnwrappedFields<F>>> } & Statics<F>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L327)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L328)
 
 ##### Statics (interface)
 
@@ -7104,7 +7181,7 @@ export interface Statics<F extends FieldsInput> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L296)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L297)
 
 ##### Variant
 
@@ -7116,7 +7193,7 @@ Shared variant helpers exposed by the SQLite model surface.
 declare const Variant: { is: { select: (value: unknown) => value is "select"; insert: (value: unknown) => value is "insert"; update: (value: unknown) => value is "update"; json: (value: unknown) => value is "json"; jsonCreate: (value: unknown) => value is "jsonCreate"; jsonUpdate: (value: unknown) => value is "jsonUpdate"; }; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L41)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L42)
 
 ##### VariantField
 
@@ -7128,7 +7205,7 @@ Shared variant helpers exposed by the SQLite model surface.
 declare const VariantField: <const A extends VariantSchema.Field.ConfigWithKeys<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(config: A & { readonly [K in Exclude<keyof A, "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">]: never; }) => VariantSchema.Field<A>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L42)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L43)
 
 ##### extract
 
@@ -7140,7 +7217,7 @@ Shared variant helpers exposed by the SQLite model surface.
 declare const extract: { <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">(variant: V): <A extends VariantSchema.Struct<any>>(self: A) => VariantSchema.Extract<V, A, V extends "select" ? true : false>; <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate", A extends VariantSchema.Struct<any>>(self: A, variant: V): VariantSchema.Extract<V, A, V extends "select" ? true : false>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L37)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L38)
 
 ##### fieldEvolve
 
@@ -7149,10 +7226,10 @@ Shared variant helpers exposed by the SQLite model surface.
 **Signature**
 
 ```ts
-declare const fieldEvolve: { <Self extends VariantSchema.Field<any> | Top, const Mapping extends Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(f: Mapping): (self: Self) => VariantSchema.Field<Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; <Self extends VariantSchema.Field<any> | Top, const Mapping extends Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(self: Self, f: Mapping): VariantSchema.Field<Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; }
+declare const fieldEvolve: FieldEvolve
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L40)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L41)
 
 #### type-level
 
@@ -7183,7 +7260,7 @@ type ColumnsOf<F> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L114)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L115)
 
 ##### EffectiveSchema (type alias)
 
@@ -7220,7 +7297,7 @@ type EffectiveSchema<I> = Field.SchemaFrom<I> extends VariantSchema.Field.Any
       : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L173)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L174)
 
 #### validation
 
@@ -7234,7 +7311,7 @@ Diagnostic returned when Model omits its self type.
 type MissingSelfGeneric = "Missing `Self` generic — use `class Self extends sqlite.Model<Self>(identifier)({ ... }) {}`"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L271)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L272)
 
 ##### ValidateFields (type alias)
 
@@ -7281,7 +7358,7 @@ type ValidateFields<F> = {
     : unknown)
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L252)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/model.ts#L253)
 
 ### SQLite schema assembly — `@beep/effect-drizzle/sqlite`
 
@@ -7379,7 +7456,7 @@ getTableName(assembly.tables.user) // => "user"
 declare const schema: <const Models extends ModelRecord>(models: Models & ValidateSchema<Models>) => Assembly<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L605)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L604)
 
 #### models
 
@@ -7412,7 +7489,7 @@ export interface Assembly<Models extends ModelRecord> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L307)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L306)
 
 ##### ModelRecord (interface)
 
@@ -7442,7 +7519,7 @@ export interface ModelRecord {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L117)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L116)
 
 ##### RelationsConfig (type alias)
 
@@ -7470,7 +7547,7 @@ type RelationsConfig<Models> = (
 ) => RelationsBuilderConfig<TablesOf<Models>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L283)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L282)
 
 #### projections
 
@@ -7495,7 +7572,7 @@ type TablesOf<Models> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L259)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L258)
 
 #### validation
 
@@ -7540,7 +7617,7 @@ type ValidateSchema<Models> = [SchemaFailures<Models>] extends [never]
   : SchemaFailures<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L240)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L239)
 
 ### SQLite table projection — `@beep/effect-drizzle/sqlite`
 
@@ -7640,7 +7717,7 @@ type AdditionalExtras<M> = (
 ) => ReadonlyArray<SQLiteTableExtraConfigValue>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/table.ts#L262)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/table.ts#L260)
 
 ##### TableOf (type alias)
 
@@ -7708,7 +7785,7 @@ getTableName(toSqliteTable(User)) // => "user"
 **Signature**
 
 ```ts
-declare const toSqliteTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M>) => TableOf<M>
+declare const toSqliteTable: <M extends AnyModel>(model: M, additionalExtras?: AdditionalExtras<M> | undefined) => TableOf<M>
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/table.ts#L338)
@@ -7729,7 +7806,7 @@ Modes supported by the installed SQLite blob builder.
 type BlobMode = "buffer" | "json" | "bigint"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L93)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L91)
 
 ##### CarrierOf (type alias)
 
@@ -7767,7 +7844,7 @@ type CarrierOf<C> = C extends Text<infer Mode>
               : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L496)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L492)
 
 ##### EntityIdIdent (type alias)
 
@@ -7779,7 +7856,7 @@ SQLite number-encoded EntityId storage identity.
 type `entityId<"${TableName}">` = `entityId<"${TableName}">`
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L67)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L65)
 
 ##### IntegerMode (type alias)
 
@@ -7791,7 +7868,7 @@ Modes supported by the installed SQLite integer builder.
 type IntegerMode = "number" | "boolean" | "timestamp" | "timestamp_ms"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L85)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L83)
 
 ##### NumericMode (type alias)
 
@@ -7803,7 +7880,7 @@ Modes supported by the installed SQLite numeric builder.
 type NumericMode = "number" | "bigint"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L101)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L99)
 
 ##### Spec (type alias)
 
@@ -7815,7 +7892,7 @@ Complete SQLite descriptor algebra exposed through public field inference.
 type Spec = TaggedEnum<SpecDefinition>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L147)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L145)
 
 ##### StorageIdent (type alias)
 
@@ -7827,7 +7904,7 @@ SQLite storage identity used by foreign-key compatibility checks.
 type StorageIdent<C, Dimensions> = Dimensions extends 0 ? C["ident"] : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L546)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L542)
 
 #### type-level
 
@@ -7841,7 +7918,7 @@ Encoded carrier accepted by SQLite's scalar-only storage model.
 type ArrayCarrier<Carrier, Dimensions> = Dimensions extends 0 ? Carrier : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L554)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L550)
 
 ##### ArrayDimension (type alias)
 
@@ -7853,7 +7930,7 @@ SQLite scalar depth retained by public storage inference.
 type ArrayDimension = Meta.ArrayDimension
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L74)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L72)
 
 ##### Blob (type alias)
 
@@ -7867,7 +7944,7 @@ type Blob<Mode> = Omit<Extract<Spec, { readonly _tag: "blob" }>, "mode"> & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L193)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L191)
 
 ##### Enum (type alias)
 
@@ -7881,7 +7958,7 @@ type Enum<Value> = Omit<Extract<Spec, { readonly _tag: "enum" }>, "values"> & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L164)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L162)
 
 ##### Integer (type alias)
 
@@ -7896,7 +7973,7 @@ type Integer<Mode, Ident> = Omit<Extract<Spec, { readonly _tag: "integer" }>, "i
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L173)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L171)
 
 ##### Numeric (type alias)
 
@@ -7911,7 +7988,7 @@ type Numeric<Mode> = Omit<
 > & { readonly mode: Mode }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L202)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L200)
 
 ##### Real (type alias)
 
@@ -7923,7 +8000,7 @@ SQLite real-number descriptor carried by `real()` fields.
 type Real = Extract<Spec, { readonly _tag: "real" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L186)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L184)
 
 ##### Text (type alias)
 
@@ -7937,7 +8014,7 @@ type Text<Mode> = Omit<Extract<Spec, { readonly _tag: "text" }>, "mode"> & {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L155)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/Column.ts#L153)
 
 ### SQLite column derivation — `@beep/effect-drizzle/sqlite`
 
@@ -7955,7 +8032,7 @@ Static EntityId metadata consumed by SQLite derivation.
 type EntityIdLike = EntityIdLikeType
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L41)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L42)
 
 ##### ResolvedColumn (type alias)
 
@@ -7977,7 +8054,7 @@ type ResolvedColumn<I> = Field.MetaFrom<I>["column"] extends undefined
       : never
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L117)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L118)
 
 ##### SelectSchemaOf (type alias)
 
@@ -7993,7 +8070,7 @@ type SelectSchemaOf<Sch> = Sch extends VariantSchema.Field<infer Config>
     : Sch
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L52)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L53)
 
 ##### StructuralJson (type alias)
 
@@ -8005,7 +8082,7 @@ Structural JSON carrier shared by SQLite JSON-mode combinator constraints.
 type StructuralJson = JsonCarrier
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L99)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L100)
 
 #### validation
 
@@ -8019,7 +8096,7 @@ Internal shared derivation error and EntityId guard re-exports.
 declare const DeriveColumnError: typeof DeriveColumnError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L26)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L27)
 
 ##### isEntityIdLike
 
@@ -8031,7 +8108,7 @@ Internal shared derivation error and EntityId guard re-exports.
 declare const isEntityIdLike: <I>(input: I) => input is I & EntityIdLikeShape
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L26)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/derive.ts#L27)
 
 ### Core: field metadata — `@beep/effect-drizzle`
 
@@ -8052,7 +8129,7 @@ Supported array depth carried by field metadata.
 type ArrayDimension = 0 | 1 | 2 | 3 | 4 | 5
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L65)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L67)
 
 ##### ColumnSpec (interface)
 
@@ -8068,7 +8145,7 @@ export interface ColumnSpec {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L53)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L55)
 
 ##### Default (type alias)
 
@@ -8085,7 +8162,7 @@ type Default = TaggedEnum<{
 }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L132)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L134)
 
 ##### DefaultNow (type alias)
 
@@ -8097,7 +8174,7 @@ Current-time default descriptor.
 type DefaultNow = Extract<Default, { readonly _tag: "now" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L174)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L176)
 
 ##### DefaultSqlExpr (type alias)
 
@@ -8111,7 +8188,7 @@ type DefaultSqlExpr<Carrier> = Omit<Extract<Default, { readonly _tag: "sqlExpr" 
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L154)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L156)
 
 ##### DefaultValue (type alias)
 
@@ -8125,7 +8202,7 @@ type DefaultValue<Encoded> = Omit<Extract<Default, { readonly _tag: "value" }>, 
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L164)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L166)
 
 ##### Empty (interface)
 
@@ -8150,7 +8227,7 @@ export interface Empty extends Meta {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L324)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L326)
 
 ##### FkAction (type alias)
 
@@ -8162,7 +8239,7 @@ Foreign-key referential actions understood by Drizzle.
 type FkAction = "cascade" | "restrict" | "no action" | "set null" | "set default"
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L81)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L83)
 
 ##### Generated (type alias)
 
@@ -8178,7 +8255,7 @@ type Generated = TaggedEnum<{
 }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L190)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L192)
 
 ##### GeneratedIdentityAlways (type alias)
 
@@ -8190,7 +8267,7 @@ Identity-always generated descriptor.
 type GeneratedIdentityAlways = Extract<Generated, { readonly _tag: "identityAlways" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L229)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L231)
 
 ##### GeneratedSqlExpr (type alias)
 
@@ -8204,7 +8281,7 @@ type GeneratedSqlExpr<Carrier> = Omit<Extract<Generated, { readonly _tag: "sqlEx
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L211)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L213)
 
 ##### IdentityMode (type alias)
 
@@ -8216,7 +8293,7 @@ Identity-generation intent shared by integer-capable dialects.
 type IdentityMode = "always" | "byDefault" | false
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L73)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L75)
 
 ##### IndexIntent (interface)
 
@@ -8248,7 +8325,7 @@ export interface IndexIntent {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L254)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L256)
 
 ##### Merge (type alias)
 
@@ -8262,7 +8339,7 @@ type Merge<M, P> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L375)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L377)
 
 ##### Meta (interface)
 
@@ -8287,7 +8364,7 @@ export interface Meta<C extends ColumnSpec = ColumnSpec> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L265)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L267)
 
 ##### Patch (type alias)
 
@@ -8299,7 +8376,7 @@ Partial metadata update produced by a field combinator.
 type Patch = { readonly [K in keyof Meta]?: Meta[K] }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L367)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L369)
 
 ##### References (interface)
 
@@ -8317,7 +8394,7 @@ export interface References<TableName extends string = string, ColumnName extend
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L98)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L100)
 
 ##### UnsafeDefaultSql (type alias)
 
@@ -8329,7 +8406,7 @@ Explicit raw-SQL default descriptor.
 type UnsafeDefaultSql = Extract<Default, { readonly _tag: "unsafeSql" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L182)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L184)
 
 ##### UnsafeGeneratedSql (type alias)
 
@@ -8341,7 +8418,7 @@ Explicit raw-SQL generated descriptor.
 type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql" }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L221)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L223)
 
 ##### isUniqueKey
 
@@ -8369,7 +8446,7 @@ isUniqueKey(String.pipe(uniqueIndex()).meta) // => true
 declare const isUniqueKey: (meta: Meta) => boolean
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L302)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L304)
 
 #### type-level
 
@@ -8388,7 +8465,7 @@ type IsUniqueKey<M> = M extends
   : false
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L311)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Meta.ts#L313)
 
 ### Core: field carriers — `@beep/effect-drizzle`
 
@@ -8420,7 +8497,7 @@ export interface SqlTypeError<Msg extends string> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L207)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L221)
 
 #### models
 
@@ -8434,7 +8511,7 @@ Existential field carrier exposed through public combinator inference.
 type Any = Field<AnySchema, Meta.Meta>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L69)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L71)
 
 ##### AnySchema (type alias)
 
@@ -8453,7 +8530,7 @@ Effect's own erased-field boundary rather than widening `@beep/effect-drizzle` d
 type AnySchema = Top | VariantSchema.Field<any>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L49)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L51)
 
 ##### EncodedOf (type alias)
 
@@ -8465,7 +8542,7 @@ Encoded database-facing type of an input; variant fields use `select`.
 type EncodedOf<I> = SchemaEncoded<SchemaFrom<I>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L179)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L193)
 
 ##### Field (interface)
 
@@ -8481,7 +8558,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L57)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L59)
 
 ##### Input (type alias)
 
@@ -8493,7 +8570,7 @@ Bare schema, variant field, or existing field accepted by public combinators.
 type Input = AnySchema | Any
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L77)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L79)
 
 ##### MetaFrom (type alias)
 
@@ -8505,7 +8582,7 @@ The metadata type an input resolves to; bare schemas start at `Meta.Empty`.
 type MetaFrom<I> = I extends Field<AnySchema, infer M> ? M : Meta.Empty
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L123)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L131)
 
 ##### Patched (type alias)
 
@@ -8517,7 +8594,7 @@ Field type produced after applying a metadata patch to an input.
 type Patched<I, Patch> = Field<SchemaFrom<I>, Meta.Merge<MetaFrom<I>, Patch>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L153)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L161)
 
 ##### SchemaFrom (type alias)
 
@@ -8529,7 +8606,7 @@ Schema type obtained by normalizing an `Input`.
 type SchemaFrom<I> = I extends Field<infer Sch, Meta.Meta> ? Sch : Extract<I, AnySchema>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L115)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L123)
 
 #### validation
 
@@ -8547,7 +8624,7 @@ type ValidateArrayElement<I> = MetaFrom<I>["column"] extends undefined
     : SqlTypeError<"pg.array element declarations must be scalar">
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L255)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L269)
 
 ##### ValidateArrayEncoded (type alias)
 
@@ -8565,7 +8642,7 @@ type ValidateArrayEncoded<I, Element, Dimensions> = [
   : SqlTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L267)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L281)
 
 ##### ValidateEncoded (type alias)
 
@@ -8581,7 +8658,7 @@ type ValidateEncoded<I, Allowed, Msg> = [Exclude<EncodedOf<I>, null>] extends [
   : SqlTypeError<Msg>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L217)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L231)
 
 ##### ValidateNonNullable (type alias)
 
@@ -8597,7 +8674,7 @@ type ValidateNonNullable<I, Msg> = [EncodedOf<I>] extends [
   : SqlTypeError<Msg>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L233)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L247)
 
 ### Core: model contract — `@beep/effect-drizzle`
 
@@ -8625,7 +8702,7 @@ export interface AnyModel {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/model.ts#L59)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/model.ts#L57)
 
 ##### ModelInvariantError (class)
 
@@ -8657,7 +8734,7 @@ error.fieldName // => "id"
 declare class ModelInvariantError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/model.ts#L41)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/model.ts#L40)
 
 ### Core: model variants — `@beep/effect-drizzle`
 
@@ -8698,7 +8775,7 @@ const field = String.pipe(FieldExcept(["insert", "jsonCreate"]))
 declare const FieldExcept: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Exclude<"update", Keys[number]> | Exclude<"insert", Keys[number]> | Exclude<"select", Keys[number]> | Exclude<"json", Keys[number]> | Exclude<"jsonCreate", Keys[number]> | Exclude<"jsonUpdate", Keys[number]>]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L146)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L148)
 
 ##### FieldOnly
 
@@ -8730,7 +8807,7 @@ Object.keys(field.schemas) // => ["select", "json"]
 declare const FieldOnly: <const Keys extends ReadonlyArray<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(keys: Keys) => <S extends Top>(schema: S) => VariantSchema.Field<{ readonly [K in Keys[number]]: S; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L121)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L123)
 
 ##### fieldEvolve
 
@@ -8758,10 +8835,10 @@ field.schemas.update // => NullOr(String)
 **Signature**
 
 ```ts
-declare const fieldEvolve: { <Self extends VariantSchema.Field<any> | Top, const Mapping extends Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(f: Mapping): (self: Self) => VariantSchema.Field<Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; <Self extends VariantSchema.Field<any> | Top, const Mapping extends Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]?: ((variant: S[K]) => Top) | undefined; } : { readonly update?: ((variant: Self) => Top) | undefined; readonly insert?: ((variant: Self) => Top) | undefined; readonly select?: ((variant: Self) => Top) | undefined; readonly json?: ((variant: Self) => Top) | undefined; readonly jsonCreate?: ((variant: Self) => Top) | undefined; readonly jsonUpdate?: ((variant: Self) => Top) | undefined; }>(self: Self, f: Mapping): VariantSchema.Field<Self extends VariantSchema.Field<infer S extends VariantSchema.Field.Config> ? { readonly [K in keyof S]: K extends keyof Mapping ? Mapping[K] extends (arg: any) => any ? ReturnType<Mapping[K]> : S[K] : S[K]; } : { readonly update: "update" extends keyof Mapping ? Mapping[keyof Mapping & "update"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "update"]> : Self : Self; readonly insert: "insert" extends keyof Mapping ? Mapping[keyof Mapping & "insert"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "insert"]> : Self : Self; readonly select: "select" extends keyof Mapping ? Mapping[keyof Mapping & "select"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "select"]> : Self : Self; readonly json: "json" extends keyof Mapping ? Mapping[keyof Mapping & "json"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "json"]> : Self : Self; readonly jsonCreate: "jsonCreate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonCreate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonCreate"]> : Self : Self; readonly jsonUpdate: "jsonUpdate" extends keyof Mapping ? Mapping[keyof Mapping & "jsonUpdate"] extends (arg: any) => any ? ReturnType<Mapping[keyof Mapping & "jsonUpdate"]> : Self : Self; }>; }
+declare const fieldEvolve: FieldEvolve
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L173)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L212)
 
 #### constructors
 
@@ -8802,7 +8879,7 @@ Object.keys(field.schemas) // => ["select", "update"]
 declare const VariantField: <const A extends VariantSchema.Field.ConfigWithKeys<"update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">>(config: A & { readonly [K in Exclude<keyof A, "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">]: never; }) => VariantSchema.Field<A>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L96)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L98)
 
 #### destructors
 
@@ -8833,7 +8910,7 @@ extract(User, "insert") // => schema for User's insert payload
 declare const extract: { <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate">(variant: V): <A extends VariantSchema.Struct<any>>(self: A) => VariantSchema.Extract<V, A, V extends "select" ? true : false>; <V extends "update" | "insert" | "select" | "json" | "jsonCreate" | "jsonUpdate", A extends VariantSchema.Struct<any>>(self: A, variant: V): VariantSchema.Extract<V, A, V extends "select" ? true : false>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L198)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L237)
 
 #### guards
 
@@ -8847,7 +8924,7 @@ Guards each supported model projection name for dialect-aware consumers.
 declare const Variant: { is: { select: (value: unknown) => value is "select"; insert: (value: unknown) => value is "insert"; update: (value: unknown) => value is "update"; json: (value: unknown) => value is "json"; jsonCreate: (value: unknown) => value is "jsonCreate"; jsonUpdate: (value: unknown) => value is "jsonUpdate"; }; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L43)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L45)
 
 #### schemas
 
@@ -8875,7 +8952,7 @@ type WriteVariant = Extract<Variant, "insert" | "update"> // => "insert" | "upda
 type Variant = (typeof variants)[number]
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L36)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/variant.ts#L38)
 
 ### Core: optimistic repositories — `@beep/effect-drizzle`
 
@@ -8921,7 +8998,7 @@ error.expectedVersion // => 2
 declare class VersionConflictError
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L63)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L62)
 
 #### factories
 
@@ -8993,10 +9070,10 @@ await runPromise(provide(program, PgliteTestLayer))
 **Signature**
 
 ```ts
-declare const makeRepository: { <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; <const Id extends string>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): <const M extends RepositoryModel>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>; }
+declare const makeRepository: { <const Id extends string>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): <const M extends RepositoryModel>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M> & ValidateLocator<M, Id>) => Effect<Repository<M, Id & IdKey<M>>, never, SqlClient>; <const M extends RepositoryModel, const Id extends IdKey<M>>(options: { readonly spanPrefix: string; readonly idColumn: Id; }): (model: M & ValidateVersionModel<M> & ValidateColumnNames<M>) => Effect<Repository<M, Id>, never, SqlClient>; <const M extends RepositoryModel, const Id extends IdKey<M>>(model: M & ValidateVersionModel<M> & ValidateColumnNames<M>, options: { readonly spanPrefix: string; readonly idColumn: Id; }): Effect<Repository<M, Id>, never, SqlClient>; }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L361)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L359)
 
 #### repositories
 
@@ -9061,7 +9138,7 @@ type Repository<M, Id> = Pick<
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L203)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L201)
 
 #### type-level
 
@@ -9102,7 +9179,7 @@ type VersionKey<M> = {
 }[keyof M["sql"]["columns"] & string]
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L127)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/repository.ts#L125)
 
 ### Core: SQL naming invariants — `@beep/effect-drizzle`
 
