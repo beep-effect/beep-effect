@@ -136,3 +136,7 @@ the operator merged it. Its remaining local full-proof job was stopped when the
 merged PR required a new delivery branch; it is not counted as completed proof.
 The approved coverage exceptions and final packet closeout now travel in a
 follow-up PR, which must remain open after final local and hosted verification.
+
+The actual configs also pass the original failing runner settings:
+`bun run coverage -- --fileParallelism=true --maxWorkers=1`, without any
+isolation CLI override. All 344 tests pass under those settings as well.

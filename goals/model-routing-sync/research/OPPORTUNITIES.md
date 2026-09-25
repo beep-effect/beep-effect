@@ -109,3 +109,8 @@
   declaration outputs had not been built. This is worktree bootstrap state, not
   an isolation-config regression. Build the affected dependency graph before
   quick checks in a fresh checkout; retain the original failed log for attribution.
+- The coverage follow-up's hosted Repo Sanity passed its preflight checks but
+  failed `quality changeset-status --since origin/main`: all three edited
+  product workspaces require an in-range changeset, even for test-runner config.
+  Add the narrow changeset and run that exact gate before republishing; package
+  quick verification does not cover publication metadata.
