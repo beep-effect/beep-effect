@@ -62,3 +62,14 @@ reporter span 4,165.50 ms under an older runtime. Source hashes stayed stable.
 The context records load, process limits and CPU/memory/I/O pressure; maximum
 I/O avg10 was 19.21 during this sample. No causal speedup or load-adjusted result
 is claimed. Coverage and hosted proof are separate obligations.
+
+## Implementation checkpoint
+
+Implementation commit 92a832a07465a50c6b4ddbf75e74186d8c85ebd9 contains the reviewed resource
+and instrumentation changes. Eleven detector repairs and the observability
+stage-context repair now cite this SHA. The two native-boundary candidates are
+reasoned exceptions. All 14 actionable saved rows are dispositioned: 12 fixed,
+two exceptions, zero open; the two no-findings coverage rows remain intact.
+The actual Effect Vitest ratchet passes with introduced=0; its four residual
+resolved rows are outside this package and remain untouched. Publication,
+prerequisite integration and hosted proof remain outstanding.
