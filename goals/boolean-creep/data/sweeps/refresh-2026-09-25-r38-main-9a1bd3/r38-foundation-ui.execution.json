@@ -1,0 +1,22 @@
+{
+  "lane": "r38-foundation-ui",
+  "sourceSha": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:10:57.591168+00:00",
+  "finished": "2026-09-25T08:15:00.152783+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r38-main-9a1bd3/r38-foundation-ui.jsonl`. Confirmed 0, disqualified 0. All five assigned roots were covered (`brand`, `dock`, `dock-react`, `editor`, `ui`), including non-TypeScript files there. The checkout matches `ab77f10cb74ad96404b05d1ab5a1d4968cef847b` with no diff in those paths. Re-checked seeds still match their owners, members, and classifications, so nothing was rewritten. No withdrawals and no unresolved source question. The validator reported `inventory OK: 0 records`.",
+  "transcriptSha256": "1a04b110a54d43c10f9b5896f29f3a97fd010a7bf6bbeb49c16f77b17c8ec7a5",
+  "runnerSha256": "123205cdff861dcf8747666ad38679b739d79c178043ff78195c7380bc0bc0e7",
+  "seedSha256": "2b0a1b97cc517fdb8c350e2a69a59f96875e4998b4416ee9fd3dc877eabf2362",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

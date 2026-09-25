@@ -1,5 +1,26 @@
 # PLAN — Boolean-Creep Eradication
 
+## R38 complete census and reconciliation, 2026-09-25
+
+R38 completed and reconciled all 27 census lanes against source `ab77f10c`
+and main `9a1bd380`. All 3,951 frozen input bindings were verified before
+integration. The inventory now has **722 rows: 106 qualified and 616
+disqualified**, with zero applied.
+
+Five qualified owners were withdrawn because each contains only one actual
+Boolean: process cwd, branch diff, policy reading, idle reading, and prepared
+publish commit. Their original rows and designs are archived. Thirty-five
+inventory citation corrections and six design location maps preserve the
+remaining contracts; all eleven affected original designs remain in history.
+The alignment model retains its optional match payload and existing 8/4
+relation. Rust builder-method flag arguments remain outside recall.
+
+R38 is complete and wet. The dry streak remains zero. See
+`data/r38-parent-integration-2026-09-25.json`,
+`data/r38-owner-reviews/README.md`, and the R38 round verdict. Two consecutive
+current-source dry rounds, replacement independent P3 review, Benjamin's
+ratification merge, implementation, and final exact-main closure remain required.
+
 ## R37 complete census and reconciliation, 2026-09-25
 
 R37 completed and reconciled all 27 census lanes against source `84058d64`

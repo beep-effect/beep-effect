@@ -1,0 +1,9 @@
+# R38 A–C source-forward locator audit
+
+Reviewed all28 raw records and both additional footer evidence claims. Propose28 complete canonical row replacements:25D metadata rows and3existing designedQ rows. Reject two unnecessary raw anchor movements: category object2301→firstBoolean2304 and CI partition object1968→firstBoolean1973. Current starts are valid. Normalize completionGate to actual nested object156, not its operator field157. Other proposed anchors name real classes, selected field clusters or sibling declarations after stale comments/unrelated lines; preserve every original disqualifier contract rather than copying raw shortened classification notes.
+
+PST remains designed4/3; do not adopt raw confirmed status or erase notes. Return owner1383 and writer1372 replace stale anchors. LegacyWordTerminal3302 remains correct; update evidence to actual legacy success3911 and full other writers. Shared payloads, approval and family-counter behavior remain unchanged. Cache class254 remains correct; update implication evidence to guard1252, not raw footer1292 (the latter proves the separate reason-specific passed relation). Preserve full authorized64/27 grammar and exact codec.
+
+Three full design replacements prepend explicit current source maps while preserving original design contracts and provenance. Original designs/rows are archived privately for integration. No new design or qualification. All audited files equal currentHEAD/main and R37sourceHEAD84058d64, so these are pre-existing citation debts rather than source changes during R38. Prior R37 A–C receipts are hashed as historical inputs, not relabeled as current proof.
+
+The review is bounded to metadata and existing owner contracts. No tests or implementation are claimed. Exact source/input/output hashes and per-raw dispositions are supplied; primary transcript agrees with terminal execution. No tracked edits/ref moves or census/P3/dry credit.
