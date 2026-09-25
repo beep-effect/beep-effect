@@ -18,6 +18,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -645,6 +646,14 @@ export declare namespace MemoryExtractionError {
 /**
  * Build a strict extraction failure.
  *
+ * **Details**
+ *
+ * Leave `options.message` out to get the default
+ * `<extractor> failed before producing a valid extraction result` message.
+ * The options sit in an object, not a bare string, so the data-last form
+ * (options first, extractor piped in) stays distinguishable from the
+ * data-first call.
+ *
  * **Example** (Use the default message)
  *
  * ```ts
@@ -653,15 +662,33 @@ export declare namespace MemoryExtractionError {
  * console.log(memoryExtractionError("batch").message) // "batch failed before producing a valid extraction result"
  * ```
  *
+ * **Example** (Pipe an extractor name with a custom message)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function"
+ * import { memoryExtractionError } from "@beep/scratchpad/beep/MemoryContracts"
+ *
+ * const error = pipe("batch", memoryExtractionError({ message: "no JSON object" }))
+ * console.log(error.extractor) // "batch"
+ * console.log(error.message) // "no JSON object"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Extractor and message are co-primary inputs.
-export const memoryExtractionError = (extractor: string, message?: string): MemoryExtractionError =>
-  MemoryExtractionError.make({
-    extractor,
-    message: Predicate.isString(message) ? message : `${extractor} failed before producing a valid extraction result`,
-  });
+export const memoryExtractionError: {
+  (options?: { readonly message?: string }): (extractor: string) => MemoryExtractionError;
+  (extractor: string, options?: { readonly message?: string }): MemoryExtractionError;
+} = dual(
+  (args) => Predicate.isString(args[0]),
+  (extractor: string, options?: { readonly message?: string }): MemoryExtractionError => {
+    const message = options?.message;
+    return MemoryExtractionError.make({
+      extractor,
+      message: Predicate.isString(message) ? message : `${extractor} failed before producing a valid extraction result`,
+    });
+  },
+);
 
 /**
  * A strict L1 extraction failed before a valid batch.
@@ -815,9 +842,14 @@ export const deriveAllowedUse = Effect.fn("MemoryContracts.deriveAllowedUse")(fu
  * @category utilities
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Namespace and payload are co-primary inputs.
-export const deterministicContractId = (namespace: string, payload: S.JsonObject): string =>
-  createHash("sha256").update(`${namespace}|${canonicalJson(payload)}`, "utf8").digest("hex");
+export const deterministicContractId: {
+  (payload: S.JsonObject): (namespace: string) => string;
+  (namespace: string, payload: S.JsonObject): string;
+} = dual(
+  2,
+  (namespace: string, payload: S.JsonObject): string =>
+    createHash("sha256").update(`${namespace}|${canonicalJson(payload)}`, "utf8").digest("hex"),
+);
 
 /**
  * One evidence pointer carried on a durable patch.
@@ -1079,11 +1111,29 @@ export const decodeL1MemoryArchiveItem = Effect.fn("MemoryContracts.decodeL1Memo
  * console.log(kept.length) // 1
  * ```
  *
+ * **Example** (Rank by query in a pipe)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function"
+ * import { L1MemoryArchiveItem, deriveArchivePolicy, filterL1ArchiveForNormalSearch } from "@beep/scratchpad/beep/MemoryContracts"
+ *
+ * const ranked = pipe(
+ *   [
+ *     deriveArchivePolicy(L1MemoryArchiveItem.make({ archiveId: "a", text: "cats" })),
+ *     deriveArchivePolicy(L1MemoryArchiveItem.make({ archiveId: "b", text: "cats and dogs" })),
+ *   ],
+ *   filterL1ArchiveForNormalSearch("cats dogs"),
+ * )
+ * console.log(ranked.map((item) => item.archiveId)) // ["b", "a"]
+ * ```
+ *
  * @category filtering
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Items and query are co-primary inputs.
-export const filterL1ArchiveForNormalSearch = (
+export const filterL1ArchiveForNormalSearch: {
+  (query?: string): (items: ReadonlyArray<L1MemoryArchiveItem>) => ReadonlyArray<L1MemoryArchiveItem>;
+  (items: ReadonlyArray<L1MemoryArchiveItem>, query?: string): ReadonlyArray<L1MemoryArchiveItem>;
+} = dual((args) => A.isArray(args[0]), (
   items: ReadonlyArray<L1MemoryArchiveItem>,
   query?: string,
 ): ReadonlyArray<L1MemoryArchiveItem> => {
@@ -1107,7 +1157,7 @@ export const filterL1ArchiveForNormalSearch = (
       Order.mapInput(Order.flip(stringOrder), (item: L1MemoryArchiveItem) => item.archiveId),
     ),
   );
-};
+});
 
 const speakerAllowed = HashSet.make("primary_user", "non_primary_speaker", "assistant", "unknown");
 const sourceModeAllowed = HashSet.make(

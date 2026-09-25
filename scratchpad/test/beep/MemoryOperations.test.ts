@@ -477,6 +477,9 @@ describe("transitions", () => {
     assert.strictEqual(operationIsStale(operation, 3, 2), false);
     assert.strictEqual(operationIsStale(operation, 4, 2), true);
     assert.strictEqual(operationIsStale(operation, 3, 1), true);
+    assert.strictEqual(operationIsStale(3, 2)(operation), false);
+    assert.strictEqual(operationIsStale(4, 2)(operation), true);
+    assert.strictEqual(operationIsStale(3, 1)(operation), true);
   });
 });
 

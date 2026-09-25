@@ -288,18 +288,20 @@ export const readPreviousReporterVocabularyForTesting = Effect.fn("SyncDataToTs.
 const decodeArchiveEntry = <A, E>(
   targetId: string,
   file: string,
-  text: string | undefined,
+  text: O.Option<string>,
   decode: (input: string) => Effect.Effect<A, E>
 ): Effect.Effect<A, SyncDataToTsError> =>
-  text === undefined
-    ? Effect.fail(
+  O.match(text, {
+    onNone: () =>
+      Effect.fail(
         SyncDataToTsError.make({
           message: `Missing archive entry "${file}".`,
           targetId,
           file,
         })
-      )
-    : decode(text).pipe(SyncDataToTsError.mapError(`Failed to decode ${file}`, targetId, file));
+      ),
+    onSome: (input) => decode(input).pipe(SyncDataToTsError.mapError(`Failed to decode ${file}`, targetId, file)),
+  });
 
 const recordArrayCount = <A>(record: Readonly<Record<string, ReadonlyArray<A>>>): number =>
   pipe(
@@ -348,32 +350,17 @@ export const decodeReportersDbSourceData = Effect.fn("SyncDataToTs.ReportersDb.d
   const caseNameAbbreviations = yield* decodeArchiveEntry(
     targetId,
     caseNameAbbreviationsPath,
-    O.getOrUndefined(R.get(entries, caseNameAbbreviationsPath)),
+    R.get(entries, caseNameAbbreviationsPath),
     decodeCaseNameAbbreviations
   );
-  const journals = yield* decodeArchiveEntry(
-    targetId,
-    journalsPath,
-    O.getOrUndefined(R.get(entries, journalsPath)),
-    decodeJournals
-  );
-  const laws = yield* decodeArchiveEntry(targetId, lawsPath, O.getOrUndefined(R.get(entries, lawsPath)), decodeLaws);
-  const regexes = yield* decodeArchiveEntry(
-    targetId,
-    regexesPath,
-    O.getOrUndefined(R.get(entries, regexesPath)),
-    decodeReporterRegexes
-  );
-  const reporters = yield* decodeArchiveEntry(
-    targetId,
-    reportersPath,
-    O.getOrUndefined(R.get(entries, reportersPath)),
-    decodeReporters
-  );
+  const journals = yield* decodeArchiveEntry(targetId, journalsPath, R.get(entries, journalsPath), decodeJournals);
+  const laws = yield* decodeArchiveEntry(targetId, lawsPath, R.get(entries, lawsPath), decodeLaws);
+  const regexes = yield* decodeArchiveEntry(targetId, regexesPath, R.get(entries, regexesPath), decodeReporterRegexes);
+  const reporters = yield* decodeArchiveEntry(targetId, reportersPath, R.get(entries, reportersPath), decodeReporters);
   const stateAbbreviations = yield* decodeArchiveEntry(
     targetId,
     stateAbbreviationsPath,
-    O.getOrUndefined(R.get(entries, stateAbbreviationsPath)),
+    R.get(entries, stateAbbreviationsPath),
     decodeStateAbbreviations
   );
 

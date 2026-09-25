@@ -26,6 +26,7 @@ import {
   pg,
   text,
 } from "./Kit.ts";
+import { PythonFloat } from "./PythonFloat.ts";
 
 const $I = $ScratchpadId.create("beep/DailySummary");
 
@@ -54,8 +55,8 @@ const stringList = (column: string) =>
 
 const optionalInt = (column: string) => S.Int.pipe(optionalNull, pg.integer(), pg.columnName(column));
 
-// @effect-diagnostics-next-line schemaNumber:off -- Location pins do not set allow_inf_nan, so non-finite coordinates stay valid.
-const optionalNumber = (column: string) => S.Number.pipe(optionalNull, pg.doublePrecision(), pg.columnName(column));
+// Location pins do not set allow_inf_nan, so non-finite coordinates stay valid.
+const optionalNumber = (column: string) => PythonFloat.pipe(optionalNull, pg.doublePrecision(), pg.columnName(column));
 
 /**
  * One thing the day asked the user to do.

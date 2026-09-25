@@ -82,6 +82,7 @@ export * as Other from "./Other.ts";
 export * as Port from "./Port.ts";
 export * as ProactiveBudget from "./ProactiveBudget.ts";
 export * as ProductMemory from "./ProductMemory.ts";
+export * as PythonFloat from "./PythonFloat.ts";
 export * as Score from "./Score.ts";
 export * as ScreenActivity from "./ScreenActivity.ts";
 export * as ScreenFrame from "./ScreenFrame.ts";

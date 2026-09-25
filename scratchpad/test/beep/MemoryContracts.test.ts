@@ -3,6 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -167,7 +168,14 @@ describe("errors", () => {
     const defaulted = memoryExtractionError("extractor_x");
     assert.strictEqual(isMemoryExtractionError(defaulted), true);
     assert.strictEqual(defaulted.message, "extractor_x failed before producing a valid extraction result");
-    assert.strictEqual(memoryExtractionError("extractor_x", "custom").message, "custom");
+    assert.strictEqual(memoryExtractionError("extractor_x", { message: "custom" }).message, "custom");
+    const piped = pipe("extractor_x", memoryExtractionError());
+    assert.deepStrictEqual(piped, defaulted);
+    assert.strictEqual(piped.extractor, defaulted.extractor);
+    const custom = memoryExtractionError("extractor_x", { message: "custom" });
+    const pipedCustom = pipe("extractor_x", memoryExtractionError({ message: "custom" }));
+    assert.deepStrictEqual(pipedCustom, custom);
+    assert.strictEqual(pipedCustom.extractor, custom.extractor);
     const staged = workingObservationExtractionError("parse");
     assert.strictEqual(isWorkingObservationExtractionError(staged), true);
     assert.strictEqual(staged.extractor, "working_observation_extractor");
@@ -335,6 +343,11 @@ describe("L1MemoryArchiveItem", () => {
       ["b", "a"],
     );
     assert.deepStrictEqual(filterL1ArchiveForNormalSearch(all, "mars"), []);
+    assert.deepStrictEqual(pipe(all, filterL1ArchiveForNormalSearch()), filterL1ArchiveForNormalSearch(all));
+    assert.deepStrictEqual(
+      pipe(all, filterL1ArchiveForNormalSearch("trip tokyo")),
+      filterL1ArchiveForNormalSearch(all, "trip tokyo"),
+    );
   });
 });
 

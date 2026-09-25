@@ -5,6 +5,7 @@ import * as A from "effect/Array";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -315,6 +316,50 @@ describe("factory rejections", () => {
     );
     assert.strictEqual(
       problemOf(() => textBoundsCheck("Bad", { maxLength: 1 })),
+      "check-name",
+    );
+  });
+});
+
+describe("pipeable factories", () => {
+  it("builds the same fields and checks when the bounds come first", () => {
+    const labelBounds = { minLength: 1, maxLength: 8, pattern: "^[a-z0-9_]+$" };
+    class PipeRow extends Model<PipeRow>("PipeRow")(
+      {
+        label: pipe("label", boundedText(labelBounds)),
+        summary: pipe("summary", optionalBoundedText({ maxLength: 4 })),
+      },
+      (columns) => [
+        pipe("label", textBoundsCheck(labelBounds))(columns.label),
+        textBoundsCheck({ maxLength: 4 })("summary")(columns.summary),
+      ],
+    ) {}
+    const decoded = decode(PipeRow, { label: "ok_1", summary: null });
+    assert.strictEqual(decoded.label, "ok_1");
+    assert.strictEqual(O.isNone(decoded.summary), true);
+    assert.strictEqual(decodeFails(PipeRow, { label: "Bad!" }), true);
+    assert.strictEqual(decodeFails(PipeRow, { label: "ok", summary: "abcde" }), true);
+    const [label, summary] = getTableConfig(PipeRow.pipe(toPgTable)).checks;
+    assert.strictEqual(label?.name, "label_text");
+    assert.strictEqual(summary?.name, "summary_text");
+    assert.strictEqual(
+      label && dialect.sqlToQuery(label.value).sql,
+      `char_length("pipe_row"."label") >= 1 and char_length("pipe_row"."label") <= 8 and "pipe_row"."label" ~ '^[a-z0-9_]+$'`,
+    );
+    assert.strictEqual(summary && dialect.sqlToQuery(summary.value).sql, `char_length("pipe_row"."summary") <= 4`);
+  });
+
+  it("rejects bad bounds and names once the column name arrives", () => {
+    assert.strictEqual(
+      problemOf(() => boundedText({})("title")),
+      "empty-bounds",
+    );
+    assert.strictEqual(
+      problemOf(() => optionalBoundedText({ pattern: "(?=a)" })("summary")),
+      "lookaround",
+    );
+    assert.strictEqual(
+      problemOf(() => textBoundsCheck({ maxLength: 1 })("Bad")),
       "check-name",
     );
   });

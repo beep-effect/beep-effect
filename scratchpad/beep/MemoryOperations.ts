@@ -16,6 +16,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -74,7 +75,7 @@ const hasText = (value: O.Option<string>): boolean => O.isSome(value) && !Str.is
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryOperationType } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryOperationType } from "./MemoryOperations.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryOperationType)("synthesis"))
  * console.log(decoded) // "synthesis"
@@ -120,7 +121,7 @@ const isMemoryOperationType = S.is(MemoryOperationType);
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryOperationStatus } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryOperationStatus } from "./MemoryOperations.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryOperationStatus)("pending"))
  * console.log(decoded) // "pending"
@@ -152,7 +153,7 @@ const terminalStatuses = HashSet.make("committed", "skipped_idempotent", "perman
  * **Example** (Committed is terminal)
  *
  * ```ts
- * import { isTerminalOperationStatus } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { isTerminalOperationStatus } from "./MemoryOperations.ts"
  *
  * console.log(isTerminalOperationStatus("committed")) // true
  * console.log(isTerminalOperationStatus("retryable_failure")) // false
@@ -169,7 +170,7 @@ export const isTerminalOperationStatus = (status: MemoryOperationStatus): boolea
  * **Example** (Build an integrity error)
  *
  * ```ts
- * import { MemoryOperationError } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryOperationError } from "./MemoryOperations.ts"
  *
  * console.log(MemoryOperationError.make({ message: "terminal" }).message) // "terminal"
  * ```
@@ -209,7 +210,7 @@ export declare namespace MemoryOperationError {
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryLedgerReopenReceipt } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryLedgerReopenReceipt } from "./MemoryOperations.ts"
  *
  * const exit = Effect.runSyncExit(
  *   S.decodeUnknownEffect(MemoryLedgerReopenReceipt)({
@@ -279,7 +280,7 @@ export declare namespace MemoryLedgerReopenReceipt {
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { OperationLogicalPayload, canonicalLogicalPayload } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { OperationLogicalPayload, canonicalLogicalPayload } from "./MemoryOperations.ts"
  *
  * const payload = OperationLogicalPayload.make({ decision: "add", memoryText: O.none() })
  * console.log(Rec.has(canonicalLogicalPayload(payload), "memory_text"))
@@ -330,7 +331,7 @@ const decodeOperationLogicalPayload = S.decodeUnknownEffect(OperationLogicalPayl
  * **Example** (Keep an empty supersedes list)
  *
  * ```ts
- * import { OperationLogicalPayload, canonicalLogicalPayload } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { OperationLogicalPayload, canonicalLogicalPayload } from "./MemoryOperations.ts"
  *
  * const encoded = canonicalLogicalPayload(OperationLogicalPayload.make({ decision: "add" }))
  * console.log(A.isArray(encoded.supersedes)) // true
@@ -405,7 +406,7 @@ const camelKnown = HashSet.fromIterable([
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { coerceLogicalPayload } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { coerceLogicalPayload } from "./MemoryOperations.ts"
  *
  * const payload = Effect.runSync(coerceLogicalPayload({ decision: "add", extra: 1 }))
  * console.log(payload.metadata.extra) // 1
@@ -439,7 +440,7 @@ export const coerceLogicalPayload = Effect.fn("MemoryOperations.coerceLogicalPay
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { buildOperationId } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { buildOperationId } from "./MemoryOperations.ts"
  *
  * const left = Effect.runSync(
  *   buildOperationId({
@@ -504,7 +505,7 @@ export const buildOperationId = Effect.fn("MemoryOperations.buildOperationId")(f
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { logicalPayloadDigest } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { logicalPayloadDigest } from "./MemoryOperations.ts"
  *
  * const digest = Effect.runSync(logicalPayloadDigest({ decision: "add" }))
  * console.log(digest.length) // 64
@@ -541,7 +542,7 @@ export const logicalPayloadDigest = Effect.fn("MemoryOperations.logicalPayloadDi
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { CheckedMemoryOperation, OperationLogicalPayload } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { CheckedMemoryOperation, OperationLogicalPayload } from "./MemoryOperations.ts"
  *
  * const exit = Effect.runSyncExit(
  *   S.decodeUnknownEffect(CheckedMemoryOperation)({
@@ -615,7 +616,7 @@ export declare namespace MemoryOperation {
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { MemoryOperation, OperationLogicalPayload, operationIntegrityIssue } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryOperation, OperationLogicalPayload, operationIntegrityIssue } from "./MemoryOperations.ts"
  *
  * const issue = operationIntegrityIssue(
  *   MemoryOperation.make({
@@ -667,7 +668,7 @@ export const operationIntegrityIssue = (operation: MemoryOperation): string | un
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { CheckedMemoryOperation, OperationLogicalPayload } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { CheckedMemoryOperation, OperationLogicalPayload } from "./MemoryOperations.ts"
  *
  * const exit = Effect.runSyncExit(
  *   S.decodeUnknownEffect(CheckedMemoryOperation)({
@@ -714,7 +715,7 @@ export type CheckedMemoryOperation = typeof CheckedMemoryOperation.Type;
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { assertOperationIdentity, memoryOperationNew } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { assertOperationIdentity, memoryOperationNew } from "./MemoryOperations.ts"
  * import * as DateTime from "effect/DateTime"
  *
  * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
@@ -773,7 +774,7 @@ export const assertOperationIdentity = Effect.fn("MemoryOperations.assertOperati
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
- * import { memoryOperationNew } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { memoryOperationNew } from "./MemoryOperations.ts"
  *
  * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const operation = Effect.runSync(
@@ -841,7 +842,7 @@ export const memoryOperationNew = Effect.fn("MemoryOperations.memoryOperationNew
  * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
- * import { MemoryOperation, OperationLogicalPayload, transitionOperation } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryOperation, OperationLogicalPayload, transitionOperation } from "./MemoryOperations.ts"
  *
  * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const operation = MemoryOperation.make({
@@ -895,7 +896,7 @@ export const transitionOperation = Effect.fn("MemoryOperations.transitionOperati
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
- * import { markOperationRetryable, memoryOperationNew } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { markOperationRetryable, memoryOperationNew } from "./MemoryOperations.ts"
  *
  * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const later = DateTime.makeUnsafe("2020-01-02T04:04:05.000Z")
@@ -940,7 +941,7 @@ export const markOperationRetryable = Effect.fn("MemoryOperations.markOperationR
  * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
- * import { markOperationCommitted, memoryOperationNew } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { markOperationCommitted, memoryOperationNew } from "./MemoryOperations.ts"
  *
  * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const operation = Effect.runSync(
@@ -991,7 +992,7 @@ export const markOperationCommitted = Effect.fn("MemoryOperations.markOperationC
  *
  * ```ts
  * import * as DateTime from "effect/DateTime"
- * import { MemoryOperation, OperationLogicalPayload, operationIsStale } from "@beep/scratchpad/beep/MemoryOperations.ts"
+ * import { MemoryOperation, OperationLogicalPayload, operationIsStale } from "./MemoryOperations.ts"
  *
  * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const operation = MemoryOperation.make({
@@ -1009,13 +1010,38 @@ export const markOperationCommitted = Effect.fn("MemoryOperations.markOperationC
  * console.log(operationIsStale(operation, 1, 3)) // true
  * ```
  *
+ * **Example** (Check staleness in a pipeline)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { pipe } from "effect/Function"
+ * import { MemoryOperation, OperationLogicalPayload, operationIsStale } from "./MemoryOperations.ts"
+ *
+ * const now = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
+ * const operation = MemoryOperation.make({
+ *   operationId: "op_x",
+ *   uid: "user-1",
+ *   operationType: "synthesis",
+ *   status: "pending",
+ *   logicalPayload: OperationLogicalPayload.make({ decision: "add" }),
+ *   logicalPayloadDigest: "digest",
+ *   accountGeneration: 1,
+ *   sourceGeneration: 2,
+ *   createdAt: now,
+ *   updatedAt: now,
+ * })
+ * console.log(pipe(operation, operationIsStale(1, 2))) // false
+ * ```
+ *
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Operation and both generations are co-primary inputs.
-export const operationIsStale = (
-  operation: MemoryOperation,
-  accountGeneration: number,
-  sourceGeneration: number,
-): boolean =>
-  !Equal.equals(accountGeneration, operation.accountGeneration) || !Equal.equals(sourceGeneration, operation.sourceGeneration);
+export const operationIsStale: {
+  (accountGeneration: number, sourceGeneration: number): (operation: MemoryOperation) => boolean;
+  (operation: MemoryOperation, accountGeneration: number, sourceGeneration: number): boolean;
+} = dual(
+  3,
+  (operation: MemoryOperation, accountGeneration: number, sourceGeneration: number): boolean =>
+    !Equal.equals(accountGeneration, operation.accountGeneration) ||
+    !Equal.equals(sourceGeneration, operation.sourceGeneration),
+);

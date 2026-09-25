@@ -22,6 +22,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { optionalText, optionalTimestamp } from "./Kit.ts";
 import { atLeastCheck, betweenCheck, finiteBetween, Model, optionalNull, pg } from "./Port.ts";
+import { PythonFloat } from "./PythonFloat.ts";
 
 const decodeUnknownFromJsonString = S.decodeEffect(S.fromJsonString(S.Unknown));
 
@@ -208,10 +209,9 @@ const decodeGeolocationWire = S.decodeUnknownEffect(GeolocationWire);
 export class GeolocationInput extends Model<GeolocationInput>("GeolocationInput")(
   {
     ...sharedGeoFields,
-    // @effect-diagnostics-next-line schemaNumber:off -- Released clients are not rejected for non-finite coordinates.
-    latitude: S.Number.pipe(pg.doublePrecision(), pg.columnName("latitude")),
-    // @effect-diagnostics-next-line schemaNumber:off -- Released clients are not rejected for non-finite coordinates.
-    longitude: S.Number.pipe(pg.doublePrecision(), pg.columnName("longitude")),
+    // Released clients are not rejected for non-finite coordinates.
+    latitude: PythonFloat.pipe(pg.doublePrecision(), pg.columnName("latitude")),
+    longitude: PythonFloat.pipe(pg.doublePrecision(), pg.columnName("longitude")),
   },
   $I.annote("GeolocationInput", {
     description: "Released coordinate wire. Latitude and longitude are intentionally unbounded.",
@@ -268,7 +268,6 @@ const decodeGeolocationInputWire = S.decodeUnknownEffect(GeolocationInputWire);
 const boundGeolocationInput = Effect.fn("Geolocation.boundInput")(function* (value: GeolocationInput) {
   const encoded = yield* Effect.result(encodeGeolocationInputWire(value));
   if (Result.isFailure(encoded)) return O.none<Geolocation>();
-  // @effect-diagnostics-next-line preferTypedSchemaDecoder:off -- The released wire and the bounded value are different schemas.
   return yield* Effect.option(decodeGeolocationWire(encoded.success));
 });
 

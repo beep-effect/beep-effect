@@ -1,5 +1,6 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -59,5 +60,21 @@ describe("ConversationPhoto", () => {
     );
     expect(photosAsString([dated], false)).toBe('- "desk"');
     expect(photosAsString([dated], true)).toBe('- [03:04:05] "desk"');
+    expect(photosAsString([dated])).toBe('- "desk"');
+  });
+
+  it("formats photo descriptions data-last in a pipe", () => {
+    const dated = Effect.runSync(
+      decodeConversationPhoto({
+        base64: "pixels",
+        description: "desk",
+        createdAt: "2020-01-02T03:04:05.000Z",
+        discarded: false,
+      }),
+    );
+    expect(pipe([dated], photosAsString(true))).toBe('- [03:04:05] "desk"');
+    expect(pipe([dated], photosAsString(false))).toBe('- "desk"');
+    expect(pipe([dated], photosAsString())).toBe('- "desk"');
+    expect(pipe([], photosAsString(true))).toBe("None");
   });
 });

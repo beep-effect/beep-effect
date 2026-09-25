@@ -7,6 +7,7 @@ import { $ScratchpadId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -789,11 +790,32 @@ export const getRatingAvg = (app: App): string | null =>
  * console.log(hasCapability(app, "memories")) // true
  * ```
  *
+ * **Example** (Filter apps by capability)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import * as HashSet from "effect/HashSet"
+ * import { App, hasCapability } from "@beep/scratchpad/beep/App"
+ *
+ * const app = App.make({
+ *   id: "app-1",
+ *   name: "Notes",
+ *   category: "productivity",
+ *   author: "omi",
+ *   description: "Notes",
+ *   image: "/notes.png",
+ *   capabilities: HashSet.fromIterable(["chat"]),
+ * })
+ * console.log(A.filter([app], hasCapability("chat")).length) // 1
+ * ```
+ *
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- The app and the capability name are co-primary inputs.
-export const hasCapability = (app: App, capability: string): boolean => HashSet.has(app.capabilities, capability);
+export const hasCapability: {
+  (capability: string): (app: App) => boolean;
+  (app: App, capability: string): boolean;
+} = dual(2, (app: App, capability: string): boolean => HashSet.has(app.capabilities, capability));
 
 /**
  * Whether the app works with memories.
@@ -1018,12 +1040,17 @@ export const triggersRealtimeAudioBytes = (app: App): boolean => triggersOn(app,
  * @category filtering
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- The app and the requested scopes are co-primary inputs.
-export const filterProactiveNotificationScopes = (app: App, params: ReadonlyArray<string>): ReadonlyArray<string> =>
-  O.match(app.proactiveNotification, {
-    onNone: () => [],
-    onSome: (note) => A.filter(params, (param) => HashSet.has(note.scopes, param)),
-  });
+export const filterProactiveNotificationScopes: {
+  (params: ReadonlyArray<string>): (app: App) => ReadonlyArray<string>;
+  (app: App, params: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(
+  2,
+  (app: App, params: ReadonlyArray<string>): ReadonlyArray<string> =>
+    O.match(app.proactiveNotification, {
+      onNone: () => [],
+      onSome: (note) => A.filter(params, (param) => HashSet.has(note.scopes, param)),
+    }),
+);
 
 /**
  * Public image URL for an app path.

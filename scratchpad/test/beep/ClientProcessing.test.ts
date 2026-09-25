@@ -1,6 +1,7 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -31,6 +32,10 @@ describe("ClientProcessing", () => {
     expect(decode(Title, "  hi  ")).toBe("hi");
     expect(decodeFails(Title, "           x")).toBe(true);
     expect(decodeFails(Title, "   ")).toBe(true);
+    const PipedTitle = pipe(10, strippedText(1));
+    expect(decode(PipedTitle, "  hi  ")).toBe("hi");
+    expect(decodeFails(PipedTitle, "           x")).toBe(true);
+    expect(decodeFails(PipedTitle, "   ")).toBe(true);
     expect(decodeFails(AwareInstant, "2020-01-02T03:04:05")).toBe(true);
     expect(decodeFails(AwareInstant, 0)).toBe(true);
     expect(DateTime.formatIso(decode(S.DateTimeUtcFromString, "2020-01-02T03:04:05Z"))).toBe("2020-01-02T03:04:05.000Z");

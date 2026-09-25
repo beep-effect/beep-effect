@@ -18,6 +18,7 @@ import { Model } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as SchemaGetter from "effect/SchemaGetter";
@@ -524,6 +525,30 @@ export const text = (column: string) => S.String.pipe(pg.text(), pg.columnName(c
  */
 export const optionalText = (column: string) => optionalNull(S.String).pipe(pg.text(), pg.columnName(column));
 
+const boundedTextField = (column: string, bounds: TextBounds) =>
+  boundedString(bounds).pipe(pg.text(), pg.columnName(column));
+
+/**
+ * Field returned by both call forms of {@link boundedText}.
+ *
+ * **Details**
+ *
+ * Module-internal. Naming it keeps the two overloads on one return type.
+ */
+type BoundedTextField = ReturnType<typeof boundedTextField>;
+
+const optionalBoundedTextField = (column: string, bounds: TextBounds) =>
+  optionalNull(boundedString(bounds)).pipe(pg.text(), pg.columnName(column));
+
+/**
+ * Field returned by both call forms of {@link optionalBoundedText}.
+ *
+ * **Details**
+ *
+ * Module-internal. Naming it keeps the two overloads on one return type.
+ */
+type OptionalBoundedTextField = ReturnType<typeof optionalBoundedTextField>;
+
 /**
  * Required text column with Python length or pattern checks.
  *
@@ -547,13 +572,31 @@ export const optionalText = (column: string) => optionalNull(S.String).pipe(pg.t
  * console.log(decoded.title) // "Notes"
  * ```
  *
+ * **Example** (Reuse one limit for several columns)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { Model, boundedText } from "@beep/scratchpad/beep"
+ *
+ * const shortName = boundedText({ minLength: 1, maxLength: 64 })
+ *
+ * class Person extends Model<Person>("Person")({
+ *   firstName: shortName("first_name"),
+ *   lastName: shortName("last_name"),
+ * }) {}
+ * const decoded = Effect.runSync(S.decodeUnknownEffect(Person)({ firstName: "Ada", lastName: "Lovelace" }))
+ * console.log(decoded.lastName) // "Lovelace"
+ * ```
+ *
  * @see {@link textBoundsCheck} for the matching SQL check.
  * @category factories
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Column name and bounds are co-primary inputs, and neither is a pipeable value.
-export const boundedText = (column: string, bounds: TextBounds) =>
-  boundedString(bounds).pipe(pg.text(), pg.columnName(column));
+export const boundedText: {
+  (bounds: TextBounds): (column: string) => BoundedTextField;
+  (column: string, bounds: TextBounds): BoundedTextField;
+} = dual(2, boundedTextField);
 
 /**
  * Optional bounded text column. Missing and null become `None`.
@@ -577,9 +620,10 @@ export const boundedText = (column: string, bounds: TextBounds) =>
  * @category factories
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Column name and bounds are co-primary inputs, and neither is a pipeable value.
-export const optionalBoundedText = (column: string, bounds: TextBounds) =>
-  optionalNull(boundedString(bounds)).pipe(pg.text(), pg.columnName(column));
+export const optionalBoundedText: {
+  (bounds: TextBounds): (column: string) => OptionalBoundedTextField;
+  (column: string, bounds: TextBounds): OptionalBoundedTextField;
+} = dual(2, optionalBoundedTextField);
 
 /**
  * Required OMI user id column (`uid` or `user_id`).
@@ -976,7 +1020,11 @@ export const nonNegativeIntCheck = (columnName: string) => {
  * **Gotchas**
  *
  * Empty bounds throw {@link KitFieldError}. The rendered SQL inlines digits and
- * the pattern literal, so the check has no parameters.
+ * the pattern literal, so the check has no parameters. The bounds-only form
+ * validates when it receives the column name.
+ *
+ * The two-argument signature is declared last, so
+ * `ReturnType<typeof textBoundsCheck>` is still the per-column check function.
  *
  * **Example** (Bound a title column)
  *
@@ -994,16 +1042,38 @@ export const nonNegativeIntCheck = (columnName: string) => {
  * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // char_length("title_row"."title") >= 1 and char_length("title_row"."title") <= 256
  * ```
  *
+ * **Example** (Share one bound across columns)
+ *
+ * ```ts
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig } from "drizzle-orm/pg-core"
+ * import { boundedText, Model, textBoundsCheck } from "@beep/scratchpad/beep"
+ *
+ * const nameBounds = { minLength: 1, maxLength: 64 }
+ * const nameCheck = textBoundsCheck(nameBounds)
+ *
+ * class Row extends Model<Row>("NameRow")(
+ *   { firstName: boundedText("first_name", nameBounds), lastName: boundedText("last_name", nameBounds) },
+ *   (columns) => [nameCheck("first_name")(columns.firstName), nameCheck("last_name")(columns.lastName)],
+ * ) {}
+ * const [first, last] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(first?.name) // "first_name_text"
+ * console.log(last?.name) // "last_name_text"
+ * ```
+ *
  * @see {@link boundedText} for the schema half of the same limits.
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Column name and bounds are co-primary inputs, and neither is a pipeable value.
-export const textBoundsCheck = (columnName: string, bounds: TextBounds) => {
+export const textBoundsCheck: {
+  (bounds: TextBounds): (columnName: string) => (column: ExtraConfigColumn) => pg.Table.Check;
+  (columnName: string, bounds: TextBounds): (column: ExtraConfigColumn) => pg.Table.Check;
+} = dual(2, (columnName: string, bounds: TextBounds): ((column: ExtraConfigColumn) => pg.Table.Check) => {
   const name = checkedName(columnName, "text");
   boundedString(bounds);
   return (column: ExtraConfigColumn) => pg.Table.check(name)(textBoundsSql(column, bounds));
-};
+});
 
 /**
  * PostgreSQL model constructor for ported OMI rows.

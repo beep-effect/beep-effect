@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -112,6 +113,19 @@ describe("§1.3 legal state matrix", () => {
     assert.strictEqual(isLegalStateCombination("archive", "superseded", "processed"), false);
     assert.strictEqual(isLegalStateCombination("archive", "active", "pending"), false);
     assert.strictEqual(isLegalStateCombination("archive", "active", "blocked"), false);
+  });
+
+  it("the pipeable form agrees with the data-first form on every triple", () => {
+    for (const layer of layers) {
+      for (const status of statuses) {
+        for (const state of states) {
+          assert.strictEqual(
+            pipe(layer, isLegalStateCombination(status, state)),
+            isLegalStateCombination(layer, status, state),
+          );
+        }
+      }
+    }
   });
 
   it("assertLegalState succeeds on a legal triple and fails with the Python message", () => {

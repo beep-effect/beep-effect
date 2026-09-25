@@ -21,6 +21,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -945,22 +946,45 @@ export const initializeConversation = (input: unknown) => {
  * console.log(getTranscript(conversation, false)) // "User: Hello"
  * ```
  *
+ * **Example** (Render in a pipeline)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { pipe } from "effect/Function"
+ * import { Conversation, getTranscript } from "./Conversation.ts"
+ * import { Structured } from "./Structured.ts"
+ * import { TranscriptSegment } from "./TranscriptSegment.ts"
+ *
+ * const conversation = Conversation.make({
+ *   id: "c1",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   structured: Structured.make({}),
+ *   transcriptSegments: [TranscriptSegment.make({ id: "s", text: " Hello ", isUser: true, speakerId: 0, start: 0, end: 1 })],
+ * })
+ * console.log(pipe(conversation, getTranscript(false, [], "Ada"))) // "Ada: Hello"
+ * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Conversation and formatting flags are co-primary inputs, and neither is a pipeable value.
-export const getTranscript = (
-  conversation: Conversation,
-  includeTimestamps = false,
-  people?: ReadonlyArray<Person>,
-  userName?: string,
-): string =>
-  segmentsAsString(
-    conversation.transcriptSegments,
-    includeTimestamps,
-    userName,
-    people?.map((person) => ({ id: person.id, name: person.name })),
-  );
+export const getTranscript: {
+  (includeTimestamps?: boolean, people?: ReadonlyArray<Person>, userName?: string): (conversation: Conversation) => string;
+  (conversation: Conversation, includeTimestamps?: boolean, people?: ReadonlyArray<Person>, userName?: string): string;
+} = dual(
+  (args) => P.isObject(args[0]),
+  (
+    conversation: Conversation,
+    includeTimestamps = false,
+    people?: ReadonlyArray<Person>,
+    userName?: string,
+  ): string =>
+    segmentsAsString(
+      conversation.transcriptSegments,
+      includeTimestamps,
+      userName,
+      people?.map((person) => ({ id: person.id, name: person.name })),
+    ),
+);
 
 /**
  * Photo descriptions, or `None`.
@@ -983,9 +1007,14 @@ export const getTranscript = (
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Conversation and the timestamp flag are co-primary inputs, and neither is a pipeable value.
-export const getPhotosDescription = (conversation: Conversation, includeTimestamps = false): string =>
-  photosAsString(conversation.photos, includeTimestamps);
+export const getPhotosDescription: {
+  (includeTimestamps?: boolean): (conversation: Conversation) => string;
+  (conversation: Conversation, includeTimestamps?: boolean): string;
+} = dual(
+  (args) => P.isObject(args[0]),
+  (conversation: Conversation, includeTimestamps = false): string =>
+    photosAsString(conversation.photos, includeTimestamps),
+);
 
 /**
  * Distinct non-blank person ids. Order is not stable.
@@ -1095,14 +1124,28 @@ export declare namespace SharedConversationResponse {
  * console.log(shared.structured.title) // "Standup"
  * ```
  *
+ * **Example** (Project in a pipeline)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { pipe } from "effect/Function"
+ * import { Conversation, projectSharedConversation } from "./Conversation.ts"
+ * import { Structured } from "./Structured.ts"
+ *
+ * const shared = pipe(
+ *   Conversation.make({ id: "c1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"), structured: Structured.make({ title: "Standup" }) }),
+ *   projectSharedConversation([]),
+ * )
+ * console.log(shared.people.length) // 0
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Conversation and people are co-primary inputs, and neither is a pipeable value.
-export const projectSharedConversation = (
-  conversation: Conversation,
-  people: ReadonlyArray<Person>,
-): SharedConversationResponse =>
+export const projectSharedConversation: {
+  (people: ReadonlyArray<Person>): (conversation: Conversation) => SharedConversationResponse;
+  (conversation: Conversation, people: ReadonlyArray<Person>): SharedConversationResponse;
+} = dual(2, (conversation: Conversation, people: ReadonlyArray<Person>): SharedConversationResponse =>
   SharedConversationResponse.make({
     id: conversation.id,
     createdAt: conversation.createdAt,
@@ -1135,7 +1178,8 @@ export const projectSharedConversation = (
     ),
     calendarEvents: conversation.calendarEvents,
     people: people.map((person) => SharedPerson.make({ id: person.id, name: person.name })),
-  });
+  }),
+);
 
 /**
  * Encoded conversation with datetimes already ISO strings.
@@ -1621,11 +1665,16 @@ export declare namespace ExternalIntegrationCreateConversation {
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Payload and the timestamp flag are co-primary inputs, and neither is a pipeable value.
-export const externalGetTranscript = (created: ExternalIntegrationCreateConversation, _includeTimestamps = false): string => {
-  void _includeTimestamps;
-  return Str.trim(created.text);
-};
+export const externalGetTranscript: {
+  (_includeTimestamps?: boolean): (created: ExternalIntegrationCreateConversation) => string;
+  (created: ExternalIntegrationCreateConversation, _includeTimestamps?: boolean): string;
+} = dual(
+  (args) => P.isObject(args[0]),
+  (created: ExternalIntegrationCreateConversation, _includeTimestamps = false): string => {
+    void _includeTimestamps;
+    return Str.trim(created.text);
+  },
+);
 
 /**
  * External creates have no person ids.

@@ -47,6 +47,22 @@ describe("Geolocation", () => {
     assert.strictEqual(geolocationFromPrivateHeader("x".repeat(4097)).pipe(Effect.runSync, O.isNone), true);
   });
 
+  it("admits non-finite input coordinates and bounds them to None", () => {
+    const nonFinite = decode(GeolocationInputWire, {
+      latitude: Number.NaN,
+      longitude: Number.POSITIVE_INFINITY,
+      altitude: null,
+    });
+    assert.isNaN(nonFinite.latitude);
+    assert.strictEqual(nonFinite.longitude, Number.POSITIVE_INFINITY);
+    assert.strictEqual(O.some(nonFinite).pipe(validatedGeolocationOrNone, O.isNone), true);
+    const nanLatitude = decode(GeolocationInputWire, { latitude: Number.NaN, longitude: 2 });
+    assert.strictEqual(O.some(nanLatitude).pipe(validatedGeolocationOrNone, O.isNone), true);
+    const negativeInfinity = decode(GeolocationInputWire, { latitude: 1, longitude: Number.NEGATIVE_INFINITY });
+    assert.strictEqual(negativeInfinity.longitude, Number.NEGATIVE_INFINITY);
+    assert.strictEqual(O.some(negativeInfinity).pipe(validatedGeolocationOrNone, O.isNone), true);
+  });
+
   it("derives an arbitrary for each model", () => {
     for (const schema of [CaptureSource, Geolocation, GeolocationInput]) {
       assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);

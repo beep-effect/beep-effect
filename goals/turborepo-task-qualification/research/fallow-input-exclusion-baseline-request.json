@@ -1,5 +1,5 @@
 {
-  "previous": "9aaf36a8160b33d2474d4dd636d1e9ca544545b6c440197fea7a18c163bca67d",
+  "previous": "5f7d17e4408dc12db2608dbfcbeb6c1035a5b87f8a9e56549030965239bec339",
   "review": {
     "reviewer": "Claude Fable 5.1 (vitest cache levers, perf/vitest-cache-levers)",
     "reason": "Accept the !.fallow/** input negation every root task that hashes $TURBO_DEFAULT$ now carries (the three tasks that had no .beep negation gain both), so untracked fallow audit residue no longer shifts task hashes between checkouts; no command, cache flag, output, dependency edge or global configuration changed.",
