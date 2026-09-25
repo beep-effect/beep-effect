@@ -71,6 +71,19 @@ const parseJson = UnknownFromJsonString.decodeUnknownEffect;
 const stringifyJson = UnknownFromJsonString.encodeUnknownEffect;
 const asRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const decodeRowJson = HarnessLedgerRow.decodeJsonEffect;
+const encodeFingerprintParts = S.encodeEffect(HarnessFingerprintParts);
+const decodeFingerprintParts = S.decodeEffect(HarnessFingerprintParts);
+const encodeFingerprint = S.encodeEffect(HarnessFingerprint);
+const decodeFingerprint = S.decodeEffect(HarnessFingerprint);
+const decodeUnknownEditRef = S.decodeUnknownEffect(HarnessEditRef);
+const encodeEditRef = S.encodeEffect(HarnessEditRef);
+const decodeEditRef = S.decodeEffect(HarnessEditRef);
+const isHarnessEditRef = S.is(HarnessEditRef);
+const encodeClaim = S.encodeEffect(BehavioralClaim);
+const decodeClaim = S.decodeEffect(BehavioralClaim);
+const encodeDelta = S.encodeEffect(HarnessLedgerDelta);
+const decodeDelta = S.decodeEffect(HarnessLedgerDelta);
+const isHarnessLedgerRowId = S.is(HarnessLedgerRowId);
 
 describe("harness-ledger", () => {
   describe("context surfaces", () => {
@@ -131,14 +144,12 @@ describe("harness-ledger", () => {
           harnessBaselineHash: Sha256Hex.make(hashB),
         });
         const fingerprint = yield* harnessFingerprintFromParts(parts);
-        const encodedParts = yield* S.encodeEffect(HarnessFingerprintParts)(parts);
-        const encodedFingerprint = yield* S.encodeEffect(HarnessFingerprint)(fingerprint);
-        expect(yield* S.decodeEffect(HarnessFingerprintParts)(encodedParts)).toStrictEqual(parts);
-        expect(yield* S.decodeEffect(HarnessFingerprint)(encodedFingerprint)).toStrictEqual(fingerprint);
+        const encodedParts = yield* encodeFingerprintParts(parts);
+        const encodedFingerprint = yield* encodeFingerprint(fingerprint);
+        expect(yield* decodeFingerprintParts(encodedParts)).toStrictEqual(parts);
+        expect(yield* decodeFingerprint(encodedFingerprint)).toStrictEqual(fingerprint);
         const { reasoningEffort: _dropped, ...withoutEffort } = encodedParts;
-        expect((yield* S.decodeEffect(HarnessFingerprintParts)(withoutEffort)).reasoningEffort).toBe(
-          harnessFingerprintUnknown
-        );
+        expect((yield* decodeFingerprintParts(withoutEffort)).reasoningEffort).toBe(harnessFingerprintUnknown);
       })
     );
   });
@@ -147,12 +158,6 @@ describe("harness-ledger", () => {
     const fingerprintEquivalent = S.toEquivalence(HarnessFingerprint);
     const editRefEquivalent = S.toEquivalence(HarnessEditRef);
     const claimEquivalent = S.toEquivalence(BehavioralClaim);
-    const encodeFingerprint = S.encodeEffect(HarnessFingerprint);
-    const decodeFingerprint = S.decodeEffect(HarnessFingerprint);
-    const encodeEditRef = S.encodeEffect(HarnessEditRef);
-    const decodeEditRef = S.decodeEffect(HarnessEditRef);
-    const encodeClaim = S.encodeEffect(BehavioralClaim);
-    const decodeClaim = S.decodeEffect(BehavioralClaim);
 
     it.effect("roundtrips arbitrary fingerprints, edit refs, and claims", () =>
       Effect.gen(function* () {
@@ -187,10 +192,10 @@ describe("harness-ledger", () => {
           { kind: "diff-digest", ref: hashA },
           { kind: "pending" },
         ]) {
-          const decoded = yield* S.decodeUnknownEffect(HarnessEditRef)(encoded);
-          expect(yield* S.encodeEffect(HarnessEditRef)(decoded)).toStrictEqual(encoded);
+          const decoded = yield* decodeUnknownEditRef(encoded);
+          expect(yield* encodeEditRef(decoded)).toStrictEqual(encoded);
         }
-        expect(S.is(HarnessEditRef)({ kind: "diff-digest", ref: "not-a-digest" })).toBe(false);
+        expect(isHarnessEditRef({ kind: "diff-digest", ref: "not-a-digest" })).toBe(false);
       })
     );
 
@@ -202,12 +207,8 @@ describe("harness-ledger", () => {
           expectedMetric: "schema-first findings per task",
         });
         const delta = HarnessLedgerDelta.make({ score: 0.05, cost: -120 });
-        expect(yield* S.decodeEffect(BehavioralClaim)(yield* S.encodeEffect(BehavioralClaim)(claim))).toStrictEqual(
-          claim
-        );
-        expect(
-          yield* S.decodeEffect(HarnessLedgerDelta)(yield* S.encodeEffect(HarnessLedgerDelta)(delta))
-        ).toStrictEqual(delta);
+        expect(yield* decodeClaim(yield* encodeClaim(claim))).toStrictEqual(claim);
+        expect(yield* decodeDelta(yield* encodeDelta(delta))).toStrictEqual(delta);
       })
     );
   });
@@ -257,7 +258,7 @@ describe("harness-ledger", () => {
             createdAt: "2026-09-25T12:00:00.000Z",
             edit: { kind: "pending" },
             mechanismClass: "config",
-            fingerprint: yield* S.encodeEffect(HarnessFingerprint)(row.fingerprint),
+            fingerprint: yield* encodeFingerprint(row.fingerprint),
             disposition: "proposed",
           })
         );
@@ -321,7 +322,7 @@ describe("harness-ledger", () => {
         const again = yield* makeHarnessLedgerRowId(createdAt).pipe(Random.withSeed("ledger"));
         expect(first).toMatch(/^hl-20260925-[0-9a-f]{8}$/);
         expect(again).toBe(first);
-        expect(S.is(HarnessLedgerRowId)(first)).toBe(true);
+        expect(isHarnessLedgerRowId(first)).toBe(true);
       })
     );
 

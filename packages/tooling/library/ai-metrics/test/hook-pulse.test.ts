@@ -318,6 +318,7 @@ const decodeHookPulseFromLegacy = HookPulseV1FromLegacyRecord.decodeUnknownEffec
 const decodeHookPulse = HookPulseV1.decodeEffect;
 const encodeHookPulse = HookPulseV1.encodeEffect;
 const encodeHookPulseToRaw = HookPulseV1FromRawEvent.encodeUnknownEffect;
+const encodeHookPulseToLegacy = S.encodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
@@ -1264,7 +1265,7 @@ describe("HookPulseV1", () => {
       );
       const failure = yield* Effect.flip(encodeHookPulseToRaw(decoded));
       // The legacy codec's encode side is the identity: the canonical row is its own legacy form.
-      const legacyEncoded = yield* S.encodeUnknownEffect(HookPulseV1FromLegacyRecord)(decoded);
+      const legacyEncoded = yield* encodeHookPulseToLegacy(decoded);
 
       expect(decoded.transcriptPath).toEqual(O.none());
       expect(legacyEncoded.sessionId).toBe(decoded.sessionId);
