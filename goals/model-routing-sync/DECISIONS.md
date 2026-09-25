@@ -44,3 +44,23 @@ through an open, mergeable PR. Do not merge it.
 
 **Rationale:** No new package, raw archive, projection write, timer, default-model
 change, or architecture-wide decision is required. No design questions remain.
+
+## 2026-09-25 — Package coverage isolation exceptions
+
+**Question:** Include the verified coverage isolation repair in this delivery,
+create a separate prerequisite PR, or wait for an upstream fix?
+
+**Answer:** Include package-local `isolate: true` overrides for `@beep/wink`,
+`@beep/utils`, and `@beep/identity`. The operator selected this recommendation
+through Ask User Question and explicitly requested implementation.
+
+**Rationale:** All 344 tests pass with isolation enabled in the diagnostic
+coverage runs. The shared runner already documents package overrides; ordinary
+tests already use isolation. Accept potentially slower coverage in these three
+packages while preserving shared defaults, assertions, thresholds, dependencies,
+and runtime interfaces. Rejected: a separate prerequisite PR or waiting for
+upstream, both of which delay this delivery without narrowing the repair itself.
+This is a scoped implementation exception, not an architecture doctrine change.
+
+PR #1224 was merged by the operator before this repair began. Carry the approved
+repair and remaining packet closeout in a follow-up PR, left open and mergeable.
