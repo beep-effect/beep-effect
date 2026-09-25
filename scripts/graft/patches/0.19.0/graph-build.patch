@@ -1,0 +1,41 @@
+--- a/graph/build.js
++++ b/graph/build.js
+@@ -24,6 +24,7 @@
+ import { relPosix } from "../util/paths.js";
+ import { readSourceFile } from "../util/source.js";
+ import { readFollowNestedRepos, readFollowSubmodules, readIncludeDirs } from "../util/state.js";
++import { compileDeepIgnore, readDeepIgnoreText } from "../util/deep-ignore.js";
+ import { emptyExtractCache, readExtractCache, writeExtractCache, } from "./extract-cache.js";
+ import { writeFingerprint } from "./fingerprint.js";
+ import { seedGraph } from "./seed.js";
+@@ -100,6 +101,12 @@
+         followNestedRepos: readFollowNestedRepos(root),
+     });
+     const onlyDirs = opts.onlyDirs && opts.onlyDirs.length > 0 ? new Set(opts.onlyDirs) : undefined;
++    // Local patch (2026-09-25): read `.graftignore` once, so the matcher the crux
++    // pass applies and the hash the fingerprint records describe the same rules
++    // even if the file changes mid-build.
++    const deepIgnoreText = readDeepIgnoreText(root);
++    const deepIgnore = deepIgnoreText === null ? () => false : compileDeepIgnore(deepIgnoreText);
++    const deepIgnoreStamp = deepIgnoreText === null ? undefined : contentHash(deepIgnoreText);
+     const repoFiles = filterByOnlyDirs(walked, root, onlyDirs);
+     const files = listSourceStats(root, outDir, repoFiles);
+     const discoveredScopes = discoverScopes(root, repoFiles);
+@@ -240,6 +247,8 @@
+     const meaning = await enrichGraph(nodes, priorById, sources, {
+         summarizer: opts.summarizer,
+         concurrency: opts.concurrency,
++        // Local patch (2026-09-25): repo-level `.graftignore` for the meaning tier.
++        ignore: deepIgnore,
+         onProgress: ({ index, total, node }) => opts.onProgress?.({ phase: "enrich", index, total, file: node }),
+         // Periodic durability flush of partial crux; the next run folds it back in by
+         // body_hash, so an interrupted --deep run never repays the crux it computed.
+@@ -277,7 +286,7 @@
+     // these source bytes." Nothing about the projections below — which is why it is
+     // safe to write here, and why `graphOnly` builds (the query path, which stops
+     // right after this line) are still recorded as fresh.
+-    writeFingerprint(outDir, entries, opts.onlyDirs);
++    writeFingerprint(outDir, entries, opts.onlyDirs, deepIgnoreStamp);
+     // Tier-2 passive surface: project the nodes into per-file markdown cards, and
+     // refresh the INDEX roster. Pure projection — no LLM, no network.
+     //

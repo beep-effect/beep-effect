@@ -452,9 +452,17 @@ version manager tree, and `graft telemetry disable` has been run once on the
 workstation:
 
 ```sh
-npm install -g --prefix "$HOME/.local" @nanonets/graft@0.18.0
+npm install -g --prefix "$HOME/.local" @nanonets/graft@0.19.0
 graft --version
 ```
+
+Do not pass `--ignore-scripts` to that install: `tree-sitter-kotlin` ships no
+prebuilt Linux binding and builds it in its install script, and without it
+every `graft` invocation dies at startup with `No native build was found`.
+If an install already skipped it, run `npm rebuild tree-sitter-kotlin` inside
+`~/.local/lib/node_modules/@nanonets/graft`. Keep exactly one `graft` on the
+machine: a second copy installed into a mise node global shadows this one on
+the systemd unit's PATH and the preflight then reads the wrong version.
 The deep build depends on workstation-local patches to the installed `dist/`,
 recorded as unified diffs under `scripts/graft/patches/<graft version>/`. Four
 fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
@@ -475,7 +483,7 @@ needs no `graft init`.
 
 ### Meaning-tier ignore list (`.graftignore`)
 
-Graft 0.18.0 selects files from `git ls-files` plus a fixed directory skip
+Graft 0.19.0 still selects files from `git ls-files` plus a fixed directory skip
 list, so a generated file the model cannot summarize (the 17,000-line
 `packages/drivers/box/src/_generated/Box.models.gen.ts` answers every crux
 call with an empty tool call) was retried twice per night and left `graft
