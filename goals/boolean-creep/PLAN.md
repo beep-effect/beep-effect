@@ -1,20 +1,23 @@
 # PLAN — Boolean-Creep Eradication
 
-## R39 partial admission, 2026-09-25
+## R39 complete census and reconciliation, 2026-09-25
 
-Two new owners passed independent bounded admission review with zero findings:
-`effect-vitest-inspect-context-phase` (8/4) and
-`r39-cli-internal-root-append-terminal-already` (4/3). Their reviewed designs
-and inventory records are installed with status `designed`. Inventory now has
-**726 rows:108 qualified,618 disqualified,zero applied**.
-Forty-four citation/status-note updates and two PackageShell D2 census records
-are installed; see `data/r39-citation-integration/integration.json`.
+R39 completed all27 census lanes against historical source `ea3ac408` and
+main `782aa4d3`. All3,946 frozen bindings match that exact Git source. Parent
+reconciliation finished after main advanced; this preserves historical evidence
+and grants no current-main dry credit.
 
-R39 remains incomplete:26 of27 lanes are reconciled, and the final CLI lane's
-design-reference review and citation integration remain pending. See
-[data/r39-owner-admission/README.md](data/r39-owner-admission/README.md).
-The dry streak stays zero; this bounded review does not replace campaign P3.
+Two new qualified owners passed bounded independent admission review. The final
+CLI lane accounts for62 original seeds and12 existing qualified designs with
+no unresolved owner-contract findings. Inventory has **726 rows:108 qualified,
+618 disqualified,zero applied**. Forty-four citation/status-note updates, two D2
+records and15 existing-design supplements are installed with originals retained.
 
+R39 is complete and wet. The dry streak remains zero. See
+`data/sweeps/refresh-2026-09-25-r39-main-782aa4/round-verdict.json` and
+`data/r39-reconciliation-progress-2026-09-25.json`. Two current-source dry rounds,
+replacement campaign-wide P3 review, Benjamin's packet ratification merge,
+implementation and final exact-main closure remain outstanding.
 
 ## R38 complete census and reconciliation, 2026-09-25
 

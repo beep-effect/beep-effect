@@ -1,0 +1,98 @@
+[
+  {
+    "lane": "r39-foundation-capability",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-foundation-capability-disposition.json",
+    "sha256": "add252c2f1944123edd9a1aa355bd230768b2b3b2935c7fd1e484d8d12d48e5e",
+    "originalSha256": "2e5f6b13e98c54b791fe274f3d3e4bedd4a496bdfae99e1e886473e3390aad3a"
+  },
+  {
+    "lane": "r39-foundation-schema-a-m",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-foundation-schema-a-m-disposition.json",
+    "sha256": "31ba6484b737180818f656bfcea46d4f1a5f83f96d2dd8497f76a45550357195",
+    "originalSha256": "b6e205447e959674cf0e24ff0ac8b7faa757c3607aa745983a3ae891336aba81"
+  },
+  {
+    "lane": "r39-foundation-modeling-rest",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-foundation-modeling-rest-disposition.json",
+    "sha256": "731a7842866d88df7c370cb65981774a2b2553c53b30f0d36557c3af7132d3d9",
+    "originalSha256": "250a6f81e4fa0eca8bce8e1486e44f52f4e43b697e5abc40e89f68405ef61839"
+  },
+  {
+    "lane": "r39-foundation-ui",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-foundation-ui-disposition.json",
+    "sha256": "8c2caff36e7547be400b25accf92a2df0421343ab04097ecb292ae610fe5be9b",
+    "originalSha256": "186374785f914f3cde91fbeb1606c677dbb9b3bc381d7bdf0e377f01bbbd8ed9"
+  },
+  {
+    "lane": "r39-tooling-library-observability",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-tooling-library-observability-disposition.json",
+    "sha256": "e93c5a4e048eed64376d8e9cb9f20a026a60be5a0485d8b9ff4c850e2bb741c3",
+    "originalSha256": "8d38d389836993fb7e894130f74d13cfe8cdd195ed0c83ed1d0e9b6e3019e9f7"
+  },
+  {
+    "lane": "r39-tool-docgen",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-tool-docgen-disposition.json",
+    "sha256": "4d6f52f101023d1a493ab630da67ef7a3a243369d99088f8902b8df05fc1ffe8",
+    "originalSha256": "fde19427841535a2baff35326da0a883cb28434d471b48e0544723b7d02cb3a5"
+  },
+  {
+    "lane": "r39-tooling-policy",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-tooling-policy-disposition.json",
+    "sha256": "ea6d498e95d8251aaff2b9d7b80d19c44d35c612c69c82f51bd85e8af36fa556",
+    "originalSha256": "6c36e4d9825fdc996230cab6f9bc934db939055033cee9e2fbfc9f5ddbf14455"
+  },
+  {
+    "lane": "r39-tooling-library-support",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-tooling-library-support-disposition.json",
+    "sha256": "01643d9dff1c97d520cb33335f744cd4f67bb158daebc0484b52e31e759f1604",
+    "originalSha256": "73b8dddaa870164dc02912edd8e14d3ab99ff7c455858f46794951e3a36e406c"
+  },
+  {
+    "lane": "r39-cli-yeet",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-cli-yeet-disposition.json",
+    "sha256": "b8449bb4a064466b7ad0d561eab219674cbdbd56a17e82cae46a0c1d25f76e92",
+    "originalSha256": "b6c24f7bd138524d3d7f4963f60b80e393eaa14ef77d8f249afffeb1764b1ead"
+  },
+  {
+    "lane": "r39-apps",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-apps-disposition.json",
+    "sha256": "9af04aad491007b8535b795a43cabe2864264cbf30df2dfeacbd77aef4237965",
+    "originalSha256": "874264b46529e31e9b3b97610ed2ca135b51fb838c7a44011dc91095fce65f7c"
+  },
+  {
+    "lane": "r39-cli-commands-r-z",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-cli-commands-r-z-disposition.json",
+    "sha256": "3e0e2bbce7bae7ebdf92b52dcbf5076d530dd149239a2822214b725037967fe6",
+    "originalSha256": "3d6166ce0f9ea21146930f08a4a884b9a1b06f057cf061debcec7a67140aa491"
+  },
+  {
+    "lane": "r39-cli-commands-a-c",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-cli-commands-a-c-disposition.json",
+    "sha256": "71d6f468a4016e5c53567fd020c1ccf5a41362703a5837cac1b0e43aa8a03dca",
+    "originalSha256": "b34007851649bd071876e8092ca4bdff8cada76cb8d38c7e62f83c83d9924502"
+  },
+  {
+    "lane": "r39-cli-commands-d-k",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-cli-commands-d-k-disposition.json",
+    "sha256": "fe66c7e4213166880e14b7614621a22eb5a87aaa1c3cea32a083efe01b303dac",
+    "originalSha256": "437587dbc7a6072a556c4e28a61b53901e45b6fd339a679d51a3c4f42f001d95"
+  },
+  {
+    "lane": "r39-law-practice-domain",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-law-practice-domain-disposition.json",
+    "sha256": "627fccdbb94b6bb4ecc06bcc67f162083459b34ad5c06e33e32e57635ff2572e",
+    "originalSha256": "850be4f0d8b186d8e6a73b1b56a5306a5de83e866909722c1121508138bebff7"
+  },
+  {
+    "lane": "r39-cli-internal-root",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-cli-internal-root-disposition.json",
+    "sha256": "75453f5875956c14b39e348b227a3f13dba1271f16d973e9cb83b5aefa1f4420",
+    "originalSha256": "fc23b906b74b76b66b242e0641d60830fd3b5ede965f65a80076c302b2835bcc"
+  },
+  {
+    "lane": "r39-cli-commands-l-q",
+    "file": "goals/boolean-creep/data/r39-owner-reviews/r39-cli-commands-l-q-review.json",
+    "sha256": "6d9bd1e40b76b71a3ca553966edb7ee6ded51de1fd9be0acbee22a3e5dd8bc1f",
+    "originalSha256": "439bf448809b9ec39ada34eee5b1813e8d1a2a6505c26615c8ad73406c064a8e"
+  }
+]
