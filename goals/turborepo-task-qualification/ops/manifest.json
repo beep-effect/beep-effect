@@ -369,7 +369,9 @@
     "research/application-static-review-reuse.json",
     "research/compiled-output-delta-review.json",
     "research/scoped-evidence-path-review.json",
-    "research/refs-key-quality-review.json"
+    "research/refs-key-quality-review.json",
+    "research/ordinary-real-local-replay.json",
+    "research/scoped-layer-repair.json"
   ],
   "agentLaunchers": [
     {

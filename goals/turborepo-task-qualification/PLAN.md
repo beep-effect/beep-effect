@@ -2018,3 +2018,23 @@ The attachment accepts 1011 sources, six artifacts and 47 reviews, retaining
 all 14 broader obligations. Bounded docgen refuses this branch because its
 lockfile delta requires full proof. Package and full proof remain pending;
 these repairs do not renew runtime evidence or promote a qualification tuple.
+
+### Ordinary real-pilot local replay — 2026-09-25
+
+The ordinary Cache CLI ran the real identity lint task at frozen source
+`8f11af6e49` in a read-only, network-isolated namespace with disposable package
+overlays. Only identity caching was enabled in the overlay. One fresh miss and
+two local hits share the same task hash; the three dependency lint tasks run
+fresh each time. Host cache configurations and executable hashes are unchanged.
+See [the independent retained-byte review](./research/ordinary-real-local-replay.json).
+
+The review confirms equal native input maps and hashed environment metadata.
+The local cache archive contains only the 53-byte task log, matching both replay
+payloads exactly. Complete CLI streams include dependency timing and summaries
+and are not asserted equal. This closes the bounded ordinary-CLI real local
+replay gap at the recorded source; it does not renew the current head, complete
+the full matrix, establish signed remote evidence or promote any tuple.
+
+The new scoped-tool attachment test now uses `it.layer` with a bounded layer
+timeout. The Effect/Vitest ratchet passes without a baseline change; see
+[the test-lifecycle repair](./research/scoped-layer-repair.json).

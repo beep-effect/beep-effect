@@ -2126,3 +2126,11 @@ invocation named nonexistent refs-worktree/refs-provider files; selecting the
 actual refresh-plan, timer and schema suites passed 16 tests. That failed
 selection earns no proof credit. `docgen:local` also correctly refused bounded
 proof for the branch lockfile change; full docgen remains required.
+
+### Generic cheap-gate repair hint — 2026-09-25
+
+The publication verdict suggested config-sync, while the lane record showed
+config-sync passed and Effect/Vitest failed on the new attachment test. Use the
+specific lane result before running a generator. The test now uses `it.layer`
+with an explicit timeout; the unchanged ratchet passes. A failed wrapper-level
+hint should name the actual failing inner lane.
