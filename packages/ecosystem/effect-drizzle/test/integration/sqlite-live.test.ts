@@ -5,7 +5,7 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { layer as makeSqliteLayer } from "@effect/sql-sqlite-bun/SqliteClient";
 import { assert, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
@@ -31,7 +31,7 @@ import {
 import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
 import { effect as effectLayer, provide, provideMerge, unwrap } from "effect/Layer";
-import { getOrThrow, getOrUndefined, isNone, none, some } from "effect/Option";
+import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
   Array as ArraySchema,
@@ -437,10 +437,10 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
       expect(formatIso(inserted.createdAt)).toBe(formatIso(request.createdAt));
       expect(formatIso(inserted.updatedAt)).toBe(formatIso(request.updatedAt));
       expect(found.id).toBe(inserted.id);
-      expect(inserted.nickname.pipe(isNone)).toBe(true);
+      assertNone(inserted.nickname);
       expect(updated.nickname.pipe(getOrUndefined)).toBe("round-seven");
       expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
-      expect(missing.pipe(isNone)).toBe(true);
+      assertNone(missing);
     })
   );
 

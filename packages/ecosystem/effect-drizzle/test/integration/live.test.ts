@@ -6,7 +6,7 @@ import { PgliteClient, PgliteTestLayer } from "@beep/pglite";
 import { it } from "@beep/test-runner";
 import { layer as makePgliteLayer } from "@effect/sql-pglite/PgliteClient";
 import { assert, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { PGlite, types } from "@electric-sql/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { drizzle } from "drizzle-orm/pglite";
@@ -18,7 +18,7 @@ import { die, exit, flip, fn, fnUntraced, forEach, gen, map, option, tryPromise 
 import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { identity } from "effect/Function";
 import { effect as effectLayer, merge, provideMerge, unwrap } from "effect/Layer";
-import { getOrThrow, getOrUndefined, isNone, none, some } from "effect/Option";
+import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
   Array as ArraySchema,
@@ -367,12 +367,12 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
       expect(formatIso(inserted.createdAt)).toBe(formatIso(insert.createdAt));
       expect(formatIso(inserted.updatedAt)).toBe(formatIso(insert.updatedAt));
       expect(found.id).toBe(inserted.id);
-      expect(inserted.nickname.pipe(isNone)).toBe(true);
+      assertNone(inserted.nickname);
       expect(updated.id).toBe(inserted.id);
       expect(updated.name).toBe("Native Repository Updated");
       expect(updated.nickname.pipe(getOrUndefined)).toBe("round-four");
       expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
-      expect(missing.pipe(isNone)).toBe(true);
+      assertNone(missing);
     })
   );
 

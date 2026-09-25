@@ -181,3 +181,17 @@ Probe logs are retained privately as effect-drizzle-trace-capture-probe.log,
 effect-drizzle-trace-capture-negative.log and
 effect-drizzle-phase-failure-probe.log. These intentional failures are diagnostic
 controls, not green package executions or final observability-lens closure.
+
+## Effect callbacks and Option assertions
+
+Moved the identity/variant construction, Overrideable defaults and catchTag
+cases into native `it.effect` callbacks. This removes three detected direct
+runSync calls and one piped runSync found during source inspection. The unit
+suite retains all 240 expect calls and its existing operands; no runSync remains.
+Both native database suites use assertNone for the four existing absence checks.
+Full package verification passed (audit 15.0s, docgen 3.2s).
+
+The diagnostic full scan emitted current rows privately without updating the
+baseline or census artifacts. Before this batch it reported ten package rows;
+remaining findings must still be reconciled individually, including the native
+filesystem boundary and deliberate interruption scope. The baseline is not empty.
