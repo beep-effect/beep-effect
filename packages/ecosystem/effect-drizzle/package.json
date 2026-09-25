@@ -72,6 +72,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/fc-runs": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/sql-pglite": "catalog:",

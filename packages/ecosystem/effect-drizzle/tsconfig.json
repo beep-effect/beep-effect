@@ -182,6 +182,9 @@
   "references": [
     {
       "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/fc-runs/tsconfig.json"
     }
   ]
 }

@@ -110,3 +110,19 @@ Full package verification passed: audit 14.9 seconds and docgen 3.3 seconds.
 The focused Node test also passed (one executed, nine unrelated cases skipped).
 This closes the additional contention-witness implementation work, not the
 remaining generated codec laws, instrumentation, final ledger or hosted gates.
+
+## SQLite schema-derived variant laws
+
+Added native `it.effect.prop` laws using `SqliteUser.insert` and
+`SqliteUser.update` directly, with `fcRuns(100)`. Insert encoding preserves
+Option-to-NULL nicknames; update encoding preserves row versions. Both assert
+decoded equality, encoded stability and membership in the existing variant.
+All original dialect, mode, negative and INTEGER PRIMARY KEY examples remain.
+The fc-runs dependency is development-only; generated TypeScript references
+were synchronized with the package-filtered command.
+
+Focused Node verification passed both properties (15 unrelated cases skipped).
+Full package verification passed: audit 16.7s and docgen 3.2s. The first audit
+reported import ordering; the corrected source passed the subsequent full run.
+This is intermediate proof, not completion of the Effect Drizzle wave: array
+codec generation, runner adoption and final ledger/timing closeout remain.

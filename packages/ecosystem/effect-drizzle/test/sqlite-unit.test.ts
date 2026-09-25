@@ -1,11 +1,15 @@
 /** Runtime and projector proofs for the SQLite dialect. */
 
 import { SchemaAssemblyError as SqliteSchemaAssemblyError } from "@beep/effect-drizzle/sqlite";
+import { fcRuns } from "@beep/fc-runs";
 import { describe, expect, it } from "@effect/vitest";
 import { defineRelations, getTableName, is as isDrizzleEntity, SQL } from "drizzle-orm";
 import { getTableConfig, SQLiteDialect } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { getOrThrowWith } from "effect/Option";
+import * as S from "effect/Schema";
 import { Boolean, Finite, is, NullOr, String, Struct, suspend } from "effect/Schema";
 import {
   _nullableSqliteVersion,
@@ -163,6 +167,36 @@ describe("SQLite projection", () => {
 });
 
 describe("SQLite derivation and family invariants", () => {
+  it.effect.prop(
+    "round-trips schema-derived SQLite insert variants with nullable nicknames",
+    [SqliteUser.insert],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(SqliteUser.insert)(value);
+        const decoded = yield* S.decodeEffect(SqliteUser.insert)(encoded);
+        expect(decoded).toEqual(value);
+        expect(yield* S.encodeEffect(SqliteUser.insert)(decoded)).toEqual(encoded);
+        expect(encoded.nickname).toEqual(O.getOrNull(value.nickname));
+        expect(S.is(SqliteUser.insert)(decoded)).toBe(true);
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived SQLite update variants preserving row versions",
+    [SqliteUser.update],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(SqliteUser.update)(value);
+        const decoded = yield* S.decodeEffect(SqliteUser.update)(encoded);
+        expect(decoded).toEqual(value);
+        expect(yield* S.encodeEffect(SqliteUser.update)(decoded)).toEqual(encoded);
+        expect(decoded.rowVersion).toBe(value.rowVersion);
+        expect(S.is(SqliteUser.update)(decoded)).toBe(true);
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
   it("derives the widest lossless number storage and SQLite-native boolean/JSON modes", () => {
     class CarrierProjection extends sqliteKit.Model<CarrierProjection>("SqliteCarrierProjection")({
       score: Finite.annotate({ identifier: "FreshFinite" }),
