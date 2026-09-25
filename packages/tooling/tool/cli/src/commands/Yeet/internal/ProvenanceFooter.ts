@@ -745,7 +745,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
   return yield* Effect.gen(function* () {
     const registry = registryOverride ?? (yield* makePrSessionRegistryLive());
     const rows = yield* registry.lookup(repository, prNumber);
-    if (A.isReadonlyArrayEmpty(rows)) {
+    if (!A.isReadonlyArrayNonEmpty(rows)) {
       const warning = `[yeet] provenance footer stamp skipped for PR #${prNumber}: no local registry rows were available`;
       yield* Console.warn(warning);
       return skippedStamp(warning);
@@ -754,13 +754,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
       Effect.map((value) => Str.trim(value) !== "off"),
       Effect.orElseSucceed(() => true)
     );
-    const first = A.head(rows);
-    if (O.isNone(first)) {
-      return skippedStamp(
-        `[yeet] provenance footer stamp skipped for PR #${prNumber}: no local registry rows were available`
-      );
-    }
-    const publicValue = toPublicPrProvenance([first.value, ...A.drop(rows, 1)], O.some(prNumber), labels);
+    const publicValue = toPublicPrProvenance(rows, O.some(prNumber), labels);
     const rendered = renderPrProvenance(publicValue);
     const body = yield* readPrBody(capture, context, prNumber);
     if (Str.Equivalence(splicePrProvenanceFooter(body, rendered), body)) return currentStamp(prNumber);
