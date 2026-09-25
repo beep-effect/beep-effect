@@ -5,7 +5,7 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Coverage must retain per-file runtime and test-context isolation.
+      // Keep all test runs isolated; shared config disables isolation for coverage.
       isolate: true,
       testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 20_000,
     },
