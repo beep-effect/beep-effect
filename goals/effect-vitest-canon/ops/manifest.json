@@ -5,7 +5,7 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-11",
+    "updated": "2026-09-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Benjamin authorized backlog-first P2 after the progress PR merged: remediate existing legitimate inventory with per-file current-source checks, then inventory the remaining main delta. P1 remains incomplete for current-main coverage; frozen evidence is preserved. Modeling ships separately and Benjamin retains merge authority."
+  "statusNote": "Benjamin authorized backlog-first P2 after the progress PR merged: remediate existing legitimate inventory with per-file current-source checks, then inventory the remaining main delta. P1 remains incomplete for current-main coverage; frozen evidence is preserved. Modeling ships separately and Benjamin retains merge authority. Wave A is published in PR #1235: eight findings fixed, two reviewed exceptions, six baseline rows removed; package proofs and timing summaries complete. Hosted readiness and Benjamin merge remain pending."
 }
