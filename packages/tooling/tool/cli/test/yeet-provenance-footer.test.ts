@@ -5,8 +5,10 @@ import {
   ensureProvenanceFooter,
   ensurePullRequest,
   GhPrView,
+  isProvenanceStampFailure,
   layerPrSessionRegistryMemory,
   makePrSessionRegistryLive,
+  ProvenanceStampOutcome,
   PrSessionRegistry,
   persistPrSessionRecord,
   RepoPlanStep,
@@ -697,11 +699,37 @@ describe("Yeet provenance footer splice", () => {
   it.effect("records failed and skipped provenance stamp outcomes without failing the publish", () =>
     Effect.gen(function* () {
       const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
-      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.some(42), O.some("footer warning"));
-      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.none(), O.none());
+      const drifted = ProvenanceStampOutcome.make({ status: "drifted", message: "footer warning" });
+      const current = ProvenanceStampOutcome.make({ status: "current", message: "provenance footer current" });
+      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.some(42), drifted);
+      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.none(), current);
       const executed = yield* Ref.get(recorder);
       expect(executed[0]).toMatchObject({ status: "failed", result: { exitCode: 1, output: "footer warning" } });
       expect(executed[1]).toMatchObject({ status: "skipped", result: { exitCode: 0 } });
+    })
+  );
+
+  it.effect("records a preserved concurrent edit as a passed lane that keeps the note", () =>
+    Effect.gen(function* () {
+      const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+      const preserved = ProvenanceStampOutcome.make({
+        status: "preserved",
+        message: "[yeet] provenance footer for PR #42 preserved a concurrent body edit by blacksmith-sh",
+      });
+      const yielded = ProvenanceStampOutcome.make({ status: "yielded", message: "yielded to a concurrent edit" });
+      const skipped = ProvenanceStampOutcome.make({ status: "skipped", message: "no registry rows" });
+      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.some(42), preserved);
+      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.some(42), yielded);
+      yield* recordPrProvenanceStampLane(recorder, O.some(provenanceStampStep), O.some(42), skipped);
+      const executed = yield* Ref.get(recorder);
+      expect(executed[0]).toMatchObject({
+        status: "passed",
+        result: { exitCode: 0, output: preserved.message },
+      });
+      expect(executed[1]).toMatchObject({ status: "failed", result: { exitCode: 1 } });
+      expect(executed[2]).toMatchObject({ status: "failed", result: { exitCode: 1, output: "no registry rows" } });
+      expect(isProvenanceStampFailure(preserved)).toBe(false);
+      expect(isProvenanceStampFailure(yielded)).toBe(true);
     })
   );
 
@@ -844,8 +872,9 @@ describe("Yeet provenance footer splice", () => {
         yield* Ref.update(calls, (count) => count + 1);
         return { exitCode: 0, output: "", truncated: false };
       });
-      const warning = yield* ensureProvenanceFooter(context(root), repository, 42, capture, registry);
-      expect(O.isSome(warning)).toBe(true);
+      const outcome = yield* ensureProvenanceFooter(context(root), repository, 42, capture, registry);
+      expect(outcome.status).toBe("skipped");
+      expect(isProvenanceStampFailure(outcome)).toBe(true);
       expect(yield* Ref.get(calls)).toBe(0);
     }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
   );
@@ -859,8 +888,9 @@ describe("Yeet provenance footer splice", () => {
       const initialFailure = Effect.fn("test.initialReadFailure")(function* () {
         return { exitCode: 1, output: "initial read denied", truncated: false };
       });
-      const initialWarning = yield* ensureProvenanceFooter(context(root), repository, 42, initialFailure, registry);
-      expect(O.getOrElse(initialWarning, () => "")).toContain("initial read denied");
+      const initialOutcome = yield* ensureProvenanceFooter(context(root), repository, 42, initialFailure, registry);
+      expect(initialOutcome.status).toBe("skipped");
+      expect(initialOutcome.message).toContain("initial read denied");
 
       const calls = yield* Ref.make(0);
       const snapshotFailure = Effect.fn("test.snapshotReadFailure")(function* () {
@@ -869,8 +899,9 @@ describe("Yeet provenance footer splice", () => {
           ? { exitCode: 0, output: encodeGhBody("Body"), truncated: false }
           : { exitCode: 1, output: "snapshot read denied", truncated: false };
       });
-      const snapshotWarning = yield* ensureProvenanceFooter(context(root), repository, 42, snapshotFailure, registry);
-      expect(O.getOrElse(snapshotWarning, () => "")).toContain("snapshot read denied");
+      const snapshotOutcome = yield* ensureProvenanceFooter(context(root), repository, 42, snapshotFailure, registry);
+      expect(snapshotOutcome.status).toBe("skipped");
+      expect(snapshotOutcome.message).toContain("snapshot read denied");
     }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
   );
 });
