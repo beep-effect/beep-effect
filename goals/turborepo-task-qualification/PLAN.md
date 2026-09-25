@@ -1809,3 +1809,16 @@ These paths retain mutable environment, ConfigProvider, filesystem, random
 identity and subprocess dependencies. No secret resolution was performed, and
 no remote-read or namespace trust was inferred. All 13 broader census
 obligations remain open; the review count is not a completion denominator.
+
+### Hosted closeout source deltas — 2026-09-25
+
+Review 35 covers five changed closeout files: report/schema compatibility,
+GraphQL collection, gate classification and shared score parsing. All 203
+Yeet/thread-state/body-signal tests passed. Reviewed assertions cover a latest
+reviewer follow-up beyond the first page, separate acknowledgements/advisories,
+and the hosted-checks gate remaining unknown. See
+[the receipt](./research/hosted-closeout-review.json).
+
+GitHub observations are mutable and collected across separate requests; write
+intents remain explicit remote effects. Local parser or fixture success cannot
+replace fresh hosted proof. All 13 broader census obligations remain open.
