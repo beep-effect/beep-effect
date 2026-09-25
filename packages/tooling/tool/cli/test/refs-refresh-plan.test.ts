@@ -85,7 +85,7 @@ describe("reference planning and refresh", () => {
     Effect.fnUntraced(function* () {
       const f = yield* prepare();
       const manifestFile = f.path.join(f.owner, "scripts/references.json");
-      const manifest = yield* S.decodeUnknownEffect(ReferenceWorkspaceManifest)({
+      const manifest = yield* S.decodeEffect(ReferenceWorkspaceManifest)({
         schemaVersion: "beep-references/v1",
         theme: "effect",
         rootDefault: "$HOME/refs",

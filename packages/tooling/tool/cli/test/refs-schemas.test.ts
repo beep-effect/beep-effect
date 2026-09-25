@@ -2,7 +2,6 @@ import { ReferenceMember, ReferenceWorkspaceManifest } from "@beep/repo-cli/comm
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import { testPlatform } from "./refs-test-utils.ts";
 
 describe("reference manifest schemas", () => {
@@ -21,9 +20,15 @@ describe("reference manifest schemas", () => {
       expect(O.isNone(manifest.members[0]?.onlyDir ?? O.none())).toBe(true);
     }, testPlatform)
   );
-  for (const extra of [{ branch: "main" }, { tier: "unknown" }, { name: "../escape" }, { onlyDir: ["../escape"] }]) {
+  const invalidMembers: ReadonlyArray<readonly [label: string, extra: Record<string, unknown>]> = [
+    ["branch", { branch: "main" }],
+    ["tier", { tier: "unknown" }],
+    ["name", { name: "../escape" }],
+    ["onlyDir", { onlyDir: ["../escape"] }],
+  ];
+  for (const [label, extra] of invalidMembers) {
     it.effect(
-      `rejects invalid member ${R.keys(extra)[0]}`,
+      `rejects invalid member ${label}`,
       Effect.fnUntraced(function* () {
         const input: unknown = { name: "effect", url: "upstream", tier: "deep", ...extra };
         const result = yield* ReferenceMember.decode(input).pipe(Effect.result);
