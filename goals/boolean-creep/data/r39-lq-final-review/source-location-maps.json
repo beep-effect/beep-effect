@@ -1,0 +1,4430 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+    "baseline": "84058d6470137e35f108d13c7dba52129db9a301",
+    "historicalSha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9",
+    "currentSha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1017,
+        "currentStart": 1,
+        "currentEnd": 1017
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "1622d3aed9308b58062c0c22aad704441935570733d056e4afe15d591f52c2e4",
+    "currentSha256": "1622d3aed9308b58062c0c22aad704441935570733d056e4afe15d591f52c2e4",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 473,
+        "currentStart": 1,
+        "currentEnd": 473
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "9f7d6e41cef30b2072e242e0aac767854826cac8b9ba4301adf8346ac3515844",
+    "currentSha256": "30d0b3d533bce5a8bcb684f7d4f4379685c3b890c00a60c7bf7d68a7b9f55618",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 67,
+        "currentStart": 1,
+        "currentEnd": 67
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 70,
+        "historicalEnd": 70,
+        "currentStart": 69,
+        "currentEnd": 69
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 72,
+        "historicalEnd": 81,
+        "currentStart": 71,
+        "currentEnd": 80
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 83,
+        "historicalEnd": 512,
+        "currentStart": 82,
+        "currentEnd": 511
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "replace",
+        "historicalStart": 68,
+        "historicalEnd": 69,
+        "currentStart": 68,
+        "currentEnd": 68
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 71,
+        "historicalEnd": 71,
+        "currentStart": 70,
+        "currentEnd": 70
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 82,
+        "historicalEnd": 82,
+        "currentStart": 81,
+        "currentEnd": 81
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+    "currentSha256": "4d0e10de3de301264e09e61d389143762aaa51e29c1f388ffe21258374956e93",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1812,
+        "currentStart": 1,
+        "currentEnd": 1812
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+    "baseline": "ab77f10cb74ad96404b05d1ab5a1d4968cef847b",
+    "historicalSha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522",
+    "currentSha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1732,
+        "currentStart": 1,
+        "currentEnd": 1732
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "c64ec0e4b0113fe376cdc8a55cff5b0db6f45da6026c8eab6271197a77d92124",
+    "currentSha256": "56951ce1a99404c4a607a898f6ecb8e208c8d42442c5f8f6feda444496d1b5cf",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 101,
+        "currentStart": 1,
+        "currentEnd": 101
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 102,
+        "historicalEnd": 129,
+        "currentStart": 103,
+        "currentEnd": 130
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 131,
+        "historicalEnd": 208,
+        "currentStart": 132,
+        "currentEnd": 209
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 210,
+        "historicalEnd": 1649,
+        "currentStart": 216,
+        "currentEnd": 1655
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1651,
+        "historicalEnd": 1818,
+        "currentStart": 1657,
+        "currentEnd": 1824
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1819,
+        "historicalEnd": 1820,
+        "currentStart": 1834,
+        "currentEnd": 1835
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1822,
+        "historicalEnd": 1838,
+        "currentStart": 1837,
+        "currentEnd": 1853
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1840,
+        "historicalEnd": 1878,
+        "currentStart": 1856,
+        "currentEnd": 1894
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1880,
+        "historicalEnd": 1883,
+        "currentStart": 1896,
+        "currentEnd": 1899
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1884,
+        "historicalEnd": 1890,
+        "currentStart": 1930,
+        "currentEnd": 1936
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1892,
+        "historicalEnd": 1894,
+        "currentStart": 1938,
+        "currentEnd": 1940
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1898,
+        "historicalEnd": 1900,
+        "currentStart": 1943,
+        "currentEnd": 1945
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1907,
+        "historicalEnd": 1937,
+        "currentStart": 1948,
+        "currentEnd": 1978
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1939,
+        "historicalEnd": 1946,
+        "currentStart": 1980,
+        "currentEnd": 1987
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1950,
+        "historicalEnd": 1960,
+        "currentStart": 1991,
+        "currentEnd": 2001
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1962,
+        "historicalEnd": 1993,
+        "currentStart": 2003,
+        "currentEnd": 2034
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1995,
+        "historicalEnd": 2390,
+        "currentStart": 2038,
+        "currentEnd": 2433
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2392,
+        "historicalEnd": 3930,
+        "currentStart": 2439,
+        "currentEnd": 3977
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3933,
+        "historicalEnd": 3933,
+        "currentStart": 3980,
+        "currentEnd": 3980
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3935,
+        "historicalEnd": 3936,
+        "currentStart": 3991,
+        "currentEnd": 3992
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3939,
+        "historicalEnd": 3999,
+        "currentStart": 3994,
+        "currentEnd": 4054
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 102,
+        "historicalEnd": 101,
+        "currentStart": 102,
+        "currentEnd": 102
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 130,
+        "historicalEnd": 130,
+        "currentStart": 131,
+        "currentEnd": 131
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 209,
+        "historicalEnd": 209,
+        "currentStart": 210,
+        "currentEnd": 215
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1650,
+        "historicalEnd": 1650,
+        "currentStart": 1656,
+        "currentEnd": 1656
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1819,
+        "historicalEnd": 1818,
+        "currentStart": 1825,
+        "currentEnd": 1833
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1821,
+        "historicalEnd": 1821,
+        "currentStart": 1836,
+        "currentEnd": 1836
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1839,
+        "historicalEnd": 1839,
+        "currentStart": 1854,
+        "currentEnd": 1855
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1879,
+        "historicalEnd": 1879,
+        "currentStart": 1895,
+        "currentEnd": 1895
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1884,
+        "historicalEnd": 1883,
+        "currentStart": 1900,
+        "currentEnd": 1929
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1891,
+        "historicalEnd": 1891,
+        "currentStart": 1937,
+        "currentEnd": 1937
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1895,
+        "historicalEnd": 1897,
+        "currentStart": 1941,
+        "currentEnd": 1942
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1901,
+        "historicalEnd": 1906,
+        "currentStart": 1946,
+        "currentEnd": 1947
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1938,
+        "historicalEnd": 1938,
+        "currentStart": 1979,
+        "currentEnd": 1979
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1947,
+        "historicalEnd": 1949,
+        "currentStart": 1988,
+        "currentEnd": 1990
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1961,
+        "historicalEnd": 1961,
+        "currentStart": 2002,
+        "currentEnd": 2002
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1994,
+        "historicalEnd": 1994,
+        "currentStart": 2035,
+        "currentEnd": 2037
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 2391,
+        "historicalEnd": 2391,
+        "currentStart": 2434,
+        "currentEnd": 2438
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3931,
+        "historicalEnd": 3932,
+        "currentStart": 3978,
+        "currentEnd": 3979
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3934,
+        "historicalEnd": 3934,
+        "currentStart": 3981,
+        "currentEnd": 3990
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3937,
+        "historicalEnd": 3938,
+        "currentStart": 3993,
+        "currentEnd": 3993
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+    "baseline": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+    "historicalSha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f",
+    "currentSha256": "f1d92d87ab89c6ea7a79566efeca4f65e72f35886153f5ed6f76fc445b81749f",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1340,
+        "currentStart": 1,
+        "currentEnd": 1340
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "7497057f3ee31a4d069f415e5aaa9407b29a5594ad2bdf2f2f1bcd376210d293",
+    "currentSha256": "d373db7522028fb0a12567af96ad1187336e4661bdaf1e4db26f75617f6a129d",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1256,
+        "currentStart": 1,
+        "currentEnd": 1256
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1257,
+        "historicalEnd": 1268,
+        "currentStart": 1258,
+        "currentEnd": 1269
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1269,
+        "historicalEnd": 1284,
+        "currentStart": 1279,
+        "currentEnd": 1294
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1285,
+        "historicalEnd": 1302,
+        "currentStart": 1296,
+        "currentEnd": 1313
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1303,
+        "historicalEnd": 1402,
+        "currentStart": 1315,
+        "currentEnd": 1414
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 1257,
+        "historicalEnd": 1256,
+        "currentStart": 1257,
+        "currentEnd": 1257
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1269,
+        "historicalEnd": 1268,
+        "currentStart": 1270,
+        "currentEnd": 1278
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1285,
+        "historicalEnd": 1284,
+        "currentStart": 1295,
+        "currentEnd": 1295
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1303,
+        "historicalEnd": 1302,
+        "currentStart": 1314,
+        "currentEnd": 1314
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "0203b3c6df5a7848cb9547f867ad4c10fddd6bde66925820a04d0fe1509e87dd",
+    "currentSha256": "e405141f8b7034129254c0eeed1330071d632d771e891cd22c4919f72315829a",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 10,
+        "currentStart": 1,
+        "currentEnd": 10
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 12,
+        "historicalEnd": 119,
+        "currentStart": 12,
+        "currentEnd": 119
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 120,
+        "historicalEnd": 338,
+        "currentStart": 121,
+        "currentEnd": 339
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 340,
+        "historicalEnd": 387,
+        "currentStart": 341,
+        "currentEnd": 388
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 388,
+        "historicalEnd": 443,
+        "currentStart": 390,
+        "currentEnd": 445
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 449,
+        "historicalEnd": 456,
+        "currentStart": 453,
+        "currentEnd": 460
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 458,
+        "historicalEnd": 465,
+        "currentStart": 462,
+        "currentEnd": 469
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 466,
+        "historicalEnd": 471,
+        "currentStart": 471,
+        "currentEnd": 476
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 472,
+        "historicalEnd": 600,
+        "currentStart": 483,
+        "currentEnd": 611
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 602,
+        "historicalEnd": 695,
+        "currentStart": 618,
+        "currentEnd": 711
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 697,
+        "historicalEnd": 804,
+        "currentStart": 713,
+        "currentEnd": 820
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 806,
+        "historicalEnd": 828,
+        "currentStart": 822,
+        "currentEnd": 844
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 830,
+        "historicalEnd": 847,
+        "currentStart": 846,
+        "currentEnd": 863
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 849,
+        "historicalEnd": 860,
+        "currentStart": 865,
+        "currentEnd": 876
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 862,
+        "historicalEnd": 892,
+        "currentStart": 878,
+        "currentEnd": 908
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 894,
+        "historicalEnd": 935,
+        "currentStart": 910,
+        "currentEnd": 951
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 937,
+        "historicalEnd": 1165,
+        "currentStart": 953,
+        "currentEnd": 1181
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1167,
+        "historicalEnd": 1192,
+        "currentStart": 1183,
+        "currentEnd": 1208
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1194,
+        "historicalEnd": 1217,
+        "currentStart": 1210,
+        "currentEnd": 1233
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1219,
+        "historicalEnd": 1320,
+        "currentStart": 1235,
+        "currentEnd": 1336
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1322,
+        "historicalEnd": 1676,
+        "currentStart": 1338,
+        "currentEnd": 1692
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1678,
+        "historicalEnd": 2629,
+        "currentStart": 1694,
+        "currentEnd": 2645
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2630,
+        "historicalEnd": 2634,
+        "currentStart": 2652,
+        "currentEnd": 2656
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2636,
+        "historicalEnd": 2641,
+        "currentStart": 2658,
+        "currentEnd": 2663
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2643,
+        "historicalEnd": 3241,
+        "currentStart": 2665,
+        "currentEnd": 3263
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3243,
+        "historicalEnd": 3305,
+        "currentStart": 3265,
+        "currentEnd": 3327
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3307,
+        "historicalEnd": 4213,
+        "currentStart": 3329,
+        "currentEnd": 4235
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "replace",
+        "historicalStart": 11,
+        "historicalEnd": 11,
+        "currentStart": 11,
+        "currentEnd": 11
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 120,
+        "historicalEnd": 119,
+        "currentStart": 120,
+        "currentEnd": 120
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 339,
+        "historicalEnd": 339,
+        "currentStart": 340,
+        "currentEnd": 340
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 388,
+        "historicalEnd": 387,
+        "currentStart": 389,
+        "currentEnd": 389
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 444,
+        "historicalEnd": 448,
+        "currentStart": 446,
+        "currentEnd": 452
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 457,
+        "historicalEnd": 457,
+        "currentStart": 461,
+        "currentEnd": 461
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 466,
+        "historicalEnd": 465,
+        "currentStart": 470,
+        "currentEnd": 470
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 472,
+        "historicalEnd": 471,
+        "currentStart": 477,
+        "currentEnd": 482
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 601,
+        "historicalEnd": 601,
+        "currentStart": 612,
+        "currentEnd": 617
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 696,
+        "historicalEnd": 696,
+        "currentStart": 712,
+        "currentEnd": 712
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 805,
+        "historicalEnd": 805,
+        "currentStart": 821,
+        "currentEnd": 821
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 829,
+        "historicalEnd": 829,
+        "currentStart": 845,
+        "currentEnd": 845
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 848,
+        "historicalEnd": 848,
+        "currentStart": 864,
+        "currentEnd": 864
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 861,
+        "historicalEnd": 861,
+        "currentStart": 877,
+        "currentEnd": 877
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 893,
+        "historicalEnd": 893,
+        "currentStart": 909,
+        "currentEnd": 909
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 936,
+        "historicalEnd": 936,
+        "currentStart": 952,
+        "currentEnd": 952
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1166,
+        "historicalEnd": 1166,
+        "currentStart": 1182,
+        "currentEnd": 1182
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1193,
+        "historicalEnd": 1193,
+        "currentStart": 1209,
+        "currentEnd": 1209
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1218,
+        "historicalEnd": 1218,
+        "currentStart": 1234,
+        "currentEnd": 1234
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1321,
+        "historicalEnd": 1321,
+        "currentStart": 1337,
+        "currentEnd": 1337
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1677,
+        "historicalEnd": 1677,
+        "currentStart": 1693,
+        "currentEnd": 1693
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 2630,
+        "historicalEnd": 2629,
+        "currentStart": 2646,
+        "currentEnd": 2651
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 2635,
+        "historicalEnd": 2635,
+        "currentStart": 2657,
+        "currentEnd": 2657
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 2642,
+        "historicalEnd": 2642,
+        "currentStart": 2664,
+        "currentEnd": 2664
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3242,
+        "historicalEnd": 3242,
+        "currentStart": 3264,
+        "currentEnd": 3264
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3306,
+        "historicalEnd": 3306,
+        "currentStart": 3328,
+        "currentEnd": 3328
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "db1cd299540d7f14cb4d4cdcbc35827da7506c84f78e4ef356626220334be785",
+    "currentSha256": "aed5e7fb9a679f3aa2d25df3268a764cdcce5cafa2b0aeaa125ce531be3105ee",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 6,
+        "currentStart": 1,
+        "currentEnd": 6
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 8,
+        "historicalEnd": 11,
+        "currentStart": 7,
+        "currentEnd": 10
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 12,
+        "historicalEnd": 97,
+        "currentStart": 13,
+        "currentEnd": 98
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 99,
+        "historicalEnd": 110,
+        "currentStart": 107,
+        "currentEnd": 118
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 112,
+        "historicalEnd": 123,
+        "currentStart": 120,
+        "currentEnd": 131
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 125,
+        "historicalEnd": 126,
+        "currentStart": 133,
+        "currentEnd": 134
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 128,
+        "historicalEnd": 128,
+        "currentStart": 136,
+        "currentEnd": 136
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 130,
+        "historicalEnd": 138,
+        "currentStart": 138,
+        "currentEnd": 146
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 140,
+        "historicalEnd": 165,
+        "currentStart": 148,
+        "currentEnd": 173
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 166,
+        "historicalEnd": 167,
+        "currentStart": 175,
+        "currentEnd": 176
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 169,
+        "historicalEnd": 226,
+        "currentStart": 182,
+        "currentEnd": 239
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 232,
+        "historicalEnd": 232,
+        "currentStart": 244,
+        "currentEnd": 244
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 235,
+        "historicalEnd": 237,
+        "currentStart": 247,
+        "currentEnd": 249
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 241,
+        "historicalEnd": 334,
+        "currentStart": 254,
+        "currentEnd": 347
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 336,
+        "historicalEnd": 339,
+        "currentStart": 350,
+        "currentEnd": 353
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "delete",
+        "historicalStart": 7,
+        "historicalEnd": 7,
+        "currentStart": 7,
+        "currentEnd": 6
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 12,
+        "historicalEnd": 11,
+        "currentStart": 11,
+        "currentEnd": 12
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 98,
+        "historicalEnd": 98,
+        "currentStart": 99,
+        "currentEnd": 106
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 111,
+        "historicalEnd": 111,
+        "currentStart": 119,
+        "currentEnd": 119
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 124,
+        "historicalEnd": 124,
+        "currentStart": 132,
+        "currentEnd": 132
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 127,
+        "historicalEnd": 127,
+        "currentStart": 135,
+        "currentEnd": 135
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 129,
+        "historicalEnd": 129,
+        "currentStart": 137,
+        "currentEnd": 137
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 139,
+        "historicalEnd": 139,
+        "currentStart": 147,
+        "currentEnd": 147
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 166,
+        "historicalEnd": 165,
+        "currentStart": 174,
+        "currentEnd": 174
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 168,
+        "historicalEnd": 168,
+        "currentStart": 177,
+        "currentEnd": 181
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 227,
+        "historicalEnd": 231,
+        "currentStart": 240,
+        "currentEnd": 243
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 233,
+        "historicalEnd": 234,
+        "currentStart": 245,
+        "currentEnd": 246
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 238,
+        "historicalEnd": 240,
+        "currentStart": 250,
+        "currentEnd": 253
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 335,
+        "historicalEnd": 335,
+        "currentStart": 348,
+        "currentEnd": 349
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "83ecc7398db34c8db8f47fdd602b63059cb7c053dbdbf47a665bb02b77194c38",
+    "currentSha256": "049ca3c529230d959ca40bfb967d0d334fe499a8f6dbc029739ec2c3808b9a64",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 33,
+        "currentStart": 1,
+        "currentEnd": 33
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 34,
+        "historicalEnd": 55,
+        "currentStart": 35,
+        "currentEnd": 56
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 56,
+        "historicalEnd": 1177,
+        "currentStart": 58,
+        "currentEnd": 1179
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1179,
+        "historicalEnd": 1781,
+        "currentStart": 1181,
+        "currentEnd": 1783
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1783,
+        "historicalEnd": 1889,
+        "currentStart": 1785,
+        "currentEnd": 1891
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1891,
+        "historicalEnd": 1899,
+        "currentStart": 1893,
+        "currentEnd": 1901
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1901,
+        "historicalEnd": 1912,
+        "currentStart": 1903,
+        "currentEnd": 1914
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1914,
+        "historicalEnd": 1962,
+        "currentStart": 1916,
+        "currentEnd": 1964
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1964,
+        "historicalEnd": 2027,
+        "currentStart": 1966,
+        "currentEnd": 2029
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2029,
+        "historicalEnd": 2477,
+        "currentStart": 2031,
+        "currentEnd": 2479
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2479,
+        "historicalEnd": 3704,
+        "currentStart": 2481,
+        "currentEnd": 3706
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3706,
+        "historicalEnd": 3794,
+        "currentStart": 3708,
+        "currentEnd": 3796
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3796,
+        "historicalEnd": 4037,
+        "currentStart": 3801,
+        "currentEnd": 4042
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4039,
+        "historicalEnd": 4108,
+        "currentStart": 4044,
+        "currentEnd": 4113
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 34,
+        "historicalEnd": 33,
+        "currentStart": 34,
+        "currentEnd": 34
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 56,
+        "historicalEnd": 55,
+        "currentStart": 57,
+        "currentEnd": 57
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1178,
+        "historicalEnd": 1178,
+        "currentStart": 1180,
+        "currentEnd": 1180
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1782,
+        "historicalEnd": 1782,
+        "currentStart": 1784,
+        "currentEnd": 1784
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1890,
+        "historicalEnd": 1890,
+        "currentStart": 1892,
+        "currentEnd": 1892
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1900,
+        "historicalEnd": 1900,
+        "currentStart": 1902,
+        "currentEnd": 1902
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1913,
+        "historicalEnd": 1913,
+        "currentStart": 1915,
+        "currentEnd": 1915
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1963,
+        "historicalEnd": 1963,
+        "currentStart": 1965,
+        "currentEnd": 1965
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 2028,
+        "historicalEnd": 2028,
+        "currentStart": 2030,
+        "currentEnd": 2030
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 2478,
+        "historicalEnd": 2478,
+        "currentStart": 2480,
+        "currentEnd": 2480
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3705,
+        "historicalEnd": 3705,
+        "currentStart": 3707,
+        "currentEnd": 3707
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3795,
+        "historicalEnd": 3795,
+        "currentStart": 3797,
+        "currentEnd": 3800
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4038,
+        "historicalEnd": 4038,
+        "currentStart": 4043,
+        "currentEnd": 4043
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f",
+    "currentSha256": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1346,
+        "currentStart": 1,
+        "currentEnd": 1346
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "751fed94e73e196220f83b122c188b8ac2004e3ffed0dd076fefab5fcbaeee07",
+    "currentSha256": "751fed94e73e196220f83b122c188b8ac2004e3ffed0dd076fefab5fcbaeee07",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1225,
+        "currentStart": 1,
+        "currentEnd": 1225
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "629f60ee5c0d727307ae4fb1e7ba131e0e19222cf039d62710ab7950de5d1bc2",
+    "currentSha256": "0111fb7993e4fd756e210455bc2da24de86db239ac5928652a66bb01eb4f8622",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 2,
+        "currentStart": 1,
+        "currentEnd": 2
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4,
+        "historicalEnd": 4,
+        "currentStart": 3,
+        "currentEnd": 3
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 6,
+        "historicalEnd": 9,
+        "currentStart": 7,
+        "currentEnd": 10
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 10,
+        "historicalEnd": 580,
+        "currentStart": 12,
+        "currentEnd": 582
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 586,
+        "historicalEnd": 595,
+        "currentStart": 586,
+        "currentEnd": 595
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 597,
+        "historicalEnd": 597,
+        "currentStart": 597,
+        "currentEnd": 597
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 598,
+        "historicalEnd": 598,
+        "currentStart": 645,
+        "currentEnd": 645
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 627,
+        "historicalEnd": 1547,
+        "currentStart": 652,
+        "currentEnd": 1572
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1578,
+        "historicalEnd": 1578,
+        "currentStart": 1615,
+        "currentEnd": 1615
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1580,
+        "historicalEnd": 1580,
+        "currentStart": 1617,
+        "currentEnd": 1617
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1586,
+        "historicalEnd": 1586,
+        "currentStart": 1623,
+        "currentEnd": 1623
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1588,
+        "historicalEnd": 1588,
+        "currentStart": 1625,
+        "currentEnd": 1625
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "delete",
+        "historicalStart": 3,
+        "historicalEnd": 3,
+        "currentStart": 3,
+        "currentEnd": 2
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5,
+        "historicalEnd": 5,
+        "currentStart": 4,
+        "currentEnd": 6
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 10,
+        "historicalEnd": 9,
+        "currentStart": 11,
+        "currentEnd": 11
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 581,
+        "historicalEnd": 585,
+        "currentStart": 583,
+        "currentEnd": 585
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 596,
+        "historicalEnd": 596,
+        "currentStart": 596,
+        "currentEnd": 596
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 598,
+        "historicalEnd": 597,
+        "currentStart": 598,
+        "currentEnd": 644
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 599,
+        "historicalEnd": 626,
+        "currentStart": 646,
+        "currentEnd": 651
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1548,
+        "historicalEnd": 1577,
+        "currentStart": 1573,
+        "currentEnd": 1614
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1579,
+        "historicalEnd": 1579,
+        "currentStart": 1616,
+        "currentEnd": 1616
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1581,
+        "historicalEnd": 1585,
+        "currentStart": 1618,
+        "currentEnd": 1622
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1587,
+        "historicalEnd": 1587,
+        "currentStart": 1624,
+        "currentEnd": 1624
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1589,
+        "historicalEnd": 1592,
+        "currentStart": 1626,
+        "currentEnd": 1646
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/test/Quality.test-kit.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "5f1b6dad7ae20d94f7002db5834bee869019d933fe8bb48cc747299e2cf2dc81",
+    "currentSha256": "5f1b6dad7ae20d94f7002db5834bee869019d933fe8bb48cc747299e2cf2dc81",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 92,
+        "currentStart": 1,
+        "currentEnd": 92
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "9ab84576de8a94dec07f35d0b483f4e92dcafafec3f17437e8db96eb10fdc515",
+    "currentSha256": "d6a7af2d4cc4a52be6023025e822d52fda331fb5c8a032701be9cb0d46749982",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 42,
+        "currentStart": 1,
+        "currentEnd": 42
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 43,
+        "historicalEnd": 121,
+        "currentStart": 44,
+        "currentEnd": 122
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 122,
+        "historicalEnd": 159,
+        "currentStart": 124,
+        "currentEnd": 161
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 160,
+        "historicalEnd": 167,
+        "currentStart": 163,
+        "currentEnd": 170
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 168,
+        "historicalEnd": 176,
+        "currentStart": 172,
+        "currentEnd": 180
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 177,
+        "historicalEnd": 202,
+        "currentStart": 182,
+        "currentEnd": 207
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 204,
+        "historicalEnd": 204,
+        "currentStart": 209,
+        "currentEnd": 209
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 208,
+        "historicalEnd": 208,
+        "currentStart": 213,
+        "currentEnd": 213
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 210,
+        "historicalEnd": 212,
+        "currentStart": 215,
+        "currentEnd": 217
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 214,
+        "historicalEnd": 218,
+        "currentStart": 219,
+        "currentEnd": 223
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 220,
+        "historicalEnd": 1249,
+        "currentStart": 225,
+        "currentEnd": 1254
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1250,
+        "historicalEnd": 1257,
+        "currentStart": 1263,
+        "currentEnd": 1270
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1258,
+        "historicalEnd": 1345,
+        "currentStart": 1272,
+        "currentEnd": 1359
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1347,
+        "historicalEnd": 1436,
+        "currentStart": 1361,
+        "currentEnd": 1450
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1438,
+        "historicalEnd": 1477,
+        "currentStart": 1452,
+        "currentEnd": 1491
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1479,
+        "historicalEnd": 1689,
+        "currentStart": 1493,
+        "currentEnd": 1703
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1691,
+        "historicalEnd": 1691,
+        "currentStart": 1705,
+        "currentEnd": 1705
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1709,
+        "historicalEnd": 2001,
+        "currentStart": 1718,
+        "currentEnd": 2010
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2002,
+        "historicalEnd": 2728,
+        "currentStart": 2049,
+        "currentEnd": 2775
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2770,
+        "historicalEnd": 3124,
+        "currentStart": 2818,
+        "currentEnd": 3172
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3126,
+        "historicalEnd": 3952,
+        "currentStart": 3174,
+        "currentEnd": 4000
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3954,
+        "historicalEnd": 3975,
+        "currentStart": 4002,
+        "currentEnd": 4023
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 3977,
+        "historicalEnd": 4008,
+        "currentStart": 4025,
+        "currentEnd": 4056
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4010,
+        "historicalEnd": 4034,
+        "currentStart": 4058,
+        "currentEnd": 4082
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4036,
+        "historicalEnd": 4057,
+        "currentStart": 4084,
+        "currentEnd": 4105
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4059,
+        "historicalEnd": 4098,
+        "currentStart": 4107,
+        "currentEnd": 4146
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4100,
+        "historicalEnd": 4279,
+        "currentStart": 4148,
+        "currentEnd": 4327
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4281,
+        "historicalEnd": 4283,
+        "currentStart": 4329,
+        "currentEnd": 4331
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4285,
+        "historicalEnd": 4290,
+        "currentStart": 4333,
+        "currentEnd": 4338
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4292,
+        "historicalEnd": 4308,
+        "currentStart": 4340,
+        "currentEnd": 4356
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4310,
+        "historicalEnd": 4377,
+        "currentStart": 4358,
+        "currentEnd": 4425
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4379,
+        "historicalEnd": 4381,
+        "currentStart": 4427,
+        "currentEnd": 4429
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4383,
+        "historicalEnd": 4386,
+        "currentStart": 4431,
+        "currentEnd": 4434
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4388,
+        "historicalEnd": 4393,
+        "currentStart": 4436,
+        "currentEnd": 4441
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4395,
+        "historicalEnd": 4693,
+        "currentStart": 4443,
+        "currentEnd": 4741
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4696,
+        "historicalEnd": 4697,
+        "currentStart": 4744,
+        "currentEnd": 4745
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4699,
+        "historicalEnd": 4699,
+        "currentStart": 4749,
+        "currentEnd": 4749
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4700,
+        "historicalEnd": 4705,
+        "currentStart": 4751,
+        "currentEnd": 4756
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4707,
+        "historicalEnd": 4866,
+        "currentStart": 4758,
+        "currentEnd": 4917
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4876,
+        "historicalEnd": 4876,
+        "currentStart": 4928,
+        "currentEnd": 4928
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 4888,
+        "historicalEnd": 5041,
+        "currentStart": 4941,
+        "currentEnd": 5094
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5043,
+        "historicalEnd": 5101,
+        "currentStart": 5100,
+        "currentEnd": 5158
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5103,
+        "historicalEnd": 5174,
+        "currentStart": 5164,
+        "currentEnd": 5235
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5176,
+        "historicalEnd": 5195,
+        "currentStart": 5243,
+        "currentEnd": 5262
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5197,
+        "historicalEnd": 5527,
+        "currentStart": 5268,
+        "currentEnd": 5598
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5538,
+        "historicalEnd": 5538,
+        "currentStart": 5610,
+        "currentEnd": 5610
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5542,
+        "historicalEnd": 5542,
+        "currentStart": 5614,
+        "currentEnd": 5614
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5557,
+        "historicalEnd": 5611,
+        "currentStart": 5632,
+        "currentEnd": 5686
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5615,
+        "historicalEnd": 5615,
+        "currentStart": 5691,
+        "currentEnd": 5691
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5630,
+        "historicalEnd": 5672,
+        "currentStart": 5710,
+        "currentEnd": 5752
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5674,
+        "historicalEnd": 5686,
+        "currentStart": 5758,
+        "currentEnd": 5770
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5688,
+        "historicalEnd": 5688,
+        "currentStart": 5772,
+        "currentEnd": 5772
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5697,
+        "historicalEnd": 5770,
+        "currentStart": 5784,
+        "currentEnd": 5857
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5772,
+        "historicalEnd": 5777,
+        "currentStart": 5863,
+        "currentEnd": 5868
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5779,
+        "historicalEnd": 5781,
+        "currentStart": 5870,
+        "currentEnd": 5872
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 5783,
+        "historicalEnd": 6691,
+        "currentStart": 5874,
+        "currentEnd": 6782
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 6692,
+        "historicalEnd": 7372,
+        "currentStart": 6869,
+        "currentEnd": 7549
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 7374,
+        "historicalEnd": 7383,
+        "currentStart": 7551,
+        "currentEnd": 7560
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 7385,
+        "historicalEnd": 7394,
+        "currentStart": 7562,
+        "currentEnd": 7571
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 7396,
+        "historicalEnd": 7421,
+        "currentStart": 7573,
+        "currentEnd": 7598
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 7423,
+        "historicalEnd": 7430,
+        "currentStart": 7600,
+        "currentEnd": 7607
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 7432,
+        "historicalEnd": 7686,
+        "currentStart": 7609,
+        "currentEnd": 7863
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 43,
+        "historicalEnd": 42,
+        "currentStart": 43,
+        "currentEnd": 43
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 122,
+        "historicalEnd": 121,
+        "currentStart": 123,
+        "currentEnd": 123
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 160,
+        "historicalEnd": 159,
+        "currentStart": 162,
+        "currentEnd": 162
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 168,
+        "historicalEnd": 167,
+        "currentStart": 171,
+        "currentEnd": 171
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 177,
+        "historicalEnd": 176,
+        "currentStart": 181,
+        "currentEnd": 181
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 203,
+        "historicalEnd": 203,
+        "currentStart": 208,
+        "currentEnd": 208
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 205,
+        "historicalEnd": 207,
+        "currentStart": 210,
+        "currentEnd": 212
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 209,
+        "historicalEnd": 209,
+        "currentStart": 214,
+        "currentEnd": 214
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 213,
+        "historicalEnd": 213,
+        "currentStart": 218,
+        "currentEnd": 218
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 219,
+        "historicalEnd": 219,
+        "currentStart": 224,
+        "currentEnd": 224
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1250,
+        "historicalEnd": 1249,
+        "currentStart": 1255,
+        "currentEnd": 1262
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1258,
+        "historicalEnd": 1257,
+        "currentStart": 1271,
+        "currentEnd": 1271
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1346,
+        "historicalEnd": 1346,
+        "currentStart": 1360,
+        "currentEnd": 1360
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1437,
+        "historicalEnd": 1437,
+        "currentStart": 1451,
+        "currentEnd": 1451
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1478,
+        "historicalEnd": 1478,
+        "currentStart": 1492,
+        "currentEnd": 1492
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1690,
+        "historicalEnd": 1690,
+        "currentStart": 1704,
+        "currentEnd": 1704
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1692,
+        "historicalEnd": 1708,
+        "currentStart": 1706,
+        "currentEnd": 1717
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 2002,
+        "historicalEnd": 2001,
+        "currentStart": 2011,
+        "currentEnd": 2048
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 2729,
+        "historicalEnd": 2769,
+        "currentStart": 2776,
+        "currentEnd": 2817
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3125,
+        "historicalEnd": 3125,
+        "currentStart": 3173,
+        "currentEnd": 3173
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3953,
+        "historicalEnd": 3953,
+        "currentStart": 4001,
+        "currentEnd": 4001
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 3976,
+        "historicalEnd": 3976,
+        "currentStart": 4024,
+        "currentEnd": 4024
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4009,
+        "historicalEnd": 4009,
+        "currentStart": 4057,
+        "currentEnd": 4057
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4035,
+        "historicalEnd": 4035,
+        "currentStart": 4083,
+        "currentEnd": 4083
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4058,
+        "historicalEnd": 4058,
+        "currentStart": 4106,
+        "currentEnd": 4106
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4099,
+        "historicalEnd": 4099,
+        "currentStart": 4147,
+        "currentEnd": 4147
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4280,
+        "historicalEnd": 4280,
+        "currentStart": 4328,
+        "currentEnd": 4328
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4284,
+        "historicalEnd": 4284,
+        "currentStart": 4332,
+        "currentEnd": 4332
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4291,
+        "historicalEnd": 4291,
+        "currentStart": 4339,
+        "currentEnd": 4339
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4309,
+        "historicalEnd": 4309,
+        "currentStart": 4357,
+        "currentEnd": 4357
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4378,
+        "historicalEnd": 4378,
+        "currentStart": 4426,
+        "currentEnd": 4426
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4382,
+        "historicalEnd": 4382,
+        "currentStart": 4430,
+        "currentEnd": 4430
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4387,
+        "historicalEnd": 4387,
+        "currentStart": 4435,
+        "currentEnd": 4435
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4394,
+        "historicalEnd": 4394,
+        "currentStart": 4442,
+        "currentEnd": 4442
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4694,
+        "historicalEnd": 4695,
+        "currentStart": 4742,
+        "currentEnd": 4743
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4698,
+        "historicalEnd": 4698,
+        "currentStart": 4746,
+        "currentEnd": 4748
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 4700,
+        "historicalEnd": 4699,
+        "currentStart": 4750,
+        "currentEnd": 4750
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4706,
+        "historicalEnd": 4706,
+        "currentStart": 4757,
+        "currentEnd": 4757
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4867,
+        "historicalEnd": 4875,
+        "currentStart": 4918,
+        "currentEnd": 4927
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 4877,
+        "historicalEnd": 4887,
+        "currentStart": 4929,
+        "currentEnd": 4940
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5042,
+        "historicalEnd": 5042,
+        "currentStart": 5095,
+        "currentEnd": 5099
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5102,
+        "historicalEnd": 5102,
+        "currentStart": 5159,
+        "currentEnd": 5163
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5175,
+        "historicalEnd": 5175,
+        "currentStart": 5236,
+        "currentEnd": 5242
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5196,
+        "historicalEnd": 5196,
+        "currentStart": 5263,
+        "currentEnd": 5267
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5528,
+        "historicalEnd": 5537,
+        "currentStart": 5599,
+        "currentEnd": 5609
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5539,
+        "historicalEnd": 5541,
+        "currentStart": 5611,
+        "currentEnd": 5613
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5543,
+        "historicalEnd": 5556,
+        "currentStart": 5615,
+        "currentEnd": 5631
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5612,
+        "historicalEnd": 5614,
+        "currentStart": 5687,
+        "currentEnd": 5690
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5616,
+        "historicalEnd": 5629,
+        "currentStart": 5692,
+        "currentEnd": 5709
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5673,
+        "historicalEnd": 5673,
+        "currentStart": 5753,
+        "currentEnd": 5757
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5687,
+        "historicalEnd": 5687,
+        "currentStart": 5771,
+        "currentEnd": 5771
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5689,
+        "historicalEnd": 5696,
+        "currentStart": 5773,
+        "currentEnd": 5783
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5771,
+        "historicalEnd": 5771,
+        "currentStart": 5858,
+        "currentEnd": 5862
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5778,
+        "historicalEnd": 5778,
+        "currentStart": 5869,
+        "currentEnd": 5869
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 5782,
+        "historicalEnd": 5782,
+        "currentStart": 5873,
+        "currentEnd": 5873
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 6692,
+        "historicalEnd": 6691,
+        "currentStart": 6783,
+        "currentEnd": 6868
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 7373,
+        "historicalEnd": 7373,
+        "currentStart": 7550,
+        "currentEnd": 7550
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 7384,
+        "historicalEnd": 7384,
+        "currentStart": 7561,
+        "currentEnd": 7561
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 7395,
+        "historicalEnd": 7395,
+        "currentStart": 7572,
+        "currentEnd": 7572
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 7422,
+        "historicalEnd": 7422,
+        "currentStart": 7599,
+        "currentEnd": 7599
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 7431,
+        "historicalEnd": 7431,
+        "currentStart": 7608,
+        "currentEnd": 7608
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "a503e5fc5e3304a507a84ff6692c0e320d3cd355e91c97d730853eaa694bdc51",
+    "currentSha256": "df8187797ed12d9ceca4c847964ea260517ed882a370ec89dae0d387e9347e96",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 23,
+        "currentStart": 1,
+        "currentEnd": 23
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 24,
+        "historicalEnd": 32,
+        "currentStart": 25,
+        "currentEnd": 33
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 33,
+        "historicalEnd": 604,
+        "currentStart": 35,
+        "currentEnd": 606
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 24,
+        "historicalEnd": 23,
+        "currentStart": 24,
+        "currentEnd": 24
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 33,
+        "historicalEnd": 32,
+        "currentStart": 34,
+        "currentEnd": 34
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "bd3ab1dc70d36c456623c87134c7b29434a46911bb8ad835ff6d487e10d989d2",
+    "currentSha256": "bd3ab1dc70d36c456623c87134c7b29434a46911bb8ad835ff6d487e10d989d2",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 151,
+        "currentStart": 1,
+        "currentEnd": 151
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/schema-first.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "80db7c7848f95adfeb3ff61b737ccac50ae3c37126c56ad3a402b2ad4ada4281",
+    "currentSha256": "d15aea184ab8e5b27ab61c535c52e080f53e3dbddd8a8e94210385fd887d04dc",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 22,
+        "currentStart": 1,
+        "currentEnd": 22
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 23,
+        "historicalEnd": 27,
+        "currentStart": 25,
+        "currentEnd": 29
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 29,
+        "historicalEnd": 29,
+        "currentStart": 30,
+        "currentEnd": 30
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 32,
+        "historicalEnd": 41,
+        "currentStart": 33,
+        "currentEnd": 42
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 48,
+        "historicalEnd": 48,
+        "currentStart": 50,
+        "currentEnd": 50
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 54,
+        "historicalEnd": 283,
+        "currentStart": 57,
+        "currentEnd": 286
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 285,
+        "historicalEnd": 298,
+        "currentStart": 288,
+        "currentEnd": 301
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 300,
+        "historicalEnd": 334,
+        "currentStart": 303,
+        "currentEnd": 337
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 336,
+        "historicalEnd": 348,
+        "currentStart": 339,
+        "currentEnd": 351
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 350,
+        "historicalEnd": 362,
+        "currentStart": 353,
+        "currentEnd": 365
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 364,
+        "historicalEnd": 400,
+        "currentStart": 367,
+        "currentEnd": 403
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 402,
+        "historicalEnd": 414,
+        "currentStart": 405,
+        "currentEnd": 417
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 416,
+        "historicalEnd": 441,
+        "currentStart": 419,
+        "currentEnd": 444
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 443,
+        "historicalEnd": 487,
+        "currentStart": 446,
+        "currentEnd": 490
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 493,
+        "historicalEnd": 493,
+        "currentStart": 497,
+        "currentEnd": 497
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 507,
+        "historicalEnd": 507,
+        "currentStart": 512,
+        "currentEnd": 512
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 23,
+        "historicalEnd": 22,
+        "currentStart": 23,
+        "currentEnd": 24
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 28,
+        "historicalEnd": 28,
+        "currentStart": 30,
+        "currentEnd": 29
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 30,
+        "historicalEnd": 31,
+        "currentStart": 31,
+        "currentEnd": 32
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 42,
+        "historicalEnd": 47,
+        "currentStart": 43,
+        "currentEnd": 49
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 49,
+        "historicalEnd": 53,
+        "currentStart": 51,
+        "currentEnd": 56
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 284,
+        "historicalEnd": 284,
+        "currentStart": 287,
+        "currentEnd": 287
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 299,
+        "historicalEnd": 299,
+        "currentStart": 302,
+        "currentEnd": 302
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 335,
+        "historicalEnd": 335,
+        "currentStart": 338,
+        "currentEnd": 338
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 349,
+        "historicalEnd": 349,
+        "currentStart": 352,
+        "currentEnd": 352
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 363,
+        "historicalEnd": 363,
+        "currentStart": 366,
+        "currentEnd": 366
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 401,
+        "historicalEnd": 401,
+        "currentStart": 404,
+        "currentEnd": 404
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 415,
+        "historicalEnd": 415,
+        "currentStart": 418,
+        "currentEnd": 418
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 442,
+        "historicalEnd": 442,
+        "currentStart": 445,
+        "currentEnd": 445
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 488,
+        "historicalEnd": 492,
+        "currentStart": 491,
+        "currentEnd": 496
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 494,
+        "historicalEnd": 506,
+        "currentStart": 498,
+        "currentEnd": 511
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "177dee33f52d6f79d4c6b074ed8cfe2fe2d3fe20296d2beb21c4c08898369db2",
+    "currentSha256": "177dee33f52d6f79d4c6b074ed8cfe2fe2d3fe20296d2beb21c4c08898369db2",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 2300,
+        "currentStart": 1,
+        "currentEnd": 2300
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "4ebd8a5d46827a86dcf181b75efeff48e33d78e866919c9d1c31bc1587e7dccd",
+    "currentSha256": "4ebd8a5d46827a86dcf181b75efeff48e33d78e866919c9d1c31bc1587e7dccd",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 953,
+        "currentStart": 1,
+        "currentEnd": 953
+      }
+    ],
+    "changedBlocks": []
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "92902c60c211f6c7e30e4c71119730be508358843fced072ef0cb61c4449da92",
+    "currentSha256": "bd66073d471b1e761bee5013cbf8847438e0d685668a1172fb290cd8b28b147b",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 1,
+        "currentStart": 1,
+        "currentEnd": 1
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 2,
+        "historicalEnd": 7,
+        "currentStart": 3,
+        "currentEnd": 8
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 8,
+        "historicalEnd": 11,
+        "currentStart": 11,
+        "currentEnd": 14
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 12,
+        "historicalEnd": 16,
+        "currentStart": 16,
+        "currentEnd": 20
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 17,
+        "historicalEnd": 171,
+        "currentStart": 22,
+        "currentEnd": 176
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 172,
+        "historicalEnd": 330,
+        "currentStart": 212,
+        "currentEnd": 370
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 2,
+        "historicalEnd": 1,
+        "currentStart": 2,
+        "currentEnd": 2
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 8,
+        "historicalEnd": 7,
+        "currentStart": 9,
+        "currentEnd": 10
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 12,
+        "historicalEnd": 11,
+        "currentStart": 15,
+        "currentEnd": 15
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 17,
+        "historicalEnd": 16,
+        "currentStart": 21,
+        "currentEnd": 21
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 172,
+        "historicalEnd": 171,
+        "currentStart": 177,
+        "currentEnd": 211
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "ef87a43c45dc18333de55e836d4f9a3c2267d0de82f8a9e3b4c86fd19235e759",
+    "currentSha256": "9ee375bd58f0226d20339c3fc0d6a053acfd47b5e520c1ff954777b3a6833bd1",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 7,
+        "currentStart": 1,
+        "currentEnd": 7
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 8,
+        "historicalEnd": 37,
+        "currentStart": 9,
+        "currentEnd": 38
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 38,
+        "historicalEnd": 1187,
+        "currentStart": 40,
+        "currentEnd": 1189
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "insert",
+        "historicalStart": 8,
+        "historicalEnd": 7,
+        "currentStart": 8,
+        "currentEnd": 8
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 38,
+        "historicalEnd": 37,
+        "currentStart": 39,
+        "currentEnd": 39
+      }
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "9d94a90c621016089517b001d16014fbf5ac7bed829c98d7e4d5b1bdcdb3af60",
+    "currentSha256": "baafff158d39672af2113e26404994e6ec270b32edf1dd826e9d879afcc401cc",
+    "byteIdentical": false,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 5,
+        "currentStart": 1,
+        "currentEnd": 5
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 7,
+        "historicalEnd": 7,
+        "currentStart": 8,
+        "currentEnd": 8
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 8,
+        "historicalEnd": 20,
+        "currentStart": 10,
+        "currentEnd": 22
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 22,
+        "historicalEnd": 23,
+        "currentStart": 24,
+        "currentEnd": 25
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 28,
+        "historicalEnd": 28,
+        "currentStart": 31,
+        "currentEnd": 31
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 30,
+        "historicalEnd": 34,
+        "currentStart": 33,
+        "currentEnd": 37
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 41,
+        "historicalEnd": 42,
+        "currentStart": 43,
+        "currentEnd": 44
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 45,
+        "historicalEnd": 58,
+        "currentStart": 58,
+        "currentEnd": 71
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 60,
+        "historicalEnd": 147,
+        "currentStart": 73,
+        "currentEnd": 160
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 150,
+        "historicalEnd": 150,
+        "currentStart": 172,
+        "currentEnd": 172
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 157,
+        "historicalEnd": 157,
+        "currentStart": 191,
+        "currentEnd": 191
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 163,
+        "historicalEnd": 163,
+        "currentStart": 202,
+        "currentEnd": 202
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 166,
+        "historicalEnd": 166,
+        "currentStart": 203,
+        "currentEnd": 203
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 171,
+        "historicalEnd": 171,
+        "currentStart": 211,
+        "currentEnd": 211
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 177,
+        "historicalEnd": 177,
+        "currentStart": 251,
+        "currentEnd": 251
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 184,
+        "historicalEnd": 184,
+        "currentStart": 278,
+        "currentEnd": 278
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 193,
+        "historicalEnd": 193,
+        "currentStart": 301,
+        "currentEnd": 301
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 202,
+        "historicalEnd": 202,
+        "currentStart": 308,
+        "currentEnd": 308
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 206,
+        "historicalEnd": 206,
+        "currentStart": 319,
+        "currentEnd": 319
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 210,
+        "historicalEnd": 210,
+        "currentStart": 330,
+        "currentEnd": 330
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 212,
+        "historicalEnd": 212,
+        "currentStart": 331,
+        "currentEnd": 331
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 236,
+        "historicalEnd": 236,
+        "currentStart": 341,
+        "currentEnd": 341
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 238,
+        "historicalEnd": 238,
+        "currentStart": 342,
+        "currentEnd": 342
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 248,
+        "historicalEnd": 248,
+        "currentStart": 349,
+        "currentEnd": 349
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 257,
+        "historicalEnd": 257,
+        "currentStart": 366,
+        "currentEnd": 366
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 259,
+        "historicalEnd": 259,
+        "currentStart": 367,
+        "currentEnd": 367
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 264,
+        "historicalEnd": 264,
+        "currentStart": 375,
+        "currentEnd": 375
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 268,
+        "historicalEnd": 268,
+        "currentStart": 381,
+        "currentEnd": 381
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 270,
+        "historicalEnd": 270,
+        "currentStart": 382,
+        "currentEnd": 382
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 277,
+        "historicalEnd": 277,
+        "currentStart": 393,
+        "currentEnd": 393
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 279,
+        "historicalEnd": 279,
+        "currentStart": 394,
+        "currentEnd": 394
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 286,
+        "historicalEnd": 286,
+        "currentStart": 404,
+        "currentEnd": 404
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 292,
+        "historicalEnd": 292,
+        "currentStart": 415,
+        "currentEnd": 415
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 294,
+        "historicalEnd": 294,
+        "currentStart": 416,
+        "currentEnd": 416
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 300,
+        "historicalEnd": 300,
+        "currentStart": 438,
+        "currentEnd": 438
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 305,
+        "historicalEnd": 305,
+        "currentStart": 456,
+        "currentEnd": 456
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 310,
+        "historicalEnd": 310,
+        "currentStart": 457,
+        "currentEnd": 457
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 315,
+        "historicalEnd": 315,
+        "currentStart": 479,
+        "currentEnd": 479
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 319,
+        "historicalEnd": 319,
+        "currentStart": 480,
+        "currentEnd": 480
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 328,
+        "historicalEnd": 328,
+        "currentStart": 493,
+        "currentEnd": 493
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 333,
+        "historicalEnd": 333,
+        "currentStart": 524,
+        "currentEnd": 524
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 346,
+        "historicalEnd": 346,
+        "currentStart": 553,
+        "currentEnd": 553
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 348,
+        "historicalEnd": 348,
+        "currentStart": 554,
+        "currentEnd": 554
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 362,
+        "historicalEnd": 362,
+        "currentStart": 571,
+        "currentEnd": 571
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 367,
+        "historicalEnd": 367,
+        "currentStart": 585,
+        "currentEnd": 585
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 374,
+        "historicalEnd": 374,
+        "currentStart": 608,
+        "currentEnd": 608
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 381,
+        "historicalEnd": 381,
+        "currentStart": 632,
+        "currentEnd": 632
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 383,
+        "historicalEnd": 383,
+        "currentStart": 633,
+        "currentEnd": 633
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 389,
+        "historicalEnd": 389,
+        "currentStart": 642,
+        "currentEnd": 642
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 394,
+        "historicalEnd": 394,
+        "currentStart": 643,
+        "currentEnd": 643
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 410,
+        "historicalEnd": 410,
+        "currentStart": 659,
+        "currentEnd": 659
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 416,
+        "historicalEnd": 416,
+        "currentStart": 682,
+        "currentEnd": 682
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 419,
+        "historicalEnd": 419,
+        "currentStart": 683,
+        "currentEnd": 683
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 427,
+        "historicalEnd": 427,
+        "currentStart": 705,
+        "currentEnd": 705
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 446,
+        "historicalEnd": 446,
+        "currentStart": 706,
+        "currentEnd": 706
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 574,
+        "historicalEnd": 582,
+        "currentStart": 710,
+        "currentEnd": 718
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 588,
+        "historicalEnd": 588,
+        "currentStart": 725,
+        "currentEnd": 725
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 595,
+        "historicalEnd": 595,
+        "currentStart": 749,
+        "currentEnd": 749
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 611,
+        "historicalEnd": 611,
+        "currentStart": 750,
+        "currentEnd": 750
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 614,
+        "historicalEnd": 619,
+        "currentStart": 754,
+        "currentEnd": 759
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 623,
+        "historicalEnd": 623,
+        "currentStart": 764,
+        "currentEnd": 764
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 631,
+        "historicalEnd": 631,
+        "currentStart": 777,
+        "currentEnd": 777
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 635,
+        "historicalEnd": 635,
+        "currentStart": 778,
+        "currentEnd": 778
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 645,
+        "historicalEnd": 645,
+        "currentStart": 804,
+        "currentEnd": 804
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 660,
+        "historicalEnd": 660,
+        "currentStart": 805,
+        "currentEnd": 805
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 663,
+        "historicalEnd": 669,
+        "currentStart": 809,
+        "currentEnd": 815
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 676,
+        "historicalEnd": 676,
+        "currentStart": 839,
+        "currentEnd": 839
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 682,
+        "historicalEnd": 682,
+        "currentStart": 851,
+        "currentEnd": 851
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 688,
+        "historicalEnd": 688,
+        "currentStart": 864,
+        "currentEnd": 864
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 690,
+        "historicalEnd": 690,
+        "currentStart": 865,
+        "currentEnd": 865
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 715,
+        "historicalEnd": 723,
+        "currentStart": 872,
+        "currentEnd": 880
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 724,
+        "historicalEnd": 724,
+        "currentStart": 901,
+        "currentEnd": 901
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 740,
+        "historicalEnd": 740,
+        "currentStart": 902,
+        "currentEnd": 902
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 744,
+        "historicalEnd": 754,
+        "currentStart": 907,
+        "currentEnd": 917
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 768,
+        "historicalEnd": 768,
+        "currentStart": 943,
+        "currentEnd": 943
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 774,
+        "historicalEnd": 774,
+        "currentStart": 958,
+        "currentEnd": 958
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 786,
+        "historicalEnd": 786,
+        "currentStart": 959,
+        "currentEnd": 959
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 791,
+        "historicalEnd": 801,
+        "currentStart": 964,
+        "currentEnd": 974
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 803,
+        "historicalEnd": 809,
+        "currentStart": 976,
+        "currentEnd": 982
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 811,
+        "historicalEnd": 815,
+        "currentStart": 984,
+        "currentEnd": 988
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 836,
+        "historicalEnd": 836,
+        "currentStart": 1010,
+        "currentEnd": 1010
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 856,
+        "historicalEnd": 856,
+        "currentStart": 1029,
+        "currentEnd": 1029
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 862,
+        "historicalEnd": 877,
+        "currentStart": 1035,
+        "currentEnd": 1050
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 878,
+        "historicalEnd": 878,
+        "currentStart": 1093,
+        "currentEnd": 1093
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 882,
+        "historicalEnd": 882,
+        "currentStart": 1105,
+        "currentEnd": 1105
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 893,
+        "historicalEnd": 893,
+        "currentStart": 1106,
+        "currentEnd": 1106
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 933,
+        "historicalEnd": 934,
+        "currentStart": 1111,
+        "currentEnd": 1112
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 943,
+        "historicalEnd": 944,
+        "currentStart": 1121,
+        "currentEnd": 1122
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 953,
+        "historicalEnd": 953,
+        "currentStart": 1136,
+        "currentEnd": 1136
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 958,
+        "historicalEnd": 958,
+        "currentStart": 1137,
+        "currentEnd": 1137
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 963,
+        "historicalEnd": 966,
+        "currentStart": 1143,
+        "currentEnd": 1146
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1009,
+        "historicalEnd": 1009,
+        "currentStart": 1190,
+        "currentEnd": 1190
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1016,
+        "historicalEnd": 1016,
+        "currentStart": 1216,
+        "currentEnd": 1216
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1032,
+        "historicalEnd": 1032,
+        "currentStart": 1217,
+        "currentEnd": 1217
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1049,
+        "historicalEnd": 1049,
+        "currentStart": 1236,
+        "currentEnd": 1236
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1081,
+        "historicalEnd": 1081,
+        "currentStart": 1276,
+        "currentEnd": 1276
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1088,
+        "historicalEnd": 1088,
+        "currentStart": 1277,
+        "currentEnd": 1277
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1094,
+        "historicalEnd": 1099,
+        "currentStart": 1284,
+        "currentEnd": 1289
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1100,
+        "historicalEnd": 1100,
+        "currentStart": 1313,
+        "currentEnd": 1313
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1105,
+        "historicalEnd": 1105,
+        "currentStart": 1336,
+        "currentEnd": 1336
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1109,
+        "historicalEnd": 1109,
+        "currentStart": 1369,
+        "currentEnd": 1369
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1113,
+        "historicalEnd": 1113,
+        "currentStart": 1400,
+        "currentEnd": 1400
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1121,
+        "historicalEnd": 1123,
+        "currentStart": 1961,
+        "currentEnd": 1963
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1144,
+        "historicalEnd": 1144,
+        "currentStart": 2001,
+        "currentEnd": 2001
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1175,
+        "historicalEnd": 1175,
+        "currentStart": 2023,
+        "currentEnd": 2023
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1179,
+        "historicalEnd": 1179,
+        "currentStart": 2039,
+        "currentEnd": 2039
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1189,
+        "historicalEnd": 1189,
+        "currentStart": 2057,
+        "currentEnd": 2057
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1195,
+        "historicalEnd": 1195,
+        "currentStart": 2071,
+        "currentEnd": 2071
+      },
+      {
+        "kind": "equal",
+        "historicalStart": 1199,
+        "historicalEnd": 1200,
+        "currentStart": 2268,
+        "currentEnd": 2269
+      }
+    ],
+    "changedBlocks": [
+      {
+        "kind": "replace",
+        "historicalStart": 6,
+        "historicalEnd": 6,
+        "currentStart": 6,
+        "currentEnd": 7
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 8,
+        "historicalEnd": 7,
+        "currentStart": 9,
+        "currentEnd": 9
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 21,
+        "historicalEnd": 21,
+        "currentStart": 23,
+        "currentEnd": 23
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 24,
+        "historicalEnd": 27,
+        "currentStart": 26,
+        "currentEnd": 30
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 29,
+        "historicalEnd": 29,
+        "currentStart": 32,
+        "currentEnd": 32
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 35,
+        "historicalEnd": 40,
+        "currentStart": 38,
+        "currentEnd": 42
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 43,
+        "historicalEnd": 44,
+        "currentStart": 45,
+        "currentEnd": 57
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 59,
+        "historicalEnd": 59,
+        "currentStart": 72,
+        "currentEnd": 72
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 148,
+        "historicalEnd": 149,
+        "currentStart": 161,
+        "currentEnd": 171
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 151,
+        "historicalEnd": 156,
+        "currentStart": 173,
+        "currentEnd": 190
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 158,
+        "historicalEnd": 162,
+        "currentStart": 192,
+        "currentEnd": 201
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 164,
+        "historicalEnd": 165,
+        "currentStart": 203,
+        "currentEnd": 202
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 167,
+        "historicalEnd": 170,
+        "currentStart": 204,
+        "currentEnd": 210
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 172,
+        "historicalEnd": 176,
+        "currentStart": 212,
+        "currentEnd": 250
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 178,
+        "historicalEnd": 183,
+        "currentStart": 252,
+        "currentEnd": 277
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 185,
+        "historicalEnd": 192,
+        "currentStart": 279,
+        "currentEnd": 300
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 194,
+        "historicalEnd": 201,
+        "currentStart": 302,
+        "currentEnd": 307
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 203,
+        "historicalEnd": 205,
+        "currentStart": 309,
+        "currentEnd": 318
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 207,
+        "historicalEnd": 209,
+        "currentStart": 320,
+        "currentEnd": 329
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 211,
+        "historicalEnd": 211,
+        "currentStart": 331,
+        "currentEnd": 330
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 213,
+        "historicalEnd": 235,
+        "currentStart": 332,
+        "currentEnd": 340
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 237,
+        "historicalEnd": 237,
+        "currentStart": 342,
+        "currentEnd": 341
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 239,
+        "historicalEnd": 247,
+        "currentStart": 343,
+        "currentEnd": 348
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 249,
+        "historicalEnd": 256,
+        "currentStart": 350,
+        "currentEnd": 365
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 258,
+        "historicalEnd": 258,
+        "currentStart": 367,
+        "currentEnd": 366
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 260,
+        "historicalEnd": 263,
+        "currentStart": 368,
+        "currentEnd": 374
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 265,
+        "historicalEnd": 267,
+        "currentStart": 376,
+        "currentEnd": 380
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 269,
+        "historicalEnd": 269,
+        "currentStart": 382,
+        "currentEnd": 381
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 271,
+        "historicalEnd": 276,
+        "currentStart": 383,
+        "currentEnd": 392
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 278,
+        "historicalEnd": 278,
+        "currentStart": 394,
+        "currentEnd": 393
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 280,
+        "historicalEnd": 285,
+        "currentStart": 395,
+        "currentEnd": 403
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 287,
+        "historicalEnd": 291,
+        "currentStart": 405,
+        "currentEnd": 414
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 293,
+        "historicalEnd": 293,
+        "currentStart": 416,
+        "currentEnd": 415
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 295,
+        "historicalEnd": 299,
+        "currentStart": 417,
+        "currentEnd": 437
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 301,
+        "historicalEnd": 304,
+        "currentStart": 439,
+        "currentEnd": 455
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 306,
+        "historicalEnd": 309,
+        "currentStart": 457,
+        "currentEnd": 456
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 311,
+        "historicalEnd": 314,
+        "currentStart": 458,
+        "currentEnd": 478
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 316,
+        "historicalEnd": 318,
+        "currentStart": 480,
+        "currentEnd": 479
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 320,
+        "historicalEnd": 327,
+        "currentStart": 481,
+        "currentEnd": 492
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 329,
+        "historicalEnd": 332,
+        "currentStart": 494,
+        "currentEnd": 523
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 334,
+        "historicalEnd": 345,
+        "currentStart": 525,
+        "currentEnd": 552
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 347,
+        "historicalEnd": 347,
+        "currentStart": 554,
+        "currentEnd": 553
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 349,
+        "historicalEnd": 361,
+        "currentStart": 555,
+        "currentEnd": 570
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 363,
+        "historicalEnd": 366,
+        "currentStart": 572,
+        "currentEnd": 584
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 368,
+        "historicalEnd": 373,
+        "currentStart": 586,
+        "currentEnd": 607
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 375,
+        "historicalEnd": 380,
+        "currentStart": 609,
+        "currentEnd": 631
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 382,
+        "historicalEnd": 382,
+        "currentStart": 633,
+        "currentEnd": 632
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 384,
+        "historicalEnd": 388,
+        "currentStart": 634,
+        "currentEnd": 641
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 390,
+        "historicalEnd": 393,
+        "currentStart": 643,
+        "currentEnd": 642
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 395,
+        "historicalEnd": 409,
+        "currentStart": 644,
+        "currentEnd": 658
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 411,
+        "historicalEnd": 415,
+        "currentStart": 660,
+        "currentEnd": 681
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 417,
+        "historicalEnd": 418,
+        "currentStart": 683,
+        "currentEnd": 682
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 420,
+        "historicalEnd": 426,
+        "currentStart": 684,
+        "currentEnd": 704
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 428,
+        "historicalEnd": 445,
+        "currentStart": 706,
+        "currentEnd": 705
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 447,
+        "historicalEnd": 573,
+        "currentStart": 707,
+        "currentEnd": 709
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 583,
+        "historicalEnd": 587,
+        "currentStart": 719,
+        "currentEnd": 724
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 589,
+        "historicalEnd": 594,
+        "currentStart": 726,
+        "currentEnd": 748
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 596,
+        "historicalEnd": 610,
+        "currentStart": 750,
+        "currentEnd": 749
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 612,
+        "historicalEnd": 613,
+        "currentStart": 751,
+        "currentEnd": 753
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 620,
+        "historicalEnd": 622,
+        "currentStart": 760,
+        "currentEnd": 763
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 624,
+        "historicalEnd": 630,
+        "currentStart": 765,
+        "currentEnd": 776
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 632,
+        "historicalEnd": 634,
+        "currentStart": 778,
+        "currentEnd": 777
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 636,
+        "historicalEnd": 644,
+        "currentStart": 779,
+        "currentEnd": 803
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 646,
+        "historicalEnd": 659,
+        "currentStart": 805,
+        "currentEnd": 804
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 661,
+        "historicalEnd": 662,
+        "currentStart": 806,
+        "currentEnd": 808
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 670,
+        "historicalEnd": 675,
+        "currentStart": 816,
+        "currentEnd": 838
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 677,
+        "historicalEnd": 681,
+        "currentStart": 840,
+        "currentEnd": 850
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 683,
+        "historicalEnd": 687,
+        "currentStart": 852,
+        "currentEnd": 863
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 689,
+        "historicalEnd": 689,
+        "currentStart": 865,
+        "currentEnd": 864
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 691,
+        "historicalEnd": 714,
+        "currentStart": 866,
+        "currentEnd": 871
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 724,
+        "historicalEnd": 723,
+        "currentStart": 881,
+        "currentEnd": 900
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 725,
+        "historicalEnd": 739,
+        "currentStart": 902,
+        "currentEnd": 901
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 741,
+        "historicalEnd": 743,
+        "currentStart": 903,
+        "currentEnd": 906
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 755,
+        "historicalEnd": 767,
+        "currentStart": 918,
+        "currentEnd": 942
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 769,
+        "historicalEnd": 773,
+        "currentStart": 944,
+        "currentEnd": 957
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 775,
+        "historicalEnd": 785,
+        "currentStart": 959,
+        "currentEnd": 958
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 787,
+        "historicalEnd": 790,
+        "currentStart": 960,
+        "currentEnd": 963
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 802,
+        "historicalEnd": 802,
+        "currentStart": 975,
+        "currentEnd": 975
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 810,
+        "historicalEnd": 810,
+        "currentStart": 983,
+        "currentEnd": 983
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 816,
+        "historicalEnd": 835,
+        "currentStart": 989,
+        "currentEnd": 1009
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 837,
+        "historicalEnd": 855,
+        "currentStart": 1011,
+        "currentEnd": 1028
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 857,
+        "historicalEnd": 861,
+        "currentStart": 1030,
+        "currentEnd": 1034
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 878,
+        "historicalEnd": 877,
+        "currentStart": 1051,
+        "currentEnd": 1092
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 879,
+        "historicalEnd": 881,
+        "currentStart": 1094,
+        "currentEnd": 1104
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 883,
+        "historicalEnd": 892,
+        "currentStart": 1106,
+        "currentEnd": 1105
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 894,
+        "historicalEnd": 932,
+        "currentStart": 1107,
+        "currentEnd": 1110
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 935,
+        "historicalEnd": 942,
+        "currentStart": 1113,
+        "currentEnd": 1120
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 945,
+        "historicalEnd": 952,
+        "currentStart": 1123,
+        "currentEnd": 1135
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 954,
+        "historicalEnd": 957,
+        "currentStart": 1137,
+        "currentEnd": 1136
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 959,
+        "historicalEnd": 962,
+        "currentStart": 1138,
+        "currentEnd": 1142
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 967,
+        "historicalEnd": 1008,
+        "currentStart": 1147,
+        "currentEnd": 1189
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1010,
+        "historicalEnd": 1015,
+        "currentStart": 1191,
+        "currentEnd": 1215
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 1017,
+        "historicalEnd": 1031,
+        "currentStart": 1217,
+        "currentEnd": 1216
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1033,
+        "historicalEnd": 1048,
+        "currentStart": 1218,
+        "currentEnd": 1235
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1050,
+        "historicalEnd": 1080,
+        "currentStart": 1237,
+        "currentEnd": 1275
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 1082,
+        "historicalEnd": 1087,
+        "currentStart": 1277,
+        "currentEnd": 1276
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1089,
+        "historicalEnd": 1093,
+        "currentStart": 1278,
+        "currentEnd": 1283
+      },
+      {
+        "kind": "insert",
+        "historicalStart": 1100,
+        "historicalEnd": 1099,
+        "currentStart": 1290,
+        "currentEnd": 1312
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1101,
+        "historicalEnd": 1104,
+        "currentStart": 1314,
+        "currentEnd": 1335
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1106,
+        "historicalEnd": 1108,
+        "currentStart": 1337,
+        "currentEnd": 1368
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1110,
+        "historicalEnd": 1112,
+        "currentStart": 1370,
+        "currentEnd": 1399
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1114,
+        "historicalEnd": 1120,
+        "currentStart": 1401,
+        "currentEnd": 1960
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1124,
+        "historicalEnd": 1143,
+        "currentStart": 1964,
+        "currentEnd": 2000
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1145,
+        "historicalEnd": 1174,
+        "currentStart": 2002,
+        "currentEnd": 2022
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1176,
+        "historicalEnd": 1178,
+        "currentStart": 2024,
+        "currentEnd": 2038
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1180,
+        "historicalEnd": 1188,
+        "currentStart": 2040,
+        "currentEnd": 2056
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1190,
+        "historicalEnd": 1194,
+        "currentStart": 2058,
+        "currentEnd": 2070
+      },
+      {
+        "kind": "replace",
+        "historicalStart": 1196,
+        "historicalEnd": 1198,
+        "currentStart": 2072,
+        "currentEnd": 2267
+      },
+      {
+        "kind": "delete",
+        "historicalStart": 1201,
+        "historicalEnd": 1757,
+        "currentStart": 2270,
+        "currentEnd": 2269
+      }
+    ]
+  },
+  {
+    "file": "goals/turborepo-task-qualification/research/refresh-root-quality-plans.ts",
+    "baseline": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+    "historicalSha256": "6d7702b39adb605bc7e3b4b4f5622b2fc268f726e7635ad14cc619ebaec8a3cc",
+    "currentSha256": "6d7702b39adb605bc7e3b4b4f5622b2fc268f726e7635ad14cc619ebaec8a3cc",
+    "byteIdentical": true,
+    "unchangedBlocks": [
+      {
+        "kind": "equal",
+        "historicalStart": 1,
+        "historicalEnd": 50,
+        "currentStart": 1,
+        "currentEnd": 50
+      }
+    ],
+    "changedBlocks": []
+  }
+]

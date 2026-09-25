@@ -1,0 +1,74 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r39-main-782aa4",
+  "roundNumber": 39,
+  "finalizedAt": "2026-09-25T10:22:40.575368+00:00",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "originMainSha": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "complete": true,
+  "sourceStable": true,
+  "sourceStabilityScope": "Primary executions only; parent reconciliation completed after main advanced. All3946 frozen bindings independently verified against historical Git source. No current-main dry credit.",
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "newQualifiedIds": [
+    "effect-vitest-inspect-context-phase",
+    "r39-cli-internal-root-append-terminal-already"
+  ],
+  "newQualifiedCount": 2,
+  "records": 726,
+  "qualified": 108,
+  "disqualified": 618,
+  "applied": 0,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "inventorySha256": "a044e9df1564289cd85b79b38ab72f7b9bb3f7811f3cee8ea1bbdb963e4e0d7b",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/execution-summary.json",
+      "sha256": "4ed71bad209c30ee056505c8470ce6a1463ae398abe92a682872f904d649c57f"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/historical-input-audit.json",
+      "sha256": "66590f09670453ed7f6e9a93d3bf600bf71de6ec6d7940d22b2051b894a351cb"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-owner-reviews/artifact-index.json",
+      "sha256": "14998f8660589623d7d245802398e3ee1a003cfb8ebc9b96382b6772fad1664e"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-reconciliation-progress-2026-09-25.json",
+      "sha256": "b0ca6c3a4bf8e887395e94b489ac3a08fd8173e61f0202118d6775f14f1300bf"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r39-final-reconciled.jsonl",
+      "sha256": "a044e9df1564289cd85b79b38ab72f7b9bb3f7811f3cee8ea1bbdb963e4e0d7b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-owner-admission/integration.json",
+      "sha256": "ca0361201a71820da056120e4cdd5cf43f8e9d3274ee4b580e4b1de2f5eab336"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-citation-integration/integration.json",
+      "sha256": "57555d1c6352bebbe209d0e7aa311abc5e3b4ffd692d89b4ca773fa562286acb"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-lq-final-review/integration.json",
+      "sha256": "c120b222820931349d7cd7bae2f2d7031858213cad5069ddf9d90aceecc686a6"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/lane-map.json",
+      "sha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/source-sha.txt",
+      "sha256": "449ad803c51fc558b0b86c6dfd550c45d795bb37d9ad6fd2e2b484e2f9aef423"
+    }
+  ]
+}

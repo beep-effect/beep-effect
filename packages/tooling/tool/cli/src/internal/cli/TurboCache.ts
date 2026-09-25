@@ -333,9 +333,12 @@ export class TurboCacheEnvironment extends S.Class<TurboCacheEnvironment>($I`Tur
     token: S.optionalKey(TurboCacheValueSource),
     team: S.optionalKey(TurboCacheValueSource),
     cache: S.optionalKey(S.String),
+    cacheDir: S.optionalKey(S.String),
+    home: S.optionalKey(S.String),
   },
   $I.annote("TurboCacheEnvironment", {
-    description: "The Turbo remote-read configuration a checkout actually carries.",
+    description:
+      "The Turbo remote-read configuration a checkout actually carries, plus the ambient cache directory inputs.",
   })
 ) {}
 
@@ -385,9 +388,11 @@ export class CallerControlledTurboCache extends S.Class<CallerControlledTurboCac
   {
     _tag: S.tag("caller-controlled"),
     reason: TurboCacheCallerReason,
+    cacheDir: S.optionalKey(S.String),
   },
   $I.annote("CallerControlledTurboCache", {
-    description: "The caller already controls Turbo caching, so the CLI injects no cache flag.",
+    description:
+      "The caller already controls the Turbo cache mode, so the CLI injects no mode flag; an explicit cache argument still keeps the shared workstation directory, CI keeps nothing.",
   })
 ) {}
 
@@ -411,6 +416,7 @@ export class LocalOnlyTurboCache extends S.Class<LocalOnlyTurboCache>($I`LocalOn
     _tag: S.tag("local-only"),
     reason: TurboCacheFallbackReason,
     missing: S.Array(TurboCacheEnvName),
+    cacheDir: S.optionalKey(S.String),
   },
   $I.annote("LocalOnlyTurboCache", {
     description: "The checkout is not provably configured for remote reads, so Turbo stays local-only.",
@@ -446,6 +452,7 @@ export class RemoteReadTurboCache extends S.Class<RemoteReadTurboCache>($I`Remot
     _tag: S.tag("remote-read"),
     mode: TurboCacheMode,
     requiresSecretSession: S.Boolean,
+    cacheDir: S.optionalKey(S.String),
   },
   $I.annote("RemoteReadTurboCache", {
     description: "The checkout carries a complete, sanctioned Turbo remote-read configuration.",
@@ -492,6 +499,30 @@ export type TurboCachePlan = typeof TurboCachePlan.Type;
 type TurboCacheResolutionOptions = { readonly args: ReadonlyArray<string>; readonly ci: boolean };
 
 const CACHE_ARG_PREFIX = "--cache=";
+const CACHE_DIR_ARG_PREFIX = "--cache-dir=";
+
+/**
+ * The home-relative directory every workstation checkout shares as its Turbo cache.
+ *
+ * **Details**
+ *
+ * Turbo task hashes are repo-relative, so sibling clones and agent worktrees at
+ * the same commit produce the same hashes. Pointing them all at one directory
+ * turns a lane proven in one checkout into a hit in every other. The same
+ * default lives in the repository `.envrc` for bare `turbo` invocations.
+ *
+ * **Example** (Read the shared suffix)
+ *
+ * ```ts
+ * import { SHARED_TURBO_CACHE_DIR_SUFFIX } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(SHARED_TURBO_CACHE_DIR_SUFFIX)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SHARED_TURBO_CACHE_DIR_SUFFIX = ".cache/beep/turbo";
 const REMOTE_CACHE_MODE_SEGMENT = "remote:";
 
 /**
@@ -525,6 +556,66 @@ export const isTurboCacheControlArg = (arg: string): boolean =>
   arg === "--remote-cache-read-only" ||
   Str.startsWith("--remote-cache-read-only=")(arg) ||
   Str.startsWith(CACHE_ARG_PREFIX)(arg);
+
+/**
+ * Whether an argument already names the Turbo cache directory.
+ *
+ * **Example** (Detect the flag)
+ *
+ * ```ts
+ * import { isTurboCacheDirArg } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(isTurboCacheDirArg("--cache-dir=/tmp/turbo"))
+ * ```
+ *
+ * @param arg - One Turbo argument.
+ * @returns Whether the argument is a `--cache-dir` flag.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isTurboCacheDirArg = (arg: string): boolean =>
+  arg === "--cache-dir" || Str.startsWith(CACHE_DIR_ARG_PREFIX)(arg);
+
+/**
+ * The shared cache directory a workstation invocation should use, when the CLI owns it.
+ *
+ * **Details**
+ *
+ * The directory is `$HOME/.cache/beep/turbo`. It is left to the caller only when
+ * the environment already sets `TURBO_CACHE_DIR`, when the arguments carry a
+ * `--cache-dir` flag, or when `HOME` is unknown; cache-mode arguments such as
+ * `--cache=` or `--force` do not suppress it. CI never reaches this helper:
+ * {@link resolveTurboCachePlan} leaves CI caller-controlled before the directory
+ * is resolved, and hosted runners keep their own cache directory.
+ *
+ * **Example** (Derive the shared directory)
+ *
+ * ```ts
+ * import { sharedTurboCacheDir, TurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const dir = sharedTurboCacheDir(TurboCacheEnvironment.make({ home: "/home/dev" }), [])
+ * console.log(dir)
+ * ```
+ *
+ * @param environment - The ambient environment the checkout carries.
+ * @param args - The invocation's arguments.
+ * @returns The shared directory, or none when the caller or environment already owns it.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const sharedTurboCacheDir: {
+  (args: ReadonlyArray<string>): (environment: TurboCacheEnvironment) => O.Option<string>;
+  (environment: TurboCacheEnvironment, args: ReadonlyArray<string>): O.Option<string>;
+} = dual(
+  2,
+  (environment: TurboCacheEnvironment, args: ReadonlyArray<string>): O.Option<string> =>
+    O.isSome(O.fromUndefinedOr(environment.cacheDir)) || A.some(args, isTurboCacheDirArg)
+      ? O.none()
+      : pipe(
+          O.fromUndefinedOr(environment.home),
+          O.map((home) => `${Str.replace(/\/+$/, "")(home)}/${SHARED_TURBO_CACHE_DIR_SUFFIX}`)
+        )
+);
 
 const isRemoteTurboCacheArg = (arg: string): boolean =>
   Str.startsWith(CACHE_ARG_PREFIX)(arg) && Str.includes(REMOTE_CACHE_MODE_SEGMENT)(arg);
@@ -655,23 +746,25 @@ export const resolveTurboCachePlan: {
     return CallerControlledTurboCache.make({ reason: "ci" });
   }
 
+  const cacheDir = O.getSomesStruct({ cacheDir: sharedTurboCacheDir(environment, options.args) });
   if (A.some(options.args, isTurboCacheControlArg)) {
-    return CallerControlledTurboCache.make({ reason: "explicit-cache-arg" });
+    return CallerControlledTurboCache.make({ reason: "explicit-cache-arg", ...cacheDir });
   }
 
   const missing = missingTurboCacheEnvNames(environment);
   if (!A.isReadonlyArrayEmpty(missing)) {
-    return LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing });
+    return LocalOnlyTurboCache.make({ reason: "incomplete-remote-config", missing, ...cacheDir });
   }
 
   return pipe(
     requestedTurboCacheMode(environment),
     O.match({
-      onNone: () => LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: A.empty() }),
+      onNone: () => LocalOnlyTurboCache.make({ reason: "unsupported-cache-mode", missing: A.empty(), ...cacheDir }),
       onSome: (mode) =>
         RemoteReadTurboCache.make({
           mode,
           requiresSecretSession: turboCacheEnvironmentNeedsSecretSession(environment),
+          ...cacheDir,
         }),
     })
   );
@@ -679,6 +772,13 @@ export const resolveTurboCachePlan: {
 
 /**
  * The cache arguments a plan contributes to a Turbo invocation.
+ *
+ * **Details**
+ *
+ * A plan resolved on a workstation also carries the shared cache directory (see
+ * {@link sharedTurboCacheDir}), emitted as `--cache-dir=`. The cache *mode* and
+ * the cache *directory* are independent: a caller-supplied `--cache=` or
+ * `--force` keeps the directory, while a CI plan contributes nothing at all.
  *
  * **Example** (Inject the local-only flag)
  *
@@ -698,10 +798,22 @@ export const resolveTurboCachePlan: {
  */
 export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> =>
   Match.value(plan).pipe(
-    Match.discriminator("_tag")("caller-controlled", A.empty<string>),
-    Match.discriminator("_tag")("local-only", () => [`${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`]),
-    Match.discriminator("_tag")("remote-read", ({ mode }) => [`${CACHE_ARG_PREFIX}${mode}`]),
+    Match.discriminator("_tag")("caller-controlled", ({ cacheDir }) => cacheDirArgs(cacheDir)),
+    Match.discriminator("_tag")("local-only", ({ cacheDir }) => [
+      `${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`,
+      ...cacheDirArgs(cacheDir),
+    ]),
+    Match.discriminator("_tag")("remote-read", ({ mode, cacheDir }) => [
+      `${CACHE_ARG_PREFIX}${mode}`,
+      ...cacheDirArgs(cacheDir),
+    ]),
     Match.exhaustive
+  );
+
+const cacheDirArgs = (cacheDir: string | undefined): ReadonlyArray<string> =>
+  pipe(
+    O.fromUndefinedOr(cacheDir),
+    O.match({ onNone: A.empty<string>, onSome: (dir) => [`${CACHE_DIR_ARG_PREFIX}${dir}`] })
   );
 
 /**

@@ -734,6 +734,79 @@ describe("stream console", () => {
     }
   });
 
+  // Bun settles most writes synchronously, inside `write`. Chaining each chunk from its
+  // callback nested one frame set per chunk until a ~100 MB payload overflowed the stack,
+  // the overflow was swallowed, and the process exited 0 with the output cut short.
+  const withSynchronousStdout = <A>(
+    run: () => A
+  ): { readonly result: A; readonly bytes: number; readonly maxDepth: number } => {
+    const originalOut = process.stdout.write;
+    let bytes = 0;
+    let depth = 0;
+    let maxDepth = 0;
+    process.stdout.write = ((chunk: string | Uint8Array, callback?: WriteCallback) => {
+      depth += 1;
+      maxDepth = Math.max(maxDepth, depth);
+      try {
+        bytes += P.isString(chunk) ? new TextEncoder().encode(chunk).byteLength : chunk.byteLength;
+        callback?.();
+        return true;
+      } finally {
+        depth -= 1;
+      }
+    }) as WriteFn;
+    try {
+      const result = run();
+      return { result, bytes, maxDepth };
+    } finally {
+      process.stdout.write = originalOut;
+    }
+  };
+
+  it("writes a multi-megabyte line byte-exact without nesting synchronously settled chunks", () => {
+    const line = Str.repeat(2 * 1024 * 1024)("x");
+    const captured = withSynchronousStdout(() => {
+      streamConsole.log(line);
+      let drained = false;
+      drainProcessStreams((failure) => {
+        drained = true;
+        assertNone(failure);
+      });
+      return drained;
+    });
+    expect(captured.result).toBe(true);
+    expect(captured.bytes).toBe(2 * 1024 * 1024 + 1);
+    expect(captured.maxDepth).toBe(1);
+  });
+
+  it("starts queued lines without nesting when a blocked stream then settles synchronously", () => {
+    const originalOut = process.stdout.write;
+    const pending: Array<WriteCallback> = [];
+    process.stdout.write = ((_chunk: string | Uint8Array, callback?: WriteCallback) => {
+      if (callback !== undefined) {
+        pending.push(callback);
+      }
+      return false;
+    }) as WriteFn;
+    try {
+      A.forEach(A.range(1, 2000), (index) => streamConsole.log(`line ${index}`));
+    } finally {
+      process.stdout.write = originalOut;
+    }
+    expect(pending).toHaveLength(1);
+    const captured = withSynchronousStdout(() => {
+      A.forEach(pending, (callback) => callback());
+      let drained = false;
+      drainProcessStreams(() => {
+        drained = true;
+      });
+      return drained;
+    });
+    expect(captured.result).toBe(true);
+    expect(captured.bytes).toBe(A.reduce(A.range(2, 2000), 0, (total, index) => total + Str.length(`line ${index}\n`)));
+    expect(captured.maxDepth).toBe(1);
+  });
+
   it.effect(
     "delivers a large block through a pipe before a forced exit under Bun",
     Effect.fnUntraced(function* () {

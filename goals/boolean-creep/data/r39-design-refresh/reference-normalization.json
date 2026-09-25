@@ -1,0 +1,9 @@
+{
+  "kind": "design-reference-normalization/v1",
+  "design": "goals/boolean-creep/designs/r3-tooling-bun-report-drift-flags.md",
+  "beforeCommit": "33b768085add937e0c74d22360a0711050d6b6db",
+  "beforeSha256": "85149dc0345971c7c21696b675831d38f7e518b539dff1049b7b5859996ed91f",
+  "afterSha256": "fd98f1b23b39e2f098455a4d5abb0280788183d230f1aa23f8523b19b47e0968",
+  "change": "Qualify the package export subpath and name its tracked repository target. No contract, migration, cardinality, review verdict or coverage change.",
+  "historicalEvidence": "Prior design bytes remain in the beforeCommit Git tree and frozen R39/R40/R41/R42 inputs. Existing historical integration hashes are unchanged."
+}
