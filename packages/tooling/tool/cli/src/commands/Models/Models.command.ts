@@ -121,7 +121,7 @@ const renderFinding = (entry: DriftFinding): string =>
     O.map((current) => ` current=${JSON.stringify(current)}`),
     O.getOrElse(() => "")
   ) +
-  ` expected=${JSON.stringify(Str.slice(0, 120)(entry.expected))}`;
+  ` expected=${JSON.stringify(entry.expected)}`;
 
 // An offline run leaves `diff` empty on purpose, so the counts would read as
 // "catalog stable" to an operator. Say which of the two it is.
@@ -144,6 +144,7 @@ const renderReportMarkdown = (report: ModelsCheckReport): string =>
       "",
       `Catalog: ${report.catalog.modelCount} model(s) from ${A.join(report.catalog.sources, ", ")}`,
       renderCatalogDiff(report),
+      `Unbound Codex candidates (propose only): ${A.join(report.candidates, ", ")}`,
       `Drift: ${report.hasDrift ? "yes" : "no"} (${A.length(report.findings)} finding(s))`,
       "",
       "| Target | Locator | Kind | Current | Expected |",
@@ -206,6 +207,11 @@ const runCheck = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
         `from ${A.join(report.catalog.sources, ", ")}`
     );
     yield* Console.log(`models: ${renderCatalogDiff(report)}`);
+    yield* Effect.forEach(
+      report.candidates,
+      (id) => Console.log(`models: candidate ${id} (routable Codex model without a manifest binding; propose only)`),
+      { discard: true }
+    );
   }
 
   yield* writeReports(flags.reportDir, report);
