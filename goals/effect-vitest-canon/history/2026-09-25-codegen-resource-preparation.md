@@ -73,3 +73,17 @@ two exceptions, zero open; the two no-findings coverage rows remain intact.
 The actual Effect Vitest ratchet passes with introduced=0; its four residual
 resolved rows are outside this package and remain untouched. Publication,
 prerequisite integration and hosted proof remain outstanding.
+
+## Published checkpoint
+
+PR #1255 publishes the codegen work, stacked on schema PR #1252. Merge checkpoint
+`fc5b4996f656d4a91aabb7a19843b3d0d48d4d9a` incorporates main, including merged
+utils PR #1245. All 31 upstream finding changes and nine upstream cache node
+changes were already present in the stack and were explicitly verified during
+conflict resolution. No upstream changes were discarded.
+
+All 12 timing source and lock hashes remain unchanged after integration, and
+strict decoding passed for all 16 codegen ledger records. Package proofs remain
+scoped evidence; hosted review, prerequisite integration and final proof remain
+open. The PR must be retargeted to main after its prerequisites land, not merged
+into its temporary parent.

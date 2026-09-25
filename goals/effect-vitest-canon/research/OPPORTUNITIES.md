@@ -2242,3 +2242,14 @@ exhausted`. There are no inline review findings to repair from this attempt.
 Keep this separate from code failures and do not claim review closure; the
 external reviewer needs available quota before a retry can produce evidence.
 Vercel deployment failures separately report the daily deployment rate limit.
+
+## Wave D publication API quota and reviewer failure
+
+Yeet early publication pushed the codegen checkpoint, but `gh pr create` failed
+with `GraphQL: API rate limit already exceeded`. REST created PR #1255 against
+its schema parent. `yeet monitor --until-ready` then reported no open PR despite
+REST confirming the branch PR. Preserve that distinction: a REST fallback or
+explicit API-error attribution would prevent misclassifying quota as absent work.
+The first hosted OpenClaw check failed before review with `402 Payment Required:
+Grok Build usage balance exhausted`; it produced no findings to remediate.
+Neither API availability nor the stacked PR's skipped checks establish readiness.
