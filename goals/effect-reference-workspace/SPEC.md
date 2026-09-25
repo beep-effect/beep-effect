@@ -55,10 +55,12 @@ within these constraints.
   (`".repos/effect-workspace"`). Lives at `scripts/references.json`; the bash provisioner and the
   CLI both read it.
 - **`MemberRefreshOutcome`** — `LiteralKit(["pulled", "unchanged", "skipped-dirty",
-  "skipped-off-branch", "pull-failed", "build-failed"])` plus the graft build coverage the deep
-  step reports (reuse `Graft.schemas.ts` coverage parsing).
+  "skipped-off-branch", "pull-failed", "build-failed"])`. A status string only.
+- **`MemberRefreshReport`** — `name`, `outcome: MemberRefreshOutcome`, optional `coverage` (the
+  graft deep-build coverage parsed with the existing `Graft.schemas.ts` helpers; absent for
+  structural members and for any outcome that never reached the build step).
 - **`RefsRefreshStatus`** — `schemaVersion: "beep-refs-refresh/v1"`, timestamp, root, one
-  `MemberRefreshOutcome` per member, workspace `graft check` result. Written to
+  `MemberRefreshReport` per member, workspace `graft check` result. Written to
   `$HOME/.local/state/beep/refs/last-refresh.json`.
 - **`ReferenceWorkspace`** (`Context.Service`) — `plan(home, root)` (what would be cloned, linked,
   built; no writes), `refresh(home, root, jobs)` (pull → build per member → `graft build` at the
@@ -134,8 +136,9 @@ within these constraints.
       notification.
 - [ ] No `.gitignore` in any reference clone is modified; `git -C <member> status --porcelain`
       is empty after a build.
-- [ ] R13 docs sweep landed; `rg -n "YeeBois/dev/effect" --glob '!explorations/**' --glob
-      '!goals/**' --glob '!graft/**'` returns only research files of this packet.
+- [ ] R13 docs sweep landed; `rg -n "YeeBois/dev/effect|BEEP_EFFECT_CHECKOUT" --glob
+      '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` returns no matches (this
+      packet's `research/` is inside `goals/**`, so it is excluded by construction).
 - [ ] `SPEC.md` acceptance criteria are satisfied; no unrelated refactors or formatting churn.
 
 ## Verification Matrix
@@ -155,7 +158,7 @@ within these constraints.
 | Timer | `systemctl --user list-timers \| grep beep-refs-refresh` | Enabled, next run 03:30 |
 | Seed run | `journalctl --user -u beep-refs-refresh -n 80`; status file present | Exit 0 or a reported partial tier |
 | Upstream hygiene | `for m in effect effect-tsgo; do git -C ~/YeeBois/references/effect/$m status --porcelain; done` | Empty |
-| Stale-path sweep | `rg -n "YeeBois/dev/effect\|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` | Only this packet's `research/` |
+| Stale-path sweep | `rg -n "YeeBois/dev/effect\|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .` | No matches (exit 1) |
 
 ## Stop Conditions
 

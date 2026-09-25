@@ -37,7 +37,7 @@ Scope:
 Workflow:
 
 1. Inspect the referenced files and repo state.
-2. Design order is schema -> `Context.Service` contract -> implementation.
+2. Design order: schema -> `Context.Service` -> implementation.
    `LiteralKit` for tiers and outcomes; `HashMap`/`HashSet` only; `Effect.fn`;
    `home` is a parameter, never `os.homedir()` at a call site.
 3. Implement PLAN S1, S2, S3 as Codex `gpt-6-astra` medium lanes; Fable
@@ -70,15 +70,15 @@ Verification:
 
 ```sh
 bun run beep quality package-verify @beep/repo-cli --quick
-bun run --cwd packages/tooling/tool/cli test -- test/setup-effect-ref.test.ts test/refs-*.test.ts
+bun run --cwd packages/tooling/tool/cli test -- test/setup-effect-ref.test.ts test/worktree-fleet.test.ts test/refs-*.test.ts
 test "$(wc -m < goals/effect-reference-workspace/GOAL.md)" -le 4000
 git diff --check -- goals/effect-reference-workspace
 ```
 
 Stop and report before moving clones with uncommitted work, when
 `git worktree repair` fails, when the proxy lacks `claude-opus-5`, or before
-changing public API, dependencies, lockfiles, or destructive state unless
-`SPEC.md` explicitly requires it.
+changing public API, dependencies, or destructive state unless `SPEC.md`
+requires it.
 
 Done only when acceptance passes and verification is complete, or when a
 blocker is reported with file/command evidence.
