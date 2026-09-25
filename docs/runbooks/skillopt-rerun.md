@@ -15,7 +15,8 @@ What changed from the P5 run
 | Rollout workers | 1 | 4 |
 | Analyst workers | 1 | 2 |
 | Optimizer | `claude_chat` sonnet | `claude_chat` opus |
-| Codex rollout effort | `none` | `low` (gpt-6-astra rejects `none`; `medium` timed out all 4 baseline items at 600 s) |
+| Rollout target | `codex_exec` | `claude_code_exec`, model `opus`, effort medium (D14 amended 2026-09-25: Codex quota exhausted until Oct 2) |
+| Codex rollout effort (if codex_exec is restored) | `none` | `low` (gpt-6-astra rejects `none`; `medium` timed out all 4 baseline items at 600 s) |
 | Rollout exec / task timeout | 600 s / 900 s | 1500 s / 1800 s |
 
 The target (`codex_exec`), the 8 train / 4 validation split, batch and
@@ -41,7 +42,7 @@ cd ../..
 
 ## 2. Check the logins
 
-Rollouts run `codex exec` and the optimizer runs `claude -p --model opus`.
+Rollouts and the optimizer both run `claude -p --model opus` (the `codex_exec` target stays configurable for when the Codex pool returns).
 Both CLIs must already be logged in; a detached run cannot prompt.
 
 ```sh

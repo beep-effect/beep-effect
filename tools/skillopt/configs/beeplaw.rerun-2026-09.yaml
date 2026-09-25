@@ -1,16 +1,19 @@
 # SkillOpt pilot rerun (goals/harness-evidence-ledger P2, decisions D11 + D14).
 # Cloned from beeplaw.template.yaml. Changes vs template: cosine edit budget
-# 4 -> 1 over 3 epochs, 4 rollout workers, 2 analyst workers, Opus optimizer
+# 4 -> 1 over 3 epochs, 4 rollout workers, 2 analyst workers, Opus optimizer,
+# Claude Code (opus) rollout target (D14 amended 2026-09-25: Codex quota exhausted until Oct 2)
 # (`claude -p --model opus`), codex_exec target, P5 batch/minibatch 2 over the
 # same 8 train / 4 val split, gate on the full 4-item selection set.
 # Launch recipe: docs/runbooks/skillopt-rerun.md.
 model:
   backend: codex_exec
   optimizer_backend: claude_chat
-  target_backend: codex_exec
+  target_backend: claude_code_exec
   optimizer: opus
-  target: ""
+  target: opus
   reasoning_effort: ""
+  claude_code_exec_path: claude
+  claude_code_exec_effort: medium
   codex_exec_path: codex
   codex_exec_sandbox: workspace-write
   codex_exec_profile: ""

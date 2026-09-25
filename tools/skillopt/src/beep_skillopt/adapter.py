@@ -506,6 +506,9 @@ def _copy_fixture(item: dict, scratch_dir: Path) -> None:
     shutil.copytree(fixture_path, scratch_dir)
 
 
+CLAUDE_TARGET_TOOLS = "Read,Edit,Write,MultiEdit,Bash,Glob,Grep,Skill"
+
+
 def _inject_target_workspace(
     scratch_dir: Path,
     *,
@@ -513,10 +516,14 @@ def _inject_target_workspace(
     task_text: str,
 ) -> None:
     skill_md = _build_codex_skill(skill_content)
-    _write_text(
-        scratch_dir / ".agents" / "skills" / "skillopt-target" / "SKILL.md",
-        skill_md,
-    )
+    # Codex discovers skills under .agents/skills; Claude Code under .claude/skills.
+    # Mirror the candidate at both paths so the target backend never changes which
+    # skill the rollout can see (harness-evidence-ledger D14 amendment).
+    for skills_root in (".agents", ".claude"):
+        _write_text(
+            scratch_dir / skills_root / "skills" / "skillopt-target" / "SKILL.md",
+            skill_md,
+        )
     _write_text(scratch_dir / "task.md", task_text)
 
 
@@ -582,6 +589,9 @@ def _process_one(
                 sandbox=adapter.codex_exec_sandbox,
                 full_auto=False,
                 allow_file_edits=True,
+                # Only read by the claude_code_exec backend; codex_exec ignores it.
+                # The harness default is Read,Bash, which cannot edit the fixture.
+                allowed_tools=CLAUDE_TARGET_TOOLS,
             )
         result["response"] = response
         result["agent_ok"] = True

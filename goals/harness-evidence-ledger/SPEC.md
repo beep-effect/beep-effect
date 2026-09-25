@@ -252,6 +252,17 @@ reproduced from the session plan.
 - **Rationale:** Keeps the subject under test identical to the pilot.
 - **Rejected:** claude_code_exec (changes the subject under test); both arms.
 
+#### D14 amendment (2026-09-25, later the same day)
+
+Question: the Codex pool reported its usage limit exhausted until 2026-10-02 after three
+launch attempts, so the `codex_exec` target could not run. Proceed how?
+Answer: switch the rollout target to `claude_code_exec` with the `opus` alias now.
+Rationale: the run computes its own baseline, so before/after within the run stays valid; only
+comparability to P5's 0.4714 baseline is lost. Rejected: hold until Oct 2 (loses a week);
+the CLIProxyAPI Codex leg (may share the same account limit).
+Adapter change: the candidate skill is mirrored at `.claude/skills/` next to `.agents/skills/`,
+and the Claude tool allowlist includes Edit/Write (the harness default is Read,Bash).
+
 ### Routine calls (2026-09-25, made without asking)
 
 - Disposition LiteralKit = proposed | accepted | rejected | deferred | waived |
