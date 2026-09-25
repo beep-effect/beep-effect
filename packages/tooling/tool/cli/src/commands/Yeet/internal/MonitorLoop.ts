@@ -122,6 +122,7 @@ import {
   dispatchYeetBaseConflict,
   stampYeetWaveRedSet,
   supersedeYeetDispatchState,
+  yeetBaseConflictGeneration,
   yeetRedSetKey,
   yeetWaveRedSetKey,
 } from "./Remediation.ts";
@@ -1112,11 +1113,13 @@ class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
     // Every check name ever reported for this head: an absent one later is pending, not missing.
     registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
     announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    // The head's open P0 base-conflict row (until-ready only): written once when
-    // the conflict is first read, reset when a `cleared` ack closes it.
+    // The head's open P0 base-conflict row (until-ready only): the id of the
+    // latest conflict generation, written once when that conflict is first read
+    // and reset when a `cleared` ack closes it, so a conflict that returns on
+    // the same head writes the next generation.
     conflictRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     // Whether this loop already knows the head's conflict row, from writing it or
-    // from one inbox lookup, so a restarted loop recalls it at most once per head.
+    // from an inbox lookup, so a restarted loop recalls it once, not every poll.
     conflictRecalled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     // Whether the wave record has been pinned to this head (until-ready only);
     // a new head starts unpinned, so the first converging poll supersedes.
@@ -1327,24 +1330,34 @@ const monitorJobAttribution = Effect.fn("YeetMonitorLoop.jobAttribution")(functi
   return { jobId, unit };
 });
 
-// A restarted monitor has no memory of the head's conflict row. On the head's
-// first positively mergeable poll it recalls one the inbox still holds unacked,
-// so a conflict that cleared while no monitor watched it can still be cleared.
-// The first poll after a restart often reads UNKNOWN while GitHub recomputes,
-// so the recall waits for the mergeable read instead of the first poll.
+// A restarted monitor has no memory of the head's conflict row. It recalls the
+// latest generation's row when the inbox still holds it unacked: on the head's
+// first positively mergeable poll, so a conflict that cleared while no monitor
+// watched it can still be cleared, and on a conflicted poll whose dispatch
+// found that row already written. Every earlier generation already carries its
+// `cleared` receipt, so only the latest is ever recalled, and only it is
+// cleared. The first poll after a restart often reads UNKNOWN while GitHub
+// recomputes, so the recall waits for a conclusive read instead of the first poll.
 const recallMonitorConflictRow = Effect.fn("YeetMonitorLoop.recallConflictRow")(function* (
   repoRoot: string,
   observed: YeetConvergeObservation
 ) {
-  const id = yield* yeetBaseConflictRowId(observed).pipe(Effect.option);
+  const id = yield* yeetBaseConflictGeneration(repoRoot, observed).pipe(
+    Effect.flatMap((generation) =>
+      yeetBaseConflictRowId({ generation, headSha: observed.headSha, prNumber: observed.prNumber })
+    ),
+    Effect.option
+  );
   if (O.isNone(id) || !(yield* yeetInboxHoldsRow(repoRoot, id.value))) return O.none<string>();
   const ack = yield* readYeetAckState(repoRoot, id.value);
   return ack.acked ? O.none<string>() : id;
 });
 
 // The conflict row's same-head clear (pr-event-awareness D17): the head read
-// mergeable again without a push, so the loop acknowledges its own row with a
-// `cleared` receipt attributed to the monitor job. A failed write keeps the
+// mergeable again without a push, so the loop acknowledges its own row, the
+// latest conflict generation's (every earlier one already has its receipt),
+// with a `cleared` receipt attributed to the monitor job. That receipt is what
+// moves the head's next conflict to a new generation. A failed write keeps the
 // row open and the next mergeable poll retries.
 const clearMonitorConflictRow = Effect.fn("YeetMonitorLoop.clearConflictRow")(function* (
   repoRoot: string,
@@ -1384,10 +1397,12 @@ const clearMonitorConflictRow = Effect.fn("YeetMonitorLoop.clearConflictRow")(fu
 });
 
 // The head's base-conflict row (pr-event-awareness D6/D17), from the same
-// reading the settle wait uses. A conflict writes one P0 row per head and joins
-// it to the head's wave, so the fix push supersedes it with the rest of the
-// wave. The same head read positively mergeable again clears it. The wait
-// itself stays non-terminal and unbudgeted.
+// reading the settle wait uses. A conflict writes one P0 row per conflict
+// generation on the head and joins it to the head's wave, so the fix push
+// supersedes it with the rest of the wave. The same head read positively
+// mergeable again clears it, and a conflict that returns on that head after
+// the clear is the next generation: a new row and a new wave. The wait itself
+// stays non-terminal and unbudgeted.
 const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConflict")(function* (
   context: RepoRunContext,
   observation: MonitorObservation,
@@ -1397,23 +1412,35 @@ const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConfl
   const { snapshot, at } = observation;
   if (monitorBaseConflict(snapshot)) {
     if (O.isSome(current.conflictRow)) return current;
-    const row = yield* dispatchYeetBaseConflict(
-      context.repoRoot,
-      YeetBaseConflictCapsule.make({
-        base: context.base,
-        headSha: observed.headSha,
-        link: snapshot.remote.url ?? null,
-        mergeable: snapshot.remote.mergeable ?? null,
-        mergeStateStatus: snapshot.remote.mergeStateStatus ?? null,
-        prNumber: observed.prNumber,
-      }),
-      at
+    const written = yield* yeetBaseConflictGeneration(context.repoRoot, observed).pipe(
+      Effect.flatMap((generation) =>
+        dispatchYeetBaseConflict(
+          context.repoRoot,
+          YeetBaseConflictCapsule.make({
+            base: context.base,
+            generation,
+            headSha: observed.headSha,
+            link: snapshot.remote.url ?? null,
+            mergeable: snapshot.remote.mergeable ?? null,
+            mergeStateStatus: snapshot.remote.mergeStateStatus ?? null,
+            prNumber: observed.prNumber,
+          }),
+          at
+        )
+      ),
+      Effect.map(O.map((row) => row.id)),
+      Effect.catch((error) =>
+        Console.error(
+          `[yeet] failed to derive the base-conflict generation for head ${Str.slice(0, 7)(observed.headSha)}: ${error.message}; retrying next poll`
+        ).pipe(Effect.as(O.none<string>()))
+      )
     );
-    return MonitorHeadState.make({
-      ...current,
-      conflictRow: O.map(row, (value) => value.id),
-      conflictRecalled: current.conflictRecalled || O.isSome(row),
-    });
+    // `None` means this poll wrote nothing: the generation's row is already in
+    // the inbox (a restarted loop), an ack receipt closes it, or the write
+    // failed. Recall it only when it is live, so the guard above stops
+    // re-dispatching and a later mergeable read clears it.
+    const open = O.isSome(written) ? written : yield* recallMonitorConflictRow(context.repoRoot, observed);
+    return MonitorHeadState.make({ ...current, conflictRow: open, conflictRecalled: true });
   }
   const mergeable = yeetBaseMergeableFor(
     O.fromUndefinedOr(snapshot.remote.mergeable),
@@ -2006,8 +2033,9 @@ const nextMonitorSleep = (next: MonitorPoll, interval: Duration.Duration): Durat
  * session; both policies bound unsettled waits and consecutive read errors.
  * Under `until-ready` the loop is also the inbox producer: every poll converges
  * the status snapshot into `check-failed`, `review-thread` and `base-drift`
- * rows, a base conflict writes one P0 `base-conflict` row per head (acked
- * `cleared` by the loop if the same head turns mergeable again), the first
+ * rows, a base conflict writes one P0 `base-conflict` row per conflict on a
+ * head (acked `cleared` by the loop if the same head turns mergeable again; a
+ * conflict that returns on that head is the next generation's row), the first
  * poll of each head pins the wave record to it, every poll stamps the head's
  * required red set on the record, and a required red or a base conflict keeps
  * the loop polling instead of ending it. Inside a detached job that first poll

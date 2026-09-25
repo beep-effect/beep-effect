@@ -40,7 +40,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -430,6 +430,12 @@ export class YeetBaseDriftRow extends S.Class<YeetBaseDriftRow>($I`YeetBaseDrift
  * the ref to merge, and `link` is the pull request URL, which the inbox hook
  * renders beside the row.
  *
+ * `generation` counts the conflicts on this head that the merge loop already
+ * acked `cleared`: 0 for the first conflict on (prNumber, headSha), 1 for a
+ * conflict that came back on the same head after that clear, and so on. It is
+ * part of the row id, so each returning conflict is a new row. A row written
+ * before the field existed decodes as generation 0.
+ *
  * **Example** (Describe a base conflict)
  *
  * ```ts
@@ -444,6 +450,7 @@ export class YeetBaseDriftRow extends S.Class<YeetBaseDriftRow>($I`YeetBaseDrift
  *   prNumber: 900
  * })
  * console.log(capsule.mergeStateStatus) // "DIRTY"
+ * console.log(capsule.generation) // 0
  * ```
  *
  * @category models
@@ -457,6 +464,7 @@ export class YeetBaseConflictCapsule extends S.Class<YeetBaseConflictCapsule>($I
     mergeable: S.NullOr(S.String),
     mergeStateStatus: S.NullOr(S.String),
     prNumber: S.Finite,
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(SchemaUtils.withKeyDefaults(0)),
   },
   $I.annote("YeetBaseConflictCapsule", {
     description: "One pull request head that no longer merges into its base, with the raw merge fields observed.",
@@ -468,19 +476,20 @@ export class YeetBaseConflictCapsule extends S.Class<YeetBaseConflictCapsule>($I
  *
  * **Details**
  *
- * The `--until-ready` merge loop appends it once per head, the first poll
- * that reads the conflict. The kind reuses the `base-conflict` settle reason:
- * the settle wait clears by re-reading the pull request, and the row clears
- * in one of two ways. A push supersedes it, because the loop pins the wave
- * record to the new head. If the same head reads mergeable again (the other
- * change was reverted), the loop writes a `cleared` ack receipt for the row.
+ * The `--until-ready` merge loop appends it once per conflict on a head, the
+ * first poll that reads the conflict. The kind reuses the `base-conflict`
+ * settle reason: the settle wait clears by re-reading the pull request, and
+ * the row clears in one of two ways. A push supersedes it, because the loop
+ * pins the wave record to the new head. If the same head reads mergeable
+ * again (the other change was reverted), the loop writes a `cleared` ack
+ * receipt for the row.
  *
  * **Gotchas**
  *
- * The id is keyed on (prNumber, headSha), so a conflict that comes back on the
- * same head after a `cleared` receipt reuses the acknowledged id and raises no
- * new row. The settle wait still names `base-conflict` on every poll, and the
- * next push gets a fresh id.
+ * The id is keyed on (prNumber, headSha, generation). A conflict that comes
+ * back on the same head after a `cleared` receipt is the next generation, so
+ * it gets a fresh id, a new row, and a new wave; it never reuses the
+ * acknowledged id. The next push starts again at generation 0.
  *
  * **Example** (Build a base-conflict row)
  *
@@ -1274,13 +1283,17 @@ export const yeetBaseDriftRowId = (capsule: Pick<YeetBaseDriftCapsule, "base" | 
   yeetInboxIdentityId("base-drift", [`${capsule.prNumber}`, capsule.headSha, capsule.base]);
 
 /**
- * Derive the stable base-conflict row id for one pull request head.
+ * Derive the stable base-conflict row id for one conflict generation on a pull request head.
  *
  * **Details**
  *
- * PR number plus head SHA: one row per head, so every poll that re-reads the
- * same conflict derives the same id and appends nothing, and a push gets a
- * new id. The `cleared` receipt the merge loop writes is keyed on this id.
+ * PR number, head SHA and conflict generation: one row per conflict on a
+ * head, so every poll that re-reads the same conflict derives the same id and
+ * appends nothing, a conflict that returns on the same head after a `cleared`
+ * receipt (the next generation) gets a new id, and a push gets a new id. The
+ * `cleared` receipt the merge loop writes is keyed on this id. Generation 0
+ * hashes only the PR number and head SHA, so rows and receipts written before
+ * generations existed keep their ids.
  *
  * **Example** (Build a conflict id)
  *
@@ -1288,19 +1301,24 @@ export const yeetBaseDriftRowId = (capsule: Pick<YeetBaseDriftCapsule, "base" | 
  * import { yeetBaseConflictRowId } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect"
  *
- * const program = yeetBaseConflictRowId({ headSha: "abc123", prNumber: 900 }).pipe(
+ * const program = yeetBaseConflictRowId({ generation: 0, headSha: "abc123", prNumber: 900 }).pipe(
  *   Effect.map((id) => id.startsWith("base-conflict-"))
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @param capsule - Pull request number and head SHA.
+ * @param capsule - Pull request number, head SHA and conflict generation.
  * @returns A stable base-conflict receipt id.
  * @category identifiers
  * @since 0.0.0
  */
-export const yeetBaseConflictRowId = (capsule: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">) =>
-  yeetInboxIdentityId("base-conflict", [`${capsule.prNumber}`, capsule.headSha]);
+export const yeetBaseConflictRowId = (capsule: Pick<YeetBaseConflictCapsule, "generation" | "headSha" | "prNumber">) =>
+  yeetInboxIdentityId(
+    "base-conflict",
+    capsule.generation === 0
+      ? [`${capsule.prNumber}`, capsule.headSha]
+      : [`${capsule.prNumber}`, capsule.headSha, `${capsule.generation}`]
+  );
 
 /**
  * Derive the stable pull request comment row id for one GitHub comment.

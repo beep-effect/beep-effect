@@ -51,6 +51,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { readYeetAckState } from "./Ack.ts";
 import {
   appendYeetInboxRow,
   appendYeetInboxRowOnce,
@@ -63,6 +64,7 @@ import {
   yeetInboxRowId,
 } from "./Inbox.ts";
 import type { Crypto } from "effect";
+import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { YeetBaseConflictCapsule } from "./Inbox.ts";
 import type { YeetWatchCheck } from "./WatchStream.ts";
 
@@ -872,19 +874,83 @@ const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row
 };
 
 /**
+ * Derive the conflict generation for the next base-conflict row on one pull request head.
+ *
+ * **Details**
+ *
+ * Counts the head's base-conflict rows that carry a `cleared` receipt, by
+ * walking the deterministic id chain from generation 0 and stopping at the
+ * first id without one. Generation n + 1 is only ever written after
+ * generation n was acked `cleared`, so the walk sees every cleared row. While
+ * the latest row is still open this returns its generation, so every poll
+ * and a restarted monitor derive the same id and append nothing; after the
+ * loop acks it `cleared`, the next conflict on the same head gets the next
+ * generation and a new row.
+ *
+ * **Gotchas**
+ *
+ * The walk reads the ack receipts, not the bounded active index: the index
+ * drops an acked row the next time any row is appended, so counting the rows
+ * it holds would lose cleared generations and derive an acknowledged id
+ * again. Only a `cleared` receipt advances the generation; a row an operator
+ * acked some other way stays the current generation.
+ *
+ * **Example** (Build the derivation)
+ *
+ * ```ts
+ * import { yeetBaseConflictGeneration } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetBaseConflictGeneration("/repo", { headSha: "abc123", prNumber: 751 })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose ack receipts are read.
+ * @param coordinates - The pull request number and head SHA.
+ * @returns The number of the head's base-conflict rows acked `cleared`.
+ * @category services
+ * @since 0.0.0
+ */
+export const yeetBaseConflictGeneration = Effect.fn("Yeet.yeetBaseConflictGeneration")(function* (
+  repoRoot: string,
+  coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
+): Effect.fn.Return<number, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  let generation = 0;
+  while (yield* baseConflictGenerationCleared(repoRoot, { ...coordinates, generation })) {
+    generation += 1;
+  }
+  return generation;
+});
+
+// Whether the generation's row id carries a `cleared` receipt. A missing,
+// unreadable or other-kind receipt ends the walk at that generation.
+const baseConflictGenerationCleared = Effect.fnUntraced(function* (
+  repoRoot: string,
+  coordinates: Pick<YeetBaseConflictCapsule, "generation" | "headSha" | "prNumber">
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const ack = yield* readYeetAckState(repoRoot, yield* yeetBaseConflictRowId(coordinates));
+  return O.exists(O.fromNullOr(ack.receipt), (receipt) => receipt.resolution.kind === "cleared");
+});
+
+/**
  * Dispatch one observed base conflict: inbox row once, then the head's wave.
  *
  * **Details**
  *
- * The row id is deterministic over (prNumber, headSha), so the row is
- * appended at most once per head, including across monitor restarts. The
- * row's id then joins the wave record through the same
- * {@link decideYeetRemediation} policy a check red uses: a conflict on a head
- * with no open session opens it, and a conflict beside a red queues onto it.
- * That keeps the conflict's liveness tied to the head, so the next push
- * supersedes it with the rest of the wave. As with check reds, the append
- * happens before the wave persist and an append failure skips the persist.
- * The next poll that still reads the conflict is the retry.
+ * The row id is deterministic over (prNumber, headSha, generation), so the
+ * row is appended at most once per conflict generation on a head, including
+ * across monitor restarts; the caller derives the generation with
+ * {@link yeetBaseConflictGeneration}. The row's id then joins the wave record
+ * through the same {@link decideYeetRemediation} policy a check red uses: a
+ * conflict on a head with no open session opens it, and a conflict beside a
+ * red queues onto it. That keeps the conflict's liveness tied to the head, so
+ * the next push supersedes it with the rest of the wave. As with check reds,
+ * the append happens before the wave persist and an append failure skips the
+ * persist. The next poll that still reads the conflict is the retry.
+ *
+ * When the inbox already holds the row, or an ack receipt for it, nothing is
+ * appended, the wave is left alone, and the result is `None`: `Some` always
+ * means this call wrote a live, unacknowledged row.
  *
  * Nothing here fails the caller: every failure path degrades to a stderr line.
  *
@@ -905,7 +971,7 @@ const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row
  * @param repoRoot - The checkout whose inbox and wave record receive the conflict.
  * @param capsule - The conflicted head, its pull request, and the raw merge fields.
  * @param at - The observation timestamp stamped on the row and the wave.
- * @returns The row when the inbox holds it (appended now or earlier); `None` when the append failed.
+ * @returns The row when this call appended it; `None` when the inbox already held it, an ack receipt exists for it, or the append failed.
  * @category services
  * @since 0.0.0
  */
@@ -916,8 +982,11 @@ export const dispatchYeetBaseConflict = Effect.fn("Yeet.dispatchYeetBaseConflict
 ): Effect.fn.Return<O.Option<YeetBaseConflictRow>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const delivered = yield* yeetBaseConflictRowId(capsule).pipe(
     Effect.map((id) => YeetBaseConflictRow.make({ capsule, checkout: repoRoot, id, severity: "P0", ts: at })),
-    Effect.tap((row) => appendYeetInboxRowOnce(repoRoot, row)),
-    Effect.asSome,
+    Effect.flatMap((row) =>
+      appendYeetInboxRowOnce(repoRoot, row).pipe(
+        Effect.map((appended) => (appended ? O.some(row) : O.none<YeetBaseConflictRow>()))
+      )
+    ),
     Effect.catch((error) =>
       Console.error(
         `[yeet] failed to deliver the base-conflict row for head ${Str.slice(0, 7)(capsule.headSha)} to the inbox (${error.message}); it is NOT queued and will retry on the next poll.`
