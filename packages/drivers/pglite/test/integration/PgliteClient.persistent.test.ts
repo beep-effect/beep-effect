@@ -1,16 +1,12 @@
 import * as Pglite from "@beep/pglite";
+import { it } from "@beep/test-runner";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as SqlClient from "effect/sql/SqlClient";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const makePersistentLayer = (dataDir: string) => Pglite.makeLayer({ dataDir, relaxedDurability: true });
 
@@ -60,7 +56,7 @@ const createDriverNotesTable = Effect.fnUntraced(function* () {
   `;
 });
 
-describe("PgliteClient (file-backed)", () => {
+it.layer(PersistentTestServices, { timeout: "30 seconds" })("PgliteClient (file-backed)", (it) => {
   it.effect(
     "persists rows across closing and reopening the same dataDir",
     Effect.fnUntraced(function* () {
@@ -70,11 +66,24 @@ describe("PgliteClient (file-backed)", () => {
       const dataDir = path.join(tempDir, "pgdata");
       const layer = makePersistentLayer(dataDir);
 
-      yield* createTableAndInsert().pipe(provideScopedLayer(layer));
-      const bodies = yield* readPersistentBodies().pipe(provideScopedLayer(layer));
+      yield* Effect.log("PGlite persistence phase: create and insert within first database lifetime");
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const context = yield* Layer.build(layer);
+          yield* createTableAndInsert().pipe(Effect.provide(context));
+        })
+      );
+      yield* Effect.log("PGlite persistence phase: first database closed; reopen and read");
+      const bodies = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const context = yield* Layer.build(layer);
+          return yield* readPersistentBodies().pipe(Effect.provide(context));
+        })
+      );
+      yield* Effect.log("PGlite persistence phase: reopened database closed; verify durable rows");
 
       expect(bodies).toEqual(["durable hello"]);
-    }, provideScopedLayer(PersistentTestServices))
+    })
   );
 
   it.effect(
@@ -86,22 +95,29 @@ describe("PgliteClient (file-backed)", () => {
       const dataDir = path.join(tempDir, "pgdata");
       const layer = makePersistentLayer(dataDir);
 
-      const rows = yield* Effect.gen(function* () {
-        yield* createDriverNotesTable();
-        const db = yield* PgDrizzle.makeWithDefaults();
+      yield* Effect.log("PGlite Drizzle phase: acquire native database and execute ordered CRUD");
+      const rows = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const context = yield* Layer.build(layer);
+          return yield* Effect.gen(function* () {
+            yield* createDriverNotesTable();
+            const db = yield* PgDrizzle.makeWithDefaults();
 
-        yield* db.insert(driverNotes).values([
-          { body: "alpha", rating: 2 },
-          { body: "beta", rating: 1 },
-        ]);
+            yield* db.insert(driverNotes).values([
+              { body: "alpha", rating: 2 },
+              { body: "beta", rating: 1 },
+            ]);
 
-        return yield* db
-          .select({ body: driverNotes.body, rating: driverNotes.rating })
-          .from(driverNotes)
-          .orderBy(driverNotes.rating);
-      }).pipe(provideScopedLayer(layer));
+            return yield* db
+              .select({ body: driverNotes.body, rating: driverNotes.rating })
+              .from(driverNotes)
+              .orderBy(driverNotes.rating);
+          }).pipe(Effect.provide(context));
+        })
+      );
+      yield* Effect.log("PGlite Drizzle phase: database closed; verify ordered rows");
 
       expect(rows.map((row) => `${row.body}:${row.rating}`)).toEqual(["beta:1", "alpha:2"]);
-    }, provideScopedLayer(PersistentTestServices))
+    })
   );
 });

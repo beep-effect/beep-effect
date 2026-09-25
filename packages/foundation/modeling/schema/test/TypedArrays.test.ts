@@ -2,8 +2,9 @@ import { fcRuns } from "@beep/fc-runs";
 import { Float16Arr, Float16ArrayFromArray } from "@beep/schema/Float16Array";
 import { Float32Arr, Float32ArrayFromArray } from "@beep/schema/Float32Array";
 import { Float64Arr, Float64ArrayFromArray } from "@beep/schema/Float64Array";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -48,9 +49,9 @@ describe("Float16Array schemas", () => {
     [Arbitrary.schema(Float16ArrayFromArray)],
     Effect.fnUntraced(function* ([value]) {
       expect(value).toBeInstanceOf(Float16Array);
-      expect(yield* decodeUnknownFloat16ArrayFromArray(yield* encodeFloat16ArrayFromArray(value))).toBeInstanceOf(
-        Float16Array
-      );
+      const decoded = yield* decodeUnknownFloat16ArrayFromArray(yield* encodeFloat16ArrayFromArray(value));
+      expect(decoded).toBeInstanceOf(Float16Array);
+      expect(A.fromIterable(decoded)).toEqual(A.fromIterable(value));
 
       return true;
     }),
@@ -85,9 +86,9 @@ describe("Float32Array schemas", () => {
     [Arbitrary.schema(Float32ArrayFromArray)],
     Effect.fnUntraced(function* ([value]) {
       expect(value).toBeInstanceOf(Float32Array);
-      expect(yield* decodeUnknownFloat32ArrayFromArray(yield* encodeFloat32ArrayFromArray(value))).toBeInstanceOf(
-        Float32Array
-      );
+      const decoded = yield* decodeUnknownFloat32ArrayFromArray(yield* encodeFloat32ArrayFromArray(value));
+      expect(decoded).toBeInstanceOf(Float32Array);
+      expect(A.fromIterable(decoded)).toEqual(A.fromIterable(value));
 
       return true;
     }),
@@ -122,9 +123,9 @@ describe("Float64Array schemas", () => {
     [Arbitrary.schema(Float64ArrayFromArray)],
     Effect.fnUntraced(function* ([value]) {
       expect(value).toBeInstanceOf(Float64Array);
-      expect(yield* decodeUnknownFloat64ArrayFromArray(yield* encodeFloat64ArrayFromArray(value))).toBeInstanceOf(
-        Float64Array
-      );
+      const decoded = yield* decodeUnknownFloat64ArrayFromArray(yield* encodeFloat64ArrayFromArray(value));
+      expect(decoded).toBeInstanceOf(Float64Array);
+      expect(A.fromIterable(decoded)).toEqual(A.fromIterable(value));
 
       return true;
     }),

@@ -7,8 +7,10 @@ import { optionalKeyWithDefault } from "@beep/schema/SchemaUtils/optionalKeyWith
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitSuccess, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
@@ -54,7 +56,7 @@ describe("optionalKeyWithDefault", () => {
     Effect.fnUntraced(function* () {
       expect(yield* decodeOptionalKeySettings({})).toEqual({ retries: 3 });
       expect(yield* decodeOptionalKeySettings({ retries: "0" })).toEqual({ retries: 0 });
-      expect(Exit.isFailure(yield* Effect.exit(decodeOptionalKeySettings({ retries: "invalid" })))).toBe(true);
+      pipe(yield* Effect.exit(decodeOptionalKeySettings({ retries: "invalid" })), Exit.isFailure, assertTrue);
     })
   );
 
@@ -62,7 +64,7 @@ describe("optionalKeyWithDefault", () => {
     "encodes decoded values and requires the decoded key",
     Effect.fnUntraced(function* () {
       expect(yield* encodeOptionalKeySettings({ retries: 3 })).toEqual({ retries: "3" });
-      expect(Exit.isFailure(yield* Effect.exit(encodeUnknownOptionalKeySettings({})))).toBe(true);
+      pipe(yield* Effect.exit(encodeUnknownOptionalKeySettings({})), Exit.isFailure, assertTrue);
     })
   );
 });
@@ -111,19 +113,19 @@ describe("encoding adapters", () => {
   );
 
   it("encodes through Exit, Option, Result, and synchronous adapters", () => {
-    expect(Exit.isSuccess(Encoders.encodeExit(NumberFromString)(42))).toBe(true);
-    expect(Exit.isSuccess(Encoders.encodeUnknownExit(NumberFromString)(42))).toBe(true);
-    expect(O.isSome(Encoders.encodeOption(NumberFromString)(42))).toBe(true);
-    expect(O.isSome(Encoders.encodeUnknownOption(NumberFromString)(42))).toBe(true);
-    expect(Result.isSuccess(Encoders.encodeResult(NumberFromString)(42))).toBe(true);
-    expect(Result.isSuccess(Encoders.encodeUnknownResult(NumberFromString)(42))).toBe(true);
+    assertExitSuccess(Encoders.encodeExit(NumberFromString)(42), "42");
+    assertExitSuccess(Encoders.encodeUnknownExit(NumberFromString)(42), "42");
+    assertSome(Encoders.encodeOption(NumberFromString)(42), "42");
+    assertSome(Encoders.encodeUnknownOption(NumberFromString)(42), "42");
+    assertSuccess(Encoders.encodeResult(NumberFromString)(42), "42");
+    assertSuccess(Encoders.encodeUnknownResult(NumberFromString)(42), "42");
     const encoded = Encoders.encodeResult(NumberFromString)(42);
-    expect(Result.isSuccess(encoded)).toBe(true);
+    pipe(encoded, Result.isSuccess, assertTrue);
     if (Result.isSuccess(encoded)) {
       expect(encoded.success).toBe("42");
     }
     const encodedUnknown = Encoders.encodeUnknownResult(NumberFromString)(42);
-    expect(Result.isSuccess(encodedUnknown)).toBe(true);
+    pipe(encodedUnknown, Result.isSuccess, assertTrue);
     if (Result.isSuccess(encodedUnknown)) {
       expect(encodedUnknown.success).toBe("42");
     }
@@ -154,28 +156,27 @@ describe("encoding adapters", () => {
   );
 
   it("forwards application options through synchronous adapters", () => {
-    expect(
-      Exit.isSuccess(Encoders.encodeExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
-    ).toBe(true);
-    expect(
-      Exit.isSuccess(Encoders.encodeUnknownExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
-    ).toBe(true);
-    expect(O.isSome(Encoders.encodeOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))).toBe(
-      true
+    assertExitSuccess(Encoders.encodeExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
+      value: "ok",
+    });
+    assertExitSuccess(
+      Encoders.encodeUnknownExit(Struct, creationOptions)(inputWithExcessProperty, applicationOptions),
+      { value: "ok" }
     );
-    expect(
-      O.isSome(Encoders.encodeUnknownOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
-    ).toBe(true);
-    expect(
-      Result.isSuccess(Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions))
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        Encoders.encodeUnknownResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
-      )
-    ).toBe(true);
+    assertSome(Encoders.encodeOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
+      value: "ok",
+    });
+    assertSome(Encoders.encodeUnknownOption(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
+      value: "ok",
+    });
+    assertSuccess(Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
+      value: "ok",
+    });
+    assertSuccess(Encoders.encodeUnknownResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions), {
+      value: "ok",
+    });
     const encoded = Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions);
-    expect(Result.isSuccess(encoded)).toBe(true);
+    pipe(encoded, Result.isSuccess, assertTrue);
     if (Result.isSuccess(encoded)) {
       expect(encoded.success).toEqual({
         value: "ok",
@@ -185,7 +186,7 @@ describe("encoding adapters", () => {
       inputWithExcessProperty,
       applicationOptions
     );
-    expect(Result.isSuccess(encodedUnknown)).toBe(true);
+    pipe(encodedUnknown, Result.isSuccess, assertTrue);
     if (Result.isSuccess(encodedUnknown)) {
       expect(encodedUnknown.success).toEqual({
         value: "ok",
@@ -331,19 +332,19 @@ describe("withEmptyArrayDefaults", () => {
 
 describe("withNoneDefault", () => {
   it("defaults an omitted optional-key Option field to None at construction time", () => {
-    expect(O.isNone(OptionalLabelNode.make({}).label)).toBe(true);
-    expect(OptionalLabelNode.make({ label: O.some("x") }).label).toStrictEqual(O.some("x"));
+    pipe(OptionalLabelNode.make({}).label, O.isNone, assertTrue);
+    assertSome(OptionalLabelNode.make({ label: O.some("x") }).label, "x");
   });
 
   it("defaults an omitted nullable Option field to None at construction time", () => {
-    expect(O.isNone(NullableDirectionNode.make({}).direction)).toBe(true);
+    pipe(NullableDirectionNode.make({}).direction, O.isNone, assertTrue);
   });
 
   it.effect(
     "leaves the decode contract intact (missing optional key still decodes to None)",
     Effect.fnUntraced(function* () {
-      expect(O.isNone((yield* decodeOptionalLabelNodeEffect({})).label)).toBe(true);
-      expect((yield* decodeOptionalLabelNodeEffect({ label: "x" })).label).toStrictEqual(O.some("x"));
+      pipe((yield* decodeOptionalLabelNodeEffect({})).label, O.isNone, assertTrue);
+      assertSome((yield* decodeOptionalLabelNodeEffect({ label: "x" })).label, "x");
     })
   );
 });
@@ -359,8 +360,8 @@ describe("withConstantDefault", () => {
   it.effect(
     "leaves the encoded contract required (the key is still mandatory on decode)",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownRequiredVersionNodeEffect({}));
-      expect(Result.isFailure(failure1)).toBe(true);
+      const failure1 = yield* Effect.exit(decodeUnknownRequiredVersionNodeEffect({}));
+      pipe(failure1, Exit.hasFails, assertTrue);
       expect((yield* decodeRequiredVersionNodeEffect({ version: 1 })).version).toBe(1);
     })
   );
@@ -375,7 +376,7 @@ describe("withCodecStatics", () => {
     Effect.fnUntraced(function* ([sampled]) {
       expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
       expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
-      expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
+      pipe(Slug.decodeUnknownOption(sampled), O.isSome, assertTrue);
 
       return true;
     }),
@@ -391,8 +392,8 @@ describe("withCodecStatics", () => {
   it("attaches `fromUnknown` (throws on invalid) and `decodeOption` (None on invalid)", () => {
     expect(Slug.decodeUnknownSync("post")).toBe("post");
     expect(() => Slug.decodeUnknownSync("")).toThrow();
-    expect(Slug.decodeUnknownOption("post")).toStrictEqual(O.some("post"));
-    expect(O.isNone(Slug.decodeUnknownOption(""))).toBe(true);
+    assertSome(Slug.decodeUnknownOption("post"), "post");
+    pipe(Slug.decodeUnknownOption(""), O.isNone, assertTrue);
   });
 
   it("preserves statics when identity annotations run later in the pipeline", () => {
@@ -402,6 +403,6 @@ describe("withCodecStatics", () => {
     );
 
     expect(Tagged.is("post")).toBe(true);
-    expect(O.isNone(Tagged.decodeUnknownOption(""))).toBe(true);
+    pipe(Tagged.decodeUnknownOption(""), O.isNone, assertTrue);
   });
 });

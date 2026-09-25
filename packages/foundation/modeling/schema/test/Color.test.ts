@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as Color from "@beep/schema/Color";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";

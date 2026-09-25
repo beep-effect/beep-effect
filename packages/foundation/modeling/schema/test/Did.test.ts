@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { Did } from "@beep/schema/Did";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -54,21 +55,16 @@ describe("Did", () => {
     )
   );
 
-  it("derives schema arbitrary values that remain valid DID Core identifiers", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([DidArbitrary]),
-          ([did]) => {
-            expect(isDid2(did)).toBe(true);
-            expect(did).toMatch(/^did:[a-z0-9]+:/u);
-            expect(did).not.toMatch(/[/?#\s]/u);
+  it.effect.prop(
+    "derives schema arbitrary values that remain valid DID Core identifiers",
+    [DidArbitrary],
+    Effect.fnUntraced(function* ([did]) {
+      expect(isDid2(did)).toBe(true);
+      expect(did).toMatch(/^did:[a-z0-9]+:/u);
+      expect(did).not.toMatch(/[/?#\s]/u);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(100) }
+  );
 });

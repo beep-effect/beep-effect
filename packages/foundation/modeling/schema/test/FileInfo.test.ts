@@ -1,12 +1,14 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FileInfo, FileInfoType } from "@beep/schema/FileInfo";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as ByteSize from "effect/ByteSize";
 import * as DateTime from "effect/DateTime";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { FileSystem } from "effect";
 
@@ -29,8 +31,8 @@ describe("FileInfoType", () => {
   it.effect(
     "rejects unsupported entry kinds",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownFileInfoTypeEffect("Device"));
-      expect(Result.isFailure(failure1)).toBe(true);
+      const failure1 = yield* Effect.exit(decodeUnknownFileInfoTypeEffect("Device"));
+      pipe(failure1, Exit.hasFails, assertTrue);
     })
   );
 });
@@ -45,9 +47,9 @@ describe("FileInfo", () => {
 
     expect(info.type).toBe("File");
     expect(info.size).toBe(12n);
-    expect(O.isNone(info.mtime)).toBe(true);
-    expect(O.isNone(info.ino)).toBe(true);
-    expect(O.isNone(info.blksize)).toBe(true);
+    pipe(info.mtime, O.isNone, assertTrue);
+    pipe(info.ino, O.isNone, assertTrue);
+    pipe(info.blksize, O.isNone, assertTrue);
   });
 
   it("constructs every entry kind with a matching type", () => {
@@ -68,8 +70,8 @@ describe("FileInfo", () => {
       });
 
       expect(info.type).toBe("Directory");
-      expect(O.isNone(info.birthtime)).toBe(true);
-      expect(O.isNone(info.blocks)).toBe(true);
+      pipe(info.birthtime, O.isNone, assertTrue);
+      pipe(info.blocks, O.isNone, assertTrue);
     })
   );
 
@@ -86,9 +88,9 @@ describe("FileInfo", () => {
         ino: 7,
       });
 
-      expect(O.isSome(info.mtime)).toBe(true);
-      expect(info.mtime).toEqual(O.some(mtime));
-      expect(info.ino).toEqual(O.some(7));
+      pipe(info.mtime, O.isSome, assertTrue);
+      assertSome(info.mtime, mtime);
+      assertSome(info.ino, 7);
     })
   );
 
@@ -106,7 +108,7 @@ describe("FileInfo", () => {
   it.effect(
     "rejects unsupported types",
     Effect.fnUntraced(function* () {
-      const failure2 = yield* Effect.result(
+      const failure2 = yield* Effect.exit(
         decodeUnknownFileInfoEffect({
           type: "Device",
           dev: 1,
@@ -114,7 +116,7 @@ describe("FileInfo", () => {
           size: ByteSize.bytes(0n),
         })
       );
-      expect(Result.isFailure(failure2)).toBe(true);
+      pipe(failure2, Exit.hasFails, assertTrue);
     })
   );
 

@@ -1,5 +1,6 @@
 import { EPOCH, EpochMillis, Timestamp } from "@beep/schema/Timestamp";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("Timestamp", () => {
   it("constructs the Unix epoch", () => {

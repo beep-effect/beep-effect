@@ -1,9 +1,13 @@
 import { fcRuns } from "@beep/fc-runs";
 import { KebabCaseStr, PascalCaseStr, SnakeCaseStr } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Result from "effect/Result";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownKebabCaseStrEffect = S.decodeUnknownEffect(KebabCaseStr);
@@ -25,20 +29,26 @@ describe("KebabCaseStr", () => {
   it.effect(
     "rejects digit-leading and non-kebab-case values",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownKebabCaseStrEffect("1-command"));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Must be KebabCase format");
+      const failure1 = yield* Effect.exit(decodeUnknownKebabCaseStrEffect("1-command"));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be KebabCase format"
+        );
       }
-      const failure2 = yield* Effect.result(decodeUnknownKebabCaseStrEffect("Command-Handler"));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain("Must be KebabCase format");
+      const failure2 = yield* Effect.exit(decodeUnknownKebabCaseStrEffect("Command-Handler"));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be KebabCase format"
+        );
       }
-      const failure3 = yield* Effect.result(decodeUnknownKebabCaseStrEffect("command_handler"));
-      expect(Result.isFailure(failure3)).toBe(true);
-      if (Result.isFailure(failure3)) {
-        expect(failure3.failure.message).toContain("Must be KebabCase format");
+      const failure3 = yield* Effect.exit(decodeUnknownKebabCaseStrEffect("command_handler"));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure3)) {
+        expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be KebabCase format"
+        );
       }
     })
   );
@@ -71,20 +81,26 @@ describe("PascalCaseStr", () => {
   it.effect(
     "rejects lowercase-leading and separator-based values",
     Effect.fnUntraced(function* () {
-      const failure4 = yield* Effect.result(decodeUnknownPascalCaseStrEffect("workflowStatus"));
-      expect(Result.isFailure(failure4)).toBe(true);
-      if (Result.isFailure(failure4)) {
-        expect(failure4.failure.message).toContain("Must be PascalCase format");
+      const failure4 = yield* Effect.exit(decodeUnknownPascalCaseStrEffect("workflowStatus"));
+      pipe(failure4, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure4)) {
+        expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be PascalCase format"
+        );
       }
-      const failure5 = yield* Effect.result(decodeUnknownPascalCaseStrEffect("Workflow_Status"));
-      expect(Result.isFailure(failure5)).toBe(true);
-      if (Result.isFailure(failure5)) {
-        expect(failure5.failure.message).toContain("Must be PascalCase format");
+      const failure5 = yield* Effect.exit(decodeUnknownPascalCaseStrEffect("Workflow_Status"));
+      pipe(failure5, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure5)) {
+        expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be PascalCase format"
+        );
       }
-      const failure6 = yield* Effect.result(decodeUnknownPascalCaseStrEffect("Workflow-Status"));
-      expect(Result.isFailure(failure6)).toBe(true);
-      if (Result.isFailure(failure6)) {
-        expect(failure6.failure.message).toContain("Must be PascalCase format");
+      const failure6 = yield* Effect.exit(decodeUnknownPascalCaseStrEffect("Workflow-Status"));
+      pipe(failure6, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure6)) {
+        expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be PascalCase format"
+        );
       }
     })
   );
@@ -116,15 +132,19 @@ describe("SnakeCaseStr", () => {
   it.effect(
     "rejects uppercase and hyphenated values",
     Effect.fnUntraced(function* () {
-      const failure7 = yield* Effect.result(decodeUnknownSnakeCaseStrEffect("WorkflowStatus"));
-      expect(Result.isFailure(failure7)).toBe(true);
-      if (Result.isFailure(failure7)) {
-        expect(failure7.failure.message).toContain("Must be SnakeCase format");
+      const failure7 = yield* Effect.exit(decodeUnknownSnakeCaseStrEffect("WorkflowStatus"));
+      pipe(failure7, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure7)) {
+        expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be SnakeCase format"
+        );
       }
-      const failure8 = yield* Effect.result(decodeUnknownSnakeCaseStrEffect("workflow-status"));
-      expect(Result.isFailure(failure8)).toBe(true);
-      if (Result.isFailure(failure8)) {
-        expect(failure8.failure.message).toContain("Must be SnakeCase format");
+      const failure8 = yield* Effect.exit(decodeUnknownSnakeCaseStrEffect("workflow-status"));
+      pipe(failure8, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure8)) {
+        expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Must be SnakeCase format"
+        );
       }
     })
   );

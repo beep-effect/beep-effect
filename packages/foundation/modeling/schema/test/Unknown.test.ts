@@ -1,8 +1,9 @@
 import { Unknown as RootUnknown, UnknownFromJsonString as RootUnknownFromJsonString } from "@beep/schema";
 import { Unknown, UnknownFromJsonString } from "@beep/schema/Unknown";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -26,7 +27,7 @@ describe("Unknown", () => {
   it("exposes only selected compact JSON runners", () => {
     expect(UnknownFromJsonString.decodeUnknownSync(compactJson)).toEqual(input);
     expect(UnknownFromJsonString.encodeUnknownSync(input)).toBe(compactJson);
-    expect(UnknownFromJsonString.decodeUnknownOption(compactJson)).toStrictEqual(O.some(input));
+    assertSome(UnknownFromJsonString.decodeUnknownOption(compactJson), input);
     expect(Result.getOrThrow(UnknownFromJsonString.decodeUnknownResult(compactJson))).toEqual(input);
     expect(Result.getOrThrow(UnknownFromJsonString.encodeUnknownResult(input))).toBe(compactJson);
     expect(Reflect.has(UnknownFromJsonString, "decodeUnknownPromise")).toBe(false);

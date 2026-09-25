@@ -1,9 +1,12 @@
 import { fcRuns } from "@beep/fc-runs";
 import { Port, PortFromString } from "@beep/schema/Port";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Result from "effect/Result";
+import * as Cause from "effect/Cause";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodePort = S.decodeEffect(Port);
@@ -34,8 +37,8 @@ describe("Port", () => {
       const zero = yield* Effect.exit(decodeUnknownPort(0));
       const aboveMaximum = yield* Effect.exit(decodeUnknownPort(portMaximum + 1));
 
-      expect(Exit.isFailure(zero)).toBe(true);
-      expect(Exit.isFailure(aboveMaximum)).toBe(true);
+      pipe(zero, Exit.isFailure, assertTrue);
+      pipe(aboveMaximum, Exit.isFailure, assertTrue);
     })
   );
 
@@ -45,18 +48,20 @@ describe("Port", () => {
       const fractional = yield* Effect.exit(decodeUnknownPort(1.5));
       const string = yield* Effect.exit(decodeUnknownPort("443"));
 
-      expect(Exit.isFailure(fractional)).toBe(true);
-      expect(Exit.isFailure(string)).toBe(true);
+      pipe(fractional, Exit.isFailure, assertTrue);
+      pipe(string, Exit.isFailure, assertTrue);
     })
   );
 
   it.effect(
     "uses the annotated range error message",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownPortEffect(0));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected a valid transport port number between 1 and 65535");
+      const failure1 = yield* Effect.exit(decodeUnknownPortEffect(0));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected a valid transport port number between 1 and 65535"
+        );
       }
     })
   );
@@ -106,22 +111,24 @@ describe("PortFromString", () => {
       const zero = yield* Effect.exit(decodeUnknownPortFromString("0"));
       const aboveMaximum = yield* Effect.exit(decodeUnknownPortFromString("65536"));
 
-      expect(Exit.isFailure(empty)).toBe(true);
-      expect(Exit.isFailure(whitespace)).toBe(true);
-      expect(Exit.isFailure(hexadecimal)).toBe(true);
-      expect(Exit.isFailure(fractional)).toBe(true);
-      expect(Exit.isFailure(zero)).toBe(true);
-      expect(Exit.isFailure(aboveMaximum)).toBe(true);
+      pipe(empty, Exit.isFailure, assertTrue);
+      pipe(whitespace, Exit.isFailure, assertTrue);
+      pipe(hexadecimal, Exit.isFailure, assertTrue);
+      pipe(fractional, Exit.isFailure, assertTrue);
+      pipe(zero, Exit.isFailure, assertTrue);
+      pipe(aboveMaximum, Exit.isFailure, assertTrue);
     })
   );
 
   it.effect(
     "uses the annotated decimal-string error message",
     Effect.fnUntraced(function* () {
-      const failure2 = yield* Effect.result(decodeUnknownPortFromStringEffect("0x50"));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain("Port strings must contain only ASCII decimal digits");
+      const failure2 = yield* Effect.exit(decodeUnknownPortFromStringEffect("0x50"));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Port strings must contain only ASCII decimal digits"
+        );
       }
     })
   );

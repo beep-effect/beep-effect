@@ -1,6 +1,7 @@
 import { CodegenKit, GenerateConfig, GeneratedModule } from "@beep/codegen-kit";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
@@ -180,121 +181,125 @@ const writeJson = Effect.fnUntraced(function* (filePath: string, document: S.Jso
   yield* fs.writeFileString(filePath, `${encoded}\n`);
 });
 
-const withTempDirectory = <A, E, R>(use: (directory: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.flatMap(FileSystem.FileSystem, (fs) =>
-      fs.makeTempDirectory({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
-    ),
-    use,
-    (directory) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(directory, { recursive: true, force: true }))
-  );
-
-layer(CodegenKitRefreshTestLayer)("@beep/codegen-kit source pins", (it) => {
+it.layer(CodegenKitRefreshTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit source pins", (it) => {
   it.effect("derives url-embedded policy and writes a matching refresh", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const cachePath = path.join(directory, "url-embedded.json");
-        const source: SpecSource = {
-          _tag: "url",
-          url: "https://example.test/releases/v1/openapi.json",
-          pin: "v1",
-          cachePath,
-        };
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        yield* kit.fetch(source, true);
-        const cache = yield* fs.readFileString(cachePath);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const cachePath = path.join(directory, "url-embedded.json");
+      const source: SpecSource = {
+        _tag: "url",
+        url: "https://example.test/releases/v1/openapi.json",
+        pin: "v1",
+        cachePath,
+      };
 
-        expect(cache).toContain('"version": "1.0.0"');
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: refresh/cache-format");
+      yield* kit.fetch(source, true);
+      const cache = yield* fs.readFileString(cachePath);
+
+      expect(cache).toContain('"version": "1.0.0"');
+    })
   );
 
   it.effect("rejects a url-embedded mismatch without replacing the cache", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const cachePath = path.join(directory, "url-embedded-mismatch.json");
-        const previous = '{"sentinel":"untouched"}\n';
-        const source: SpecSource = {
-          _tag: "url",
-          url: "https://example.test/releases/v2/openapi.json",
-          pin: "v1",
-          pinPolicy: "url-embedded",
-          cachePath,
-        };
-        yield* fs.writeFileString(cachePath, previous);
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        const failure = yield* kit.fetch(source, true).pipe(Effect.flip);
-        const cache = yield* fs.readFileString(cachePath);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const cachePath = path.join(directory, "url-embedded-mismatch.json");
+      const previous = '{"sentinel":"untouched"}\n';
+      const source: SpecSource = {
+        _tag: "url",
+        url: "https://example.test/releases/v2/openapi.json",
+        pin: "v1",
+        pinPolicy: "url-embedded",
+        cachePath,
+      };
+      yield* fs.writeFileString(cachePath, previous);
 
-        expect(failure._tag).toBe("CodegenFetchError");
-        expect(failure.message).toContain("Configured pin v1");
-        expect(cache).toBe(previous);
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: refresh/cache-format");
+      const failure = yield* kit.fetch(source, true).pipe(Effect.flip);
+      const cache = yield* fs.readFileString(cachePath);
+
+      expect(failure._tag).toBe("CodegenFetchError");
+      expect(failure.message).toContain("Configured pin v1");
+      expect(cache).toBe(previous);
+    })
   );
 
   it.effect("derives info-version policy and writes a matching refresh", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const cachePath = path.join(directory, "info-version.json");
-        const source: SpecSource = {
-          _tag: "url",
-          url: "https://example.test/openapi.json",
-          pin: "1.0.0",
-          cachePath,
-        };
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        yield* kit.fetch(source, true);
-        const cache = yield* fs.readFileString(cachePath);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const cachePath = path.join(directory, "info-version.json");
+      const source: SpecSource = {
+        _tag: "url",
+        url: "https://example.test/openapi.json",
+        pin: "1.0.0",
+        cachePath,
+      };
 
-        expect(cache).toContain('"version": "1.0.0"');
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: refresh/cache-format");
+      yield* kit.fetch(source, true);
+      const cache = yield* fs.readFileString(cachePath);
+
+      expect(cache).toContain('"version": "1.0.0"');
+    })
   );
 
   it.effect("rejects an info-version mismatch without replacing the cache", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const cachePath = path.join(directory, "info-version-mismatch.json");
-        const previous = '{"sentinel":"untouched"}\n';
-        const source: SpecSource = {
-          _tag: "url",
-          url: "https://example.test/openapi.json",
-          pin: "2.0.0",
-          pinPolicy: "info-version",
-          cachePath,
-        };
-        yield* fs.writeFileString(cachePath, previous);
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        const failure = yield* kit.fetch(source, true).pipe(Effect.flip);
-        const cache = yield* fs.readFileString(cachePath);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const cachePath = path.join(directory, "info-version-mismatch.json");
+      const previous = '{"sentinel":"untouched"}\n';
+      const source: SpecSource = {
+        _tag: "url",
+        url: "https://example.test/openapi.json",
+        pin: "2.0.0",
+        pinPolicy: "info-version",
+        cachePath,
+      };
+      yield* fs.writeFileString(cachePath, previous);
 
-        expect(failure._tag).toBe("CodegenFetchError");
-        expect(failure.message).toContain("info.version 1.0.0");
-        expect(failure.message).toContain("configured pin is 2.0.0");
-        expect(failure.message).toContain("bump pin deliberately");
-        expect(cache).toBe(previous);
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: refresh/cache-format");
+      const failure = yield* kit.fetch(source, true).pipe(Effect.flip);
+      const cache = yield* fs.readFileString(cachePath);
+
+      expect(failure._tag).toBe("CodegenFetchError");
+      expect(failure.message).toContain("info.version 1.0.0");
+      expect(failure.message).toContain("configured pin is 2.0.0");
+      expect(failure.message).toContain("bump pin deliberately");
+      expect(cache).toBe(previous);
+    })
   );
 });
 
-layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
+it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (it) => {
   it.effect("preserves boolean union members while distributing object siblings", () =>
     Effect.gen(function* () {
       const kit = yield* CodegenKit;
+      yield* Effect.logInfo("Codegen stage: generate");
       const output = yield* kit.generate(
         {
           $defs: {
@@ -319,6 +324,7 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
   it.effect("repairs ACP ContentBlock and SessionUpdate variant schemas", () =>
     Effect.gen(function* () {
       const kit = yield* CodegenKit;
+      yield* Effect.logInfo("Codegen stage: generate");
       const raw = yield* kit.generate(acpRegressionFixture, config("schema.gen.ts"));
 
       expect(raw).not.toContain("Schema.Never");
@@ -349,6 +355,7 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
           },
         },
       };
+      yield* Effect.logInfo("Codegen stage: generate");
       const raw = yield* kit.generate(document, transformConfig);
 
       expect(raw).toContain("Schema.StructWithRest");
@@ -454,72 +461,78 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
   );
 
   it.effect("runs a patched Swagger 2.0 HttpApi document end to end", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const specPath = path.join(directory, "swagger.json");
-        const outputPath = path.join(directory, "SwaggerApi.gen.ts");
-        yield* writeJson(specPath, tinySwagger);
-        const generateConfig = GenerateConfig.make({
-          packageName: "@beep/codegen-kit-fixture",
-          name: "SwaggerApi",
-          identity: { composer: "$CodegenKitId", moduleId: "fixture/SwaggerApi.gen" },
-          source: { _tag: "file", path: specPath },
-          dialect: "swagger-2.0",
-          patches: [
-            {
-              source: "inline produces patch",
-              patch: [{ op: "add", path: "/produces", value: ["application/json"] }],
-            },
-          ],
-          format: "httpapi",
-          output: { path: outputPath },
-        });
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        yield* kit.run(generateConfig, "write");
-        const output = yield* fs.readFileString(outputPath);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const specPath = path.join(directory, "swagger.json");
+      const outputPath = path.join(directory, "SwaggerApi.gen.ts");
+      yield* writeJson(specPath, tinySwagger);
+      const generateConfig = GenerateConfig.make({
+        packageName: "@beep/codegen-kit-fixture",
+        name: "SwaggerApi",
+        identity: { composer: "$CodegenKitId", moduleId: "fixture/SwaggerApi.gen" },
+        source: { _tag: "file", path: specPath },
+        dialect: "swagger-2.0",
+        patches: [
+          {
+            source: "inline produces patch",
+            patch: [{ op: "add", path: "/produces", value: ["application/json"] }],
+          },
+        ],
+        format: "httpapi",
+        output: { path: outputPath },
+      });
 
-        expect(output).toContain("export class SwaggerApi extends HttpApi.make");
-        expect(output).toContain("S.Int");
-        expect(output).toContain("S.Finite");
-        expect(output).toContain("S.Array(S.String).pipe(S.optionalKey)");
-        expect(output).not.toContain("S.Number");
-        expect(output).toContain("**Example** (Inspect SwaggerApi)");
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: format/write-or-drift-check");
+      yield* kit.run(generateConfig, "write");
+      const output = yield* fs.readFileString(outputPath);
+
+      expect(output).toContain("export class SwaggerApi extends HttpApi.make");
+      expect(output).toContain("S.Int");
+      expect(output).toContain("S.Finite");
+      expect(output).toContain("S.Array(S.String).pipe(S.optionalKey)");
+      expect(output).not.toContain("S.Number");
+      expect(output).toContain("**Example** (Inspect SwaggerApi)");
+    })
   );
 
   it.effect("runs an OpenAPI 3.0 HttpApi document end to end", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const specPath = path.join(directory, "openapi.json");
-        const outputPath = path.join(directory, "OpenApi.gen.ts");
-        yield* writeJson(specPath, tinyOpenApi);
-        const generateConfig = GenerateConfig.make({
-          packageName: "@beep/codegen-kit-fixture",
-          name: "OpenApiFixture",
-          identity: { composer: "$CodegenKitId", moduleId: "fixture/OpenApi.gen" },
-          source: { _tag: "file", path: specPath },
-          dialect: "openapi-3.0",
-          format: "httpapi",
-          output: { path: outputPath },
-        });
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        yield* kit.run(generateConfig, "write");
-        const output = yield* fs.readFileString(outputPath);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const specPath = path.join(directory, "openapi.json");
+      const outputPath = path.join(directory, "OpenApi.gen.ts");
+      yield* writeJson(specPath, tinyOpenApi);
+      const generateConfig = GenerateConfig.make({
+        packageName: "@beep/codegen-kit-fixture",
+        name: "OpenApiFixture",
+        identity: { composer: "$CodegenKitId", moduleId: "fixture/OpenApi.gen" },
+        source: { _tag: "file", path: specPath },
+        dialect: "openapi-3.0",
+        format: "httpapi",
+        output: { path: outputPath },
+      });
 
-        expect(output).toContain("export class OpenApiFixture extends HttpApi.make");
-        expect(output).toContain("S.Finite");
-        expect(output).not.toContain("HttpApiMiddleware");
-        expect(output).not.toContain("HttpApiSecurity");
-        expect(output).toContain("@since 0.0.0");
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: format/write-or-drift-check");
+      yield* kit.run(generateConfig, "write");
+      const output = yield* fs.readFileString(outputPath);
+
+      expect(output).toContain("export class OpenApiFixture extends HttpApi.make");
+      expect(output).toContain("S.Finite");
+      expect(output).not.toContain("HttpApiMiddleware");
+      expect(output).not.toContain("HttpApiSecurity");
+      expect(output).toContain("@since 0.0.0");
+    })
   );
 
   it.effect("fails on generator warnings by default and logs them when configured", () =>
@@ -534,6 +547,7 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
         format: "httpapi",
         output: { path: "WarningApi.gen.ts" },
       });
+      yield* Effect.logInfo("Codegen stage: generate");
       const failure = yield* kit.generate(warningOpenApi, strictConfig).pipe(Effect.flip);
       expect(failure._tag).toBe("CodegenGenerateError");
       expect(failure.message).toContain("cookie-parameter-dropped");
@@ -548,6 +562,7 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
         onWarning: "log",
         output: { path: "WarningApi.gen.ts" },
       });
+      yield* Effect.logInfo("Codegen stage: generate");
       const output = yield* kit.generate(warningOpenApi, logConfig);
       const warnings = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
 
@@ -557,62 +572,67 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
   );
 
   it.effect("prints a unified diff when check mode detects drift", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory: string) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const specPath = path.join(directory, "openapi.json");
-        const outputPath = path.join(directory, "DriftApi.gen.ts");
-        yield* writeJson(specPath, tinyOpenApi);
-        yield* fs.writeFileString(outputPath, "export const stale = true;\n");
-        const generateConfig = GenerateConfig.make({
-          packageName: "@beep/codegen-kit-fixture",
-          name: "DriftApi",
-          identity: { composer: "$CodegenKitId", moduleId: "fixture/DriftApi.gen" },
-          source: { _tag: "file", path: specPath },
-          dialect: "openapi-3.0",
-          format: "httpapi",
-          output: { path: outputPath },
-        });
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        const failure = yield* kit.run(generateConfig, "check").pipe(Effect.flip);
-        const printed = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const specPath = path.join(directory, "openapi.json");
+      const outputPath = path.join(directory, "DriftApi.gen.ts");
+      yield* writeJson(specPath, tinyOpenApi);
+      yield* fs.writeFileString(outputPath, "export const stale = true;\n");
+      const generateConfig = GenerateConfig.make({
+        packageName: "@beep/codegen-kit-fixture",
+        name: "DriftApi",
+        identity: { composer: "$CodegenKitId", moduleId: "fixture/DriftApi.gen" },
+        source: { _tag: "file", path: specPath },
+        dialect: "openapi-3.0",
+        format: "httpapi",
+        output: { path: outputPath },
+      });
 
-        expect(failure._tag).toBe("CodegenDriftError");
-        expect(printed).toContain(`--- ${outputPath}`);
-        expect(printed).toContain("+++ generated");
-        expect(printed).toContain("-export const stale = true;");
-        expect(printed).toContain("+/**");
-      })
-    )
+      yield* Effect.logInfo("Codegen stage: format/write-or-drift-check");
+      const failure = yield* kit.run(generateConfig, "check").pipe(Effect.flip);
+      const printed = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+
+      expect(failure._tag).toBe("CodegenDriftError");
+      expect(printed).toContain(`--- ${outputPath}`);
+      expect(printed).toContain("+++ generated");
+      expect(printed).toContain("-export const stale = true;");
+      expect(printed).toContain("+/**");
+    })
   );
 
   it.effect("reports clean, changed, and missing generated outputs", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (directory) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const kit = yield* CodegenKit;
-        const outputPath = path.join(directory, "schema.gen.ts");
-        const current = GeneratedModule.make({ path: outputPath, content: "export const value = 1;\n" });
+    Effect.gen(function* () {
+      const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
+        fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
+      );
 
-        const missing = yield* kit.drift(current);
-        expect(missing.status).toBe("missing");
-        expect(missing.diffLines).toBeGreaterThan(0);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const outputPath = path.join(directory, "schema.gen.ts");
+      const current = GeneratedModule.make({ path: outputPath, content: "export const value = 1;\n" });
 
-        yield* fs.writeFileString(outputPath, current.content);
-        const clean = yield* kit.drift(current);
-        expect(clean.status).toBe("clean");
-        expect(clean.diffLines).toBe(0);
+      const missing = yield* kit.drift(current);
+      expect(missing.status).toBe("missing");
+      expect(missing.diffLines).toBeGreaterThan(0);
 
-        const changed = yield* kit.drift(
-          GeneratedModule.make({ path: outputPath, content: "export const value = 2;\n" })
-        );
-        expect(changed.status).toBe("changed");
-        expect(changed.diffLines).toBe(1);
-      })
-    )
+      yield* fs.writeFileString(outputPath, current.content);
+      const clean = yield* kit.drift(current);
+      expect(clean.status).toBe("clean");
+      expect(clean.diffLines).toBe(0);
+
+      const changed = yield* kit.drift(
+        GeneratedModule.make({ path: outputPath, content: "export const value = 2;\n" })
+      );
+      expect(changed.status).toBe("changed");
+      expect(changed.diffLines).toBe(1);
+    })
   );
 
   it.effect("runs a tiny schema document through generation and rendering", () =>
@@ -628,6 +648,7 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
         },
       };
       const generateConfig = config("widget.gen.ts");
+      yield* Effect.logInfo("Codegen stage: generate");
       const raw = yield* kit.generate(tiny, generateConfig);
       const rendered = yield* kit.postProcess(raw, generateConfig);
 

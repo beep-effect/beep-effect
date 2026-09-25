@@ -14,7 +14,9 @@ import {
   revisionLabel,
 } from "@beep/schema/Conformance";
 import { URLStr } from "@beep/schema/URL";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -102,12 +104,12 @@ describe("Conformance", () => {
     const annotationResult = makeAnnotationResult({ sources: [], profiles: [], invariants: [] });
 
     expect(Scalar).toBeDefined();
-    expect(Result.isFailure(collectedResult)).toBe(true);
+    pipe(collectedResult, Result.isFailure, assertTrue);
     if (Result.isFailure(collectedResult)) {
       expect(collectedResult.failure).toBeInstanceOf(S.SchemaError);
     }
     expect(() => collectAnnotations(Invalid)).toThrow(S.SchemaError);
-    expect(Result.isFailure(annotationResult)).toBe(true);
+    pipe(annotationResult, Result.isFailure, assertTrue);
     if (Result.isFailure(annotationResult)) {
       expect(annotationResult.failure).toBeInstanceOf(S.SchemaError);
     }
@@ -120,7 +122,7 @@ describe("Conformance", () => {
 
     const result = collectAnnotationsResult(Broken);
 
-    expect(Result.isFailure(result)).toBe(true);
+    pipe(result, Result.isFailure, assertTrue);
     if (Result.isFailure(result)) {
       expect(result.failure).toBeInstanceOf(S.SchemaError);
     }
@@ -141,8 +143,8 @@ describe("Conformance", () => {
       profiles: [{ ...annotationInput.profiles[0], sourceIds: ["missing-source"] }],
     });
 
-    expect(Result.isFailure(duplicateResult)).toBe(true);
-    expect(Result.isFailure(danglingResult)).toBe(true);
+    pipe(duplicateResult, Result.isFailure, assertTrue);
+    pipe(danglingResult, Result.isFailure, assertTrue);
     expect(() =>
       makeAnnotation({
         ...annotationInput,
@@ -179,8 +181,8 @@ describe("Conformance", () => {
       ],
     });
 
-    expect(Result.isFailure(duplicateSelection)).toBe(true);
-    expect(Result.isFailure(outsideProfile)).toBe(true);
+    pipe(duplicateSelection, Result.isFailure, assertTrue);
+    pipe(outsideProfile, Result.isFailure, assertTrue);
   });
 
   it("rejects enforcement evidence that contradicts decidability", () => {
@@ -246,75 +248,81 @@ describe("Conformance", () => {
       },
     ];
 
-    expect(
-      A.every(invalidDescriptors, (descriptor) => Result.isFailure(decodeUnknownInvariantResult(descriptor)))
-    ).toBe(true);
+    A.forEach(invalidDescriptors, (descriptor, index) => {
+      pipe(decodeUnknownInvariantResult(descriptor), Result.isFailure, (failed) =>
+        assertTrue(failed, `Invalid invariant descriptor ${index}: ${JSON.stringify(descriptor)}`)
+      );
+    });
 
-    expect(
-      Result.isSuccess(
-        decodeInvariantResult({
-          ...invariant,
-          decidability: "externalAuthority",
-          enforcement: [{ kind: "notEnforced", gap: "The authority must decide this condition." }],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeInvariantResult({
-          ...invariant,
-          references: [
-            { sourceId: "example-spec", section: "Rule" },
-            { sourceId: "example-spec", section: "Different section" },
-          ],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeInvariantResult({
-          ...invariant,
-          enforcement: [
-            { kind: "runtime", validator: "Example.validate" },
-            { kind: "runtime", validator: "Example.validateFallback" },
-          ],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeInvariantResult({
-          ...invariant,
-          decidability: "contextualRuntime",
-          enforcement: [{ kind: "documented", rationale: "The caller supplies the deciding context." }],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeInvariantResult({
-          ...invariant,
-          decidability: "undecidable",
-          enforcement: [
-            { kind: "documented", rationale: "This mathematical condition is documented for consumers." },
-            { kind: "notEnforced", gap: "No finite local procedure can decide the condition." },
-          ],
-        })
-      )
-    ).toBe(true);
-    expect(
-      A.every(
-        [
-          "@beep/html Effect Schema decode boundary",
-          "inspectConformance and resolveScriptState",
-          "decodePandocJsonStrict,encodePandocJson",
-          "Heading.validateOutline()",
+    pipe(
+      decodeInvariantResult({
+        ...invariant,
+        decidability: "externalAuthority",
+        enforcement: [{ kind: "notEnforced", gap: "The authority must decide this condition." }],
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeInvariantResult({
+        ...invariant,
+        references: [
+          { sourceId: "example-spec", section: "Rule" },
+          { sourceId: "example-spec", section: "Different section" },
         ],
-        (validator) => Result.isFailure(decodeEnforcementResult({ kind: "runtime", validator }))
-      )
-    ).toBe(true);
-    expect(Result.isSuccess(decodeEnforcementResult({ kind: "runtime", validator: "Heading.validateOutline" }))).toBe(
-      true
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeInvariantResult({
+        ...invariant,
+        enforcement: [
+          { kind: "runtime", validator: "Example.validate" },
+          { kind: "runtime", validator: "Example.validateFallback" },
+        ],
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeInvariantResult({
+        ...invariant,
+        decidability: "contextualRuntime",
+        enforcement: [{ kind: "documented", rationale: "The caller supplies the deciding context." }],
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeInvariantResult({
+        ...invariant,
+        decidability: "undecidable",
+        enforcement: [
+          { kind: "documented", rationale: "This mathematical condition is documented for consumers." },
+          { kind: "notEnforced", gap: "No finite local procedure can decide the condition." },
+        ],
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    A.forEach(
+      [
+        "@beep/html Effect Schema decode boundary",
+        "inspectConformance and resolveScriptState",
+        "decodePandocJsonStrict,encodePandocJson",
+        "Heading.validateOutline()",
+      ],
+      (validator) => {
+        pipe(decodeEnforcementResult({ kind: "runtime", validator }), Result.isFailure, (failed) =>
+          assertTrue(failed, `Invalid runtime validator: ${validator}`)
+        );
+      }
+    );
+    pipe(
+      decodeEnforcementResult({ kind: "runtime", validator: "Heading.validateOutline" }),
+      Result.isSuccess,
+      assertTrue
     );
   });
 
@@ -360,17 +368,21 @@ describe("Conformance", () => {
       { kind: "retrievedSnapshot", retrievedOn: "2026-13-01" },
     ];
 
-    expect(A.every(invalidRevisions, (revision) => Result.isFailure(decodeUnknownRevisionResult(revision)))).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeRevisionResult({
-          kind: "gitCommit",
-          repository: "https://example.com/repository.git",
-          commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
-        })
-      )
-    ).toBe(true);
-    expect(Result.isSuccess(decodeRevisionResult({ kind: "datedSnapshot", date: "2024-02-29" }))).toBe(true);
+    A.forEach(invalidRevisions, (revision, index) => {
+      pipe(decodeUnknownRevisionResult(revision), Result.isFailure, (failed) =>
+        assertTrue(failed, `Invalid revision ${index}: ${JSON.stringify(revision)}`)
+      );
+    });
+    pipe(
+      decodeRevisionResult({
+        kind: "gitCommit",
+        repository: "https://example.com/repository.git",
+        commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(decodeRevisionResult({ kind: "datedSnapshot", date: "2024-02-29" }), Result.isSuccess, assertTrue);
   });
 
   it("formats every immutable source revision kind", () => {
@@ -392,37 +404,28 @@ describe("Conformance", () => {
     expect(revisionLabel(packageRevision)).toBe("packageRevision:%40beep%2Fmd@0.0.0");
   });
 
-  it("round-trips schema-derived conformance variants", () => {
+  {
     const report = Report.cases.conforming.make({
       profileIds: ["example"],
       checkedInvariantIds: ["example.rule"],
     });
+    it.effect.prop(
+      "round-trips schema-derived conformance variants",
+      [InvariantEnforcementArbitrary, ConformancePolicyArbitrary, SpecificationRevisionArbitrary],
+      Effect.fnUntraced(function* ([enforcement, policy, revision]) {
+        assertSuccess(
+          pipe(encodeEnforcementResult(enforcement), Result.flatMap(decodeUnknownEnforcementResult)),
+          enforcement
+        );
+        assertSuccess(pipe(encodePolicyResult(policy), Result.flatMap(decodeUnknownPolicyResult)), policy);
+        assertSuccess(pipe(encodeReportResult(report), Result.flatMap(decodeUnknownReportResult)), report);
+        assertSuccess(pipe(encodeRevisionResult(revision), Result.flatMap(decodeUnknownRevisionResult)), revision);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([InvariantEnforcementArbitrary, ConformancePolicyArbitrary, SpecificationRevisionArbitrary]),
-          ([enforcement, policy, revision]) => {
-            expect(pipe(encodeEnforcementResult(enforcement), Result.flatMap(decodeUnknownEnforcementResult))).toEqual(
-              Result.succeed(enforcement)
-            );
-            expect(pipe(encodePolicyResult(policy), Result.flatMap(decodeUnknownPolicyResult))).toEqual(
-              Result.succeed(policy)
-            );
-            expect(pipe(encodeReportResult(report), Result.flatMap(decodeUnknownReportResult))).toEqual(
-              Result.succeed(report)
-            );
-            expect(pipe(encodeRevisionResult(revision), Result.flatMap(decodeUnknownRevisionResult))).toEqual(
-              Result.succeed(revision)
-            );
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(50) }
+    );
+  }
 
   it("requires issues for non-conforming reports", () => {
     const result = decodeUnknownReportResult({
@@ -431,7 +434,7 @@ describe("Conformance", () => {
       checkedInvariantIds: ["example.rule"],
     });
 
-    expect(Result.isFailure(result)).toBe(true);
+    pipe(result, Result.isFailure, assertTrue);
   });
 
   it("requires unique report identifiers and issues drawn from checked invariants", () => {
@@ -462,8 +465,8 @@ describe("Conformance", () => {
       ],
     };
 
-    expect(Result.isFailure(decodeUnknownReportResult(uncheckedIssue))).toBe(true);
-    expect(Result.isFailure(decodeUnknownReportResult(duplicateIds))).toBe(true);
+    pipe(decodeUnknownReportResult(uncheckedIssue), Result.isFailure, assertTrue);
+    pipe(decodeUnknownReportResult(duplicateIds), Result.isFailure, assertTrue);
     expect(() =>
       Report.cases.nonConforming.make({
         profileIds: ["example"],

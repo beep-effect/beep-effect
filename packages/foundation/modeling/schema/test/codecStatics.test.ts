@@ -7,15 +7,16 @@ import {
   withCodecStatics,
 } from "@beep/schema/SchemaUtils/withCodecStatics";
 import { withStatics } from "@beep/schema/SchemaUtils/withStatics";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { expectTypeOf } from "vitest";
 
 const Count = S.FiniteFromString;
 const decodeUnknownCountEffect = S.decodeUnknownEffect(Count);
@@ -72,32 +73,28 @@ describe("withCodecStatics", () => {
     expect(Reflect.set(Selected, "is", () => false)).toBe(false);
   });
 
-  it("agrees with its source schema over schema-derived finite numbers", () => {
+  {
     const Selected = Count.pipe(withCodecStatics(["asserts", "decodeUnknownSync", "encodeSync", "equivalence", "is"]));
     const assertsCount: (input: unknown) => asserts input is number = Selected.asserts;
+    it.effect.prop(
+      "agrees with its source schema over schema-derived finite numbers",
+      [finiteArbitrary],
+      Effect.fnUntraced(function* ([sampled]) {
+        const encoded = Selected.encodeSync(sampled);
+        const decoded = Selected.decodeUnknownSync(encoded);
+        const asserted: unknown = decoded;
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([finiteArbitrary]),
-          ([sampled]) => {
-            const encoded = Selected.encodeSync(sampled);
-            const decoded = Selected.decodeUnknownSync(encoded);
-            const asserted: unknown = decoded;
+        assertsCount(asserted);
+        expect(asserted).toBe(decoded);
+        expect(Selected.is(sampled)).toBe(true);
+        expect(Selected.equivalence(decoded, sampled)).toBe(true);
+        expect(Selected.encodeSync(decoded)).toBe(encoded);
 
-            assertsCount(asserted);
-            expect(asserted).toBe(decoded);
-            expect(Selected.is(sampled)).toBe(true);
-            expect(Selected.equivalence(decoded, sampled)).toBe(true);
-            expect(Selected.encodeSync(decoded)).toBe(encoded);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(50) }
+    );
+  }
 
   it("preserves the selection through schema rebuilds", () => {
     const Selected = Count.pipe(withCodecStatics(["decodeUnknownOption", "is"]));
@@ -109,7 +106,9 @@ describe("withCodecStatics", () => {
     expect(P.isFunction(decodeUnknownOption)).toBe(true);
     if (P.isFunction(is) && P.isFunction(decodeUnknownOption)) {
       expect(Reflect.apply(is, undefined, [42])).toBe(true);
-      expect(Reflect.apply(decodeUnknownOption, undefined, ["42"])).toStrictEqual(O.some(42));
+      const decoded = Reflect.apply(decodeUnknownOption, undefined, ["42"]);
+      assertTrue(O.isOption(decoded));
+      assertSome(decoded, 42);
     }
     expect(Reflect.has(Annotated, "decodeEffect")).toBe(false);
   });
@@ -161,9 +160,11 @@ describe("withCodecStatics", () => {
     );
 
     expect(JsonStruct.encodeUnknownSync({ value: "ok" })).toBe('{\n  "value": "ok"\n}');
-    expect(
-      Result.isFailure(JsonStruct.decodeUnknownResult('{"value":"ok","extra":true}', { onExcessProperty: "error" }))
-    ).toBe(true);
+    pipe(
+      JsonStruct.decodeUnknownResult('{"value":"ok","extra":true}', { onExcessProperty: "error" }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it.effect(
@@ -189,10 +190,10 @@ describe("withCodecStatics", () => {
 
       expect(yield* Selected.decodeEffect("42")).toBe(42);
       expect(yield* Selected.encodeEffect(42)).toBe("42");
-      expect(Exit.getSuccess(Selected.decodeUnknownExit("42"))).toStrictEqual(O.some(42));
-      expect(Exit.getSuccess(Selected.encodeUnknownExit(42))).toStrictEqual(O.some("42"));
-      expect(Selected.decodeUnknownOption("42")).toStrictEqual(O.some(42));
-      expect(Selected.encodeUnknownOption(42)).toStrictEqual(O.some("42"));
+      assertSome(Exit.getSuccess(Selected.decodeUnknownExit("42")), 42);
+      assertSome(Exit.getSuccess(Selected.encodeUnknownExit(42)), "42");
+      assertSome(Selected.decodeUnknownOption("42"), 42);
+      assertSome(Selected.encodeUnknownOption(42), "42");
       expect(Result.getOrThrow(Selected.decodeUnknownResult("42"))).toBe(42);
       expect(Result.getOrThrow(Selected.encodeUnknownResult(42))).toBe("42");
       expect(Selected.decodeUnknownSync("42")).toBe(42);

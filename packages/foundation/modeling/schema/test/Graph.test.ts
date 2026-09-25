@@ -1,12 +1,15 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as GraphSchema from "@beep/schema/Graph";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import * as Graph_ from "effect/Graph";
-import * as Result from "effect/Result";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeGraphSchemaEdgeIndex = S.decodeUnknownEffect(GraphSchema.EdgeIndex);
@@ -36,14 +39,18 @@ describe("Graph indices", () => {
   it.effect(
     "rejects invalid indices",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeGraphSchemaNodeIndex(-1));
-      const isFailure1 = Result.isFailure(failure1);
+      const failure1 = yield* Effect.exit(decodeGraphSchemaNodeIndex(-1));
+      const isFailure1 = Exit.hasFails(failure1);
       assertTrue(isFailure1);
-      expect(failure1.failure.message).toContain("Expected a value greater than or equal to 0");
-      const failure2 = yield* Effect.result(decodeGraphSchemaEdgeIndexFromString("-1"));
-      const isFailure2 = Result.isFailure(failure2);
+      expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected a value greater than or equal to 0"
+      );
+      const failure2 = yield* Effect.exit(decodeGraphSchemaEdgeIndexFromString("-1"));
+      const isFailure2 = Exit.hasFails(failure2);
       assertTrue(isFailure2);
-      expect(failure2.failure.message).toContain("Expected a value greater than or equal to 0");
+      expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected a value greater than or equal to 0"
+      );
     })
   );
 
@@ -110,10 +117,10 @@ describe("Graph edge schemas", () => {
 
       expect(GraphSchema.isEdge(decoded)).toBe(true);
       expect(decoded.data).toBe(1);
-      const failure3 = yield* Effect.result(S.decodeUnknownEffect(schema)({ source: 0, target: 1, data: null }));
-      const isFailure3 = Result.isFailure(failure3);
+      const failure3 = yield* Effect.exit(S.decodeUnknownEffect(schema)({ source: 0, target: 1, data: null }));
+      const isFailure3 = Exit.hasFails(failure3);
       assertTrue(isFailure3);
-      expect(failure3.failure.message).toContain("Expected string");
+      expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain("Expected string");
     })
   );
 
@@ -124,8 +131,8 @@ describe("Graph edge schemas", () => {
       const equivalent = S.toEquivalence(schema);
       const edge = { source: 0, target: 1, data: "x" };
 
-      const isFailure4 = Result.isFailure(
-        yield* Effect.result(S.decodeEffect(schema)({ source: -1, target: 1, data: "x" }))
+      const isFailure4 = Exit.hasFails(
+        yield* Effect.exit(S.decodeEffect(schema)({ source: -1, target: 1, data: "x" }))
       );
       assertTrue(isFailure4);
       expect(equivalent(edge, { source: 0, target: 1, data: "x" })).toBe(true);
@@ -211,7 +218,7 @@ describe("DirectedGraph", () => {
         edge: S.String,
       });
 
-      const failure4 = yield* Effect.result(
+      const failure4 = yield* Effect.exit(
         S.decodeEffect(schema)({
           _tag: "Graph",
           type: "undirected",
@@ -219,11 +226,13 @@ describe("DirectedGraph", () => {
           edges: [],
         })
       );
-      const isFailure5 = Result.isFailure(failure4);
+      const isFailure5 = Exit.hasFails(failure4);
       assertTrue(isFailure5);
-      expect(failure4.failure.message).toContain("Expected directed graph, got undirected");
+      expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected directed graph, got undirected"
+      );
 
-      const failure5 = yield* Effect.result(
+      const failure5 = yield* Effect.exit(
         S.decodeUnknownEffect(schema)({
           _tag: "Graph",
           type: "directed",
@@ -231,11 +240,11 @@ describe("DirectedGraph", () => {
           edges: [{ index: 0, source: 0, target: 1, data: "x" }],
         })
       );
-      const isFailure6 = Result.isFailure(failure5);
+      const isFailure6 = Exit.hasFails(failure5);
       assertTrue(isFailure6);
-      expect(failure5.failure.message).toContain("Node 1 does not exist");
+      expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain("Node 1 does not exist");
 
-      const failure6 = yield* Effect.result(
+      const failure6 = yield* Effect.exit(
         S.decodeUnknownEffect(schema)({
           _tag: "Graph",
           type: "directed",
@@ -243,11 +252,13 @@ describe("DirectedGraph", () => {
           edges: [],
         })
       );
-      const isFailure7 = Result.isFailure(failure6);
+      const isFailure7 = Exit.hasFails(failure6);
       assertTrue(isFailure7);
-      expect(failure6.failure.message).toContain("Expected node index 1, got 0");
+      expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected node index 1, got 0"
+      );
 
-      const failure7 = yield* Effect.result(
+      const failure7 = yield* Effect.exit(
         S.decodeUnknownEffect(schema)({
           _tag: "Graph",
           type: "directed",
@@ -258,9 +269,11 @@ describe("DirectedGraph", () => {
           edges: [{ index: 1, source: 0, target: 1, data: "x" }],
         })
       );
-      const isFailure8 = Result.isFailure(failure7);
+      const isFailure8 = Exit.hasFails(failure7);
       assertTrue(isFailure8);
-      expect(failure7.failure.message).toContain("Expected edge index 1, got 0");
+      expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected edge index 1, got 0"
+      );
     })
   );
 });
@@ -351,10 +364,10 @@ describe("Graph FromSelf schemas", () => {
         Graph_.addEdge(mutable, a, b, "x");
       });
 
-      const failure8 = yield* Effect.result(S.decodeUnknownEffect(schema)(graph));
-      const isFailure9 = Result.isFailure(failure8);
+      const failure8 = yield* Effect.exit(S.decodeUnknownEffect(schema)(graph));
+      const isFailure9 = Exit.hasFails(failure8);
       assertTrue(isFailure9);
-      expect(failure8.failure.message).toContain(`Expected string
+      expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`Expected string
   at ["nodes"][1][1]`);
     })
   );
@@ -374,10 +387,12 @@ describe("Graph FromSelf schemas", () => {
         })
       );
 
-      const failure9 = yield* Effect.result(S.decodeUnknownEffect(schema)(graph));
-      const isFailure10 = Result.isFailure(failure9);
+      const failure9 = yield* Effect.exit(S.decodeUnknownEffect(schema)(graph));
+      const isFailure10 = Exit.hasFails(failure9);
       assertTrue(isFailure10);
-      expect(failure9.failure.message).toContain("Expected @beep/schema/Graph/GraphFromSelf");
+      expect(pipe(failure9.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected @beep/schema/Graph/GraphFromSelf"
+      );
     })
   );
 
@@ -431,7 +446,7 @@ describe("Graph FromSelf schemas", () => {
       expect(generic.mutable).toBe(true);
       expect(undirected.type).toBe("undirected");
       expect(undirected.mutable).toBe(true);
-      const isFailure11 = Result.isFailure(yield* Effect.result(S.decodeUnknownEffect(directedSchema)(graph)));
+      const isFailure11 = Exit.hasFails(yield* Effect.exit(S.decodeUnknownEffect(directedSchema)(graph)));
       assertTrue(isFailure11);
     })
   );

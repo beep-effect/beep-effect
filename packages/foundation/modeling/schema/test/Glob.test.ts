@@ -1,10 +1,14 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as GlobModule from "@beep/schema/Glob";
 import { Glob } from "@beep/schema/Glob";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Result from "effect/Result";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeGlobModuleSchemaEffect = S.decodeEffect(GlobModule.Schema);
@@ -29,10 +33,12 @@ describe("Glob", () => {
   it.effect(
     "rejects empty input",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownGlobEffect(""));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Glob pattern must not be empty");
+      const failure1 = yield* Effect.exit(decodeUnknownGlobEffect(""));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Glob pattern must not be empty"
+        );
       }
     })
   );
@@ -40,10 +46,12 @@ describe("Glob", () => {
   it.effect(
     "rejects backslash-separated patterns",
     Effect.fnUntraced(function* () {
-      const failure2 = yield* Effect.result(decodeUnknownGlobEffect("src\\**\\*.ts"));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain("Glob pattern must use forward slashes instead of backslashes");
+      const failure2 = yield* Effect.exit(decodeUnknownGlobEffect("src\\**\\*.ts"));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Glob pattern must use forward slashes instead of backslashes"
+        );
       }
     })
   );
@@ -53,10 +61,12 @@ describe("Glob", () => {
     Effect.fnUntraced(function* () {
       const tooLong = "a".repeat(65_537);
 
-      const failure3 = yield* Effect.result(decodeUnknownGlobEffect(tooLong));
-      expect(Result.isFailure(failure3)).toBe(true);
-      if (Result.isFailure(failure3)) {
-        expect(failure3.failure.message).toContain("Glob pattern must not exceed 65536 characters");
+      const failure3 = yield* Effect.exit(decodeUnknownGlobEffect(tooLong));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure3)) {
+        expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Glob pattern must not exceed 65536 characters"
+        );
       }
     })
   );
@@ -69,10 +79,10 @@ describe("Glob", () => {
   it.effect(
     "reports nested field failures at the glob key",
     Effect.fnUntraced(function* () {
-      const failure4 = yield* Effect.result(decodeGlobPayloadEffect({ glob: "src\\**\\*.ts" }));
-      expect(Result.isFailure(failure4)).toBe(true);
-      if (Result.isFailure(failure4)) {
-        expect(failure4.failure.message).toContain(`at ["glob"]`);
+      const failure4 = yield* Effect.exit(decodeGlobPayloadEffect({ glob: "src\\**\\*.ts" }));
+      pipe(failure4, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure4)) {
+        expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`at ["glob"]`);
       }
     })
   );

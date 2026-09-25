@@ -1,6 +1,8 @@
 import { fcRuns } from "@beep/fc-runs";
 import { OptionFromOptionalNullishKey } from "@beep/schema/Options";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -21,16 +23,16 @@ describe("OptionFromOptionalNullishKey", () => {
   it.effect(
     "decodes omitted, null, and undefined keys as None",
     Effect.fnUntraced(function* () {
-      expect((yield* decodeUnknownNicknamePayloadEffect({})).nickname).toEqual(O.none());
-      expect((yield* decodeUnknownNicknamePayloadEffect({ nickname: null })).nickname).toEqual(O.none());
-      expect((yield* decodeUnknownNicknamePayloadEffect({ nickname: undefined })).nickname).toEqual(O.none());
+      assertNone((yield* decodeUnknownNicknamePayloadEffect({})).nickname);
+      assertNone((yield* decodeUnknownNicknamePayloadEffect({ nickname: null })).nickname);
+      assertNone((yield* decodeUnknownNicknamePayloadEffect({ nickname: undefined })).nickname);
     })
   );
 
   it.effect(
     "decodes present non-nullish values as Some",
     Effect.fnUntraced(function* () {
-      expect((yield* decodeUnknownNicknamePayloadEffect({ nickname: "beep" })).nickname).toEqual(O.some("beep"));
+      assertSome((yield* decodeUnknownNicknamePayloadEffect({ nickname: "beep" })).nickname, "beep");
     })
   );
 

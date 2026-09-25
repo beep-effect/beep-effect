@@ -26,15 +26,18 @@ import { NoSniffHeader } from "@beep/schema/NoSniff";
 import { PermissionsPolicyHeader } from "@beep/schema/PermissionsPolicy";
 import { PermittedCrossDomainPoliciesHeader } from "@beep/schema/PermittedCrossDomainPolicies";
 import { ReferrerPolicyHeader } from "@beep/schema/ReferrerPolicy";
+import * as HeaderErrors from "@beep/schema/SecureHeaderError";
 import { createHeadersObject, createSecureHeaders, SecureHeaderOptions } from "@beep/schema/SecureHeaderOptions";
 import { XSSProtectionHeader } from "@beep/schema/XssProtection";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitSuccess, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { ContentSecurityPolicyOption } from "@beep/schema/Csp";
 
@@ -58,16 +61,13 @@ type HeaderLike = {
   readonly value: O.Option<string>;
 };
 
-const run = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(effect.pipe(Effect.orDie));
-const runExit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runSyncExit(effect.pipe(Effect.orDie));
-
 const expectHeader = (header: HeaderLike, name: string, value: string | undefined) => {
   expect(header.name).toBe(name);
   expect(O.getOrUndefined(header.value)).toBe(value);
 };
 
 const expectSomeHeader = (header: O.Option<HeaderLike>, name: string, value: string) => {
-  expect(O.isSome(header)).toBe(true);
+  pipe(header, O.isSome, assertTrue);
 
   if (O.isSome(header)) {
     expectHeader(header.value, name, value);
@@ -84,7 +84,8 @@ type CrossOriginCase = {
   readonly decodeValid: () => Effect.Effect<HeaderLike, S.SchemaError>;
   readonly createValueValid: () => Effect.Effect<O.Option<string>, never, never>;
   readonly createValid: () => Effect.Effect<O.Option<HeaderLike>, never, never>;
-  readonly createInvalid: () => Effect.Effect<O.Option<string>, never, never>;
+  readonly createInvalid: () => Effect.Effect<O.Option<string>, HeaderErrors.Error>;
+  readonly isError: (value: unknown) => boolean;
 };
 
 const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
@@ -98,7 +99,8 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     decodeValid: () => decodeCrossOriginEmbedderPolicyHeaderEffect("require-corp"),
     createValueValid: () => CrossOriginEmbedderPolicyHeader.createValue("require-corp").pipe(Effect.orDie),
     createValid: () => CrossOriginEmbedderPolicyHeader.create("require-corp").pipe(Effect.orDie),
-    createInvalid: () => CrossOriginEmbedderPolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
+    createInvalid: () => CrossOriginEmbedderPolicyHeader.createValue("invalid" as never),
+    isError: S.is(HeaderErrors.CrossOriginEmbedderPolicyError),
   },
   {
     label: "COOP",
@@ -110,7 +112,8 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     decodeValid: () => decodeCrossOriginOpenerPolicyHeaderEffect("same-origin"),
     createValueValid: () => CrossOriginOpenerPolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginOpenerPolicyHeader.create("same-origin").pipe(Effect.orDie),
-    createInvalid: () => CrossOriginOpenerPolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
+    createInvalid: () => CrossOriginOpenerPolicyHeader.createValue("invalid" as never),
+    isError: S.is(HeaderErrors.CrossOriginOpenerPolicyError),
   },
   {
     label: "CORP",
@@ -122,7 +125,8 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     decodeValid: () => decodeCrossOriginResourcePolicyHeaderEffect("same-origin"),
     createValueValid: () => CrossOriginResourcePolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginResourcePolicyHeader.create("same-origin").pipe(Effect.orDie),
-    createInvalid: () => CrossOriginResourcePolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
+    createInvalid: () => CrossOriginResourcePolicyHeader.createValue("invalid" as never),
+    isError: S.is(HeaderErrors.CrossOriginResourcePolicyError),
   },
 ];
 
@@ -144,10 +148,10 @@ describe("Secure header schemas", () => {
     "rejects encoding a normalized COEP header back to its one-way input boundary",
     Effect.fnUntraced(function* () {
       const header = yield* decodeCrossOriginEmbedderPolicyHeaderEffect("require-corp");
-      const result = yield* Effect.result(encodeCrossOriginEmbedderPolicyHeaderEffect(header));
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isFailure(result)) {
-        expect(result.failure.message).toContain(
+      const result = yield* Effect.exit(encodeCrossOriginEmbedderPolicyHeaderEffect(header));
+      pipe(result, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(result)) {
+        expect(pipe(result.cause, Cause.findErrorOption, O.getOrThrow).message).toContain(
           "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported"
         );
       }
@@ -169,7 +173,7 @@ describe("Secure header schemas", () => {
         Effect.fnUntraced(function* () {
           expectHeader(yield* testCase.decodeValid(), testCase.headerName, testCase.validValue);
           const createdValue = yield* testCase.createValueValid();
-          expect(createdValue).toEqual(O.some(testCase.validValue));
+          assertSome(createdValue, testCase.validValue);
           expectSomeHeader(yield* testCase.createValid(), testCase.headerName, testCase.validValue);
         })
       );
@@ -190,7 +194,7 @@ describe("Secure header schemas", () => {
       it.effect(
         "fails on invalid createValue input",
         Effect.fnUntraced(function* () {
-          expect(Exit.isFailure(yield* Effect.exit(testCase.createInvalid()))).toBe(true);
+          pipe(yield* Effect.flip(testCase.createInvalid()), testCase.isError, assertTrue);
         })
       );
     });
@@ -209,7 +213,7 @@ describe("Secure header schemas", () => {
       const expected = "max-age=123, enforce, report-uri=https://example.com/report";
 
       expectHeader(yield* decodeExpectCTHeader(encoded), "Expect-CT", expected);
-      expect(runExit(ExpectCTHeader.createValue(encoded))).toStrictEqual(Exit.succeed(O.some(expected)));
+      assertExitSuccess(yield* Effect.exit(ExpectCTHeader.createValue(encoded).pipe(Effect.orDie)), O.some(expected));
     })
   );
 
@@ -221,46 +225,46 @@ describe("Secure header schemas", () => {
       expectHeader(yield* decodeExpectCTHeader([true, {}]), "Expect-CT", "max-age=86400");
       expectHeader(yield* decodeExpectCTHeader([true, { enforce: false }]), "Expect-CT", "max-age=86400");
 
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(ExpectCTHeader.createValue())).resolves.toEqual(O.none()))
+      assertNone(yield* ExpectCTHeader.createValue().pipe(Effect.orDie));
+      assertNone(yield* ExpectCTHeader.createValue(false).pipe(Effect.orDie));
+      assertSome(yield* ExpectCTHeader.createValue(true).pipe(Effect.orDie), "max-age=86400");
+      pipe(yield* ExpectCTHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(
+        yield* Effect.flip(
+          ExpectCTHeader.createValue([
+            true,
+            {
+              reportURI: "not-a-url",
+            },
+          ] as const)
+        ),
+        S.is(HeaderErrors.ExpectCtError),
+        assertTrue
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(ExpectCTHeader.createValue(false))).resolves.toEqual(O.none()))
+      pipe(
+        yield* Effect.flip(ExpectCTHeader.createValue([true, { maxAge: -1 }] as never)),
+        S.is(HeaderErrors.ExpectCtError),
+        assertTrue
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(ExpectCTHeader.createValue(true))).resolves.toEqual(O.some("max-age=86400")))
-      );
-      expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(ExpectCTHeader.create(false)))))).toBe(true);
-      expect(
-        Exit.isFailure(
-          runExit(
-            ExpectCTHeader.createValue([
-              true,
-              {
-                reportURI: "not-a-url",
-              },
-            ] as const)
-          )
-        )
-      ).toBe(true);
-      expect(Exit.isFailure(runExit(ExpectCTHeader.createValue([true, { maxAge: -1 }] as never)))).toBe(true);
     })
   );
 
   it.effect("formats HSTS defaults and tuple options", () =>
     Effect.gen(function* () {
       expectHeader(yield* decodeForceHttpsRedirectHeader(undefined), "Strict-Transport-Security", "max-age=63072000");
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(
-            run(ForceHttpsRedirectHeader.createValue([true, { maxAge: 120, includeSubDomains: true, preload: true }]))
-          ).resolves.toEqual(O.some("max-age=120; includeSubDomains; preload"))
-        )
+      assertSome(
+        yield* ForceHttpsRedirectHeader.createValue([
+          true,
+          { maxAge: 120, includeSubDomains: true, preload: true },
+        ]).pipe(Effect.orDie),
+        "max-age=120; includeSubDomains; preload"
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(ForceHttpsRedirectHeader.createValue(false))).resolves.toEqual(O.none()))
+      assertNone(yield* ForceHttpsRedirectHeader.createValue(false).pipe(Effect.orDie));
+      pipe(
+        yield* Effect.flip(ForceHttpsRedirectHeader.createValue([true, { maxAge: -1 }] as never)),
+        S.is(HeaderErrors.ForceHttpsRedirectError),
+        assertTrue
       );
-      expect(Exit.isFailure(runExit(ForceHttpsRedirectHeader.createValue([true, { maxAge: -1 }] as never)))).toBe(true);
     })
   );
 
@@ -275,19 +279,9 @@ describe("Secure header schemas", () => {
         "max-age=120"
       );
 
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(ForceHttpsRedirectHeader.createValue())).resolves.toEqual(O.some("max-age=63072000"))
-        )
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(ForceHttpsRedirectHeader.createValue(true))).resolves.toEqual(O.some("max-age=63072000"))
-        )
-      );
-      expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(ForceHttpsRedirectHeader.create(false)))))).toBe(
-        true
-      );
+      assertSome(yield* ForceHttpsRedirectHeader.createValue().pipe(Effect.orDie), "max-age=63072000");
+      assertSome(yield* ForceHttpsRedirectHeader.createValue(true).pipe(Effect.orDie), "max-age=63072000");
+      pipe(yield* ForceHttpsRedirectHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
     })
   );
 
@@ -296,12 +290,9 @@ describe("Secure header schemas", () => {
       const option = ["allow-from", { uri: "https://example.com/frame" }] as const;
 
       expectHeader(yield* decodeFrameGuardHeader(option), "X-Frame-Options", "allow-from https://example.com/frame");
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(FrameGuardHeader.createValue(option))).resolves.toEqual(
-            O.some("allow-from https://example.com/frame")
-          )
-        )
+      assertSome(
+        yield* FrameGuardHeader.createValue(option).pipe(Effect.orDie),
+        "allow-from https://example.com/frame"
       );
     })
   );
@@ -313,18 +304,14 @@ describe("Secure header schemas", () => {
       expectHeader(yield* decodeFrameGuardHeader("deny"), "X-Frame-Options", "deny");
       expectHeader(yield* decodeFrameGuardHeader("sameorigin"), "X-Frame-Options", "sameorigin");
 
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(FrameGuardHeader.createValue())).resolves.toEqual(O.some("deny")))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(FrameGuardHeader.createValue(false))).resolves.toEqual(O.none()))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(FrameGuardHeader.createValue("sameorigin"))).resolves.toEqual(O.some("sameorigin")))
-      );
-      expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(FrameGuardHeader.create(false)))))).toBe(true);
-      expect(Exit.isFailure(runExit(FrameGuardHeader.createValue(["allow-from", { uri: "not-a-url" }] as never)))).toBe(
-        true
+      assertSome(yield* FrameGuardHeader.createValue().pipe(Effect.orDie), "deny");
+      assertNone(yield* FrameGuardHeader.createValue(false).pipe(Effect.orDie));
+      assertSome(yield* FrameGuardHeader.createValue("sameorigin").pipe(Effect.orDie), "sameorigin");
+      pipe(yield* FrameGuardHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(
+        yield* Effect.flip(FrameGuardHeader.createValue(["allow-from", { uri: "not-a-url" }] as never)),
+        S.is(HeaderErrors.FrameGuardError),
+        assertTrue
       );
     })
   );
@@ -339,15 +326,9 @@ describe("Secure header schemas", () => {
         "none"
       );
 
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(NoOpenHeader.createValue())).resolves.toEqual(O.some("noopen")))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(NoSniffHeader.createValue())).resolves.toEqual(O.some("nosniff")))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(PermittedCrossDomainPoliciesHeader.createValue())).resolves.toEqual(O.some("none")))
-      );
+      assertSome(yield* NoOpenHeader.createValue().pipe(Effect.orDie), "noopen");
+      assertSome(yield* NoSniffHeader.createValue().pipe(Effect.orDie), "nosniff");
+      assertSome(yield* PermittedCrossDomainPoliciesHeader.createValue().pipe(Effect.orDie), "none");
     })
   );
 
@@ -368,29 +349,29 @@ describe("Secure header schemas", () => {
         "master-only"
       );
 
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(NoOpenHeader.createValue(false))).resolves.toEqual(O.none()))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(NoSniffHeader.createValue(false))).resolves.toEqual(O.none()))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(PermittedCrossDomainPoliciesHeader.createValue(false))).resolves.toEqual(O.none()))
-      );
-      expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(NoOpenHeader.create(false)))))).toBe(true);
-      expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(NoSniffHeader.create(false)))))).toBe(true);
-      expect(
-        O.isNone(yield* Effect.promise(() => Promise.resolve(run(PermittedCrossDomainPoliciesHeader.create(false)))))
-      ).toBe(true);
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(PermittedCrossDomainPoliciesHeader.createValue("all"))).resolves.toEqual(O.some("all"))
-        )
-      );
+      assertNone(yield* NoOpenHeader.createValue(false).pipe(Effect.orDie));
+      assertNone(yield* NoSniffHeader.createValue(false).pipe(Effect.orDie));
+      assertNone(yield* PermittedCrossDomainPoliciesHeader.createValue(false).pipe(Effect.orDie));
+      pipe(yield* NoOpenHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* NoSniffHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* PermittedCrossDomainPoliciesHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      assertSome(yield* PermittedCrossDomainPoliciesHeader.createValue("all").pipe(Effect.orDie), "all");
 
-      expect(Exit.isFailure(runExit(NoOpenHeader.createValue("invalid" as never)))).toBe(true);
-      expect(Exit.isFailure(runExit(NoSniffHeader.createValue("invalid" as never)))).toBe(true);
-      expect(Exit.isFailure(runExit(PermittedCrossDomainPoliciesHeader.createValue("invalid" as never)))).toBe(true);
+      pipe(
+        yield* Effect.flip(NoOpenHeader.createValue("invalid" as never)),
+        S.is(HeaderErrors.NoOpenError),
+        assertTrue
+      );
+      pipe(
+        yield* Effect.flip(NoSniffHeader.createValue("invalid" as never)),
+        S.is(HeaderErrors.NoSniffError),
+        assertTrue
+      );
+      pipe(
+        yield* Effect.flip(PermittedCrossDomainPoliciesHeader.createValue("invalid" as never)),
+        S.is(HeaderErrors.PermittedCrossDomainPoliciesError),
+        assertTrue
+      );
     })
   );
 
@@ -409,33 +390,30 @@ describe("Secure header schemas", () => {
         "Permissions-Policy",
         'camera=(), microphone=(self), geolocation=("https://example.com")'
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(PermissionsPolicyHeader.createValue(option))).resolves.toEqual(
-            O.some('camera=(), microphone=(self), geolocation=("https://example.com")')
-          )
-        )
+      assertSome(
+        yield* PermissionsPolicyHeader.createValue(option).pipe(Effect.orDie),
+        'camera=(), microphone=(self), geolocation=("https://example.com")'
       );
-      const invalid = runExit(
+      const invalid = yield* Effect.flip(
         PermissionsPolicyHeader.createValue({
           directives: {
             "invalid-directive": "none",
           } as never,
         })
       );
-      expect(Exit.isFailure(invalid)).toBe(true);
-      expect(
-        Exit.isFailure(
-          runExit(
-            decodePermissionsPolicyHeader({
-              directives: {
-                camera: "none",
-                "invalid-directive": "none",
-              },
-            })
-          )
-        )
-      ).toBe(true);
+      pipe(invalid, S.is(HeaderErrors.PermissionsPolicyError), assertTrue);
+      pipe(
+        yield* Effect.flip(
+          decodePermissionsPolicyHeader({
+            directives: {
+              camera: "none",
+              "invalid-directive": "none",
+            },
+          })
+        ),
+        S.isSchemaError,
+        assertTrue
+      );
     })
   );
 
@@ -458,25 +436,14 @@ describe("Secure header schemas", () => {
         'autoplay=*, fullscreen=(self "https://example.com"), payment=("https://pay.example")'
       );
 
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(PermissionsPolicyHeader.createValue())).resolves.toEqual(O.none()))
+      assertNone(yield* PermissionsPolicyHeader.createValue().pipe(Effect.orDie));
+      assertNone(yield* PermissionsPolicyHeader.createValue(false).pipe(Effect.orDie));
+      assertNone(yield* PermissionsPolicyHeader.createValue({ directives: {} }).pipe(Effect.orDie));
+      assertSome(
+        yield* PermissionsPolicyHeader.createValue(option).pipe(Effect.orDie),
+        'autoplay=*, fullscreen=(self "https://example.com"), payment=("https://pay.example")'
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(PermissionsPolicyHeader.createValue(false))).resolves.toEqual(O.none()))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(PermissionsPolicyHeader.createValue({ directives: {} }))).resolves.toEqual(O.none()))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(PermissionsPolicyHeader.createValue(option))).resolves.toEqual(
-            O.some('autoplay=*, fullscreen=(self "https://example.com"), payment=("https://pay.example")')
-          )
-        )
-      );
-      expect(
-        O.isNone(yield* Effect.promise(() => Promise.resolve(run(PermissionsPolicyHeader.create({ directives: {} })))))
-      ).toBe(true);
+      pipe(yield* PermissionsPolicyHeader.create({ directives: {} }).pipe(Effect.orDie), O.isNone, assertTrue);
     })
   );
 
@@ -489,14 +456,15 @@ describe("Secure header schemas", () => {
         "Referrer-Policy",
         "no-referrer, origin, strict-origin-when-cross-origin"
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(ReferrerPolicyHeader.createValue(option))).resolves.toEqual(
-            O.some("no-referrer, origin, strict-origin-when-cross-origin")
-          )
-        )
+      assertSome(
+        yield* ReferrerPolicyHeader.createValue(option).pipe(Effect.orDie),
+        "no-referrer, origin, strict-origin-when-cross-origin"
       );
-      expect(Exit.isFailure(runExit(ReferrerPolicyHeader.createValue("unsafe-url" as never)))).toBe(true);
+      pipe(
+        yield* Effect.flip(ReferrerPolicyHeader.createValue("unsafe-url" as never)),
+        S.is(HeaderErrors.ReferrerPolicyError),
+        assertTrue
+      );
     })
   );
 
@@ -512,15 +480,10 @@ describe("Secure header schemas", () => {
         "1; report=https://example.com/report"
       );
 
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(XSSProtectionHeader.createValue(false))).resolves.toEqual(O.some("0")))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(XSSProtectionHeader.createValue(reportOption))).resolves.toEqual(
-            O.some("1; report=https://example.com/report")
-          )
-        )
+      assertSome(yield* XSSProtectionHeader.createValue(false).pipe(Effect.orDie), "0");
+      assertSome(
+        yield* XSSProtectionHeader.createValue(reportOption).pipe(Effect.orDie),
+        "1; report=https://example.com/report"
       );
     })
   );
@@ -540,15 +503,12 @@ describe("Secure header schemas", () => {
         "Content-Security-Policy-Report-Only",
         "script-src 'self'; report-uri https://example.com/csp"
       );
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          expect(run(ContentSecurityPolicyHeader.createValue(option))).resolves.toEqual(
-            O.some("script-src 'self'; report-uri https://example.com/csp")
-          )
-        )
+      assertSome(
+        yield* ContentSecurityPolicyHeader.createValue(option).pipe(Effect.orDie),
+        "script-src 'self'; report-uri https://example.com/csp"
       );
       expectSomeHeader(
-        yield* Effect.promise(() => Promise.resolve(run(ContentSecurityPolicyHeader.create(option)))),
+        yield* ContentSecurityPolicyHeader.create(option).pipe(Effect.orDie),
         "Content-Security-Policy-Report-Only",
         "script-src 'self'; report-uri https://example.com/csp"
       );
@@ -598,81 +558,61 @@ describe("Secure header schemas", () => {
 
   it.effect("handles disabled and empty CSP options", () =>
     Effect.gen(function* () {
-      expect(createContentSecurityPolicyOptionHeaderValue()).toEqual(O.none());
-      expect(createContentSecurityPolicyOptionHeaderValue(false)).toEqual(O.none());
-      expect(createContentSecurityPolicyOptionHeaderValue({ directives: { sandbox: true } })).toEqual(
-        O.some("sandbox")
-      );
+      assertNone(createContentSecurityPolicyOptionHeaderValue());
+      assertNone(createContentSecurityPolicyOptionHeaderValue(false));
+      assertSome(createContentSecurityPolicyOptionHeaderValue({ directives: { sandbox: true } }), "sandbox");
       expectHeader(yield* decodeContentSecurityPolicyHeader(undefined), "Content-Security-Policy", undefined);
       expectHeader(yield* decodeContentSecurityPolicyHeader(false), "Content-Security-Policy", undefined);
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(ContentSecurityPolicyHeader.createValue())).resolves.toEqual(O.none()))
-      );
-      yield* Effect.promise(() =>
-        Promise.resolve(expect(run(ContentSecurityPolicyHeader.createValue(false))).resolves.toEqual(O.none()))
-      );
-      expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(ContentSecurityPolicyHeader.create()))))).toBe(
-        true
-      );
-      expect(
-        O.isNone(yield* Effect.promise(() => Promise.resolve(run(ContentSecurityPolicyHeader.create(false)))))
-      ).toBe(true);
+      assertNone(yield* ContentSecurityPolicyHeader.createValue().pipe(Effect.orDie));
+      assertNone(yield* ContentSecurityPolicyHeader.createValue(false).pipe(Effect.orDie));
+      pipe(yield* ContentSecurityPolicyHeader.create().pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* ContentSecurityPolicyHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
 
-      const emptyDecode = runExit(decodeContentSecurityPolicyHeader({ directives: {} }));
-      expect(Exit.isFailure(emptyDecode)).toBe(true);
+      const emptyDecode = yield* Effect.flip(decodeContentSecurityPolicyHeader({ directives: {} }));
+      pipe(emptyDecode, S.isSchemaError, assertTrue);
     })
   );
 });
 
 describe("Secure header aggregates", () => {
   it.effect("creates the default secure headers object", () =>
-    Effect.promise(() =>
-      Promise.resolve(
-        expect(run(createHeadersObject())).resolves.toEqual({
-          "Strict-Transport-Security": "max-age=63072000",
-          "X-Frame-Options": "deny",
-          "X-Download-Options": "noopen",
-          "X-Content-Type-Options": "nosniff",
-          "X-Permitted-Cross-Domain-Policies": "none",
-          "X-XSS-Protection": "1",
-        })
-      )
-    )
+    Effect.gen(function* () {
+      return expect(yield* createHeadersObject().pipe(Effect.orDie)).toEqual({
+        "Strict-Transport-Security": "max-age=63072000",
+        "X-Frame-Options": "deny",
+        "X-Download-Options": "noopen",
+        "X-Content-Type-Options": "nosniff",
+        "X-Permitted-Cross-Domain-Policies": "none",
+        "X-XSS-Protection": "1",
+      });
+    })
   );
 
   it.effect("treats omitted, undefined, and schema-constructed empty options identically", () =>
     Effect.gen(function* () {
-      const omitted = yield* Effect.promise(() => Promise.resolve(run(createHeadersObject())));
-      const explicitUndefined = yield* Effect.promise(() => Promise.resolve(run(createHeadersObject(undefined))));
-      const schemaConstructed = yield* Effect.promise(() =>
-        Promise.resolve(run(createHeadersObject(SecureHeaderOptions.make({}))))
-      );
+      const omitted = yield* createHeadersObject();
+      const explicitUndefined = yield* createHeadersObject(undefined);
+      const schemaConstructed = yield* createHeadersObject(SecureHeaderOptions.make({}));
 
       expect(explicitUndefined).toEqual(omitted);
       expect(schemaConstructed).toEqual(omitted);
-    })
+    }).pipe(Effect.orDie)
   );
 
   it.effect("creates customized secure headers and omits disabled values", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.promise(() =>
-        Promise.resolve(
-          run(
-            createHeadersObject({
-              frameGuard: "sameorigin",
-              referrerPolicy: "same-origin",
-              noopen: false,
-              nosniff: false,
-              contentSecurityPolicy: {
-                directives: {
-                  scriptSrc: "'self'",
-                },
-              },
-              expectCT: [true, { maxAge: 123, reportURI: "https://example.com/report" }],
-            })
-          )
-        )
-      );
+      const result = yield* createHeadersObject({
+        frameGuard: "sameorigin",
+        referrerPolicy: "same-origin",
+        noopen: false,
+        nosniff: false,
+        contentSecurityPolicy: {
+          directives: {
+            scriptSrc: "'self'",
+          },
+        },
+        expectCT: [true, { maxAge: 123, reportURI: "https://example.com/report" }],
+      }).pipe(Effect.orDie);
 
       expect(result["X-Frame-Options"]).toBe("sameorigin");
       expect(result["Referrer-Policy"]).toBe("same-origin");
@@ -685,9 +625,7 @@ describe("Secure header aggregates", () => {
 
   it.effect("creates secure headers in key/value form", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.promise(() =>
-        Promise.resolve(run(createSecureHeaders({ frameGuard: "sameorigin" })))
-      );
+      const result = yield* createSecureHeaders({ frameGuard: "sameorigin" }).pipe(Effect.orDie);
       const plain = pipe(
         result,
         A.map((header) => ({
@@ -713,7 +651,7 @@ describe("Secure header aggregates", () => {
 
   it.effect("creates default secure headers in key/value form", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.promise(() => Promise.resolve(run(createSecureHeaders())));
+      const result = yield* createSecureHeaders().pipe(Effect.orDie);
       const plain = pipe(
         result,
         A.map((header) => ({

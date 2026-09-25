@@ -14,7 +14,9 @@ import {
   ValidateFileTypeOptions,
   validateFileType,
 } from "@beep/schema/FileTypeChecker";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Match, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -121,13 +123,13 @@ describe("FileTypeChecker schemas", () => {
   it("owns constructor, decoding, and encoding defaults", () => {
     const madeSignature = FileSignature.make({ sequence: [0x50, 0x4b] });
     expect(madeSignature).toMatchObject({ offset: 0, skippedBytes: [], compatibleExtensions: [] });
-    expect(O.isNone(madeSignature.description)).toBe(true);
+    pipe(madeSignature.description, O.isNone, assertTrue);
 
     const decodedSignature = Result.getOrThrow(decodeFileSignatureResult({ sequence: [0x50, 0x4b] }));
     expect(decodedSignature.offset).toBe(0);
     expect(decodedSignature.skippedBytes).toEqual([]);
     expect(decodedSignature.compatibleExtensions).toEqual([]);
-    expect(O.isNone(decodedSignature.description)).toBe(true);
+    pipe(decodedSignature.description, O.isNone, assertTrue);
     expect(Result.getOrThrow(encodeUnknownFileSignatureResult(decodedSignature))).toEqual({
       sequence: [0x50, 0x4b],
       offset: 0,
@@ -159,10 +161,10 @@ describe("FileTypeChecker schemas", () => {
 
   it("rejects invalid bytes, options, signatures, and file types", () => {
     for (const invalidByte of [-1, 0.5, 256]) {
-      expect(Result.isFailure(decodeByteResult(invalidByte))).toBe(true);
+      pipe(decodeByteResult(invalidByte), Result.isFailure, assertTrue);
     }
     for (const invalidChunkSize of [-1, 0, 1.5]) {
-      expect(Result.isFailure(decodeDetectFileOptionsResult({ chunkSize: invalidChunkSize }))).toBe(true);
+      pipe(decodeDetectFileOptionsResult({ chunkSize: invalidChunkSize }), Result.isFailure, assertTrue);
     }
     for (const invalidSignature of [
       { sequence: [] },
@@ -170,7 +172,7 @@ describe("FileTypeChecker schemas", () => {
       { sequence: [1], skippedBytes: [99] },
       { sequence: [1], compatibleExtensions: ["png", "png"] },
     ]) {
-      expect(Result.isFailure(decodeUnknownFileSignatureResult(invalidSignature))).toBe(true);
+      pipe(decodeUnknownFileSignatureResult(invalidSignature), Result.isFailure, assertTrue);
     }
     const rawSignature = { sequence: [0x89, 0x50, 0x4e, 0x47] };
     for (const invalidInfo of [
@@ -193,18 +195,18 @@ describe("FileTypeChecker schemas", () => {
         signatures: [rawSignature],
       },
     ]) {
-      expect(Result.isFailure(decodeUnknownFileTypeInfoResult(invalidInfo))).toBe(true);
+      pipe(decodeUnknownFileTypeInfoResult(invalidInfo), Result.isFailure, assertTrue);
     }
-    expect(
-      Result.isSuccess(
-        decodeFileTypeInfoResult({
-          extension: "blend",
-          mimeType: "application/x-blender",
-          description: "Blender asset",
-          signatures: [{ sequence: [0x42, 0x4c, 0x45, 0x4e, 0x44, 0x45, 0x52] }],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeFileTypeInfoResult({
+        extension: "blend",
+        mimeType: "application/x-blender",
+        description: "Blender asset",
+        signatures: [{ sequence: [0x42, 0x4c, 0x45, 0x4e, 0x44, 0x45, 0x52] }],
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
     expect(isFileContent([0, 255])).toBe(true);
     expect(isFileContent([256])).toBe(false);
     expect(isFileType("png")).toBe(true);
@@ -221,9 +223,11 @@ describe("FileTypeChecker schemas", () => {
       skippedBytes: [1, 2],
       compatibleExtensions: ["flv", "mp4"],
     });
-    expect(Result.isFailure(decodeFileSignatureResult({ sequence: [1], skippedBytes: [2, 1] }))).toBe(true);
-    expect(Result.isFailure(decodeFileSignatureResult({ sequence: [1], compatibleExtensions: ["mp4", "flv"] }))).toBe(
-      true
+    pipe(decodeFileSignatureResult({ sequence: [1], skippedBytes: [2, 1] }), Result.isFailure, assertTrue);
+    pipe(
+      decodeFileSignatureResult({ sequence: [1], compatibleExtensions: ["mp4", "flv"] }),
+      Result.isFailure,
+      assertTrue
     );
   });
 
@@ -245,7 +249,7 @@ describe("FileTypeChecker schemas", () => {
     for (const content of [[1, 2], new Uint8Array([1, 2]), new Uint8Array([1, 2]).buffer]) {
       const decoded = Result.getOrThrow(decodeFileContentResult(content));
       const encoded = Result.getOrThrow(encodeUnknownFileContentResult(decoded));
-      expect(Result.isSuccess(decodeFileContentResult(encoded))).toBe(true);
+      pipe(decodeFileContentResult(encoded), Result.isSuccess, assertTrue);
     }
   });
 
@@ -262,37 +266,32 @@ describe("FileTypeChecker schemas", () => {
     }
   });
 
-  it("derives codec-equivalent arbitrary values from every public schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(FileType),
-            Arbitrary.schema(Byte),
-            Arbitrary.schema(FileContent),
-            Arbitrary.schema(FileSignature),
-            Arbitrary.schema(FileTypeInfo),
-            Arbitrary.schema(DetectedFileInfo),
-            Arbitrary.schema(DetectFileOptions),
-            Arbitrary.schema(ValidateFileTypeOptions),
-          ]),
-          ([type, byte, content, signature, info, detected, detectOptions, validateOptions]) => {
-            expectSchemaRoundTrip(FileType, type);
-            expectSchemaRoundTrip(Byte, byte);
-            expectSchemaRoundTrip(FileContent, content);
-            expectSchemaRoundTrip(FileSignature, signature);
-            expectSchemaRoundTrip(FileTypeInfo, info);
-            expectSchemaRoundTrip(DetectedFileInfo, detected);
-            expectSchemaRoundTrip(DetectFileOptions, detectOptions);
-            expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
+  it.effect.prop(
+    "derives codec-equivalent arbitrary values from every public schema",
+    [
+      Arbitrary.schema(FileType),
+      Arbitrary.schema(Byte),
+      Arbitrary.schema(FileContent),
+      Arbitrary.schema(FileSignature),
+      Arbitrary.schema(FileTypeInfo),
+      Arbitrary.schema(DetectedFileInfo),
+      Arbitrary.schema(DetectFileOptions),
+      Arbitrary.schema(ValidateFileTypeOptions),
+    ],
+    Effect.fnUntraced(function* ([type, byte, content, signature, info, detected, detectOptions, validateOptions]) {
+      expectSchemaRoundTrip(FileType, type);
+      expectSchemaRoundTrip(Byte, byte);
+      expectSchemaRoundTrip(FileContent, content);
+      expectSchemaRoundTrip(FileSignature, signature);
+      expectSchemaRoundTrip(FileTypeInfo, info);
+      expectSchemaRoundTrip(DetectedFileInfo, detected);
+      expectSchemaRoundTrip(DetectFileOptions, detectOptions);
+      expectSchemaRoundTrip(ValidateFileTypeOptions, validateOptions);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 describe("detectFile", () => {
@@ -333,13 +332,13 @@ describe("detectFile", () => {
   it("returns none for empty, invalid, detached, unknown, truncated, and inconclusive input", () => {
     const detached = new ArrayBuffer(4);
     detached.transfer();
-    expect(O.isNone(detectFile([]))).toBe(true);
-    expect(O.isNone(detectFile([256]))).toBe(true);
-    expect(O.isNone(detectFile(detached))).toBe(true);
-    expect(O.isNone(detectFile([1, 2, 3, 4]))).toBe(true);
-    expect(O.isNone(detectFile(pngBytes, DetectFileOptions.make({ chunkSize: pngBytes.length - 1 })))).toBe(true);
-    expect(O.isNone(detectFile([0, 0, 0]))).toBe(true);
-    expect(O.isNone(detectFile([0x1a, 0x45, 0xdf, 0xa3]))).toBe(true);
+    pipe(detectFile([]), O.isNone, assertTrue);
+    pipe(detectFile([256]), O.isNone, assertTrue);
+    pipe(detectFile(detached), O.isNone, assertTrue);
+    pipe(detectFile([1, 2, 3, 4]), O.isNone, assertTrue);
+    pipe(detectFile(pngBytes, DetectFileOptions.make({ chunkSize: pngBytes.length - 1 })), O.isNone, assertTrue);
+    pipe(detectFile([0, 0, 0]), O.isNone, assertTrue);
+    pipe(detectFile([0x1a, 0x45, 0xdf, 0xa3]), O.isNone, assertTrue);
   });
 
   it("honors skipped positions independently of significant signature bytes", () => {
@@ -348,7 +347,7 @@ describe("detectFile", () => {
     const changedSignificantByte = pipe(A.replace(wav, 8, 0xff), O.getOrThrow);
     expect(O.getOrThrow(detectFile(wav)).extension).toBe("wav");
     expect(O.getOrThrow(detectFile(changedSkippedByte)).extension).toBe("wav");
-    expect(O.isNone(detectFile(changedSignificantByte))).toBe(true);
+    pipe(detectFile(changedSignificantByte), O.isNone, assertTrue);
   });
 
   it("respects exact chunk boundaries and explicitly enlarged high-offset windows", () => {
@@ -356,9 +355,9 @@ describe("detectFile", () => {
       if (Num.Equivalence(signature.offset, 0)) continue;
       const sample = baseSampleFromSignature(signature);
       const boundary = signature.offset + signature.sequence.length + signature.skippedBytes.length;
-      expect(O.isNone(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary - 1 })))).toBe(true);
+      pipe(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary - 1 })), O.isNone, assertTrue);
       expect(O.getOrThrow(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary }))).extension).toBe("zip");
-      if (boundary > 64) expect(O.isNone(detectFile(sample))).toBe(true);
+      if (boundary > 64) pipe(detectFile(sample), O.isNone, assertTrue);
     }
   });
 
@@ -371,7 +370,7 @@ describe("detectFile", () => {
       expect(O.getOrThrow(detectFile(sampleFromSignature("heic", signature))).extension).toBe("heic");
     }
     const ebml = baseSampleFromSignature(FileTypeCatalog.webm.signatures[0]);
-    expect(O.isNone(detectFile(pipe(ebml, A.appendAll(webmDocType), A.appendAll(matroskaDocType))))).toBe(true);
+    pipe(detectFile(pipe(ebml, A.appendAll(webmDocType), A.appendAll(matroskaDocType))), O.isNone, assertTrue);
   });
 });
 
@@ -425,8 +424,10 @@ describe("validateFileType", () => {
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.
-it.effect("encodes FileSignature through its generation link", () =>
-  Effect.gen(function* () {
+it.effect.prop(
+  "encodes FileSignature through its generation link",
+  [Arbitrary.schema(FileSignature)],
+  Effect.fnUntraced(function* ([value]) {
     const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
       FileSignature.ast
     ).annotations;
@@ -434,23 +435,19 @@ it.effect("encodes FileSignature through its generation link", () =>
     if (link === undefined || link.transformation._tag !== "Transformation")
       throw new Error("Missing generation transformation");
     expect(link.transformation._tag).toBe("Transformation");
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(FileSignature),
-      (value) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeFileSignatureLink(value);
-          expect(encoded).toEqual(yield* encodeFileSignature(value));
-          return true;
-        }),
-      fcRuns(50)
-    );
-    expect(result._tag).toBe("Passed");
-  })
+    const encoded = yield* encodeFileSignatureLink(value);
+    expect(encoded).toEqual(yield* encodeFileSignature(value));
+
+    return true;
+  }),
+  { arbitrary: fcRuns(50) }
 );
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.
-it.effect("encodes DetectedFileInfo through its generation link", () =>
-  Effect.gen(function* () {
+it.effect.prop(
+  "encodes DetectedFileInfo through its generation link",
+  [Arbitrary.schema(DetectedFileInfo)],
+  Effect.fnUntraced(function* ([value]) {
     const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
       DetectedFileInfo.ast
     ).annotations;
@@ -458,18 +455,12 @@ it.effect("encodes DetectedFileInfo through its generation link", () =>
     if (link === undefined || link.transformation._tag !== "Transformation")
       throw new Error("Missing generation transformation");
     expect(link.transformation._tag).toBe("Transformation");
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(DetectedFileInfo),
-      (value) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeDetectedFileInfoLink(value);
-          expect(encoded).toEqual(yield* encodeFileTypeInfo(value.info));
-          expect(value.mimeType).toBe(value.info.mimeType);
-          expect(value.description).toBe(value.info.description);
-          return true;
-        }),
-      fcRuns(50)
-    );
-    expect(result._tag).toBe("Passed");
-  })
+    const encoded = yield* encodeDetectedFileInfoLink(value);
+    expect(encoded).toEqual(yield* encodeFileTypeInfo(value.info));
+    expect(value.mimeType).toBe(value.info.mimeType);
+    expect(value.description).toBe(value.info.description);
+
+    return true;
+  }),
+  { arbitrary: fcRuns(50) }
 );

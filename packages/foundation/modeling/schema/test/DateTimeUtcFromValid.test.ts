@@ -14,13 +14,16 @@ import {
   DateTimeInputString,
   DateTimeUtcFromValid,
 } from "@beep/schema/DateTimeUtcFromValid";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
-import * as Result from "effect/Result";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeDateTimeInputDate = S.decodeUnknownEffect(DateTimeInputDate);
@@ -127,14 +130,16 @@ describe("DateTimeInput primitive schemas", () => {
   it.effect(
     "rejects invalid primitive inputs",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeDateTimeInputString("not-a-date"));
-      const isFailure1 = Result.isFailure(failure1);
+      const failure1 = yield* Effect.exit(decodeDateTimeInputString("not-a-date"));
+      const isFailure1 = Exit.hasFails(failure1);
       assertTrue(isFailure1);
-      expect(failure1.failure.message).toContain("Expected a string that can be converted into a DateTime.Utc");
-      const isFailure2 = Result.isFailure(yield* Effect.result(decodeDateTimeInputNumber(Number.POSITIVE_INFINITY)));
+      expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected a string that can be converted into a DateTime.Utc"
+      );
+      const isFailure2 = Exit.hasFails(yield* Effect.exit(decodeDateTimeInputNumber(Number.POSITIVE_INFINITY)));
       assertTrue(isFailure2);
-      const isFailure3 = Result.isFailure(
-        yield* Effect.result(decodeDateTimeInputDate(Reflect.construct(NativeDate, ["not-a-date"])))
+      const isFailure3 = Exit.hasFails(
+        yield* Effect.exit(decodeDateTimeInputDate(Reflect.construct(NativeDate, ["not-a-date"])))
       );
       assertTrue(isFailure3);
     })
@@ -167,16 +172,18 @@ describe("DateTimeInput tagged object schemas", () => {
   it.effect(
     "rejects invalid InstantWithZone time zone identifiers",
     Effect.fnUntraced(function* () {
-      const failure2 = yield* Effect.result(
+      const failure2 = yield* Effect.exit(
         decodeDateTimeInputInstantWithZone({
           _tag: "InstantWithZone",
           epochMilliseconds,
           timeZoneId: "Not/AZone",
         })
       );
-      const isFailure4 = Result.isFailure(failure2);
+      const isFailure4 = Exit.hasFails(failure2);
       assertTrue(isFailure4);
-      expect(failure2.failure.message).toContain("Expected a valid DateTime time zone identifier");
+      expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected a valid DateTime time zone identifier"
+      );
     })
   );
 
@@ -288,10 +295,12 @@ describe("DateTimeUtcFromValid", () => {
   it.effect(
     "rejects input that passes the shape schema but cannot become a DateTime.Utc",
     Effect.fnUntraced(function* () {
-      const failure3 = yield* Effect.result(decodeUtc(DateTimeInputParts.make({ year: 1e100 })));
-      const isFailure5 = Result.isFailure(failure3);
+      const failure3 = yield* Effect.exit(decodeUtc(DateTimeInputParts.make({ year: 1e100 })));
+      const isFailure5 = Exit.hasFails(failure3);
       assertTrue(isFailure5);
-      expect(failure3.failure.message).toContain("Expected a valid Effect DateTime.Input value");
+      expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+        "Expected a valid Effect DateTime.Input value"
+      );
     })
   );
 

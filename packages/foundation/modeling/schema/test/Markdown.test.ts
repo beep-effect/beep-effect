@@ -1,8 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
 import { decodeMarkdownTextAs, Markdown, MarkdownTextToHtml } from "@beep/schema/Markdown";
 import { loadMarkdownGfmModule, loadMarkdownModule, makeParseMarkdownForSchema } from "@beep/schema/test/Markdown";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -15,7 +17,7 @@ const replaceGlobalBunMarkdownHtml = (html: unknown) =>
   Effect.sync(() => {
     const bunRuntime = Reflect.get(globalThis, "Bun");
     const markdown = P.isObject(bunRuntime) ? Reflect.get(bunRuntime, "markdown") : undefined;
-    const original = P.isObject(markdown) ? Reflect.get(markdown, "html") : undefined;
+    const original = P.isObject(markdown) ? Object.getOwnPropertyDescriptor(markdown, "html") : undefined;
 
     if (P.isObject(markdown)) {
       Reflect.set(markdown, "html", html);
@@ -29,15 +31,19 @@ const restoreGlobalBunMarkdownHtml = ({
   original,
 }: {
   readonly markdown: unknown;
-  readonly original: unknown;
+  readonly original: PropertyDescriptor | undefined;
 }) =>
   Effect.sync(() => {
-    if (P.isObject(markdown) && P.isFunction(original)) {
-      Reflect.set(markdown, "html", original);
+    if (P.isObject(markdown)) {
+      if (original === undefined) {
+        Reflect.deleteProperty(markdown, "html");
+      } else {
+        Object.defineProperty(markdown, "html", original);
+      }
     }
   });
 
-describe("Markdown", () => {
+describe("Markdown", { concurrent: false }, () => {
   const markdownArbitrary = Arbitrary.schema(Markdown);
 
   it.effect(
@@ -66,7 +72,7 @@ describe("Markdown", () => {
     });
     const result = parseWithoutBun("| a | b |\n| - | - |\n| 1 | 2 |");
 
-    expect(Result.isSuccess(result)).toBe(true);
+    pipe(result, Result.isSuccess, assertTrue);
     if (Result.isSuccess(result)) {
       expect(result.success).toContain("<table>");
     }
@@ -81,7 +87,7 @@ describe("Markdown", () => {
         restoreGlobalBunMarkdownHtml
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 
@@ -99,7 +105,7 @@ describe("Markdown", () => {
         restoreGlobalBunMarkdownHtml
       );
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 
@@ -126,14 +132,14 @@ describe("Markdown", () => {
         restoreGlobalBunMarkdownHtml
       );
 
-      expect(Exit.isFailure(errorResult)).toBe(true);
+      pipe(errorResult, Exit.isFailure, assertTrue);
       if (Exit.isFailure(errorResult)) {
         const rendered = Cause.pretty(errorResult.cause);
 
         expect(rendered).toContain("Invalid Markdown input (renderer failed).");
       }
 
-      expect(Exit.isFailure(unknownResult)).toBe(true);
+      pipe(unknownResult, Exit.isFailure, assertTrue);
       if (Exit.isFailure(unknownResult)) {
         const rendered = Cause.pretty(unknownResult.cause);
 
@@ -174,7 +180,7 @@ describe("Markdown", () => {
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(S.encodeEffect(MarkdownTextToHtml())("<h1>Hello</h1>\n"));
 
-      expect(Exit.isFailure(result)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
       if (Exit.isFailure(result)) {
         const rendered = Cause.pretty(result.cause);
 

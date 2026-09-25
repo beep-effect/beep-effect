@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import {
   BunSqliteTestDriver,
   makePgliteSqlTestLayer,
@@ -10,13 +11,29 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, vi } from "@effect/vitest";
-import { Cause, ConfigProvider, Duration, Effect, Exit, Fiber } from "effect";
+import { describe, expect, vi } from "@effect/vitest";
+import { Cause, Clock, ConfigProvider, Duration, Effect, Exit, Fiber, Queue } from "effect";
 import * as O from "effect/Option";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
 const nodeRuntimeEffectIt = it.effect.skipIf(process.versions.bun !== undefined);
+
+const connectionAttempt = vi.fn(() => undefined);
+
+vi.doMock("@effect/sql-pg", (importOriginal) =>
+  importOriginal<typeof import("@effect/sql-pg")>().then((actual) => ({
+    ...actual,
+    PgClient: {
+      ...actual.PgClient,
+      makeClient: () =>
+        Effect.suspend(() => {
+          connectionAttempt();
+          return Effect.fail("offline PostgreSQL refusal");
+        }),
+    },
+  }))
+);
 
 vi.doMock("pg", () => ({
   Client: class {
@@ -263,6 +280,17 @@ describe("SqlTest offline coverage", () => {
 
   nodeRuntimeEffectIt("maps mocked external PostgreSQL refusal with virtual retry time", () =>
     Effect.gen(function* () {
+      const scheduled = yield* Effect.acquireRelease(Queue.unbounded<Duration.Input>(), Queue.shutdown);
+      const clock = yield* Clock.Clock;
+      const observedClock: Clock.Clock = {
+        ...clock,
+        sleep: (duration) =>
+          Effect.suspend(() => {
+            Queue.offerUnsafe(scheduled, duration);
+            return clock.sleep(duration);
+          }),
+      };
+      const initialAttempts = connectionAttempt.mock.calls.length;
       const fiber = yield* Effect.void.pipe(
         provideScopedLayer(
           makeSqlTestLayer({
@@ -274,16 +302,23 @@ describe("SqlTest offline coverage", () => {
             driver: PgExternalTestDriver,
           })
         ),
+        Effect.provideService(Clock.Clock, observedClock),
         Effect.exit,
         Effect.forkChild
       );
 
-      yield* Effect.forEach(
-        A.range(0, 24),
-        () => Effect.yieldNow.pipe(Effect.andThen(TestClock.adjust(Duration.millis(300)))),
-        { discard: true }
+      // Advance only after the child has requested a real clock sleep.
+      // Race the driver with completion so the final attempt needs no extra tick.
+      const driveClock = Effect.forever(
+        Effect.gen(function* () {
+          const duration = yield* Queue.take(scheduled);
+          expect(Duration.toMillis(Duration.fromInputUnsafe(duration))).toBe(250);
+          yield* Effect.log("SQL retry phase: advance requested sleep");
+          yield* TestClock.adjust(duration);
+        })
       );
-      const exit = yield* Fiber.join(fiber);
+      const exit = yield* Fiber.join(fiber).pipe(Effect.raceFirst(driveClock));
+      expect(connectionAttempt.mock.calls.length - initialAttempts).toBe(21);
 
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {

@@ -1,0 +1,66 @@
+{
+  "package": "@beep/codegen-kit",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T12:20:50.206901+00:00",
+  "totalMs": 3390.0009765625,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "ms": 147.0009765625,
+      "tests": 17
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit source pins derives info-version policy and writes a matching refresh",
+      "ms": 125.04186400000026
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit source pins derives url-embedded policy and writes a matching refresh",
+      "ms": 121.04232700000011
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit runs a patched Swagger 2.0 HttpApi document end to end",
+      "ms": 94.31136700000025
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit prints a unified diff when check mode detects drift",
+      "ms": 73.00101399999994
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit source pins rejects a url-embedded mismatch without replacing the cache",
+      "ms": 71.29219299999977
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit source pins rejects an info-version mismatch without replacing the cache",
+      "ms": 70.43591399999968
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit runs an OpenAPI 3.0 HttpApi document end to end",
+      "ms": 66.66114300000027
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit preserves boolean union members while distributing object siblings",
+      "ms": 10.506317999999737
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit applies the schema post-processing contract",
+      "ms": 7.925513000000137
+    },
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "testName": "@beep/codegen-kit reports clean, changed, and missing generated outputs",
+      "ms": 7.727097999999842
+    }
+  ]
+}

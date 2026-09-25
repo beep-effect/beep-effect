@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import {
   assertSchemaArbitraryDecodesToSelf,
   BunSqliteTestDriver,
@@ -13,12 +14,13 @@ import {
   PgliteSqlTestLayerMode,
   PgliteTestcontainersTestDriver,
   PgliteTestcontainersTestDriverConfig,
+  provideScopedLayer,
   SqlTestHarnessError,
   TestDatabaseInfo,
   TestDatabaseInfoShape,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as FileSystem from "effect/FileSystem";
@@ -132,11 +134,6 @@ vi.mock("pg", (importOriginal) =>
   })
 );
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const isBunRuntime = process.versions.bun !== undefined;
 const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.String("VITEST_COVERAGE_RATCHET"))), "1");
 const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
@@ -144,31 +141,13 @@ const nodeRuntimeIt = it.skipIf(isBunRuntime);
 const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);
 const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
 
-const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
-  schema: Schema,
-  options?: {
-    readonly runs?: number;
-  }
-): void => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownEffect(schema);
-  const encode = S.encodeUnknownEffect(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  const result = Effect.runSync(
-    Arbitrary.checkEffect(
-      arbitrary,
-      (value) => {
-        const encoded = Effect.runSync(encode(value));
-        const decoded = Effect.runSync(decode(encoded));
-
-        return equivalent(decoded, value);
-      },
-      fcRuns(options?.runs ?? 20)
-    )
-  );
-  expect(result._tag).toBe("Passed");
-};
+const assertSchemaArbitraryRoundTrips = Effect.fn("assertSchemaArbitraryRoundTrips")(function* <
+  Schema extends S.Codec<unknown>,
+>(schema: Schema, value: Schema["Type"]) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+});
 
 const makeLayer = <MigrateError = never, SeedError = never>(hooks?: SqlTestHooks<MigrateError, SeedError>) =>
   isBunRuntime
@@ -420,9 +399,8 @@ describe("SqlTest", () => {
         return yield* doesTableExist("notes");
       }).pipe(provideScopedLayer(makeLayer()));
 
-      const tableExistsAfterFreshProvision = yield* doesTableExist("notes").pipe(provideScopedLayer(makeLayer()));
-
       expect(yield* createTable).toBe(true);
+      const tableExistsAfterFreshProvision = yield* doesTableExist("notes").pipe(provideScopedLayer(makeLayer()));
       expect(tableExistsAfterFreshProvision).toBe(false);
     })
   );
@@ -536,7 +514,7 @@ describe("SqlTest", () => {
   localSqliteIt(
     "removes the temporary SQLite directory when the layer scope closes",
     Effect.fnUntraced(function* () {
-      const scope = yield* Scope.make();
+      const scope = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit));
       const services = yield* Layer.buildWithScope(makeLayer(), scope);
       const info = Context.get(services, TestDatabaseInfo);
       const fs = Context.get(services, FileSystem.FileSystem);
@@ -625,111 +603,120 @@ describe("SqlTest", () => {
     assertSchemaArbitraryDecodesToSelf(PgExternalTestDriverConfig, { runs: 10 });
   });
 
-  it("round-trips SQL schema arbitraries through their encoded shape", () => {
-    assertSchemaArbitraryRoundTrips(PgExternalConnectionUri, { runs: 10 });
-    assertSchemaArbitraryRoundTrips(PgliteSqlTestLayerMode, { runs: 10 });
-    assertSchemaArbitraryRoundTrips(TestDatabaseInfoShape, { runs: 10 });
-    assertSchemaArbitraryRoundTrips(PgliteTestcontainersTestDriverConfig, { runs: 10 });
-    assertSchemaArbitraryRoundTrips(PgExternalTestDriverConfig, { runs: 10 });
+  it.effect.prop(
+    "round-trips SQL schema arbitraries through their encoded shape",
+    [
+      Arbitrary.schema(PgExternalConnectionUri),
+      Arbitrary.schema(PgliteSqlTestLayerMode),
+      Arbitrary.schema(TestDatabaseInfoShape),
+      Arbitrary.schema(PgliteTestcontainersTestDriverConfig),
+      Arbitrary.schema(PgExternalTestDriverConfig),
+    ],
+    ([uri, mode, info, pglite, external]) =>
+      Effect.gen(function* () {
+        yield* assertSchemaArbitraryRoundTrips(PgExternalConnectionUri, uri);
+        yield* assertSchemaArbitraryRoundTrips(PgliteSqlTestLayerMode, mode);
+        yield* assertSchemaArbitraryRoundTrips(TestDatabaseInfoShape, info);
+        yield* assertSchemaArbitraryRoundTrips(PgliteTestcontainersTestDriverConfig, pglite);
+        yield* assertSchemaArbitraryRoundTrips(PgExternalTestDriverConfig, external);
+      }),
+    { arbitrary: fcRuns(10) }
+  );
+
+  it.effect("preserves SQL schema encoded snapshots", () =>
+    Effect.gen(function* () {
+      const info = TestDatabaseInfoShape.make({
+        connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
+        containerId: O.some("container-1"),
+        database: O.some("test_db"),
+        databasePath: O.none(),
+        driver: "pg-external",
+        host: O.some("localhost"),
+        port: O.some(5432),
+        schema: O.some("beep_test_schema"),
+        tempDir: O.none(),
+        username: O.some("user"),
+      });
+      const pgliteConfig = PgliteTestcontainersTestDriverConfig.make({
+        database: "postgres",
+        internalPort: 5432,
+        maxConnections: 1,
+        password: "secret",
+        startupTimeoutMs: 60_000,
+        username: "postgres",
+      });
+      const pgExternalConfig = PgExternalTestDriverConfig.make({
+        connectTimeoutMs: 5_000,
+        connectionUri: "postgres://user:pass@localhost:5432/test_db",
+        isolation: "schema",
+        maxConnections: 1,
+        schemaPrefix: "beep_test",
+        ssl: false,
+      });
+      const harnessError = SqlTestHarnessError.make({
+        cause: O.none(),
+        driver: "pg-external",
+        message: "setup failed",
+        phase: "provision",
+      });
+
+      expect(yield* encodeUnknownPgliteSqlTestLayerMode("auto")).toBe("auto");
+      expect(yield* encodeUnknownPgExternalConnectionUri(pgExternalConfig.connectionUri)).toBe(
+        "postgres://user:pass@localhost:5432/test_db"
+      );
+      expect(yield* encodeUnknownTestDatabaseInfoShape(info)).toEqual({
+        connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
+        containerId: O.some("container-1"),
+        database: O.some("test_db"),
+        databasePath: O.none(),
+        driver: "pg-external",
+        host: O.some("localhost"),
+        port: O.some(5432),
+        schema: O.some("beep_test_schema"),
+        tempDir: O.none(),
+        username: O.some("user"),
+      });
+      expect(yield* encodeUnknownPgliteTestcontainersTestDriverConfig(pgliteConfig)).toEqual({
+        database: "postgres",
+        internalPort: 5432,
+        maxConnections: 1,
+        password: "secret",
+        startupTimeoutMs: 60_000,
+        username: "postgres",
+      });
+      expect(yield* encodeUnknownPgExternalTestDriverConfig(pgExternalConfig)).toEqual({
+        connectTimeoutMs: 5_000,
+        connectionUri: "postgres://user:pass@localhost:5432/test_db",
+        isolation: "schema",
+        maxConnections: 1,
+        schemaPrefix: "beep_test",
+        ssl: false,
+      });
+      expect(yield* encodeUnknownSqlTestHarnessError(harnessError)).toEqual({
+        _tag: "SqlTestHarnessError",
+        driver: "pg-external",
+        message: "setup failed",
+        phase: "provision",
+      });
+    })
+  );
+
+  const SqlTestHarnessErrorEncoded = S.TaggedStruct("SqlTestHarnessError", {
+    driver: S.Literals(["bun-sqlite", "node-sqlite", "pglite-testcontainers", "pglite-inprocess", "pg-external"]),
+    message: S.String,
+    phase: S.Literals(["provision", "migrate", "seed", "teardown"]),
   });
-
-  it("preserves SQL schema encoded snapshots", () => {
-    const info = TestDatabaseInfoShape.make({
-      connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
-      containerId: O.some("container-1"),
-      database: O.some("test_db"),
-      databasePath: O.none(),
-      driver: "pg-external",
-      host: O.some("localhost"),
-      port: O.some(5432),
-      schema: O.some("beep_test_schema"),
-      tempDir: O.none(),
-      username: O.some("user"),
-    });
-    const pgliteConfig = PgliteTestcontainersTestDriverConfig.make({
-      database: "postgres",
-      internalPort: 5432,
-      maxConnections: 1,
-      password: "secret",
-      startupTimeoutMs: 60_000,
-      username: "postgres",
-    });
-    const pgExternalConfig = PgExternalTestDriverConfig.make({
-      connectTimeoutMs: 5_000,
-      connectionUri: "postgres://user:pass@localhost:5432/test_db",
-      isolation: "schema",
-      maxConnections: 1,
-      schemaPrefix: "beep_test",
-      ssl: false,
-    });
-    const harnessError = SqlTestHarnessError.make({
-      cause: O.none(),
-      driver: "pg-external",
-      message: "setup failed",
-      phase: "provision",
-    });
-
-    expect(Effect.runSync(encodeUnknownPgliteSqlTestLayerMode("auto"))).toBe("auto");
-    expect(Effect.runSync(encodeUnknownPgExternalConnectionUri(pgExternalConfig.connectionUri))).toBe(
-      "postgres://user:pass@localhost:5432/test_db"
-    );
-    expect(Effect.runSync(encodeUnknownTestDatabaseInfoShape(info))).toEqual({
-      connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
-      containerId: O.some("container-1"),
-      database: O.some("test_db"),
-      databasePath: O.none(),
-      driver: "pg-external",
-      host: O.some("localhost"),
-      port: O.some(5432),
-      schema: O.some("beep_test_schema"),
-      tempDir: O.none(),
-      username: O.some("user"),
-    });
-    expect(Effect.runSync(encodeUnknownPgliteTestcontainersTestDriverConfig(pgliteConfig))).toEqual({
-      database: "postgres",
-      internalPort: 5432,
-      maxConnections: 1,
-      password: "secret",
-      startupTimeoutMs: 60_000,
-      username: "postgres",
-    });
-    expect(Effect.runSync(encodeUnknownPgExternalTestDriverConfig(pgExternalConfig))).toEqual({
-      connectTimeoutMs: 5_000,
-      connectionUri: "postgres://user:pass@localhost:5432/test_db",
-      isolation: "schema",
-      maxConnections: 1,
-      schemaPrefix: "beep_test",
-      ssl: false,
-    });
-    expect(Effect.runSync(encodeUnknownSqlTestHarnessError(harnessError))).toEqual({
-      _tag: "SqlTestHarnessError",
-      driver: "pg-external",
-      message: "setup failed",
-      phase: "provision",
-    });
-  });
-
-  it("round-trips SQL harness error encoded values", () => {
-    const SqlTestHarnessErrorEncoded = S.TaggedStruct("SqlTestHarnessError", {
-      driver: S.Literals(["bun-sqlite", "node-sqlite", "pglite-testcontainers", "pglite-inprocess", "pg-external"]),
-      message: S.String,
-      phase: S.Literals(["provision", "migrate", "seed", "teardown"]),
-    });
-    const result = Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(SqlTestHarnessErrorEncoded),
-        (encoded) => {
-          const decoded = Effect.runSync(decodeUnknownSqlTestHarnessError(encoded));
-
-          expect(SqlTestHarnessError.is(decoded)).toBe(true);
-          expect(Effect.runSync(encodeUnknownSqlTestHarnessError(decoded))).toEqual(encoded);
-          return true;
-        },
-        fcRuns(10)
-      )
-    );
-    expect(result._tag).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips SQL harness error encoded values",
+    [Arbitrary.schema(SqlTestHarnessErrorEncoded)],
+    ([encoded]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeUnknownSqlTestHarnessError(encoded);
+        expect(SqlTestHarnessError.is(decoded)).toBe(true);
+        expect(yield* encodeUnknownSqlTestHarnessError(decoded)).toEqual(encoded);
+      }),
+    { arbitrary: fcRuns(10) }
+  );
 
   nodeRuntimeIt("selects PGLite integration gate branches from environment", () => {
     const environmentGate = makePgliteIntegrationGate();
