@@ -38,5 +38,5 @@ speedup is claimed. Private reproducible receipts live under
 `~/.cache/beep/effect-vitest-canon/obs-*`.
 
 Two shorter handshake scopes remain intentional exceptions. Ten no-findings
-coverage records remain unchanged. Exact fix provenance is added after committing
-the implementation; final ratchet and hosted publication remain separate gates.
+coverage records remain unchanged. The 17 fixes point to implementation commit `1201d9f3fc5609988129bcf0af5b8b05ce01fdb5`.
+All 29 records strictly decode; hosted publication remains a separate gate.
