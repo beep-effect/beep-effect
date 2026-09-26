@@ -17,7 +17,7 @@ import { Button, Input, Select } from "@beep/html/Html.model";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertNone } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -139,8 +139,14 @@ describe("HTML form-control semantic states", () => {
     expect(validButton.state).toBe("submit");
     expect(invalidInput.state).toBe("unsupported");
     expect(invalidButton.basis).toBe("auto-command");
-    assertTrue(Result.isFailure(decodeUnknownInputStateResult({ state: "unsupported" })));
-    assertTrue(Result.isFailure(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" })));
+    assertFailure(
+      Result.mapError(decodeUnknownInputStateResult({ state: "unsupported" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it.prop(

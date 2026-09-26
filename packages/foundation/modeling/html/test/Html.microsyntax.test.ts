@@ -19,9 +19,10 @@ import { A as Anchor, Area, Audio, Button, HtmlNode, Li, Link, Meta, Ol } from "
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure, assertFailure, assertSome } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -120,7 +121,10 @@ describe("@beep/html attribute microsyntaxes", () => {
           value: "-2",
         })
       );
-      assertTrue(Exit.isFailure(encodedStringValue));
+      assertExitFailure(
+        Exit.mapError(encodedStringValue, ({ _tag }) => _tag),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -175,7 +179,10 @@ describe("@beep/html attribute microsyntaxes", () => {
         const value = `noopener${separator}noreferrer`;
         expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
         const invalidRel = yield* Effect.exit(decodeRel(value));
-        assertTrue(Exit.isFailure(invalidRel));
+        assertExitFailure(
+          Exit.mapError(invalidRel, ({ _tag }) => _tag),
+          Cause.fail("SchemaError")
+        );
         expect(() => Rel.make(value)).toThrow();
       }
     })
@@ -223,7 +230,10 @@ describe("@beep/html attribute microsyntaxes", () => {
         expect(Result.getOrThrow(encodeOlResult(decoded)).type).toBe(value);
       }
       const invalidOlType = yield* Effect.exit(decodeUnknownOl({ _tag: "ol", children: [], type: "ALPHA" }));
-      assertTrue(Exit.isFailure(invalidOlType));
+      assertExitFailure(
+        Exit.mapError(invalidOlType, ({ _tag }) => _tag),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -250,9 +260,15 @@ describe("@beep/html attribute microsyntaxes", () => {
 
   it("rejects non-ASCII and padded enumerated keywords", () => {
     for (const invalid of [" image", "image ", "ımage"]) {
-      assertTrue(Result.isFailure(decodeEnumeratedResult(invalid)));
+      assertFailure(
+        Result.mapError(decodeEnumeratedResult(invalid), ({ _tag }) => _tag),
+        "SchemaError"
+      );
     }
-    assertTrue(Result.isFailure(decodeAsciiKResult("\u212A")));
+    assertFailure(
+      Result.mapError(decodeAsciiKResult("\u212A"), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it("canonicalizes the exact enumerated global-attribute inventory", () => {

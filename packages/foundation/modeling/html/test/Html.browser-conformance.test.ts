@@ -7,8 +7,9 @@ import { Div, ForeignElement, P } from "@beep/html/Html.model";
 import { Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 
 const isForeignElementName = S.is(ForeignElementName);
@@ -140,8 +141,14 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(root))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(root)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 
@@ -174,7 +181,10 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(serialize(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlSerializeError")
+        );
         expect(container.firstElementChild?.firstElementChild?.childElementCount).toBe(0);
       }
     })
@@ -228,7 +238,10 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(serialize(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlSerializeError")
+        );
         expect(container.firstElementChild?.firstElementChild?.childElementCount).toBe(0);
       }
     })
@@ -277,7 +290,10 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(invalid))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(serialize(invalid)), ({ _tag }) => _tag),
+          Cause.fail("HtmlSerializeError")
+        );
         expect(invalidContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
           XHTML_NAMESPACE
         );
@@ -413,7 +429,10 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(invalidForeign))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(serialize(invalidForeign)), ({ _tag }) => _tag),
+          Cause.fail("HtmlSerializeError")
+        );
         expect(invalidContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
           XHTML_NAMESPACE
         );
@@ -488,7 +507,10 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(encodedMathChild))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(encodedMathChild)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
       expect(encodedMathChildContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
         XHTML_NAMESPACE
       );
@@ -553,7 +575,10 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(wrongSvgNamespace))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(wrongSvgNamespace)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
       expect(wrongSvgContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
         SVG_NAMESPACE
       );
@@ -595,7 +620,10 @@ describe("@beep/html browser conformance", () => {
           }),
         ],
       });
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(drifting))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(drifting)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 

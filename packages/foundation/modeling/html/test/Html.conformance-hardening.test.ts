@@ -83,7 +83,7 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertExitFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -1046,7 +1046,10 @@ describe("@beep/html generated special-child grammars", () => {
         Result.map(uppercaseCharset, ({ charset }) => charset),
         O.some("utf-8")
       );
-      assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", charset: "iso-8859-1" })));
+      assertFailure(
+        Result.mapError(decodeMetaResult({ _tag: "meta", charset: "iso-8859-1" }), ({ _tag }) => _tag),
+        "SchemaError"
+      );
       expect(() => Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("PreLoad") })).toThrow();
       expect(
         inspectConformance(
@@ -1059,7 +1062,10 @@ describe("@beep/html generated special-child grammars", () => {
   it.effect("rejects invalid preload destination tokens at decode time", () =>
     Effect.gen(function* () {
       const invalid = yield* Effect.exit(decodeLink({ _tag: "link", as: "video", href: "/resource", rel: "preload" }));
-      assertTrue(Exit.isFailure(invalid));
+      assertExitFailure(
+        Exit.mapError(invalid, ({ _tag }) => _tag),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -1372,12 +1378,21 @@ describe("@beep/html exact attribute domains", () => {
     expect(() => makeSpaceSeparatedTokenList(["foo", "FOO"])).toThrow();
 
     assertSuccess(decodeAsciiKResult("K"), "k");
-    assertTrue(Result.isFailure(decodeAsciiKResult("K")));
+    assertFailure(
+      Result.mapError(decodeAsciiKResult("K"), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it("keeps link relations open while enforcing shortcut-icon and token-list laws", () => {
-    for (const relation of ["shortcut icon", "SHORTCUT ICON", "apple-touch-icon", "mask-icon", "x-beep"]) {
-      assertTrue(Result.isSuccess(decodeLinkRelationListResult(relation)));
+    for (const [relation, expected] of [
+      ["shortcut icon", "shortcut icon"],
+      ["SHORTCUT ICON", "shortcut icon"],
+      ["apple-touch-icon", "apple-touch-icon"],
+      ["mask-icon", "mask-icon"],
+      ["x-beep", "x-beep"],
+    ] as const) {
+      assertSuccess(decodeLinkRelationListResult(relation), expected);
     }
     for (const relation of [
       "shortcut\ticon",
@@ -1386,13 +1401,19 @@ describe("@beep/html exact attribute domains", () => {
       "shortcut icon preload",
       "x-beep x-beep",
     ]) {
-      assertTrue(Result.isFailure(decodeLinkRelationListResult(relation)));
+      assertFailure(
+        Result.mapError(decodeLinkRelationListResult(relation), ({ _tag }) => _tag),
+        "SchemaError"
+      );
     }
 
     const idReferences = decodeHtmlIdReferenceListResult("First\tsecond");
     assertSuccess(idReferences, "First second");
     assertSuccess(decodeHtmlIdReferenceListResult("First first"), "First first");
-    assertTrue(Result.isFailure(decodeHtmlIdReferenceListResult("First First")));
+    assertFailure(
+      Result.mapError(decodeHtmlIdReferenceListResult("First First"), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it.effect("keeps extension relations structural and conformant but narrows SafeHtml", () =>
@@ -1406,7 +1427,10 @@ describe("@beep/html exact attribute domains", () => {
         [Area, { _tag: "area", href: "/profile", rel: "me" }],
         [Form, { _tag: "form", children: [], rel: "me" }],
       ] as const) {
-        assertTrue(Result.isSuccess(S.decodeResult(schema)(encoded)));
+        assertSuccess(
+          Result.map(S.decodeResult(schema)(encoded), ({ rel }) => rel),
+          O.some("me")
+        );
       }
 
       for (const relation of ["me", "opener", "x-beep"]) {
@@ -1441,25 +1465,29 @@ describe("@beep/html exact attribute domains", () => {
   );
 
   it("decodes presence booleans, blocking tokens, and exact enumerations", () => {
-    for (const value of ["", true]) {
-      assertTrue(
-        Result.isSuccess(
+    for (const value of ["", true] as const) {
+      assertSuccess(
+        Result.map(
           decodeUnknownTemplateResult({
             _tag: "template",
             children: [],
             shadowrootcustomelementregistry: value,
-          })
-        )
+          }),
+          ({ shadowrootcustomelementregistry }) => shadowrootcustomelementregistry
+        ),
+        O.some(value)
       );
     }
-    assertTrue(
-      Result.isFailure(
+    assertFailure(
+      Result.mapError(
         decodeUnknownTemplateResult({
           _tag: "template",
           children: [],
           shadowrootcustomelementregistry: false,
-        })
-      )
+        }),
+        ({ _tag }) => _tag
+      ),
+      "SchemaError"
     );
 
     for (const [schema, encoded] of [
@@ -1467,9 +1495,18 @@ describe("@beep/html exact attribute domains", () => {
       [Script, { _tag: "script", blocking: "RENDER", content: "" }],
       [Style, { _tag: "style", blocking: "RENDER", content: "" }],
     ] as const) {
-      assertTrue(Result.isSuccess(S.decodeResult(schema)(encoded)));
-      assertTrue(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "render render" })));
-      assertTrue(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "paint" })));
+      assertSuccess(
+        Result.map(S.decodeResult(schema)(encoded), ({ blocking }) => blocking),
+        O.some("render")
+      );
+      assertFailure(
+        Result.mapError(S.decodeResult(schema)({ ...encoded, blocking: "render render" }), ({ _tag }) => _tag),
+        "SchemaError"
+      );
+      assertFailure(
+        Result.mapError(S.decodeResult(schema)({ ...encoded, blocking: "paint" }), ({ _tag }) => _tag),
+        "SchemaError"
+      );
     }
 
     const link = decodeLinkResult({
@@ -1486,10 +1523,12 @@ describe("@beep/html exact attribute domains", () => {
         referrerpolicy: O.some("strict-origin"),
       }
     );
-    assertTrue(
-      Result.isFailure(
-        decodeLinkResult({ _tag: "link", href: "/style.css", referrerpolicy: "private", rel: "stylesheet" })
-      )
+    assertFailure(
+      Result.mapError(
+        decodeLinkResult({ _tag: "link", href: "/style.css", referrerpolicy: "private", rel: "stylesheet" }),
+        ({ _tag }) => _tag
+      ),
+      "SchemaError"
     );
   });
 
@@ -1508,25 +1547,76 @@ describe("@beep/html exact attribute domains", () => {
       }
     );
 
-    assertTrue(Result.isSuccess(decodeFormResult({ _tag: "form", "accept-charset": "UTF-8", children: [] })));
-    assertTrue(Result.isFailure(decodeFormResult({ _tag: "form", "accept-charset": "iso-8859-1", children: [] })));
-    assertTrue(Result.isSuccess(decodeMetaResult({ _tag: "meta", name: "X-Beep" })));
-    assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", name: "x beep" })));
-    assertTrue(Result.isSuccess(decodeMetaResult({ _tag: "meta", "http-equiv": "REFRESH" })));
-    assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", "http-equiv": "expires" })));
+    assertSuccess(
+      Result.map(
+        decodeFormResult({ _tag: "form", "accept-charset": "UTF-8", children: [] }),
+        (form) => form["accept-charset"]
+      ),
+      O.some("utf-8")
+    );
+    assertFailure(
+      Result.mapError(
+        decodeFormResult({ _tag: "form", "accept-charset": "iso-8859-1", children: [] }),
+        ({ _tag }) => _tag
+      ),
+      "SchemaError"
+    );
+    assertSuccess(
+      Result.map(decodeMetaResult({ _tag: "meta", name: "X-Beep" }), ({ name }) => name),
+      O.some("x-beep")
+    );
+    assertFailure(
+      Result.mapError(decodeMetaResult({ _tag: "meta", name: "x beep" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
+    assertSuccess(
+      Result.map(decodeMetaResult({ _tag: "meta", "http-equiv": "REFRESH" }), (meta) => meta["http-equiv"]),
+      O.some("refresh")
+    );
+    assertFailure(
+      Result.mapError(decodeMetaResult({ _tag: "meta", "http-equiv": "expires" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
 
-    for (const command of ["toggle-popover", "TOGGLE-POPOVER", "--", "--Beep\nCommand"]) {
-      assertTrue(Result.isSuccess(decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" })));
+    for (const [command, expected] of [
+      ["toggle-popover", "toggle-popover"],
+      ["TOGGLE-POPOVER", "toggle-popover"],
+      ["--", "--"],
+      ["--Beep\nCommand", "--Beep\nCommand"],
+    ] as const) {
+      assertSuccess(
+        Result.map(
+          decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" }),
+          ({ command }) => command
+        ),
+        O.some(expected)
+      );
     }
     for (const command of ["", "rotate", "-beep"]) {
-      assertTrue(Result.isFailure(decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" })));
+      assertFailure(
+        Result.mapError(
+          decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" }),
+          ({ _tag }) => _tag
+        ),
+        "SchemaError"
+      );
     }
 
-    for (const step of ["any", "ANY", 0.25]) {
-      assertTrue(Result.isSuccess(decodeInputResult({ _tag: "input", step })));
+    for (const [step, expected] of [
+      ["any", "any"],
+      ["ANY", "any"],
+      [0.25, 0.25],
+    ] as const) {
+      assertSuccess(
+        Result.map(decodeInputResult({ _tag: "input", step }), ({ step }) => step),
+        O.some(expected)
+      );
     }
     for (const step of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, "sometimes"]) {
-      assertTrue(Result.isFailure(decodeInputResult({ _tag: "input", step })));
+      assertFailure(
+        Result.mapError(decodeInputResult({ _tag: "input", step }), ({ _tag }) => _tag),
+        "SchemaError"
+      );
     }
   });
 });
@@ -1800,7 +1890,10 @@ describe("@beep/html foreign browser fixed points", () => {
       expect(hasRule(svgRoot("customÉ"), "foreignIntegration")).toBe(false);
       expect(hasRule(svgRoot("customElement"), "foreignIntegration")).toBe(true);
       expect(hasRule(svgRoot("path", { customAttr: "value" }), "foreignIntegration")).toBe(true);
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(svgRoot("lineargradient")))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(svgRoot("lineargradient"))), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
 
       const mismatchedPrefix = ForeignElement.make({
         namespace: "mathml",
@@ -1808,7 +1901,10 @@ describe("@beep/html foreign browser fixed points", () => {
         children: [ForeignElement.make({ namespace: "mathml", name: "svg:path", children: [] })],
       });
       expect(hasRule(mismatchedPrefix, "foreignIntegration")).toBe(true);
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(mismatchedPrefix))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(mismatchedPrefix)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 });

@@ -23,9 +23,10 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -88,10 +89,19 @@ describe("HtmlNode AST — structure & nodes", () => {
       { encoded: { _tag: "#doctype", name: "html" }, type: Doctype.html() },
     ];
 
-    assertTrue(Result.isSuccess(decodeUnknownHtmlDocumentResult(canonical)));
+    assertSuccess(
+      decodeUnknownHtmlDocumentResult(canonical),
+      HtmlDocument.make({ children: [comment, documentElement] })
+    );
     expect(HtmlDocument.make({ children: [comment, documentElement] })).toBeDefined();
     for (const { encoded, type } of excludedChildren) {
-      assertTrue(Result.isFailure(decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] })));
+      assertFailure(
+        Result.mapError(
+          decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] }),
+          ({ _tag }) => _tag
+        ),
+        "SchemaError"
+      );
       expect(() =>
         HtmlDocument.make({
           // @ts-expect-error -- exercise constructor validation for excluded document child kinds.
@@ -100,7 +110,10 @@ describe("HtmlNode AST — structure & nodes", () => {
       ).toThrow();
     }
 
-    assertTrue(Result.isSuccess(decodeUnknownLosslessDocumentResult(diagnostic)));
+    assertSuccess(
+      decodeUnknownLosslessDocumentResult(diagnostic),
+      LosslessDocument.make({ children: [Div.make({ children: [] })] })
+    );
     expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
   });
 
@@ -132,7 +145,10 @@ describe("HtmlNode AST — structure & nodes", () => {
     Effect.gen(function* () {
       expect((yield* decode({ _tag: "span", children: [] }))._tag).toBe("span");
       const unknownTag = yield* Effect.exit(decode({ _tag: "not-a-real-element", children: [] }));
-      assertTrue(Exit.isFailure(unknownTag));
+      assertExitFailure(
+        Exit.mapError(unknownTag, ({ _tag }) => _tag),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -190,7 +206,10 @@ describe("HtmlNode AST — attributes", () => {
         expect(() => Input.make({ type: O.some(type) })).not.toThrow();
       }
       const invalidType = yield* Effect.exit(decode({ _tag: "input", type: "not-a-type" }));
-      assertTrue(Exit.isFailure(invalidType));
+      assertExitFailure(
+        Exit.mapError(invalidType, ({ _tag }) => _tag),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -312,7 +331,10 @@ describe("ELEMENT_META", () => {
   });
 
   it("rejects tags outside the generated HtmlNode inventory", () => {
-    assertTrue(Result.isFailure(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] })));
+    assertFailure(
+      Result.mapError(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it("tags conformance, void, and raw-text correctly", () => {

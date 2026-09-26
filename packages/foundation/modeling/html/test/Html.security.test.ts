@@ -50,10 +50,11 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -194,8 +195,8 @@ describe("@beep/html safe policy", () => {
       }
 
       for (const href of ["http://example.com", "javascript:alert(1)", "//example.com", String.raw`\evil`]) {
-        assertTrue(
-          Exit.isFailure(
+        assertExitFailure(
+          Exit.mapError(
             yield* conform(
               fragment(
                 Anchor.make({
@@ -203,8 +204,10 @@ describe("@beep/html safe policy", () => {
                   children: [text("link")],
                 })
               )
-            ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)
-          )
+            ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit),
+            ({ _tag }) => _tag
+          ),
+          Cause.fail("HtmlPolicyError")
         );
       }
 
@@ -225,7 +228,10 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
-        assertTrue(Exit.isFailure(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+        assertExitFailure(
+          Exit.mapError(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), ({ _tag }) => _tag),
+          Cause.fail("HtmlPolicyError")
+        );
       }
 
       for (const target of ["report-window", "_parent", "_top", "_unfencedTop", "", " _self"]) {
@@ -236,7 +242,10 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
-        assertTrue(Exit.isFailure(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+        assertExitFailure(
+          Exit.mapError(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), ({ _tag }) => _tag),
+          Cause.fail("HtmlPolicyError")
+        );
       }
 
       for (const target of ["_self", "_SELF"]) {
@@ -287,7 +296,10 @@ describe("@beep/html safe policy", () => {
           rel: `noopener${separator}noreferrer`,
           target: "_blank",
         });
-        assertTrue(Exit.isFailure(yield* Effect.exit(applyPolicy(fragment(decoded)))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(applyPolicy(fragment(decoded))), ({ _tag }) => _tag),
+          Cause.fail("HtmlPolicyError")
+        );
       }
     })
   );
@@ -329,7 +341,13 @@ describe("@beep/html safe policy", () => {
           children: [text("added")],
         })
       );
-      assertTrue(Exit.isFailure(yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+      assertExitFailure(
+        Exit.mapError(
+          yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit),
+          ({ _tag }) => _tag
+        ),
+        Cause.fail("HtmlPolicyError")
+      );
     })
   );
 
@@ -351,7 +369,10 @@ describe("@beep/html safe policy", () => {
       expect(inspectConformance(legacyImageName)).toContainEqual(
         expect.objectContaining({ rule: "obsoleteAttribute" })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(legacyImageName))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(legacyImageName)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
     })
   );
 });
@@ -462,19 +483,40 @@ describe("@beep/html canonical serialization", () => {
           children: [],
         })
       );
-      assertTrue(Exit.isFailure(hostile));
+      assertExitFailure(
+        Exit.mapError(hostile, ({ _tag }) => _tag),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
   it.effect("rejects scalar hazards, ambiguous comments, raw end tags, and plaintext", () =>
     Effect.gen(function* () {
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(text("\u0000")))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(text("\uD800")))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] })))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(text("\u0000"))), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(text("\uD800"))), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
+      assertExitFailure(
+        Exit.mapError(
+          yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] }))),
+          ({ _tag }) => _tag
+        ),
+        Cause.fail("HtmlSerializeError")
+      );
       expect(isHtmlCommentData("safe note")).toBe(true);
       expect(isHtmlCommentData("-->")).toBe(false);
       expect(() => Comment.make({ value: "<!--" })).toThrow();
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" })))));
+      assertExitFailure(
+        Exit.mapError(
+          yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" }))),
+          ({ _tag }) => _tag
+        ),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 });

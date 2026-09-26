@@ -48,8 +48,9 @@ import {
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ConformantHtml, SafeHtml, SafeHtmlAst } from "@beep/html";
@@ -247,7 +248,10 @@ describe("@beep/html conformance branch matrix", () => {
         ...P.make({ children: [] }),
         children: [malformedText],
       } as unknown as P;
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(malformedParagraph))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(malformedParagraph)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
 
       const malformedForeign = {
         _tag: "#foreign",
@@ -264,7 +268,10 @@ describe("@beep/html conformance branch matrix", () => {
         children: [],
       } as unknown as Parameters<typeof inspectConformance>[0];
       expect(inspectConformance(unknownNode)).toStrictEqual([]);
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(unknownNode))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(unknownNode)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
     })
   );
 });
@@ -335,7 +342,10 @@ describe("@beep/html serialization branch matrix", () => {
       expect(
         yield* pipe(Style.make({ content: "body > p { color: red; }" }), serialize, Effect.map(untrustedHtmlValue))
       ).toBe("<style>body > p { color: red; }</style>");
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" })))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" }))), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 
@@ -356,8 +366,12 @@ describe("@beep/html serialization branch matrix", () => {
         Doctype.make({ name: O.some("html"), publicId: O.some("legacy") }),
         Doctype.make({ name: O.some("html"), systemId: O.some("legacy") }),
       ]) {
-        assertTrue(
-          Exit.isFailure(yield* Effect.exit(serialize(Document.make({ doctype: O.some(doctype), children: [] }))))
+        assertExitFailure(
+          Exit.mapError(
+            yield* Effect.exit(serialize(Document.make({ doctype: O.some(doctype), children: [] }))),
+            ({ _tag }) => _tag
+          ),
+          Cause.fail("HtmlSerializeError")
         );
       }
     })
@@ -371,14 +385,20 @@ describe("@beep/html serialization branch matrix", () => {
       expect(yield* pipe(math, serialize, Effect.map(untrustedHtmlValue))).toBe("<mathml:math></mathml:math>");
 
       const mismatched = ForeignElement.make({ namespace: "svg", name: "mathml:path", children: [] });
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(mismatched))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(mismatched)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
       const badAttribute = ForeignElement.make({
         namespace: "svg",
         name: "svg",
         attributes: O.some({ viewbox: "0 0 1 1" }),
         children: [],
       });
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(badAttribute))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize(badAttribute)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 
@@ -396,8 +416,14 @@ describe("@beep/html serialization branch matrix", () => {
       expect(() => conformantRoot({} as ConformantHtml)).toThrow();
       expect(() => safeHtmlAstConformant({} as SafeHtmlAst)).toThrow();
       expect(() => safeHtmlValue({} as SafeHtml)).toThrow();
-      assertTrue(Exit.isFailure(yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0]))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(serializeSafe({} as SafeHtmlAst))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0])), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(serializeSafe({} as SafeHtmlAst)), ({ _tag }) => _tag),
+        Cause.fail("HtmlSerializeError")
+      );
     })
   );
 });
