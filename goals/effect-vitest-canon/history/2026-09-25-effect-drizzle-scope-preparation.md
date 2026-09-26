@@ -209,3 +209,20 @@ repository census or satisfy the goal-wide P1 acknowledgement gate.
 The final phase-label batch passed full package verification: audit 14.9s,
 docgen 3.0s. The initial check caught a duplicate import introduced in that batch;
 it was corrected before the successful proof and implementation commit.
+
+## SQLite migration interruption witness
+
+A temporary diagnostic observed acquisition of the actual Node drizzle-kit
+child, interrupted the parent fiber, and verified interruption, SIGKILL and
+completion of the existing Promise.allSettled drain before the fiber returned.
+The native directory still existed at that point, preserving cleanup ordering.
+The same probe failed when only the owned cleanup was replaced with Effect.void;
+an independent outer safety finalizer terminated that negative-control child.
+Source bytes were restored exactly after both runs. The saved receipt reports
+positive=0, negative=1 and sourceRestored=true. No native driver was substituted.
+
+The first probe incorrectly required a non-null exitCode after a signal exit.
+Bun retained null there while signalCode was SIGKILL; the final witness checks
+signalCode and observed drain completion directly. The previously open resource
+row now cites the existing scoped-child repair commit. All 15 substantive human
+findings have dispositions: 13 fixed and two native-boundary exceptions.
