@@ -13,9 +13,8 @@ Full package verification passed: audit 6.6 seconds and docgen 3.3 seconds.
 The final package detector emits no findings. Exactly 19 Provenance baseline
 rows were removed; all 8017 unrelated raw records are preserved. Historical
 ledger IDs remain, with anchors reconciled to current files. The five-lens
-validator reports valid and complete, with zero missing files. Historical
-findings remain open until a signed implementation commit supplies a real
-fix SHA. Local evidence does not establish hosted readiness or goal completion.
+validator reports valid and complete, with zero missing files. The 19 resolved findings credit signed implementation commit
+41f44a6455ae8d5c19be18165d0401991e8a6209. Local evidence does not establish hosted readiness or goal completion.
 
 Final timings were refreshed after correcting the runner dependency to
 workspace:^. The previous full proof failed Syncpack on workspace:*; that
