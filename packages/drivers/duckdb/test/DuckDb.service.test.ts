@@ -241,6 +241,66 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     { arbitrary: fcRuns(20) }
   );
 
+  it.effect.prop(
+    "round-trips DuckDbErrorFromUnknownOptions with representable Some causes",
+    [S.String, S.String, S.String, S.String, S.String, S.String],
+    ([name, causeMessage, stack, databasePath, message, statement]) =>
+      Effect.gen(function* () {
+        const cause = { name, message: causeMessage, stack };
+        const options = DuckDbErrorFromUnknownOptions.make({
+          cause: O.some(cause),
+          databasePath: O.some(databasePath),
+          message,
+          statement: O.some(statement),
+        });
+        const expectedWire = { cause: { name, message: causeMessage, stack }, databasePath, message, statement };
+        const encoded = yield* S.encodeEffect(DuckDbErrorFromUnknownOptions)(options);
+        expect(encoded).toEqual(expectedWire);
+        const json = yield* encodeJson(encoded);
+        expect(json).toBe(yield* encodeJson(expectedWire));
+        const decoded = yield* S.decodeEffect(S.fromJsonString(DuckDbErrorFromUnknownOptions))(json);
+        assertSome(decoded.cause, { name, message: causeMessage, stack });
+        pipe(S.toEquivalence(DuckDbErrorFromUnknownOptions)(decoded, options), assertTrue);
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbError with representable Some causes and preserves raw normalization",
+    [DuckDbOperation, S.String, S.String, S.String, S.String, S.String, S.String],
+    ([operation, name, causeMessage, stack, databasePath, message, statement]) =>
+      Effect.gen(function* () {
+        const cause = { name, message: causeMessage, stack };
+        const error = DuckDbError.fromUnknown(operation, cause, { databasePath, message, statement });
+        expect(O.getOrThrow(error.cause)).toBe(cause);
+        const made = DuckDbError.make({
+          cause: O.some(cause),
+          databasePath: O.some(databasePath),
+          message,
+          operation,
+          statement: O.some(statement),
+        });
+        pipe(S.toEquivalence(DuckDbError)(error, made), assertTrue);
+        const expectedWire = {
+          _tag: "DuckDbError",
+          cause: { name, message: causeMessage, stack },
+          databasePath,
+          message,
+          operation,
+          statement,
+        };
+        const encoded = yield* S.encodeEffect(DuckDbError)(error);
+        expect(encoded).toEqual(expectedWire);
+        expect(yield* S.encodeEffect(DuckDbError)(made)).toEqual(expectedWire);
+        const json = yield* encodeJson(encoded);
+        expect(json).toBe(yield* encodeJson(expectedWire));
+        const decoded = yield* S.decodeEffect(S.fromJsonString(DuckDbError))(json);
+        assertSome(decoded.cause, { name, message: causeMessage, stack });
+        pipe(S.toEquivalence(DuckDbError)(decoded, error), assertTrue);
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
   it("normalizes unknown failures into typed DuckDB errors", () => {
     const cause = new Error("native failed");
     const error = DuckDbError.fromUnknown("query", cause, {
