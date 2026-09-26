@@ -10,6 +10,7 @@ import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -88,7 +89,7 @@ const assertEncodedRoundTrip = <Codec extends Schema.Codec<unknown, unknown>>(
   const encoded = encode(schema, value);
   const decoded = decode(schema, encoded);
   if (options.compareDecoded !== false) {
-    assert.isTrue(Schema.toEquivalence(schema)(decoded, value));
+    assertTrue(Schema.toEquivalence(schema)(decoded, value));
   }
   assert.deepEqual(encode(schema, decoded), encoded);
 };
@@ -611,7 +612,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       const message = yield* Deferred.await(firstMessage);
       const exitError = yield* Deferred.await(termination);
       assert.instanceOf(exitError, AcpError.AcpProcessExitedError);
-      assert.equal(O.getOrThrow((exitError as AcpError.AcpProcessExitedError).code), 7);
+      assertSome((exitError as AcpError.AcpProcessExitedError).code, 7);
       assert.equal(
         (
           message as {
@@ -632,7 +633,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       };
       assert.equal(defect._tag, "RpcClientDefect");
       assert.instanceOf(defect.cause, AcpError.AcpProcessExitedError);
-      assert.equal(O.getOrThrow((defect.cause as AcpError.AcpProcessExitedError).code), 7);
+      assertSome((defect.cause as AcpError.AcpProcessExitedError).code, 7);
     }),
     childProcessProtocolTestTimeout
   );
@@ -704,7 +705,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         })
       );
       assert.instanceOf(error, AcpError.AcpProcessExitedError);
-      assert.equal(O.getOrThrow(error.code), 0);
+      assertSome(error.code, 0);
     })
   );
 });
