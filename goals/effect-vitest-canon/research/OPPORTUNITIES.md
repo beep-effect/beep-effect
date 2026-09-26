@@ -2369,3 +2369,15 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+### 2026-09-26 — Pure test stubs and strict Effect provide diagnostics
+
+The CLI/config scope migration removed redundant scoped-layer wrappers and
+used direct `Effect.provide` for verified `Layer.succeed` test stubs, as D14
+permits. Full package proofs for `@beep/ai-provider-cli` and
+`@beep/architecture-lab-config` rejected those calls with TS377032
+`effect(strictEffectProvide)`. The packet exemption does not imply checker
+acceptance. Move ownership to the test harness without suppressing diagnostics
+or rebuilding a manual layer wrapper. Preparation should check both D14 and
+the active language-service diagnostic before recommending a direct stub
+provide; this would have avoided a failed proof in each package.
