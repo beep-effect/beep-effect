@@ -96,3 +96,29 @@ The final package verification passed: audit 16.8s and docgen 14.1s, recorded in
 html-properties-package-002.log. The remaining ordinary Effect runtime-boundary
 and specialized-assertion detector findings are still queued; no baseline rows
 have been removed merely because this property subset passes.
+
+## Effect runtime boundaries
+
+Converted 47 ordinary tests across six suites to it.effect and yielded their
+existing Effect operations. Removed five synchronous wrappers by yielding the
+underlying conformance, safe-policy or serialization operations at each call
+site. No runSync/runPromise calls remain in the HTML test directory. Existing
+failure checks inspect yielded Effect.exit values, keeping failures distinct
+from successful payloads. The facade no-throw witness now yields its decode;
+any failure or defect still fails that test.
+
+A syntax-tree comparison preserved all runtime literal values and assertion
+matcher counts in the six touched files, with the one intentional replacement
+of expect(...).not.toThrow() by a successful yield. The private receipt is
+html-runtime-parity.json. Native DOM parsing and serialized-byte witnesses stay
+in place, including proof forgery checks and deep-freeze mutations.
+
+Moving the forgery test into Effect.gen exposed native JSON calls to the Effect
+language-service rule. The round trip now uses S.fromJsonString(S.Unknown),
+encodeEffect and the typed decodeEffect; it still requires exact empty-object
+JSON and rejects the reconstructed proof. The reference-only alias and an
+unnecessarily unknown decoder were corrected without suppressing diagnostics.
+
+Final full package verification passed: audit 18.1s and docgen 14.8s
+(html-runtime-package-004.log). Specialized assertions, detector/ledger
+reconciliation, final timing and publication remain queued.

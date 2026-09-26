@@ -70,15 +70,17 @@ describe("@beep/html per-module entry points", () => {
     })
   );
 
-  it("validates detailed autocomplete through the staged facade", () => {
-    const root = Input.make({
-      autocomplete: O.some("section-checkout shipping email"),
-      type: O.some("email"),
-    });
+  it.effect("validates detailed autocomplete through the staged facade", () =>
+    Effect.gen(function* () {
+      const root = Input.make({
+        autocomplete: O.some("section-checkout shipping email"),
+        type: O.some("email"),
+      });
 
-    expect(Html.Conformant.issues(root)).toStrictEqual([]);
-    const conformant = Effect.runSync(Html.Conformant.decode(root));
-    expect(Html.Safe.issues(conformant)[0]?.rule).toBe("deniedElement");
-    expect(Exit.isFailure(Effect.runSyncExit(Html.Safe.decode(conformant)))).toBe(true);
-  });
+      expect(Html.Conformant.issues(root)).toStrictEqual([]);
+      const conformant = yield* Html.Conformant.decode(root);
+      expect(Html.Safe.issues(conformant)[0]?.rule).toBe("deniedElement");
+      expect(Exit.isFailure(yield* Effect.exit(Html.Safe.decode(conformant)))).toBe(true);
+    })
+  );
 });

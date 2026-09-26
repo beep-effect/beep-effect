@@ -58,14 +58,16 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
 };
 
 describe("HtmlNode AST — structure & nodes", () => {
-  it("exposes staged conformance and safe-policy facades", () => {
-    const root = HtmlFragment.make({ children: [] });
-    expect(Html.Conformant.issues(root)).toStrictEqual([]);
+  it.effect("exposes staged conformance and safe-policy facades", () =>
+    Effect.gen(function* () {
+      const root = HtmlFragment.make({ children: [] });
+      expect(Html.Conformant.issues(root)).toStrictEqual([]);
 
-    const conformant = Effect.runSync(Html.Conformant.decode(root));
-    expect(Html.Safe.issues(conformant)).toStrictEqual([]);
-    expect(() => Effect.runSync(Html.Safe.decode(conformant))).not.toThrow();
-  });
+      const conformant = yield* Html.Conformant.decode(root);
+      expect(Html.Safe.issues(conformant)).toStrictEqual([]);
+      yield* Html.Safe.decode(conformant);
+    })
+  );
 
   it("narrows canonical document children without weakening the lossless document", () => {
     const comment = Comment.make({ value: "before root" });

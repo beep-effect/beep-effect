@@ -2318,3 +2318,13 @@ The test-only repair targets the adapter public `PgClient.makeClient` entry poin
 while retaining the real test-utils layer/retry implementation. A mock-hit assertion
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
+
+### 2026-09-25 — reference checkout ahead of installed Schema aliases
+
+While migrating HTML's runtime-boundary tests, the Effect reference checkout at
+3495bd8858 exported UnknownFromJsonString, but installed effect 4.0.0-rc.117 did
+not. `bun run beep quality package-verify @beep/html` rejected that alias with
+TS2551. The test uses the supported equivalent `S.fromJsonString(S.Unknown)`;
+no dependency upgrade or diagnostic suppression is needed. API grounding should
+pair reference-source inspection with an installed-export check whenever the
+reference revision and lockfile release differ.
