@@ -7,6 +7,7 @@ import {
   M365ListDrivesRequest,
 } from "@beep/m365";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -41,7 +42,7 @@ pipe(
     onNone: () =>
       describe("@beep/m365 live integration (M365_*)", () => {
         it("skips live Graph calls when required M365_* env or token cache settings are absent", () => {
-          expect(O.isNone(liveEnv)).toBe(true);
+          assertNone(liveEnv);
         });
       }),
     onSome: (env) =>
