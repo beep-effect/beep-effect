@@ -13,10 +13,11 @@ import {
   verifyTextAnchorAgainstVerifiedSource,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, flow, Layer, Result } from "effect";
+import { expect } from "@effect/vitest";
+import { Effect, flow, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
@@ -43,7 +44,6 @@ const surrogateDigest = SourceTextDigest.make(
 );
 const extractor = SourceTextExtractor.make({ name: "utf8", version: "1" });
 const decodeTextAnchor = flow(S.decodeUnknownResult(TextAnchor), Result.getOrThrow);
-const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 
 const identity = (overrides: Partial<SourceTextIdentity> = {}): SourceTextIdentity =>
   SourceTextIdentity.make({
@@ -57,7 +57,7 @@ const identity = (overrides: Partial<SourceTextIdentity> = {}): SourceTextIdenti
     ...overrides,
   });
 
-describe("@beep/provenance VerifiedTextAnchor", () => {
+it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTextAnchor", (it) => {
   it.effect(
     "verifies a source manifestation independently of any anchor",
     Effect.fnUntraced(function* () {
@@ -74,41 +74,38 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(isVerifiedSourceText(verifiedSource)).toBe(true);
       expect(verifiedSource.source).toEqual(source);
       expect(verifiedSource.sourceText).toBe("fact");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
     "snapshots source authority before the asynchronous digest boundary",
     Effect.fnUntraced(function* () {
       const source = identity({ textDigest: factDigest });
-      const MutatingCrypto = Layer.succeed(
-        Crypto.Crypto,
-        Crypto.make({
-          digest: (algorithm, data) =>
-            Effect.sync(() => Reflect.set(source, "scopeRef", "matter:mutated")).pipe(
-              Effect.andThen(
-                Effect.tryPromise({
-                  catch: (cause) =>
-                    PlatformError.systemError({
-                      _tag: "Unknown",
-                      cause,
-                      description: "Could not compute mutating fixture digest",
-                      method: "digest",
-                      module: "VerifiedTextAnchorTest",
-                    }),
-                  try: () =>
-                    globalThis.crypto.subtle
-                      .digest(algorithm, new Uint8Array(data))
-                      .then((buffer) => new Uint8Array(buffer)),
-                })
-              )
-            ),
-          randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-        })
-      );
+      const mutatingCrypto = Crypto.make({
+        digest: (algorithm, data) =>
+          Effect.sync(() => Reflect.set(source, "scopeRef", "matter:mutated")).pipe(
+            Effect.andThen(
+              Effect.tryPromise({
+                catch: (cause) =>
+                  PlatformError.systemError({
+                    _tag: "Unknown",
+                    cause,
+                    description: "Could not compute mutating fixture digest",
+                    method: "digest",
+                    module: "VerifiedTextAnchorTest",
+                  }),
+                try: () =>
+                  globalThis.crypto.subtle
+                    .digest(algorithm, new Uint8Array(data))
+                    .then((buffer) => new Uint8Array(buffer)),
+              })
+            )
+          ),
+        randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
+      });
       const verified = yield* verifySourceTextIdentity(
         VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: "fact" })
-      ).pipe(provideScopedLayer(MutatingCrypto));
+      ).pipe(Effect.provideService(Crypto.Crypto, mutatingCrypto));
 
       expect(source.scopeRef).toBe("matter:mutated");
       expect(verified.source.scopeRef).toBe("matter:example");
@@ -155,7 +152,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(verifiedSource.sourceText).toBe("fact");
       expect(verified.anchor.quote).toBe("fact");
       expect(verified.source.sourceRef).toBe("source:example");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -195,7 +192,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
           value: verified.anchor,
         })
       ).toThrow();
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -214,7 +211,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(verified.anchor.quote).toBe("😀");
       expect(verified.source).toEqual(source);
       expect(isVerifiedTextAnchor(verified)).toBe(true);
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -231,7 +228,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       ).pipe(Effect.flip);
 
       expect(failure.reason).toBe("cross-scope");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -259,7 +256,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(versionFailure.reason).toBe("stale-source");
       expect(expectedSource.textDigest).toBe(emptyDigest);
       expect(expectedSource.extractor.version).toBe("1");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -278,7 +275,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(failure.reason).toBe("stale-source");
       expect(failure.message).not.toContain("fact");
       expect(failure.message).not.toContain(emptyDigest);
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -304,7 +301,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
 
       expect(failures.map(({ reason }) => reason)).toEqual(["stale-source", "stale-source"]);
       expect(replacement.sourceText).toBe("\ufffd");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -324,21 +321,19 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
         expect(failure.reason).toBe("stale-source");
         expect(failure.message).toBe("Verified text anchor rejected: stale-source.");
       },
-      provideScopedLayer(
-        Layer.succeed(
-          Crypto.Crypto,
-          Crypto.make({
-            digest: () =>
-              Effect.fail(
-                PlatformError.systemError({
-                  _tag: "Unknown",
-                  method: "digest",
-                  module: "VerifiedTextAnchorTest",
-                })
-              ),
-            randomBytes: (size) => new Uint8Array(size),
-          })
-        )
+      Effect.provideService(
+        Crypto.Crypto,
+        Crypto.make({
+          digest: () =>
+            Effect.fail(
+              PlatformError.systemError({
+                _tag: "Unknown",
+                method: "digest",
+                module: "VerifiedTextAnchorTest",
+              })
+            ),
+          randomBytes: (size) => new Uint8Array(size),
+        })
       )
     )
   );
@@ -357,7 +352,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       ).pipe(Effect.flip);
 
       expect(failure.reason).toBe("invalid-anchor");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -374,7 +369,7 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       ).pipe(Effect.flip);
 
       expect(failure.reason).toBe("quote-mismatch");
-    }, provideBunCrypto)
+    })
   );
 
   it.effect(
@@ -400,24 +395,20 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(isVerifiedTextAnchor(decodedReceipt)).toBe(false);
       expect(receiptIsNotVerified).toBe(true);
       expect(verificationFailure.message).toContain("VerifiedTextAnchor");
-    }, provideBunCrypto)
+    })
   );
 
-  it("derives constructive arbitrary source identities from the schema", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SourceTextIdentity)]),
-          ([source]) => {
-            const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(source));
-            const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
+  it.prop(
+    "derives constructive arbitrary source identities from the schema",
+    [Arbitrary.schema(SourceTextIdentity)],
+    ([source]) => {
+      const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(source));
+      const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
 
-            expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
+      expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

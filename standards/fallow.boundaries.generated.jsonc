@@ -3026,12 +3026,14 @@
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

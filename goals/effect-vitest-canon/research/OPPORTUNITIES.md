@@ -2361,6 +2361,15 @@ Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
 
 
+### Provenance scope migration: pure service overrides
+
+The scope-phase package check rejected two test-local Effect.provide(Layer)
+applications with TS377032 (strictEffectProvide), although the focused tests
+passed. Both fixtures construct pure Crypto values, so Effect.provideService
+preserves their per-case behavior without a nested Layer boundary. The corrected
+full package verification passed. Classifying pure service overrides before
+replacing scoped helpers would have prevented this failed check.
+
 ### Drizzle full-proof follow-up: compiled codecs and private output references
 
 PR #1277 full proof reached Lint Policy and rejected eight inline schema compiler
