@@ -3,7 +3,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as assert from "@effect/vitest/utils";
-import { Effect, Layer, pipe } from "effect";
+import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Eq from "effect/Equal";
@@ -23,11 +23,6 @@ const decodeUnknownDrizzleRowsResult = S.decodeUnknownResult(DrizzleRows);
 const encodeDrizzleErrorResult = S.encodeResult(DrizzleError);
 const encodeDrizzleErrorContextResult = S.encodeResult(DrizzleErrorContext);
 const encodeDrizzleRowsResult = S.encodeResult(DrizzleRows);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const makeClient = (execute: DrizzleClient["execute"]): DrizzleClient => {
   let client: DrizzleClient;
@@ -419,88 +414,108 @@ describe("DrizzleError", () => {
 });
 
 describe("Drizzle", () => {
-  it.effect(
-    "exposes adapter execute failures as DrizzleError",
-    Effect.fnUntraced(function* () {
-      const cause = new Error("execute failed");
-      const client = makeClient(() => Effect.fail(DrizzleError.fromUnknown("execute", cause)));
-      const program = Effect.gen(function* () {
-        const drizzle = yield* Drizzle;
-        return yield* drizzle.execute("select 1", []);
-      });
-      const error = yield* pipe(program, provideScopedLayer(Drizzle.makeLayer(client)), Effect.flip);
+  describe("exposes adapter execute failures as DrizzleError", () => {
+    const cause = new Error("execute failed");
+    const client = makeClient(() => Effect.fail(DrizzleError.fromUnknown("execute", cause)));
+    it.layer(Drizzle.makeLayer(client))((it) => {
+      it.effect(
+        "exposes adapter execute failures as DrizzleError",
+        Effect.fnUntraced(function* () {
+          const program = Effect.gen(function* () {
+            const drizzle = yield* Drizzle;
+            return yield* drizzle.execute("select 1", []);
+          });
+          const error = yield* Effect.flip(program);
 
-      assert.assertInstanceOf(error, DrizzleError);
-      assert.strictEqual(error.operation, "execute");
-      assert.strictEqual(O.getOrThrow(error.cause), cause);
-    })
-  );
+          assert.assertInstanceOf(error, DrizzleError);
+          assert.strictEqual(error.operation, "execute");
+          assert.strictEqual(O.getOrThrow(error.cause), cause);
+        })
+      );
+    });
+  });
 
-  it.effect(
-    "provides execute and transaction through Drizzle.makeLayer",
-    Effect.fnUntraced(function* () {
-      const transactionClient = makeClient((statement, parameters) => Effect.succeed([statement, parameters]));
-      const client: DrizzleClient = {
-        execute: (statement, parameters) => Effect.succeed([statement, parameters]),
-        withTransaction: (use) => use(transactionClient),
-      };
-      const program = Effect.gen(function* () {
-        const drizzle = yield* Drizzle;
-        const executed = yield* drizzle.execute("select 1", ["root"]);
-        const transacted = yield* drizzle.withTransaction((transaction) => transaction.execute("select 2", ["tx"]));
-        return { executed, transacted };
-      });
-      const result = yield* pipe(program, provideScopedLayer(Drizzle.makeLayer(client)));
+  describe("provides execute and transaction through Drizzle.makeLayer", () => {
+    const transactionClient = makeClient((statement, parameters) => Effect.succeed([statement, parameters]));
+    const client: DrizzleClient = {
+      execute: (statement, parameters) => Effect.succeed([statement, parameters]),
+      withTransaction: (use) => use(transactionClient),
+    };
+    it.layer(Drizzle.makeLayer(client))((it) => {
+      it.effect(
+        "provides execute and transaction through Drizzle.makeLayer",
+        Effect.fnUntraced(function* () {
+          const program = Effect.gen(function* () {
+            const drizzle = yield* Drizzle;
+            const executed = yield* drizzle.execute("select 1", ["root"]);
+            const transacted = yield* drizzle.withTransaction((transaction) => transaction.execute("select 2", ["tx"]));
+            return { executed, transacted };
+          });
+          const result = yield* program;
 
-      assert.deepStrictEqual(result.executed, ["select 1", ["root"]]);
-      assert.deepStrictEqual(result.transacted, ["select 2", ["tx"]]);
-    })
-  );
+          assert.deepStrictEqual(result.executed, ["select 1", ["root"]]);
+          assert.deepStrictEqual(result.transacted, ["select 2", ["tx"]]);
+        })
+      );
+    });
+  });
 
-  it.effect(
-    "preserves callback failures inside transactions",
-    Effect.fnUntraced(function* () {
-      const expected = DrizzleError.fromUnknown("withTransaction", new Error("callback failed"));
-      const client = makeClient((statement) => Effect.succeed([statement]));
-      const program = Effect.gen(function* () {
-        const drizzle = yield* Drizzle;
-        return yield* drizzle.withTransaction(() => Effect.fail(expected));
-      });
-      const error = yield* pipe(program, provideScopedLayer(Drizzle.makeLayer(client)), Effect.flip);
+  describe("preserves callback failures inside transactions", () => {
+    const expected = DrizzleError.fromUnknown("withTransaction", new Error("callback failed"));
+    const client = makeClient((statement) => Effect.succeed([statement]));
+    it.layer(Drizzle.makeLayer(client))((it) => {
+      it.effect(
+        "preserves callback failures inside transactions",
+        Effect.fnUntraced(function* () {
+          const program = Effect.gen(function* () {
+            const drizzle = yield* Drizzle;
+            return yield* drizzle.withTransaction(() => Effect.fail(expected));
+          });
+          const error = yield* Effect.flip(program);
 
-      assert.strictEqual(error, expected);
-    })
-  );
+          assert.strictEqual(error, expected);
+        })
+      );
+    });
+  });
 
-  it.effect(
-    "preserves adapter failures from transactions",
-    Effect.fnUntraced(function* () {
-      const expected = DrizzleError.fromUnknown("withTransaction", new Error("adapter failed"));
-      const client: DrizzleClient = {
-        execute: (statement) => Effect.succeed([statement]),
-        withTransaction: () => Effect.fail(expected),
-      };
-      const program = Effect.gen(function* () {
-        const drizzle = yield* Drizzle;
-        return yield* drizzle.withTransaction((transaction) => transaction.execute("select 1", []));
-      });
-      const error = yield* pipe(program, provideScopedLayer(Drizzle.makeLayer(client)), Effect.flip);
+  describe("preserves adapter failures from transactions", () => {
+    const expected = DrizzleError.fromUnknown("withTransaction", new Error("adapter failed"));
+    const client: DrizzleClient = {
+      execute: (statement) => Effect.succeed([statement]),
+      withTransaction: () => Effect.fail(expected),
+    };
+    it.layer(Drizzle.makeLayer(client))((it) => {
+      it.effect(
+        "preserves adapter failures from transactions",
+        Effect.fnUntraced(function* () {
+          const program = Effect.gen(function* () {
+            const drizzle = yield* Drizzle;
+            return yield* drizzle.withTransaction((transaction) => transaction.execute("select 1", []));
+          });
+          const error = yield* Effect.flip(program);
 
-      assert.strictEqual(error, expected);
-    })
-  );
+          assert.strictEqual(error, expected);
+        })
+      );
+    });
+  });
 
-  it.effect(
-    "uses explicit Effect-native transaction callbacks",
-    Effect.fnUntraced(function* () {
-      const client = makeClient((statement) => Effect.succeed([statement]));
-      const program = Effect.gen(function* () {
-        const drizzle = yield* Drizzle;
-        return yield* drizzle.withTransaction((transaction) => transaction.execute("select 1", []));
-      });
-      const rows = yield* pipe(program, provideScopedLayer(Drizzle.makeLayer(client)));
+  describe("uses explicit Effect-native transaction callbacks", () => {
+    const client = makeClient((statement) => Effect.succeed([statement]));
+    it.layer(Drizzle.makeLayer(client))((it) => {
+      it.effect(
+        "uses explicit Effect-native transaction callbacks",
+        Effect.fnUntraced(function* () {
+          const program = Effect.gen(function* () {
+            const drizzle = yield* Drizzle;
+            return yield* drizzle.withTransaction((transaction) => transaction.execute("select 1", []));
+          });
+          const rows = yield* program;
 
-      assert.deepStrictEqual(rows, ["select 1"]);
-    })
-  );
+          assert.deepStrictEqual(rows, ["select 1"]);
+        })
+      );
+    });
+  });
 });
