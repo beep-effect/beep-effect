@@ -12,12 +12,15 @@ import {
   FreshbooksStoredToken,
   FreshbooksTokenStore,
 } from "@beep/freshbooks";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 type CapturedRequest = {
@@ -194,7 +197,7 @@ describe("@beep/freshbooks models", () => {
 });
 
 describe("@beep/freshbooks read service", () => {
-  layer(TestLayer)((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "resolves the identity with distinct account and business namespaces",
       Effect.fnUntraced(function* () {
@@ -274,17 +277,17 @@ describe("@beep/freshbooks read service", () => {
         const freshbooks = yield* Freshbooks;
         const exit = yield* Effect.exit(freshbooks.listInvoices(errorAccountId));
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(error._tag).toBe("Some");
-          if (error._tag === "Some") {
-            expect(error.value).toBeInstanceOf(FreshbooksError);
-            expect(error.value.reason).toBe("response status");
-            expect(error.value.status).toBe(429);
-            expect(error.value.resource).toBe("invoices");
-          }
-        }
+        const error = Exit.match(exit, {
+          onFailure: Cause.findErrorOption,
+          onSuccess: O.none,
+        });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, FreshbooksError);
+            return { reason: error.reason, status: error.status, resource: error.resource };
+          }),
+          { reason: "response status", status: 429, resource: "invoices" }
+        );
       })
     );
   });

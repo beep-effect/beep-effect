@@ -1,0 +1,111 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-evidence>/business-uspto-before-bun.json"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/uspto/package.json",
+      "sha256": "9d4318d71dd25ed0e2bf48aa4c3ffba14ae26fb4d39be00db51933a6f05dbd55"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.config.ts",
+      "sha256": "350c1b74e44466a4297d0bf5d3195af21e873577401bc7f9eedab7eb6ba57ab8"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.errors.ts",
+      "sha256": "8d727625046961b8f8b04f6da78ad3a59287e1bcaf47db097b6c7e5234f164a5"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.models.ts",
+      "sha256": "4783e5f399aca4a2669fb24a1722c93477b8740d1a5ac3c9329379b40ad74b5d"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.service.ts",
+      "sha256": "36d6fd231b2b78186a3e79a7978f6cdddfa926ed8db741b1aa5cf9b6ded39996"
+    },
+    {
+      "file": "packages/drivers/uspto/src/index.ts",
+      "sha256": "9abe52d2f9d29616140e32e7894713ea258b3b82a8807ea3442801aa7788d5f2"
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.equivalence.test.ts",
+      "sha256": "d7bfc237c932c7f2981670191ae94b312be4c5bda459ebeb1c386b7cf0afdca7"
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "sha256": "83c2a2e8ca3eb664cd2ae225290e80def74706a423ced881212c48062dfe90b1"
+    }
+  ],
+  "loadBefore": [23.74609375, 21.29931640625, 25.65380859375],
+  "pressureBefore": {
+    "cpu": "some avg10=6.47 avg60=3.09 avg300=2.23 total=2443563508\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.06 total=204522328\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=177525041\n",
+    "io": "some avg10=0.02 avg60=0.09 avg300=0.48 total=970999206\nfull avg10=0.00 avg60=0.05 avg300=0.31 total=662211218\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 1.9856531279947376,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/uspto/package.json",
+      "sha256": "9d4318d71dd25ed0e2bf48aa4c3ffba14ae26fb4d39be00db51933a6f05dbd55"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.config.ts",
+      "sha256": "350c1b74e44466a4297d0bf5d3195af21e873577401bc7f9eedab7eb6ba57ab8"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.errors.ts",
+      "sha256": "8d727625046961b8f8b04f6da78ad3a59287e1bcaf47db097b6c7e5234f164a5"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.models.ts",
+      "sha256": "4783e5f399aca4a2669fb24a1722c93477b8740d1a5ac3c9329379b40ad74b5d"
+    },
+    {
+      "file": "packages/drivers/uspto/src/Uspto.service.ts",
+      "sha256": "36d6fd231b2b78186a3e79a7978f6cdddfa926ed8db741b1aa5cf9b6ded39996"
+    },
+    {
+      "file": "packages/drivers/uspto/src/index.ts",
+      "sha256": "9abe52d2f9d29616140e32e7894713ea258b3b82a8807ea3442801aa7788d5f2"
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.equivalence.test.ts",
+      "sha256": "d7bfc237c932c7f2981670191ae94b312be4c5bda459ebeb1c386b7cf0afdca7"
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "sha256": "83c2a2e8ca3eb664cd2ae225290e80def74706a423ced881212c48062dfe90b1"
+    }
+  ],
+  "loadAfter": [22.40478515625, 21.0615234375, 25.55322265625],
+  "pressureAfter": {
+    "cpu": "some avg10=5.29 avg60=2.99 avg300=2.21 total=2443566937\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.06 total=204522328\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=177525041\n",
+    "io": "some avg10=0.01 avg60=0.09 avg300=0.48 total=970999485\nfull avg10=0.00 avg60=0.05 avg300=0.31 total=662211314\n"
+  },
+  "sourceStable": true
+}

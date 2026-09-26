@@ -8,9 +8,11 @@ import {
   HubSpotUpsertContactRequest,
   HubSpotUpsertContactResponse,
 } from "@beep/hubspot";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -259,7 +261,7 @@ describe("@beep/hubspot", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(TestLayer)((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "submits a form through the secure Forms API endpoint",
       Effect.fnUntraced(function* () {
@@ -276,7 +278,9 @@ describe("@beep/hubspot", () => {
         expect(captures[0]?.headers.authorization).toBe("Bearer hubspot-service-key");
       })
     );
+  });
 
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps non-success responses to typed driver errors",
       Effect.fnUntraced(function* () {
@@ -286,19 +290,28 @@ describe("@beep/hubspot", () => {
         const hubspot = yield* HubSpot;
         const exit = yield* Effect.exit(hubspot.submitForm(request));
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(HubSpotError);
-            expect(error.value.reason).toBe("response status");
-            expect(error.value.status).toBe(401);
+        const error = Exit.match(exit, {
+          onFailure: Cause.findErrorOption,
+          onSuccess: O.none,
+        });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, HubSpotError);
+            return {
+              reason: error.reason,
+              status: error.status,
+            };
+          }),
+          {
+            reason: "response status",
+            status: 401,
           }
-        }
+        );
       })
     );
+  });
 
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "upserts contacts through the CRM batch endpoint",
       Effect.fnUntraced(function* () {
@@ -324,7 +337,9 @@ describe("@beep/hubspot", () => {
         expect(capture?.headers.authorization).toBe("Bearer hubspot-service-key");
       })
     );
+  });
 
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps upsert response status failures with email context",
       Effect.fnUntraced(function* () {
@@ -343,18 +358,27 @@ describe("@beep/hubspot", () => {
           )
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(HubSpotError);
-            expect(error.value.reason).toBe("response status");
-            expect(error.value.status).toBe(429);
-            expect(error.value.email).toBe("tom@example.com");
-            expect(error.value.formGuid).toBeUndefined();
+        const error = Exit.match(exit, {
+          onFailure: Cause.findErrorOption,
+          onSuccess: O.none,
+        });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, HubSpotError);
+            return {
+              reason: error.reason,
+              status: error.status,
+              email: error.email,
+              formGuid: error.formGuid,
+            };
+          }),
+          {
+            reason: "response status",
+            status: 429,
+            email: "tom@example.com",
+            formGuid: undefined,
           }
-        }
+        );
       })
     );
   });

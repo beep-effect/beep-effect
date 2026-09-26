@@ -2369,3 +2369,18 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+### Business-driver assertions: preserve observation and branded expectations
+
+During the assertion phase, a provisional FreshBooks full-Cause comparison
+introduced a stricter singleton expectation and failed on stack annotations.
+The original oracle observes the first typed error. Preserve that observation
+with `Exit.match`, `Cause.findErrorOption` and native `assertSome`, retaining
+all original class and payload checks without reconstructing the cause.
+
+USPTO package verification then rejected four raw string expectations with
+`TS2345` because native assertion helpers enforce the branded payload type.
+Use the existing `NonEmptyTrimmedStr.make` constructor for the unchanged literal
+values. A small preflight against the actual test compiler would catch this
+introduced typing error before the full package audit. Neither failure
+justifies a production change, weakened assertion or quality-gate waiver.
