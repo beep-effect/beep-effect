@@ -1,0 +1,505 @@
+{
+  "numTotalTestSuites": 11,
+  "numPassedTestSuites": 11,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 39,
+  "numPassedTests": 39,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790461600663,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["ACP declared-field equivalence"],
+          "fullName": "ACP declared-field equivalence treats field-equal defect-bearing errors as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal defect-bearing errors as equivalent and field-different ones as distinct",
+          "duration": 1.242823000000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461604679,
+      "endTime": 1790461604680.243,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/acp/test/Acp.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "constructs the stdio agent layer with default options",
+          "status": "passed",
+          "title": "constructs the stdio agent layer with default options",
+          "duration": 19.79721500000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "round-trips schema-derived agent JSON-RPC responses and notifications through JSON boundaries",
+          "status": "passed",
+          "title": "round-trips schema-derived agent JSON-RPC responses and notifications through JSON boundaries",
+          "duration": 19.951182000000244,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "effect-acp agent handles core agent requests and outbound client requests",
+          "status": "passed",
+          "title": "effect-acp agent handles core agent requests and outbound client requests",
+          "duration": 29.312622999999803,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "effect-acp agent uses distinct ids for RPC calls and extension requests",
+          "status": "passed",
+          "title": "effect-acp agent uses distinct ids for RPC calls and extension requests",
+          "duration": 26.530449999999746,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461604730,
+      "endTime": 1790461604759.3127,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/acp/test/agent.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "reads every JSON text produced from a schema-derived JSON value",
+          "status": "passed",
+          "title": "reads every JSON text produced from a schema-derived JSON value",
+          "duration": 37.52176899999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "reports an escaped property key exactly when a key needs escaping",
+          "status": "passed",
+          "title": "reports an escaped property key exactly when a key needs escaping",
+          "duration": 37.95660799999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "keeps escaped one-character keys distinct from a materialised backslash key at the same position",
+          "status": "passed",
+          "title": "keeps escaped one-character keys distinct from a materialised backslash key at the same position",
+          "duration": 13.257076999999754,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "mirrors JSON.parse value semantics on the strict path",
+          "status": "passed",
+          "title": "mirrors JSON.parse value semantics on the strict path",
+          "duration": 13.27568599999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects texts outside the JSON grammar with the failing position",
+          "status": "passed",
+          "title": "rejects texts outside the JSON grammar with the failing position",
+          "duration": 13.269256000000041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "bounds nesting depth on the strict path",
+          "status": "passed",
+          "title": "bounds nesting depth on the strict path",
+          "duration": 4.337938000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "fromJsonText round-trips a schema through JSON text and reports syntax failures as issues",
+          "status": "passed",
+          "title": "fromJsonText round-trips a schema through JSON text and reports syntax failures as issues",
+          "duration": 4.293729999999869,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461604726,
+      "endTime": 1790461604764.9565,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/acp/test/json.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries",
+          "status": "passed",
+          "title": "round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries",
+          "duration": 31.461941000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "keeps escaped _meta keys after the host materialised a backslash key at the same position",
+          "status": "passed",
+          "title": "keeps escaped _meta keys after the host materialised a backslash key at the same position",
+          "duration": 31.22190099999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "keeps handwritten ACP schema encoded shapes byte-identical",
+          "status": "passed",
+          "title": "keeps handwritten ACP schema encoded shapes byte-identical",
+          "duration": 31.20536600000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "round-trips handwritten ACP schemas through encoded form",
+          "status": "passed",
+          "title": "round-trips handwritten ACP schemas through encoded form",
+          "duration": 31.197803999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol emits exact JSON-RPC notifications and decodes inbound session/update and elicitation completion",
+          "status": "passed",
+          "title": "emits exact JSON-RPC notifications and decodes inbound session/update and elicitation completion",
+          "duration": 22.125638999999865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol decodes escaped _meta keys on inbound frames after the host materialised a backslash key",
+          "status": "passed",
+          "title": "decodes escaped _meta keys on inbound frames after the host materialised a backslash key",
+          "duration": 5.391149000000041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol logs outgoing notifications when logOutgoing is enabled",
+          "status": "passed",
+          "title": "logs outgoing notifications when logOutgoing is enabled",
+          "duration": 3.235559999999168,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol fails notification encoding through the declared ACP error channel",
+          "status": "passed",
+          "title": "fails notification encoding through the declared ACP error channel",
+          "duration": 3.22543399999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol supports generic extension requests over the patched transport",
+          "status": "passed",
+          "title": "supports generic extension requests over the patched transport",
+          "duration": 20.746436000000358,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol preserves zero-valued ids for inbound core client requests",
+          "status": "passed",
+          "title": "preserves zero-valued ids for inbound core client requests",
+          "duration": 18.86746299999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol cleans up interrupted extension requests before a late response arrives",
+          "status": "passed",
+          "title": "cleans up interrupted extension requests before a late response arrives",
+          "duration": 18.706316000000697,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol propagates the real child exit code when the input stream ends",
+          "status": "passed",
+          "title": "propagates the real child exit code when the input stream ends",
+          "duration": 911.5828840000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol does not emit a second process-exit error after a decode failure",
+          "status": "passed",
+          "title": "does not emit a second process-exit error after a decode failure",
+          "duration": 902.0970620000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp protocol"],
+          "fullName": "effect-acp protocol fails pending extension requests with the propagated exit code",
+          "status": "passed",
+          "title": "fails pending extension requests with the propagated exit code",
+          "duration": 1.4475979999997435,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder parity"],
+          "fullName": "effect-acp frame decoder parity routes every JSON-RPC frame kind exactly like effect's ndjson serializer",
+          "status": "passed",
+          "title": "routes every JSON-RPC frame kind exactly like effect's ndjson serializer",
+          "duration": 46.157782999999654,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder parity"],
+          "fullName": "effect-acp frame decoder parity splits batch frames and reassembles UTF-8 fragmented across chunks",
+          "status": "passed",
+          "title": "splits batch frames and reassembles UTF-8 fragmented across chunks",
+          "duration": 19.67631900000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder parity"],
+          "fullName": "effect-acp frame decoder parity terminates with a parse error when a frame exceeds the buffer limit",
+          "status": "passed",
+          "title": "terminates with a parse error when a frame exceeds the buffer limit",
+          "duration": 11.443516000000272,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder edge cases"],
+          "fullName": "effect-acp frame decoder edge cases routes the remaining control frames, cause shapes, and params-less requests",
+          "status": "passed",
+          "title": "routes the remaining control frames, cause shapes, and params-less requests",
+          "duration": 32.82517999999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder edge cases"],
+          "fullName": "effect-acp frame decoder edge cases terminates with a parse error on an empty chunk result",
+          "status": "passed",
+          "title": "terminates with a parse error on an empty chunk result",
+          "duration": 1.7769859999998516,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder edge cases"],
+          "fullName": "effect-acp frame decoder edge cases terminates with a parse error on a control frame without a requestId",
+          "status": "passed",
+          "title": "terminates with a parse error on a control frame without a requestId",
+          "duration": 1.6149560000003476,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp frame decoder edge cases"],
+          "fullName": "effect-acp frame decoder edge cases terminates with a parse error on a line longer than the buffer limit",
+          "status": "passed",
+          "title": "terminates with a parse error on a line longer than the buffer limit",
+          "duration": 6.4250700000002325,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp untagged error decoding"],
+          "fullName": "effect-acp untagged error decoding surfaces an untagged JSON-RPC error response as a Fail cause entry, never a Die defect",
+          "status": "passed",
+          "title": "surfaces an untagged JSON-RPC error response as a Fail cause entry, never a Die defect",
+          "duration": 7.6871540000001914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461604743,
+      "endTime": 1790461605719.0972,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/acp/test/protocol.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["effect-acp client"],
+          "fullName": "effect-acp client initializes, prompts, receives updates, and handles permission requests",
+          "status": "passed",
+          "title": "initializes, prompts, receives updates, and handles permission requests",
+          "duration": 932.6319259999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp client"],
+          "fullName": "effect-acp client returns formatted invalid params when a typed extension request payload is wrong",
+          "status": "passed",
+          "title": "returns formatted invalid params when a typed extension request payload is wrong",
+          "duration": 946.5490590000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp client"],
+          "fullName": "effect-acp client replays buffered notifications to handlers registered after they arrive",
+          "status": "passed",
+          "title": "replays buffered notifications to handlers registered after they arrive",
+          "duration": 932.5549579999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp client"],
+          "fullName": "effect-acp client continues dispatching session updates after one handler fails",
+          "status": "passed",
+          "title": "continues dispatching session updates after one handler fails",
+          "duration": 959.4052790000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-acp client"],
+          "fullName": "effect-acp client uses distinct ids for RPC calls and extension requests",
+          "status": "passed",
+          "title": "uses distinct ids for RPC calls and extension requests",
+          "duration": 28.00384699999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461604697,
+      "endTime": 1790461605657.4053,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/acp/test/integration/client.integration.test.ts"
+    }
+  ]
+}
