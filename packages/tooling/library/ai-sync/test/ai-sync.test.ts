@@ -37,6 +37,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -411,7 +412,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
       });
       expect(findings).toHaveLength(1);
       expect(findings[0]?.sourceId).toBe("synthetic");
-      expect(findings[0] !== undefined && O.isSome(findings[0].expectedHash)).toBe(true);
+      assertTrue(findings[0] !== undefined && O.isSome(findings[0].expectedHash));
     })
   );
 
@@ -500,7 +501,7 @@ layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds" }
           'model = "gpt-5"\n\n[skills]\ninclude_instructions = "definitely"\n'
         );
         const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
-        expect(Exit.isFailure(invalid)).toBe(true);
+        assertTrue(Exit.isFailure(invalid));
         expect(String(invalid)).toContain('["skills"]["include_instructions"]');
       })
     );
