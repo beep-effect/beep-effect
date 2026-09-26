@@ -16,7 +16,7 @@ import { hexToOklchValue, oklchToHexValue } from "./Color.transforms.ts";
 
 const HexColorScale12Checks = S.makeFilterGroup(
   [
-    S.isLengthBetween(12, 12, {
+    S.isBetweenLength(12, 12, {
       identifier: $I`HexColorScale12LengthCheck`,
       title: "Hex Color Scale Length",
       description: "A hex color scale containing exactly 12 entries.",

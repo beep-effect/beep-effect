@@ -92,6 +92,12 @@ const config: StorybookConfig = {
     `${head}<style>html,body,#storybook-root,#storybook-docs{background:oklch(0.145 0 0);color-scheme:dark}.sb-loader{border-color:oklch(0.708 0 0);border-top-color:transparent}</style><script>globalThis.process ??= { env: { NODE_ENV: "development" }, platform: "browser", arch: "browser" };</script>`,
   viteFinal(config) {
     const defaults = {
+      // effect ships both `effect/Schema` (the module) and `effect/schema` (the
+      // promoted barrel). Their pre-bundle entry names differ only by case, so
+      // rolldown dedupes one to `effect_Schema2.js` and Vite's optimizer then
+      // cannot find it ("Cannot destructure property 'exportsData'"). Serve the
+      // barrel unbundled; it is plain ESM and only workspace source imports it.
+      optimizeDeps: { exclude: ["effect/schema"] },
       resolve: { dedupe: ["react", "react-dom"] },
       plugins: [resolveUniformTypeScriptSourceSpecifiers(), stripMisplacedLexicalPureAnnotations()],
       server: { fs: { allow: [repoRoot] } },

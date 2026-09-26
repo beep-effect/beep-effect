@@ -7,10 +7,10 @@
 
 import { Config, Effect } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
 import { CorpusCommandError } from "./Corpus.errors.ts";
 import {
   CorpusArchiveMoveOptions,

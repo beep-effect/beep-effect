@@ -16,11 +16,11 @@ import {
 } from "@beep/uspto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Redacted, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const decodeUsptoConfigInputResult = S.decodeResult(UsptoConfigInput);
 

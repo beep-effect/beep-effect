@@ -4,7 +4,7 @@
  *
  * NOTE: the Authentication API returns failures as HTTP 200 with a body-level
  * `loginResult` code and an empty `nextGenCSO`, so these are decoded with the
- * lower-level `effect/unstable/http` client (not `httpapi`) and branched on in
+ * lower-level `effect/http` client (not `httpapi`) and branched on in
  * the service layer.
  *
  * @packageDocumentation

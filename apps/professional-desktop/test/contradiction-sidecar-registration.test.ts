@@ -42,9 +42,9 @@ import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import { RpcTest } from "effect/rpc";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { RpcTest } from "effect/unstable/rpc";
 import type * as DateTime from "effect/DateTime";
 
 const leftLogicalKey = Str.repeat(64)("a");

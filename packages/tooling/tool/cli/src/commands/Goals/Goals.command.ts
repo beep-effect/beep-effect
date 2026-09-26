@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { goalsAdoptCommand } from "./Adopt.ts";
 import { goalsBootstrapCommand } from "./Bootstrap.ts";

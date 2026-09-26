@@ -19,7 +19,7 @@ import { and, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import { bigint, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { Data, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -77,7 +77,7 @@ class CandidatePayloadConflict extends Data.TaggedError("CandidatePayloadConflic
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
+  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
 });
 const encodeBeliefRef = (ref: BeliefRef): string => `${ref.logicalKey}:${ref.edgeVersionId}:${ref.version}`;
 

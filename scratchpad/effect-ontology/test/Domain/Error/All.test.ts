@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Activity from "../../../Domain/Error/Activity.ts";
 import * as Auth from "../../../Domain/Error/Auth.ts";
 import * as Base from "../../../Domain/Error/Base.ts";

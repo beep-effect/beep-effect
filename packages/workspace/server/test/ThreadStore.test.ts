@@ -9,6 +9,7 @@ import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Clock, DateTime, Effect, Exit, HashMap, Layer } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Eq from "effect/Equal";
@@ -16,7 +17,6 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadId);
 

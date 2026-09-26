@@ -2,6 +2,7 @@ import { ContradictionReviewDecision } from "@beep/epistemic-use-cases/public";
 import { SubmitContradictionCandidate, SubmitContradictionCandidateArbitrary } from "@beep/epistemic-use-cases/server";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -9,7 +10,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeSubmitContradictionCandidateResult = S.encodeResult(SubmitContradictionCandidate);
 

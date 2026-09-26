@@ -3,10 +3,10 @@ import { FilingDecisionInput } from "@beep/documents-use-cases/aggregates/Docume
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownFilingDecisionInputResult = S.decodeUnknownResult(FilingDecisionInput);
 const encodeFilingDecisionInputResult = S.encodeResult(FilingDecisionInput);

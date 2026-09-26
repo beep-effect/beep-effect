@@ -23,15 +23,15 @@ import { sanitizedToolkit } from "@beep/mcp-kit";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { Layer } from "effect";
+import * as McpProtocol from "effect/ai/McpProtocol";
+import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
-import * as McpProtocol from "effect/unstable/ai/McpProtocol";
-import * as McpServer from "effect/unstable/ai/McpServer";
 import { StreamingToolkitHandlersLive } from "./StreamingHandlers.ts";
 import { StreamingToolkit } from "./StreamingTools.ts";
 import type * as FileSystem from "effect/FileSystem";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type { Stdio } from "effect/Stdio";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
 
 const $I = $NlpMcpId.create("Server");
 
@@ -79,7 +79,7 @@ export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpSer
  * `FileSystem`/`Path` services used by the streaming handlers, and an
  * `HttpClient` for URL-backed dataset loads; provide `NodeStdio.layer`,
  * `NodeFileSystem.layer`, `NodePath.layer` (from `@effect/platform-node`) and
- * `FetchHttpClient.layer` (from `effect/unstable/http`) at the entrypoint.
+ * `FetchHttpClient.layer` (from `effect/http`) at the entrypoint.
  *
  * **Example** (Providing Node platform layers)
  *
@@ -89,7 +89,7 @@ export class NlpMcpServerConfig extends S.Class<NlpMcpServerConfig>($I`NlpMcpSer
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"
  * import * as NodeStdio from "@effect/platform-node/NodeStdio"
- * import { FetchHttpClient } from "effect/unstable/http"
+ * import { FetchHttpClient } from "effect/http"
  *
  * const server = makeServerLayer({ name: "beep-nlp", version: "0.0.0" }).pipe(
  *   Layer.provide(NodeStdio.layer),

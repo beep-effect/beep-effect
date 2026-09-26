@@ -19,6 +19,7 @@ import {
 } from "@beep/tailscale";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
@@ -27,12 +28,11 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const encoder = new TextEncoder();
 const tailscaleStatusJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.100.100.100","fd7a:115c:a1e0::1","192.168.1.20"]}}`;
@@ -87,6 +87,8 @@ function mockSpawnerLayer(
   );
 }
 
+const encodeTailscaleStatusJson = S.encodeEffect(S.fromJsonString(TailscaleStatusJson));
+
 describe("tailscale", () => {
   it.effect("detects Tailnet IPv4 addresses", () =>
     Effect.sync(() => {
@@ -135,7 +137,7 @@ describe("tailscale", () => {
             ],
           }),
         });
-        const encoded = yield* S.encodeEffect(S.fromJsonString(TailscaleStatusJson))(statusJson);
+        const encoded = yield* encodeTailscaleStatusJson(statusJson);
         const status = yield* parseTailscaleStatus(encoded);
         assert.deepEqual(status.tailnetIpv4Addresses, expected);
       }),

@@ -6,9 +6,9 @@ import * as ProofManifest from "@beep/repo-docgen/ProofManifest";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeConfigurationConfigurationSchemaResult = S.decodeResult(Configuration.ConfigurationSchema);
 const encodeUnknownDomainFileResult = S.encodeUnknownResult(Domain.File);

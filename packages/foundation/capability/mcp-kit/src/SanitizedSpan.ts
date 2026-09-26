@@ -23,15 +23,7 @@
 import { NonNegativeInt } from "@beep/schema";
 import { Cause, Context, Effect, Layer, Result, Stream } from "effect";
 import * as A from "effect/Array";
-import * as ErrorReporter from "effect/ErrorReporter";
-import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as References from "effect/References";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import * as AiError from "effect/unstable/ai/AiError";
+import * as AiError from "effect/ai/AiError";
 import {
   CallToolResult,
   InvalidParams,
@@ -40,11 +32,19 @@ import {
   ToolJson,
   ToolOutputJson,
   Tool as WireTool,
-} from "effect/unstable/ai/McpSchema";
-import * as McpServer from "effect/unstable/ai/McpServer";
-import * as AiTool from "effect/unstable/ai/Tool";
-import * as Toolkit from "effect/unstable/ai/Toolkit";
-import { Headers, HttpServerRequest } from "effect/unstable/http";
+} from "effect/ai/McpSchema";
+import * as McpServer from "effect/ai/McpServer";
+import * as AiTool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
+import * as ErrorReporter from "effect/ErrorReporter";
+import { dual } from "effect/Function";
+import { Headers, HttpServerRequest } from "effect/http";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as References from "effect/References";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ToolHandlerPayload, translateApiKeyRequired } from "./ApiKeyRequired.ts";
 import { CurrentMcpCaller, CurrentMcpDispatchAnchor, McpCallerIdentity } from "./McpCaller.ts";
 import type * as JsonSchema from "effect/JsonSchema";
@@ -545,7 +545,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
 });
 
 /**
- * Registers an `effect/unstable/ai` `Toolkit` with the ambient `McpServer`,
+ * Registers an `effect/ai` `Toolkit` with the ambient `McpServer`,
  * wrapping every tool's dispatch in {@link withSanitizedToolSpan} so raw,
  * undecoded call parameters never reach span attributes.
  *
@@ -582,7 +582,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * ```ts
  * import { Effect, Layer } from "effect"
  * import { sanitizedToolkit } from "@beep/mcp-kit"
- * import { Tool, Toolkit } from "effect/unstable/ai"
+ * import { Tool, Toolkit } from "effect/ai"
  * import * as S from "effect/Schema"
  *
  * const ExampleTool = Tool.make("example_tool", { success: S.String })

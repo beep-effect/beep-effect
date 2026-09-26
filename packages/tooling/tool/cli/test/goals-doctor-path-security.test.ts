@@ -3,8 +3,8 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Ref } from "effect";
+import { Command } from "effect/cli";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 

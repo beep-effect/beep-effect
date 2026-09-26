@@ -51,11 +51,11 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Runtime, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Command } from "effect/cli";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
 const provideScopedLayer =

@@ -20,14 +20,14 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Duration, Effect, FileSystem, Match, Path, Result, Schedule, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess } from "effect/unstable/process";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
 const decodeUnknownSequenceBreakDampingV1Result = S.decodeUnknownResult(SequenceBreakDampingV1);

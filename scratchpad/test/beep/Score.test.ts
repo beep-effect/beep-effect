@@ -2,7 +2,7 @@ import { toPgTable } from "@beep/effect-drizzle/pg";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { DailyScore, ScorePeriod, Scores } from "../../beep/Score.ts";
 
 const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>

@@ -17,7 +17,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import {
   InferenceRunRequest,
   InferenceRunResponse,
@@ -384,7 +384,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
  *
  * const served = Layer.provide(InferenceRouter, HttpRouter.layer)

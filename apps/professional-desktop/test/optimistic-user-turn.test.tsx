@@ -21,7 +21,7 @@ import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { AsyncResult, Reactivity } from "effect/unstable/reactivity";
+import { AsyncResult, Reactivity } from "effect/reactivity";
 import { afterEach, beforeAll, vi } from "vitest";
 import type { JSX } from "react";
 

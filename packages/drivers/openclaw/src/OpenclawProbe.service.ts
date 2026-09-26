@@ -10,11 +10,11 @@
 
 import { Effect, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
 import { OPENCLAW_HTTP_PROBE_TIMEOUT } from "./Openclaw.config.ts";
 import {
   OpenclawDiagnosticText,

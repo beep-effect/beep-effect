@@ -23,8 +23,8 @@ import { GovinfoErrorReason, Search } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { Result } from "effect";
+import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
 import { resolveProductionToolName, ToolNameCandidate } from "./ToolNames.ts";
 
 const $I = $GovLegalMcpId.create("Tools");

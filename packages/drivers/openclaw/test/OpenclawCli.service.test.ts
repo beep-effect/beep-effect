@@ -14,12 +14,12 @@ import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Duration, Effect, Layer, Result, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
 

@@ -13,7 +13,7 @@ import {
   String as StringSchema,
   Struct as StructSchema,
 } from "effect/Schema";
-import { Model as EffectModel } from "effect/unstable/schema";
+import { Model as EffectModel } from "effect/schema";
 import type { Repository } from "@beep/effect-drizzle";
 
 const kit = make("pg", (pg) => ({

@@ -1,6 +1,7 @@
 import { Json as AcpJson } from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
 import { assert, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -8,7 +9,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Struct from "effect/Struct";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const JsonArbitrary = Arbitrary.schema(Schema.Json);
 const encodeJsonText = Schema.encodeEffect(Schema.fromJsonString(Schema.Json));

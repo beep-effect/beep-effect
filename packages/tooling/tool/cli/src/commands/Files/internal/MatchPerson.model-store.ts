@@ -10,10 +10,11 @@ import { LiteralKit, NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Crypto, Duration, Effect, Encoding, FileSystem, Match, Number as Num, Path, Schedule, Stream } from "effect";
+import { Crypto, Duration, Effect, FileSystem, Match, Number as Num, Path, Schedule, Stream } from "effect";
+import * as Hex from "effect/encoding/Hex";
+import { HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientError, HttpClientRequest } from "effect/unstable/http";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
@@ -187,7 +188,7 @@ const inspectArtifact = Effect.fn("Files.PersonMatchModelStore.inspectArtifact")
   ).pipe(Effect.mapError((cause) => integrityError(`Failed to hash model artifact "${filePath}".`, cause)));
 
   return ObservedArtifact.make({
-    sha256: Sha256Hex.make(Encoding.encodeHex(hasher.digest())),
+    sha256: Sha256Hex.make(Hex.encode(hasher.digest())),
     sizeBytes: NonNegativeInt.make(sizeBytes),
   });
 });
@@ -510,7 +511,7 @@ const downloadArtifactAttempt = Effect.fn("Files.PersonMatchModelStore.downloadA
     { concurrency: 1, discard: true }
   );
   return ObservedArtifact.make({
-    sha256: Sha256Hex.make(Encoding.encodeHex(hasher.digest())),
+    sha256: Sha256Hex.make(Hex.encode(hasher.digest())),
     sizeBytes: NonNegativeInt.make(sizeBytes),
   });
 });

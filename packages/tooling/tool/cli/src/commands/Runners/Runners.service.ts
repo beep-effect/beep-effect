@@ -35,7 +35,7 @@ import {
   RUNNER_AMI_PIN_PARAMETER,
 } from "./Runners.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { BakeConfig } from "./Runners.schemas.ts";
 
 const decodeSha256Hex = S.decodeEffect(Sha256Hex);

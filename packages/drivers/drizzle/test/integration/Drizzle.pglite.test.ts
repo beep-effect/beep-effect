@@ -5,7 +5,7 @@ import { describe, expect, layer } from "@effect/vitest";
 import { Effect, Exit, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import type { DrizzleClient, DrizzleRows } from "@beep/drizzle";
 
 const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();

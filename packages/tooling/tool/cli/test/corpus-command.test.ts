@@ -49,13 +49,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess } from "effect/unstable/process";
 import type { PlatformError } from "effect";
 
 const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);

@@ -24,12 +24,12 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Path, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess } from "effect/unstable/process";
 
 // The writer is shell, so the only honest conformance test spawns the real
 // script and decodes what it wrote. `HookPulseV1` carries the

@@ -27,7 +27,6 @@ import {
   DateTime,
   Duration,
   Effect,
-  Encoding,
   Fiber,
   FileSystem,
   Layer,
@@ -38,6 +37,7 @@ import {
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Crypto from "effect/Crypto";
+import * as Hex from "effect/encoding/Hex";
 import { constant, dual, flow } from "effect/Function";
 import * as HS from "effect/HashSet";
 import * as Num from "effect/Number";
@@ -91,7 +91,7 @@ import {
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
@@ -542,7 +542,7 @@ const stagingTemporaryPath = Effect.fnUntraced(function* (filePath: string, proc
   );
   return `${filePath}.tmp-${process.pid}${O.match(procStart, {
     onNone: () => "",
-    onSome: (identity) => `-${Encoding.encodeHex(identity)}`,
+    onSome: (identity) => `-${Hex.encode(identity)}`,
   })}-${token}`;
 });
 
@@ -559,7 +559,7 @@ interface StagingFileOwner {
 const stagingFileIdentity = (segment: string | undefined): string =>
   pipe(
     O.fromUndefinedOr(segment),
-    O.map(flow(Encoding.decodeHexString, Result.getOrElse(constant(Str.empty)))),
+    O.map(flow(Hex.decodeString, Result.getOrElse(constant(Str.empty)))),
     O.getOrElse(constant(Str.empty))
   );
 
@@ -879,7 +879,7 @@ const reapClaimPath = Effect.fnUntraced(function* (
   const bytes = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(`${claim._tag}:${claim.nonce}:${claim.sourcePath}`))
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to hash scheduler reap claim identity.")));
-  const digest = Encoding.encodeHex(bytes);
+  const digest = Hex.encode(bytes);
   const suffix = AdmissionClaimSinkState.is["pending-protocol-off"](claim.admissionJournal)
     ? PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX
     : REAP_CLAIM_SUFFIX;

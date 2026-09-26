@@ -23,7 +23,7 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel } from "effect/ai";
 import { Entity, GroundingDecision, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { EntityId } from "../Domain/Model/shared.ts";

@@ -39,9 +39,9 @@ import * as A from "effect/Array";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { goldenDeploymentIntent } from "../fixtures/golden-intent.expected.ts";
 
 const compatibility = OPENCLAW_COMPATIBILITY_SET;

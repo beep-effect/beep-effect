@@ -45,9 +45,10 @@ Test pattern:
   `Cause.fail(expectedError)`, rather than the bare error.
 - Schema-modeled laws: pass production Schemas to `it.prop` or
   `it.effect.prop`, or derive native generators with `Arbitrary.schema(schema)`
-  from `effect/unstable/arbitrary`. Use `{ arbitrary: fcRuns(n) }` from
-  `@beep/fc-runs` to preserve the repository's run floor and seed. Native
-  Arbitrary has no global run-floor configuration. Shape generated values
+  from `effect/Arbitrary`. Use `{ arbitrary: fcRuns(n) }` from
+  `@beep/fc-runs` to preserve the repository's run floor and seed. Upstream
+  `Arbitrary.configureGlobal` exists, but the repository run floor and seed
+  are owned by `@beep/fc-runs`, so leave it unset. Shape generated values
   through valid production constraints and supported native annotations.
 
 `Membership.canRevoke` is a pure predicate. `Membership.revoke` is an

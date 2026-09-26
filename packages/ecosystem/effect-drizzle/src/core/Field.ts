@@ -17,7 +17,7 @@ import { hasProperty } from "effect/Predicate";
 import * as Meta from "./Meta.ts";
 import type { Pipeable } from "effect/Pipeable";
 import type { Top } from "effect/Schema";
-import type { VariantSchema } from "effect/unstable/schema";
+import type { VariantSchema } from "effect/schema";
 
 /**
  * Runtime marker carried by every `@beep/effect-drizzle` field wrapper.

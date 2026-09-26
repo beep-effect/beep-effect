@@ -35,8 +35,8 @@ import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import { Effect } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Model as M } from "effect/unstable/schema";
-import type { VariantSchema } from "effect/unstable/schema";
+import { Model as M } from "effect/schema";
+import type { VariantSchema } from "effect/schema";
 
 const $I = $ScratchpadId.create("identity-kit-probe");
 

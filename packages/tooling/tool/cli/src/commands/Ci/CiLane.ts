@@ -17,11 +17,11 @@ import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, HashMap, HashSet, Match, Order, Path, pipe } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as Num from "effect/Number";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { readTurboCacheEnvironment, turboEnvExtendsAmbient, turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
@@ -48,7 +48,7 @@ import {
 } from "./CiLanePartitions.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type { Crypto } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { QualityTaskConfigurationError, QualityTaskGroupFailed, QualityTaskLaneInput } from "../Quality/Tasks.ts";
 import type { CiLanePartition, PartitionedCiLane } from "./CiLanePartitions.ts";
 
@@ -2169,7 +2169,7 @@ const reportCiCommandError = (error: { readonly message: string }) =>
  *
  * ```ts
  * import { ciLaneCommand } from "@beep/repo-cli/commands/Ci"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(ciLaneCommand, { version: "0.0.0" })
@@ -2614,7 +2614,7 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
  *
  * ```ts
  * import { ciLocalCommand } from "@beep/repo-cli/commands/Ci"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(ciLocalCommand, { version: "0.0.0" })

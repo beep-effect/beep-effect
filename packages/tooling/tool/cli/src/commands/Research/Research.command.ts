@@ -7,12 +7,12 @@
 
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import { Argument, Command, Flag } from "effect/cli";
 import * as Eq from "effect/Equal";
 import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { installResearchTimers, readRecordedResearchTimer, uninstallResearchTimers } from "./internal/Timers.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";

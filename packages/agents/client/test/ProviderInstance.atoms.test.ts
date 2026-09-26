@@ -11,10 +11,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { Atom, AtomRegistry } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import * as RpcTest from "effect/unstable/rpc/RpcTest";
 
 const encodedInstance = {
   ...productEntityFixtureInput("AgentsProviderInstance", 7),

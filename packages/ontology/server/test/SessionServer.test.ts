@@ -31,10 +31,10 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { Dataset } from "@beep/rdf/Rdf";
 
 const decodeOntologyFilePath = S.decodeEffect(OntologyFilePath);

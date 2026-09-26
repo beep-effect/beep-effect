@@ -11,11 +11,11 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, flow, Layer, Match, pipe, Queue, Redacted, Stream } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import WebSocket from "ws";
 import { XAI_API_URL, XAI_MANAGEMENT_API_URL, XAI_WEBSOCKET_URL, XAiConfigInput } from "./XAi.config.ts";
 import { XAiError } from "./XAi.errors.ts";
@@ -35,7 +35,7 @@ import {
   XAiRequestBodyKind,
   XAiResponseBodyKind,
 } from "./XAiEndpoints.models.ts";
-import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { XAiQueryValue, XAiResponse, XAiWebSocketEvent } from "./XAi.models.ts";
 import type { XAiEndpointDescriptor, XAiEndpointMethodName } from "./XAiEndpoints.models.ts";
 

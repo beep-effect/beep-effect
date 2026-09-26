@@ -30,16 +30,16 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
+import * as McpProtocol from "effect/ai/McpProtocol";
+import * as McpServer from "effect/ai/McpServer";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Metric from "effect/Metric";
-import * as McpProtocol from "effect/unstable/ai/McpProtocol";
-import * as McpServer from "effect/unstable/ai/McpServer";
-import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
 import type * as Redacted from "effect/Redacted";
 

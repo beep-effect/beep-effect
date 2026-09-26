@@ -2,8 +2,8 @@ import { $SemanticaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Bool from "effect/Boolean";
+import { Command, Flag } from "effect/cli";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { GOLD_SUBSETS, proposeGold } from "@/canary/Gold";
 import { RelationPreviewOptions, runRelationPreview } from "@/canary/RelationPreview";
 import { CorpusManifest, ManifestWriteFailed } from "@/corpus/Manifest";
@@ -275,7 +275,7 @@ const RelationCommand = Command.make("relation").pipe(
  *
  * ```ts
  * import { CanaryCommand } from "@/canary/Command"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  *
  * const runCanary = Command.runWith(CanaryCommand, { version: "0.0.0" })
  * console.log(typeof runCanary) // "function"

@@ -15,8 +15,8 @@ import { Console, Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import * as Command from "effect/unstable/cli/Command";
-import * as Flag from "effect/unstable/cli/Flag";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { WikidataApiError, WikidataClient, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
@@ -180,7 +180,7 @@ To create a link, run:`);
  *
  * ```ts
  * import { linkCommand } from "@effect-ontology/Cli/Commands/Link"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["--entity-iri", "https://example.com/ada", "--wikidata-id", "Q7259"]
  * const program = Command.runWith(linkCommand, { version: "0.0.0" })([...argv])

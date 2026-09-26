@@ -29,11 +29,11 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
 import { Effect, identity } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(
   schema: Schema,

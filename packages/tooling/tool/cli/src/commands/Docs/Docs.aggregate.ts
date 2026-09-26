@@ -12,7 +12,7 @@ import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.ts";
 

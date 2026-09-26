@@ -9,7 +9,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { Console, Effect, FileSystem, HashSet, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()("MigrationsDriftError", {
   message: S.String,

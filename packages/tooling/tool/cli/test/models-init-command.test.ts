@@ -4,11 +4,11 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import { Command } from "effect/cli";
+import { FetchHttpClient } from "effect/http";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
 
 // `init` is the one subcommand that touches no upstream catalog: it seeds the
 // routing manifest from the bundled defaults, so the whole command group can be

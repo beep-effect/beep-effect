@@ -22,22 +22,22 @@ import { SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Deferred, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
+import * as McpSchema from "effect/ai/McpSchema";
 import { dual } from "effect/Function";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { Rpc, RpcClient, RpcGroup } from "effect/rpc";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as McpSchema from "effect/unstable/ai/McpSchema";
-import { HttpClient, HttpClientRequest } from "effect/unstable/http";
-import { Rpc, RpcClient, RpcGroup } from "effect/unstable/rpc";
 import { MCP_PROTOCOL_VERSION, VERSION } from "./Version.ts";
+import type { HttpClientError } from "effect/http/HttpClientError";
+import type * as RpcClientError from "effect/rpc/RpcClientError";
+import type * as RpcMessage from "effect/rpc/RpcMessage";
+import type * as RpcSerialization from "effect/rpc/RpcSerialization";
 import type * as Scope from "effect/Scope";
-import type { HttpClientError } from "effect/unstable/http/HttpClientError";
-import type * as RpcClientError from "effect/unstable/rpc/RpcClientError";
-import type * as RpcMessage from "effect/unstable/rpc/RpcMessage";
-import type * as RpcSerialization from "effect/unstable/rpc/RpcSerialization";
 
 const $I = $McpKitId.create("client");
 
@@ -504,7 +504,7 @@ export class ResourcesRead extends Rpc.make("resources/read", {
  *
  * ```ts
  * import { McpClientRpcs } from "@beep/mcp-kit/client"
- * import { RpcClient } from "effect/unstable/rpc"
+ * import { RpcClient } from "effect/rpc"
  *
  * const client = RpcClient.make(McpClientRpcs)
  * console.log(typeof client)
@@ -758,7 +758,7 @@ export class McpHttpExchange extends S.Class<McpHttpExchange>($I`McpHttpExchange
  * ```ts
  * import { JsonRpcMessage, postJsonRpc, routingHeaders } from "@beep/mcp-kit/client"
  * import * as Effect from "effect/Effect"
- * import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient"
  *
  * const frame = JsonRpcMessage.make({ id: 1, method: "server/discover", params: {} })
  * const program = Effect.gen(function* () {
@@ -1152,7 +1152,7 @@ export interface McpClientConnection {
  * import { connect, layerProtocolHttp, McpHttpProtocolOptions } from "@beep/mcp-kit/client"
  * import * as Effect from "effect/Effect"
  * import * as Layer from "effect/Layer"
- * import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient"
  *
  * // The protocol layer is built into the ambient scope, never `Effect.provide`d
  * // around `connect` alone: the layer owns the response router, so a scope

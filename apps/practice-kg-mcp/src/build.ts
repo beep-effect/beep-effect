@@ -12,8 +12,8 @@ import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
-import { Command, Flag } from "effect/unstable/cli";
 import { makePracticeKgBuildLayer } from "./runtime/index.ts";
 
 const corpusRoot = Flag.Directory("corpus-root", { mustExist: true });

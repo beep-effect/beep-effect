@@ -3,12 +3,13 @@
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { ConfigProvider, Crypto, Effect, Encoding, Equal, Exit, FileSystem, HashSet, Layer, Path } from "effect";
+import { ConfigProvider, Crypto, Effect, Equal, Exit, FileSystem, HashSet, Layer, Path } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand } from "@/canary/Command";
 import { RelationPreviewManifest } from "@/canary/RelationPreview";
@@ -61,7 +62,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const digestRows = (rows: ReadonlyArray<unknown>): Sha256Hex =>
-  Sha256Hex.make(Encoding.encodeHex(sha256(new TextEncoder().encode(canonicalJson(rows)))));
+  Sha256Hex.make(Hex.encode(sha256(new TextEncoder().encode(canonicalJson(rows)))));
 
 const rejectsManifest = (input: unknown) =>
   decodeUnknownCorpusManifest(input).pipe(Effect.exit, Effect.map(Exit.isFailure));

@@ -9,10 +9,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { buildRepoDependencyIndex, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runCaptured } from "../../internal/process/StepExec.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
@@ -507,7 +507,7 @@ const boundariesCommand = Command.make(
  *
  * ```ts
  * import { fallowCommand } from "@beep/repo-cli/commands/Fallow"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(fallowCommand, { version: "0.0.0" })

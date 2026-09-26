@@ -23,7 +23,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { DRAG_DROP_PASTE } from "@lexical/rich-text";
 import { FileIcon } from "@phosphor-icons/react/File";
 import { XIcon } from "@phosphor-icons/react/X";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { COMMAND_PRIORITY_LOW } from "lexical";
 import { attachmentFailureAtom, captureAttachmentsFn } from "./atoms.ts";
 import { AttachmentFailure, isImageAttachment } from "./attachment-model.ts";

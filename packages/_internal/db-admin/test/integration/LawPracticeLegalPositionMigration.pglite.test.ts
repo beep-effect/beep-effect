@@ -26,7 +26,7 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const decodeUnknownActFrame = S.decodeUnknownEffect(ActFrame);
 const decodeUnknownCorrectionDelta = S.decodeUnknownEffect(CorrectionDelta);

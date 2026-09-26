@@ -14,15 +14,15 @@ import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
 import { dual } from "effect/Function";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import type { Redacted } from "effect";
-import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 
 const $I = $VeniceAiId.create("VeniceAI.service");
 

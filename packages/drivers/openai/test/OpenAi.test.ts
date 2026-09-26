@@ -8,9 +8,9 @@ import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const EmbeddingModelOptionsArbitrary = Arbitrary.schema(OpenAiEmbeddingModelOptions);
 const LanguageModelOptionsArbitrary = Arbitrary.schema(OpenAiLanguageModelOptions);

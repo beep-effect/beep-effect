@@ -1,4 +1,4 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { ConversationMetadata, ConversationMetadataKeys, metadataList, toVectorMetadata } from "../../beep/ConversationMetadata.ts";
 

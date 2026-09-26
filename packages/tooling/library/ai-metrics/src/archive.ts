@@ -8,7 +8,8 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
+import { Clock, Effect, FileSystem, Path, Redacted, Result } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
@@ -27,7 +28,7 @@ const ArchiveSha256Hex = S.toEncoded(Sha256Hex).pipe(
 );
 
 const decodedBase64ByteLengthSatisfies = (predicate: (byteLength: number) => boolean) => (value: string) =>
-  Result.match(Encoding.decodeBase64(value), {
+  Result.match(Base64.decode(value), {
     onFailure: () => false,
     onSuccess: (bytes) => predicate(bytes.byteLength),
   });
@@ -46,7 +47,7 @@ const STANDARD_BASE64_PATTERN = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9
  * @returns A string filter that passes only standard Base64 text.
  */
 const isStandardBase64 = (annotations: S.Annotations.Filter) =>
-  S.makeFilter<string>((value) => Result.isSuccess(Encoding.decodeBase64(value)), {
+  S.makeFilter<string>((value) => Result.isSuccess(Base64.decode(value)), {
     expected: "a base64 encoded string",
     arbitraryConstraint: { patterns: [{ source: STANDARD_BASE64_PATTERN.source, flags: "" }] },
     toJsonSchema: () => ({ pattern: STANDARD_BASE64_PATTERN.source }),
@@ -490,9 +491,9 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
     const envelope = yield* AiMetricsEncryptedRawArchiveEnvelope.makeEffect({
       algorithm: AiMetricsArchiveAlgorithm.Enum["AES-256-GCM"],
       archiveObjectId,
-      ciphertextBase64: Encoding.encodeBase64(new Uint8Array(ciphertext)),
+      ciphertextBase64: Base64.encode(new Uint8Array(ciphertext)),
       encryptedAtEpochMillis,
-      nonceBase64: Encoding.encodeBase64(nonce),
+      nonceBase64: Base64.encode(nonce),
       plaintextContentHash,
       sourceKind,
       sourcePathHash,
@@ -569,11 +570,11 @@ export const decryptEncryptedRawArchiveEnvelope = Effect.fn("AiMetrics.decryptEn
   readonly rawArchiveKey: AiMetricsRawArchiveKey;
 }) {
   const key = yield* importRawArchiveKey(rawArchiveKey);
-  const nonce = yield* Result.match(Encoding.decodeBase64(envelope.nonceBase64), {
+  const nonce = yield* Result.match(Base64.decode(envelope.nonceBase64), {
     onFailure: (cause) => Effect.fail(archiveFailure("Archive envelope nonce is not valid base64.", cause)),
     onSuccess: Effect.succeed,
   });
-  const ciphertext = yield* Result.match(Encoding.decodeBase64(envelope.ciphertextBase64), {
+  const ciphertext = yield* Result.match(Base64.decode(envelope.ciphertextBase64), {
     onFailure: (cause) => Effect.fail(archiveFailure("Archive envelope ciphertext is not valid base64.", cause)),
     onSuccess: Effect.succeed,
   });

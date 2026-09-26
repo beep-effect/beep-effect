@@ -15,7 +15,7 @@ import { thunkNull } from "@beep/utils/thunk";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
-import { AsyncResult } from "effect/unstable/reactivity";
+import { AsyncResult } from "effect/reactivity";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {
   VaultSyncCommand,

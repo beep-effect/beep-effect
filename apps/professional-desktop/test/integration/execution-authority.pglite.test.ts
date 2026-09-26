@@ -25,6 +25,7 @@ import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -36,8 +37,7 @@ import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import {
   decodeOntologyFilePath,

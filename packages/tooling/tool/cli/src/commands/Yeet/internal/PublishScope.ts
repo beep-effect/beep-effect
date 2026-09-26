@@ -36,7 +36,7 @@ import { writeIssueArtifacts } from "./IssueArtifacts.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
 import type { Crypto } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
 

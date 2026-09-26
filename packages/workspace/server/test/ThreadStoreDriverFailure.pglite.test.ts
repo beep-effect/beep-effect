@@ -22,7 +22,7 @@ import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const decodeThreadId = S.decodeUnknownEffect(WorkspaceIdentity.ThreadId);
 const decodeWorkspaceId = S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);

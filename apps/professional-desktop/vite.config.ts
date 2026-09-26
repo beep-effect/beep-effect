@@ -109,7 +109,10 @@ export default defineConfig({
     // prefix-rewritten into a doubled, nonexistent path).
     // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
     // initialize or prebundle it if a future webview path imports the package.
-    exclude: ["@cosmos.gl/graph", "oxigraph"],
+    // effect/schema (the promoted barrel) and effect/Schema pre-bundle to entry
+    // names that differ only by case; rolldown dedupes one and Vite's optimizer
+    // loses it. Keep the barrel unbundled (plain ESM, workspace-imported only).
+    exclude: ["@cosmos.gl/graph", "oxigraph", "effect/schema"],
     // three is only reached through @beep/graph-3d's lazy import on the first
     // 3D-toggle; without pre-bundling, Vite discovers it mid-session,
     // re-optimizes, and the stale hashed chunk URL 404s ("Failed to fetch

@@ -8,9 +8,9 @@
 import { resolveThemeMode, ThemeMode } from "@beep/ui/themes";
 import * as P from "@beep/utils/Predicate";
 import * as Effect from "effect/Effect";
+import { KeyValueStore } from "effect/persistence";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { KeyValueStore } from "effect/unstable/persistence";
-import { Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
 const THEME_STORAGE_KEY = "professional-desktop:theme-mode";

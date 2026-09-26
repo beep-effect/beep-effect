@@ -12,19 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import {
-  Clock,
-  Context,
-  Crypto,
-  DateTime,
-  Duration,
-  Effect,
-  Encoding,
-  HashSet,
-  Layer,
-  Number as N,
-  Schedule,
-} from "effect";
+import { Clock, Context, Crypto, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
+import * as Base64Url from "effect/encoding/Base64Url";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -97,7 +86,7 @@ const makeTicketService = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
 
   const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
-    return Encoding.encodeBase64Url(yield* crypto.randomBytes(32));
+    return Base64Url.encode(yield* crypto.randomBytes(32));
   });
 
   const persistTicket = (ticket: string, record: TicketRecord) =>

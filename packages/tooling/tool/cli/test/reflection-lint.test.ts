@@ -5,8 +5,8 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import { Command } from "effect/cli";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 

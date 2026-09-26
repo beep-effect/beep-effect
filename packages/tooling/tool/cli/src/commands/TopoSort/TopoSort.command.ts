@@ -8,7 +8,7 @@
 import { buildRepoDependencyIndex, findRepoRoot, sortWorkspacePackages } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Effect, HashMap } from "effect";
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 import { isRootDepIndexKey } from "../TsconfigSync/TsconfigSync.schemas.ts";
 
 /**

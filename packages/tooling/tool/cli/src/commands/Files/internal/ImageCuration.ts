@@ -14,18 +14,8 @@ import {
 } from "@beep/face-detection";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
-import {
-  Console,
-  Crypto,
-  Effect,
-  Encoding,
-  FileSystem,
-  MutableHashMap,
-  MutableHashSet,
-  Order,
-  Path,
-  pipe,
-} from "effect";
+import { Console, Crypto, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import sharp from "sharp";
@@ -56,7 +46,7 @@ import {
 import { FileSha256Hash } from "./Media.schemas.ts";
 import type { LoadedFaceDetector } from "@beep/face-detection";
 import type { Terminal } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { StagedFileCommitRecord } from "./FileTransaction.ts";
 import type { ImageAuditOptions } from "./ImageAudit.schemas.ts";
 import type {
@@ -514,7 +504,7 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
     `${decoded.info.width}x${decoded.info.height}x${decoded.info.channels}:`
   );
   const crypto = yield* Crypto.Crypto;
-  const decodedHash = Encoding.encodeHex(
+  const decodedHash = Hex.encode(
     yield* crypto
       .digest("SHA-256", concatBytes([decodedHeader, decoded.data]))
       .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`))

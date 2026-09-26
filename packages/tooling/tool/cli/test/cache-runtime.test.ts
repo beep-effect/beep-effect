@@ -27,8 +27,8 @@ import { assertInstanceOf } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, Layer, Path } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import { ChildProcessSpawner } from "effect/process";
 import * as Result from "effect/Result";
-import { ChildProcessSpawner } from "effect/unstable/process";
 
 describe("cache runtime identity input", () => {
   it.effect("rejects supplied values in either environment before planned Turbo execution", () =>

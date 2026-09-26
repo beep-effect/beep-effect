@@ -22,13 +22,13 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Queue, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as McpSchema from "effect/ai/McpSchema";
+import * as McpServer from "effect/ai/McpServer";
+import { HttpClient, HttpClientRequest, HttpClientResponse, HttpRouter } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
-import * as McpSchema from "effect/unstable/ai/McpSchema";
-import * as McpServer from "effect/unstable/ai/McpServer";
-import { HttpClient, HttpClientRequest, HttpClientResponse, HttpRouter } from "effect/unstable/http";
 import {
   CLIENT_CAPABILITIES_META_KEY,
   CLIENT_INFO_META_KEY,

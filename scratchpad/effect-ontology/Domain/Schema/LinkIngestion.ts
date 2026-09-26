@@ -1,4 +1,4 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 /**
  * Link-ingestion request, result, listing, and detail contracts.
  *
@@ -639,7 +639,7 @@ export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
  * **Example** (Sample consistent values)
  * ```ts
  * import { BatchIngestResponseArbitrary } from "@effect-ontology/Schema/LinkIngestion"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * const samples = Arbitrary.sampleEffect(BatchIngestResponseArbitrary)
  * ```
  *

@@ -28,10 +28,10 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,

@@ -10,8 +10,8 @@ import {
   ServerObservabilityConfig,
 } from "@beep/observability/server";
 import { Cause, Effect, Metric } from "effect";
+import { HttpApiSchema } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpApiSchema } from "effect/unstable/httpapi";
 
 const loggingConfig = LoggingConfig.make({
   format: "json",

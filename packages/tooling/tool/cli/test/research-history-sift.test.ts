@@ -7,8 +7,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import { FetchHttpClient } from "effect/http";
 import * as Str from "effect/String";
-import { FetchHttpClient } from "effect/unstable/http";
 
 const provideTestLayer = provideScopedLayer(Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer));
 

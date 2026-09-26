@@ -9,7 +9,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
 const decodeShaclValidationReport = S.decodeEffect(ShaclValidationReport);
 const decodeValidationPolicy = S.decodeEffect(ValidationPolicy);

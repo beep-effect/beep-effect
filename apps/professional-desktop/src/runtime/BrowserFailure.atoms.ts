@@ -10,8 +10,8 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "./ProfessionalAtomRuntime.ts";
 
 const $I = $ProfessionalDesktopId.create("runtime/BrowserFailure.atoms");

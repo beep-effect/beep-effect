@@ -7,8 +7,8 @@
 
 import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
 import { Config, Duration, Effect, ExecutionPlan, Layer, Schedule } from "effect";
-import { AiError } from "effect/unstable/ai";
-import { FetchHttpClient } from "effect/unstable/http";
+import { AiError } from "effect/ai";
+import { FetchHttpClient } from "effect/http";
 import {
   ANTHROPIC_API_KEY_ENV,
   ANTHROPIC_DEFAULT_MODEL,
@@ -97,7 +97,7 @@ export const makeAnthropicLanguageModelLayer = (
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelLive } from "@beep/anthropic"
  * import type { Config, Layer } from "effect"
- * import type * as LanguageModel from "effect/unstable/ai/LanguageModel"
+ * import type * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const layer: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigError, never> =
  *   AnthropicLanguageModelLive

@@ -2,11 +2,11 @@ import { renderPrProvenance, toPublicPrProvenance } from "@beep/repo-cli/test/Ye
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { assert, describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
 
 describe("Yeet PR provenance public boundary", () => {

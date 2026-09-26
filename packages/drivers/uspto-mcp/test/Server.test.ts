@@ -35,12 +35,12 @@ import {
 } from "@beep/uspto-mcp";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { McpServerClient } from "effect/ai/McpSchema";
+import * as McpServer from "effect/ai/McpServer";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
-import { McpServerClient } from "effect/unstable/ai/McpSchema";
-import * as McpServer from "effect/unstable/ai/McpServer";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const decodeDocumentsProjectionOutput = S.decodeEffect(DocumentsProjectionOutput);
 const decodeDocumentsProjectionOutputJson = S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput));

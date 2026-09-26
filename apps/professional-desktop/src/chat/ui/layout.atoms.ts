@@ -16,8 +16,8 @@ import * as N from "@beep/utils/Number";
 import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
 import * as Effect from "effect/Effect";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
 const $I = $ProfessionalDesktopId.create("chat/ui/layout.atoms");

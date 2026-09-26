@@ -6,8 +6,8 @@
  */
 
 import { $ApiDocsId } from "@beep/identity/packages";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const $I = $ApiDocsId.create("Api");
 

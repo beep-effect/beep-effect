@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/unstable/reactivity";
+import { AtomRegistry } from "effect/reactivity";
 import { afterEach, vi } from "vitest";
 import { fpsSampleAtoms } from "@/spikes/Fps.atoms";
 

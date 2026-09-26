@@ -8,7 +8,7 @@ import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Exit, Layer, Runtime } from "effect";
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 import { docgenCommand } from "./CLI.ts";
 import * as Domain from "./Domain.ts";
 import * as Version from "./Version.ts";

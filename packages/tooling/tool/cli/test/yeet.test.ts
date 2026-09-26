@@ -154,16 +154,17 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, DateTime, Deferred, Effect, Encoding, Fiber, FileSystem, Layer, Path, Ref } from "effect";
+import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Hex from "effect/encoding/Hex";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 const decodeRepoStepRunResult = S.decodeEffect(RepoStepRunResult);
@@ -230,7 +231,7 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
 const proofLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedText: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedText));
-  return `${lockPath}.reap-${Encoding.encodeHex(digest)}.claim`;
+  return `${lockPath}.reap-${Hex.encode(digest)}.claim`;
 });
 const proofLockReapClaimTombstonePath = proofLockReapClaimPath;
 

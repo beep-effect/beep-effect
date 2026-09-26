@@ -11,13 +11,13 @@ import { Fn, NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { Argument, Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { parseDocument } from "yaml";
 import { runCapturedStreams } from "../../internal/process/index.ts";
 import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.ts";
@@ -43,7 +43,7 @@ import {
 } from "./internal/FallowEnvelope.schema.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
@@ -2458,7 +2458,7 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  *
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })

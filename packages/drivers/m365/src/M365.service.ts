@@ -1,7 +1,7 @@
 /**
  * Effect service for Microsoft Graph `v1.0` read-only driver calls.
  *
- * The driver uses raw Graph REST requests through `effect/unstable/http`,
+ * The driver uses raw Graph REST requests through `effect/http`,
  * decodes every JSON payload with `effect/Schema`, and records only technical
  * counts/sizes in spans. It never logs tokens, mail bodies, file bytes, or
  * document content.
@@ -15,13 +15,13 @@ import { PosInt, SchemaUtils } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
 import { Config, Context, Duration, Effect, flow, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { M365Auth } from "./M365.auth.ts";
 import { M365ConfigInput, ResolvedM365Config, resolveM365Config } from "./M365.config.ts";
 import { M365Error } from "./M365.errors.ts";
@@ -35,7 +35,7 @@ import {
   GraphMessage,
   GraphSite,
 } from "./M365.schemas.ts";
-import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
 
 const decodeM365ConfigInput = S.decodeEffect(M365ConfigInput);

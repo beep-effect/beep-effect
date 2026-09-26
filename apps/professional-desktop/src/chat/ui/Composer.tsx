@@ -43,7 +43,7 @@ import * as Str from "@beep/utils/Str";
 import { thunkNull } from "@beep/utils/thunk";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 import { composerShellAtoms, composerSurfaceAtoms } from "./Composer.atoms.ts";
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type { ChatComposerMountConfig } from "@beep/editor/chat/chat-composer";

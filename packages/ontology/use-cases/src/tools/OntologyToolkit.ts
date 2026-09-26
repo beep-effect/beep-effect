@@ -12,8 +12,8 @@ import { ChangeOperation, SessionChangeDelta, SessionId } from "@beep/ontology-d
 import { PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
+import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
 import { OntologyFilePath } from "../aggregates/Session/Session.ports.ts";
 import {
   OntologyResourceSummary,

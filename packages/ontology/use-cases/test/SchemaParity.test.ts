@@ -32,9 +32,9 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import { Option as O, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeParseTurtleResultResult = S.decodeResult(ParseTurtleResult);
 const decodeSerializeTurtleRequestResult = S.decodeResult(SerializeTurtleRequest);

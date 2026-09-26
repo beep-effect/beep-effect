@@ -6,7 +6,7 @@
  */
 
 import { Effect } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { runEffectVitestLint } from "./internal/EffectVitestScan.ts";
 import { EffectVitestLintOptions } from "./Lint.schemas.ts";
 
@@ -18,7 +18,7 @@ import { EffectVitestLintOptions } from "./Lint.schemas.ts";
  * ```ts
  * import { lintEffectVitestCommand } from "@beep/repo-cli/commands/Lint"
  * import * as Effect from "effect/Effect"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  *
  * const run = Command.run(lintEffectVitestCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

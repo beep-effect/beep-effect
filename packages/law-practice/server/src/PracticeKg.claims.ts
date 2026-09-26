@@ -32,8 +32,8 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient";
-import type * as SqlClient from "effect/unstable/sql/SqlClient";
+import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
+import type * as SqlClient from "effect/sql/SqlClient";
 
 const isUnionInlineSchema = S.is(S.Union([IrToLawExtractionError, LangExtractError]));
 

@@ -8,8 +8,8 @@
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Layer } from "effect";
-import { HttpRouter } from "effect/unstable/http";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
+import { HttpRouter } from "effect/http";
+import { HttpApiBuilder } from "effect/http-api";
 import { Api, Health } from "../Api.ts";
 import { CatalogRoutes } from "../Docs.routes.ts";
 

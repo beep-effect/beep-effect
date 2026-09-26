@@ -36,7 +36,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
-import type { PayloadEncoding } from "effect/unstable/httpapi/HttpApiSchema";
+import type { PayloadEncoding } from "effect/http-api/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
 import type { CoreVocab, Predicate, VocabShape } from "./Vocab.ts";
 

@@ -22,9 +22,9 @@ import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Argument from "effect/unstable/cli/Argument";
-import * as Command from "effect/unstable/cli/Command";
-import * as Flag from "effect/unstable/cli/Flag";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import type { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../../Domain/Error/Jina.ts";
 import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
 import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
@@ -144,7 +144,7 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
  *
  * ```ts
  * import { fetchCommand } from "@effect-ontology/Cli/Commands/Fetch"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["https://example.com/ada", "--metadata"]
  * const program = Command.runWith(fetchCommand, { version: "0.0.0" })([...argv])
@@ -241,7 +241,7 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
  *
  * ```ts
  * import { ingestLinkCommand } from "@effect-ontology/Cli/Commands/Fetch"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["https://example.com/ada", "--ontology-id", "people"]
  * const program = Command.runWith(ingestLinkCommand, { version: "0.0.0" })([...argv])
@@ -356,7 +356,7 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
  *
  * ```ts
  * import { documentsCommand } from "@effect-ontology/Cli/Commands/Fetch"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["--status", "pending", "--limit", "20"]
  * const program = Command.runWith(documentsCommand, { version: "0.0.0" })([...argv])
@@ -460,7 +460,7 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
  *
  * ```ts
  * import { ingestBatchCommand } from "@effect-ontology/Cli/Commands/Fetch"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["urls.txt", "--ontology-id", "people", "--concurrency", "4"]
  * const program = Command.runWith(ingestBatchCommand, { version: "0.0.0" })([...argv])

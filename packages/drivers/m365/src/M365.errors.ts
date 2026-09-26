@@ -11,9 +11,9 @@ import { HttpStatus } from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 const $I = $M365Id.create("M365.errors");
 

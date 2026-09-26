@@ -22,7 +22,7 @@ const csvCodecOptionsParseOptions = {
 };
 
 const SingleCharacterText = S.String.check(
-  S.isLengthBetween(1, 1, {
+  S.isBetweenLength(1, 1, {
     description: "A string that must contain exactly one character.",
     message: "CSV option values must be one character long",
   })

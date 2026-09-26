@@ -3,12 +3,12 @@ import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-proce
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeResultStoreStoredResult = S.decodeEffect(ResultStore.StoredResult);
 const encodeResultStoreStoredResult = S.encodeEffect(ResultStore.StoredResult);

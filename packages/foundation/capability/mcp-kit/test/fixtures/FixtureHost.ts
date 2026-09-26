@@ -15,10 +15,10 @@ import {
   sanitizedToolkit,
 } from "@beep/mcp-kit";
 import { Effect, Layer } from "effect";
+import { Tool, Toolkit } from "effect/ai";
+import * as McpServer from "effect/ai/McpServer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
-import * as McpServer from "effect/unstable/ai/McpServer";
 import type { ConformanceHost } from "@beep/mcp-kit/test/Conformance";
 
 export const softRegistration = SourceAuthRegistration.make({

@@ -3,8 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { AsyncResult, AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import {
   activatePanelOne,
   clearWorkspace,
