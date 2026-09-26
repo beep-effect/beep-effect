@@ -923,10 +923,11 @@ describe("job wait wave return", () => {
           yield* launcher.bindPullRequest(seven.jobId, 7);
           yield* launcher.bindPullRequest(eight.jobId, 8);
           const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(1_000), pollIntervalMs: 1 });
+          const awaitReturn = Job.ProofJobWaitOptions.make({ timeoutMs: O.none(), pollIntervalMs: 1 });
           const redOnEight = yield* waveRow(root, 8, "Check");
           // Two monitors share this checkout: PR 8's red must not wake PR 7's waiter.
           yield* waitTimesOut(launcher, seven.jobId, quick);
-          const eightWave = yield* launcher.wait(eight.jobId, quick);
+          const eightWave = yield* launcher.wait(eight.jobId, awaitReturn);
           if (eightWave.kind !== "wave") return yield* Effect.die("Expected a wave return");
           expect(eightWave.wave.prNumber).toBe(8);
           expect(A.map(eightWave.wave.entries, (entry) => entry.row.id)).toEqual([redOnEight.id]);
@@ -937,7 +938,7 @@ describe("job wait wave return", () => {
           // A re-run on the same running job waits past the wave it already returned.
           yield* waitTimesOut(launcher, eight.jobId, quick);
           const redOnSeven = yield* waveRow(root, 7, "Lint");
-          const sevenWave = yield* launcher.wait(seven.jobId, quick);
+          const sevenWave = yield* launcher.wait(seven.jobId, awaitReturn);
           expect(sevenWave.kind === "wave" ? A.map(sevenWave.wave.entries, (entry) => entry.row.id) : []).toEqual([
             redOnSeven.id,
           ]);
@@ -950,7 +951,7 @@ describe("job wait wave return", () => {
             seven.jobId,
             Job.ProofJobSystemdResult.make({ serviceResult: "success", finalizedAt: stamp })
           );
-          expect((yield* launcher.wait(seven.jobId, quick)).kind).toBe("settled");
+          expect((yield* launcher.wait(seven.jobId, awaitReturn)).kind).toBe("settled");
           expect((yield* readYeetAckState(root, yeetProofJobRowId(seven))).receipt?.resolution).toMatchObject({
             kind: "observed",
             via: "job-wait",
@@ -968,12 +969,13 @@ describe("job wait wave return", () => {
         const job = yield* launcher.submit(submission(root));
         yield* launcher.bindPullRequest(job.jobId, 7);
         const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(1_000), pollIntervalMs: 1 });
+        const awaitReturn = Job.ProofJobWaitOptions.make({ timeoutMs: O.none(), pollIntervalMs: 1 });
         yield* commentRow(root, 8, 40);
         yield* waitTimesOut(launcher, job.jobId, quick);
         // The fix push moved the wave record to a new head before the comment landed.
         yield* Job.supersedeYeetDispatchState(root, "def456", 7, stamp);
         const comment = yield* commentRow(root, 7, 41);
-        const returned = yield* launcher.wait(job.jobId, quick);
+        const returned = yield* launcher.wait(job.jobId, awaitReturn);
         if (returned.kind !== "wave") return yield* Effect.die("Expected a wave return");
         expect(A.map(returned.wave.entries, (entry) => [entry.row.id, entry.liveness])).toStrictEqual([
           [comment.id, "live"],
