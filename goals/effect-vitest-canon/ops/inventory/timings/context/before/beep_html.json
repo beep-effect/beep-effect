@@ -4,7 +4,7 @@
     "vitest",
     "run",
     "--reporter=json",
-    "--outputFile=~/.cache/beep/effect-vitest-canon/p1/html-before.json"
+    "--outputFile=<private-output>/html-before.json"
   ],
   "phase": "before",
   "sourceBefore": {
@@ -136,5 +136,6 @@
     "memory": "some avg10=0.00 avg60=0.00 avg300=0.03 total=128878185\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=117972136\n",
     "io": "some avg10=0.28 avg60=1.69 avg300=1.15 total=738881114\nfull avg10=0.15 avg60=1.40 avg300=0.97 total=531054923\n"
   },
-  "sourceStable": true
+  "sourceStable": true,
+  "commandRedaction": "Only the private output directory is replaced with <private-output>; the output basename and command arguments are preserved."
 }

@@ -4,11 +4,11 @@
     "vitest",
     "run",
     "--reporter=json",
-    "--outputFile=~/.cache/beep/effect-vitest-canon/p1/html-after-zero.json"
+    "--outputFile=<private-output>/html-policy-repair-node.json"
   ],
-  "phase": "after-zero",
+  "phase": "policy-repair-node",
   "sourceBefore": {
-    "bun.lock": "21eaee20b8fd36048f7567fea53ff245a6ca9ff3314e9be23cfcd6a070f6d3d7",
+    "bun.lock": "f3a6e629dfbff5ee0f27ba1c228e22f51b7f3b5c6eca4caaf09b73318bedfef9",
     "packages/foundation/modeling/html/package.json": "c5e82a0bd4c6fad76ac814ab0443a075e4e061d379d1dec3b29df32253617410",
     "packages/foundation/modeling/html/src/Html.attributes.ts": "7a815ef355d229d005ffc62f836e1ed222865d7cd92380615a69a371f9be0956",
     "packages/foundation/modeling/html/src/Html.conformance.ts": "7a9ca39b11ca3f85d426f826392150d4874d2a34c63c1b0f689906f676e3eac2",
@@ -42,29 +42,29 @@
     "packages/foundation/modeling/html/src/internal/conformance/Html.policy-conformance-registry.ts": "e003a54e0a918ee4fc6c48ff5487344c62cea961b1f66e4317cabba27a88ca61",
     "packages/foundation/modeling/html/src/internal/conformance/Html.script-conformance.ts": "7a1aebbc8b17c5d64d2ef6acfff629f5fe211b6e83984b57f58bbd840f0d8390",
     "packages/foundation/modeling/html/test/ConformanceLedger.test.ts": "5150df4a009ea4041365977957ddc71f73161220f5c7a06c5ab0769443082282",
-    "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts": "43b06be328b0b80af8b522eacf1c6f4e6c3454383675efd3790e0f5bdc2f9c27",
+    "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts": "d86db7b451290a29153ed698ae865e0148c15c834d51588b19173c6e407f5047",
     "packages/foundation/modeling/html/test/Html.browser-import.test.ts": "04b6723f5d8a86b23cdbdec5d1c135bc5c46194f65799dd3f6f794ba6da10f11",
     "packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts": "774d722bc2377d510eb13eaa381e26b909af5dd627ad850f938d34a199c6b4dc",
-    "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts": "2d23fe4f9972f6d6f25dd3f74e5ec678a64dd7c97190594aa1076cee821d1feb",
-    "packages/foundation/modeling/html/test/Html.entrypoints.test.ts": "e3a7bb9577529a13541db79ee828d8b60a0038973ed02592d0105e433c49853e",
+    "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts": "abc37351bb85feafbe2f6875cfed37e0c91e43f6a6ae7da71eab55c394fba26c",
+    "packages/foundation/modeling/html/test/Html.entrypoints.test.ts": "f276561395bca3c6df8f7082d496a9e646f3d129b9bd0992ffd5e11b2e8bb739",
     "packages/foundation/modeling/html/test/Html.generator.test.ts": "4ae8ab6e5c9a34e8e891d969e3f33a78b2cd607e1ad1774c8888c995a1b24f85",
     "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts": "f1efe404871f187d26f2bbb5eb0aec9ff3eb9130c615b5efb143e212c232aeaf",
     "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts": "a219c5a4f411529fd8a5ec9da5881f3446d2f6e217e119b36ca7a14f8031a2e4",
     "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts": "64e8b8c40e12918348a04e7c142497bfea62aa50ce6ff2bee108331763a70fd4",
-    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "900f32bd4fdf19a26ab3b05acda972552ac0a45a6784b07128641f48705014be",
+    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "ca4e0cded5f7c0f3e1e33f929688beff8df1a32a4ee039da5488f8909a138fa7",
     "packages/foundation/modeling/html/test/Html.form-control.test.ts": "fc0e5cb22d40a32d7860a6962938732c95df35ea0a1c7202d7f4890ab0052d0b",
-    "packages/foundation/modeling/html/test/Html.microsyntax.test.ts": "21881b87a3233e4d9e8cac42d1b295529290efb12b82d8d2282a3a4641c5ffe3",
+    "packages/foundation/modeling/html/test/Html.microsyntax.test.ts": "f0cfa2c4421ad78a8af0cb390ea86f551173f0bf1cc51bc093c1387a21c9e37f",
     "packages/foundation/modeling/html/test/Html.script.test.ts": "97d97e1b3677a2817b7d2a29c100b27d882ce2bf2eec9f38854dbb5a596280b3",
-    "packages/foundation/modeling/html/test/Html.security.test.ts": "60a739c239fb4cac4d0528d850a2ee9cf8fcd82a04d07320a97afbd03e033691",
+    "packages/foundation/modeling/html/test/Html.security.test.ts": "6ae54408686e1ed43b781386b40dff98d6a23bd3c54568bd2de025c05908a4b0",
     "packages/foundation/modeling/html/test/Html.source-size.test.ts": "6949eb978501d6f42cff249bfdcbadb577df98f745110542b9ebf01f78397729",
     "packages/foundation/modeling/html/test/Html.srcset.test.ts": "e01fc6152146504b87cd1f45e7079b911b756f3fa6a678cf4069bb40e95ffce7",
-    "packages/foundation/modeling/html/test/Html.test.ts": "d5f0705153e58ae82ed175e28e52c75fa8b225673f4624e7a7f39a62011cdab4"
+    "packages/foundation/modeling/html/test/Html.test.ts": "11a7d02f73aa26c5728d6d24a3dabb1fb31297eeb15856a92dfb44db345ec9d1"
   },
-  "loadBefore": [12.3662109375, 17.451171875, 18.8056640625],
+  "loadBefore": [22.11376953125, 18.19091796875, 18.3583984375],
   "pressureBefore": {
-    "cpu": "some avg10=0.39 avg60=0.43 avg300=1.29 total=1594455654\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=141070082\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=129548691\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.06 total=768346084\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=553186369\n"
+    "cpu": "some avg10=0.60 avg60=0.99 avg300=1.16 total=1748157866\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.04 avg300=0.05 total=153592278\nfull avg10=0.00 avg60=0.04 avg300=0.05 total=140464228\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=850646183\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=609172376\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -76,9 +76,9 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 8.270107161006308,
+  "wholeCommandSeconds": 7.780646091996459,
   "sourceAfter": {
-    "bun.lock": "21eaee20b8fd36048f7567fea53ff245a6ca9ff3314e9be23cfcd6a070f6d3d7",
+    "bun.lock": "f3a6e629dfbff5ee0f27ba1c228e22f51b7f3b5c6eca4caaf09b73318bedfef9",
     "packages/foundation/modeling/html/package.json": "c5e82a0bd4c6fad76ac814ab0443a075e4e061d379d1dec3b29df32253617410",
     "packages/foundation/modeling/html/src/Html.attributes.ts": "7a815ef355d229d005ffc62f836e1ed222865d7cd92380615a69a371f9be0956",
     "packages/foundation/modeling/html/src/Html.conformance.ts": "7a9ca39b11ca3f85d426f826392150d4874d2a34c63c1b0f689906f676e3eac2",
@@ -112,29 +112,30 @@
     "packages/foundation/modeling/html/src/internal/conformance/Html.policy-conformance-registry.ts": "e003a54e0a918ee4fc6c48ff5487344c62cea961b1f66e4317cabba27a88ca61",
     "packages/foundation/modeling/html/src/internal/conformance/Html.script-conformance.ts": "7a1aebbc8b17c5d64d2ef6acfff629f5fe211b6e83984b57f58bbd840f0d8390",
     "packages/foundation/modeling/html/test/ConformanceLedger.test.ts": "5150df4a009ea4041365977957ddc71f73161220f5c7a06c5ab0769443082282",
-    "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts": "43b06be328b0b80af8b522eacf1c6f4e6c3454383675efd3790e0f5bdc2f9c27",
+    "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts": "d86db7b451290a29153ed698ae865e0148c15c834d51588b19173c6e407f5047",
     "packages/foundation/modeling/html/test/Html.browser-import.test.ts": "04b6723f5d8a86b23cdbdec5d1c135bc5c46194f65799dd3f6f794ba6da10f11",
     "packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts": "774d722bc2377d510eb13eaa381e26b909af5dd627ad850f938d34a199c6b4dc",
-    "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts": "2d23fe4f9972f6d6f25dd3f74e5ec678a64dd7c97190594aa1076cee821d1feb",
-    "packages/foundation/modeling/html/test/Html.entrypoints.test.ts": "e3a7bb9577529a13541db79ee828d8b60a0038973ed02592d0105e433c49853e",
+    "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts": "abc37351bb85feafbe2f6875cfed37e0c91e43f6a6ae7da71eab55c394fba26c",
+    "packages/foundation/modeling/html/test/Html.entrypoints.test.ts": "f276561395bca3c6df8f7082d496a9e646f3d129b9bd0992ffd5e11b2e8bb739",
     "packages/foundation/modeling/html/test/Html.generator.test.ts": "4ae8ab6e5c9a34e8e891d969e3f33a78b2cd607e1ad1774c8888c995a1b24f85",
     "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts": "f1efe404871f187d26f2bbb5eb0aec9ff3eb9130c615b5efb143e212c232aeaf",
     "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts": "a219c5a4f411529fd8a5ec9da5881f3446d2f6e217e119b36ca7a14f8031a2e4",
     "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts": "64e8b8c40e12918348a04e7c142497bfea62aa50ce6ff2bee108331763a70fd4",
-    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "900f32bd4fdf19a26ab3b05acda972552ac0a45a6784b07128641f48705014be",
+    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "ca4e0cded5f7c0f3e1e33f929688beff8df1a32a4ee039da5488f8909a138fa7",
     "packages/foundation/modeling/html/test/Html.form-control.test.ts": "fc0e5cb22d40a32d7860a6962938732c95df35ea0a1c7202d7f4890ab0052d0b",
-    "packages/foundation/modeling/html/test/Html.microsyntax.test.ts": "21881b87a3233e4d9e8cac42d1b295529290efb12b82d8d2282a3a4641c5ffe3",
+    "packages/foundation/modeling/html/test/Html.microsyntax.test.ts": "f0cfa2c4421ad78a8af0cb390ea86f551173f0bf1cc51bc093c1387a21c9e37f",
     "packages/foundation/modeling/html/test/Html.script.test.ts": "97d97e1b3677a2817b7d2a29c100b27d882ce2bf2eec9f38854dbb5a596280b3",
-    "packages/foundation/modeling/html/test/Html.security.test.ts": "60a739c239fb4cac4d0528d850a2ee9cf8fcd82a04d07320a97afbd03e033691",
+    "packages/foundation/modeling/html/test/Html.security.test.ts": "6ae54408686e1ed43b781386b40dff98d6a23bd3c54568bd2de025c05908a4b0",
     "packages/foundation/modeling/html/test/Html.source-size.test.ts": "6949eb978501d6f42cff249bfdcbadb577df98f745110542b9ebf01f78397729",
     "packages/foundation/modeling/html/test/Html.srcset.test.ts": "e01fc6152146504b87cd1f45e7079b911b756f3fa6a678cf4069bb40e95ffce7",
-    "packages/foundation/modeling/html/test/Html.test.ts": "d5f0705153e58ae82ed175e28e52c75fa8b225673f4624e7a7f39a62011cdab4"
+    "packages/foundation/modeling/html/test/Html.test.ts": "11a7d02f73aa26c5728d6d24a3dabb1fb31297eeb15856a92dfb44db345ec9d1"
   },
-  "loadAfter": [14.22509765625, 17.6962890625, 18.87158203125],
+  "loadAfter": [20.41748046875, 17.9541015625, 18.279296875],
   "pressureAfter": {
-    "cpu": "some avg10=3.58 avg60=1.18 avg300=1.43 total=1595011337\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.14 avg60=0.03 avg300=0.00 total=141144740\nfull avg10=0.14 avg60=0.03 avg300=0.00 total=129619514\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.06 total=768355816\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=553191624\n"
+    "cpu": "some avg10=0.42 avg60=0.90 avg300=1.13 total=1748216560\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.03 avg300=0.05 total=153592350\nfull avg10=0.00 avg60=0.03 avg300=0.05 total=140464299\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=850648390\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=609174130\n"
   },
-  "sourceStable": true
+  "sourceStable": true,
+  "commandRedaction": "Only the private output directory is replaced with <private-output>; the output basename and command arguments are preserved."
 }

@@ -2401,3 +2401,13 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+## 2026-09-26: HTML full-proof policy findings
+
+The HTML early-publish full proof reached lint policy and found two inline
+JSON schema codec compilations in Html.security.test.ts plus three gated
+external-mirror references in timing command metadata. Both were introduced
+by this migration. Hoist the unchanged codecs and explicitly redact only the
+private output directory in published command receipts. Package verification
+does not cover these root policy gates; include focused oxlint and knowledge
+reference checks before the next full proof.

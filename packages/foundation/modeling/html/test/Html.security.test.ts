@@ -58,6 +58,9 @@ import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const encodeJsonUnknown = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeJsonUnknown = S.decodeEffect(S.fromJsonString(S.Unknown));
+
 const decodeAnchor = S.decodeUnknownEffect(Anchor);
 const decodeForeignElement = S.decodeUnknownEffect(ForeignElement);
 const decodeSafeImageUrlAttribute = S.decodeUnknownEffect(SafeImageUrlAttribute);
@@ -686,10 +689,10 @@ describe("@beep/html proof provenance", () => {
         expect(Object.getPrototypeOf(value)).toBeNull();
         expect(Reflect.get(value, "constructor")).toBeUndefined();
         expect(Object.keys(value)).toStrictEqual([]);
-        const serialized = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(value);
+        const serialized = yield* encodeJsonUnknown(value);
         expect(serialized).toBe("{}");
         expect(S.is(schema)({ ...value })).toBe(false);
-        expect(S.is(schema)(yield* S.decodeEffect(S.fromJsonString(S.Unknown))(serialized))).toBe(false);
+        expect(S.is(schema)(yield* decodeJsonUnknown(serialized))).toBe(false);
         expect(S.is(schema)(Object.create(Object.getPrototypeOf(value)))).toBe(false);
         expect(S.is(schema)({})).toBe(false);
       }
