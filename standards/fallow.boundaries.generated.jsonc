@@ -1674,11 +1674,15 @@
         "from": "@beep/effect-drizzle",
         "allow": [
           "@beep/effect-drizzle",
-          "@beep/pglite"
+          "@beep/fc-runs",
+          "@beep/pglite",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
-          "@beep/pglite"
+          "@beep/fc-runs",
+          "@beep/pglite",
+          "@beep/test-runner"
         ]
       },
       {
@@ -2030,6 +2034,7 @@
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2037,6 +2042,7 @@
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

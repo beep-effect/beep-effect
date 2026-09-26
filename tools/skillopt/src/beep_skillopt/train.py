@@ -71,9 +71,34 @@ def _patch_codex_artifact_bytes() -> None:
     codex_harness._persist_codex_artifacts = _safe
 
 
+def _patch_claude_json_envelope() -> None:
+    """Flatten the JSON envelope Claude Code >= 2.1 prints for `--output-format json`.
+
+    skillopt 0.2.0 parses stdout line by line and expects one event object per
+    line. Claude Code 2.1.282 prints the whole event stream as a single-line JSON
+    array, so the parser appends one list as an "event" and `_extract_result`
+    dies with `'list' object has no attribute 'get'` on every optimizer call.
+    """
+    from skillopt.model import claude_backend
+
+    original = claude_backend._extract_result
+
+    def _flatten(event_stream):
+        events = []
+        for event in event_stream:
+            if isinstance(event, list):
+                events.extend(item for item in event if isinstance(item, dict))
+            elif isinstance(event, dict):
+                events.append(event)
+        return original(events)
+
+    claude_backend._extract_result = _flatten
+
+
 def main() -> None:
     materialize_vendored_prompts()
     _patch_codex_artifact_bytes()
+    _patch_claude_json_envelope()
 
     import scripts.train as train_script
 

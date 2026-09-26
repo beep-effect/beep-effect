@@ -19,7 +19,9 @@ import {
   ConfigProvider,
   Context,
   Deferred,
+  Duration,
   Effect,
+  Fiber,
   FileSystem,
   HashSet,
   Layer,
@@ -171,6 +173,24 @@ const commentRow = Effect.fnUntraced(function* (root: string, prNumber: number, 
   });
   yield* Job.appendYeetInboxRow(root, row);
   return row;
+});
+
+// A wait that must not return is driven to its timeout on the TestClock: the timeout
+// timer registers the moment the wait starts, so one adjust just past its own timeoutMs
+// fails the wait deterministically however long the poll ticks take on a loaded runner. A wait that
+// must return finds its row on the first poll tick and never touches the clock.
+const waitTimesOut = Effect.fnUntraced(function* (
+  launcher: Job.ProofJobLauncherShape,
+  jobId: UUID,
+  options: Job.ProofJobWaitOptions
+) {
+  const timeoutMs = yield* O.match(options.timeoutMs, {
+    onNone: () => Effect.die("waitTimesOut needs a bounded timeoutMs: an unbounded wait never times out"),
+    onSome: Effect.succeed,
+  });
+  const waiter = yield* Effect.forkChild(launcher.wait(jobId, options), { startImmediately: true });
+  yield* TestClock.adjust(Duration.millis(timeoutMs + 1));
+  expect((yield* Fiber.join(waiter).pipe(Effect.flip)).message).toContain("Timed out");
 });
 
 describe("proof job schemas", () => {
@@ -892,7 +912,6 @@ describe("job wait wave return", () => {
     );
     assertNone(Job.selectYeetPrWave(entries, 9, HashSet.empty()));
   });
-  // TestClock.withLive: the waits that must not return time out against real sleeps.
   it.effect(
     "returns a wave only for its own pull request, leaves the rows live, and never twice for the same rows",
     () =>
@@ -903,10 +922,10 @@ describe("job wait wave return", () => {
           const eight = yield* launcher.submit(submission(root));
           yield* launcher.bindPullRequest(seven.jobId, 7);
           yield* launcher.bindPullRequest(eight.jobId, 8);
-          const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(60), pollIntervalMs: 1 });
+          const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(1_000), pollIntervalMs: 1 });
           const redOnEight = yield* waveRow(root, 8, "Check");
           // Two monitors share this checkout: PR 8's red must not wake PR 7's waiter.
-          expect((yield* launcher.wait(seven.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+          yield* waitTimesOut(launcher, seven.jobId, quick);
           const eightWave = yield* launcher.wait(eight.jobId, quick);
           if (eightWave.kind !== "wave") return yield* Effect.die("Expected a wave return");
           expect(eightWave.wave.prNumber).toBe(8);
@@ -916,7 +935,7 @@ describe("job wait wave return", () => {
           expect((yield* readYeetAckState(root, yeetProofJobRowId(eight))).acked).toBe(false);
           expect(O.getOrThrow(yield* launcher.read(eight.jobId)).returnedWaveRowIds).toEqual([redOnEight.id]);
           // A re-run on the same running job waits past the wave it already returned.
-          expect((yield* launcher.wait(eight.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+          yield* waitTimesOut(launcher, eight.jobId, quick);
           const redOnSeven = yield* waveRow(root, 7, "Lint");
           const sevenWave = yield* launcher.wait(seven.jobId, quick);
           expect(sevenWave.kind === "wave" ? A.map(sevenWave.wave.entries, (entry) => entry.row.id) : []).toEqual([
@@ -938,7 +957,7 @@ describe("job wait wave return", () => {
           });
           expect((yield* readYeetAckState(root, redOnSeven.id)).acked).toBe(false);
         })
-      ).pipe(TestClock.withLive)
+      )
   );
   // A comment row never joins the per-head wave record; the waiter reads the
   // inbox, so a new comment wakes it like a new red, even after a push.
@@ -948,9 +967,9 @@ describe("job wait wave return", () => {
         const launcher = yield* ProofJobLauncher.make(root);
         const job = yield* launcher.submit(submission(root));
         yield* launcher.bindPullRequest(job.jobId, 7);
-        const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(60), pollIntervalMs: 1 });
+        const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(1_000), pollIntervalMs: 1 });
         yield* commentRow(root, 8, 40);
-        expect((yield* launcher.wait(job.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+        yield* waitTimesOut(launcher, job.jobId, quick);
         // The fix push moved the wave record to a new head before the comment landed.
         yield* Job.supersedeYeetDispatchState(root, "def456", 7, stamp);
         const comment = yield* commentRow(root, 7, 41);
@@ -960,9 +979,9 @@ describe("job wait wave return", () => {
           [comment.id, "live"],
         ]);
         expect((yield* readYeetAckState(root, comment.id)).acked).toBe(false);
-        expect((yield* launcher.wait(job.jobId, quick).pipe(Effect.flip)).message).toContain("Timed out");
+        yield* waitTimesOut(launcher, job.jobId, quick);
       })
-    ).pipe(TestClock.withLive)
+    )
   );
 });
 

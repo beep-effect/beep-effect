@@ -1,7 +1,26 @@
-import { describe, expect, it } from "@effect/vitest";
-import { fnUntraced, tryPromise } from "effect/Effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Deferred from "effect/Deferred";
+import {
+  acquireRelease,
+  addFinalizer,
+  fnUntraced,
+  forkChild,
+  gen,
+  never,
+  orDie,
+  scoped,
+  sync,
+  tryPromise,
+  withSpan,
+} from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Tuple from "effect/Tuple";
 import { buildBundleConsumer } from "./bundle-build.ts";
 import { compareBundleSize, formatBundleSizeLine } from "./bundle-size.ts";
+import type * as Effect from "effect/Effect";
 
 describe("bundle size comparison", () => {
   it("passes when the current size equals the baseline", () => {
@@ -31,7 +50,7 @@ describe("bundle size probe", () => {
   it.effect(
     "measures the sole artifact as raw UTF-8 bytes",
     fnUntraced(function* () {
-      const artifact = yield* tryPromise(buildBundleConsumer);
+      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.bundle.build"));
       expect(artifact.rawBytes).toBe(new TextEncoder().encode(artifact.text).byteLength);
       expect(artifact.rawBytes).toBeGreaterThan(1000);
     })
@@ -42,31 +61,90 @@ describe("bundle size probe", () => {
 // gate on every capability the probe-process spawn actually needs.
 const hasBunSpawn = typeof Bun !== "undefined" && typeof Bun.spawn === "function" && typeof Bun.which === "function";
 
+const acquireProbe = fnUntraced(function* (command: Array<string>) {
+  return yield* acquireRelease(
+    tryPromise(() => {
+      const process = Bun.spawn(command, {
+        cwd: new URL("../", import.meta.url).pathname,
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      return Promise.resolve({
+        process,
+        output: Tuple.make(process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()),
+      });
+    }).pipe(withSpan("EffectDrizzle.bundle.spawn")),
+    ({ process, output }) =>
+      tryPromise(() => {
+        if (process.exitCode === null) process.kill("SIGKILL");
+        return Promise.allSettled(output);
+      }).pipe(withSpan("EffectDrizzle.bundle.cleanup"), orDie)
+  );
+});
+
 describe.runIf(hasBunSpawn)("bundle size probe process", () => {
   it.effect(
     "exits nonzero for an injected one-byte regression without mutating the baseline",
     fnUntraced(function* () {
-      const artifact = yield* tryPromise(buildBundleConsumer);
-      const baselineRawBytes = artifact.rawBytes - 1;
-      const probe = Bun.spawn(
-        [
-          Bun.which("bun") ?? "bun",
-          new URL("./bundle-size.probe.ts", import.meta.url).pathname,
-          `--test-baseline-raw-bytes=${baselineRawBytes}`,
-        ],
-        {
-          cwd: new URL("../", import.meta.url).pathname,
-          stdout: "pipe",
-          stderr: "pipe",
-        }
+      const baselineFile = Bun.file(new URL("./bundle-size.baseline.json", import.meta.url));
+      const baselineBefore = yield* tryPromise(() => baselineFile.bytes());
+      yield* addFinalizer(() =>
+        gen(function* () {
+          const baselineAfter = yield* tryPromise(() => baselineFile.bytes());
+          expect(baselineAfter).toEqual(baselineBefore);
+        }).pipe(orDie)
       );
-      const [exitCode, stdout, stderr] = yield* tryPromise(() =>
-        Promise.all([probe.exited, new Response(probe.stdout).text(), new Response(probe.stderr).text()])
+      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.bundle.build"));
+      const baselineRawBytes = artifact.rawBytes - 1;
+      const probe = yield* acquireProbe([
+        Bun.which("bun") ?? "bun",
+        new URL("./bundle-size.probe.ts", import.meta.url).pathname,
+        `--test-baseline-raw-bytes=${baselineRawBytes}`,
+      ]);
+      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
+        withSpan("EffectDrizzle.bundle.drain")
+      );
+      yield* sync(() => {
+        expect(exitCode).not.toBe(0);
+        const lines = stdout.split("\n");
+        expect(lines[0]).toBe(formatBundleSizeLine(artifact.rawBytes, baselineRawBytes));
+        expect(`${stdout}${stderr}`).toContain("Bundle raw byte size exceeds the committed baseline");
+      }).pipe(withSpan("EffectDrizzle.bundle.exit"));
+    })
+  );
+  it.effect(
+    "terminates and drains an acquired probe when its scope is interrupted",
+    fnUntraced(function* () {
+      const acquired = yield* Deferred.make<Effect.Success<ReturnType<typeof acquireProbe>>>();
+      const fiber = yield* scoped(
+        fnUntraced(function* () {
+          const probe = yield* acquireProbe([
+            Bun.which("bun") ?? "bun",
+            "--eval",
+            "process.stdout.write('ready'); process.stderr.write('waiting'); setInterval(() => {}, 1000)",
+          ]);
+          yield* Deferred.succeed(acquired, probe);
+          return yield* never;
+        })()
+      ).pipe(forkChild);
+      const probe = yield* Deferred.await(acquired);
+      yield* addFinalizer(() =>
+        tryPromise(() => {
+          if (probe.process.exitCode === null) probe.process.kill("SIGKILL");
+          return Promise.allSettled(probe.output);
+        }).pipe(orDie)
+      );
+      expect(probe.process.exitCode).toBeNull();
+      yield* Fiber.interrupt(fiber);
+      const interrupted = yield* Fiber.await(fiber);
+      assertTrue(Exit.hasInterrupts(interrupted));
+      expect(probe.process.signalCode).toBe("SIGKILL");
+      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
+        withSpan("EffectDrizzle.bundle.drain")
       );
       expect(exitCode).not.toBe(0);
-      const lines = stdout.split("\n");
-      expect(lines[0]).toBe(formatBundleSizeLine(artifact.rawBytes, baselineRawBytes));
-      expect(`${stdout}${stderr}`).toContain("Bundle raw byte size exceeds the committed baseline");
+      expect(stdout).toBeTypeOf("string");
+      expect(stderr).toBeTypeOf("string");
     })
   );
 });

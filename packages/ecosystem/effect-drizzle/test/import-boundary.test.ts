@@ -1,7 +1,10 @@
 /** Executable proof of the ecosystem polarity contract and dialect import DAG. */
-import { describe, expect, it } from "@effect/vitest";
-import { fnUntraced, forEach, gen, map, tryPromise } from "effect/Effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
+import { fnUntraced, forEach, gen, map, tryPromise, withSpan } from "effect/Effect";
 import { decodeUnknownEffect, Record as RecordSchema, String, Unknown } from "effect/Schema";
+import * as Str from "effect/String";
 import {
   createSourceFile,
   forEachChild,
@@ -72,13 +75,15 @@ const moduleSpecifiers = (file: string, source: string): ReadonlyArray<ModuleEdg
   return edges;
 };
 
-const sourceEdges = (directoryUrl: URL) =>
+const sourceEdges = (directoryUrl: URL, requiredFile: string) =>
   gen(function* () {
     const files = [...new Bun.Glob("**/*.ts").scanSync({ cwd: directoryUrl.pathname })];
+    expect(files).toContain(requiredFile);
     return yield* forEach(
       files,
       (file) =>
         tryPromise(() => Bun.file(new URL(file, directoryUrl)).text()).pipe(
+          withSpan("EffectDrizzle.boundary.read", { attributes: { file } }),
           map((source) => moduleSpecifiers(file, source))
         ),
       { concurrency: "unbounded" }
@@ -104,18 +109,58 @@ const localImportClosure = (entrypoint: URL) =>
     return [...visited];
   });
 
+const workspaceEdges = (edges: ReadonlyArray<ModuleEdge>) =>
+  A.filter(edges, ({ specifier }) => Str.startsWith("@beep/")(specifier));
+
+const dialectEdges = (edges: ReadonlyArray<ModuleEdge>, forbiddenFragments: ReadonlyArray<string>) =>
+  A.filter(edges, ({ specifier }) => A.some(forbiddenFragments, (fragment) => Str.includes(fragment)(specifier)));
+
+const dialectEntrypoints = { core: "model.ts", pg: "index.ts", sqlite: "index.ts" };
+
 const forbiddenDialectEdges = (directory: "core" | "pg" | "sqlite", forbiddenFragments: ReadonlyArray<string>) =>
   gen(function* () {
-    const edges = yield* sourceEdges(new URL(`../src/${directory}/`, import.meta.url));
-    return edges.filter(({ specifier }) => forbiddenFragments.some((fragment) => specifier.includes(fragment)));
+    const edges = yield* sourceEdges(
+      new URL(`../src/${directory}/`, import.meta.url),
+      dialectEntrypoints[directory]
+    ).pipe(withSpan("EffectDrizzle.boundary.scan", { attributes: { tree: directory } }));
+    return dialectEdges(edges, forbiddenFragments);
   });
+
+describe("boundary scanner controls", () => {
+  it("detects forbidden edges in each supported module syntax", () => {
+    const source = `
+      import { value } from "@beep/forbidden-import";
+      export { value } from "@beep/forbidden-export";
+      import legacy = require("@beep/forbidden-equals");
+      void import("@beep/forbidden-dynamic");
+      require("@beep/forbidden-require");
+      import { pg } from "../pg/index.ts";
+      export { sqlite } from "../sqlite/index.ts";
+      import { allowed } from "effect/Effect";
+    `;
+    const edges = moduleSpecifiers("boundary-control.ts", source);
+    expect(A.map(workspaceEdges(edges), ({ specifier }) => specifier)).toEqual([
+      "@beep/forbidden-import",
+      "@beep/forbidden-export",
+      "@beep/forbidden-equals",
+      "@beep/forbidden-dynamic",
+      "@beep/forbidden-require",
+    ]);
+    expect(A.map(dialectEdges(edges, ["../pg", "../sqlite"]), ({ specifier }) => specifier)).toEqual([
+      "../pg/index.ts",
+      "../sqlite/index.ts",
+    ]);
+  });
+});
 
 describe("ecosystem import boundaries", () => {
   it.effect(
     "keeps every source module free of @beep/* edges",
     fnUntraced(function* () {
-      const edges = yield* sourceEdges(new URL("../src/", import.meta.url));
-      expect(edges.filter(({ specifier }) => specifier.startsWith("@beep/"))).toEqual([]);
+      const edges = yield* sourceEdges(new URL("../src/", import.meta.url), "index.ts").pipe(
+        withSpan("EffectDrizzle.boundary.scan", { attributes: { tree: "src" } })
+      );
+      expect(workspaceEdges(edges)).toEqual([]);
     })
   );
 
@@ -123,7 +168,9 @@ describe("ecosystem import boundaries", () => {
     "keeps runtime manifest edges free of @beep/* and forbids bundled fields",
     fnUntraced(function* () {
       const manifest = yield* decodeRecord(
-        yield* tryPromise(() => Bun.file(new URL("../package.json", import.meta.url)).json())
+        yield* tryPromise(() => Bun.file(new URL("../package.json", import.meta.url)).json()).pipe(
+          withSpan("EffectDrizzle.boundary.manifest")
+        )
       );
       const runtimeSections = ["dependencies", "peerDependencies", "optionalDependencies"];
       const runtimeKeys: Array<string> = [];
@@ -178,7 +225,7 @@ describe("bundle isolation", () => {
   it.effect(
     "drops unrelated PostgreSQL column families and SQLite from an integer import",
     fnUntraced(function* () {
-      const artifact = yield* tryPromise(buildBundleConsumer);
+      const artifact = yield* tryPromise(buildBundleConsumer).pipe(withSpan("EffectDrizzle.boundary.build"));
       // A vacuous stub (the Bun.build shaker failure mode) cannot pass:
       // the bundle must carry the real integer implementation.
       expect(artifact.rawBytes).toBeGreaterThan(1000);

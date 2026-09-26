@@ -2,18 +2,22 @@
 
 import { VersionConflictError } from "@beep/effect-drizzle";
 import { PgliteClient, PgliteTestLayer } from "@beep/pglite";
+import { it } from "@beep/test-runner";
 import { layer as makePgliteLayer } from "@effect/sql-pglite/PgliteClient";
-import { expect, layer } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { PGlite, types } from "@electric-sql/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { drizzle } from "drizzle-orm/pglite";
-import { findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
+import { filter, findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
+import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso } from "effect/DateTime";
-import { die, flip, fn, fnUntraced, gen, map, option, tryPromise } from "effect/Effect";
+import { die, exit, flip, fn, fnUntraced, forEach, gen, map, option, tryPromise, withSpan } from "effect/Effect";
+import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { identity } from "effect/Function";
 import { effect as effectLayer, merge, provideMerge, unwrap } from "effect/Layer";
-import { getOrThrow, getOrUndefined, isNone, none, some } from "effect/Option";
+import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
   Array as ArraySchema,
@@ -89,11 +93,11 @@ class PgliteHarnessError extends TaggedError<PgliteHarnessError>("@beep/effect-d
   { message: StringSchema, cause: Unknown }
 ) {}
 
-const tryHarness = <A>(try_: () => PromiseLike<A>) =>
+const tryHarness = <A>(phase: string, try_: () => PromiseLike<A>) =>
   tryPromise({
     try: try_,
-    catch: (cause) => PgliteHarnessError.make({ message: "PGlite harness operation failed", cause }),
-  });
+    catch: (cause) => PgliteHarnessError.make({ message: `PGlite harness ${phase} failed`, cause }),
+  }).pipe(withSpan(`EffectDrizzle.pglite.${phase}`));
 
 const isVersionConflict = is(VersionConflictError);
 
@@ -130,9 +134,9 @@ const PgliteHarnessState = effectLayer(
     client.pglite.parsers[types.TIMESTAMP] = identity;
     client.pglite.parsers[types.TIMESTAMPTZ] = identity;
     const db = drizzle({ client: client.pglite });
-    const migration = yield* tryHarness(() => pushSchema(drizzleExports, db));
-    yield* tryHarness(() => migration.apply());
-    const noOp = yield* tryHarness(() => pushSchema(drizzleExports, db));
+    const migration = yield* tryHarness("generate", () => pushSchema(drizzleExports, db));
+    yield* tryHarness("apply", () => migration.apply());
+    const noOp = yield* tryHarness("regenerate", () => pushSchema(drizzleExports, db));
     return PgliteHarness.of({
       migrationStatements: migration.sqlStatements,
       noOpStatements: noOp.sqlStatements,
@@ -152,7 +156,7 @@ const RepositoryClientLayer = unwrap(
 
 const PgliteHarnessLayer = merge(PgliteHarnessState, RepositoryClientLayer).pipe(provideMerge(PgliteTestLayer));
 
-layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite gauntlet", (it) => {
+it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite gauntlet", (it) => {
   it.effect(
     "applies drizzle-kit DDL from the @beep/effect-drizzle projection and regenerates to no-op",
     fnUntraced(function* () {
@@ -362,12 +366,12 @@ layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite
       expect(formatIso(inserted.createdAt)).toBe(formatIso(insert.createdAt));
       expect(formatIso(inserted.updatedAt)).toBe(formatIso(insert.updatedAt));
       expect(found.id).toBe(inserted.id);
-      expect(inserted.nickname.pipe(isNone)).toBe(true);
+      assertNone(inserted.nickname);
       expect(updated.id).toBe(inserted.id);
       expect(updated.name).toBe("Native Repository Updated");
       expect(updated.nickname.pipe(getOrUndefined)).toBe("round-four");
       expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
-      expect(missing.pipe(isNone)).toBe(true);
+      assertNone(missing);
     })
   );
 
@@ -413,6 +417,44 @@ layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGlite
       expect(conflict.table).toBe("user");
       expect(conflict.id).toBe(snapshot.id);
       expect(conflict.expectedVersion).toBe(1);
+    })
+  );
+
+  it.effect(
+    "lets exactly one concurrent optimistic writer persist its result",
+    fnUntraced(function* () {
+      const organization = yield* createOrganization("optimistic-contention");
+      const repository = yield* userOptimisticRepository;
+      const insert = yield* makeEffect(User.insert)({
+        orgId: organization.id,
+        email: "round-four-contention@example.com",
+        name: "Concurrent Snapshot",
+        bio: null,
+        nickname: none(),
+        settings: { theme: "light" },
+        active: true,
+        status: "active",
+      });
+      const snapshot = yield* repository.insert(insert);
+      const requests = yield* forEach(["Concurrent A", "Concurrent B"], (name) =>
+        makeEffect(User.update)({ id: snapshot.id, rowVersion: snapshot.rowVersion, name })
+      );
+      const results = yield* forEach(requests, (request) => exit(repository.update(request)), { concurrency: 2 });
+      expect(filter(results, isSuccess)).toHaveLength(1);
+      const winner = getOrThrow(findFirst(results, isSuccess));
+      const loser = getOrThrow(findFirst(results, isFailure));
+      assertTrue(hasFails(loser));
+      assertFalse(hasDies(loser));
+      assertFalse(hasInterrupts(loser));
+      const conflict = getOrThrow(Cause.findErrorOption(loser.cause));
+      assert(isVersionConflict(conflict));
+      expect(conflict.table).toBe(User.sql.tableName);
+      expect(conflict.id).toBe(snapshot.id);
+      expect(conflict.expectedVersion).toBe(snapshot.rowVersion);
+      const persisted = yield* repository.findById(snapshot.id);
+      yield* repository.delete(snapshot.id);
+      expect(persisted).toEqual(winner.value);
+      expect(persisted.rowVersion).toBe(snapshot.rowVersion + 1);
     })
   );
 

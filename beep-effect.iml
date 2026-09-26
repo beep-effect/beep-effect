@@ -182,6 +182,7 @@
       <excludeFolder url="file://$MODULE_DIR$/graft" />
       <excludeFolder url="file://$MODULE_DIR$/licenses" />
       <excludeFolder url="file://$MODULE_DIR$/research" />
+      <excludeFolder url="file://$MODULE_DIR$/docs" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

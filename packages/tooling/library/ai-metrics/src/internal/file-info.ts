@@ -4,8 +4,9 @@
  * @since 0.0.0
  */
 
+import { thunk0 } from "@beep/utils/thunk";
 import * as O from "effect/Option";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 
 /**
  * Convert Effect filesystem file sizes into plain numeric byte counts for JSON-safe metrics.
@@ -23,6 +24,6 @@ export const fileSizeBytes = (info: FileSystem.File.Info): number => globalThis.
  */
 export const modifiedAtMillis = (info: FileSystem.File.Info): number =>
   O.match(info.mtime, {
-    onNone: () => 0,
+    onNone: thunk0,
     onSome: (mtime) => mtime.getTime(),
   });

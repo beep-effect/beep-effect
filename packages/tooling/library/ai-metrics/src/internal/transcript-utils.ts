@@ -4,9 +4,9 @@
  * @since 0.0.0
  */
 
-import { A, Str } from "@beep/utils";
-import { flow, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as A from "@beep/utils/Array";
+import * as Str from "@beep/utils/Str";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import {
   AiMetricsTranscriptSource,
@@ -19,7 +19,7 @@ import type { AiMetricsTranscriptEventName } from "../models.ts";
 
 export { repoPathToClaudeProjectName };
 
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 
 const isEventNameForSource = (
   sourceKind: AiMetricsTranscriptSource,

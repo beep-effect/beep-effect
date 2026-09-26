@@ -98,6 +98,14 @@ const evalRecordFlag = Flag.Boolean("record").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Record the score as an ai-metrics BenchmarkRun row")
 );
+const evalModelFlag = Flag.String("model").pipe(
+  Flag.withDescription("Rollout model id recorded in the harness fingerprint (defaults to unknown)"),
+  Flag.optional
+);
+const evalReasoningEffortFlag = Flag.String("reasoning-effort").pipe(
+  Flag.withDescription("Rollout reasoning effort recorded in the harness fingerprint (defaults to unknown)"),
+  Flag.optional
+);
 const confirmPhoenixWriteFlag = Flag.String("confirm-phoenix-write").pipe(
   Flag.withDescription(
     `Confirmation token required for live Phoenix writes: ${AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION}`
@@ -467,6 +475,8 @@ class MakeEvalScoreProgramOptions extends S.Class<MakeEvalScoreProgramOptions>($
     dataRoot: S.Option(S.String),
     dir: S.String,
     json: S.Boolean,
+    modelId: S.Option(S.NonEmptyString),
+    reasoningEffort: S.Option(S.NonEmptyString),
     record: S.Boolean,
     taskPath: S.String,
   },
@@ -483,6 +493,8 @@ const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram"
   dataRoot,
   dir,
   json,
+  modelId,
+  reasoningEffort,
   record,
   taskPath,
 }: MakeEvalScoreProgramOptions) {
@@ -493,6 +505,8 @@ const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram"
     dataRoot: resolvedDataRoot,
     dir,
     json,
+    modelId,
+    reasoningEffort,
     record,
     taskPath,
   });
@@ -629,6 +643,8 @@ const evalsScoreCommand = Command.make(
     dataRoot: dataRootFlag,
     dir: evalFixtureDirFlag,
     json: jsonFlag,
+    modelId: evalModelFlag,
+    reasoningEffort: evalReasoningEffortFlag,
     record: evalRecordFlag,
     taskPath: evalTaskManifestFlag,
   },

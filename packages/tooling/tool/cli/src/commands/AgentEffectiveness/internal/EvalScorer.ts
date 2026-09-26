@@ -178,6 +178,8 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
     dataRoot: S.Option(S.String),
     dir: S.String,
     json: S.Boolean,
+    modelId: S.Option(S.NonEmptyString),
+    reasoningEffort: S.Option(S.NonEmptyString),
     record: S.Boolean,
     taskPath: S.String,
   },
@@ -206,6 +208,8 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  *   dataRoot: O.none(),
  *   dir: "fixtures/task",
  *   json: true,
+ *   modelId: O.none(),
+ *   reasoningEffort: O.none(),
  *   record: false,
  *   taskPath: "fixtures/task.json"
  * })
@@ -219,6 +223,8 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
   dataRoot,
   dir,
   json,
+  modelId,
+  reasoningEffort,
   record,
   taskPath,
 }: RunAgentEffectivenessEvalScoreCommandOptions): Effect.fn.Return<
@@ -258,7 +264,10 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
     });
     yield* recordAgentEffectivenessEvalScore({
       dataRoot: resolvedDataRoot,
+      dir,
       elapsedMs: Duration.toMillis(elapsed),
+      modelId,
+      reasoningEffort,
       report,
       task,
       taskPath,

@@ -1,15 +1,20 @@
 /** Real-file SQLite execution proofs for the round-seven dialect. */
 import { Database } from "bun:sqlite";
 import { VersionConflictError } from "@beep/effect-drizzle";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { layer as makeSqliteLayer } from "@effect/sql-sqlite-bun/SqliteClient";
-import { expect, layer } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
+import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso, makeUnsafe, toDate } from "effect/DateTime";
 import {
+  acquireRelease,
+  acquireUseRelease,
   addFinalizer,
   exit,
   flip,
@@ -21,11 +26,12 @@ import {
   orDie,
   sync,
   tryPromise,
+  withSpan,
 } from "effect/Effect";
-import { isSuccess } from "effect/Exit";
+import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
-import { effect as effectLayer, provide, provideMerge, unwrap } from "effect/Layer";
-import { getOrThrow, getOrUndefined, isNone, none, some } from "effect/Option";
+import { effect as effectLayer, provide, provideMerge, unwrap, withSpan as withLayerSpan } from "effect/Layer";
+import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
   Array as ArraySchema,
@@ -43,6 +49,7 @@ import { camelCase, snakeCase } from "effect/String";
 import { SqlClient } from "effect/sql/SqlClient";
 import { isSqlError } from "effect/sql/SqlError";
 import { makeRepository as makeSqlRepository } from "effect/sql/SqlModel";
+import * as Tuple from "effect/Tuple";
 import {
   SqliteOrganization,
   SqliteUser,
@@ -109,54 +116,62 @@ const resolveNodeBinary = (): string => {
 const nodeBinary = resolveNodeBinary();
 
 const runPush = (databasePath: string) =>
-  tryPromise({
-    try: (): Promise<string> => {
-      const inheritedOptions = Bun.env.NODE_OPTIONS;
-      const nodeOptions =
-        inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
-      const process = Bun.spawn(
-        [
-          nodeBinary,
-          "./node_modules/.bin/drizzle-kit",
-          "push",
-          "--dialect",
-          "sqlite",
-          "--schema",
-          schemaPath,
-          "--url",
-          databasePath,
-          "--force",
-          "--verbose",
-        ],
-        {
-          cwd: repositoryRoot,
-          env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "pipe",
-        }
-      );
-      return Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]).then(([status, stdout, stderr]) => {
-        const output = `${stdout}\n${stderr}`;
-        if (status !== 0) {
-          throw SqliteHarnessError.make({
-            message: `drizzle-kit SQLite push failed (${status})`,
-            cause: output,
-          });
-        }
-        return output;
-      });
-    },
-    catch: (cause) =>
-      SqliteHarnessError.make({
-        message: "drizzle-kit SQLite push failed",
-        cause,
+  acquireUseRelease(
+    tryPromise({
+      try: () => {
+        const inheritedOptions = Bun.env.NODE_OPTIONS;
+        const nodeOptions =
+          inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
+        const process = Bun.spawn(
+          [
+            nodeBinary,
+            "./node_modules/.bin/drizzle-kit",
+            "push",
+            "--dialect",
+            "sqlite",
+            "--schema",
+            schemaPath,
+            "--url",
+            databasePath,
+            "--force",
+            "--verbose",
+          ],
+          {
+            cwd: repositoryRoot,
+            env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          }
+        );
+        return Promise.resolve({
+          process,
+          output: Tuple.make(process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()),
+        });
+      },
+      catch: (cause) => SqliteHarnessError.make({ message: "drizzle-kit SQLite push failed", cause }),
+    }),
+    ({ output }) =>
+      tryPromise({
+        try: () =>
+          Promise.all(output).then(([status, stdout, stderr]) => {
+            const output = `${stdout}\n${stderr}`;
+            if (status !== 0) {
+              throw SqliteHarnessError.make({
+                message: `drizzle-kit SQLite push failed (${status})`,
+                cause: output,
+              });
+            }
+            return output;
+          }),
+        catch: (cause) => SqliteHarnessError.make({ message: "drizzle-kit SQLite push failed", cause }),
       }),
-  });
+    ({ process, output }) =>
+      tryPromise(() => {
+        if (process.exitCode === null) process.kill("SIGKILL");
+        return Promise.allSettled(output);
+      }).pipe(orDie)
+  );
 
 class SqliteHarness extends Service<
   SqliteHarness,
@@ -188,13 +203,19 @@ const SqliteHarnessState = effectLayer(
     const databaseDirectory = yield* fileSystem.makeTempDirectory({
       prefix: "effect-drizzle-live-",
     });
-    yield* addFinalizer(() => fileSystem.remove(databaseDirectory, { recursive: true, force: true }).pipe(orDie));
+    yield* addFinalizer(() =>
+      fileSystem
+        .remove(databaseDirectory, { recursive: true, force: true })
+        .pipe(withSpan("EffectDrizzle.sqlite.directory-cleanup"), orDie)
+    );
     const databasePath = `${databaseDirectory}/live.sqlite`;
-    const migrationOutput = yield* runPush(databasePath);
-    const noOpOutput = yield* runPush(databasePath);
-    const drizzleClient = new Database(databasePath);
+    const migrationOutput = yield* runPush(databasePath).pipe(withSpan("EffectDrizzle.sqlite.first-push"));
+    const noOpOutput = yield* runPush(databasePath).pipe(withSpan("EffectDrizzle.sqlite.no-op-push"));
+    const drizzleClient = yield* acquireRelease(
+      sync(() => new Database(databasePath)).pipe(withSpan("EffectDrizzle.sqlite.direct-open")),
+      (client) => sync(() => client.close()).pipe(withSpan("EffectDrizzle.sqlite.direct-close"))
+    );
     drizzleClient.run("PRAGMA foreign_keys = ON");
-    yield* addFinalizer(() => sync(() => drizzleClient.close()));
     return SqliteHarness.of({ databasePath, drizzleClient, migrationOutput, noOpOutput });
   })
 ).pipe(provide(BunFileSystem.layer));
@@ -205,13 +226,13 @@ const SqliteRepositoryLayer = unwrap(
       filename: databasePath,
       transformQueryNames: snakeCase,
       transformResultNames: camelCase,
-    })
+    }).pipe(withLayerSpan("EffectDrizzle.sqlite.adapter-open"))
   )
 );
 
 const SqliteHarnessLayer = SqliteRepositoryLayer.pipe(provideMerge(SqliteHarnessState));
 
-layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite gauntlet", (it) => {
+it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite gauntlet", (it) => {
   it.effect(
     "applies projected DDL through drizzle-kit and regenerates to no-op",
     fnUntraced(function* () {
@@ -416,10 +437,10 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
       expect(formatIso(inserted.createdAt)).toBe(formatIso(request.createdAt));
       expect(formatIso(inserted.updatedAt)).toBe(formatIso(request.updatedAt));
       expect(found.id).toBe(inserted.id);
-      expect(inserted.nickname.pipe(isNone)).toBe(true);
+      assertNone(inserted.nickname);
       expect(updated.nickname.pipe(getOrUndefined)).toBe("round-seven");
       expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
-      expect(missing.pipe(isNone)).toBe(true);
+      assertNone(missing);
     })
   );
 
@@ -474,6 +495,19 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
       expect(winner.rowVersion).toBe(2);
       expect(conflict.expectedVersion).toBe(1);
       expect(concurrentUpdates.filter(isSuccess)).toHaveLength(1);
+      const concurrentWinner = getOrThrow(findFirst(concurrentUpdates, isSuccess));
+      const concurrentLoser = getOrThrow(findFirst(concurrentUpdates, isFailure));
+      assertTrue(hasFails(concurrentLoser));
+      assertFalse(hasDies(concurrentLoser));
+      assertFalse(hasInterrupts(concurrentLoser));
+      const concurrentConflict = getOrThrow(Cause.findErrorOption(concurrentLoser.cause));
+      assert(is(VersionConflictError)(concurrentConflict));
+      expect(concurrentConflict.table).toBe(SqliteUser.sql.tableName);
+      expect(concurrentConflict.id).toBe(concurrentSeed.id);
+      expect(concurrentConflict.expectedVersion).toBe(concurrentSeed.rowVersion);
+      const persisted = yield* repository.findById(concurrentSeed.id);
+      expect(persisted).toEqual(concurrentWinner.value);
+      expect(persisted.rowVersion).toBe(concurrentSeed.rowVersion + 1);
     })
   );
 

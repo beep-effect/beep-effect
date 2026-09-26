@@ -6,4 +6,5 @@
  */
 
 export * from "../commands/AgentEffectiveness/index.ts";
+export * from "../commands/AgentEffectiveness/internal/EvalLawLanes.ts";
 export * from "../commands/AgentEffectiveness/internal/EvalScorer.ts";

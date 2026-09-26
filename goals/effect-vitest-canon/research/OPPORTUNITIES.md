@@ -2372,6 +2372,78 @@ Cause preservation in implementation and mixed-failure controls, rather than an
 API name or pure-failure example, would have prevented the overbroad assertion
 claim. The same projection pattern is being repaired in the open HTML wave.
 
+
+### 2026-09-25 — reference checkout ahead of installed Schema aliases
+
+While migrating HTML's runtime-boundary tests, the Effect reference checkout at
+3495bd8858 exported UnknownFromJsonString, but installed effect 4.0.0-rc.117 did
+not. `bun run beep quality package-verify @beep/html` rejected that alias with
+TS2551. The test uses the supported equivalent `S.fromJsonString(S.Unknown)`;
+no dependency upgrade or diagnostic suppression is needed. API grounding should
+pair reference-source inspection with an installed-export check whenever the
+reference revision and lockfile release differ.
+
+### 2026-09-25 — Effect snapshot preview failure and exhausted retry quota
+
+After merging main into PR #1277 at 38c00919ba, full effect-drizzle package
+verification passed, but OIP's Vercel preview failed webpack compilation on
+Effect's isBetweenLength and onExitUnsafe exports. The new exports exist in the
+local snapshot; the hosted build restored a previous deployment cache. A retry
+of that exact preview through the deployment API with forceNew=1 was rejected
+with HTTP 402, api-deployments-free-per-day. No new deployment was created.
+The cache hypothesis is unproven, and the original build failure is not a
+rate-limit-only deployment failure. A cache-free preview retry after quota
+reset, with installed-package provenance, would separate stale cache from a
+snapshot packaging/bundler regression without weakening merge gates.
+
+## Shared OIP preview failure reproduced on Graph3D
+
+After PR #1275 merged main at a8649df330, its OIP preview failed with the same
+Effect snapshot import error already observed on #1277: `isBetweenLength is not
+exported from ../Schema.js`, through `effect/dist/http/Multipart.js`. Evidence:
+`vercel inspect` build log for deployment EKAyZWoQTqxhHYoJ4JGV52fVt7UE, saved
+privately as pr1275-oip-current.log. Graph3D package audit/docgen and version-sync
+passed locally. This proves the hosted failure is shared across both branches;
+it does not yet identify stale build cache versus another bundler/install issue.
+The separate Todox failure is explicitly rate limited. Do not classify OIP as
+the rate-limit exception. A clean preview build with inspected package exports
+would distinguish these causes; the prior no-cache deployment request remains
+quota-blocked, so it was not retried here.
+
+## HTML frozen/current detector identity drift
+
+At package closeout, the frozen HTML ledger had 177 rows while current main's
+baseline had 181; only 85 ids were shared. Line-based identities moved as main
+changed. Preserve the union as 273 historical identities, not 273 distinct
+findings, and remove only HTML baseline rows after a fresh zero scan. Four
+retired wrapper ranges extended beyond their shorter canonical property files;
+re-anchor those rows to the replacement property blocks while keeping original
+ids and evidence. A stable occurrence key with explicit source-revision/span
+provenance would prevent this reconciliation ambiguity.
+
+### Generated SDK missing compiled declarations during docgen
+
+HTML full proof failed infra docgen on TS1205/TS1294/TS4114 in generated
+@pulumi/gharunners. Identical sources passed on main because its bin declarations
+existed; the worktree lacked them. The SDK's existing build script restored the
+ignored declarations and infra docgen passed 101 examples. Install/preflight
+should check for this generated SDK output before starting a repository proof;
+a missing build artifact must not be mistaken for a request to weaken TS rules.
+
+### 2026-09-25 — Main merge introduces Fallow health debt into a docs checkpoint
+
+- Activity: republish modeling inventory PR #1273 after merging main, preserving
+  its docs-only diff.
+- Evidence: `bun run beep yeet publish --start-pr-early --monitor --pr` pushed
+  successfully, then cheap gates failed only `fallow:health`. The report lists
+  five complexity findings in `MonitorLoop.ts` and `yeet-check-fidelity.test.ts`,
+  both byte-identical to origin/main and landed by PR #1270. The Effect/Vitest
+  ratchet passed. This is inherited tooling debt, not a modeling inventory defect.
+- Prevention: require the Fallow health baseline check on the final merged result
+  of tooling PRs, and retain file-level provenance in the failure envelope; its
+  current `not-applicable` attribution requires manual comparison with main.
+- Disposition: keep proof red; repair tooling in its separate D13 lane rather
+  than modifying the modeling checkpoint or waiving the gate.
 ### 2026-09-25 — GitHub quota interrupts heavy-admission observation
 
 After the graph-3d browser prerequisite passed Chromium and package proof,
@@ -2399,3 +2471,23 @@ guards and three private timing output paths in root Lint Policy. Hoist the
 unchanged guard once and redact those destinations as `<private-output>`.
 Focused root-policy checks before publication would catch these conditions
 that package verification alone did not reject.
+
+## 2026-09-26: HTML full-proof policy findings
+
+The HTML early-publish full proof reached lint policy and found two inline
+JSON schema codec compilations in Html.security.test.ts plus three gated
+external-mirror references in timing command metadata. Both were introduced
+by this migration. Hoist the unchanged codecs and explicitly redact only the
+private output directory in published command receipts. Package verification
+does not cover these root policy gates; include focused oxlint and knowledge
+reference checks before the next full proof.
+
+
+### Drizzle full-proof follow-up: compiled codecs and private output references
+
+PR #1277 full proof reached Lint Policy and rejected eight inline schema compiler
+applications in the SQLite properties and two private timing-output references.
+Hoist the unchanged insert/update codecs and guards to module scope, and redact
+the timing command output destination as `<private-output>`. Package proof alone
+did not cover these root policies; running the focused root policies before
+publication would have caught both failures earlier.

@@ -1,0 +1,14 @@
+  [config] epochs=3 steps/epoch=4 (auto) accum=1 batch_size=2
+  [config] train_size=8
+  [config] batches/epoch=4 total_steps=12 games/epoch=8
+  [config] lr_scheduler=cosine edit_budget=4 min_edit_budget=1
+  [config] skill_update_mode=patch lr_control_mode=fixed rewrite_reasoning_effort=high rewrite_max_completion_tokens=64000 max_analyst_rounds=1
+  [config] longitudinal_pair_policy=mixed
+  [config] base_seeds=[8, 9, 10, 11]
+  [baseline result] selection hard=0.0000 soft=0.5015 gate[soft]=0.5015
+    [6/6 EVALUATE] selection items=4
+    [6/6 EVALUATE] ACCEPT (new best) soft=0.9583 > prev best 0.5015
+  [STEP 1 done] epoch=1 action=accept_new_best current=0.9583 best=0.9583 dt=180.0s
+    [6/6 EVALUATE] selection items=4
+    [6/6 EVALUATE] ACCEPT (new best) soft=1.0000 > prev best 0.9583
+  [STEP 2 done] epoch=1 action=accept_new_best current=1.0000 best=1.0000 dt=232.8s
