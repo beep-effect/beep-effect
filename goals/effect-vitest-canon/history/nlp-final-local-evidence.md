@@ -1,4 +1,4 @@
-# NLP final local evidence, pending signed publication
+# NLP final local evidence
 
 Final Node and Bun runs both passed 175 tests, with zero failed or pending
 tests. Source hashes remained unchanged during each run. Whole command times
@@ -13,10 +13,10 @@ identities and evidence are retained. No-findings spans were refreshed for the
 current ten files. The strict five-lens inventory validator passes with zero
 missing rows; this validates coverage and shape, not P1 acceptance or closure.
 
-Historical actionable rows remain open until a signed implementation commit
-can provide their actual fix SHA. The prior signing socket failure has not
-been bypassed. Final inventory closure, committed-tree reference checks,
-publication, review closure, and hosted proof remain outstanding.
+The remaining 80 actionable rows credit signed implementation commit
+b8152b533f6f90aa69c4e75282de8a775f51361f. Earlier fix SHAs remain intact.
+Committed-tree reference checks, publication, review closure, and hosted proof
+remain outstanding.
 
 The preserved preparation reports are also copied byte-for-byte into the
 canonical before-report and before-context locations for both Node and Bun.
