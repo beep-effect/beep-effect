@@ -352,65 +352,51 @@ describe("DrizzleError", () => {
     })
   );
 
-  it("round-trips exported schemas with schema-derived arbitraries", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([DrizzleErrorContextArbitrary]),
-          ([context]) => {
-            const decoded = Result.getOrThrow(
-              encodeDrizzleErrorContextResult(context).pipe(Result.flatMap(decodeUnknownDrizzleErrorContextResult))
-            );
+  it.effect.prop(
+    "round-trips schema-derived Drizzle error contexts",
+    [DrizzleErrorContextArbitrary],
+    ([context]) =>
+      Effect.sync(() => {
+        const decoded = Result.getOrThrow(
+          encodeDrizzleErrorContextResult(context).pipe(Result.flatMap(decodeUnknownDrizzleErrorContextResult))
+        );
 
-            expect(Eq.equals(decoded, context)).toBe(true);
+        expect(Eq.equals(decoded, context)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
+  it.effect.prop(
+    "round-trips schema-derived Drizzle errors",
+    [DrizzleErrorArbitrary],
+    ([error]) =>
+      Effect.sync(() => {
+        const decoded = Result.getOrThrow(
+          error.pipe(encodeDrizzleErrorResult, Result.flatMap(decodeUnknownDrizzleErrorResult))
+        );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([DrizzleErrorArbitrary]),
-          ([error]) => {
-            const decoded = Result.getOrThrow(
-              error.pipe(encodeDrizzleErrorResult, Result.flatMap(decodeUnknownDrizzleErrorResult))
-            );
+        expect(decoded._tag).toBe(error._tag);
+        expect(decoded.operation).toBe(error.operation);
+        expect(O.isSome(decoded.cause)).toBe(O.isSome(error.cause));
+        expect(Eq.equals(decoded.query, error.query)).toBe(true);
+        expect(Eq.equals(decoded.params, error.params)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 
-            expect(decoded._tag).toBe(error._tag);
-            expect(decoded.operation).toBe(error.operation);
-            expect(O.isSome(decoded.cause)).toBe(O.isSome(error.cause));
-            expect(Eq.equals(decoded.query, error.query)).toBe(true);
-            expect(Eq.equals(decoded.params, error.params)).toBe(true);
+  it.effect.prop(
+    "round-trips schema-derived Drizzle rows",
+    [DrizzleRowsArbitrary],
+    ([rows]) =>
+      Effect.sync(() => {
+        const decoded = Result.getOrThrow(
+          encodeDrizzleRowsResult(rows).pipe(Result.flatMap(decodeUnknownDrizzleRowsResult))
+        );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([DrizzleRowsArbitrary]),
-          ([rows]) => {
-            const decoded = Result.getOrThrow(
-              encodeDrizzleRowsResult(rows).pipe(Result.flatMap(decodeUnknownDrizzleRowsResult))
-            );
-
-            expect(Eq.equals(decoded, rows)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        expect(Eq.equals(decoded, rows)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("Drizzle", () => {
@@ -436,9 +422,20 @@ describe("Drizzle", () => {
   });
 
   describe("provides execute and transaction through Drizzle.makeLayer", () => {
-    const transactionClient = makeClient((statement, parameters) => Effect.succeed([statement, parameters]));
+    let rootExecutions = 0;
+    let transactionExecutions = 0;
+    const transactionClient = makeClient((statement, parameters) =>
+      Effect.sync(() => {
+        transactionExecutions += 1;
+        return [statement, parameters];
+      })
+    );
     const client: DrizzleClient = {
-      execute: (statement, parameters) => Effect.succeed([statement, parameters]),
+      execute: (statement, parameters) =>
+        Effect.sync(() => {
+          rootExecutions += 1;
+          return [statement, parameters];
+        }),
       withTransaction: (use) => use(transactionClient),
     };
     it.layer(Drizzle.makeLayer(client))((it) => {
@@ -455,6 +452,8 @@ describe("Drizzle", () => {
 
           assert.deepStrictEqual(result.executed, ["select 1", ["root"]]);
           assert.deepStrictEqual(result.transacted, ["select 2", ["tx"]]);
+          assert.strictEqual(rootExecutions, 1);
+          assert.strictEqual(transactionExecutions, 1);
         })
       );
     });
