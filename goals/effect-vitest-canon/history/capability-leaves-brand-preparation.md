@@ -35,7 +35,7 @@ passed after this change; no production code or assets were regenerated.
 The existing BrandIdentity property and five-case floor remain unchanged.
 PR #1200 performed that migration; its historical diff is saved for correct
 ledger attribution. Flake review adds no timing or retry changes: golden reads
-are sequential, and React tests use synchronous queries after render. Final ledger reconciliation remains pending.
+are sequential, and React tests use synchronous queries after render. Ledger reconciliation is recorded below.
 
 ## Instrumented runner
 
@@ -52,4 +52,24 @@ Biome. Full package verification then passed: audit 7.4 seconds, docgen 3.1
 seconds. Configured Node and Bun runs both passed all 17 tests with stable
 source hashes, taking 5.070854 and 1.684376 seconds respectively. Resource
 pressure and load were captured; these shared-workstation measurements do
-not establish a controlled speedup. Ledger and baseline closure are pending.
+not establish a controlled speedup. Ledger and baseline reconciliation are recorded below.
+
+## Inventory reconciliation
+
+Source commit 50a96f57fcaf6573a956b35112146038fbaef936 contains the local
+scope, assertion, asset-oracle and runner changes. Both final timing source
+manifests still match the committed source. The pre-existing BrandIdentity
+property migration is credited to b1aa7e320cde926e7e80a98073ba8b0d517d7c8c.
+
+The ledger retains the union of historical and current candidates: 14 detector
+rows and 12 human lens rows. The two EV010 identities represent the same native
+asset provenance judgment at different recorded lines; both retain an explicit
+exception reason. No unresolved actionable row remains in this scoped ledger.
+Eight resolved baseline rows were removed, one native-filesystem exception was
+retained, and all 8024 unrelated baseline records were preserved byte-for-byte.
+The root ratchet reports zero introduced and zero resolved entries.
+
+Canonical discovery still identifies the three existing Brand files. The scoped
+strict validator reports valid, complete and zero missing lens coverage. This
+is local package evidence; the wave has not yet passed hosted PR gates, and
+the global goal inventory and exception closeout remain outstanding.
