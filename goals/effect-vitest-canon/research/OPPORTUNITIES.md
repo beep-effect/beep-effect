@@ -2345,3 +2345,12 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+## Runner dependency and receipt generation
+
+`bun add --dev @beep/test-runner@workspace:^` wrote workspace:* in Chalk,
+which Syncpack rejected. The manifest was corrected and verified. The generator
+should preserve the workspace protocol policy. Separately, PR #1282 review
+found that its scoped dependency projection retained an inherited Graph3D
+review receipt; a package-specific receipt and hash now identify its Provenance
+edges. Dependency reconciliation should require a matching review basis.

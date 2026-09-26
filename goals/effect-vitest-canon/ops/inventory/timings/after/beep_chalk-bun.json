@@ -1,0 +1,357 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 28,
+  "numPassedTests": 28,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790401530806,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/chalk tagged-error declared equivalence"],
+          "fullName": "@beep/chalk tagged-error declared equivalence compares the private missing-builder-metadata error by declared message",
+          "status": "passed",
+          "title": "compares the private missing-builder-metadata error by declared message",
+          "duration": 1.7385880000001634,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790401531863,
+      "endTime": 1790401531864.7385,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/chalk/test/TaggedError.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk does not add styling when called as the base function",
+          "status": "passed",
+          "title": "does not add styling when called as the base function",
+          "duration": 3.2455489999999827,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk supports automatic casting to string",
+          "status": "passed",
+          "title": "supports automatic casting to string",
+          "duration": 3.1154079999998885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk styles strings with chained modifiers and colors",
+          "status": "passed",
+          "title": "styles strings with chained modifiers and colors",
+          "duration": 3.108347999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk supports nested styles and same-type reopen behavior",
+          "status": "passed",
+          "title": "supports nested styles and same-type reopen behavior",
+          "duration": 3.102529000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk resets styles and preserves function prototype methods",
+          "status": "passed",
+          "title": "resets styles and preserves function prototype methods",
+          "duration": 3.099042999999938,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk supports aliases, empty input, and template-tag parity",
+          "status": "passed",
+          "title": "supports aliases, empty input, and template-tag parity",
+          "duration": 7.13210499999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk re-opens styles around line breaks",
+          "status": "passed",
+          "title": "re-opens styles around line breaks",
+          "duration": 7.129030000000057,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk supports RGB, HEX, and ANSI256 builders across levels",
+          "status": "passed",
+          "title": "supports RGB, HEX, and ANSI256 builders across levels",
+          "duration": 2.5712499999999636,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk keeps isolated instances separate and validates invalid levels",
+          "status": "passed",
+          "title": "keeps isolated instances separate and validates invalid levels",
+          "duration": 2.549897000000101,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk propagates level changes across child builders",
+          "status": "passed",
+          "title": "propagates level changes across child builders",
+          "duration": 2.539630999999872,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk supports visible for enabled and disabled instances",
+          "status": "passed",
+          "title": "supports visible for enabled and disabled instances",
+          "duration": 15.481955999999855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk exposes a stderr instance with independent state",
+          "status": "passed",
+          "title": "exposes a stderr instance with independent state",
+          "duration": 15.473132000000078,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk backs public option models with Effect schemas",
+          "status": "passed",
+          "title": "backs public option models with Effect schemas",
+          "duration": 21.263551000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips AnsiRenderLevel through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AnsiRenderLevel through its encoded shape",
+          "duration": 39.668268000000126,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ChalkConstructorOptions through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ChalkConstructorOptions through its encoded shape",
+          "duration": 41.18123800000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ChalkOptions through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ChalkOptions through its encoded shape",
+          "duration": 27.46544300000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ColorInfo through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ColorInfo through its encoded shape",
+          "duration": 28.635474999999815,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ColorModelName through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ColorModelName through its encoded shape",
+          "duration": 23.690769000000046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ColorName through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ColorName through its encoded shape",
+          "duration": 12.328589000000193,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ColorSupport through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ColorSupport through its encoded shape",
+          "duration": 11.938216999999895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ColorSupportLevel through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ColorSupportLevel through its encoded shape",
+          "duration": 10.74079299999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips ModifierName through its encoded shape",
+          "status": "passed",
+          "title": "round-trips ModifierName through its encoded shape",
+          "duration": 10.489094999999907,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips StyleChannel through its encoded shape",
+          "status": "passed",
+          "title": "round-trips StyleChannel through its encoded shape",
+          "duration": 9.733743000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk"],
+          "fullName": "@beep/chalk round-trips StyleName through its encoded shape",
+          "status": "passed",
+          "title": "round-trips StyleName through its encoded shape",
+          "duration": 10.610492000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["supportsColor detection"],
+          "fullName": "supportsColor detection honors force-color, no-color, tty, and CI rules",
+          "status": "passed",
+          "title": "honors force-color, no-color, tty, and CI rules",
+          "duration": 4.909261000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["supportsColor detection"],
+          "fullName": "supportsColor detection covers platform, flag, and terminal-specific rules with explicit runtime fixtures",
+          "status": "passed",
+          "title": "covers platform, flag, and terminal-specific rules with explicit runtime fixtures",
+          "duration": 4.887958000000026,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/chalk browser entry"],
+          "fullName": "@beep/chalk browser entry remains usable in non-browser runtimes",
+          "status": "passed",
+          "title": "remains usable in non-browser runtimes",
+          "duration": 4.878273000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790401531872,
+      "endTime": 1790401531945.6106,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/chalk/test/index.test.ts"
+    }
+  ]
+}

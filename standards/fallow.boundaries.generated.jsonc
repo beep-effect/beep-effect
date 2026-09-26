@@ -1315,6 +1315,7 @@
           "@beep/chalk",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1322,6 +1323,7 @@
           "@beep/chalk",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
