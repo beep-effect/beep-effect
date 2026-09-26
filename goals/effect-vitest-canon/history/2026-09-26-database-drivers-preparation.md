@@ -45,4 +45,47 @@ predicates and timeout budgets remain intact. Full package audit/docgen passed
 (10.8 / 3.5 seconds) with in-process PGlite gates. No production code changed.
 
 Main's merged HTML checkpoint was then merged into this branch without
-conflicts. DuckDB scope work and the subsequent per-package D12 phases remain.
+conflicts. The subsequent checkpoints below continue the required per-package order.
+
+
+DuckDB scope commit `abcc797422` moves ordinary providers to isolated harness
+layers and keeps native directories for file-backed databases and Parquet.
+Instance and connection fixtures have independent finalizers; coordinator
+cleanup releases native promises before structured child joins. All 83 prior
+assertion expressions and property definitions were preserved. Deliberate
+short production scopes remain where close-count assertions run after teardown.
+Full package audit/docgen passed (8.1 / 2.7 seconds).
+
+## Assertions, properties and deterministic paths
+
+Postgres assertion commit `999d118b04` preserves seven absence predicates through
+assertNone (audit/docgen 11.8 / 2.8 seconds). Property commit `24b52b1c78`
+registers four separate native laws with the same domains and fcRuns(25).
+The normalized error generator still excludes cause and params, and each law
+still checks re-encoding equality plus Equal.equals or schema equivalence.
+The fixed migration-bundle fixture remains separate. Audit/docgen passed
+(10.5 / 2.8 seconds); all four named laws passed with 400 runs and seed 20260708.
+Flake commit `0d378ed030` owns a scoped native temporary parent and supplies
+an uncreated child to the real migrator, preserving the typed error, operation
+and ENOENT assertions (audit/docgen 10.7 / 2.8 seconds).
+
+Drizzle assertion commit `0e0402ef7f` preserves absence, expected cause and
+unknown Exit failure predicates, including strict cause identity. Its initial
+introduced missedPipeableOpportunity diagnostic was corrected without changing
+the predicate (final audit/docgen 10.2 / 2.8 seconds). Three native laws retain
+the Result codec paths, original arbitraries and all five error predicates,
+including comparison of both cause-presence booleans. Each keeps fcRuns(50).
+All three named laws passed with 400 runs and seed 20260708; full package
+audit/docgen passed (8.9 / 2.6 seconds). Separate root/transaction execution
+counters now distinguish client routing while retaining the original SQL and
+result-array oracles. The prior scoped interruption probe covers the identified
+transaction ownership defect; no additional flake repair was established.
+
+DuckDB assertion commit `bda048be32` uses expected string payloads for two
+assertSome checks and retains nine exact Exit failure predicates through
+assertTrue. Strict original cause identity remains unchanged (audit/docgen
+8.4 / 2.7 seconds). DuckDB properties, cancellation timing, final instrumentation,
+final timings and eight-file inventory reconciliation remain outstanding.
+
+These are per-phase proofs, not final wave or goal acceptance. Native SQL tests
+still explicitly select in-process PGlite with an empty external URL.
