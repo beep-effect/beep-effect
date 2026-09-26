@@ -1,0 +1,73 @@
+{
+  "numTotalTestSuites": 2,
+  "numPassedTestSuites": 2,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 3,
+  "numPassedTests": 3,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790416050967,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["WorkItem configuration"],
+          "fullName": "WorkItem configuration provides client-safe and server configuration",
+          "status": "passed",
+          "title": "provides client-safe and server configuration",
+          "duration": 17.787038999999822,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["WorkItem configuration"],
+          "fullName": "WorkItem configuration keeps default encoded configuration shape byte-identical",
+          "status": "passed",
+          "title": "keeps default encoded configuration shape byte-identical",
+          "duration": 17.543343999999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["WorkItem configuration"],
+          "fullName": "WorkItem configuration round-trips schema-derived WorkItem config values",
+          "status": "passed",
+          "title": "round-trips schema-derived WorkItem config values",
+          "duration": 21.62616100000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790416052017,
+      "endTime": 1790416052038.6262,
+      "status": "passed",
+      "message": "",
+      "name": "packages/architecture-lab/config/test/WorkItemConfig.test.ts"
+    }
+  ]
+}

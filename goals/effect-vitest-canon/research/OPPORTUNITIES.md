@@ -2369,3 +2369,27 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+### 2026-09-26 — Pure test stubs and strict Effect provide diagnostics
+
+The CLI/config scope migration removed redundant scoped-layer wrappers and
+used direct `Effect.provide` for verified `Layer.succeed` test stubs, as D14
+permits. Full package proofs for `@beep/ai-provider-cli` and
+`@beep/architecture-lab-config` rejected those calls with TS377032
+`effect(strictEffectProvide)`. The packet exemption does not imply checker
+acceptance. Move ownership to the test harness without suppressing diagnostics
+or rebuilding a manual layer wrapper. Preparation should check both D14 and
+the active language-service diagnostic before recommending a direct stub
+provide; this would have avoided a failed proof in each package.
+
+### 2026-09-26 — Runner trace events reach a fixture diagnostic logger
+
+The CLI snapshot trace-enabled proof failed its exact diagnostic log record:
+runner `start`/`end` events reached a logger installed for the entire harness
+layer. The production diagnostic payload was unchanged. Keep the full exact
+assertion and supply the logger reference only around the provider call;
+runner lifecycle logs remain outside that capture. A trace-enabled example
+for exact logger assertions would prevent this scope mismatch. The first
+attempt used the deep-property environment floor, which excludes this
+non-property file; its zero-test exit was rejected as proof and the real
+13-test snapshot suite was run without that filter.
