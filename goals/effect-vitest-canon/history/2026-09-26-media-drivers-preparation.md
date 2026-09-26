@@ -47,5 +47,23 @@ scopes are removed. All 38 unit and 16 integration expectation expressions
 and embedded PNG/GIF bytes are preserved. Final full audit/docgen passed
 (15.1 / 4.8 seconds), including the three native integration cases.
 
-ExifTool assertions, properties, availability masking and instrumentation
-remain for their later D12 phases. No production code changed.
+ExifTool properties, availability masking and instrumentation remain for their
+later D12 phases. No production code changed.
+
+## Assertions and Face Detection instrumentation
+
+ExifTool assertion commit `9528437796` replaces 22 existing Option/Boolean
+assertions while preserving exact operands and polarity. Full audit/docgen
+passed (9.3 / 3.1 seconds). The encoded provenance equality, six command
+capture resets and native PNG/GIF fixtures remain unchanged.
+
+Face Detection runner commit `ba75dec0b8` adopts `@beep/test-runner` in all
+three test files, with its workspace dependency and generated references.
+Full audit/docgen passed (7.7 / 3.2 seconds). CI tracing passed all 14 tests
+across three files, including the native ONNX installer fixtures. Final
+timing samples passed 14 tests with no skips and stable source hashes:
+Node 3.283 seconds; Bun 1.407 seconds. Load and pressure context accompanies
+the raw reports. These single samples do not establish a speedup.
+
+Cache dependency accounting, Fallow projection and final ledger reconciliation
+remain before this wave can be published.
