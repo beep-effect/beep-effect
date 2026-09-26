@@ -29,8 +29,9 @@ import {
 } from "@beep/m365";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Duration, Effect, Exit, Fiber, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -398,7 +399,7 @@ describe("@beep/m365 service", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "decodes Graph fixtures for each read verb and sends bearer auth to Graph",
       Effect.fnUntraced(function* () {
@@ -450,7 +451,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeAuthFailureLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeAuthFailureLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "preserves auth failures before HTTP execution",
       Effect.fnUntraced(function* () {
@@ -472,7 +473,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "rejects untrusted deltaLink values before sending signed continuation requests",
       Effect.fnUntraced(function* () {
@@ -512,7 +513,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "rejects path-segment injection in Graph identifier request fields before HTTP",
       Effect.fnUntraced(function* () {
@@ -582,7 +583,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "downloads file content from the preauthenticated URL without forwarding Authorization",
       Effect.fnUntraced(function* () {
@@ -624,7 +625,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "skips protected/encrypted items by extension without fetching content",
       Effect.fnUntraced(function* () {
@@ -658,7 +659,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps Retry-After throttles to typed driver errors",
       Effect.fnUntraced(function* () {
@@ -690,7 +691,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(testConfig(1)), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(testConfig(1)), { timeout: "5 seconds" })((it) => {
     it.effect(
       "retries throttled requests after Retry-After within the configured budget",
       Effect.fnUntraced(function* () {
@@ -714,7 +715,7 @@ describe("@beep/m365 service", () => {
     );
   });
 
-  layer(makeTestLayer(testConfig(1)), { timeout: "5 seconds" })((it) => {
+  it.layer(makeTestLayer(testConfig(1)), { timeout: "5 seconds" })((it) => {
     it.effect(
       "retries throttled requests with a default delay when Retry-After is absent",
       Effect.fnUntraced(function* () {

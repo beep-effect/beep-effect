@@ -1,4 +1,5 @@
 import { NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
   makeUsptoError,
@@ -15,7 +16,7 @@ import {
   UsptoPatentNumber,
 } from "@beep/uspto";
 import { thunkTrue } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

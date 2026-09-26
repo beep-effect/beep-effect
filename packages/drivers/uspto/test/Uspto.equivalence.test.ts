@@ -1,6 +1,7 @@
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { UsptoError } from "@beep/uspto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const sameUsptoError = S.toEquivalence(UsptoError);

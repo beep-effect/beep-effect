@@ -1,5 +1,6 @@
 import { HubSpotError } from "@beep/hubspot";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const sameHubSpotError = S.toEquivalence(HubSpotError);

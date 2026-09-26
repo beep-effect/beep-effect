@@ -6,7 +6,8 @@ import {
   M365GetMessageRequest,
   M365ListDrivesRequest,
 } from "@beep/m365";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -41,7 +42,7 @@ pipe(
   O.match({
     onNone: () =>
       describe("@beep/m365 live integration (M365_*)", () => {
-        it("skips live Graph calls when required M365_* env or token cache settings are absent", () => {
+        it.skip("skips live Graph calls when required M365_* env or token cache settings are absent", () => {
           assertNone(liveEnv);
         });
       }),
@@ -57,18 +58,23 @@ pipe(
           )
         );
 
-        layer(LiveLayer, { timeout: "60 seconds" })((it) => {
+        it.layer(LiveLayer, { timeout: "60 seconds" })((it) => {
           it.effect(
             "lists a document library, downloads a file, and reads a message",
             Effect.fnUntraced(function* () {
               const m365 = yield* M365;
+              yield* Effect.logInfo("M365 live: listing drives");
               const drives = yield* m365.listDrives(M365ListDrivesRequest.make({ siteId: O.some(env.siteId) }));
+              yield* Effect.logInfo("M365 live: downloading content");
               const download = yield* m365.downloadDriveItemContent(
                 M365DownloadDriveItemContentRequest.make({ driveId: env.driveId, itemId: env.itemId })
               );
+              yield* Effect.logInfo("M365 live: reading message");
               const message = yield* m365.getMessage(
                 M365GetMessageRequest.make({ messageId: env.messageId, userId: liveUserId })
               );
+
+              yield* Effect.logInfo("M365 live: requests completed");
 
               expect(drives.value.length).toBeGreaterThan(0);
               expect(message.id.length).toBeGreaterThan(0);

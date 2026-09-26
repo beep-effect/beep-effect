@@ -12,8 +12,9 @@ import {
   FreshbooksStoredToken,
   FreshbooksTokenStore,
 } from "@beep/freshbooks";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -196,7 +197,7 @@ describe("@beep/freshbooks models", () => {
 });
 
 describe("@beep/freshbooks read service", () => {
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "resolves the identity with distinct account and business namespaces",
       Effect.fnUntraced(function* () {

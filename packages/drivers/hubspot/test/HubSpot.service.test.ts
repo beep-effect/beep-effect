@@ -8,9 +8,10 @@ import {
   HubSpotUpsertContactRequest,
   HubSpotUpsertContactResponse,
 } from "@beep/hubspot";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -260,7 +261,7 @@ describe("@beep/hubspot", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "submits a form through the secure Forms API endpoint",
       Effect.fnUntraced(function* () {
@@ -279,7 +280,7 @@ describe("@beep/hubspot", () => {
     );
   });
 
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps non-success responses to typed driver errors",
       Effect.fnUntraced(function* () {
@@ -310,7 +311,7 @@ describe("@beep/hubspot", () => {
     );
   });
 
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "upserts contacts through the CRM batch endpoint",
       Effect.fnUntraced(function* () {
@@ -338,7 +339,7 @@ describe("@beep/hubspot", () => {
     );
   });
 
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps upsert response status failures with email context",
       Effect.fnUntraced(function* () {

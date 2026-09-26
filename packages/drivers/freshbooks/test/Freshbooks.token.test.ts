@@ -7,8 +7,9 @@ import {
   makeFreshbooksAuthLayer,
   resolveConfig,
 } from "@beep/freshbooks";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Redacted, Ref } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -121,7 +122,7 @@ const AuthLayer = (
   );
 
 describe("@beep/freshbooks token rotation", () => {
-  layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect("persists a consumed refresh token before honoring caller cancellation", () =>
       Effect.gen(function* () {
         const server = yield* TokenServer;
@@ -171,7 +172,7 @@ describe("@beep/freshbooks token rotation", () => {
     );
   });
 
-  layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "serializes concurrent refreshes to a single owner (one network refresh)",
       Effect.fnUntraced(function* () {
@@ -194,7 +195,7 @@ describe("@beep/freshbooks token rotation", () => {
     );
   });
 
-  layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "persists the rotated single-use token before releasing",
       Effect.fnUntraced(function* () {
@@ -219,7 +220,7 @@ describe("@beep/freshbooks token rotation", () => {
     );
   });
 
-  layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "reuses a still-fresh token without a network refresh",
       Effect.fnUntraced(function* () {
@@ -244,7 +245,7 @@ describe("@beep/freshbooks token rotation", () => {
     Layer.provideMerge(TokenServerLayer("refresh-0"))
   );
 
-  layer(EmptyStoreAuthLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(EmptyStoreAuthLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "fails with a token-refresh error when no token has been granted",
       Effect.fnUntraced(function* () {
@@ -263,7 +264,7 @@ describe("@beep/freshbooks token rotation", () => {
     );
   });
 
-  layer(AuthLayer(freshToken), { timeout: "5 seconds" })((it) => {
+  it.layer(AuthLayer(freshToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "forces a rotation on explicit refresh even when the stored token is still fresh",
       Effect.fnUntraced(function* () {
