@@ -1,0 +1,256 @@
+{
+  "numTotalTestSuites": 7,
+  "numPassedTestSuites": 7,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 18,
+  "numPassedTests": 18,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790414853417,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli"],
+          "fullName": "@beep/ai-provider-cli keeps encoded provider CLI wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded provider CLI wire shapes byte-identical",
+          "duration": 12.34278699999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli"],
+          "fullName": "@beep/ai-provider-cli round-trips schema-derived provider CLI payloads",
+          "status": "passed",
+          "title": "round-trips schema-derived provider CLI payloads",
+          "duration": 12.150630999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli"],
+          "fullName": "@beep/ai-provider-cli maps Claude and Codex CLI exit codes to sanitized auth probes",
+          "status": "passed",
+          "title": "maps Claude and Codex CLI exit codes to sanitized auth probes",
+          "duration": 12.146284999999807,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790414857524,
+      "endTime": 1790414857536.3428,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots decodes a logged-in Claude status payload into a rich snapshot",
+          "status": "passed",
+          "title": "decodes a logged-in Claude status payload into a rich snapshot",
+          "duration": 8.177524000000176,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots maps unknown Claude subscription types to the generic label",
+          "status": "passed",
+          "title": "maps unknown Claude subscription types to the generic label",
+          "duration": 7.968301000000338,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots reports a logged-out Claude CLI as not authenticated with no account detail",
+          "status": "passed",
+          "title": "reports a logged-out Claude CLI as not authenticated with no account detail",
+          "duration": 7.950854000000163,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots degrades malformed Claude stdout to the exit-code-only interpretation",
+          "status": "passed",
+          "title": "degrades malformed Claude stdout to the exit-code-only interpretation",
+          "duration": 7.941710000000057,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots classifies the Codex ChatGPT status line as a chatgpt token source",
+          "status": "passed",
+          "title": "classifies the Codex ChatGPT status line as a chatgpt token source",
+          "duration": 7.934929000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots classifies the Codex API key status line as an api-key token source",
+          "status": "passed",
+          "title": "classifies the Codex API key status line as an api-key token source",
+          "duration": 1.073652999999922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots reports a Codex non-zero exit as not authenticated with no token source",
+          "status": "passed",
+          "title": "reports a Codex non-zero exit as not authenticated with no token source",
+          "duration": 1.039241000000402,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots propagates transport failures as AiProviderCliError",
+          "status": "passed",
+          "title": "propagates transport failures as AiProviderCliError",
+          "duration": 2.0674340000000484,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots logs safe process diagnostics before translating native failures",
+          "status": "passed",
+          "title": "logs safe process diagnostics before translating native failures",
+          "duration": 2.032770999999684,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli auth snapshots"],
+          "fullName": "@beep/ai-provider-cli auth snapshots keeps the encoded snapshot wire shape byte-identical",
+          "status": "passed",
+          "title": "keeps the encoded snapshot wire shape byte-identical",
+          "duration": 2.023515999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli executable overrides"],
+          "fullName": "@beep/ai-provider-cli executable overrides expands Windows-style tilde prefixes with host path semantics",
+          "status": "passed",
+          "title": "expands Windows-style tilde prefixes with host path semantics",
+          "duration": 2.4906850000002123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli executable overrides"],
+          "fullName": "@beep/ai-provider-cli executable overrides expands a tilde executable override before it reaches the runner",
+          "status": "passed",
+          "title": "expands a tilde executable override before it reaches the runner",
+          "duration": 2.4558210000000145,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-provider-cli executable overrides"],
+          "fullName": "@beep/ai-provider-cli executable overrides rejects an off-allowlist executable before invoking the runner",
+          "status": "passed",
+          "title": "rejects an off-allowlist executable before invoking the runner",
+          "duration": 2.42101700000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790414857476,
+      "endTime": 1790414857489.0674,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AI provider CLI home declared-field equivalence"],
+          "fullName": "AI provider CLI home declared-field equivalence treats field-equal path conflicts as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal path conflicts as equivalent and field-different ones as distinct",
+          "duration": 1.5964480000002368,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["AI provider CLI home declared-field equivalence"],
+          "fullName": "AI provider CLI home declared-field equivalence excludes the optional opaque defect cause from diagnostic identity",
+          "status": "passed",
+          "title": "excludes the optional opaque defect cause from diagnostic identity",
+          "duration": 1.2156719999998131,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790414857474,
+      "endTime": 1790414857476.2156,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts"
+    }
+  ]
+}
