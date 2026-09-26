@@ -1,0 +1,270 @@
+{
+  "numTotalTestSuites": 9,
+  "numPassedTestSuites": 9,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 19,
+  "numPassedTests": 19,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790407303707,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model supports data-last codecs and model construction",
+          "status": "passed",
+          "title": "supports data-last codecs and model construction",
+          "duration": 42.26802899999939,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model keeps encoded OpenAI-compatible schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded OpenAI-compatible schema wire shapes byte-identical",
+          "duration": 41.98427199999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model round-trips schema-derived OpenAI-compatible payloads through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived OpenAI-compatible payloads through encoded form",
+          "duration": 42.0045540000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model translates Effect prompts into chat completion requests",
+          "status": "passed",
+          "title": "translates Effect prompts into chat completion requests",
+          "duration": 41.99606100000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model declares tool_choice alongside declared tools",
+          "status": "passed",
+          "title": "declares tool_choice alongside declared tools",
+          "duration": 41.98777799999971,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model decodes tool calls from chat completion responses",
+          "status": "passed",
+          "title": "decodes tool calls from chat completion responses",
+          "duration": 6.506757999999536,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model streams chat completion chunks as Effect AI stream parts",
+          "status": "passed",
+          "title": "streams chat completion chunks as Effect AI stream parts",
+          "duration": 6.44916000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model emits streamed finish after the trailing usage chunk",
+          "status": "passed",
+          "title": "emits streamed finish after the trailing usage chunk",
+          "duration": 6.437762000000475,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model decodes partial streaming tool-call deltas",
+          "status": "passed",
+          "title": "decodes partial streaming tool-call deltas",
+          "duration": 6.429740000000493,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model buffers streaming tool-call argument deltas until JSON is complete",
+          "status": "passed",
+          "title": "buffers streaming tool-call argument deltas until JSON is complete",
+          "duration": 6.41725999999926,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model rejects non-image file parts before provider calls",
+          "status": "passed",
+          "title": "rejects non-image file parts before provider calls",
+          "duration": 11.56400399999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "unsupported tool schema fixture"
+          ],
+          "fullName": "OpenAiCompat language model unsupported tool schema fixture maps tool schema conversion failures to UnsupportedSchemaError before provider calls",
+          "status": "passed",
+          "title": "maps tool schema conversion failures to UnsupportedSchemaError before provider calls",
+          "duration": 7.976300999999694,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAiCompat language model"],
+          "fullName": "OpenAiCompat language model maps structured response schema conversion failures to UnsupportedSchemaError before provider calls",
+          "status": "passed",
+          "title": "maps structured response schema conversion failures to UnsupportedSchemaError before provider calls",
+          "duration": 10.89802999999938,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "maps JSON body encoding failures to AiError fixture"
+          ],
+          "fullName": "OpenAiCompat language model maps JSON body encoding failures to AiError fixture maps JSON body encoding failures to AiError",
+          "status": "passed",
+          "title": "maps JSON body encoding failures to AiError",
+          "duration": 7.954657000000225,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "maps non-2xx client responses without exposing response bodies fixture"
+          ],
+          "fullName": "OpenAiCompat language model maps non-2xx client responses without exposing response bodies fixture maps non-2xx client responses without exposing response bodies",
+          "status": "passed",
+          "title": "maps non-2xx client responses without exposing response bodies",
+          "duration": 7.948919000000387,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "rejects stream responses whose leading content type is not text/event-stream fixture"
+          ],
+          "fullName": "OpenAiCompat language model rejects stream responses whose leading content type is not text/event-stream fixture rejects stream responses whose leading content type is not text/event-stream",
+          "status": "passed",
+          "title": "rejects stream responses whose leading content type is not text/event-stream",
+          "duration": 5.261962000000494,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "Accept header clients"
+          ],
+          "fullName": "OpenAiCompat language model Accept header clients sets operation-specific Accept headers and allows configured overrides",
+          "status": "passed",
+          "title": "sets operation-specific Accept headers and allows configured overrides",
+          "duration": 5.46071800000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "maps SSE retry directives to typed AiError fixture"
+          ],
+          "fullName": "OpenAiCompat language model maps SSE retry directives to typed AiError fixture maps SSE retry directives to typed AiError",
+          "status": "passed",
+          "title": "maps SSE retry directives to typed AiError",
+          "duration": 26.013402000000497,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAiCompat language model",
+            "maps SSE decoding failures to typed AiError fixture"
+          ],
+          "fullName": "OpenAiCompat language model maps SSE decoding failures to typed AiError fixture maps SSE decoding failures to typed AiError",
+          "status": "passed",
+          "title": "maps SSE decoding failures to typed AiError",
+          "duration": 25.94965300000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407307792,
+      "endTime": 1790407307885.0134,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts"
+    }
+  ]
+}

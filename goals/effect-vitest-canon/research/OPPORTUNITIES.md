@@ -2366,3 +2366,13 @@ introduced by the test refactor, not inherited source failures. The repair
 inlines the redundant generator boundary while retaining Effect.flip on the
 failing operation and the same error assertions. Running the package's actual
 audit check path before handoff would have caught this distinction earlier.
+
+## 2026-09-26: Git signer socket failed after green provider proofs
+
+Saving the OpenAI, Venice, and xAI phase repairs failed after all commit hooks
+passed: `1Password: Could not connect to socket`, followed by `failed to write
+commit object`. The prescribed op-doctor check found the automation backend
+healthy, but the configured Git signer still failed. The source changes are
+preserved in the index and a private patch; signing was not disabled and no
+credential was exported. A signer-health preflight distinct from automation
+secret-backend health would have exposed this publication boundary earlier.

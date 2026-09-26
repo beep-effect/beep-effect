@@ -1,0 +1,95 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-report>"
+  ],
+  "phase": "after-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5ab88dbd9b8b7ac597c9b2d243c7ad83e578459a5642dcfe9fac01753283457b"
+    },
+    {
+      "file": "packages/drivers/openai-compat/package.json",
+      "sha256": "7f14c2bb637d653adf029ff3125f3de9f37c6e6611e95b3344cd897ff8e03121"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+      "sha256": "711e4e70093ebdb6a8b38ef98fc554cd55b0cf7fa59f84b200029319bd0bda6e"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "f4708c09f2af6296702a758361ae8f73359067861b1b8a91e5167569ba60eded"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/index.ts",
+      "sha256": "82b3ddb6139e39c4d6b0618c4c57c035e9d4e84d33de98794a67f6e33c0b36a3"
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "sha256": "1d305df508018c5c15cd49fc76caa70c2904cb06548c92a7a14f73023d4048b3"
+    }
+  ],
+  "loadBefore": [30.74755859375, 34.162109375, 37.2431640625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.60 avg60=1.85 avg300=3.79 total=2353487842\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.06 total=200592601\nfull avg10=0.00 avg60=0.04 avg300=0.04 total=173938180\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=956768819\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=652480013\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 1.5635869580000872,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5ab88dbd9b8b7ac597c9b2d243c7ad83e578459a5642dcfe9fac01753283457b"
+    },
+    {
+      "file": "packages/drivers/openai-compat/package.json",
+      "sha256": "7f14c2bb637d653adf029ff3125f3de9f37c6e6611e95b3344cd897ff8e03121"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "sha256": "ce2d9ad62885ee4ee748557c02d6e37bddbf0530010accd55444b099bbbfae36"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+      "sha256": "711e4e70093ebdb6a8b38ef98fc554cd55b0cf7fa59f84b200029319bd0bda6e"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "sha256": "f4708c09f2af6296702a758361ae8f73359067861b1b8a91e5167569ba60eded"
+    },
+    {
+      "file": "packages/drivers/openai-compat/src/index.ts",
+      "sha256": "82b3ddb6139e39c4d6b0618c4c57c035e9d4e84d33de98794a67f6e33c0b36a3"
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "sha256": "1d305df508018c5c15cd49fc76caa70c2904cb06548c92a7a14f73023d4048b3"
+    }
+  ],
+  "loadAfter": [30.74755859375, 34.162109375, 37.2431640625],
+  "pressureAfter": {
+    "cpu": "some avg10=0.49 avg60=1.79 avg300=3.76 total=2353504411\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.06 total=200592623\nfull avg10=0.00 avg60=0.04 avg300=0.04 total=173938191\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=956769357\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=652480458\n"
+  },
+  "sourceStable": true
+}

@@ -1,0 +1,157 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 9,
+  "numPassedTests": 9,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790407295621,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Anthropic declared-field equivalence"],
+          "fullName": "Anthropic declared-field equivalence treats field-equal RepairError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal RepairError instances as equivalent and field-different ones as distinct",
+          "duration": 1.4002760000000762,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407296865,
+      "endTime": 1790407296866.4004,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/anthropic/test/Anthropic.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Anthropic repair helpers"],
+          "fullName": "Anthropic repair helpers collects streamed tool params until the end marker",
+          "status": "passed",
+          "title": "collects streamed tool params until the end marker",
+          "duration": 14.4113890000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Anthropic repair helpers"],
+          "fullName": "Anthropic repair helpers collects terminal repair usage and round-trips the result through JSON",
+          "status": "passed",
+          "title": "collects terminal repair usage and round-trips the result through JSON",
+          "duration": 14.119850999999926,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Anthropic repair helpers"],
+          "fullName": "Anthropic repair helpers fails with a typed repair error when provider usage metadata is absent",
+          "status": "passed",
+          "title": "fails with a typed repair error when provider usage metadata is absent",
+          "duration": 14.097206000000142,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Anthropic repair helpers"],
+          "fullName": "Anthropic repair helpers round-trips schema-derived repair responses through JSON",
+          "status": "passed",
+          "title": "round-trips schema-derived repair responses through JSON",
+          "duration": 14.088502000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407296894,
+      "endTime": 1790407296909.0972,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/anthropic/test/Anthropic.repair.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/anthropic"],
+          "fullName": "@beep/anthropic pins the generated-catalog-safe default model",
+          "status": "passed",
+          "title": "pins the generated-catalog-safe default model",
+          "duration": 12.06615799999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/anthropic"],
+          "fullName": "@beep/anthropic builds live layers and the acquisition retry plan",
+          "status": "passed",
+          "title": "builds live layers and the acquisition retry plan",
+          "duration": 11.788401000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/anthropic"],
+          "fullName": "@beep/anthropic keeps encoded Anthropic schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded Anthropic schema wire shapes byte-identical",
+          "duration": 11.768409999999903,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/anthropic"],
+          "fullName": "@beep/anthropic round-trips schema-derived Anthropic payloads through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived Anthropic payloads through encoded form",
+          "duration": 11.77028200000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407296894,
+      "endTime": 1790407296906.0662,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/anthropic/test/Anthropic.test.ts"
+    }
+  ]
+}
