@@ -54,6 +54,9 @@ const CapturedSanityRequestBodyJson = S.fromJsonString(CapturedSanityRequestBody
 const ConfigInputArbitrary = Arbitrary.schema(SanityConfigInput).pipe(
   Arbitrary.filter((config) => config.apiToken === undefined)
 );
+const TokenConfigInputArbitrary = Arbitrary.all([ConfigInputArbitrary, Arbitrary.schema(S.String)]).pipe(
+  Arbitrary.map(([config, token]) => SanityConfigInput.make({ ...config, apiToken: Redacted.make(token) }))
+);
 const QueryParamValueArbitrary = Arbitrary.schema(SanityQueryParamValue);
 const QueryRequestArbitrary = Arbitrary.schema(SanityQueryRequest);
 const QueryResponseArbitrary = Arbitrary.schema(SanityQueryResponse);
@@ -232,6 +235,16 @@ describe("@beep/sanity", () => {
       expectRoundTrip(SanityErrorReason, errorReason);
       expectRoundTrip(SanityErrorOptions, errorOptions);
       expectRoundTrip(SanityError, error);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "round-trips schema-derived Sanity configs with synthetic API tokens",
+    [TokenConfigInputArbitrary],
+    ([config]) => {
+      const normalizedConfig = decode(SanityConfigInput, encode(SanityConfigInput, config));
+      expectRoundTrip(SanityConfigInput, normalizedConfig);
     },
     { arbitrary: fcRuns(50) }
   );
