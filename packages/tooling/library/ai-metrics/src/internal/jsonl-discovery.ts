@@ -4,9 +4,12 @@
  * @since 0.0.0
  */
 
-import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as A from "@beep/utils/Array";
+import * as Str from "@beep/utils/Str";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 
 /**
  * Stat a path, returning `O.none` when the path is missing or unreadable.
