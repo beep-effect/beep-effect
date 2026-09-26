@@ -1,0 +1,258 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 19,
+  "numPassedTests": 19,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790403835025,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/ciops"],
+          "fullName": "@beep/ciops serves GET /health",
+          "status": "passed",
+          "title": "serves GET /health",
+          "duration": 13.265503999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790403835762,
+      "endTime": 1790403835775.2656,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/apps/labs/ciops/test/health.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection strictly decodes every ratified S6 policy parameter from Turtle bytes",
+          "status": "passed",
+          "title": "strictly decodes every ratified S6 policy parameter from Turtle bytes",
+          "duration": 44.08582699999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection property 1: projection and emitted A-Box are deterministic",
+          "status": "passed",
+          "title": "property 1: projection and emitted A-Box are deterministic",
+          "duration": 161.26703599999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection property 2: every admitted step preserves charge versus capacity",
+          "status": "passed",
+          "title": "property 2: every admitted step preserves charge versus capacity",
+          "duration": 166.5295779999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection property 3: every input request occurs once in steps or the deferred tail",
+          "status": "passed",
+          "title": "property 3: every input request occurs once in steps or the deferred tail",
+          "duration": 171.41517999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection property 4: publish aging is honored",
+          "status": "passed",
+          "title": "property 4: publish aging is honored",
+          "duration": 93.65691900000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection keeps a saturated review-fix class deferred while admitting a full proof",
+          "status": "passed",
+          "title": "keeps a saturated review-fix class deferred while admitting a full proof",
+          "duration": 1.7287519999999859,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection property 5: frozen journal replay strictly matches every recorded admission",
+          "status": "passed",
+          "title": "property 5: frozen journal replay strictly matches every recorded admission",
+          "duration": 52.878373999999894,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection decodes a v2 lease eviction fixture and folds it as a release",
+          "status": "passed",
+          "title": "decodes a v2 lease eviction fixture and folds it as a release",
+          "duration": 28.13555999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection replays every v3 variant with legacy rows and counts ledger-neutral queue events in source indexes",
+          "status": "passed",
+          "title": "replays every v3 variant with legacy rows and counts ledger-neutral queue events in source indexes",
+          "duration": 32.6894299999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection renders byte-identical evidence from a typed replay report",
+          "status": "passed",
+          "title": "renders byte-identical evidence from a typed replay report",
+          "duration": 1.8734549999999217,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection mints distinct valid-Turtle nodes per proposal and re-points hasCurrentProposal",
+          "status": "passed",
+          "title": "mints distinct valid-Turtle nodes per proposal and re-points hasCurrentProposal",
+          "duration": 2.340102999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection emits the v2 golden ordering cluster with nonce evidence and a step-less deferred tail",
+          "status": "passed",
+          "title": "emits the v2 golden ordering cluster with nonce evidence and a step-less deferred tail",
+          "duration": 23.242124000000103,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection keeps empty and fully deferred proposals grounded without inventing steps",
+          "status": "passed",
+          "title": "keeps empty and fully deferred proposals grounded without inventing steps",
+          "duration": 2.414156999999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection separates episode identity from specification content and escapes tuple boundaries",
+          "status": "passed",
+          "title": "separates episode identity from specification content and escapes tuple boundaries",
+          "duration": 2.038769000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection requires a non-empty episode identity at the input boundary",
+          "status": "passed",
+          "title": "requires a non-empty episode identity at the input boundary",
+          "duration": 1.791227999999819,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection fails typed on ambiguous dead-lease censorship instead of guessing",
+          "status": "passed",
+          "title": "fails typed on ambiguous dead-lease censorship instead of guessing",
+          "duration": 2.3964699999999084,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection records a mismatch when a unique eviction cannot explain the recorded admission",
+          "status": "passed",
+          "title": "records a mismatch when a unique eviction cannot explain the recorded admission",
+          "duration": 3.082475999999815,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ciops S7 projection"],
+          "fullName": "@beep/ciops S7 projection keeps current proposal state transactionally and leaves the planner seam typed",
+          "status": "passed",
+          "title": "keeps current proposal state transactionally and leaves the planner seam typed",
+          "duration": 30.1283669999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790403836732,
+      "endTime": 1790403836905.1284,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/apps/labs/ciops/test/projection.test.ts"
+    }
+  ]
+}

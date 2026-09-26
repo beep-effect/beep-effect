@@ -9,6 +9,9 @@
       "path": "../../../packages/foundation/modeling/schema/tsconfig.json"
     },
     {
+      "path": "../../../packages/tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
       "path": "../../../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ],

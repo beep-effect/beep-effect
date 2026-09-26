@@ -1336,12 +1336,14 @@
           "@beep/ciops",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/ciops",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

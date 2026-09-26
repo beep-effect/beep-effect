@@ -15,3 +15,8 @@ profile, epoch, scope, source records and other packages. No cache eligibility
 is widened. The inherited main projection at 7581ead6c8 remains intact except
 for these dependency lists. Later packages in this wave require their own
 explicit extension of this receipt and scoped dependency comparison.
+
+Ciops adds 7 dependency lists: audit, build, check, dev, lint:deprecated-apis, package-test-typecheck, test.
+Both existing Ciops test files use the instrumented runner. The tracked policy
+and golden journal remain native filesystem inputs; policy decoding is shared
+through a read-only test service within the suite layer.
