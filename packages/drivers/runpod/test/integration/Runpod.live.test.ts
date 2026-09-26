@@ -39,12 +39,7 @@ describe("@beep/runpod live", () => {
   it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "fetches the unauthenticated OpenAPI document",
-      Effect.fnUntraced(function* (context) {
-        const apiKey = yield* usableRunpodApiKey;
-        if (O.isNone(apiKey)) {
-          return context.skip();
-        }
-
+      Effect.fnUntraced(function* () {
         const runpod = yield* Runpod;
         const openApi = yield* runpod.getOpenAPI();
         expect(openApi).toHaveProperty("openapi");

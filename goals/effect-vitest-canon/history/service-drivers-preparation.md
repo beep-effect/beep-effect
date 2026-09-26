@@ -111,3 +111,15 @@ removing none. The cache audit has zero blocking findings and 1,251 unassessed
 computations. Generated TypeScript references were refreshed with tsconfig-sync
 and its check reports no drift. Hosted proof, adversarial review and operator
 merge remain outstanding; this checkpoint does not close the goal.
+
+## PR review follow-up
+
+The timing table above predates the OpenAPI review correction. Runpod's generated
+getOpenAPI operation is explicitly unauthenticated and its unit test already
+checks the absence of an Authorization header. The live OpenAPI case therefore
+no longer depends on API-key availability. Credential skipping remains on the
+authenticated listPods case. Earlier two-skip measurements are retained as
+historical evidence and do not prove the newly ungated public endpoint.
+
+Repo Sanity also found unordered Runpod devDependencies after adding the test
+runner. The manifest order is corrected without changing dependency versions.
