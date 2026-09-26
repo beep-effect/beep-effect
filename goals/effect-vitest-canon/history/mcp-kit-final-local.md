@@ -29,5 +29,6 @@ those seven additional paths. The declaration scope needs reconciliation in the
 later census pass; it has not been silently excluded or counted as reviewed.
 The broad generated census refresh is retained privately, not included here.
 
-New fixes still need their signed commit SHA recorded in the ledger, followed
-by publication and full local/hosted proof. No production code changed.
+The local repairs are committed as 6348511a4f17a60971462a27fe98378965c8b738.
+The ledger credits that commit for 21 resolved detector/property rows.
+Publication and full local/hosted proof remain outstanding. No production code changed.
