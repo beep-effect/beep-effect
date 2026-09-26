@@ -109,18 +109,18 @@ const makeHandle = Effect.fn("AcpProtocolTest.makeHandle")(function* (env?: Reco
   return yield* spawner.spawn(command);
 });
 
-it.prop(
+it.effect.prop(
   "round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries",
   [SessionCancelNotificationArbitrary, RequestPermissionResponseArbitrary],
-  ([cancelNotification, permissionResponse]) => {
-    const encodedCancelNotification = Effect.runSync(encodeSessionCancelNotification(cancelNotification));
-    const decodedCancelNotification = Effect.runSync(decodeSessionCancelNotification(encodedCancelNotification));
-    assert.equal(Effect.runSync(encodeSessionCancelNotification(decodedCancelNotification)), encodedCancelNotification);
+  Effect.fnUntraced(function* ([cancelNotification, permissionResponse]) {
+    const encodedCancelNotification = yield* encodeSessionCancelNotification(cancelNotification);
+    const decodedCancelNotification = yield* decodeSessionCancelNotification(encodedCancelNotification);
+    assert.equal(yield* encodeSessionCancelNotification(decodedCancelNotification), encodedCancelNotification);
 
-    const encodedPermissionResponse = Effect.runSync(encodeRequestPermissionResponse(permissionResponse));
-    const decodedPermissionResponse = Effect.runSync(decodeRequestPermissionResponse(encodedPermissionResponse));
-    assert.equal(Effect.runSync(encodeRequestPermissionResponse(decodedPermissionResponse)), encodedPermissionResponse);
-  },
+    const encodedPermissionResponse = yield* encodeRequestPermissionResponse(permissionResponse);
+    const decodedPermissionResponse = yield* decodeRequestPermissionResponse(encodedPermissionResponse);
+    assert.equal(yield* encodeRequestPermissionResponse(decodedPermissionResponse), encodedPermissionResponse);
+  }),
   { arbitrary: fcRuns(25) }
 );
 

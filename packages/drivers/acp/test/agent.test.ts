@@ -46,18 +46,18 @@ it("constructs the stdio agent layer with default options", () => {
   assert.isDefined(AcpAgent.layerStdio());
 });
 
-it.prop(
+it.effect.prop(
   "round-trips schema-derived agent JSON-RPC responses and notifications through JSON boundaries",
   [InitializeResponseArbitrary, SessionCancelNotificationArbitrary],
-  ([initializeResponse, cancelNotification]) => {
-    const encodedInitializeResponse = Effect.runSync(encodeInitializeResponse(initializeResponse));
-    const decodedInitializeResponse = Effect.runSync(decodeInitializeResponse(encodedInitializeResponse));
-    assert.equal(Effect.runSync(encodeInitializeResponse(decodedInitializeResponse)), encodedInitializeResponse);
+  Effect.fnUntraced(function* ([initializeResponse, cancelNotification]) {
+    const encodedInitializeResponse = yield* encodeInitializeResponse(initializeResponse);
+    const decodedInitializeResponse = yield* decodeInitializeResponse(encodedInitializeResponse);
+    assert.equal(yield* encodeInitializeResponse(decodedInitializeResponse), encodedInitializeResponse);
 
-    const encodedCancelNotification = Effect.runSync(encodeSessionCancelNotification(cancelNotification));
-    const decodedCancelNotification = Effect.runSync(decodeSessionCancelNotification(encodedCancelNotification));
-    assert.equal(Effect.runSync(encodeSessionCancelNotification(decodedCancelNotification)), encodedCancelNotification);
-  },
+    const encodedCancelNotification = yield* encodeSessionCancelNotification(cancelNotification);
+    const decodedCancelNotification = yield* decodeSessionCancelNotification(encodedCancelNotification);
+    assert.equal(yield* encodeSessionCancelNotification(decodedCancelNotification), encodedCancelNotification);
+  }),
   { arbitrary: fcRuns(25) }
 );
 
