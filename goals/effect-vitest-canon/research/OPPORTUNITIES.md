@@ -2345,3 +2345,23 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+## 2026-09-26: Ready proof-job waves raced a negative-path deadline
+
+Coverage on PRs #1277 and #1279 failed in the proof-job wave-return tests
+with `Timed out waiting for proof job`. The tests reuse a 60 ms live-clock
+deadline both to assert that unrelated or already-returned rows do not wake
+a waiter and to read an already-persisted matching wave. The latter path
+includes real filesystem reads and acknowledgement writes, making coverage
+load part of the result. A separate tooling-only follow-up will distinguish
+the negative timeout oracle from event-driven positive completion, preserving
+the existing runner deadline, row isolation, deduplication, and acknowledgement
+assertions. No retry, global timeout increase, or coverage-baseline reduction
+is authorized by this receipt.
+
+The completed local Drizzle proof also reports coverage deficits in Yeet
+Inbox, InboxView, Remediation, and WatchStream. These are separate from the
+hosted timeout and are being attributed against the completed coverage data.
+Keeping positive event observation separate from a deliberately short negative
+wait would have prevented the timing race; keeping terminal coverage artifacts
+would preserve attribution across simultaneous PRs.
