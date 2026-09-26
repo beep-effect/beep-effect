@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "qualification-refs-transitive-review/v1",
+  "revision": "f04ffbf932b77a098fe1580318f51cc8aabf5353",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts",
+      "sha256": "dffa34120ed7cdb4750fc8643a99b461b0101426d885fe0c20b1b8dcc31dc44b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.schemas.ts",
+      "sha256": "b512ad616e55521be0d274f33eb78498867a80a0f899bee437354e8f407767df"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/systemd/index.ts",
+      "sha256": "2b8d9d40116d14efbde8879bc41d85b1214b073ca95e3c48b3e77ef7d5ca0e7f"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/src/Root.ts",
+      "sha256": "7ad8da2f1670b6c9e51edce6ce9a9727e752c4a853f98856e92ecc1225292bfd"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sha256": "f5ea05fe58ceaec33b87ac1410b55b50253dd02f85c416a7403cbaf4db01a557"
+    }
+  ],
+  "scope": "Complete systemd helper and root-discovery bodies; selected StepExec capture, admission resolution and spawning bodies. Not full transitive closure.",
+  "corrections": [
+    {
+      "receipt": "research/refs-entrypoint-semantics.json",
+      "field": "captureBoundary.limit",
+      "previous": "8 MiB per subprocess capture",
+      "correct": "maxChars = 8 * 1024 * 1024 string characters, followed by a truncation notice when overflow is observed. This is not a byte limit.",
+      "basis": "boundedChunkReducer uses effect/String length and slice after decoding streams."
+    }
+  ],
+  "findings": {
+    "bunResolution": "Without a pin, probes HOME-relative mise shim then standalone Bun using stat (including symlink target and executable mode bits); falls back to process.execPath. A pin is expanded and resolved, not executable-validated by this helper.",
+    "pathResolution": "Leading ~/ expands using supplied home; relative paths use the supplied platform resolver and its current working directory.",
+    "installedUnits": "Reads existence and text under HOME/.config/systemd/user. Parsing preserves ordered Key=Value lines without section tracking; lookup returns the first matching directive. No live systemd introspection occurs in these helpers.",
+    "unitInputValidation": "SystemdUnitPath rejects quotes, backslashes, percent/dollar signs and control characters. This constraint alone does not pin filesystem identity or executable bytes.",
+    "rootDiscovery": "Starts from explicit startFrom or process.cwd(); walks parents and accepts existence of .git or bun.lock. Presence errors are treated as absent. Uses existence, not marker-content hashing.",
+    "capture": "Refs merge capture separately decodes stdout and stderr, then merges streams; interleaving is not a deterministic combined-log contract. stdout mode ignores stderr. trim and truncation change the returned text. No redaction is established by these reviewed routines.",
+    "admission": "runCaptured resolves explicit, fiber-local and inherited admission metadata before spawning. The reviewed path reads BEEP_YEET_ADMISSION_WORKLOAD_PATH and BEEP_YEET_ADMISSION_LEASE_ID even when the caller disables ordinary child environment inheritance. Child registration and deadline cleanup are additional effects; full implementations remain outside this bounded review."
+  },
+  "remaining": [
+    "Complete admission preparation/registration and process-platform implementation review if this path becomes a cache candidate.",
+    "Review Graft coverage parsing and external executable behavior.",
+    "Observe actual execution inputs and captures under the named runtime profile.",
+    "Signed remote and shadow comparisons remain required."
+  ],
+  "qualificationGranted": false
+}

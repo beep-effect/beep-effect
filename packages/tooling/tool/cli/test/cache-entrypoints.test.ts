@@ -69,6 +69,28 @@ const encodeCacheCensusReportJson = S.encodeEffect(S.fromJsonString(CacheCensusR
 const decodeCacheCensusReportJson = S.decodeEffect(S.fromJsonString(CacheCensusReport));
 
 describe("source-bound census entrypoints", () => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "binds scoped tool sources while rejecting changed bytes and symlinked scopes",
+      Effect.fnUntraced(function* () {
+        const f = yield* fixture();
+        const scope = f.path.join(f.root, "node_modules/@fixture");
+        yield* f.fs.makeDirectory(f.path.join(scope, "tool"), { recursive: true });
+        const source = yield* f.write("node_modules/@fixture/tool/package.json", '{"name":"@fixture/tool"}');
+        const request = CacheEntrypointReviewRequest.make({ ...f.request, sources: [...f.request.sources, source] });
+        const result = yield* attachCacheEntrypointReview(f.root, f.census, request);
+        expect(O.getOrThrow(result.entrypointReview).sources).toContainEqual(source);
+        yield* f.fs.writeFileString(f.path.join(f.root, source.path), '{"name":"changed"}');
+        expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+        yield* f.write(source.path, '{"name":"@fixture/tool"}');
+        const original = f.path.join(f.root, "original-scope");
+        yield* f.fs.rename(scope, original);
+        yield* f.fs.symlink(original, scope);
+        expect(yield* attachCacheEntrypointReview(f.root, f.census, request).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+  });
+
   it.effect("preserves arbitrary owner-defined JSON fields through verified attachment", () =>
     Arbitrary.checkEffect(
       Arbitrary.schema(S.JsonObject),

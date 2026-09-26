@@ -1,0 +1,56 @@
+{
+  "authority": "nested-lambda-command-boundary-review",
+  "head": "b88102f8ed9a46d02b4ed532a2e2283f96edb6e1",
+  "sources": [
+    {
+      "path": "infra/package.json",
+      "sha256": "4b1450430e021d4d7c0173733550a269d5fc54ccdf02407999d1009c98fbea49"
+    },
+    {
+      "path": "infra/lambda/turbo-cache/package.json",
+      "sha256": "544137e5776bbaf66cf322f9ed7bdd4537056a87a158da4e09f3250b9c788e62"
+    },
+    {
+      "path": "infra/lambda/turbo-cache/package-zip.sh",
+      "sha256": "60a9974e6fa3ae5e45df28c769d16fd620690292a5d5a23de37b9dcf7d0f3aad"
+    },
+    {
+      "path": "infra/lambda/turbo-cache/test/bundle-smoke.cjs",
+      "sha256": "fedcd0360cc5031acb41624a713c2e14280ec2eba4d706323769fec7b6eeb9d0"
+    },
+    {
+      "path": "infra/lambda/turbo-cache/tsconfig.json",
+      "sha256": "cd6e9960f6bea967d115112553c0235b3547cce78f0e20b8d583d9e0e1b17ed9"
+    }
+  ],
+  "priorBoundary": "goals/turborepo-task-qualification/research/command-boundaries-post-main.json",
+  "cwd": "infra/lambda/turbo-cache",
+  "findings": [
+    "Both infra audit and test reach test:lambda; its leading cd changes the package manifest used by subsequent bun run invocations.",
+    "The nested manifest defines typecheck, bundle:check and zip:check; these are not absent scripts.",
+    "The chain performs frozen-lockfile install, TypeScript noEmit validation, Bun tests, esbuild bundling and handler-export loading, then ZIP assembly. It was not executed by this review.",
+    "bundle:check removes the nested build directory, bundles three entries targeting Node22 CommonJS and executes a Node smoke script that loads each module and checks handler export type. This is not handler behavior or remote conformance proof.",
+    "zip:check removes a fixed turbo-cache-zip-check directory under TMPDIR (or /tmp) and calls package-zip.sh. The shell script copies three outputs, normalizes timestamps through touch, creates ZIP with zip -X, checks size exceeds one million bytes, and prints path, size and SHA256. Tool versions, timezone semantics, TMPDIR, filesystem state and concurrent use of the fixed location require explicit consideration.",
+    "The current census enables cache for infra#test with empty outputs; infra#audit disables cache. The ledger has no explicit infra#test tuple entry. Writes alone do not prove cached test verdicts unsafe: output consumption and runtime input coverage require investigation before a policy transition."
+  ],
+  "nestedScripts": {
+    "build": "./build.sh",
+    "bundle:check": "rm -rf build && bunx esbuild src/index.ts src/authorizer.ts src/writer.ts --bundle --platform=node --target=node22 --format=cjs --outdir=build --entry-names='[name]' --out-extension:.js=.cjs --alias:punycode=punycode/ --log-level=warning && node test/bundle-smoke.cjs build",
+    "zip:check": "rm -rf \"${TMPDIR:-/tmp}/turbo-cache-zip-check\" && ./package-zip.sh build \"${TMPDIR:-/tmp}/turbo-cache-zip-check/turbo-cache.zip\"",
+    "check": "bun run typecheck",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "limits": [
+    "No install, bundle load, archive creation, cloud call or deployment executed.",
+    "No runtime safety, determinism, signed-remote or conformance claim.",
+    "Standalone Lambda source, nested lock/toolchain, test dependencies and archive consumers remain incomplete review obligations.",
+    "All existing unresolved obligations and qualification lifecycle remain unchanged."
+  ],
+  "acceptedAttachment": {
+    "sources": 1002,
+    "artifacts": 6,
+    "reviews": 45,
+    "unresolved": 14
+  }
+}

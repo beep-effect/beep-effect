@@ -18,9 +18,6 @@
       "path": "../../../foundation/modeling/utils/tsconfig.json"
     },
     {
-      "path": "../../../foundation/primitive/types/tsconfig.json"
-    },
-    {
       "path": "../../test-kit/test-utils/tsconfig.json"
     }
   ]

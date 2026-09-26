@@ -1,0 +1,229 @@
+{
+  "sourceRevision": "53aa105ecbb0e3306b065778254c358e37f5a0fa",
+  "sourcePath": "infra/lambda/turbo-cache/package-zip.sh",
+  "sourceSha256": "60a9974e6fa3ae5e45df28c769d16fd620690292a5d5a23de37b9dcf7d0f3aad",
+  "scope": "Actual ZIP assembler with deterministic synthetic incompressible bundle bytes. No Lambda build, imports, handlers or deployment executed.",
+  "environment": {
+    "network": "disabled via bubblewrap",
+    "TZ": "UTC",
+    "LC_ALL": "C",
+    "filesystem": "host read-only with disposable fixture writable",
+    "tools": {
+      "bash": "07a2331ac400749cc7740fac9999e36cf104c743b612c307ef155fc5dca7fe2e",
+      "cp": "6bbf3d572182690cdab29a5acd63bc752f0ced47b2f03fb97dbdbb87798b9160",
+      "touch": "fc2ed73a5d7a271cb893c6fdf66470d897894cfc4604132ec120752bbf83f7fa",
+      "zip": "f5da1df7b32149b11ec1ae63a08af6ad3dd3f68bccb7d4b086e2c43fb23d981e",
+      "stat": "8c0763b1d0f68e0f9135434a367ad8f39383df378911f6ba7f14d8ad8349046b",
+      "sha256sum": "57c07de75b2911bbad174ff73deed8be4065601b003750b2b8e9aed3bf580f84",
+      "cut": "1ecba0f04594408952f1577b5ccb33a5b883e94e425fe3f5f6f2847d7e4e068a",
+      "bwrap": "0b4005e5e12887a22fa9e8d64a41962d8a0015ed4836f2791c560eb9246c890a"
+    }
+  },
+  "cases": [
+    {
+      "case": "baseline",
+      "exit": 0,
+      "archiveSha256": "4eaffa455a5eb2feb4f3d0bfcc479d049f00a1a29b0912eb746dcba2c0599c4b",
+      "archiveBytes": 1350520,
+      "entries": [
+        {
+          "name": "index.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "28670a3808a9373bc6891a6de77719d6488aa3f834005a84ccdca240d407f43b"
+        },
+        {
+          "name": "authorizer.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "f5736b354773f113714759e7ed702a8dc08f976e4e4f711bcb24831544bf4f1b"
+        },
+        {
+          "name": "writer.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "7f1435555b8dd4bd4b7d4a495ff6298fcb2aa7bcc99afe33b16ca92e2661f878"
+        }
+      ]
+    },
+    {
+      "case": "repeat",
+      "exit": 0,
+      "archiveSha256": "4eaffa455a5eb2feb4f3d0bfcc479d049f00a1a29b0912eb746dcba2c0599c4b",
+      "archiveBytes": 1350520,
+      "entries": [
+        {
+          "name": "index.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "28670a3808a9373bc6891a6de77719d6488aa3f834005a84ccdca240d407f43b"
+        },
+        {
+          "name": "authorizer.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "f5736b354773f113714759e7ed702a8dc08f976e4e4f711bcb24831544bf4f1b"
+        },
+        {
+          "name": "writer.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "7f1435555b8dd4bd4b7d4a495ff6298fcb2aa7bcc99afe33b16ca92e2661f878"
+        }
+      ]
+    },
+    {
+      "case": "private-mode",
+      "exit": 0,
+      "archiveSha256": "20abb234b6ace8135934e60a012ccc2fa22ea1b01bdbcea5463accadbdff6fa4",
+      "archiveBytes": 1350520,
+      "entries": [
+        {
+          "name": "index.js",
+          "mode": "0o100600",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "28670a3808a9373bc6891a6de77719d6488aa3f834005a84ccdca240d407f43b"
+        },
+        {
+          "name": "authorizer.js",
+          "mode": "0o100600",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "f5736b354773f113714759e7ed702a8dc08f976e4e4f711bcb24831544bf4f1b"
+        },
+        {
+          "name": "writer.js",
+          "mode": "0o100600",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "7f1435555b8dd4bd4b7d4a495ff6298fcb2aa7bcc99afe33b16ca92e2661f878"
+        }
+      ]
+    },
+    {
+      "case": "undersize",
+      "exit": 1,
+      "archiveSha256": "a62a709079bda6d9f229bf97c19d329793d130bca19d86cb543ec93446c4d5ee",
+      "archiveBytes": 610,
+      "entries": [
+        {
+          "name": "index.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "3983a48152b22e6afdd39c33257d89bf0feecc74cb68ccec3346e9f2321430a8"
+        },
+        {
+          "name": "authorizer.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "df620dd2aac9bb27142d32e94e7442ae7d66a694c7578cdc9ef0971eaf6ba166"
+        },
+        {
+          "name": "writer.js",
+          "mode": "0o100644",
+          "timestamp": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sha256": "e9fc92af08465e5fca2e69da1fcaf8045aa36780aa01f4dbd4660bd5b9cc00ba"
+        }
+      ]
+    },
+    {
+      "case": "missing-writer",
+      "exit": 1,
+      "archiveSha256": null,
+      "archiveBytes": null,
+      "entries": []
+    }
+  ],
+  "conclusion": "Repeated equal inputs agree; input file permissions alter ZIP external attributes and digest despite equal payloads and normalized timestamps. Undersized archive fails after writing archive; missing source fails before archive.",
+  "limitations": [
+    "Synthetic bundle bytes are not real build outputs or valid Lambda handlers.",
+    "This does not establish end-to-end build, host/profile independence, transport behavior or signed qualification.",
+    "Both permission values are valid filesystem inputs; this experiment does not show that normal bundle generation varies permissions."
+  ],
+  "retention": {
+    "archiveManifestSha256": "34a0b76cd48d7219c582a0e7da68dd25378cf69b83a24635b84db0718feeb16f",
+    "fileCount": 46
+  }
+}

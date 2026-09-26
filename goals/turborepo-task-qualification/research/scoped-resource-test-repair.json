@@ -1,0 +1,41 @@
+{
+  "authority": "scoped-resource-and-typed-layer-test-repair",
+  "baseHead": "2d5f80d4e500521bc012e7df2f651a82b91e7ff5",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "sha256": "bd8a718a284ae8d2b104e7eeafd9fb45e128226e5a8903adffa78af6001c98c5"
+    },
+    {
+      "path": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "sha256": "f01bb6ebfb43ca0fcbbdb076e4ee41ce0b9b47f984537f1950c76b2974b1f2fa"
+    }
+  ],
+  "changes": [
+    "Setup tests use the platform layer and allocate each temporary directory with makeTempDirectoryScoped in the individual test effect; the manual acquireUseRelease wrapper and per-test platform provisions are removed.",
+    "AI-sync uses inferred NodeServices.layer service types instead of Layer<any>. Both suites declare a thirty-second layer hook timeout."
+  ],
+  "validation": {
+    "setupTests": 7,
+    "aiSyncTests": 15,
+    "aiSyncTestTypecheckExit": 0,
+    "biome": "passed",
+    "aiSyncPackageVerify": "Final source: audit 7.5s and docgen 2.9s, exit 0.",
+    "repoCliPackageVerify": "Existing session 78387 remains live, completion pending; no final package proof claimed.",
+    "effectVitest": {
+      "beforeIntroduced": 18,
+      "afterIntroduced": 16,
+      "exit": 1,
+      "remaining": "Per-test layer provisioning in refs-refresh-plan, refs-timer and worktree-fleet."
+    }
+  },
+  "limits": [
+    "Fresh temporary directories remain test-scoped; only stateless platform services are suite-shared.",
+    "No inventory baseline or exception changed.",
+    "Full repository proof and remaining provider migrations are incomplete; this is no cache qualification."
+  ],
+  "retention": {
+    "fileCount": 7,
+    "archiveManifestSha256": "475bcb6eaf9d219a25981c443b9fffa8014a98e2fcf0c3fc978e5dfb3161d882"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "authority": "source-delta-review-with-synthetic-identity-and-ledger-controls",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "554e0fbbdd901cec247a8d166165dbb78d4b842a",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/internal/repo-run/RepoRunArtifacts.ts",
+      "sha256": "ba1e83e0e395d92847d440316eb24dde11fd068682c2206aa3c7786aff8fa20b",
+      "review": [
+        "Node SHA256 becomes shared Effect SHA256 with typed QualitySchedulerError. Sanitized branch prefix and first 12 lowercase digest characters remain the naming rule.",
+        "The API now returns an Effect requiring Crypto; identical names do not erase this caller/service contract change."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
+      "sha256": "2b9aec01fc6383929c88525d29ecffc6296d7e48108f4b4ce64c551f13e0fa38",
+      "review": [
+        "Coordinator hash computation moves to Effect Crypto with typed YeetCommandError. Canonical repository-origin normalization remains unchanged in the reviewed delta.",
+        "Coordinator path inputs include hostname, user id and per-user runtime root, plus canonical origin. Branch artifact directories also depend on the supplied repo root and branch. These are local coordination identities, not portable signed cache namespaces.",
+        "runIdForContext changes from a string to an Effect, and artifact path callers yield it."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofDigest.ts",
+      "sha256": "ea57a61f2cbc893952ab4850a792a22b4da6a0d7d1660e89e6e8362f5b8144e2",
+      "review": [
+        "Adds proofCommandDigest using existing SHA256 framing with one command-text component. Exact command text, including trailing whitespace, changes the digest.",
+        "Existing proof input keys use lane, command digest, environment profile, input digest and epoch digest. Epoch reads lockfile, Bun/Node pin files, root turbo.json, tsconfig.base.json and decoded lint-rules package version. Pin files alone do not measure installed binaries or complete transitive configuration."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofFact.ts",
+      "sha256": "6a06f47b7080f93d9aac50f085d6e9f249770df94a7c64537b6006aa21f844ad",
+      "review": [
+        "ProofInputDigest laneId broadens from CiLaneId to NonEmptyString to carry finer lane identifiers. Non-empty syntax does not independently prove registration in a live command catalog.",
+        "Shadow rows require laneId, branch, stage, envProfile and nonnegative finite durationMs. The schema version remains proof-fact/v1; old rows missing the added fields are rejected by the current decoder.",
+        "Synthetic ledger read retains the current row and counts the old and negative-duration rows as malformed. This demonstrates selected loader behavior, not full shadow enforcement or qualification."
+      ]
+    }
+  ],
+  "supportingConsumer": {
+    "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+    "sha256": "b1b607d4c26ead9111cf1e69188da1444efcb5c8fe2f7675a03148e0b039cd3a",
+    "scope": "loadProofLedger malformed-row handling only; full file delta remains separately reviewable"
+  },
+  "controls": {
+    "runtime": "1.4.2",
+    "artifacts": [
+      {
+        "branch": "main",
+        "id": "main-0d6e4079e367",
+        "independentSha256Matches": true
+      },
+      {
+        "branch": "feature/a",
+        "id": "feature_a-951d42dc02dc",
+        "independentSha256Matches": true
+      },
+      {
+        "branch": "feature_a",
+        "id": "feature_a-14d425a9c90a",
+        "independentSha256Matches": true
+      },
+      {
+        "branch": "  \u03b1 space  ",
+        "id": "space-c69032e22772",
+        "independentSha256Matches": true
+      },
+      {
+        "branch": "",
+        "id": "repo-e3b0c44298fc",
+        "independentSha256Matches": true
+      }
+    ],
+    "commands": [
+      {
+        "command": "bun run check",
+        "digest": "63dec8353e51c65817391feadd75be2f6aa3ca1aa6819c05e2b738694b704bd4",
+        "independentSha256Matches": true
+      },
+      {
+        "command": "bun run check ",
+        "digest": "70d2edb0a10c8fa7a6b5623e94ae408a9c31d06b97b0cc480087164b8dc87428",
+        "independentSha256Matches": true
+      },
+      {
+        "command": "bun run lint",
+        "digest": "f1e294de755981040a391248b615f8d6ac56e8aae6e27591e2c5644f15df2120",
+        "independentSha256Matches": true
+      }
+    ],
+    "decodes": [
+      {
+        "name": "old",
+        "result": "rejected"
+      },
+      {
+        "name": "current",
+        "result": "accepted"
+      },
+      {
+        "name": "negative-duration",
+        "result": "rejected"
+      }
+    ],
+    "ledger": {
+      "malformedRows": 2,
+      "shadowRows": 1
+    },
+    "limits": [
+      "Synthetic rows only; no real proof ledger was altered.",
+      "Digest compatibility does not grant proof reuse or cache qualification."
+    ]
+  },
+  "tests": {
+    "suites": [
+      "proof-digest.test.ts",
+      "proof-fact.test.ts",
+      "yeet-artifact-writers.test.ts"
+    ],
+    "passed": 13,
+    "exit": 0
+  },
+  "remaining": [
+    "Proof identity does not establish complete semantic inputs, correct actual toolchain pins, arbitrary cross-host reuse, signed remote transport, or fresh hosted proof.",
+    "No tuple lifecycle or cache setting changes follow from these controls."
+  ],
+  "retention": {
+    "fileCount": 20,
+    "archiveManifestSha256": "ad6324cbc46f26e82eea86a2d6a11be8d5ac8494f507e0c24e8c23f11552549d"
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 31,
+    "unresolved": 13
+  }
+}

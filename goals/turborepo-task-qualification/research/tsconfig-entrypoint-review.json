@@ -1,0 +1,61 @@
+{
+  "authority": "bounded-tsconfig-entrypoint-review",
+  "head": "e5f7012b01131c417aa8be4cdb9a48d2eb6ef605",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+      "sha256": "5ca00d821f39a860366afbdb9d0a74b263a3a73e75948998f5f2bc62708ea7ee"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.service.ts",
+      "sha256": "0db05ddc9a22b6d2cf6082f92f0b5560e032057559918d5d3f3a2e727cc86f02"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
+      "sha256": "dff100e8e993437016a34e78370dd99f09ede08503c10e40d9f9cae291bc622a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.render.ts",
+      "sha256": "ab0e6f5b76cf8b4f7c40f164a9fdfa619d73a2cb77ae135e89a0f08dc0d1359b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "sha256": "781b980562f013df632ecc968bc8f049f71e2a3ea042f31dfefe77c0fde35933"
+    }
+  ],
+  "reviewScope": [
+    "Full command, service and renderer; planner API and filesystem/workspace/filter call sites; test fixture and executed suite.",
+    "Schema helpers, full planner algorithms and external package dependencies remain incomplete."
+  ],
+  "classification": {
+    "default": "Mutating configuration synchronization, not qualified for reuse.",
+    "check": "Filesystem-dependent fresh drift verdict; no planned writes, but the complete transitive input boundary is not established.",
+    "dry-run": "Filesystem-dependent plan and logs; no planned writes."
+  },
+  "findings": [
+    "Command discovers repository root and selects mode from flags; no exclusive matching flag pattern defaults to sync.",
+    "Service discovers all workspaces and dependency graph and rejects cycles before planning.",
+    "Root references, aliases and syncpack are planned without the package filter; filter only selects package reference, check-overlay and docgen planners.",
+    "Check overlays consume newly planned canonical content when present, avoiding one-run lag.",
+    "Only sync writes sorted planned changes; check renders drift before returning a typed drift error. A write failure can leave an earlier subset written: no transaction or rollback is shown in the service.",
+    "Planner inputs include workspace manifests and exports, filesystem discovery, owner tsconfigs, check/docgen file existence, existing references and path resolution, root tsconfig.packages.json, tsconfig.json and syncpack.config.ts.",
+    "Rendered paths are relative to root but planner/errors may carry absolute paths; output safety is not established by relative summaries.",
+    "The temporary test harness changes process cwd and restores it; these tests are not cross-process or concurrent-cache evidence."
+  ],
+  "tests": {
+    "command": "bunx vitest run packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+    "passed": 15,
+    "exit": 0,
+    "logSha256": "d5c81b805dd86adda386b2819192906cc5ba7c86bfdea528709e69ce74c4837b"
+  },
+  "remaining": [
+    "Transitive repo-utils discovery/dependency-index/process effects and full schema/planner semantics require further review.",
+    "All 14 census obligations remain; no signed remote receipt, qualification transition or cache policy change."
+  ],
+  "acceptedAttachment": {
+    "sources": 990,
+    "artifacts": 6,
+    "reviews": 42,
+    "unresolved": 14
+  }
+}
