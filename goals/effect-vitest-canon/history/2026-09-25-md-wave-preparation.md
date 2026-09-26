@@ -151,3 +151,23 @@ cancelled explicitly because its inputs were superseded by this repair.
 
 The review found no other actionable issue in its bounded property/runner scope.
 It supplements, and does not replace, required Grok review or user acceptance.
+
+
+## HTML prerequisite landed and main reconciled
+
+HTML #1279 is merged. Main 9cb79ddda2b72c426b322045fee9f5131b92a13c was
+merged into this lane as f3f2100eca. The friction ledger retains both branches'
+receipts; the cache projection preserves every main entry, including HTML and
+effect-drizzle, plus only the nine reviewed Markdown runner dependency lists.
+Frozen install and cache audit pass with no blocking cache findings. No Markdown
+source or test behavior changed during this merge.
+
+Full Markdown package audit/docgen passed after the merge (20.2 / 6.7 seconds).
+The Effect Vitest ratchet reports zero introduced and zero resolved findings.
+Fresh Node/Bun runs each pass 73 tests with zero skips and stable source, manifest
+and lock hashes; wall observations are 5.247 / 2.609 seconds. Their sanitized raw
+reports and load/pressure contexts replace the after slots; previous committed
+measurements remain historical. These samples do not establish a performance gain.
+The generated infra SDK was built through its existing package script before
+full proof submission. HTML-first publication is now satisfied; full local and
+hosted PR gates remain outstanding.
