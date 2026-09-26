@@ -3,8 +3,9 @@ import {
   EffectLawsAllowlistDocument,
   EffectLawsAllowlistSnapshot,
 } from "@beep/repo-configs/internal/eslint/EffectLawsAllowlistSchemas";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

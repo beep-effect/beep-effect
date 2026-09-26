@@ -26,8 +26,9 @@ import {
 } from "@beep/repo-configs/cache";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -160,8 +161,12 @@ describe("cache qualification policy", () => {
     ];
     for (const from of CacheQualificationState.Options) {
       for (const to of CacheQualificationState.Options) {
-        expect(isCacheTransitionAllowed(from, to)).toBe(A.contains(expected, `${from}:${to}`));
-        expect(isCacheTransitionAllowed(to)(from)).toBe(isCacheTransitionAllowed(from, to));
+        expect(isCacheTransitionAllowed(from, to), `data-first transition ${from} -> ${to}`).toBe(
+          A.contains(expected, `${from}:${to}`)
+        );
+        expect(isCacheTransitionAllowed(to)(from), `data-last transition ${from} -> ${to}`).toBe(
+          isCacheTransitionAllowed(from, to)
+        );
       }
     }
   });

@@ -1,9 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { buildAllowlistSnapshotModuleFromJsoncText } from "@beep/repo-configs/internal/eslint/EffectLawsAllowlistSnapshotCodegen";
 import { resolveImportSpecifierImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem } from "effect";
 
@@ -31,7 +32,7 @@ const readText = Effect.fn(function* (path: string) {
   return yield* fs.readFileString(path);
 });
 
-layer(NodeServices.layer, { timeout: "10 seconds" })("effect-first regressions", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-first regressions", (it) => {
   describe("effect-first regressions", () => {
     it.effect(
       "disallows Match.value usage in retained docs and governance modules",

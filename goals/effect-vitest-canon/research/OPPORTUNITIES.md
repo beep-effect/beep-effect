@@ -2436,3 +2436,12 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: Repository-config trace selection guard
+
+The temporary compiler diagnostic trace probe initially used an inaccurate test
+name. Vitest exited zero while selecting no tests; the receipt's exact count
+check rejected both positive and negative runs. Source was restored byte for
+byte. Read the actual registered name from the JSON reporter and rerun that
+case. Reusing reporter names instead of reconstructing them prevents this
+false-positive verification path. No product test or deadline was changed.

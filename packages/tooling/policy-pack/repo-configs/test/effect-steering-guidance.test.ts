@@ -1,7 +1,8 @@
 import { fileURLToPath } from "node:url";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
 
 const skillFilePath = fileURLToPath(
@@ -13,7 +14,7 @@ const readText = Effect.fn(function* (path: string) {
   return yield* fs.readFileString(path);
 });
 
-layer(NodeServices.layer, { timeout: "10 seconds" })("effect steering guidance", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect steering guidance", (it) => {
   describe("effect steering guidance", () => {
     it.effect(
       "aligns the canonical skill with flat control flow guidance",
