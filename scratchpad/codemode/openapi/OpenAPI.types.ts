@@ -9,9 +9,9 @@ import { LiteralKit, MappedLiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@
 import { O, P, pipe, R } from "@beep/utils";
 import { type Effect, flow, HashMap, Layer, Redacted, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
-import type * as Tool from "effect/unstable/ai/Tool";
-import type * as Toolkit from "effect/unstable/ai/Toolkit";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
+import type * as Tool from "effect/ai/Tool";
+import type * as Toolkit from "effect/ai/Toolkit";
+import type * as HttpClient from "effect/http/HttpClient";
 import type { ToolError } from "../Codemode.tool-error.ts";
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.types");

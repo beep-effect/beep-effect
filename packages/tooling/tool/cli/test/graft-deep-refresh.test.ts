@@ -31,13 +31,13 @@ import { expect, it, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as Dur from "effect/Duration";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
 import type { GraftDeepRunnerStep } from "@beep/repo-cli/commands/Graft";
 
 const artifacts = [

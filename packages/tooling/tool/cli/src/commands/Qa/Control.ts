@@ -13,8 +13,8 @@
 import { MarkAccepted, SessionStore } from "@beep/qa-capture";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
+import { HttpBody, HttpClient, HttpClientResponse } from "effect/http";
 import * as S from "effect/Schema";
-import { HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { CollectorHandle } from "@beep/qa-capture";
 

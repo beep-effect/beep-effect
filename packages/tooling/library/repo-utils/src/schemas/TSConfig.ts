@@ -24,7 +24,7 @@ import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
 import { Cause, Effect, Exit, Result, SchemaAST, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
 import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Model from "effect/unstable/schema/Model";
+import * as Model from "effect/schema/Model";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import type { DomainError } from "../errors/index.ts";
 

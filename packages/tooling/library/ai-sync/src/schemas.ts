@@ -8,10 +8,10 @@
 import { $AiSyncId } from "@beep/identity/packages";
 import { SchemaUtils, UnknownRecord } from "@beep/schema";
 import { flow, identity, SchemaTransformation } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   ClaudeMcpJson,
   ClaudeSettings,
@@ -249,7 +249,7 @@ export { ClaudeMcpJson, ClaudeSettings, CodexConfig, CodexMcpServer, CodexSkillE
  *
  * ```ts
  * import { NormalizedAgentInstructionDocumentArbitrary } from "@beep/ai-sync"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * const samples = Arbitrary.sampleEffect(NormalizedAgentInstructionDocumentArbitrary)
  * ```
  *

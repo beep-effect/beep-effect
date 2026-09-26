@@ -2,8 +2,8 @@ import { fcRuns } from "@beep/fc-runs";
 import { FlightRecordCompositionInput, FlightRecordCompositionInputArbitrary } from "@beep/repo-ai-metrics";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isFlightRecordCompositionInput = S.is(FlightRecordCompositionInput);
 

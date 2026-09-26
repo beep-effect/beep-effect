@@ -18,12 +18,13 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Encoding, FileSystem, Path, Result } from "effect";
+import { Effect, FileSystem, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
@@ -970,7 +971,7 @@ exec "$mapped_command" "\${mapped[@]}"`
 
         const payload = eml.slice(eml.indexOf("\r\n\r\n") + 4);
         expect(payload.split("\r\n").every((line) => line.length <= 76)).toBe(true);
-        expect(Result.getOrElse(Encoding.decodeBase64String(payload.split("\r\n").join("")), () => "")).toBe(
+        expect(Result.getOrElse(Base64.decodeString(payload.split("\r\n").join("")), () => "")).toBe(
           `<p>${"x".repeat(1200)}</p>`
         );
       },

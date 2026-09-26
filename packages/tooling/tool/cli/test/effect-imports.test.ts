@@ -5,8 +5,8 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import { Command } from "effect/cli";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
@@ -126,7 +126,7 @@ const writeDemoFoundationPackage = Effect.fn(function* (
 const demoSource = A.join(
   [
     'import { Effect as Fx, MutableList, pipe as p, type Scope } from "effect";',
-    'import * as Command from "effect/unstable/cli";',
+    'import * as Command from "effect/cli";',
     "",
     "export const program: Fx.Effect<void> = Fx.void;",
     "export const items = MutableList.make<number>();",
@@ -356,7 +356,7 @@ describe("effect import laws", () => {
           expect(source).toContain('import * as MutableList from "effect/MutableList";');
           expect(source).toContain('import type * as Scope from "effect/Scope";');
           expect(source).toContain('import { pipe as p } from "effect/Function";');
-          expect(source).toContain('import * as Command from "effect/unstable/cli";');
+          expect(source).toContain('import * as Command from "effect/cli";');
           expect(source).not.toContain('from "effect"');
 
           const second = yield* runEffectImportRules(

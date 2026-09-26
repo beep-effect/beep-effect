@@ -10,9 +10,9 @@ import { NonNegativeInt } from "@beep/schema";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer } from "effect";
+import * as McpServer from "effect/ai/McpServer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as McpServer from "effect/unstable/ai/McpServer";
 import { FixtureRegistrationsLive } from "./fixtures/FixtureHost.ts";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 

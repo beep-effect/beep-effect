@@ -4,8 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
+import { AtomRegistry } from "effect/reactivity";
 import * as Schedule from "effect/Schedule";
-import { AtomRegistry } from "effect/unstable/reactivity";
 import { describe, expect } from "vitest";
 import {
   BrowserFailure,

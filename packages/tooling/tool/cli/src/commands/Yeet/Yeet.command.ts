@@ -12,9 +12,9 @@ import { UUID } from "@beep/schema/String";
 import { O } from "@beep/utils";
 import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { Argument, Command, Flag } from "effect/cli";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags.ts";
 import { readContainedFileStringNoFollow } from "../../internal/cli/FsGuards.ts";
@@ -1216,7 +1216,7 @@ const yeetPlanContractCheckCommand = Command.make(
  *
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(yeetCommand, { version: "0.0.0" })

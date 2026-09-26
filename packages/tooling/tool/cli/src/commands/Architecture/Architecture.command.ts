@@ -9,9 +9,9 @@
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { A, Text } from "@beep/utils";
 import { Console, Effect, FileSystem } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.ts";

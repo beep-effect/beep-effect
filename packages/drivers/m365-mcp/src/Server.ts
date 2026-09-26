@@ -8,8 +8,8 @@
 import { $M365McpId } from "@beep/identity/packages";
 import { sanitizedToolkit, statelessMcpProtocols } from "@beep/mcp-kit";
 import { Layer } from "effect";
+import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
-import * as McpServer from "effect/unstable/ai/McpServer";
 import { M365ToolkitHandlersLive } from "./M365Handlers.ts";
 import { M365Toolkit } from "./M365Tools.ts";
 import type { M365 } from "@beep/m365";

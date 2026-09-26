@@ -48,7 +48,7 @@ import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 import { Data, Equal } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import {
   $createParagraphNode,
   $getSelection,

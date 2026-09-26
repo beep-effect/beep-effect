@@ -44,13 +44,13 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Str from "effect/String";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { EvidenceSourcePanel } from "./EvidenceSourcePanel.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
 import type { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction";
 import type { ContradictionCandidateId } from "@beep/shared-domain/identity/Epistemic";
-import type { RpcClientError } from "effect/unstable/rpc";
+import type { RpcClientError } from "effect/rpc";
 import type { JSX } from "react";
 
 const $I = $EpistemicUiId.create("ContradictionTriage/ContradictionTriageView");

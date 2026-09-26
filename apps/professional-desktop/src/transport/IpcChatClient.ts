@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import * as Layer from "effect/Layer";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
+import { RpcClient, RpcSerialization } from "effect/rpc";
 import { TauriIpcSocketLive } from "./TauriIpcSocket.ts";
 
 /**

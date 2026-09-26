@@ -4,7 +4,7 @@ import { editorNodes } from "@beep/editor/nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { $isCodeNode } from "@lexical/code";
 import { createHeadlessEditor } from "@lexical/headless";
-import { AtomRegistry } from "effect/unstable/reactivity";
+import { AtomRegistry } from "effect/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from "lexical";
 import type { LexicalEditor } from "lexical";
 

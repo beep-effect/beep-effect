@@ -10,7 +10,8 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Encoding, FileSystem, Layer, Path, pipe } from "effect";
+import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 
 // 8x8 single-color images generated once via `ffmpeg -f lavfi -i color=c=red`
@@ -51,7 +52,7 @@ const roundTrip = Effect.fn("ExiftoolLive.roundTrip")(function* (fileName: strin
   const exiftool = yield* Exiftool;
   const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exiftool-live-" });
   const filePath = path.join(tmpDir, fileName);
-  const bytes = yield* Effect.orDie(Effect.fromResult(Encoding.decodeBase64(base64)));
+  const bytes = yield* Effect.orDie(Effect.fromResult(Base64.decode(base64)));
   yield* fs.writeFile(filePath, bytes);
 
   const written = yield* exiftool.writeXmpPacket(

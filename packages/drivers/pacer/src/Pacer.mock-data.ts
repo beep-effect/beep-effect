@@ -14,11 +14,11 @@
  */
 
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { CsoAuthResponse, CsoLogoutResponse } from "./CsoAuth.models.ts";
 import {
   CaseReportList,

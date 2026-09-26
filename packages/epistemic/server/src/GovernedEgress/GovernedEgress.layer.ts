@@ -24,7 +24,7 @@
  */
 
 import { Layer } from "effect";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { makeGovernedEgressFetch } from "./GovernedEgress.fetch.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";

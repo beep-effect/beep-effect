@@ -45,7 +45,7 @@ import { Ledger } from "@/services/Ledger";
 import { Parser } from "@/services/Parser";
 import { ProviderCache } from "@/services/ProviderCache";
 import type { Config } from "effect";
-import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import type * as LanguageModel from "effect/ai/LanguageModel";
 import type { CanaryOptions } from "@/canary/Command";
 import type { F1FixtureId } from "@/fixtures/F1";
 import type { SourceDocument } from "@/schema/Document";

@@ -12,9 +12,9 @@ import { DocumentId } from "@beep/nlp/Core";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Stream } from "effect";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import {
   EXPECTED_DISTINCTION_LIMITATION,
   EXPECTED_DISTINCTION_QUOTE,

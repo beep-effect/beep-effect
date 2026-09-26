@@ -23,7 +23,7 @@ import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
-import { LanguageModel, Response } from "effect/unstable/ai";
+import { LanguageModel, Response } from "effect/ai";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
 import { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";

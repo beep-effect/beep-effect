@@ -6,9 +6,9 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { Chunk, Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeDocument = S.decodeEffect(Document);

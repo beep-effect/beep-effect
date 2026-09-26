@@ -8,13 +8,13 @@ import { $ObservabilityId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
 import { Clock, Context, Effect, HashMap, Layer, Match, MutableRef, Queue } from "effect";
+import * as DevToolsServer from "effect/devtools/DevToolsServer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as DevToolsServer from "effect/unstable/devtools/DevToolsServer";
-import * as SocketServer from "effect/unstable/socket/SocketServer";
+import * as SocketServer from "effect/socket/SocketServer";
 import { decodeNonNegativeInt } from "../../internal/decode.ts";
-import type * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema";
-import type * as NetAddress from "effect/unstable/net/NetAddress";
+import type * as DevToolsSchema from "effect/devtools/DevToolsSchema";
+import type * as NetAddress from "effect/net/NetAddress";
 
 const $I = $ObservabilityId.create("experimental/server/DevToolsRelay");
 const maxSpanEvents = 200;
@@ -110,7 +110,7 @@ const toSpanKey = (span: Pick<DevToolsSchema.Span, "traceId" | "spanId">): strin
  * ```typescript
  * import { Layer } from "effect"
  * import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server"
- * import * as SocketServer from "effect/unstable/socket/SocketServer"
+ * import * as SocketServer from "effect/socket/SocketServer"
  *
  * const RelayLive: Layer.Layer<DevToolsRelayService, never, SocketServer.SocketServer> =
  *   Layer.effect(DevToolsRelayService, makeDevToolsRelayService)

@@ -37,13 +37,13 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect, layer } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Path, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 
 const decodeStructInlineSchemaJson = S.decodeEffect(
   S.fromJsonString(

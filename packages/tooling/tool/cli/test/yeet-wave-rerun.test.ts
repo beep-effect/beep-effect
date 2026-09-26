@@ -64,13 +64,13 @@ import {
   strictEqual,
 } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, HashSet, Layer, Ref, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type {
   ProofJobLauncherShape,
   ProofJobWaitResult,

@@ -19,7 +19,7 @@ import { runCapturedStreams } from "../../../internal/process/index.ts";
 import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { ParseError } from "jsonc-parser";
 
 const $I = $RepoCliId.create("commands/Quality/internal/KnipRatchet");

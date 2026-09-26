@@ -15,7 +15,7 @@ import { ResolverService, ResolverServiceLive } from "./services/ResolverService
 import { UpdateApplierService, UpdateApplierServiceLive } from "./services/UpdateApplierService.ts";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
-import type { HttpClient } from "effect/unstable/http";
+import type { HttpClient } from "effect/http";
 import type { VersionSyncError, VersionSyncOptions } from "../VersionSync.schemas.ts";
 
 const VersionSyncServicesLive = Layer.mergeAll(

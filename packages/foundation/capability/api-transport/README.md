@@ -1,7 +1,7 @@
 # @beep/api-transport
 
 Shared hand-authored HTTP transport transformer (auth, rate-limit, retry) for
-gov/legal data drivers, built on native `effect/unstable/http` primitives
+gov/legal data drivers, built on native `effect/http` primitives
 (`HttpClient.mapRequest`, `HttpClient.withRateLimiter`, `HttpClient.retryTransient`
 with a jittered exponential `Schedule`). Codegen never emits transport — value
 models + operation descriptors stay in each driver's `src/_generated/*`, and
@@ -51,7 +51,7 @@ bun add @beep/api-transport
 
 ```ts
 import { Effect } from "effect"
-import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
+import * as RateLimiter from "effect/persistence/RateLimiter"
 import { ApiAuth, makeApiTransport } from "@beep/api-transport"
 
 const program = Effect.gen(function* () {

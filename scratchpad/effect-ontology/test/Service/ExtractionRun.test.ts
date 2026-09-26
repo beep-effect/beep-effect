@@ -2,7 +2,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { SystemError } from "effect/PlatformError";
-import { KeyValueStore } from "effect/unstable/persistence";
+import { KeyValueStore } from "effect/persistence";
 import { IdempotencyKey } from "../../Domain/Identity.ts";
 import { ExtractionRunError, ExtractionRunService, ExtractionRunServiceLive } from "../../Service/ExtractionRun.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";

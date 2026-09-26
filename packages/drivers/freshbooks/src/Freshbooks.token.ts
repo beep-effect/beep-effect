@@ -22,10 +22,10 @@
 import { $FreshbooksId } from "@beep/identity";
 import { O } from "@beep/utils";
 import { Clock, Context, Effect, Layer, pipe, Redacted, Ref, Semaphore } from "effect";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as S from "effect/Schema";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { FreshbooksError } from "./Freshbooks.errors.ts";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
+import type * as HttpClient from "effect/http/HttpClient";
 import type { ResolvedFreshbooksConfig } from "./Freshbooks.service.ts";
 
 const $I = $FreshbooksId.create("Freshbooks.token");

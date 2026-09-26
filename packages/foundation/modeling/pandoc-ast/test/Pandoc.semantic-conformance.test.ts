@@ -4,10 +4,10 @@ import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
 import { PandocColumnWidth } from "@beep/pandoc-ast/Pandoc.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodePandocConformanceResult = S.encodeEffect(PandocConformanceResult);
 const isPandocColumnWidth = S.is(PandocColumnWidth);

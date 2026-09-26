@@ -25,10 +25,10 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Context, Deferred, Effect, Fiber, FileSystem, Layer, Path, PlatformError, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
 
 const testLayer = PacketForkRepairApplierLive.pipe(
   Layer.provideMerge(PacketEventStoreLive),

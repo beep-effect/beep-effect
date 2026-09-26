@@ -65,7 +65,7 @@ import type {
   RoundLayout,
 } from "@beep/qa-capture";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { QaExtractOptions } from "./Qa.schemas.ts";
 
 const decodeRoundNumber = S.decodeEffect(RoundNumber);

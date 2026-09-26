@@ -9,12 +9,12 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { O } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import * as Duration from "effect/Duration";
 import * as F from "effect/Function";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { securityRepositoryFromRemote } from "./Security.bundle.ts";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
@@ -324,7 +324,7 @@ const securitySubcommand = (mode: SecurityScanMode) =>
  * **Example** (Composing the command group)
  * ```ts
  * import { securityCommand } from "@beep/repo-cli/commands/Codex/Security.command"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * const root = Command.make("example").pipe(Command.withSubcommands([securityCommand]))
  * console.log(securityCommand.name) // "security"
  * ```

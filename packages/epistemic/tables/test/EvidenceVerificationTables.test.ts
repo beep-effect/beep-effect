@@ -19,10 +19,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { DateTime, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownEvidenceResult = S.decodeUnknownResult(Evidence);
 const decodeUnknownEvidenceVerificationModelResult = S.decodeUnknownResult(EvidenceVerificationModel);

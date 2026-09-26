@@ -193,7 +193,7 @@ intent only — it is not scheduled work and no part of this adoption:
 - Port basic-memory's store model (markdown as source of truth, SQLite FTS as
   materialization) to `@beep/memory` with `S.Class` note schemas, `LiteralKit`
   for note kinds and folders, Effect `HashMap` graph views, and an
-  `effect/unstable/http` MCP server.
+  `effect/http` MCP server.
 - Port Graphiti's bi-temporal validity intervals on edges as the temporal
   schema, minus its runtime.
 - Keep codegraph as the code-KG engine; its SQLite schema is readable from

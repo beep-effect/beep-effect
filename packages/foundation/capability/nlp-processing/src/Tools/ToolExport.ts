@@ -9,15 +9,15 @@ import { $NlpProcessingId } from "@beep/identity";
 import { Defect } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Cause, Effect, Inspectable, pipe, Stream } from "effect";
+import { Tool } from "effect/ai";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Tool } from "effect/unstable/ai";
 import * as Obs from "../internal/observability.ts";
 import { NlpToolkit, NlpTools } from "./NlpToolkit.ts";
-import type { AiError, Toolkit } from "effect/unstable/ai";
+import type { AiError, Toolkit } from "effect/ai";
 
 const $I = $NlpProcessingId.create("Tools/ToolExport");
 

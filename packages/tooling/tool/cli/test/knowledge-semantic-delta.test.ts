@@ -26,13 +26,14 @@ import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Encoding, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
+import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type {
   KnowledgeArchiveOracle,
   KnowledgeFinding,
@@ -214,7 +215,7 @@ const unbootableProbeOracle = (
 const independentDigestEffect = Effect.fn("KnowledgeTest.independentDigest")(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(text));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 const independentDigest = (text: string): Effect.Effect<string> =>
@@ -1068,7 +1069,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         yield* fs.writeFileString(
           rootModule,
           [
-            'import { Command } from "effect/unstable/cli"',
+            'import { Command } from "effect/cli"',
             `await Bun.write(${encodedMarkerPath}, "executed")`,
             "const chooseArchiveCode = true",
             'export const rootCommand = chooseArchiveCode ? Command.make("safe") : Command.make("evil\\u001B[31m\\u202E")',
@@ -1100,7 +1101,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           rootModule,
           [
             'import { A } from "@beep/utils"',
-            'import * as Command from "effect/unstable/cli"',
+            'import * as Command from "effect/cli"',
             'const first = Command.make("first").pipe(Command.withAlias("f"), Command.withAlias("final"))',
             'const second = Command.make("second")',
             "const leading = [first]",
@@ -1138,7 +1139,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           {
             name: "shadowed-array",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               "const A = { make: (...values: unknown[]) => values }",
               'const child = Command.make("child")',
               'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands(A.make(child)))',
@@ -1147,21 +1148,21 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           {
             name: "unknown-transform",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               'export const rootCommand = Command.make("beep-cli").pipe(Command.withSharedFlags([]))',
             ],
           },
           {
             name: "omitted-list",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([,]))',
             ],
           },
           {
             name: "dynamic-list",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               'const commands = true ? [Command.make("first")] : [Command.make("second")]',
               'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands(commands))',
             ],
@@ -1169,7 +1170,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           {
             name: "name-alias-collision",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               'const first = Command.make("first").pipe(Command.withAlias("shared"))',
               'const second = Command.make("shared")',
               'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([first, second]))',
@@ -1178,7 +1179,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           {
             name: "duplicate-alias",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               'const first = Command.make("first").pipe(Command.withAlias("shared"))',
               'const second = Command.make("second").pipe(Command.withAlias("shared"))',
               'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([first, second]))',
@@ -1187,7 +1188,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           {
             name: "multiple-return-factory",
             source: [
-              'import { Command } from "effect/unstable/cli"',
+              'import { Command } from "effect/cli"',
               'const makeCommand = (name: string) => { if (name) return Command.make(name); return Command.make("other") }',
               'export const rootCommand = makeCommand("beep-cli")',
             ],
@@ -1220,7 +1221,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         yield* fs.writeFileString(
           factoryRoot,
           [
-            'import { Command } from "effect/unstable/cli"',
+            'import { Command } from "effect/cli"',
             "const recursive = (name: string) => recursive(name)",
             'export const rootCommand = recursive("beep-cli")',
             "",
@@ -1229,7 +1230,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         yield* fs.writeFileString(
           listRoot,
           [
-            'import { Command } from "effect/unstable/cli"',
+            'import { Command } from "effect/cli"',
             "const commands = [...commands]",
             'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands(commands))',
             "",
@@ -1269,7 +1270,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         yield* fs.writeFileString(
           rootModule,
           [
-            'import { Command } from "effect/unstable/cli"',
+            'import { Command } from "effect/cli"',
             `if (process.env.ARCHIVE_DOTENV_SENTINEL === "loaded") await Bun.write(${encodedMarkerPath}, "executed")`,
             'const doctor = Command.make("doctor")',
             'const goals = Command.make("goals").pipe(Command.withSubcommands([doctor]))',

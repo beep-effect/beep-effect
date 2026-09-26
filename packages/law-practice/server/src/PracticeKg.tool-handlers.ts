@@ -24,7 +24,7 @@ import { NonNegativeInt } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, Path } from "effect";
 import * as A from "effect/Array";
-import { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient";
+import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { PracticeKgQueries } from "./PracticeKg.queries.ts";
 import {
@@ -37,10 +37,10 @@ import {
   toToolRecord,
 } from "./PracticeKg.rows.ts";
 import type { FieldTierSet } from "@beep/mcp-kit";
+import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
 import type * as S from "effect/Schema";
-import type * as Tool from "effect/unstable/ai/Tool";
-import type * as SqlClient from "effect/unstable/sql/SqlClient";
+import type * as SqlClient from "effect/sql/SqlClient";
 
 const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-records"];
 const candidateStatus = PracticeKgEpistemicStatus.Enum["candidate-unreviewed"];

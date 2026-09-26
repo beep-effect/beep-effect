@@ -18,9 +18,9 @@ import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual, stric
 import { Effect, FileSystem, Layer, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 // A GitHub App can post under a login without the `[bot]` suffix: Copilot's
 // pull request reviewer posts as `Copilot`, and only the REST `user.type`

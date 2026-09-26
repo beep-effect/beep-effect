@@ -41,7 +41,7 @@ import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import type { CitingApplicationIdentity } from "@beep/law-practice-domain";
 import type { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord";
 

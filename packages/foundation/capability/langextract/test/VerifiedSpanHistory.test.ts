@@ -17,13 +17,13 @@ import { ISOStr } from "@beep/schema/Timestamp";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Ref, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeVerifiedSpanAttemptFailureResult = S.decodeResult(VerifiedSpanAttemptFailure);
 const decodeUnknownVerifiedSpanHistoryResult = S.decodeUnknownResult(VerifiedSpanHistory);

@@ -18,7 +18,7 @@ import { RegistryProvider, useAtom, useAtomSet, useAtomValue } from "@effect/ato
 import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const exampleText = (year: number) =>

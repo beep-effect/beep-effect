@@ -10,11 +10,11 @@ import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, NonNegativeInt, PosInt, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity, Number as N, Order } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   Component,
   EntityId,
@@ -1346,7 +1346,7 @@ export class MutableRetentionMetadata extends S.Class<MutableRetentionMetadata>(
  *
  * ```ts
  * import { MutableRetentionMetadataArbitrary } from "@/domain/Bundle"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const samples = Arbitrary.sampleEffect(MutableRetentionMetadataArbitrary, { count: 10 })
  * ```

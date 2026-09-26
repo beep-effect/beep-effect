@@ -30,10 +30,10 @@ import {
 import { AnthropicTurnPlan } from "@beep/anthropic";
 import { Effect, Layer, Metric, Order, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import { LanguageModel, Tool, Toolkit } from "effect/ai";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { LanguageModel, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import { IssueReport, repairInvalidBlocks } from "./BlockRepair.ts";
 import { initialScanState, scanChunk } from "./ScanState.ts";
@@ -41,7 +41,7 @@ import type { IndexedBlock } from "@beep/agents-use-cases/AssistantTurn.contract
 import type { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
 import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import type { Config } from "effect";
-import type { AiError, Response } from "effect/unstable/ai";
+import type { AiError, Response } from "effect/ai";
 
 const SYSTEM_PROMPT = [
   "You are a helpful assistant in a rich-text chat application.",

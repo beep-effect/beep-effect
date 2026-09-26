@@ -44,9 +44,9 @@ import {
   flip,
   is,
   isBetween,
+  isBetweenLength,
   isInt,
   isInt32,
-  isLengthBetween,
   isMaxLength,
   isStringFinite,
   isUUID,
@@ -55,7 +55,7 @@ import {
 } from "effect/Schema";
 import { toType } from "effect/SchemaAST";
 import { toLowerCase } from "effect/String";
-import { VariantSchema } from "effect/unstable/schema";
+import { VariantSchema } from "effect/schema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
 import { ModelInvariantError } from "../core/model.ts";
@@ -236,7 +236,7 @@ const fixedString = (input: Field.Input, length: number | undefined): Field.Any 
         onEmpty: () => {
           throw DeriveColumnError.make({
             message:
-              "pg.char() derive mode requires an isLengthBetween(n, n) check on the schema; add one or pass an explicit length.",
+              "pg.char() derive mode requires an isBetweenLength(n, n) check on the schema; add one or pass an explicit length.",
             fieldName: "(unknown — set at model definition)",
             astTag: "(checks)",
           });
@@ -285,7 +285,7 @@ const fixedString = (input: Field.Input, length: number | undefined): Field.Any 
             astTag: toType(encodedSchema.ast)._tag,
           });
         }
-        const evolved = flip(encodedSchema.check(isLengthBetween(resolvedLength, resolvedLength)));
+        const evolved = flip(encodedSchema.check(isBetweenLength(resolvedLength, resolvedLength)));
         return Field.make(evolved, Meta.merge(field.meta, { column: PgColumn.Char.make({ length: resolvedLength }) }));
       }
       return Field.patch(field, { column: PgColumn.Char.make({ length: resolvedLength }) });
@@ -559,7 +559,7 @@ export function date(options?: { readonly mode: "date" }): unknown {
  *
  * **Details**
  *
- * Omitted length derives an `isLengthBetween(n, n)` check. An explicit length
+ * Omitted length derives an `isBetweenLength(n, n)` check. An explicit length
  * verifies or injects that exact check.
  *
  * **Gotchas**
@@ -570,10 +570,10 @@ export function date(options?: { readonly mode: "date" }): unknown {
  * **Example** (Derive a char length)
  *
  * ```ts
- * import { String, isLengthBetween } from "effect/Schema"
+ * import { String, isBetweenLength } from "effect/Schema"
  * import { char } from "@beep/effect-drizzle/pg"
  *
- * String.check(isLengthBetween(2, 2)).pipe(char()).meta.column?.kind // => "char"
+ * String.check(isBetweenLength(2, 2)).pipe(char()).meta.column?.kind // => "char"
  * ```
  *
  * @category combinators

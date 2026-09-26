@@ -8,10 +8,10 @@
 import { O } from "@beep/utils";
 import { Duration, Effect, Stream } from "effect";
 import * as A from "effect/Array";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 import { OpenclawCommandSpawnError } from "../Openclaw.errors.ts";
 import { OpenclawProcessResult } from "../Openclaw.models.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { OpenclawProcessRequest } from "../Openclaw.models.ts";
 
 const forceKillGrace = Duration.seconds(2);

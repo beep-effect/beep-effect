@@ -24,13 +24,13 @@ import { SourceTextPage } from "@beep/file-processing/SourceText";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as N from "effect/Number";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceSourceHighlightResult = S.decodeResult(EvidenceSourceHighlight);
 const decodeEvidenceSourcePageResult = S.decodeResult(EvidenceSourcePage);

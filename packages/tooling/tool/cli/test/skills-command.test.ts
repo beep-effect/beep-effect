@@ -2,9 +2,9 @@ import { renderCodexConfigWithSkills, runSkillsUpdate, skillsCommand } from "@be
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Command } from "effect/cli";
+import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 
 const runSkillsCommand = Command.runWith(skillsCommand, { version: "0.0.0" });

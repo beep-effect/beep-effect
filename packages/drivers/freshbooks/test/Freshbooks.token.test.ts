@@ -10,11 +10,11 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { Cause, Context, Deferred, Effect, Fiber, Layer, Redacted, Ref } from "effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { FreshbooksError } from "@beep/freshbooks";
-import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 /**
  * A mock FreshBooks OAuth token server that enforces single-use refresh

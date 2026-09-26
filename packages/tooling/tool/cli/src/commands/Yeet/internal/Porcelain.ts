@@ -64,7 +64,7 @@ import { executeSweep, observeSweepGitState, overrideSweepBranch, planSweep, ren
 import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";

@@ -18,10 +18,10 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 // A7 (ship-velocity): `gh pr checks --watch` reports a head with no check runs
 // as an error — exit 1, "no checks reported on the '<branch>' branch" — and

@@ -20,8 +20,8 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
-import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import { Command, Flag } from "effect/cli";
+import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -289,7 +289,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
  *
  * ```ts
  * import { reconcileCommand } from "@effect-ontology/Cli/Commands/Reconcile"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["--batch-id", "batch-1234567890ab", "--threshold", "0.8"]
  * const program = Command.runWith(reconcileCommand, { version: "0.0.0" })([...argv])

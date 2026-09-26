@@ -34,7 +34,6 @@ import {
   DateTime,
   Deferred,
   Effect,
-  Encoding,
   Fiber,
   FileSystem,
   Layer,
@@ -43,14 +42,15 @@ import {
   Ref,
   Schedule,
 } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 // Ruling 10's synthetic producer: admission rows come from the real scheduler.
 const producerPath = "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts";
@@ -65,7 +65,7 @@ const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeScenario = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject, { space: 2 }));
 const sha256Hex = Effect.fnUntraced(function* (bytes: Uint8Array) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", bytes));
+  return Hex.encode(yield* crypto.digest("SHA-256", bytes));
 });
 const randomAttemptId = Effect.fnUntraced(function* () {
   const crypto = yield* Crypto.Crypto;

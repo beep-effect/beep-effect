@@ -15,6 +15,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import {
+  Arbitrary,
   ConfigProvider,
   Context,
   Deferred,
@@ -30,15 +31,14 @@ import {
   Stream,
 } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Arbitrary } from "effect/unstable/arbitrary";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("test/proof-job.test");
 const stamp = "2026-09-15T00:00:00.000Z";

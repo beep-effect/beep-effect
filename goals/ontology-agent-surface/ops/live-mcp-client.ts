@@ -9,11 +9,11 @@ import {
 import { NodeRuntime } from "@effect/platform-node";
 import { Config, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as McpSchema from "effect/ai/McpSchema";
+import { HttpClient, HttpClientRequest } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import { RpcClient, RpcSerialization } from "effect/rpc";
 import * as S from "effect/Schema";
-import * as McpSchema from "effect/unstable/ai/McpSchema";
-import { HttpClient, HttpClientRequest } from "effect/unstable/http";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { rpcSessionAuthorizationHeader } from "../../../apps/professional-desktop/server/RpcSessionAuth.ts";
 
 const url = Effect.runSync(Config.string("ONTOLOGY_MCP_URL"));

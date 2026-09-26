@@ -17,10 +17,10 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/C
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as Effect from "effect/Effect";
+import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";
-import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

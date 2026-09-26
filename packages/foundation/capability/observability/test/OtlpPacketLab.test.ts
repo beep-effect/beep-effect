@@ -1,6 +1,6 @@
 import { layerJson, layerProtobuf, OtlpPacketLab } from "@beep/observability/experimental/server";
 import { Effect, Layer } from "effect";
-import { OtlpSerialization } from "effect/unstable/observability/OtlpSerialization";
+import { OtlpSerialization } from "effect/observability/OtlpSerialization";
 import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
