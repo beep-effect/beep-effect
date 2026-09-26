@@ -10,10 +10,16 @@
  */
 
 import * as GraphOps from "@beep/nlp/Graph/GraphOps";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Graph from "effect/Graph";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
 // build: a -> b, a -> c, b -> d
 const sample = (): GraphOps.DirectedGraph<string, number> =>
@@ -57,6 +63,11 @@ describe("GraphOps functor laws", () => {
     const doubled = GraphOps.mapEdges(g, (e) => e * 2);
     expect(GraphOps.edgeCount(doubled)).toBe(3);
     expect(GraphOps.nodeCount(doubled)).toBe(4);
+    expect(doubled.pipe(Graph.edges, Graph.values, A.fromIterable)).toEqual([
+      { source: 0, target: 1, data: 2 },
+      { source: 0, target: 2, data: 4 },
+      { source: 1, target: 3, data: 6 },
+    ]);
   });
 
   it("bimap transforms nodes and edges together", () => {
@@ -68,7 +79,42 @@ describe("GraphOps functor laws", () => {
     );
     expect(GraphOps.collectNodes(out).includes("A")).toBe(true);
     expect(GraphOps.edgeCount(out)).toBe(3);
+    expect(GraphOps.collectNodes(out)).toEqual(["A", "B", "C", "D"]);
+    expect(out.pipe(Graph.edges, Graph.values, A.fromIterable)).toEqual([
+      { source: 0, target: 1, data: "1" },
+      { source: 0, target: 2, data: "2" },
+      { source: 1, target: 3, data: "3" },
+    ]);
   });
+});
+
+describe("GraphOps generated mapping laws", () => {
+  it.prop(
+    "preserves generated chain topology while transforming every payload",
+    [Arbitrary.schema(S.Array(S.Tuple([S.String, S.Int])).check(S.isMaxLength(20)))],
+    ([entries]) => {
+      const graph = Graph.directed<string, number>((mutable) => {
+        let previous = O.none<Graph.NodeIndex>();
+        for (const [label, weight] of entries) {
+          const current = Graph.addNode(mutable, label);
+          if (O.isSome(previous)) Graph.addEdge(mutable, previous.value, current, weight);
+          previous = O.some(current);
+        }
+      });
+      const originalEdges = graph.pipe(Graph.edges, Graph.values, A.fromIterable);
+      const doubled = GraphOps.mapEdges(graph, (weight) => weight * 2);
+      const mapped = GraphOps.bimap(graph, Str.toUpperCase, (weight) => `${weight}`);
+      expect(GraphOps.collectNodes(doubled)).toEqual(A.map(entries, ([label]) => label));
+      expect(doubled.pipe(Graph.edges, Graph.values, A.fromIterable)).toEqual(
+        A.map(originalEdges, (edge) => ({ ...edge, data: edge.data * 2 }))
+      );
+      expect(GraphOps.collectNodes(mapped)).toEqual(A.map(entries, ([label]) => Str.toUpperCase(label)));
+      expect(mapped.pipe(Graph.edges, Graph.values, A.fromIterable)).toEqual(
+        A.map(originalEdges, (edge) => ({ ...edge, data: `${edge.data}` }))
+      );
+    },
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("GraphOps filtering & folds", () => {

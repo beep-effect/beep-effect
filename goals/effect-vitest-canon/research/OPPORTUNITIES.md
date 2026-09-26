@@ -2354,3 +2354,11 @@ computed source hash, not a credential. Public receipts now represent each hash
 as an explicit `{ file, sha256 }` entry, preserving every path/hash pair while
 avoiding the misleading token-named JSON key. No scanner rule or gate was
 disabled. A typed manifest-entry format would avoid this ambiguity at capture.
+
+## 2026-09-26: Graph walker composition diagnostic
+
+While adding NLP graph payload laws, package verification rejected the nested
+Graph.edges/Graph.values/Array.fromIterable expression with
+missedPipeableOpportunity. The equivalent graph.pipe(...) sequence passed.
+Use pipe for multi-stage walker extraction when constructing future graph
+assertions; this avoids a package-audit round trip without changing coverage.
