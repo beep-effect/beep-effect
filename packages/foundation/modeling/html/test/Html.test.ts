@@ -20,10 +20,14 @@ import {
   Script,
   Span,
 } from "@beep/html/Html.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -57,14 +61,16 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
 };
 
 describe("HtmlNode AST — structure & nodes", () => {
-  it("exposes staged conformance and safe-policy facades", () => {
-    const root = HtmlFragment.make({ children: [] });
-    expect(Html.Conformant.issues(root)).toStrictEqual([]);
+  it.effect("exposes staged conformance and safe-policy facades", () =>
+    Effect.gen(function* () {
+      const root = HtmlFragment.make({ children: [] });
+      expect(Html.Conformant.issues(root)).toStrictEqual([]);
 
-    const conformant = Effect.runSync(Html.Conformant.decode(root));
-    expect(Html.Safe.issues(conformant)).toStrictEqual([]);
-    expect(() => Effect.runSync(Html.Safe.decode(conformant))).not.toThrow();
-  });
+      const conformant = yield* Html.Conformant.decode(root);
+      expect(Html.Safe.issues(conformant)).toStrictEqual([]);
+      yield* Html.Safe.decode(conformant);
+    })
+  );
 
   it("narrows canonical document children without weakening the lossless document", () => {
     const comment = Comment.make({ value: "before root" });
@@ -84,10 +90,19 @@ describe("HtmlNode AST — structure & nodes", () => {
       { encoded: { _tag: "#doctype", name: "html" }, type: Doctype.html() },
     ];
 
-    expect(Result.isSuccess(decodeUnknownHtmlDocumentResult(canonical))).toBe(true);
+    assertSuccess(
+      decodeUnknownHtmlDocumentResult(canonical),
+      HtmlDocument.make({ children: [comment, documentElement] })
+    );
     expect(HtmlDocument.make({ children: [comment, documentElement] })).toBeDefined();
     for (const { encoded, type } of excludedChildren) {
-      expect(Result.isFailure(decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] }))).toBe(true);
+      assertFailure(
+        Result.mapError(
+          decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] }),
+          ({ _tag }) => _tag
+        ),
+        "SchemaError"
+      );
       expect(() =>
         HtmlDocument.make({
           // @ts-expect-error -- exercise constructor validation for excluded document child kinds.
@@ -96,7 +111,10 @@ describe("HtmlNode AST — structure & nodes", () => {
       ).toThrow();
     }
 
-    expect(Result.isSuccess(decodeUnknownLosslessDocumentResult(diagnostic))).toBe(true);
+    assertSuccess(
+      decodeUnknownLosslessDocumentResult(diagnostic),
+      LosslessDocument.make({ children: [Div.make({ children: [] })] })
+    );
     expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
   });
 
@@ -128,7 +146,20 @@ describe("HtmlNode AST — structure & nodes", () => {
     Effect.gen(function* () {
       expect((yield* decode({ _tag: "span", children: [] }))._tag).toBe("span");
       const unknownTag = yield* Effect.exit(decode({ _tag: "not-a-real-element", children: [] }));
-      expect(Exit.isFailure(unknownTag)).toBe(true);
+      assertExitFailure(
+        Exit.match(unknownTag, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -186,7 +217,20 @@ describe("HtmlNode AST — attributes", () => {
         expect(() => Input.make({ type: O.some(type) })).not.toThrow();
       }
       const invalidType = yield* Effect.exit(decode({ _tag: "input", type: "not-a-type" }));
-      expect(Exit.isFailure(invalidType)).toBe(true);
+      assertExitFailure(
+        Exit.match(invalidType, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -274,34 +318,30 @@ describe("HtmlNode AST — schema laws", () => {
     })
   );
 
-  it("round-trips schema-derived HTML AST schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            GlobalAttributesArbitrary,
-            BooleanAttributeArbitrary,
-            TextArbitrary,
-            CommentArbitrary,
-            DoctypeArbitrary,
-            InputArbitrary,
-            HtmlElementMetaArbitrary,
-          ]),
-          ([attributes, booleanAttribute, text, comment, doctype, input, meta]) => {
-            expectRoundTrip(GlobalAttributesStruct, attributes);
-            expectRoundTrip(BooleanAttribute, booleanAttribute);
-            expectRoundTrip(Text, text);
-            expectRoundTrip(Comment, comment);
-            expectRoundTrip(Doctype, doctype);
-            expectRoundTrip(Input, input);
-            expectRoundTrip(HtmlElementMeta, meta);
+  it.prop(
+    "round-trips schema-derived HTML AST schemas",
+    [
+      GlobalAttributesArbitrary,
+      BooleanAttributeArbitrary,
+      TextArbitrary,
+      CommentArbitrary,
+      DoctypeArbitrary,
+      InputArbitrary,
+      HtmlElementMetaArbitrary,
+    ],
+    ([attributes, booleanAttribute, text, comment, doctype, input, meta]) => {
+      expectRoundTrip(GlobalAttributesStruct, attributes);
+      expectRoundTrip(BooleanAttribute, booleanAttribute);
+      expectRoundTrip(Text, text);
+      expectRoundTrip(Comment, comment);
+      expectRoundTrip(Doctype, doctype);
+      expectRoundTrip(Input, input);
+      expectRoundTrip(HtmlElementMeta, meta);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("ELEMENT_META", () => {
@@ -312,7 +352,10 @@ describe("ELEMENT_META", () => {
   });
 
   it("rejects tags outside the generated HtmlNode inventory", () => {
-    expect(Result.isFailure(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] }))).toBe(true);
+    assertFailure(
+      Result.mapError(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it("tags conformance, void, and raw-text correctly", () => {
