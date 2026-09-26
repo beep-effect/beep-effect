@@ -40,3 +40,9 @@ Final Node and Bun runs pass all four tests with stable source hashes, taking
 Discord. The one resolved baseline entry is removed; all 8001 unrelated records
 are unchanged byte-for-byte. Canonical discovery still contains the same two
 files. Scoped ledger attribution and validation follow the source commit.
+
+Source commit 80c4d73cb50273e555261533cd56d40b2d5bac11 is the fix attribution
+for both actionable inventory entries. Both final timing manifests match the
+committed source after hooks. The ledger retains one detector and eight human
+lens rows. Scoped strict inventory validation is valid and complete with zero
+missing lens coverage. Hosted wave proof remains outstanding.
