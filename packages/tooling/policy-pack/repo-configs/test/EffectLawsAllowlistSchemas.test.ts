@@ -44,30 +44,21 @@ describe("Effect laws allowlist schemas", () => {
     })
   );
 
-  it("round-trips allowlist document and snapshot schemas", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(EffectLawsAllowlistDocument)]),
-          ([value]) => {
-            expectRoundTrip(EffectLawsAllowlistDocument, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(EffectLawsAllowlistSnapshot)]),
-          ([value]) => {
-            expectRoundTrip(EffectLawsAllowlistSnapshot, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "EffectLawsAllowlistDocument: round-trips allowlist document and snapshot schemas",
+    [Arbitrary.schema(EffectLawsAllowlistDocument)],
+    ([value]) => {
+      expectRoundTrip(EffectLawsAllowlistDocument, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "EffectLawsAllowlistSnapshot: round-trips allowlist document and snapshot schemas",
+    [Arbitrary.schema(EffectLawsAllowlistSnapshot)],
+    ([value]) => {
+      expectRoundTrip(EffectLawsAllowlistSnapshot, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

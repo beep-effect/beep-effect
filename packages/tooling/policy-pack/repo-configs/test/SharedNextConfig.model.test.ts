@@ -175,44 +175,32 @@ describe("Shared Next.js config preset", () => {
     })
   );
 
-  it("round-trips defaulted shared feature schemas", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(BeepNextMdxConfig)]),
-          ([value]) => {
-            expectRoundTrip(BeepNextMdxConfig, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(BeepNextPwaConfig)]),
-          ([value]) => {
-            expectRoundTrip(BeepNextPwaConfig, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SecureHeadersConfig)]),
-          ([value]) => {
-            expectRoundTrip(SecureHeadersConfig, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "BeepNextMdxConfig: round-trips defaulted shared feature schemas",
+    [Arbitrary.schema(BeepNextMdxConfig)],
+    ([value]) => {
+      expectRoundTrip(BeepNextMdxConfig, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "BeepNextPwaConfig: round-trips defaulted shared feature schemas",
+    [Arbitrary.schema(BeepNextPwaConfig)],
+    ([value]) => {
+      expectRoundTrip(BeepNextPwaConfig, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "SecureHeadersConfig: round-trips defaulted shared feature schemas",
+    [Arbitrary.schema(SecureHeadersConfig)],
+    ([value]) => {
+      expectRoundTrip(SecureHeadersConfig, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("composes plugin helpers in explicit left-to-right order", () => {
     let events: ReadonlyArray<string> = A.empty();

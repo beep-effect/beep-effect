@@ -132,23 +132,17 @@ describe("cache qualification policy", () => {
     })
   );
 
-  it("preserves the complete qualification tuple through schema serialization", () => {
-    const equivalent = S.toEquivalence(CacheQualificationKey);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(CacheQualificationKey),
-          (value) => {
-            const encoded = Result.getOrThrow(encodeResultCacheQualificationKey(value));
-            const decoded = Result.getOrThrow(decodeResultCacheQualificationKey(encoded));
-            assertTrue(equivalent(value, decoded));
-            return true;
-          },
-          fcRuns(40)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "CacheQualificationKey: preserves the complete qualification tuple through schema serialization",
+    [Arbitrary.schema(CacheQualificationKey)],
+    ([value]) => {
+      const equivalent = S.toEquivalence(CacheQualificationKey);
+      const encoded = Result.getOrThrow(encodeResultCacheQualificationKey(value));
+      const decoded = Result.getOrThrow(decodeResultCacheQualificationKey(encoded));
+      assertTrue(equivalent(value, decoded));
+    },
+    { arbitrary: fcRuns(40) }
+  );
 
   it("requires the documented lifecycle edges including requalification", () => {
     const expected = [

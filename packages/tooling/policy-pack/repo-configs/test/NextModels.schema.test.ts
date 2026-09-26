@@ -58,32 +58,23 @@ describe("Next shared schemas", () => {
     assertNone(SizeLimit.decodeUnknownOption("mb"));
   });
 
-  it("round-trips schema-derived primitive values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(FileSizeSuffix)]),
-          ([value]) => {
-            expectRoundTrip(FileSizeSuffix, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SizeLimit)]),
-          ([value]) => {
-            expectRoundTrip(SizeLimit, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "FileSizeSuffix: round-trips schema-derived primitive values",
+    [Arbitrary.schema(FileSizeSuffix)],
+    ([value]) => {
+      expectRoundTrip(FileSizeSuffix, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "SizeLimit: round-trips schema-derived primitive values",
+    [Arbitrary.schema(SizeLimit)],
+    ([value]) => {
+      expectRoundTrip(SizeLimit, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 describe("Next route schemas", () => {
@@ -140,77 +131,51 @@ describe("Next route schemas", () => {
     })
   );
 
-  it("decodes schema-derived route predicates", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([routeHasArbitrary]),
-          ([predicate]) => {
-            const decoded = RouteHas.decodeUnknownSync(predicate);
+  it.prop(
+    "RouteHas: decodes schema-derived route predicates",
+    [routeHasArbitrary],
+    ([predicate]) => {
+      const decoded = RouteHas.decodeUnknownSync(predicate);
+      expect(decoded).toEqual(predicate);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            expect(decoded).toEqual(predicate);
+  it.prop(
+    "RedirectStatusCodeValue: round-trips redirect status-code values",
+    [Arbitrary.schema(RedirectStatusCodeValue)],
+    ([value]) => {
+      expectRoundTrip(RedirectStatusCodeValue, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "Rewrite: round-trips route object schemas that do not contain never fields",
+    [Arbitrary.schema(Rewrite)],
+    ([value]) => {
+      expectRoundTrip(Rewrite, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("round-trips redirect status-code values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RedirectStatusCodeValue)]),
-          ([value]) => {
-            expectRoundTrip(RedirectStatusCodeValue, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "Header: round-trips route object schemas that do not contain never fields",
+    [Arbitrary.schema(Header)],
+    ([value]) => {
+      expectRoundTrip(Header, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("round-trips route object schemas that do not contain never fields", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(Rewrite)]),
-          ([value]) => {
-            expectRoundTrip(Rewrite, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(Header)]),
-          ([value]) => {
-            expectRoundTrip(Header, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(Middleware)]),
-          ([value]) => {
-            expectRoundTrip(Middleware, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "Middleware: round-trips route object schemas that do not contain never fields",
+    [Arbitrary.schema(Middleware)],
+    ([value]) => {
+      expectRoundTrip(Middleware, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("rejects invalid route discriminators and redirect mode mixing", () =>
     Effect.gen(function* () {
@@ -237,35 +202,23 @@ describe("Next route schemas", () => {
 });
 
 describe("Next image schemas", () => {
-  it("round-trips schema-derived complete image configs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ImageConfigComplete)]),
-          ([value]) => {
-            expectRoundTrip(ImageConfigComplete, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "ImageConfigComplete: round-trips schema-derived complete image configs",
+    [Arbitrary.schema(ImageConfigComplete)],
+    ([value]) => {
+      expectRoundTrip(ImageConfigComplete, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("round-trips schema-derived partial image configs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ImageConfig)]),
-          ([value]) => {
-            expectRoundTrip(ImageConfig, value);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "ImageConfig: round-trips schema-derived partial image configs",
+    [Arbitrary.schema(ImageConfig)],
+    ([value]) => {
+      expectRoundTrip(ImageConfig, value);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("rejects out-of-domain image quality values", () =>
     Effect.gen(function* () {

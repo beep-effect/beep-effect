@@ -2,7 +2,7 @@ import { AllowedDevOrigin } from "@beep/repo-configs/next/models/AllowedDevOrigi
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Result } from "effect";
+import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
@@ -33,18 +33,12 @@ describe("AllowedDevOrigin", () => {
     assertNone(AllowedDevOrigin.decodeUnknownOption("*."));
   });
 
-  it("round-trips schema-derived allowed origins", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AllowedDevOrigin)]),
-          (values) => {
-            expectRoundTrip(...values);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "AllowedDevOrigin: round-trips schema-derived allowed origins",
+    [Arbitrary.schema(AllowedDevOrigin)],
+    (values) => {
+      expectRoundTrip(...values);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });
