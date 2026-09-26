@@ -79,3 +79,18 @@ exception retains a subject-specific reason. All 8001 unrelated baseline records
 are preserved byte-for-byte. The exception is not an empty global baseline or
 permission to omit global closeout. Scoped ledger attribution follows the
 implementation commit, and hosted wave proof remains outstanding.
+
+## Ledger closure for this package
+
+Implementation commit 5a6e7f6113aa86c6dbfb8b7075f2c18f5d304ae3 is the fix
+attribution for this package's local changes. Both final timing source manifests
+match the committed source after commit hooks. The ledger retains 25 detector
+rows and eight human lens rows; two EV010 identities record the same native
+filesystem exception at historical/current lines. All other actionable entries
+are fixed with the actual source commit.
+
+Canonical discovery contains the same two files. Strict scoped validation is
+valid and complete with zero missing lens coverage. The root ratchet introduces
+zero findings. Its thirteen resolved findings belong to the separate uncommitted
+Box scope work, whose baseline entries remain pending that package's closure.
+This is local Ciops evidence; the wave's hosted gates remain outstanding.
