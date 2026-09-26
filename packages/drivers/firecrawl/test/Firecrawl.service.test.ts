@@ -180,23 +180,12 @@ const makeFakeClient = (overrides: Partial<F.FirecrawlSdkClient> = {}): F.Firecr
 };
 
 const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <SchemaT extends S.Codec<unknown, unknown>>(
-  schema: SchemaT
+  schema: SchemaT,
+  value: SchemaT["Type"]
 ) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(equivalent(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("@beep/firecrawl", () => {
@@ -257,26 +246,62 @@ describe("@beep/firecrawl", () => {
     })
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips crispened schema invariants through derived arbitraries",
-    Effect.fnUntraced(function* () {
-      yield* assertRoundTrip(F.FirecrawlApiUrl);
-      yield* assertRoundTrip(F.FirecrawlConfigInput);
-      yield* assertRoundTrip(F.FirecrawlMethodName);
-      yield* assertRoundTrip(F.FirecrawlErrorReason);
-      yield* assertRoundTrip(F.FirecrawlCodecErrorReason);
-      yield* assertRoundTrip(F.FirecrawlApiFailure);
-      yield* assertRoundTrip(F.FirecrawlErrorOptions);
-      yield* assertRoundTrip(F.FirecrawlError);
-      yield* assertRoundTrip(F.FirecrawlFormatType);
-      yield* assertRoundTrip(F.FirecrawlScrapeActionType);
-      yield* assertRoundTrip(F.FirecrawlSearchSourceType);
-      yield* assertRoundTrip(F.FirecrawlJobStatus);
-      yield* assertRoundTrip(F.FirecrawlAgentStatus);
-      yield* assertRoundTrip(F.FirecrawlBrowserLanguage);
-      yield* assertRoundTrip(F.FirecrawlWatcherKind);
-      yield* assertRoundTrip(F.FirecrawlWatcherEventType);
-    })
+    [
+      Arbitrary.schema(F.FirecrawlApiUrl),
+      Arbitrary.schema(F.FirecrawlConfigInput),
+      Arbitrary.schema(F.FirecrawlMethodName),
+      Arbitrary.schema(F.FirecrawlErrorReason),
+      Arbitrary.schema(F.FirecrawlCodecErrorReason),
+      Arbitrary.schema(F.FirecrawlApiFailure),
+      Arbitrary.schema(F.FirecrawlErrorOptions),
+      Arbitrary.schema(F.FirecrawlError),
+      Arbitrary.schema(F.FirecrawlFormatType),
+      Arbitrary.schema(F.FirecrawlScrapeActionType),
+      Arbitrary.schema(F.FirecrawlSearchSourceType),
+      Arbitrary.schema(F.FirecrawlJobStatus),
+      Arbitrary.schema(F.FirecrawlAgentStatus),
+      Arbitrary.schema(F.FirecrawlBrowserLanguage),
+      Arbitrary.schema(F.FirecrawlWatcherKind),
+      Arbitrary.schema(F.FirecrawlWatcherEventType),
+    ],
+    Effect.fnUntraced(function* ([
+      apiUrl,
+      config,
+      method,
+      reason,
+      codecReason,
+      failure,
+      errorOptions,
+      error,
+      format,
+      action,
+      searchSource,
+      jobStatus,
+      agentStatus,
+      language,
+      watcherKind,
+      eventType,
+    ]) {
+      yield* assertRoundTrip(F.FirecrawlApiUrl, apiUrl);
+      yield* assertRoundTrip(F.FirecrawlConfigInput, config);
+      yield* assertRoundTrip(F.FirecrawlMethodName, method);
+      yield* assertRoundTrip(F.FirecrawlErrorReason, reason);
+      yield* assertRoundTrip(F.FirecrawlCodecErrorReason, codecReason);
+      yield* assertRoundTrip(F.FirecrawlApiFailure, failure);
+      yield* assertRoundTrip(F.FirecrawlErrorOptions, errorOptions);
+      yield* assertRoundTrip(F.FirecrawlError, error);
+      yield* assertRoundTrip(F.FirecrawlFormatType, format);
+      yield* assertRoundTrip(F.FirecrawlScrapeActionType, action);
+      yield* assertRoundTrip(F.FirecrawlSearchSourceType, searchSource);
+      yield* assertRoundTrip(F.FirecrawlJobStatus, jobStatus);
+      yield* assertRoundTrip(F.FirecrawlAgentStatus, agentStatus);
+      yield* assertRoundTrip(F.FirecrawlBrowserLanguage, language);
+      yield* assertRoundTrip(F.FirecrawlWatcherKind, watcherKind);
+      yield* assertRoundTrip(F.FirecrawlWatcherEventType, eventType);
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect(
