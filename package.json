@@ -286,7 +286,7 @@
     "picomatch": "catalog:",
     "syncpack": "catalog:",
     "toml": "catalog:",
-    "turbo": "^2.11.4",
+    "turbo": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
