@@ -492,6 +492,7 @@ describe("@beep/html proof provenance", () => {
 
     expect(Object.isFrozen(issuedRoot)).toBe(true);
     expect(safeRoot).toBe(issuedRoot);
+    expect(issuedRoot._tag).toBe("#fragment");
     if (issuedRoot._tag === "#fragment") {
       expect(Object.isFrozen(issuedRoot.children)).toBe(true);
       const issuedAnchor = O.getOrThrow(A.head(issuedRoot.children));

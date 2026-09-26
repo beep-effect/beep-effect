@@ -8,6 +8,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isSourceSizeAnalysis = S.is(SourceSizeAnalysis);
 const isSourceSizeIssue = S.is(SourceSizeIssue);
+const sourceSizeResultEquivalence = S.toEquivalence(S.Result(SourceSizeAnalysis, S.Array(SourceSizeIssue)));
 
 type IssueCode = SourceSizeIssue["code"];
 
@@ -354,6 +355,7 @@ describe("@beep/html source-size author conformance", () => {
             const first = inspectSourceSizeList(input);
             const second = inspectSourceSizeList(input);
             expect(Result.isSuccess(first)).toBe(Result.isSuccess(second));
+            expect(sourceSizeResultEquivalence(first, second)).toBe(true);
             if (Result.isFailure(first) && Result.isFailure(second)) {
               expect(first.failure[0]?.code).toBe(second.failure[0]?.code);
             }
