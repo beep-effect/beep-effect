@@ -1,0 +1,103 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-evidence>/business-hubspot-before-bun.json"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/hubspot/package.json",
+      "sha256": "2b16bfa0b74c18ba0c764e5c04d32b0c5e1a04a7dfad792a633530014c550ed3"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.config.ts",
+      "sha256": "f46052db8ca0467022a82223932604738a2458066dfeded138f3778990f9a1bd"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
+      "sha256": "7b21e4dee86195a9bac86efd00fd95519dbf9f7b2b2296623a9812afba0e39d1"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+      "sha256": "3dde825cb8a53766025188acb99a0308beb3dcbf36572c307c27daedc18c4d5c"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/index.ts",
+      "sha256": "f80649af28694db6564cd9227998491af1c6c2e5a97cfad0a69315f83e9a1825"
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts",
+      "sha256": "11f8be4debab977c884a083604b66f6619600270b6618b17b758559ba080737e"
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "sha256": "58d68c4755ad1c0cb5954a3c0b7018be59018446b47d15b04724b9a78196d1a5"
+    }
+  ],
+  "loadBefore": [14.517578125, 19.42724609375, 25.12890625],
+  "pressureBefore": {
+    "cpu": "some avg10=3.37 avg60=1.33 avg300=1.84 total=2442026511\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.06 total=204522319\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=177525033\n",
+    "io": "some avg10=0.12 avg60=0.12 avg300=0.51 total=970985886\nfull avg10=0.05 avg60=0.07 avg300=0.33 total=662202244\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 3.851966187998187,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/hubspot/package.json",
+      "sha256": "2b16bfa0b74c18ba0c764e5c04d32b0c5e1a04a7dfad792a633530014c550ed3"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.config.ts",
+      "sha256": "f46052db8ca0467022a82223932604738a2458066dfeded138f3778990f9a1bd"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
+      "sha256": "7b21e4dee86195a9bac86efd00fd95519dbf9f7b2b2296623a9812afba0e39d1"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+      "sha256": "3dde825cb8a53766025188acb99a0308beb3dcbf36572c307c27daedc18c4d5c"
+    },
+    {
+      "file": "packages/drivers/hubspot/src/index.ts",
+      "sha256": "f80649af28694db6564cd9227998491af1c6c2e5a97cfad0a69315f83e9a1825"
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts",
+      "sha256": "11f8be4debab977c884a083604b66f6619600270b6618b17b758559ba080737e"
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "sha256": "58d68c4755ad1c0cb5954a3c0b7018be59018446b47d15b04724b9a78196d1a5"
+    }
+  ],
+  "loadAfter": [19.041015625, 20.28369140625, 25.37548828125],
+  "pressureAfter": {
+    "cpu": "some avg10=4.61 avg60=1.67 avg300=1.90 total=2442473174\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.06 total=204522319\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=177525034\n",
+    "io": "some avg10=0.08 avg60=0.11 avg300=0.51 total=970986644\nfull avg10=0.03 avg60=0.07 avg300=0.33 total=662202841\n"
+  },
+  "sourceStable": true
+}

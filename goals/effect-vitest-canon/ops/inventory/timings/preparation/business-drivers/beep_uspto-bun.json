@@ -1,0 +1,192 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 13,
+  "numPassedTests": 13,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790409517544,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["USPTO declared-field equivalence"],
+          "fullName": "USPTO declared-field equivalence treats field-equal UsptoError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal UsptoError instances as equivalent and field-different ones as distinct",
+          "duration": 1.6257219999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790409519228,
+      "endTime": 1790409519229.6257,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/uspto/test/Uspto.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service resolves application metadata from a file wrapper envelope",
+          "status": "passed",
+          "title": "resolves application metadata from a file wrapper envelope",
+          "duration": 11.469078000000081,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service sends the application request to the open data portal path",
+          "status": "passed",
+          "title": "sends the application request to the open data portal path",
+          "duration": 11.139750999999933,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service maps 404 responses to not-found",
+          "status": "passed",
+          "title": "maps 404 responses to not-found",
+          "duration": 11.055620999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service maps 429 responses to rate-limited",
+          "status": "passed",
+          "title": "maps 429 responses to rate-limited",
+          "duration": 11.100861000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service extracts continuity parents and children",
+          "status": "passed",
+          "title": "extracts continuity parents and children",
+          "duration": 11.100130000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service extracts document references with download urls and skips id-less rows",
+          "status": "passed",
+          "title": "extracts document references with download urls and skips id-less rows",
+          "duration": 2.701188000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto service"],
+          "fullName": "Uspto service searches applications and projects each wrapper",
+          "status": "passed",
+          "title": "searches applications and projects each wrapper",
+          "duration": 2.666283999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto identifier normalization"],
+          "fullName": "Uspto identifier normalization constructs errors in data-last form",
+          "status": "passed",
+          "title": "constructs errors in data-last form",
+          "duration": 25.39705099999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto identifier normalization"],
+          "fullName": "Uspto identifier normalization normalizes application numbers",
+          "status": "passed",
+          "title": "normalizes application numbers",
+          "duration": 25.373694999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto identifier normalization"],
+          "fullName": "Uspto identifier normalization normalizes patent numbers",
+          "status": "passed",
+          "title": "normalizes patent numbers",
+          "duration": 25.36325899999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto schema parity"],
+          "fullName": "Uspto schema parity keeps encoded schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded schema wire shapes byte-identical",
+          "duration": 25.355426999999963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Uspto schema parity"],
+          "fullName": "Uspto schema parity round-trips schema-derived USPTO payloads through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived USPTO payloads through encoded form",
+          "duration": 25.333832999999913,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790409519254,
+      "endTime": 1790409519293.7012,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/uspto/test/Uspto.service.test.ts"
+    }
+  ]
+}
