@@ -1,5 +1,6 @@
 import { Runpod } from "@beep/runpod";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Config, Effect, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -22,10 +23,10 @@ describe("@beep/runpod live", () => {
   it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "lists pods when RUNPOD_API_KEY is configured",
-      Effect.fnUntraced(function* () {
+      Effect.fnUntraced(function* (context) {
         const apiKey = yield* usableRunpodApiKey;
         if (O.isNone(apiKey)) {
-          return;
+          return context.skip();
         }
 
         const runpod = yield* Runpod;
@@ -38,10 +39,10 @@ describe("@beep/runpod live", () => {
   it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "fetches the unauthenticated OpenAPI document",
-      Effect.fnUntraced(function* () {
+      Effect.fnUntraced(function* (context) {
         const apiKey = yield* usableRunpodApiKey;
         if (O.isNone(apiKey)) {
-          return;
+          return context.skip();
         }
 
         const runpod = yield* Runpod;

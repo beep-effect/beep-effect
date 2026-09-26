@@ -1,7 +1,8 @@
 import * as F from "@beep/firecrawl";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { thunkTrue } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -337,7 +338,7 @@ describe("@beep/firecrawl", () => {
     })
   );
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()), { timeout: "5 seconds" })((it) => {
+  it.layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()), { timeout: "5 seconds" })((it) => {
     it.effect(
       "wraps SDK scrape output in a decoded success class",
       Effect.fnUntraced(function* () {
@@ -456,7 +457,7 @@ describe("@beep/firecrawl", () => {
     );
   });
 
-  layer(
+  it.layer(
     F.Firecrawl.makeLayerFromClient(
       makeFakeClient({
         scrape: () => Promise.reject({ name: "SdkError", statusCode: 429 }),
@@ -485,7 +486,7 @@ describe("@beep/firecrawl", () => {
     );
   });
 
-  layer(
+  it.layer(
     F.Firecrawl.makeLayerFromClient(
       makeFakeClient({
         getQueueStatus: () =>
@@ -530,26 +531,28 @@ describe("@beep/firecrawl", () => {
     },
   ]);
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => watcher })), { timeout: "5 seconds" })((it) => {
-    it.effect(
-      "streams watcher events and closes the SDK watcher after done",
-      Effect.fnUntraced(function* () {
-        const firecrawl = yield* F.Firecrawl;
-        const events = yield* firecrawl
-          .watcher(F.FirecrawlWatcherPayload.make({ jobId: "crawl-id" }))
-          .pipe(Stream.runCollect);
-        const values = A.fromIterable(events);
+  it.layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => watcher })), { timeout: "5 seconds" })(
+    (it) => {
+      it.effect(
+        "streams watcher events and closes the SDK watcher after done",
+        Effect.fnUntraced(function* () {
+          const firecrawl = yield* F.Firecrawl;
+          const events = yield* firecrawl
+            .watcher(F.FirecrawlWatcherPayload.make({ jobId: "crawl-id" }))
+            .pipe(Stream.runCollect);
+          const values = A.fromIterable(events);
 
-        expect(watcher.started).toBe(true);
-        expect(watcher.closed).toBe(true);
-        expect(A.map(values, (event) => event.type)).toEqual(["document", "done"]);
-      })
-    );
-  });
+          expect(watcher.started).toBe(true);
+          expect(watcher.closed).toBe(true);
+          expect(A.map(values, (event) => event.type)).toEqual(["document", "done"]);
+        })
+      );
+    }
+  );
 
   const invalidDoneWatcher = new FakeFirecrawlWatcher([{ eventName: "done", payload: { data: { markdown: "bad" } } }]);
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => invalidDoneWatcher })), {
+  it.layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => invalidDoneWatcher })), {
     timeout: "5 seconds",
   })((it) => {
     it.effect(

@@ -9,10 +9,11 @@ import {
   SanityQueryRequest,
   SanityQueryResponse,
 } from "@beep/sanity";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, thunkTrue } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -249,7 +250,7 @@ describe("@beep/sanity", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "submits a GROQ query and decodes the result envelope",
       Effect.fnUntraced(function* () {
@@ -271,7 +272,7 @@ describe("@beep/sanity", () => {
     );
   });
 
-  layer(TestLayer, { timeout: "5 seconds" })((it) => {
+  it.layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps non-success responses to typed driver errors",
       Effect.fnUntraced(function* () {

@@ -20,9 +20,10 @@ import {
   RunpodRawResponse,
 } from "@beep/runpod";
 import { decodeJsonString } from "@beep/schema/Json";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -214,7 +215,7 @@ const llmsText = `# Runpod Documentation
 `;
 
 describe("@beep/runpod", () => {
-  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect("keeps the generated operation surface complete", () =>
       Effect.sync(() => {
         const operationKeys = R.keys(RUNPOD_OPERATION_SPECS);
@@ -228,7 +229,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "sends typed operations with expected auth, query, path, and JSON body encoding",
       Effect.fnUntraced(function* () {
@@ -277,7 +278,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
       Effect.fnUntraced(function* () {
@@ -300,7 +301,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps status and transport failures into typed errors",
       Effect.fnUntraced(function* () {
@@ -332,7 +333,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "supports raw requests for ahead-of-spec endpoints",
       Effect.fnUntraced(function* () {
@@ -364,7 +365,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodDocsUnitLayer(), { timeout: "5 seconds" })((it) =>
+  it.layer(makeRunpodDocsUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "parses and fetches the Runpod llms.txt documentation index",
       Effect.fnUntraced(function* () {

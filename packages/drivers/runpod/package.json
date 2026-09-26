@@ -79,6 +79,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-runner": "workspace:^",
     "@beep/codegen-kit": "workspace:^",
     "@effect/openapi-generator": "catalog:",
     "@effect/vitest": "catalog:",

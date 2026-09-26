@@ -1,7 +1,8 @@
 import * as F from "@beep/firecrawl";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -46,13 +47,13 @@ pipe(
   O.match({
     onNone: () =>
       describe("@beep/firecrawl live integration (FIRECRAWL_API_KEY)", () => {
-        it("skips live API calls when FIRECRAWL_API_KEY is absent", () => {
+        it.skip("skips live API calls when FIRECRAWL_API_KEY is absent", () => {
           assertNone(apiKey);
         });
       }),
     onSome: () =>
       describe.concurrent("@beep/firecrawl live integration", () => {
-        layer(F.Firecrawl.layer, { timeout: "30 seconds" })((it) => {
+        it.layer(F.Firecrawl.layer, { timeout: "30 seconds" })((it) => {
           it.effect(
             "reads queue status through the live Firecrawl API",
             Effect.fnUntraced(function* () {
