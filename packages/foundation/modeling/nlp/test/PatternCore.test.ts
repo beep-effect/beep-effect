@@ -39,8 +39,11 @@ import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Chunk, Effect, Exit, Schema } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
@@ -213,9 +216,48 @@ describe("Core Pattern", () => {
       const emptyPos = yield* Effect.exit(decodePOSPatternOption([""]));
       const emptyEntity = yield* Effect.exit(decodeEntityPatternOption([""]));
       const emptyLiteral = yield* Effect.exit(decodeLiteralPatternOption([""]));
-      expect(Exit.isFailure(emptyPos)).toBe(true);
-      expect(Exit.isFailure(emptyEntity)).toBe(true);
-      expect(Exit.isFailure(emptyLiteral)).toBe(true);
+      assertExitFailure(
+        Exit.match(emptyPos, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      assertExitFailure(
+        Exit.match(emptyEntity, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      assertExitFailure(
+        Exit.match(emptyLiteral, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -224,7 +266,20 @@ describe("Core Pattern", () => {
     Effect.fnUntraced(function* () {
       expect(() => literal("DATE")).toThrow();
       const reservedLiteral = yield* Effect.exit(decodeBracketStringToLiteralPatternElement("[DATE]"));
-      expect(Exit.isFailure(reservedLiteral)).toBe(true);
+      assertExitFailure(
+        Exit.match(reservedLiteral, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 

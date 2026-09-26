@@ -5,6 +5,7 @@ import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Chunk, Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -247,8 +248,13 @@ describe("Core models", () => {
         Chunk.toReadonlyArray
       )
     ).toEqual([[0], [2]]);
-    expect(O.isSome(Document.getTokenByIndex(filtered, ada.index))).toBe(true);
-    expect(O.isNone(Document.getTokenByIndex(filtered, wrote.index))).toBe(true);
-    expect(O.isSome(Document.getSentenceByIndex(filtered, O.getOrThrow(A.get(sentences, 1)).index))).toBe(true);
+    assertSome(Document.getTokenByIndex(filtered, ada.index), ada);
+    assertNone(Document.getTokenByIndex(filtered, wrote.index));
+    assertSome(
+      O.map(Document.getSentenceByIndex(filtered, O.getOrThrow(A.get(sentences, 1)).index), (sentence) =>
+        Chunk.toReadonlyArray(sentence.tokens)
+      ),
+      [grace]
+    );
   });
 });
