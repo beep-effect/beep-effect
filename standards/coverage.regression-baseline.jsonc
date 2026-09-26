@@ -21358,15 +21358,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 85.22,
-      "statements": 85.03,
-      "branches": 76.73,
-      "functions": 81.3,
+      "lines": 85.11,
+      "statements": 84.91,
+      "branches": 76.56,
+      "functions": 81.1,
       "uncovered": {
-        "lines": 8075,
-        "statements": 8640,
-        "branches": 4855,
-        "functions": 3249
+        "lines": 8065,
+        "statements": 8626,
+        "branches": 4839,
+        "functions": 3240
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
