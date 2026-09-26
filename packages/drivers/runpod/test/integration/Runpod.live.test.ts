@@ -1,6 +1,6 @@
 import { Runpod } from "@beep/runpod";
 import { describe, expect, it } from "@effect/vitest";
-import { Config, Effect, Layer, Redacted } from "effect";
+import { Config, Effect, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
@@ -18,37 +18,36 @@ const usableRunpodApiKey = Config.Redacted("RUNPOD_API_KEY").pipe(
   )
 );
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("@beep/runpod live", () => {
-  it.effect(
-    "lists pods when RUNPOD_API_KEY is configured",
-    Effect.fnUntraced(function* () {
-      const apiKey = yield* usableRunpodApiKey;
-      if (O.isNone(apiKey)) {
-        return;
-      }
+  it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "lists pods when RUNPOD_API_KEY is configured",
+      Effect.fnUntraced(function* () {
+        const apiKey = yield* usableRunpodApiKey;
+        if (O.isNone(apiKey)) {
+          return;
+        }
 
-      const runpod = yield* Runpod;
-      const pods = yield* runpod.listPods();
-      expect(Array.isArray(pods)).toBe(true);
-    }, provideScopedLayer(Runpod.layer))
-  );
+        const runpod = yield* Runpod;
+        const pods = yield* runpod.listPods();
+        expect(Array.isArray(pods)).toBe(true);
+      })
+    );
+  });
 
-  it.effect(
-    "fetches the unauthenticated OpenAPI document",
-    Effect.fnUntraced(function* () {
-      const apiKey = yield* usableRunpodApiKey;
-      if (O.isNone(apiKey)) {
-        return;
-      }
+  it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "fetches the unauthenticated OpenAPI document",
+      Effect.fnUntraced(function* () {
+        const apiKey = yield* usableRunpodApiKey;
+        if (O.isNone(apiKey)) {
+          return;
+        }
 
-      const runpod = yield* Runpod;
-      const openApi = yield* runpod.getOpenAPI();
-      expect(openApi).toHaveProperty("openapi");
-    }, provideScopedLayer(Runpod.layer))
-  );
+        const runpod = yield* Runpod;
+        const openApi = yield* runpod.getOpenAPI();
+        expect(openApi).toHaveProperty("openapi");
+      })
+    );
+  });
 });

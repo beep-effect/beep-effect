@@ -231,7 +231,7 @@ const llmsText = `# Runpod Documentation
 `;
 
 describe("@beep/runpod", () => {
-  layer(makeRunpodUnitLayer())((it) =>
+  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect("keeps the generated operation surface complete", () =>
       Effect.sync(() => {
         const operationKeys = R.keys(RUNPOD_OPERATION_SPECS);
@@ -245,7 +245,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "sends typed operations with expected auth, query, path, and JSON body encoding",
       Effect.fnUntraced(function* () {
@@ -294,7 +294,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
       Effect.fnUntraced(function* () {
@@ -317,7 +317,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps status and transport failures into typed errors",
       Effect.fnUntraced(function* () {
@@ -349,7 +349,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "supports raw requests for ahead-of-spec endpoints",
       Effect.fnUntraced(function* () {
@@ -381,7 +381,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodDocsUnitLayer())((it) =>
+  layer(makeRunpodDocsUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "parses and fetches the Runpod llms.txt documentation index",
       Effect.fnUntraced(function* () {
@@ -417,7 +417,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it("round-trips schema-derived config, error, raw, and docs models", () => {
       expect(
         Effect.runSync(

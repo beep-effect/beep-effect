@@ -310,7 +310,7 @@ describe("@beep/firecrawl", () => {
     })
   );
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()))((it) => {
+  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()), { timeout: "5 seconds" })((it) => {
     it.effect(
       "wraps SDK scrape output in a decoded success class",
       Effect.fnUntraced(function* () {
@@ -434,7 +434,8 @@ describe("@beep/firecrawl", () => {
       makeFakeClient({
         scrape: () => Promise.reject({ name: "SdkError", statusCode: 429 }),
       })
-    )
+    ),
+    { timeout: "5 seconds" }
   )((it) => {
     it.effect(
       "translates SDK throws into sanitized FirecrawlError values",
@@ -467,7 +468,8 @@ describe("@beep/firecrawl", () => {
             maxConcurrency: Number.POSITIVE_INFINITY,
           }),
       })
-    )
+    ),
+    { timeout: "5 seconds" }
   )((it) => {
     it.effect(
       "maps malformed SDK responses to response-decoding errors",
@@ -503,7 +505,7 @@ describe("@beep/firecrawl", () => {
     },
   ]);
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => watcher })))((it) => {
+  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => watcher })), { timeout: "5 seconds" })((it) => {
     it.effect(
       "streams watcher events and closes the SDK watcher after done",
       Effect.fnUntraced(function* () {
@@ -522,7 +524,9 @@ describe("@beep/firecrawl", () => {
 
   const invalidDoneWatcher = new FakeFirecrawlWatcher([{ eventName: "done", payload: { data: { markdown: "bad" } } }]);
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => invalidDoneWatcher })))((it) => {
+  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => invalidDoneWatcher })), {
+    timeout: "5 seconds",
+  })((it) => {
     it.effect(
       "fails watcher streams when terminal event payloads cannot decode",
       Effect.fnUntraced(function* () {
