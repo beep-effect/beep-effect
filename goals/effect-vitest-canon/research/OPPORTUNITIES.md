@@ -2345,3 +2345,13 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+## 2026-09-26: Observability charter retained the old runner import
+
+Preparing the twelve recorded Anthropic, OpenAI, OpenAI compatibility, Venice,
+and xAI tests exposed a stale All Seeing Eye charter: it still directed new
+adopters to the historical test-utils/Vitest subpath. Current merged test
+suites use the accepted test-runner package. The charter now names that public
+package while retaining the historical rc.112/rc.113 evidence and semantics.
+Updating consumer instructions in the runner extraction PR would have prevented
+new remediation lanes from repeating the obsolete import.
