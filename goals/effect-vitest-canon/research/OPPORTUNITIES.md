@@ -2335,3 +2335,11 @@ During the Markdown final ratchet check, `beep lint effect-vitest --check` was
 rejected with `Unrecognized flag: --check`. The default command is already the
 check mode; rerunning without that flag passed. An explicit check-mode example
 in the command help would prevent borrowing flags from adjacent lint commands.
+
+### Detached proof user-manager environment
+
+The Markdown cheap-gates launch reported `Detached proof jobs require an active
+systemd user manager` before starting a job. The user manager was confirmed live;
+rerunning with the documented XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS
+restored the supported detached path. A launcher diagnostic distinguishing
+missing session environment from an unavailable manager would avoid ambiguity.

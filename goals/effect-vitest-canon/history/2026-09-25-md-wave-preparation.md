@@ -116,3 +116,17 @@ configuration prevent attributing a performance change to this migration.
 
 Dependency-related cache/boundary metadata checks, PR gates and HTML-first
 publication remain outstanding. This checkpoint does not close the goal.
+
+## Dependency metadata checks
+
+The cache census identifies nine Markdown task dependency lists gaining their
+corresponding test-runner dependency. The initial audit's six configuration-drift
+findings are attributable to those declared dependency edges. The reviewed
+baseline update changes only those nine lists: commands, configuration, cache
+eligibility, unrelated nodes and global settings are unchanged. Cache audit now
+passes with zero blocking findings (1,251 unassessed cached computations remain
+repository-wide; no broader qualification is claimed).
+
+Generated Fallow boundaries add only Markdown's runtime/type allowances for
+the declared runner dependency. Both generated-file freshness and doctrine-pinned
+layer-legality checks pass. Broader cheap-gates proof is the next local gate.
