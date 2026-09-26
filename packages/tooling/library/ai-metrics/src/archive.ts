@@ -49,7 +49,14 @@ const STANDARD_BASE64_PATTERN = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9
 const isStandardBase64 = (annotations: S.Annotations.Filter) =>
   S.makeFilter<string>((value) => Result.isSuccess(Base64.decode(value)), {
     expected: "a base64 encoded string",
-    arbitraryConstraint: { patterns: [{ source: STANDARD_BASE64_PATTERN.source, flags: "" }] },
+    arbitraryConstraint: {
+      patterns: [
+        {
+          source: STANDARD_BASE64_PATTERN.source,
+          flags: "",
+        },
+      ],
+    },
     toJsonSchema: () => ({ pattern: STANDARD_BASE64_PATTERN.source }),
     ...annotations,
   });
@@ -65,7 +72,14 @@ const Aes256KeyBase64 = S.String.check(
     decodedBase64ByteLengthSatisfies((byteLength) => byteLength === AES_GCM_KEY_BYTES),
     {
       identifier: $I`Aes256KeyByteLengthCheck`,
-      arbitraryConstraint: { patterns: [{ source: "^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$", flags: "" }] },
+      arbitraryConstraint: {
+        patterns: [
+          {
+            source: "^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$",
+            flags: "",
+          },
+        ],
+      },
       title: "AES-256 Key Byte Length",
       description: "A Base64 value that decodes to exactly 32 AES-256 key bytes.",
       message: "Raw archive key must decode to exactly 32 bytes for AES-256-GCM",
@@ -88,7 +102,14 @@ const AesGcmNonceBase64 = S.String.check(
     decodedBase64ByteLengthSatisfies((byteLength) => byteLength === AES_GCM_NONCE_BYTES),
     {
       identifier: $I`AesGcmNonceByteLengthCheck`,
-      arbitraryConstraint: { patterns: [{ source: "^[A-Za-z0-9+/]{16}$", flags: "" }] },
+      arbitraryConstraint: {
+        patterns: [
+          {
+            source: "^[A-Za-z0-9+/]{16}$",
+            flags: "",
+          },
+        ],
+      },
       title: "AES-GCM Nonce Byte Length",
       description: "A Base64 value that decodes to exactly 12 nonce bytes.",
       message: "Archive envelope nonce must decode to exactly 12 bytes",
@@ -111,7 +132,14 @@ const AesGcmCiphertextBase64 = S.String.check(
     decodedBase64ByteLengthSatisfies((byteLength) => byteLength >= AES_GCM_TAG_BYTES),
     {
       identifier: $I`AesGcmCiphertextTagLengthCheck`,
-      arbitraryConstraint: { patterns: [{ source: "^(?:[A-Za-z0-9+/]{4}){6,20}$", flags: "" }] },
+      arbitraryConstraint: {
+        patterns: [
+          {
+            source: "^(?:[A-Za-z0-9+/]{4}){6,20}$",
+            flags: "",
+          },
+        ],
+      },
       title: "AES-GCM Ciphertext Tag Length",
       description: "Ciphertext bytes long enough to contain the 16-byte AES-GCM authentication tag.",
       message: "Archive envelope ciphertext must include a 16-byte AES-GCM authentication tag",
@@ -580,7 +608,14 @@ export const decryptEncryptedRawArchiveEnvelope = Effect.fn("AiMetrics.decryptEn
   });
   const plaintext = yield* Effect.tryPromise({
     try: () =>
-      globalThis.crypto.subtle.decrypt({ iv: cryptoBytes(nonce), name: "AES-GCM" }, key, cryptoBytes(ciphertext)),
+      globalThis.crypto.subtle.decrypt(
+        {
+          iv: cryptoBytes(nonce),
+          name: "AES-GCM",
+        },
+        key,
+        cryptoBytes(ciphertext)
+      ),
     catch: (cause) => archiveFailure("Failed to decrypt raw archive envelope.", cause),
   });
 

@@ -1,0 +1,1291 @@
+{
+  "numTotalTestSuites": 35,
+  "numPassedTestSuites": 34,
+  "numFailedTestSuites": 1,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 108,
+  "numPassedTests": 106,
+  "numFailedTests": 0,
+  "numPendingTests": 2,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790397244098,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares SqlExpressionError captured from public expression validation",
+          "status": "passed",
+          "title": "compares SqlExpressionError captured from public expression validation",
+          "duration": 3.3245190000000093,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares DeriveColumnError captured from public derivation",
+          "status": "passed",
+          "title": "compares DeriveColumnError captured from public derivation",
+          "duration": 3.0500560000000405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares ModelInvariantError by fields",
+          "status": "passed",
+          "title": "compares ModelInvariantError by fields",
+          "duration": 3.0291939999999613,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares SqlNameError captured from public name validation",
+          "status": "passed",
+          "title": "compares SqlNameError captured from public name validation",
+          "duration": 3.019219000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares VersionConflictError by stable fields and ignores opaque id",
+          "status": "passed",
+          "title": "compares VersionConflictError by stable fields and ignores opaque id",
+          "duration": 3.011688000000049,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares PostgreSQL ColumnInvariantError captured from public column validation",
+          "status": "passed",
+          "title": "compares PostgreSQL ColumnInvariantError captured from public column validation",
+          "duration": 1.4693230000000312,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares PostgreSQL TableExtraError by fields",
+          "status": "passed",
+          "title": "compares PostgreSQL TableExtraError by fields",
+          "duration": 1.4357710000000452,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares PostgreSQL SchemaAssemblyError by fields",
+          "status": "passed",
+          "title": "compares PostgreSQL SchemaAssemblyError by fields",
+          "duration": 1.4210590000000138,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares SQLite TableExtraError by fields",
+          "status": "passed",
+          "title": "compares SQLite TableExtraError by fields",
+          "duration": 1.4136569999999438,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares SQLite ColumnInvariantError captured from public schema assembly",
+          "status": "passed",
+          "title": "compares SQLite ColumnInvariantError captured from public schema assembly",
+          "duration": 1.4003569999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["effect-drizzle declared-field equivalence"],
+          "fullName": "effect-drizzle declared-field equivalence compares SQLite SchemaAssemblyError by fields",
+          "status": "passed",
+          "title": "compares SQLite SchemaAssemblyError by fields",
+          "duration": 0.26538800000002993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790397244856,
+      "endTime": 1790397244861.2654,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/TaggedErrors.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["bundle size comparison"],
+          "fullName": "bundle size comparison passes when the current size equals the baseline",
+          "status": "passed",
+          "title": "passes when the current size equals the baseline",
+          "duration": 1.119703999999956,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size comparison"],
+          "fullName": "bundle size comparison passes when the current size decreases",
+          "status": "passed",
+          "title": "passes when the current size decreases",
+          "duration": 0.9095309999999017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size comparison"],
+          "fullName": "bundle size comparison fails when the current size increases by one byte",
+          "status": "passed",
+          "title": "fails when the current size increases by one byte",
+          "duration": 0.8920439999999417,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size comparison"],
+          "fullName": "bundle size comparison flags a collapse below the stub floor even when it is a decrease",
+          "status": "passed",
+          "title": "flags a collapse below the stub floor even when it is a decrease",
+          "duration": 0.8834299999999757,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size comparison"],
+          "fullName": "bundle size comparison does not flag healthy sizes above the floor",
+          "status": "passed",
+          "title": "does not flag healthy sizes above the floor",
+          "duration": 0.8753879999999299,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size probe"],
+          "fullName": "bundle size probe measures the sole artifact as raw UTF-8 bytes",
+          "status": "passed",
+          "title": "measures the sole artifact as raw UTF-8 bytes",
+          "duration": 19.399451999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size probe process"],
+          "fullName": "bundle size probe process exits nonzero for an injected one-byte regression without mutating the baseline",
+          "status": "skipped",
+          "title": "exits nonzero for an injected one-byte regression without mutating the baseline",
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle size probe process"],
+          "fullName": "bundle size probe process terminates and drains an acquired probe when its scope is interrupted",
+          "status": "skipped",
+          "title": "terminates and drains an acquired probe when its scope is interrupted",
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790397244653,
+      "endTime": 1790397244674.3994,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/bundle-size.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["boundary scanner controls"],
+          "fullName": "boundary scanner controls detects forbidden edges in each supported module syntax",
+          "status": "passed",
+          "title": "detects forbidden edges in each supported module syntax",
+          "duration": 28.207994999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ecosystem import boundaries"],
+          "fullName": "ecosystem import boundaries keeps every source module free of @beep/* edges",
+          "status": "passed",
+          "title": "keeps every source module free of @beep/* edges",
+          "duration": 115.65306499999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ecosystem import boundaries"],
+          "fullName": "ecosystem import boundaries keeps runtime manifest edges free of @beep/* and forbids bundled fields",
+          "status": "passed",
+          "title": "keeps runtime manifest edges free of @beep/* and forbids bundled fields",
+          "duration": 123.078259,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dialect import boundaries"],
+          "fullName": "dialect import boundaries keeps core independent of both dialects",
+          "status": "passed",
+          "title": "keeps core independent of both dialects",
+          "duration": 134.1688170000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dialect import boundaries"],
+          "fullName": "dialect import boundaries keeps PostgreSQL and SQLite as non-importing siblings",
+          "status": "passed",
+          "title": "keeps PostgreSQL and SQLite as non-importing siblings",
+          "duration": 183.59267,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dialect import boundaries"],
+          "fullName": "dialect import boundaries keeps each dialect-local kit constructor outside its sibling graph",
+          "status": "passed",
+          "title": "keeps each dialect-local kit constructor outside its sibling graph",
+          "duration": 218.22574900000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["bundle isolation"],
+          "fullName": "bundle isolation drops unrelated PostgreSQL column families and SQLite from an integer import",
+          "status": "passed",
+          "title": "drops unrelated PostgreSQL column families and SQLite from an integer import",
+          "duration": 49.76035200000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790397244758,
+      "endTime": 1790397245004.2258,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/import-boundary.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["SQLite name invariants"],
+          "fullName": "SQLite name invariants rejects empty and NUL identifiers plus normalized column collisions",
+          "status": "passed",
+          "title": "rejects empty and NUL identifiers plus normalized column collisions",
+          "duration": 9.716060999999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite name invariants"],
+          "fullName": "SQLite name invariants rejects duplicate index names in the schema-global namespace",
+          "status": "passed",
+          "title": "rejects duplicate index names in the schema-global namespace",
+          "duration": 9.494789999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite Wave E value and structure invariants"],
+          "fullName": "SQLite Wave E value and structure invariants keeps only faithful NUMERIC modes and injects their value domains",
+          "status": "passed",
+          "title": "keeps only faithful NUMERIC modes and injects their value domains",
+          "duration": 9.478144000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite Wave E value and structure invariants"],
+          "fullName": "SQLite Wave E value and structure invariants rejects invalid defaults and parameterized schema expressions",
+          "status": "passed",
+          "title": "rejects invalid defaults and parameterized schema expressions",
+          "duration": 9.467808000000105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite Wave E value and structure invariants"],
+          "fullName": "SQLite Wave E value and structure invariants rejects invalid composites, PKs, extras names, and referential actions",
+          "status": "passed",
+          "title": "rejects invalid composites, PKs, extras names, and referential actions",
+          "duration": 9.45410800000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite Wave E value and structure invariants"],
+          "fullName": "SQLite Wave E value and structure invariants rejects empty, generated-only, and over-ceiling SQLite models",
+          "status": "passed",
+          "title": "rejects empty, generated-only, and over-ceiling SQLite models",
+          "duration": 10.174356999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite projection"],
+          "fullName": "SQLite projection projects storage classes, names, defaults, and AUTOINCREMENT",
+          "status": "passed",
+          "title": "projects storage classes, names, defaults, and AUTOINCREMENT",
+          "duration": 10.122096000000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite projection"],
+          "fullName": "SQLite projection emits enum and kit checks plus SQLite partial indexes",
+          "status": "passed",
+          "title": "emits enum and kit checks plus SQLite partial indexes",
+          "duration": 10.101564999999937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite projection"],
+          "fullName": "SQLite projection accepts a colocated unique index as a foreign-key target",
+          "status": "passed",
+          "title": "accepts a colocated unique index as a foreign-key target",
+          "duration": 10.094302999999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite projection"],
+          "fullName": "SQLite projection renders sqlite.defaultNow() as an ISO-text strftime expression",
+          "status": "passed",
+          "title": "renders sqlite.defaultNow() as an ISO-text strftime expression",
+          "duration": 10.079110000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite derivation and family invariants"],
+          "fullName": "SQLite derivation and family invariants round-trips schema-derived SQLite insert variants with nullable nicknames",
+          "status": "passed",
+          "title": "round-trips schema-derived SQLite insert variants with nullable nicknames",
+          "duration": 58.394858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite derivation and family invariants"],
+          "fullName": "SQLite derivation and family invariants round-trips schema-derived SQLite update variants preserving row versions",
+          "status": "passed",
+          "title": "round-trips schema-derived SQLite update variants preserving row versions",
+          "duration": 60.13786100000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite derivation and family invariants"],
+          "fullName": "SQLite derivation and family invariants derives the widest lossless number storage and SQLite-native boolean/JSON modes",
+          "status": "passed",
+          "title": "derives the widest lossless number storage and SQLite-native boolean/JSON modes",
+          "duration": 19.755318999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite derivation and family invariants"],
+          "fullName": "SQLite derivation and family invariants rejects cross-dialect descriptors and array dimensions at runtime",
+          "status": "passed",
+          "title": "rejects cross-dialect descriptors and array dimensions at runtime",
+          "duration": 19.75536999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite derivation and family invariants"],
+          "fullName": "SQLite derivation and family invariants matches SQLite INTEGER PRIMARY KEY rowid omission on both insert surfaces",
+          "status": "passed",
+          "title": "matches SQLite INTEGER PRIMARY KEY rowid omission on both insert surfaces",
+          "duration": 19.75312699999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite relations"],
+          "fullName": "SQLite relations resolves exact registry keys before unique physical-name fallbacks",
+          "status": "passed",
+          "title": "resolves exact registry keys before unique physical-name fallbacks",
+          "duration": 0.5289949999998953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["SQLite relations"],
+          "fullName": "SQLite relations wires forward, reverse, and through relations with generic defineRelations",
+          "status": "passed",
+          "title": "wires forward, reverse, and through relations with generic defineRelations",
+          "duration": 0.5071510000000217,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790397244810,
+      "endTime": 1790397244890.138,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/sqlite-unit.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["PostgreSQL name invariants"],
+          "fullName": "PostgreSQL name invariants rejects empty, NUL, character-invalid, and over-63-byte names and labels",
+          "status": "passed",
+          "title": "rejects empty, NUL, character-invalid, and over-63-byte names and labels",
+          "duration": 18.168605999999954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgreSQL name invariants"],
+          "fullName": "PostgreSQL name invariants rejects snake-case, case-fold, truncation-prefix, and schema-global collisions",
+          "status": "passed",
+          "title": "rejects snake-case, case-fold, truncation-prefix, and schema-global collisions",
+          "duration": 17.94449099999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PostgreSQL Wave E value and structure invariants"
+          ],
+          "fullName": "PostgreSQL Wave E value and structure invariants round-trips schema-derived PostgreSQL array insert variants",
+          "status": "passed",
+          "title": "round-trips schema-derived PostgreSQL array insert variants",
+          "duration": 81.47465699999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PostgreSQL Wave E value and structure invariants"
+          ],
+          "fullName": "PostgreSQL Wave E value and structure invariants injects closed scalar domains and multidimensional rectangularity",
+          "status": "passed",
+          "title": "injects closed scalar domains and multidimensional rectangularity",
+          "duration": 22.24923000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PostgreSQL Wave E value and structure invariants"
+          ],
+          "fullName": "PostgreSQL Wave E value and structure invariants rejects PostgreSQL type bounds and unsafe literal defaults",
+          "status": "passed",
+          "title": "rejects PostgreSQL type bounds and unsafe literal defaults",
+          "duration": 22.238883999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PostgreSQL Wave E value and structure invariants"
+          ],
+          "fullName": "PostgreSQL Wave E value and structure invariants structurally rejects parameters on every schema-expression surface",
+          "status": "passed",
+          "title": "structurally rejects parameters on every schema-expression surface",
+          "duration": 4.814463000000046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PostgreSQL Wave E value and structure invariants"
+          ],
+          "fullName": "PostgreSQL Wave E value and structure invariants rejects invalid composite, primary-key, extras-name, and FK-action assembly",
+          "status": "passed",
+          "title": "rejects invalid composite, primary-key, extras-name, and FK-action assembly",
+          "duration": 4.79985099999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PostgreSQL Wave E value and structure invariants"
+          ],
+          "fullName": "PostgreSQL Wave E value and structure invariants rejects empty and over-ceiling PostgreSQL structures",
+          "status": "passed",
+          "title": "rejects empty and over-ceiling PostgreSQL structures",
+          "duration": 15.092269999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["toPgTable"],
+          "fullName": "toPgTable projects names, nullability, identities, defaults, and generation",
+          "status": "passed",
+          "title": "projects names, nullability, identities, defaults, and generation",
+          "duration": 0.49888799999996536,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["toPgTable"],
+          "fullName": "toPgTable maps every showcase kind to the installed pg builders",
+          "status": "passed",
+          "title": "maps every showcase kind to the installed pg builders",
+          "duration": 0.464354999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["toPgTable"],
+          "fullName": "toPgTable emits table-level indexes, uniques, checks, and composite primary keys",
+          "status": "passed",
+          "title": "emits table-level indexes, uniques, checks, and composite primary keys",
+          "duration": 2.468972000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["toPgTable"],
+          "fullName": "toPgTable emits partial unique indexes and explicitly unsafe checks",
+          "status": "passed",
+          "title": "emits partial unique indexes and explicitly unsafe checks",
+          "duration": 2.438374999999951,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["variant truth table"],
+          "fullName": "variant truth table keeps identity row locators in update and omits generated expressions",
+          "status": "passed",
+          "title": "keeps identity row locators in update and omits generated expressions",
+          "duration": 2.4352890000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["variant truth table"],
+          "fullName": "variant truth table keeps identity-by-default present in update and optional in insert",
+          "status": "passed",
+          "title": "keeps identity-by-default present in update and optional in insert",
+          "duration": 2.424983999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["variant truth table"],
+          "fullName": "variant truth table preserves author-supplied VariantSchema.Field membership",
+          "status": "passed",
+          "title": "preserves author-supplied VariantSchema.Field membership",
+          "duration": 0.9670889999999872,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["kit write strategies"],
+          "fullName": "kit write strategies injects defaults while preserving Effect variant membership",
+          "status": "passed",
+          "title": "injects defaults while preserving Effect variant membership",
+          "duration": 0.9498219999999264,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["kit write strategies"],
+          "fullName": "kit write strategies constructs insert payloads through Overrideable constructor defaults",
+          "status": "passed",
+          "title": "constructs insert payloads through Overrideable constructor defaults",
+          "duration": 0.9416300000000319,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["kit write strategies"],
+          "fullName": "kit write strategies rejects kit default collisions at compile time and runtime",
+          "status": "passed",
+          "title": "rejects kit default collisions at compile time and runtime",
+          "duration": 0.930923000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["kit write strategies"],
+          "fullName": "kit write strategies emits default extras before model extras",
+          "status": "passed",
+          "title": "emits default extras before model extras",
+          "duration": 14.07198799999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["named unique indexes"],
+          "fullName": "named unique indexes emits a unique index while retaining model annotations",
+          "status": "passed",
+          "title": "emits a unique index while retaining model annotations",
+          "duration": 14.059769000000074,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["named unique indexes"],
+          "fullName": "named unique indexes accepts a colocated unique index as a foreign-key target",
+          "status": "passed",
+          "title": "accepts a colocated unique index as a foreign-key target",
+          "duration": 14.053048999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["enum and custom columns"],
+          "fullName": "enum and custom columns shares enum instances across assembly tables",
+          "status": "passed",
+          "title": "shares enum instances across assembly tables",
+          "duration": 1.0550450000000637,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["enum and custom columns"],
+          "fullName": "enum and custom columns rejects non-literal schemas and conflicting enum declarations",
+          "status": "passed",
+          "title": "rejects non-literal schemas and conflicting enum declarations",
+          "duration": 1.0262710000000652,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["enum and custom columns"],
+          "fullName": "enum and custom columns compiles unsafe custom SQL types verbatim",
+          "status": "passed",
+          "title": "compiles unsafe custom SQL types verbatim",
+          "duration": 1.1425199999999904,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["mechanical column kinds"],
+          "fullName": "mechanical column kinds compiles numeric, date, char, json, and real descriptors",
+          "status": "passed",
+          "title": "compiles numeric, date, char, json, and real descriptors",
+          "duration": 1.4328460000000405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["mechanical column kinds"],
+          "fullName": "mechanical column kinds compiles bigserial and smallserial defaults",
+          "status": "passed",
+          "title": "compiles bigserial and smallserial defaults",
+          "duration": 1.3318010000000413,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["mechanical column kinds"],
+          "fullName": "mechanical column kinds requires exact char lengths in derive, verify, inject, and model-mirror modes",
+          "status": "passed",
+          "title": "requires exact char lengths in derive, verify, inject, and model-mirror modes",
+          "duration": 1.3209750000000895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgreSQL arrays"],
+          "fullName": "PostgreSQL arrays projects scalar builders once with dimensions, defaults, unique, and enum support",
+          "status": "passed",
+          "title": "projects scalar builders once with dimensions, defaults, unique, and enum support",
+          "duration": 1.6393849999999475,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgreSQL arrays"],
+          "fullName": "PostgreSQL arrays keeps bare array and object schemas on the existing jsonb derivation",
+          "status": "passed",
+          "title": "keeps bare array and object schemas on the existing jsonb derivation",
+          "duration": 2.350569000000064,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgreSQL arrays"],
+          "fullName": "PostgreSQL arrays rejects carrier, depth, and write-strategy mismatches at runtime",
+          "status": "passed",
+          "title": "rejects carrier, depth, and write-strategy mismatches at runtime",
+          "duration": 2.0346020000000635,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgreSQL arrays"],
+          "fullName": "PostgreSQL arrays rejects scalar-array and array-depth foreign keys",
+          "status": "passed",
+          "title": "rejects scalar-array and array-depth foreign keys",
+          "duration": 2.023496000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema assembly"],
+          "fullName": "schema assembly emits direct and self-referential foreign keys",
+          "status": "passed",
+          "title": "emits direct and self-referential foreign keys",
+          "duration": 2.3445600000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema assembly"],
+          "fullName": "schema assembly feeds its config to installed defineRelations and derives optionality",
+          "status": "passed",
+          "title": "feeds its config to installed defineRelations and derives optionality",
+          "duration": 1.5297759999999698,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema assembly"],
+          "fullName": "schema assembly disambiguates multiple reverse edges by the source relation field",
+          "status": "passed",
+          "title": "disambiguates multiple reverse edges by the source relation field",
+          "duration": 1.205885999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema assembly"],
+          "fullName": "schema assembly throws tagged errors for missing and incompatible targets",
+          "status": "passed",
+          "title": "throws tagged errors for missing and incompatible targets",
+          "duration": 1.1936080000000402,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema assembly"],
+          "fullName": "schema assembly resolves exact registry keys before unique physical-name fallbacks",
+          "status": "passed",
+          "title": "resolves exact registry keys before unique physical-name fallbacks",
+          "duration": 1.7571149999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema assembly"],
+          "fullName": "schema assembly provides collision-proof Drizzle export keys",
+          "status": "passed",
+          "title": "provides collision-proof Drizzle export keys",
+          "duration": 1.185685000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants projects inferred and explicit public columns through the table boundary",
+          "status": "passed",
+          "title": "projects inferred and explicit public columns through the table boundary",
+          "duration": 3.1512129999999843,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants scans maxLength checks without mutating the schema",
+          "status": "passed",
+          "title": "scans maxLength checks without mutating the schema",
+          "duration": 2.583389000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants classifies bare carriers with SQL identities",
+          "status": "passed",
+          "title": "classifies bare carriers with SQL identities",
+          "duration": 2.5690459999999575,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants corroborates every safe explicit PostgreSQL carrier at model construction",
+          "status": "passed",
+          "title": "corroborates every safe explicit PostgreSQL carrier at model construction",
+          "duration": 3.176270999999929,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants derives the number carrier for a declaration only through its representation",
+          "status": "passed",
+          "title": "derives the number carrier for a declaration only through its representation",
+          "duration": 2.1105199999999513,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants refuses ambiguous encodings and mirrors model invariants at runtime",
+          "status": "passed",
+          "title": "refuses ambiguous encodings and mirrors model invariants at runtime",
+          "duration": 5.242260999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants rejects unsafe optimistic repository construction synchronously",
+          "status": "passed",
+          "title": "rejects unsafe optimistic repository construction synchronously",
+          "duration": 0.5097649999999021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants accepts a colocated single-column unique index as a repository locator",
+          "status": "passed",
+          "title": "accepts a colocated single-column unique index as a repository locator",
+          "duration": 0.837319999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants uses Effect's finite-number schema for PostgreSQL floats",
+          "status": "passed",
+          "title": "uses Effect's finite-number schema for PostgreSQL floats",
+          "duration": 0.5493960000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema corroboration and invariants"],
+          "fullName": "schema corroboration and invariants validates extras at the public author-input seam",
+          "status": "passed",
+          "title": "validates extras at the public author-input seam",
+          "duration": 1.214631000000054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tagged errors"],
+          "fullName": "tagged errors supports structural equality, make construction, and catchTag",
+          "status": "passed",
+          "title": "supports structural equality, make construction, and catchTag",
+          "duration": 1.2962459999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["varchar authoring modes"],
+          "fullName": "varchar authoring modes derives the length from the schema's isMaxLength check",
+          "status": "passed",
+          "title": "derives the length from the schema's isMaxLength check",
+          "duration": 1.2622240000000602,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["varchar authoring modes"],
+          "fullName": "varchar authoring modes takes the tightest bound when several maxLength checks exist",
+          "status": "passed",
+          "title": "takes the tightest bound when several maxLength checks exist",
+          "duration": 0.9461270000000468,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["varchar authoring modes"],
+          "fullName": "varchar authoring modes refuses derive mode when no maxLength check exists",
+          "status": "passed",
+          "title": "refuses derive mode when no maxLength check exists",
+          "duration": 0.8723130000000765,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["varchar authoring modes"],
+          "fullName": "varchar authoring modes injects isMaxLength into unbounded plain schemas so domain and DDL agree",
+          "status": "passed",
+          "title": "injects isMaxLength into unbounded plain schemas so domain and DDL agree",
+          "duration": 5.566690999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["varchar authoring modes"],
+          "fullName": "varchar authoring modes injects varchar bounds on the encoded side of transformed schemas",
+          "status": "passed",
+          "title": "injects varchar bounds on the encoded side of transformed schemas",
+          "duration": 5.579340000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["varchar authoring modes"],
+          "fullName": "varchar authoring modes verifies instead of double-injecting when the schema already carries a bound",
+          "status": "passed",
+          "title": "verifies instead of double-injecting when the schema already carries a bound",
+          "duration": 0.8390019999999367,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Option paved road"],
+          "fullName": "Option paved road derives nullable columns from OptionFromNullOr and effect FieldOption",
+          "status": "passed",
+          "title": "derives nullable columns from OptionFromNullOr and effect FieldOption",
+          "duration": 0.8244900000000825,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790397244850,
+      "endTime": 1790397244931.4746,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/unit.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet applies drizzle-kit DDL from the @beep/effect-drizzle projection and regenerates to no-op",
+          "status": "passed",
+          "title": "applies drizzle-kit DDL from the @beep/effect-drizzle projection and regenerates to no-op",
+          "duration": 8.740548999999191,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet keeps deeper PostgreSQL expression restrictions database-checked",
+          "status": "passed",
+          "title": "keeps deeper PostgreSQL expression restrictions database-checked",
+          "duration": 27.06509499999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet mirrors PostgreSQL value, default, action, and structural boundaries",
+          "status": "passed",
+          "title": "mirrors PostgreSQL value, default, action, and structural boundaries",
+          "duration": 53.06106399999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet keeps char values faithful and enforces unique-column foreign keys",
+          "status": "passed",
+          "title": "keeps char values faithful and enforces unique-column foreign keys",
+          "duration": 29.904958999999508,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet round-trips one- and two-dimensional arrays through the model repository",
+          "status": "passed",
+          "title": "round-trips one- and two-dimensional arrays through the model repository",
+          "duration": 19.795861999999943,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet executes the installed SqlModel repository and Option codec",
+          "status": "passed",
+          "title": "executes the installed SqlModel repository and Option codec",
+          "duration": 25.303883999999925,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet increments versions and rejects stale concurrent writers",
+          "status": "passed",
+          "title": "increments versions and rejects stale concurrent writers",
+          "duration": 22.08236300000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet lets exactly one concurrent optimistic writer persist its result",
+          "status": "passed",
+          "title": "lets exactly one concurrent optimistic writer persist its result",
+          "duration": 17.09414199999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet round-trips valid enums and surfaces invalid values as SqlError",
+          "status": "passed",
+          "title": "round-trips valid enums and surfaces invalid values as SqlError",
+          "duration": 13.558327000000645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/effect-drizzle live PGlite gauntlet"],
+          "fullName": "@beep/effect-drizzle live PGlite gauntlet queries forward, reverse, self, and junction relations through RQBv2",
+          "status": "passed",
+          "title": "queries forward, reverse, self, and junction relations through RQBv2",
+          "duration": 17.468257999999878,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790397249013,
+      "endTime": 1790397249066.061,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/integration/live.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1790397244098,
+      "endTime": 1790397244098,
+      "status": "failed",
+      "message": "Cannot find package 'bun:sqlite' imported from <checkout>/packages/ecosystem/effect-drizzle/test/integration/sqlite-live.test.ts",
+      "name": "<checkout>/packages/ecosystem/effect-drizzle/test/integration/sqlite-live.test.ts"
+    }
+  ]
+}
