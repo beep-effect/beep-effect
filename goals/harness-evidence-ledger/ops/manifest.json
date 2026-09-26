@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "harness-evidence-ledger",
+    "title": "Harness Evidence Ledger",
+    "status": "active",
+    "created": "2026-09-25",
+    "updated": "2026-09-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/harness-evidence-ledger",
+  "lifecycle": "active",
+  "mission": "Typed per-edit harness evidence ledger with config-fingerprint expiry, retention-side pruning proposals, and an annealed-budget rerun of the SkillOpt pilot",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "note": "Authored directly (no exploration) from a 2026-09-25 grill-with-docs session on RRSI (arXiv 2609.24972), backed by four research lanes; decisions D1-D14 recorded in SPEC.md Locked Decisions, sources in research/SOURCES.md.",
+    "graduated": "2026-09-25"
+  },
+  "discoveredFrom": "goals/coding-agent-effectiveness-evidence-loop",
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/harness-evidence-ledger/README.md",
+    "goals/harness-evidence-ledger/SPEC.md",
+    "goals/harness-evidence-ledger/PLAN.md",
+    "goals/harness-evidence-ledger/GOAL.md",
+    "goals/harness-evidence-ledger/research/SOURCES.md",
+    "harness-ledger/README.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/harness-evidence-ledger/GOAL.md"
+    }
+  ],
+  "provides": ["tooling/harness-ledger"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Schemas + ledger CLI + hook-pulse surface + scorer fixes",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Rerun",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR1 to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "PR2 results + reflection",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/harness-evidence-ledger/GOAL.md)\" -le 4000",
+    "jq . goals/harness-evidence-ledger/ops/manifest.json",
+    "rg -n \"harness-evidence-ledger|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-evidence-ledger",
+    "git diff --check -- goals/harness-evidence-ledger",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep lint goal-packets"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "A ledger row or telemetry field would carry a path, prompt, tool argument, secret, or corpus content.",
+    "A change would apply a harness edit or pruning proposal without human admission."
+  ]
+}
