@@ -1,36 +1,39 @@
 /**
- * Remediation dispatch for the `yeet monitor --watch` backpressure engine.
+ * Remediation dispatch for the inbox wave that `yeet monitor --watch` and
+ * `yeet monitor --until-ready` both write.
  *
  * **Details**
  *
- * This is the policy half of ship-velocity A1: every hosted check red the
- * watch observes becomes one inbox capsule, and the *wave record* decides what
+ * This is the policy half of ship-velocity A1: every hosted check red either
+ * loop observes becomes one inbox capsule, and the *wave record* decides what
  * that capsule means — the first red for a head opens the wave's repair
  * session, subsequent reds for the same head queue onto it, and a new push
- * supersedes the whole wave. The policy is a pure total function over the
- * persisted {@link YeetRemediationWave}; the effectful wrapper only loads
- * state, appends the inbox row, persists, and announces.
+ * supersedes the whole wave. A base conflict seen by `--until-ready` joins the
+ * same wave, so the fix push supersedes it too. The policy is a pure total
+ * function over the persisted {@link YeetRemediationWave}; the effectful
+ * wrapper only loads state, appends the inbox row, persists, and announces.
  *
  * The wave record at `.beep/inbox/dispatch.json` is the countable "repair
- * session" unit: one wave, one session, N queued capsules. Attaching a live
- * harness to that session is deliberately not this module's job — A2's hook
- * adapters consume the inbox rows, and A4's lease machinery decides where a
- * session runs when the owning checkout is busy.
+ * session" unit: one wave, one session, N queued capsules. Nothing here
+ * launches a fixer. The inbox hook injects the rows into the owner session and
+ * `yeet job wait` hands the wave back to it; that woken owner dispatches the
+ * fix itself (pr-event-awareness D14).
  *
  * **Gotchas**
  *
- * Dispatch failures never escape to the watch loop: a capsule that cannot be
+ * Dispatch failures never escape to the calling loop: a capsule that cannot be
  * appended is reported loudly on stderr and *not* recorded in the wave, so the
  * next observation of the same red retries the append instead of believing the
  * capsule was delivered. The A7 posture applies — a side-channel failure must
  * not cancel check watching.
  *
  * The wave record is last-writer-wins by design, not a lock: two concurrent
- * watches on one checkout can interleave load/persist and clobber each
- * other's record. The failure modes that leaves are bounded — a re-announced
- * red or a same-id row re-appended, never a lost capsule (the inbox is
- * append-only and ids are deterministic, so consumers dedup by id), and a
- * stale-head record self-heals on the next tick's supersede-and-converge.
+ * loops on one checkout (watches or `--until-ready` monitors) can interleave
+ * load/persist and clobber each other's record. The failure modes that
+ * leaves are bounded — a re-announced red or a same-id row re-appended, never
+ * a lost capsule (the inbox is append-only and ids are deterministic, so
+ * consumers dedup by id), and a stale-head record self-heals on the next
+ * tick's supersede-and-converge.
  * Single-writer discipline for the checkout is A2's hook-mutex deliverable.
  *
  * @packageDocumentation
@@ -38,25 +41,33 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import { Console, Effect, FileSystem, Match, Path } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Console, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { readYeetAckState } from "./Ack.ts";
 import {
   appendYeetInboxRow,
+  appendYeetInboxRowOnce,
+  YeetBaseConflictRow,
   YeetCheckFailedRow,
   YeetFailureCapsule,
   YeetInboxSeverity,
+  yeetBaseConflictRowId,
+  yeetInboxAckPath,
   yeetInboxPaths,
   yeetInboxRowId,
 } from "./Inbox.ts";
 import type { Crypto } from "effect";
-import type { YeetWatchCheck, YeetWatchSnapshot } from "./WatchStream.ts";
+import type { YeetCommandError } from "../Yeet.errors.ts";
+import type { YeetBaseConflictCapsule } from "./Inbox.ts";
+import type { YeetWatchCheck } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Remediation");
 
@@ -87,6 +98,16 @@ export const YEET_DISPATCH_SCHEMA_VERSION = "yeet-dispatch/v1";
  * ids are deterministic over (prNumber, headSha, lane), membership here is
  * exactly the "dedup by headSha+lane" the dispatch contract requires.
  *
+ * `redSetKey` is the head's required red set as the `--until-ready` loop last
+ * observed it ({@link yeetWaveRedSetKey}), stamped on every converging poll by
+ * {@link stampYeetWaveRedSet}. A row id cannot see a rerun that comes back
+ * red on the same head, because the id stays the same; the key can, because
+ * the rerun's job link and completion stamp change. The waiters compare it
+ * with the key they last handed back: a red set that names a red they have
+ * not handed back is a new wave. A record written before the field existed,
+ * or by a loop that does not stamp it, decodes with `None`, and the schema
+ * version is unchanged.
+ *
  * **Example** (Build a wave)
  *
  * ```ts
@@ -116,9 +137,11 @@ export class YeetRemediationWave extends S.Class<YeetRemediationWave>($I`YeetRem
     prNumber: S.Finite,
     sessionStartedAt: S.NullOr(S.String),
     updatedAt: S.String,
+    redSetKey: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetRemediationWave", {
-    description: "The remediation wave for one PR head: session start, queued capsule ids, and freshness.",
+    description:
+      "The remediation wave for one PR head: session start, queued capsule ids, freshness, and the last observed required red set.",
   })
 ) {}
 
@@ -250,7 +273,8 @@ export class YeetRemediationOutcome extends S.Class<YeetRemediationOutcome>($I`Y
  * not started yet (a push opened it empty) starts the session now; anything
  * else queues onto the running session. The first two SPEC sentences fall out
  * directly: first red for a head starts a repair session, subsequent reds for
- * the same head append to that session's queue.
+ * the same head append to that session's queue. A same-head wave keeps its
+ * `redSetKey`; only {@link stampYeetWaveRedSet} moves it.
  *
  * **Example** (First red starts the session)
  *
@@ -303,6 +327,7 @@ export const decideYeetRemediation = (input: YeetRemediationInput): YeetRemediat
           prNumber: wave.prNumber,
           sessionStartedAt: input.at,
           updatedAt: input.at,
+          redSetKey: wave.redSetKey,
         }),
       })
     : YeetRemediationOutcome.make({
@@ -313,6 +338,7 @@ export const decideYeetRemediation = (input: YeetRemediationInput): YeetRemediat
           prNumber: wave.prNumber,
           sessionStartedAt: wave.sessionStartedAt,
           updatedAt: input.at,
+          redSetKey: wave.redSetKey,
         }),
       });
 };
@@ -393,6 +419,115 @@ export const supersedeYeetRemediationWave = (input: YeetWaveSupersedeInput): Yee
         updatedAt: input.at,
       });
 };
+
+// One red check as the red-set key names it: its name, its job link and its
+// completion stamp, tab-separated. A rerun of the same check changes the link
+// or the stamp, so it is a different entry.
+const yeetRedSetEntry = (check: YeetWatchCheck): string =>
+  A.join(
+    [
+      check.name,
+      O.getOrElse(O.fromNullOr(check.link), () => Str.empty),
+      O.getOrElse(check.completedAt, () => Str.empty),
+    ],
+    "\t"
+  );
+
+const yeetRedSetEntries = (key: string): HashSet.HashSet<string> =>
+  HashSet.fromIterable(A.filter(Str.split(key, "\n"), Str.isNonEmpty));
+
+/**
+ * Key a set of red checks: one sorted line per check naming it, its job link and its completion stamp.
+ *
+ * **Details**
+ *
+ * The caller passes the reds it means; the order it passes them in does not
+ * matter. The merge loop keys every failing check to skip re-triaging a red
+ * set it already classified, and keys only the failing *required* checks for
+ * the wave record ({@link yeetWaveRedSetKey}). No reds key to the empty string.
+ *
+ * **Example** (Order does not matter)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetRedSetKey } from "@beep/repo-cli/test/Yeet"
+ *
+ * const lint = YeetWatchCheck.make({ name: "Lint", outcome: "fail", link: "https://ci/1" })
+ * const check = YeetWatchCheck.make({ name: "Check", outcome: "fail", link: "https://ci/2" })
+ *
+ * console.log(yeetRedSetKey([lint, check]) === yeetRedSetKey([check, lint])) // true
+ * ```
+ *
+ * @param reds - The red checks to key.
+ * @returns The key: sorted, newline-joined entries; empty for no reds.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetRedSetKey = (reds: ReadonlyArray<YeetWatchCheck>): string =>
+  pipe(A.map(reds, yeetRedSetEntry), A.sort(Order.String), A.join("\n"));
+
+/**
+ * Key one head's required red set, the key the wave record carries.
+ *
+ * **Details**
+ *
+ * Only failing required checks count. An optional red never wakes a waiter
+ * (ttc ruling 42), so a rerun of an optional check must not move the key
+ * either.
+ *
+ * **Example** (An optional red is not in the key)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetWaveRedSetKey } from "@beep/repo-cli/test/Yeet"
+ *
+ * const vercel = YeetWatchCheck.make({ name: "Vercel", outcome: "fail", required: false })
+ * const lint = YeetWatchCheck.make({ name: "Lint", outcome: "pass" })
+ *
+ * console.log(yeetWaveRedSetKey([vercel, lint])) // ""
+ * ```
+ *
+ * @param checks - One poll's checks for the head.
+ * @returns The required red set's key; empty when no required check is red.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetWaveRedSetKey = (checks: ReadonlyArray<YeetWatchCheck>): string =>
+  yeetRedSetKey(A.filter(checks, (check) => check.required && check.outcome === "fail"));
+
+/**
+ * Whether a red-set key names a red that an accounted-for key does not.
+ *
+ * **Details**
+ *
+ * This is the "new wave on the same head" test. A red whose rerun came back
+ * red again has a new job link, so its entry is new. A red set that only
+ * shrank (a rerun went green) or emptied names nothing new, so it wakes
+ * nobody: there is no new work in it.
+ *
+ * **Example** (A rerun that failed again is new; a shrink is not)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetRedSetKey, yeetRedSetKeyGained } from "@beep/repo-cli/test/Yeet"
+ *
+ * const red = (name: string, link: string) => YeetWatchCheck.make({ name, outcome: "fail", link })
+ * const before = yeetRedSetKey([red("Lint", "https://ci/1"), red("Check", "https://ci/2")])
+ *
+ * console.log(yeetRedSetKeyGained(yeetRedSetKey([red("Lint", "https://ci/3")]), before)) // true
+ * console.log(yeetRedSetKeyGained(yeetRedSetKey([red("Lint", "https://ci/1")]), before)) // false
+ * ```
+ *
+ * @param current - The red-set key observed now.
+ * @param accounted - The red-set key already handed back.
+ * @returns Whether `current` names at least one red `accounted` does not.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetRedSetKeyGained: {
+  (accounted: string): (current: string) => boolean;
+  (current: string, accounted: string): boolean;
+} = dual(2, (current: string, accounted: string): boolean => {
+  const handed = yeetRedSetEntries(accounted);
+  return HashSet.some(yeetRedSetEntries(current), (entry) => !HashSet.has(handed, entry));
+});
 
 /**
  * Resolve the persisted wave record's path for one checkout.
@@ -627,13 +762,15 @@ export const renderYeetDispatchLine = (report: YeetDispatchReport): string => {
  *
  * **Details**
  *
- * The capsule derives from the failing check's own snapshot record — name,
- * link, workflow, raw bucket/state — plus the watched PR's identity, and the
- * row id is deterministic over (prNumber, headSha, lane). A `duplicate`
- * decision performs no writes at all. Otherwise the inbox append happens
- * *before* the wave persist, and an append failure skips the persist: the
- * wave must never claim a capsule the inbox does not hold, because the next
- * observation of the same red is the retry.
+ * The capsule derives from the failing check's own record — name, link,
+ * workflow, raw bucket/state — plus the observed head's identity, and the row
+ * id is deterministic over (prNumber, headSha, lane). The head is only
+ * `{ headSha, prNumber }`, so the watch snapshot and the merge loop's status
+ * snapshot both dispatch through here. A `duplicate` decision performs no
+ * writes at all. Otherwise the inbox append happens *before* the wave persist,
+ * and an append failure skips the persist: the wave must never claim a capsule
+ * the inbox does not hold, because the next observation of the same red is
+ * the retry.
  *
  * Nothing here fails the caller: every failure path degrades to a loud stderr
  * line, keeping the A7 posture that a side-channel failure must not cancel
@@ -642,24 +779,17 @@ export const renderYeetDispatchLine = (report: YeetDispatchReport): string => {
  * **Example** (Build the dispatch effect)
  *
  * ```ts
- * import { dispatchYeetCheckFailure, YeetWatchCheck, YeetWatchSnapshot } from "@beep/repo-cli/test/Yeet"
+ * import { dispatchYeetCheckFailure, YeetWatchCheck } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
  * const check = YeetWatchCheck.make({ name: "Check", outcome: "fail" })
- * const snapshot = YeetWatchSnapshot.make({
- *   checks: [check],
- *   headSha: "abc123",
- *   mergeable: "MERGEABLE",
- *   prNumber: 751,
- *   state: "OPEN",
- *   threads: []
- * })
+ * const head = { headSha: "abc123", prNumber: 751 }
  *
- * console.log(Effect.isEffect(dispatchYeetCheckFailure("/repo", snapshot, check, "2026-08-17T00:00:00Z"))) // true
+ * console.log(Effect.isEffect(dispatchYeetCheckFailure("/repo", head, check, "2026-08-17T00:00:00Z"))) // true
  * ```
  *
  * @param repoRoot - The checkout whose inbox and wave record receive the failure.
- * @param snapshot - The snapshot the failure was observed in.
+ * @param head - The observed pull-request head the failure belongs to: its SHA and PR number.
  * @param check - The failing check's record itself — never a name to re-resolve,
  * because a rollup can legitimately carry two same-named checks.
  * @param at - The observation timestamp stamped on the capsule and row.
@@ -669,17 +799,17 @@ export const renderYeetDispatchLine = (report: YeetDispatchReport): string => {
  */
 export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure")(function* (
   repoRoot: string,
-  snapshot: YeetWatchSnapshot,
+  head: Pick<YeetRemediationWave, "headSha" | "prNumber">,
   check: YeetWatchCheck,
   at: string
 ): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const capsule = YeetFailureCapsule.make({
     bucket: check.signal.bucket,
-    headSha: snapshot.headSha,
+    headSha: head.headSha,
     lane: check.name,
     link: check.link,
     observedAt: at,
-    prNumber: snapshot.prNumber,
+    prNumber: head.prNumber,
     state: check.signal.state,
     workflow: check.workflow,
   });
@@ -706,8 +836,8 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
     YeetRemediationInput.make({
       at,
       capsuleId: row.id,
-      headSha: snapshot.headSha,
-      prNumber: snapshot.prNumber,
+      headSha: head.headSha,
+      prNumber: head.prNumber,
       wave: O.getOrNull(wave),
     })
   );
@@ -727,6 +857,290 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
   }
   yield* persistYeetRemediationWave(repoRoot, outcome.wave);
   yield* Console.error(renderYeetDispatchLine(YeetDispatchReport.make({ outcome, row })));
+});
+
+const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row: YeetBaseConflictRow): string => {
+  const head = Str.slice(0, 7)(row.capsule.headSha);
+  const opened = `[yeet] base conflict with ${row.capsule.base} on head ${head} — P0 capsule ${row.id}`;
+  return Match.value(outcome.decision).pipe(
+    Match.when("start-session", () => `${opened} opened the repair session; merge ${row.capsule.base} and push`),
+    Match.when(
+      "queue",
+      () =>
+        `${opened} queued to the head ${head} repair session (${A.length(outcome.wave.capsuleIds)} capsules); merge ${row.capsule.base} and push`
+    ),
+    Match.when("duplicate", () => `${opened} already queued for head ${head}`),
+    Match.exhaustive
+  );
+};
+
+/**
+ * One base-conflict ack receipt the generation walk passed without decoding it.
+ *
+ * **Details**
+ *
+ * The receipt file exists, so it acks its row, but it does not decode (a
+ * truncated write). The walk counts its generation as consumed and hands the
+ * receipt back instead of printing, so its caller decides how often to name
+ * it. `path` is the receipt file; `generation` is the conflict generation on
+ * the walked head whose row it acks.
+ *
+ * **Example** (Name a corrupt receipt)
+ *
+ * ```ts
+ * import { YeetBaseConflictCorruptReceipt } from "@beep/repo-cli/test/Yeet"
+ *
+ * const receipt = YeetBaseConflictCorruptReceipt.make({ generation: 0, path: "/repo/.beep/inbox/acks/conflict.json" })
+ * console.log(receipt.generation) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseConflictCorruptReceipt extends S.Class<YeetBaseConflictCorruptReceipt>(
+  $I`YeetBaseConflictCorruptReceipt`
+)(
+  {
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    path: S.String,
+  },
+  $I.annote("YeetBaseConflictCorruptReceipt", {
+    description: "A base-conflict ack receipt that exists but does not decode, and the generation it acks.",
+  })
+) {}
+
+/**
+ * Where one head's base-conflict generation walk stopped, and what it passed.
+ *
+ * **Details**
+ *
+ * `generation` is the conflict generation for the head's next base-conflict
+ * row (see {@link yeetBaseConflictWalk}). `corruptReceipts` lists, oldest
+ * generation first, every receipt the walk counted as consumed because it
+ * exists but does not decode; it is empty on a clean chain.
+ *
+ * **Example** (A clean walk)
+ *
+ * ```ts
+ * import { YeetBaseConflictWalk } from "@beep/repo-cli/test/Yeet"
+ *
+ * const walk = YeetBaseConflictWalk.make({ generation: 1 })
+ * console.log(walk.corruptReceipts.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseConflictWalk extends S.Class<YeetBaseConflictWalk>($I`YeetBaseConflictWalk`)(
+  {
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    corruptReceipts: S.Array(YeetBaseConflictCorruptReceipt).pipe(
+      SchemaUtils.withKeyDefaults(A.empty<YeetBaseConflictCorruptReceipt>())
+    ),
+  },
+  $I.annote("YeetBaseConflictWalk", {
+    description: "A head's next base-conflict generation and the undecodable ack receipts the walk passed to reach it.",
+  })
+) {}
+
+/**
+ * Walk one pull request head's base-conflict generations to the next one.
+ *
+ * **Details**
+ *
+ * Counts the head's consumed base-conflict rows, by walking the
+ * deterministic id chain from generation 0 and stopping at the first id that
+ * is not consumed. A row is consumed when its ack receipt is `cleared`, or
+ * when a receipt file exists but does not decode. Generation n + 1 is only
+ * ever written after generation n was consumed, so the walk sees every
+ * consumed row. While the latest row is still open this returns its
+ * generation, so every poll and a restarted monitor derive the same id and
+ * append nothing; after the loop acks it `cleared`, the next conflict on the
+ * same head gets the next generation and a new row.
+ *
+ * **Gotchas**
+ *
+ * The walk reads the ack receipts, not the bounded active index: the index
+ * drops an acked row the next time any row is appended, so counting the rows
+ * it holds would lose cleared generations and derive an acknowledged id
+ * again. A receipt that exists but does not decode (a truncated write) still
+ * acks its row, so the append would skip that id and the recall would ignore
+ * it; stopping there would leave the head's next conflict with no row. The
+ * walk counts it as consumed instead and returns it in `corruptReceipts`
+ * without printing anything: the walk runs from the dispatch, the recall, and
+ * the ack notice on every conflicted poll, so the until-ready loop names each
+ * corrupt receipt once per head and generation. A decodable receipt of any
+ * kind other than `cleared` stays the current generation: a row an operator
+ * acked some other way keeps the head's conflict closed until a push.
+ *
+ * **Example** (Build the walk)
+ *
+ * ```ts
+ * import { yeetBaseConflictWalk } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetBaseConflictWalk("/repo", { headSha: "abc123", prNumber: 751 })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose ack receipts are read.
+ * @param coordinates - The pull request number and head SHA.
+ * @returns The next generation (the number of consumed rows) and the undecodable receipts the walk passed.
+ * @category services
+ * @since 0.0.0
+ */
+export const yeetBaseConflictWalk = Effect.fn("Yeet.yeetBaseConflictWalk")(function* (
+  repoRoot: string,
+  coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
+): Effect.fn.Return<YeetBaseConflictWalk, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  let generation = 0;
+  let corruptReceipts = A.empty<YeetBaseConflictCorruptReceipt>();
+  let consumed = yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation });
+  while (O.isSome(consumed)) {
+    corruptReceipts = A.appendAll(corruptReceipts, consumed.value);
+    generation += 1;
+    consumed = yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation });
+  }
+  return YeetBaseConflictWalk.make({ generation, corruptReceipts });
+});
+
+/**
+ * Derive the conflict generation for the next base-conflict row on one pull request head.
+ *
+ * **Details**
+ *
+ * The `generation` of {@link yeetBaseConflictWalk}, for callers that need only
+ * the row id. Like the walk it prints nothing, so deriving the id on every
+ * poll repeats no line.
+ *
+ * **Example** (Build the derivation)
+ *
+ * ```ts
+ * import { yeetBaseConflictGeneration } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetBaseConflictGeneration("/repo", { headSha: "abc123", prNumber: 751 })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose ack receipts are read.
+ * @param coordinates - The pull request number and head SHA.
+ * @returns The number of the head's consumed base-conflict rows: acked `cleared`, or with a receipt that does not decode.
+ * @category services
+ * @since 0.0.0
+ */
+export const yeetBaseConflictGeneration = Effect.fn("Yeet.yeetBaseConflictGeneration")(function* (
+  repoRoot: string,
+  coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
+): Effect.fn.Return<number, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  return (yield* yeetBaseConflictWalk(repoRoot, coordinates)).generation;
+});
+
+// Whether the generation's row id is consumed, and by what. `None` when the
+// receipt is missing or a decodable kind other than `cleared`: the walk ends
+// at that generation. `Some` holds nothing for a `cleared` receipt, and the
+// receipt itself when the file exists but does not decode: a corrupt receipt
+// still acks the row, so ending the walk on it would wedge the head at that
+// generation. Nothing prints here; the walk's caller names corrupt receipts.
+const baseConflictGenerationConsumed = Effect.fnUntraced(function* (
+  repoRoot: string,
+  coordinates: Pick<YeetBaseConflictCapsule, "generation" | "headSha" | "prNumber">
+): Effect.fn.Return<
+  O.Option<ReadonlyArray<YeetBaseConflictCorruptReceipt>>,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
+  const id = yield* yeetBaseConflictRowId(coordinates);
+  const ack = yield* readYeetAckState(repoRoot, id);
+  const receipt = O.fromNullOr(ack.receipt);
+  if (O.isSome(receipt)) {
+    return receipt.value.resolution.kind === "cleared" ? O.some(A.empty()) : O.none();
+  }
+  if (!ack.acked) return O.none();
+  const path = yield* yeetInboxAckPath(repoRoot, id);
+  return O.some(A.of(YeetBaseConflictCorruptReceipt.make({ generation: coordinates.generation, path })));
+});
+
+/**
+ * Dispatch one observed base conflict: inbox row once, then the head's wave.
+ *
+ * **Details**
+ *
+ * The row id is deterministic over (prNumber, headSha, generation), so the
+ * row is appended at most once per conflict generation on a head, including
+ * across monitor restarts; the caller derives the generation with
+ * {@link yeetBaseConflictGeneration}. The row's id then joins the wave record
+ * through the same {@link decideYeetRemediation} policy a check red uses: a
+ * conflict on a head with no open session opens it, and a conflict beside a
+ * red queues onto it. That keeps the conflict's liveness tied to the head, so
+ * the next push supersedes it with the rest of the wave. As with check reds,
+ * the append happens before the wave persist and an append failure skips the
+ * persist. The next poll that still reads the conflict is the retry.
+ *
+ * When the inbox already holds the row, or an ack receipt for it, nothing is
+ * appended, the wave is left alone, and the result is `None`: `Some` always
+ * means this call wrote a live, unacknowledged row.
+ *
+ * Nothing here fails the caller: every failure path degrades to a stderr line.
+ *
+ * **Example** (Build the dispatch effect)
+ *
+ * ```ts
+ * import { dispatchYeetBaseConflict, YeetBaseConflictCapsule } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const capsule = YeetBaseConflictCapsule.make({
+ *   base: "origin/main", headSha: "abc123", link: null,
+ *   mergeable: "CONFLICTING", mergeStateStatus: "DIRTY", prNumber: 751
+ * })
+ *
+ * console.log(Effect.isEffect(dispatchYeetBaseConflict("/repo", capsule, "2026-09-25T00:00:00Z"))) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose inbox and wave record receive the conflict.
+ * @param capsule - The conflicted head, its pull request, and the raw merge fields.
+ * @param at - The observation timestamp stamped on the row and the wave.
+ * @returns The row when this call appended it; `None` when the inbox already held it, an ack receipt exists for it, or the append failed.
+ * @category services
+ * @since 0.0.0
+ */
+export const dispatchYeetBaseConflict = Effect.fn("Yeet.dispatchYeetBaseConflict")(function* (
+  repoRoot: string,
+  capsule: YeetBaseConflictCapsule,
+  at: string
+): Effect.fn.Return<O.Option<YeetBaseConflictRow>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const delivered = yield* yeetBaseConflictRowId(capsule).pipe(
+    Effect.map((id) => YeetBaseConflictRow.make({ capsule, checkout: repoRoot, id, severity: "P0", ts: at })),
+    Effect.flatMap((row) =>
+      appendYeetInboxRowOnce(repoRoot, row).pipe(
+        Effect.map((appended) => (appended ? O.some(row) : O.none<YeetBaseConflictRow>()))
+      )
+    ),
+    Effect.catch((error) =>
+      Console.error(
+        `[yeet] failed to deliver the base-conflict row for head ${Str.slice(0, 7)(capsule.headSha)} to the inbox (${error.message}); it is NOT queued and will retry on the next poll.`
+      ).pipe(Effect.as(O.none<YeetBaseConflictRow>()))
+    )
+  );
+  if (O.isNone(delivered)) {
+    return delivered;
+  }
+  const row = delivered.value;
+  const wave = yield* loadYeetRemediationWave(repoRoot);
+  const outcome = decideYeetRemediation(
+    YeetRemediationInput.make({
+      at,
+      capsuleId: row.id,
+      headSha: capsule.headSha,
+      prNumber: capsule.prNumber,
+      wave: O.getOrNull(wave),
+    })
+  );
+  if (!YeetDispatchDecision.is.duplicate(outcome.decision)) {
+    yield* persistYeetRemediationWave(repoRoot, outcome.wave);
+  }
+  yield* Console.error(renderYeetBaseConflictDispatchLine(outcome, row));
+  return delivered;
 });
 
 /**
@@ -777,4 +1191,62 @@ export const supersedeYeetDispatchState = Effect.fn("Yeet.supersedeYeetDispatchS
       `[yeet] head moved to ${Str.slice(0, 7)(headSha)}; the ${A.length(superseded.value.capsuleIds)}-capsule wave for ${Str.slice(0, 7)(superseded.value.headSha)} is superseded.`
     );
   }
+});
+
+/**
+ * Stamp one head's required red set on the persisted wave record.
+ *
+ * **Details**
+ *
+ * The `--until-ready` loop calls this on every converging poll, after the
+ * poll's rows are appended and after the first poll of a head pinned the
+ * record to it. It writes only when the record is pinned to this head and
+ * holds a different key, so an unchanged red set costs one read. A record on
+ * another head is left alone: pinning is the caller's first-poll job.
+ *
+ * **Gotchas**
+ *
+ * The rows and the key are two writes. A waiter that reads between them can
+ * hand the same rows back once more on its next read. That is accepted: the
+ * window is one poll's local file writes, and a duplicate return repeats the
+ * gate line; it loses nothing.
+ *
+ * **Example** (Build the stamp effect)
+ *
+ * ```ts
+ * import { stampYeetWaveRedSet } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const head = { headSha: "abc123", prNumber: 751 }
+ *
+ * console.log(Effect.isEffect(stampYeetWaveRedSet("/repo", head, "", "2026-09-25T00:00:00Z"))) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose wave record is stamped.
+ * @param head - The observed head: its SHA and pull request number.
+ * @param redSetKey - The head's required red set ({@link yeetWaveRedSetKey}).
+ * @param at - The observation timestamp stamped as the record's `updatedAt`.
+ * @returns The key the record held for this head before the stamp; `None` when it held none or is on another head.
+ * @category services
+ * @since 0.0.0
+ */
+export const stampYeetWaveRedSet = Effect.fn("Yeet.stampYeetWaveRedSet")(function* (
+  repoRoot: string,
+  head: Pick<YeetRemediationWave, "headSha" | "prNumber">,
+  redSetKey: string,
+  at: string
+): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const pinned = O.filter(
+    yield* loadYeetRemediationWave(repoRoot),
+    (wave) => wave.headSha === head.headSha && wave.prNumber === head.prNumber
+  );
+  if (O.isNone(pinned)) return O.none<string>();
+  const previous = pinned.value.redSetKey;
+  if (!O.contains(previous, redSetKey)) {
+    yield* persistYeetRemediationWave(
+      repoRoot,
+      YeetRemediationWave.make({ ...pinned.value, redSetKey: O.some(redSetKey), updatedAt: at })
+    );
+  }
+  return previous;
 });

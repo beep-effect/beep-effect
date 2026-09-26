@@ -1,0 +1,91 @@
+{
+  "authority": "bounded-D1-main-source-and-census-review",
+  "revision": "8caad510d26bdfbce0830567d45d7e378eebd181",
+  "changedSources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "beforeSha256": "d373db7522028fb0a12567af96ad1187336e4661bdaf1e4db26f75617f6a129d",
+      "afterSha256": "46ca5a6178a04d97671bd9e1def72db6b5d65cf0c94a40b8506658ae6b4684e0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "beforeSha256": "1c5e855fa5c7f7e73e5e57f3935e2d323fcf7198f064c56bd5cbfe3b4f59b6bf",
+      "afterSha256": "0e8c18ccfeba2115ea05048d24f9c58d907f0d7abf99d4ec4cf8071d02770f35"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "beforeSha256": "7f2323746794e3866574793a7796e9ec7dce650f249a9b91290c617fe1352319",
+      "afterSha256": "aad45921b1384218d503718a330d0aa94857e7015e2f74483b8322037a5ef1f6"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "beforeSha256": "c2de8a66fd0639ef796ad0fa0749afce7426a97120572b9a7913de9bdef7477f",
+      "afterSha256": "80515e1392ec12c4a99087392afa20133567e97a6efc12980df83e0c6cd93f1d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
+      "beforeSha256": "ef432afcb2e1b75157903ea5d528283a980ec98eb2c9efcc7f6b6241390ee464",
+      "afterSha256": "b40030c7c98fa46f6270ee95f8f71ad858c9f198031e51acccf3f1282ce75cb7"
+    },
+    {
+      "path": "packages/tooling/tool/cli/turbo.json",
+      "beforeSha256": "685f70a6a73ea35b0e1778e6905a9ecfe2e086a38774ba063aeb0aec92b72131",
+      "afterSha256": "e8f889632573b9b92ed423b73d3ae1d80b03763d652fd25429416c64e3b1aab2"
+    }
+  ],
+  "addedSources": [
+    {
+      "path": "packages/tooling/tool/cli/test/gate-order-handoff.test.ts",
+      "sha256": "b8e0fbc8157357977530a2a329939ae558b655a153db2e27a5cb83ac629770c1"
+    },
+    {
+      "path": "goals/time-to-certainty/research/economics.json",
+      "sha256": "37e854ef859c00e4930cb1b23cfba5989a2947c121a9f0bc88c30e2fc2785230"
+    },
+    {
+      "path": "goals/time-to-certainty/research/gate-order-handoff.json",
+      "sha256": "c9619cee69e05a8e45555696292579864cbadcc965d2be4f4251a41182554c9b"
+    }
+  ],
+  "census": {
+    "workspaces": 144,
+    "nodes": 3473,
+    "executable": 1970,
+    "addedNodes": 0,
+    "removedNodes": 0,
+    "inputSummaryOnlyChanges": 53,
+    "configurationChanges": [
+      "@beep/repo-cli#test",
+      "@beep/repo-cli#test:property"
+    ],
+    "rootScriptsUnchanged": true,
+    "globalConfigurationUnchanged": true
+  },
+  "review": [
+    "Planner replaces its inline full-tier concatenation with the same shared declaration list; commands and their execution authorities remain downstream.",
+    "Tasks exports the existing red-scheduling decision. Unknown and precise lanes stop after red; explicitly imprecise lanes continue.",
+    "WaveOrder seeds quality:cache-policy and records post-A1 absence honestly. Runtime lane order may change; historical plan order is not renewed.",
+    "Ranking and handoff helpers consume typed seed, lane and economics values; the fixture loads the two declared repository JSON files and verifies pinned handoff behavior.",
+    "Quality schemas add pointer classification, seed findings and handoff coherence. This bounded review and eight tests are not exhaustive interpreter or effect coverage."
+  ],
+  "tests": {
+    "command": "bunx vitest run packages/tooling/tool/cli/test/gate-order-handoff.test.ts",
+    "filesPassed": 1,
+    "testsPassed": 8,
+    "logSha256": "5e470d5f2121aecbecb93f2283757bb0923dcebd64d8a69bff48d6ab7bef8838"
+  },
+  "beforeCensusSha256": "3acc31fed1b0842d1d943c2955a7d21b8301004881e77add5054c4a05254a0bf",
+  "afterCensusSha256": "847b8dca75805bc161f8bf35fd4a0a9995c92f33e4374a6815a0dba09c401d34",
+  "limits": [
+    "All 14 broader unresolved attachment obligations remain.",
+    "Six retained planner artifacts keep their historical pins; no current planner parity or execution claim.",
+    "Live census is not an atomic filesystem snapshot.",
+    "No signed-remote evidence, complete semantic closure, runtime renewal or qualification promotion."
+  ],
+  "acceptedAttachment": {
+    "sources": 1014,
+    "artifacts": 6,
+    "reviews": 50,
+    "unresolved": 14
+  }
+}

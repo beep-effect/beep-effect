@@ -1,0 +1,176 @@
+{
+  "authority": "reviewed-ai-sync-unused-dependency-removal",
+  "reason": "The only removed import used an unsafe Layer<any> test assertion. Removing it exposes the unused development dependency.",
+  "previousReview": {
+    "reviewer": "effect-vitest-canon goal executor",
+    "reason": "Preserve main pilot exclusions and all 68 reviewed migration dependency deltas.",
+    "basis": {
+      "path": "goals/effect-vitest-canon/research/qualification-main-merge-review.md",
+      "sha256": "43dc104d9e053336f94f029b20e482c5d5747985b05c4c0152fbbce642ef2961"
+    }
+  },
+  "changes": [
+    {
+      "computation": "@beep/ai-sync#audit",
+      "before": [
+        "@beep/identity#audit",
+        "@beep/schema#audit",
+        "@beep/test-utils#audit",
+        "@beep/types#audit",
+        "@beep/utils#audit"
+      ],
+      "after": [
+        "@beep/identity#audit",
+        "@beep/schema#audit",
+        "@beep/test-utils#audit",
+        "@beep/utils#audit"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#build",
+      "before": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/types#build",
+        "@beep/utils#build"
+      ],
+      "after": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#check",
+      "before": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/types#build",
+        "@beep/utils#build"
+      ],
+      "after": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#coverage",
+      "before": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/types#build",
+        "@beep/utils#build"
+      ],
+      "after": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#lint:deprecated-apis",
+      "before": [
+        "//#lint:policy-fingerprint",
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/types#transit",
+        "@beep/utils#transit"
+      ],
+      "after": [
+        "//#lint:policy-fingerprint",
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/utils#transit"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#package-test-typecheck",
+      "before": [
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/types#transit",
+        "@beep/utils#transit"
+      ],
+      "after": [
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/utils#transit"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#test",
+      "before": [
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/types#transit",
+        "@beep/utils#transit",
+        "@beep/utils#transit"
+      ],
+      "after": [
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/utils#transit",
+        "@beep/utils#transit"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#test:integration",
+      "before": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/types#build",
+        "@beep/utils#build"
+      ],
+      "after": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-utils#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/ai-sync#test:property",
+      "before": [
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/types#transit",
+        "@beep/utils#transit",
+        "@beep/utils#transit"
+      ],
+      "after": [
+        "@beep/identity#transit",
+        "@beep/schema#transit",
+        "@beep/test-utils#transit",
+        "@beep/utils#transit",
+        "@beep/utils#transit"
+      ]
+    }
+  ],
+  "invariants": [
+    "Nine executable dependency arrays lose only @beep/types task edges; five are cache-enabled.",
+    "All commands, command digests, task configurations, root configuration and Turbo source bindings are identical.",
+    "The four existing scope entries, profile, epoch and qualification ledger remain unchanged. No computation is qualified or newly allowed to cache."
+  ],
+  "validation": {
+    "aiSyncPackageVerify": "audit and docgen pass after dependency removal",
+    "remaining": "Exact-head full proof remains pending."
+  },
+  "limits": [
+    "Lockfile and TypeScript reference changes do not renew frozen pilot or signed evidence."
+  ]
+}

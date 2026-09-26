@@ -1,0 +1,119 @@
+{
+  "sourceRevision": "32e271e543d7225d6f8ffe3f1cdd2160cfe9b9a6",
+  "authority": "Bounded actual-script execution against disposable synthetic inputs; child browser/test executables are recorders. No task qualification.",
+  "storybook": {
+    "head": "32e271e543d7225d6f8ffe3f1cdd2160cfe9b9a6",
+    "sourceSha256": "488deb42c6c48cd65647ecad3d69593225819f9ac07c6ecd8ebee1d1bc373945",
+    "cases": [
+      {
+        "case": "ci-success",
+        "ci": "true",
+        "exit": 0,
+        "calls": 3,
+        "vitestChunks": [
+          20,
+          20,
+          1
+        ]
+      },
+      {
+        "case": "ci-failed-first-chunk",
+        "ci": "true",
+        "exit": 1,
+        "calls": 3,
+        "vitestChunks": [
+          20,
+          20,
+          1
+        ]
+      },
+      {
+        "case": "numeric-ci-installs",
+        "ci": "1",
+        "exit": 0,
+        "calls": 4,
+        "vitestChunks": [
+          20,
+          20,
+          1
+        ]
+      },
+      {
+        "case": "install-failure",
+        "ci": "false",
+        "exit": 1,
+        "calls": 1,
+        "vitestChunks": []
+      },
+      {
+        "case": "empty-stories",
+        "ci": "true",
+        "exit": 1,
+        "calls": 0,
+        "vitestChunks": []
+      }
+    ],
+    "scope": "Real dispatcher with synthetic stories and recorder executables replacing playwright/vitest. No browser download, story execution or cache qualification.",
+    "findings": [
+      "Exact CI=true suppresses installation; CI=1 does not.",
+      "41 regular stories sorted into 20/20/1; symlink and non-story ignored.",
+      "Failed first chunk does not prevent remaining chunks; aggregate exits 1.",
+      "Install failure stops before Vitest.",
+      "Empty story population fails."
+    ]
+  },
+  "migration": {
+    "head": "32e271e543d7225d6f8ffe3f1cdd2160cfe9b9a6",
+    "sourceSha256": "56c85a526f35e1e4bd58933c73876910b2ab51cd8c372b8ccc18b59f0f9131e1",
+    "cases": [
+      {
+        "case": "stale-check",
+        "flag": "--check",
+        "exit": 1,
+        "targetChanged": false,
+        "targetSha256": "44ea8ede9025c26663124ceeefca2a35e40e5021cd116e436d368e2deae3355e"
+      },
+      {
+        "case": "write",
+        "flag": "--write",
+        "exit": 0,
+        "targetChanged": true,
+        "targetSha256": "22bde7b2d309ddaeff7a7318ec6d11d578e54ac8a967c4c6ceb379813d29176d"
+      },
+      {
+        "case": "fresh-check",
+        "flag": "--check",
+        "exit": 0,
+        "targetChanged": false,
+        "targetSha256": "22bde7b2d309ddaeff7a7318ec6d11d578e54ac8a967c4c6ceb379813d29176d"
+      },
+      {
+        "case": "changed-sql-check",
+        "flag": "--check",
+        "exit": 1,
+        "targetChanged": false,
+        "targetSha256": "22bde7b2d309ddaeff7a7318ec6d11d578e54ac8a967c4c6ceb379813d29176d"
+      },
+      {
+        "case": "rewrite",
+        "flag": "--write",
+        "exit": 0,
+        "targetChanged": true,
+        "targetSha256": "145e6daecde6f8f6a58231c837019bbe5ada5f71d2597176258ec397d0405793"
+      }
+    ],
+    "scope": "Real generator with disposable synthetic migration directories and target; existing installed dependencies reused. No database migration applied or real workspace edited.",
+    "findings": [
+      "Check rejects stale generated source and does not write.",
+      "Write generates sorted migration entries and escapes template syntax.",
+      "Directory entries lacking migration.sql and top-level regular files are ignored.",
+      "Changing SQL invalidates check and rewrite refreshes target."
+    ]
+  },
+  "archiveManifestSha256": "02c2f97501b3090debc4353c6bfef3cbf630184474dcbcda2e49d9c79da9c1ef",
+  "remaining": [
+    "Actual Storybook/Vitest/browser effects and inherited environment require owning runtime evidence.",
+    "Migration source discovery, dependencies and generated-module consumers are not completely qualified by fixture checks.",
+    "Both effective task configurations remain cache:false; no lifecycle promotion requested."
+  ]
+}

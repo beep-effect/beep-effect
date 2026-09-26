@@ -4572,59 +4572,62 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("enriches active lease scopes with live memory and task telemetry", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(
-          gibRef,
-          (tempRoot) =>
-            Effect.gen(function* () {
-              const fs = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
-              yield* fs.makeDirectory(binDirectory, { recursive: true });
-              yield* writeExecutable(
-                path.join(binDirectory, "systemctl"),
-                "#!/bin/sh\nprintf 'MemoryPeak=16384\\nTasksCurrent=7\\n'\n"
-              );
-              yield* writeFakeLease(tempRoot, {
-                weightTokens: 10,
-                runScope: RunScopeRecord.make({
-                  unitName: "agent-run-telemetry.scope",
-                  support: "active",
-                  attachedPid: process.pid,
-                  attachedAt: "2026-08-29T00:00:00.000Z",
-                }),
-              });
+  // Queue polling and subprocess telemetry observe the live filesystem and clock.
+  it.effect("enriches active lease scopes with live memory and task telemetry", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(
+        gibRef,
+        (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(
+              path.join(binDirectory, "systemctl"),
+              "#!/bin/sh\nprintf 'MemoryPeak=16384\\nTasksCurrent=7\\n'\n"
+            );
+            yield* writeFakeLease(tempRoot, {
+              weightTokens: 10,
+              runScope: RunScopeRecord.make({
+                unitName: "agent-run-telemetry.scope",
+                support: "active",
+                attachedPid: process.pid,
+                attachedAt: "2026-08-29T00:00:00.000Z",
+              }),
+            });
 
-              const queued = yield* Effect.forkChild(
-                withQualityAdmission(
-                  request({ originKey: "origin-telemetry-contender" }),
-                  noAdmissionOriginGate,
-                  Effect.void,
-                  fastConfig
-                )
-              );
-              yield* Effect.sleep("100 millis");
+            const queued = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-telemetry-contender" }),
+                noAdmissionOriginGate,
+                Effect.void,
+                fastConfig
+              )
+            );
+            yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
 
-              const snapshot = yield* withPrependedPath(binDirectory, admissionStatus());
-              expect(snapshot.leases[0]?.runScope).toMatchObject({
-                memoryPeakBytes: 16_384,
-                tasksCurrent: 7,
-              });
-              expect(snapshot.tickets).toHaveLength(1);
-              yield* Fiber.interrupt(queued);
-              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
-              const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
-              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
-              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("tasksCurrent");
-            }),
-          128,
-          true
-        );
-      })
-    ));
+            const snapshot = yield* withPrependedPath(binDirectory, admissionStatus());
+            expect(snapshot.leases[0]?.runScope).toMatchObject({
+              memoryPeakBytes: 16_384,
+              tasksCurrent: 7,
+            });
+            expect(snapshot.tickets).toHaveLength(1);
+            yield* Fiber.interrupt(queued);
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
+            expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
+            expect(unavailable.leases[0]?.runScope).not.toHaveProperty("tasksCurrent");
+          }),
+        128,
+        true
+      );
+    }).pipe(TestClock.withLive)
+  );
 
   // it.live: the reaper reads the real clock to age heartbeats, as every sibling test here does.
   it.live.each(["agent-run-deadbeef.scope", "beep-proof-deadbeef.service"])(

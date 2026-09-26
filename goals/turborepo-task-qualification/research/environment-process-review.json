@@ -1,0 +1,88 @@
+{
+  "authority": "environment-and-admission-source-delta-review",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "61d57b2ee95b1f4216aad81f742f427d8bf64fc4",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "sha256": "2ecc2f4bd372c58ab73bdbb14cf2de5092a2a7819e2dd07a96ed819fb554578e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "sha256": "f5ea05fe58ceaec33b87ac1410b55b50253dd02f85c416a7403cbaf4db01a557"
+    }
+  ],
+  "findings": [
+    "EnvConfig synchronous string readers now parse a fresh environment provider per call. Synthetic set/change/delete controls observe each new value.",
+    "isCi reads an effect-provided ConfigProvider; isCiSync checks live Bun.env and a fresh synchronous provider. CI recognition is exact true, not 1 or TRUE. Provided configuration can intentionally disagree with the process environment.",
+    "Environment classification adds optional HOME and TURBO_CACHE_DIR. Synthetic directory inputs are trimmed; they do not independently establish remote eligibility or a protected namespace.",
+    "StepExec admission workload writing obtains a UUID through Effect Crypto and maps identity failure into AdmissionWorkloadRegistrationError. Existing temporary write/chmod/rename behavior remains; this is a random filesystem side effect outside task output purity.",
+    "Environment health and secret-session paths gain Crypto requirements. The existing health cache is process-local and keyed by repoRoot; .env reads and op subprocess probes remain effects, not pure configuration. No live secret operation was performed."
+  ],
+  "controls": {
+    "synthetic": true,
+    "reads": [
+      null,
+      "first",
+      "second",
+      null
+    ],
+    "ci": [
+      {
+        "value": "true",
+        "sync": true,
+        "providedFalse": false
+      },
+      {
+        "value": "1",
+        "sync": false,
+        "providedFalse": false
+      },
+      {
+        "value": "TRUE",
+        "sync": false,
+        "providedFalse": false
+      },
+      {
+        "value": "false",
+        "sync": false,
+        "providedFalse": false
+      }
+    ],
+    "cache": [
+      {
+        "home": null,
+        "cacheDir": null
+      },
+      {
+        "home": "/synthetic/home",
+        "cacheDir": null
+      },
+      {
+        "home": "/synthetic/home",
+        "cacheDir": "/synthetic/cache"
+      }
+    ]
+  },
+  "tests": {
+    "command": "bun run --cwd packages/tooling/tool/cli test test/shared-internals.test.ts test/turbo-cache.test.ts test/step-capture-lifecycle.test.ts",
+    "passed": 115,
+    "suites": 3,
+    "exit": 0
+  },
+  "limits": [
+    "The initial private control mistakenly treated optional cache directory fields as Options; it failed before results were retained. The corrected recipe uses optional string fields and passed.",
+    "This reviews two historical source deltas, not complete transitive process/environment behavior, production secret readiness, or signed remote qualification.",
+    "All 13 broader census obligations remain open."
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 34,
+    "unresolved": 13
+  },
+  "retention": {
+    "fileCount": 8,
+    "archiveManifestSha256": "d6b6242684fd18432bb4ad2640de032ba9d44f0c1e497e786042289b86443be8"
+  }
+}

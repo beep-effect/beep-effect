@@ -1,0 +1,27 @@
+{
+  "kind": "main-integration-alias-parity-repair",
+  "base": "217e3085921c0a11c9504e2e0106f51af2efc62f",
+  "previousHead": "e1b5f5841e7f813fe4c8d4c6aa9720dc2b687156",
+  "failure": "Merged-preview lint:tsgo-rules found generated Vitest aliases did not match root TypeScript paths.",
+  "attribution": "Inherited main integration: origin/main adds the Refs alias to tsconfig.json but leaves the generated alias file unchanged.",
+  "repair": "Regenerate vitest.aliases.generated.json from parsed tsconfig.json compilerOptions.paths, then run Biome formatting. Only the Refs alias is added.",
+  "verification": {
+    "command": "bun run beep quality tsgo-rules",
+    "exit": 0,
+    "result": "113 rules and 27 plugin options verified; alias parity passes."
+  },
+  "files": [
+    {
+      "path": "tsconfig.json",
+      "sha256": "99d989f4baf69a2e3c05a95c2da4cc82d5bccdab0e96634c1775fcfc28293ef7"
+    },
+    {
+      "path": "vitest.aliases.generated.json",
+      "sha256": "1287d2379cd9f1e4d920110a86d38b58db9ef72d0d9b9c2971395b1537457e84"
+    }
+  ],
+  "remaining": [
+    "Full merged-head proof and hosted checks remain required.",
+    "Frozen pilot evidence retains its own recorded source revisions."
+  ]
+}

@@ -419,6 +419,11 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
       message: "--observed applies only to proof-job-finished and pr-merge-ready rows.",
     });
   }
+  if (resolution.kind === "cleared" && entry.value.row.kind !== "base-conflict") {
+    return yield* YeetCommandError.make({
+      message: "A cleared receipt applies only to base-conflict rows; the merge loop writes it.",
+    });
+  }
   const receipt = YeetAckReceipt.make({ ackedAt, id, resolution });
   const receiptPath = yield* writeYeetAckReceipt(repoRoot, receipt);
   return YeetInboxAckReport.make({ receipt, receiptPath, replacedPrior: entry.value.ack.acked });

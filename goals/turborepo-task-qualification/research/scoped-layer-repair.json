@@ -1,0 +1,15 @@
+{
+  "authority": "scoped-evidence-test-layer-repair",
+  "source": {
+    "path": "packages/tooling/tool/cli/test/cache-entrypoints.test.ts",
+    "sha256": "3e957c9662b5974b48ee098ded26d9aa7509130990ea5ecd1cd61385257afda4"
+  },
+  "change": "Register the new scoped-tool test with it.layer and an explicit 30-second layer timeout; remove its per-test provideScopedLayer wrapper.",
+  "validation": {
+    "effectVitestRatchet": "passed; baseline unchanged",
+    "ratchetLogSha256": "cf6fac345b5fb14073287f22c304448ce49538f346031cdbcaf5a586dbe954da"
+  },
+  "limits": [
+    "Test resource-lifecycle repair only; no cache qualification or runtime evidence renewal."
+  ]
+}

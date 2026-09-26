@@ -81,7 +81,7 @@ Higher sources outrank lower sources when they conflict.
 | --- | --- |
 | W1 check fidelity + measurement | `Status.ts` requests `name,state,bucket,link,workflow,completedAt,startedAt`; `GhStatusCheck` gains the four as `S.optionalKey`; `YeetStatusRemote.checks` becomes `S.Array(YeetWatchCheck)` through `SchemaUtils.withKeyDefaults`; the hook's session file gains an additive `firstSeenAt` map with `schemaVersion` unchanged; a push → row → ack timeline per head prints from the new stamps. |
 | W2 `Converge.ts` + loop contract + wave return | The private convergence moves to `internal/Converge.ts` with its signature narrowed to the fields it reads; `dispatchYeetCheckFailure` takes `{ headSha, prNumber }`; `--until-ready` runs the convergence every poll; `required-red` and the base conflict are non-terminal under `--until-ready`; `job wait` gains outcome `wave` with exit code 2, scoped to the job's own PR, never acking the wave rows. |
-| W3 conflict row + `cleared` ack | A P0 `base-conflict` `S.Class` row with `kind: S.tag("base-conflict")`, keyed on `(prNumber, headSha)`, written at the existing `yeetBaseConflictFor` site with a `conflictRow` guard beside `announcedRow`; a seventh `YeetAckResolutionKind`, `cleared`, attributed to the monitor job, written when the same head is observed mergeable again. |
+| W3 conflict row + `cleared` ack | A P0 `base-conflict` `S.Class` row with `kind: S.tag("base-conflict")`, keyed on `(prNumber, headSha, generation)` (a conflict that returns on the same head after its `cleared` ack is the next generation), written at the existing `yeetBaseConflictFor` site with a `conflictRow` guard beside `announcedRow`; a seventh `YeetAckResolutionKind`, `cleared`, attributed to the monitor job, written when the same head is observed mergeable again. |
 | W4 comment rows + per-consumer cursor | A P1 `pr-comment` row per human, non-self, top-level comment, keyed on the comment id, carrying URL, author and an excerpt of about 200 characters; the comment watermark namespaced per consumer mode; the `--until-ready` first-cycle backlog, bounded to comments created after the job's submit time, becomes rows instead of stdout. |
 | W5 wave-exempt kit + hook parity | `YeetInboxWaveExemptRowKind = LiteralKit(["review-thread", "pr-comment"])`; `yeetInboxRowLiveness` reads it; the hook carries the exempt-plus-observed union as one marked jq literal line; a repo-cli test parses that line and asserts it equals the kits; `base-drift` keeps superseding on a push. |
 | W6 attribution + law text | `CLAUDE_CODE_SESSION_ID` and `CODEX_THREAD_ID` join `PROOF_JOB_FORWARDED_ENV_NAMES` with one test assertion; `AGENTS.md`, the yeet skill, `CheckOutcome.ts:63-64` and `Remediation.ts:14-18` describe the shipped behaviour; the vocabulary block (checkout, inbox row, capsule, wave, owner session) lands in the yeet skill. |
@@ -192,8 +192,10 @@ question, rejected option and cite.
       new P0/P1 wave on its own PR with the rows still live, and reaches
       `ready` exit 0 on re-run; `MonitorLoop` and `WatchMode` both import
       `Converge.ts`.
-- [ ] W3: one `base-conflict` row per head, idempotent across polls; a
-      `cleared` ack lands only when the same head is observed mergeable.
+- [ ] W3: one `base-conflict` row per (head, generation), idempotent across
+      polls; a `cleared` ack lands only when the same head is observed
+      mergeable, and a conflict that returns on that head after it writes
+      generation + 1 as a new row and wave.
 - [ ] W4: `--watch` and `--until-ready` on one branch keep separate
       watermarks; the backlog becomes rows bounded by the submit time; the
       first namespaced run replays nothing.

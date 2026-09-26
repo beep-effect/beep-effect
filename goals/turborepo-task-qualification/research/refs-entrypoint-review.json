@@ -1,0 +1,76 @@
+{
+  "authority": "refs-entrypoint-source-and-fixture-review",
+  "head": "0d44354f8691f1048aa821b1fade5b16ef2b2276",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts",
+      "sha256": "9617c1c6165b5af18bb67ef804eff7c2b49f87ea15ca527dbc42a56fcb6ba63f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
+      "sha256": "20519bfc67bee29980aa59cc4e4a00dbee826d35ad3eddfab6f8f1f7b1fa4a1a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
+      "sha256": "246821048944d875d466223d7f7ddd8ed34d990191455efa9896cafb219bf9a6"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.errors.ts",
+      "sha256": "b2da682047ba9ad5ef336ab4dfa65481bc1134431b29485c8cdec10e4a998e2e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/index.ts",
+      "sha256": "78ea0f7b981da528840adfbe101adc0971b26055282431ca42b73b6c064c9f0c"
+    },
+    {
+      "path": "scripts/references.json",
+      "sha256": "6c9b3c226249cd115aaffd88b65981e9edb78b7e0980a2d20e2f4171ab679114"
+    }
+  ],
+  "classification": {
+    "plan": "Read-only filesystem-dependent plan; absolute roots and member Git presence affect output.",
+    "refresh": "Mutating orchestration with network, toolchain, environment, time and filesystem dependencies; not qualified for reuse.",
+    "timer": "User-systemd rendering/install/refresh/uninstall with filesystem and service-manager effects; not qualified for reuse.",
+    "linkInto": "Filesystem mutation exposed through the service; preserves existing nonsymlink paths and refuses a symlinked .repos directory."
+  },
+  "inputs": [
+    "Owner scripts/references.json; HOME; BEEP_REFERENCES_ROOT; explicit root; PATH; jobs; member Git metadata, cleanliness, branch and HEAD.",
+    "Git remotes and network results; resolved git/graft binaries; Graft configuration, source trees and deep-provider environment.",
+    "Installed systemd owner/root/calendar directives, Bun executable resolution and user unit directory; graft environment-file presence and service environment.",
+    "Clock for refresh timestamp; temporary filename generation; child process output and exit status."
+  ],
+  "findings": [
+    "Root precedence is explicit flag, nonempty environment override, then home-relative manifest default. Manifest is read even with an explicit root.",
+    "Plan checks member .git presence and prints clone/link/build suggestions, but performs no clone. Refresh likewise does not provision missing clones; missing Git metadata becomes pull-failed.",
+    "Before cleanliness checks, refresh may append graft exclusions to .git/info/exclude. Dirty/off-main members skip pull and member build; clean main uses pull --ff-only. Workspace build/check still run after member failures or skips.",
+    "Deep members use build --deep --allow-partial with jobs and optional directory filters. Structural members use build without deep flags. Production deep builds were not executed by this review.",
+    "Child captures are trimmed, bounded to 8 Mi characters and may merge stdout/stderr. This cannot establish exact raw log or byte equality. Maintenance children receive a restricted environment, while deep builds, notify-send and systemctl extend it.",
+    "Refresh writes last-refresh.json via a temporary file and rename and may issue a critical notification. Member failures can be encoded in a returned status; the CLI prints that status rather than explicitly converting every failed member into a command error.",
+    "Timer rendering includes an environment file, frozen-lockfile pre-install, twelve-hour timeout, persistent scheduling and randomized delay. Install and refresh write units and enable the timer; uninstall disables it and removes units. These are not executed against live workstation units by this review.",
+    "Manifest decode rejects excess fields and duplicate member names. Timer fields use the shared SystemdUnitPath schema. Errors retain path, message and optional defect details; output safety is not implied by type validity."
+  ],
+  "tests": {
+    "suites": [
+      "refs-refresh-plan.test.ts",
+      "refs-timer.test.ts",
+      "refs-schemas.test.ts"
+    ],
+    "passed": 16,
+    "exit": 0,
+    "scope": "Temporary filesystem fixtures and shell stand-ins for git, graft, notify-send and systemctl; codec/property tests included. No production pulls, paid deep builds or live timer changes."
+  },
+  "remaining": [
+    "The Refs-specific obligation now has bounded source/fixture review; transitive systemd, process, Git and Graft semantics and actual runtime closure remain incomplete.",
+    "All 14 census obligations remain attached. No signed remote evidence, task qualification or fresh hosted proof is established."
+  ],
+  "acceptedAttachment": {
+    "sources": 974,
+    "artifacts": 6,
+    "reviews": 39,
+    "unresolved": 14
+  },
+  "retention": {
+    "fileCount": 10,
+    "archiveManifestSha256": "ad323bbcd6267a53793b21b8cfc250141b5fcdf349e0cdfd0dd2bcc528f739fd"
+  }
+}

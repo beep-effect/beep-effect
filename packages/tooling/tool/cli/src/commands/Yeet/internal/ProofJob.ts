@@ -12,7 +12,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Cause, Effect, Exit } from "effect";
+import { Cause, Effect, Exit, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -132,6 +132,16 @@ export const PROOF_JOB_ENV = {
  * Exact environment variable names forwarded from the submitter to the job
  * unit (ruling 39). Values are never recorded anywhere.
  *
+ * **Details**
+ *
+ * `CLAUDE_CODE_SESSION_ID` and `CODEX_THREAD_ID` let a detached monitor's
+ * session-registry rows carry the harness and session id of the session that
+ * submitted it (pr-event-awareness D3). A session id names a local transcript,
+ * not a credential, and neither name matches the deny pattern. The forwarded
+ * id names that spawning session, not the job, so a monitor that outlives the
+ * session reads its owner as dead. That is deliberate: the job never adopts a
+ * later session it was not started from.
+ *
  * **Example** (PATH is forwarded)
  *
  * ```ts
@@ -162,6 +172,8 @@ export const PROOF_JOB_FORWARDED_ENV_NAMES: ReadonlyArray<string> = [
   "GIT_AUTHOR_EMAIL",
   "GIT_COMMITTER_NAME",
   "GIT_COMMITTER_EMAIL",
+  "CLAUDE_CODE_SESSION_ID",
+  "CODEX_THREAD_ID",
 ];
 
 /**
@@ -814,7 +826,7 @@ export class ProofJobCommandEnd extends S.Class<ProofJobCommandEnd>($I`ProofJobC
  *
  * A clean exit records `success` and any other failure records `failure`, so
  * `yeet job wait` exits 0 or 1. An interrupt-only exit records nothing: the job
- * was stopped, and the finalizer's `terminated` reading (exit 2) is the truth.
+ * was stopped, and the finalizer's `terminated` reading (exit 3) is the truth.
  *
  * **Example** (A clean exit records success; a stop records nothing)
  *
@@ -899,6 +911,19 @@ export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`Pro
  * `terminated` or carries a stamp; wait, prune, and inbox publication use
  * that definition. An unstamped `finished` record still awaits finalization.
  *
+ * `prNumber` is bound by a monitor job once it has read the pull request it
+ * follows; `yeet job wait` returns a `wave` only for inbox rows on that pull
+ * request, so two monitors in one checkout never wake each other's waiter. An
+ * `--until-ready` job binds it only after its first poll pins the wave record
+ * to the head it observes, so the waiter never reads the previous head's
+ * still-live rows as a new wave.
+ * `returnedWaveRowIds` are the inbox row ids an earlier `job wait` on this job
+ * already returned as a wave; a re-run waits for rows beyond them.
+ * `returnedWaveRedSetKey` is the head's required red set (the wave record's
+ * `redSetKey`) as of the last wave returned. A re-run also returns when that
+ * red set names a red the key does not: a rerun that came back red on the
+ * same head keeps its row id, so only the key sees it.
+ *
  * **Example** (A freshly submitted record)
  *
  * ```ts
@@ -945,10 +970,13 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
     terminationReason: ProofJobTerminationReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     publishedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    returnedWaveRowIds: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    returnedWaveRedSetKey: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ProofJobRecord", {
     description:
-      "One detached proof job: identity, phase, request, submitter, unit, runner facts, recorded outcome, systemd result, termination reason, and cancel request.",
+      "One detached proof job: identity, phase, request, submitter, unit, runner facts, recorded outcome, systemd result, termination reason, cancel request, the pull request a monitor job follows, and the inbox rows and required red set job wait already returned.",
   })
 ) {}
 
@@ -1142,6 +1170,161 @@ export class ProofJobWaitOptions extends S.Class<ProofJobWaitOptions>($I`ProofJo
     description: "Optional overall timeout and poll interval for waiting on a detached proof job.",
   })
 ) {}
+
+/**
+ * Every way `yeet job wait` can return.
+ *
+ * **Details**
+ *
+ * `success` and `failure` are a settled job's recorded verdict, and
+ * `terminated` is a job that settled without one (cancelled, killed, or a
+ * stopped loop). `wave` is the return that does not wait for the job to
+ * settle: a new P0/P1 inbox wave landed on the pull request the monitor job
+ * follows, and the job keeps running (pr-event-awareness D16, D31).
+ *
+ * **Example** (List the outcomes)
+ *
+ * ```ts
+ * import { ProofJobWaitOutcome } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(ProofJobWaitOutcome.Options) // ["success", "failure", "wave", "terminated"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofJobWaitOutcome = LiteralKit(["success", "failure", "wave", "terminated"]).pipe(
+  $I.annoteSchema("ProofJobWaitOutcome", {
+    title: "Proof Job Wait Outcome",
+    description: "How yeet job wait returned: a settled verdict, a terminated job, or a new inbox wave.",
+  })
+);
+
+/**
+ * Every way `yeet job wait` can return.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProofJobWaitOutcome = typeof ProofJobWaitOutcome.Type;
+
+/**
+ * One row of the `yeet job wait` exit-code table.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofJobWaitExit extends S.Class<ProofJobWaitExit>($I`ProofJobWaitExit`)(
+  {
+    outcome: ProofJobWaitOutcome,
+    exitCode: S.Finite,
+    summary: S.NonEmptyString,
+  },
+  $I.annote("ProofJobWaitExit", {
+    description: "Exit code and operator summary for one yeet job wait outcome.",
+  })
+) {}
+
+/**
+ * The exit code and summary for one `yeet job wait` outcome, the one table the
+ * command and the tests read.
+ *
+ * **Details**
+ *
+ * `0` is a green job, `1` a red one, `2` a wave on the job's pull request (the
+ * job keeps running; fix, publish, and re-run `job wait` on the same job), and
+ * `3` a job that was terminated without a verdict. A wave takes `2` so a script
+ * can tell it from a red (D31); a terminated job, which used `2` before waves
+ * existed, moves to `3`.
+ *
+ * **Example** (A wave exits two)
+ *
+ * ```ts
+ * import { proofJobWaitExitFor } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(proofJobWaitExitFor("wave").exitCode) // 2
+ * console.log(proofJobWaitExitFor("terminated").exitCode) // 3
+ * ```
+ *
+ * @param outcome - How the wait returned.
+ * @returns The exit-code row for that outcome.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofJobWaitExitFor = (outcome: ProofJobWaitOutcome): ProofJobWaitExit =>
+  Match.value(outcome).pipe(
+    Match.when("success", () =>
+      ProofJobWaitExit.make({ outcome: "success", exitCode: 0, summary: "the job settled green" })
+    ),
+    Match.when("failure", () =>
+      ProofJobWaitExit.make({ outcome: "failure", exitCode: 1, summary: "the job settled red" })
+    ),
+    Match.when("wave", () =>
+      ProofJobWaitExit.make({
+        outcome: "wave",
+        exitCode: 2,
+        summary: "a new P0/P1 inbox wave landed on the job's pull request; the job keeps running",
+      })
+    ),
+    Match.when("terminated", () =>
+      ProofJobWaitExit.make({
+        outcome: "terminated",
+        exitCode: 3,
+        summary: "the job was terminated without a verdict; re-submit it",
+      })
+    ),
+    Match.exhaustive
+  );
+
+/**
+ * The whole `yeet job wait` exit-code table, one row per outcome.
+ *
+ * **Example** (Every outcome has exactly one row)
+ *
+ * ```ts
+ * import { proofJobWaitExitTable, ProofJobWaitOutcome } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(proofJobWaitExitTable.length === ProofJobWaitOutcome.Options.length) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const proofJobWaitExitTable: ReadonlyArray<ProofJobWaitExit> = A.map(
+  ProofJobWaitOutcome.Options,
+  proofJobWaitExitFor
+);
+
+/**
+ * The `yeet job wait` outcome of a settled job record.
+ *
+ * **Example** (A recorded success)
+ *
+ * ```ts
+ * import { ProofJobOutcome, proofJobSettledWaitOutcome } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const outcome = proofJobSettledWaitOutcome({
+ *   phase: "finished",
+ *   outcome: O.some(ProofJobOutcome.make({ verdictOutcome: "success", endedAt: "2026-09-25T00:00:00Z" }))
+ * })
+ * console.log(outcome) // "success"
+ * ```
+ *
+ * @param record - The settled job's phase and recorded outcome.
+ * @returns `terminated` for a terminated job, else the recorded verdict (no verdict reads as `failure`).
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofJobSettledWaitOutcome = (record: Pick<ProofJobRecord, "phase" | "outcome">): ProofJobWaitOutcome =>
+  Match.value(record.phase).pipe(
+    Match.when("terminated", () => ProofJobWaitOutcome.Enum.terminated),
+    Match.orElse(() =>
+      O.exists(record.outcome, (outcome) => outcome.verdictOutcome === "success")
+        ? ProofJobWaitOutcome.Enum.success
+        : ProofJobWaitOutcome.Enum.failure
+    )
+  );
 
 /**
  * What `finalize` did (ruling 36): the stamped record, the inbox row id it

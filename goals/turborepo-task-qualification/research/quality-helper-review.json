@@ -1,0 +1,72 @@
+{
+  "authority": "quality-helper-source-delta-review-and-example-repair",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "headBeforeRepair": "6c4eb23c4ecf71745bf8626640b04b7bbe348970",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sha256": "049ca3c529230d959ca40bfb967d0d334fe499a8f6dbc029739ec2c3808b9a64"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "sha256": "49f2493efc8a63a46bff7416c3f285e200c9c31aca576a36ea6d632682c8e522"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "sha256": "850f85250078180c73e6497f410744714b331d51797410b7a9d7d3486f804297"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
+      "sha256": "a152d3c395f37d3728eb0bcbe64a71a9a8e27c8501fadf44822bf4408d7b1057"
+    }
+  ],
+  "findings": [
+    "CoverageRegression changes measured-row formatting from throwing synchronous schema encoding plus JSON.stringify to schema JSON Result encoding with an explicit diagnostic on failure. Existing baseline reads retain Git merge-base, TURBO_SCM_BASE and coverage artifact inputs.",
+    "JSDocDocumentationInventory handles trim decode absence and recognizes inline annotation objects in S.Class and S.TaggedError factory calls. Recognition is AST syntax, not runtime schema evaluation.",
+    "JSDocMigrateExtract moves exact-block SHA256 hashing to Effect Crypto and maps failures to QualityScriptCommandError. Record extraction and apply callers now yield sequential per-file hashing effects.",
+    "Extraction discovers tracked packages/apps source through Git, reads source text, parses blocks and writes the selected JSONL inventory. Apply checks frozen titles/overrides and anchors, rewrites source unless dry-run, invokes Biome and writes a timestamped manifest. These retain file, command, configuration and time dependencies.",
+    "Two inherited examples still treated Effect-returning APIs as direct values. They now provide NodeCrypto, execute the Effect, and demonstrate the actual hash/record results. Runtime implementation is unchanged by this repair."
+  ],
+  "controls": {
+    "block": "/** Doc. */",
+    "hash": "sha256:0ae444742e7a76609cce356e89b6511fb4a6c844ba9b148c49237fdbb16e24be",
+    "records": 1,
+    "exampleTagCount": 1,
+    "independentSha256Matches": true
+  },
+  "validation": {
+    "focusedTests": 312,
+    "suites": [
+      "jsdoc-migrate.test.ts",
+      "jsdoc-inventory-detector-fixes.test.ts",
+      "quality-tasks.test.ts"
+    ],
+    "testsExit": 0,
+    "packageVerify": "@beep/repo-cli --quick: lint and check passed; limited to documentation-only implementation edit",
+    "docgenLocal": "one affected package passed, exit 0"
+  },
+  "limits": [
+    "Four historical source deltas reviewed. PackageVerify.ts was inventoried but not reviewed in this receipt.",
+    "Synthetic example execution and focused suites do not prove arbitrary migration output determinism, complete semantic closure, signed remote comparisons or qualified tuples.",
+    "All 13 broader census obligations remain open."
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 36,
+    "unresolved": 13
+  },
+  "censusRefresh": {
+    "workspaces": 144,
+    "nodes": 3473,
+    "executable": 1970,
+    "changedSourceBindings": [
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts"
+    ],
+    "note": "Fresh normal census source population unchanged except repaired source digest; prior unresolved obligations retained explicitly."
+  },
+  "retention": {
+    "fileCount": 13,
+    "archiveManifestSha256": "492557b01cfb9acb72c9fba0eb452237c5318f3523cf580a446b1401fe52d42d"
+  }
+}
