@@ -27,3 +27,25 @@ timing directories. These samples do not establish a performance improvement.
 - exiftool bun: 17 passed, 0 skipped; 2.423 seconds
 - face-detection node: 14 passed, 0 skipped; 4.471 seconds
 - face-detection bun: 14 passed, 0 skipped; 2.612 seconds
+
+## Scope checkpoint
+
+Face Detection scope commit `2520171e0e` removes its local provide wrapper,
+preserves both public withDetector call forms under harness ownership, and
+adds the native ONNX fixture hook budget. Full audit/docgen passed (8.1 / 3.2
+seconds). Its existing 13-domain native property suite also passed with the
+400-run floor and seed 20260708, retaining fcRuns(20) and existing domains.
+No additional assertion or flake repair is justified for this package.
+
+ExifTool's six fake-spawner cases now use isolated MemoryFileSystem + Path
+harness layers. Service, fake spawner and test body share each fixture's
+filesystem. Command captures reset on every invocation. Native integration
+retains real filesystem/process services with excludeTestServices and a
+bounded layer hook, while each test owns its temporary image directory.
+Both wrapper definitions, imported scoped provider and redundant whole-body
+scopes are removed. All 38 unit and 16 integration expectation expressions
+and embedded PNG/GIF bytes are preserved. Final full audit/docgen passed
+(15.1 / 4.8 seconds), including the three native integration cases.
+
+ExifTool assertions, properties, availability masking and instrumentation
+remain for their later D12 phases. No production code changed.
