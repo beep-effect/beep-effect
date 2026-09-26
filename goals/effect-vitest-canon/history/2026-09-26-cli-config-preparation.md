@@ -92,3 +92,21 @@ shared-workstation samples.
 - architecture-lab-config bun: 3 passed, 0 skipped; 1.321 seconds
 
 Ledger, ratchet reconciliation and hosted gates remain before publication.
+
+## Inventory reconciliation
+
+The reviewed ledger now has 54 rows across the four existing files: 27 fixed,
+12 reasoned exceptions, and 15 no-findings lens rows. The eleven added rows
+are current timeout-review candidates introduced by harness ownership of pure
+stubs. All twelve exceptions have current detector ids, lines, evidence and
+occurrence hashes. `makeLayerFromRunner` and `ArchitectureLabConfigTest` are
+verified `Layer.succeed` constructors with no acquisition or wait; no timeout
+was invented to silence those candidates.
+
+The owned baseline changes from 25 old candidates to 12 current exceptions:
+24 old candidates disappear, one remains as a re-anchored pure-stub judgment,
+and eleven new pure-stub judgments are explicitly reviewed. Other packages'
+baseline rows are preserved byte-for-byte. This is not an empty-baseline claim.
+The strict four-file validator reports valid, complete and zero missing lens
+coverage. Historical fixed rows retain their original identity and fix SHA;
+current exceptions and whole-file review extents point to current source.
