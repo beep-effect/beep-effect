@@ -1,0 +1,2349 @@
+{
+  "numTotalTestSuites": 50,
+  "numPassedTestSuites": 50,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 196,
+  "numPassedTests": 196,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790386992747,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "validates the HTML conformance ledger",
+          "status": "passed",
+          "title": "validates the HTML conformance ledger",
+          "duration": 29.15238199999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386993106,
+      "endTime": 1790386993135.1523,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/ConformanceLedger.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance matches browser relList token boundaries for opener protections",
+          "status": "passed",
+          "title": "matches browser relList token boundaries for opener protections",
+          "duration": 54.37368000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance keeps every admitted data-* suffix distinct after browser parsing",
+          "status": "passed",
+          "title": "keeps every admitted data-* suffix distinct after browser parsing",
+          "duration": 54.0616399999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance rejects opaque foreign trees that an HTML parser restructures",
+          "status": "passed",
+          "title": "rejects opaque foreign trees that an HTML parser restructures",
+          "duration": 54.037041000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance rejects every foreign-content breakout start tag",
+          "status": "passed",
+          "title": "rejects every foreign-content breakout start tag",
+          "duration": 93.05102899999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance applies the attribute-dependent foreign-content font breakout",
+          "status": "passed",
+          "title": "applies the attribute-dependent foreign-content font breakout",
+          "duration": 54.02058699999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance models every SVG HTML integration point",
+          "status": "passed",
+          "title": "models every SVG HTML integration point",
+          "duration": 20.864679999999908,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance admits exact SVG and MathML re-entry from HTML integration mode",
+          "status": "passed",
+          "title": "admits exact SVG and MathML re-entry from HTML integration mode",
+          "duration": 20.822644999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance models every MathML text integration point and its foreign exceptions",
+          "status": "passed",
+          "title": "models every MathML text integration point and its foreign exceptions",
+          "duration": 20.81314999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance models annotation-xml HTML integration and SVG re-entry",
+          "status": "passed",
+          "title": "models annotation-xml HTML integration and SVG re-entry",
+          "duration": 20.808001999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance serializes canonical SVG names and attributes to browser fixed points",
+          "status": "passed",
+          "title": "serializes canonical SVG names and attributes to browser fixed points",
+          "duration": 3.522844999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html browser conformance"],
+          "fullName": "@beep/html browser conformance admits exactly the foreign-name representatives preserved by HTML parsing",
+          "status": "passed",
+          "title": "admits exactly the foreign-name representatives preserved by HTML parsing",
+          "duration": 3.475161999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994585,
+      "endTime": 1790386994679.051,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.browser-conformance.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html browser import boundary"],
+          "fullName": "@beep/html browser import boundary loads production conformance when SharedArrayBuffer is absent",
+          "status": "passed",
+          "title": "loads production conformance when SharedArrayBuffer is absent",
+          "duration": 1372.909197,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386993039,
+      "endTime": 1790386994411.9092,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.browser-import.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html conformance annotations"],
+          "fullName": "@beep/html conformance annotations collects the WHATWG profile from the conformant HTML proof schema",
+          "status": "passed",
+          "title": "collects the WHATWG profile from the conformant HTML proof schema",
+          "duration": 13.460517999999865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance annotations"],
+          "fullName": "@beep/html conformance annotations collects the package safe-output policy from the SafeHtmlAst proof schema",
+          "status": "passed",
+          "title": "collects the package safe-output policy from the SafeHtmlAst proof schema",
+          "duration": 12.951665000000048,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance annotations"],
+          "fullName": "@beep/html conformance annotations matches the exact selected HTML ledger records and enforcement evidence",
+          "status": "passed",
+          "title": "matches the exact selected HTML ledger records and enforcement evidence",
+          "duration": 21.62394900000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994381,
+      "endTime": 1790386994402.624,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix rejects a structurally invalid recursive conformance view",
+          "status": "passed",
+          "title": "rejects a structurally invalid recursive conformance view",
+          "duration": 26.81036599999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix constructs recursive conformance views with canonical Option doctypes",
+          "status": "passed",
+          "title": "constructs recursive conformance views with canonical Option doctypes",
+          "duration": 26.48110900000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix locates every document doctype and root-placement failure",
+          "status": "passed",
+          "title": "locates every document doctype and root-placement failure",
+          "duration": 26.455778999999893,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix covers direct and wrapped description-list alternatives",
+          "status": "passed",
+          "title": "covers direct and wrapped description-list alternatives",
+          "duration": 26.44460200000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix covers picture, datalist, select, ruby, and obsolete-element alternatives",
+          "status": "passed",
+          "title": "covers picture, datalist, select, ruby, and obsolete-element alternatives",
+          "duration": 26.438313000000107,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix rejects obsolete elements at the inspectConformance boundary",
+          "status": "passed",
+          "title": "rejects obsolete elements at the inspectConformance boundary",
+          "duration": 7.3031160000000455,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix allows and rejects foreign/text children according to the generated content tokens",
+          "status": "passed",
+          "title": "allows and rejects foreign/text children according to the generated content tokens",
+          "duration": 7.299901000000091,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix covers every opaque foreign child boundary",
+          "status": "passed",
+          "title": "covers every opaque foreign child boundary",
+          "duration": 7.293852000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance branch matrix"],
+          "fullName": "@beep/html conformance branch matrix fails malformed JavaScript callers at the schema snapshot boundary",
+          "status": "passed",
+          "title": "fails malformed JavaScript callers at the schema snapshot boundary",
+          "duration": 2.3775410000000647,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe-policy branch matrix"],
+          "fullName": "@beep/html safe-policy branch matrix applies role compatibility across matching, mismatching, and absent roles",
+          "status": "passed",
+          "title": "applies role compatibility across matching, mismatching, and absent roles",
+          "duration": 49.2661750000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe-policy branch matrix"],
+          "fullName": "@beep/html safe-policy branch matrix applies each element-aware ARIA compatibility rule",
+          "status": "passed",
+          "title": "applies each element-aware ARIA compatibility rule",
+          "duration": 49.211991000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html serialization branch matrix"],
+          "fullName": "@beep/html serialization branch matrix serializes text/comment factories and each text-content mode",
+          "status": "passed",
+          "title": "serializes text/comment factories and each text-content mode",
+          "duration": 49.19492500000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html serialization branch matrix"],
+          "fullName": "@beep/html serialization branch matrix serializes optional and canonical doctypes and rejects every noncanonical component",
+          "status": "passed",
+          "title": "serializes optional and canonical doctypes and rejects every noncanonical component",
+          "duration": 49.1762369999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html serialization branch matrix"],
+          "fullName": "@beep/html serialization branch matrix accepts namespace-matching qualified foreign names and rejects mismatches",
+          "status": "passed",
+          "title": "accepts namespace-matching qualified foreign names and rejects mismatches",
+          "duration": 49.166270999999824,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html serialization branch matrix"],
+          "fullName": "@beep/html serialization branch matrix exercises conformant and safe serializer entrypoints",
+          "status": "passed",
+          "title": "exercises conformant and safe serializer entrypoints",
+          "duration": 7.368107000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html serialization branch matrix"],
+          "fullName": "@beep/html serialization branch matrix rejects forged opaque proof values at every public unwrapping boundary",
+          "status": "passed",
+          "title": "rejects forged opaque proof values at every public unwrapping boundary",
+          "duration": 7.323397999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994353,
+      "endTime": 1790386994439.3774,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html per-module entry points"],
+          "fullName": "@beep/html per-module entry points resolves the explicit subpaths through the package export map",
+          "status": "passed",
+          "title": "resolves the explicit subpaths through the package export map",
+          "duration": 2164.468841,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html per-module entry points"],
+          "fullName": "@beep/html per-module entry points keeps the source and published exports aligned with the package version",
+          "status": "passed",
+          "title": "keeps the source and published exports aligned with the package version",
+          "duration": 27.4366,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html per-module entry points"],
+          "fullName": "@beep/html per-module entry points validates detailed autocomplete through the staged facade",
+          "status": "passed",
+          "title": "validates detailed autocomplete through the staged facade",
+          "duration": 26.073470999999927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994352,
+      "endTime": 1790386996516.4688,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.entrypoints.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants requires an exact reviewed explanation for every pinned/webref gap",
+          "status": "passed",
+          "title": "requires an exact reviewed explanation for every pinned/webref gap",
+          "duration": 17.219245,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants freezes every public conformance registry recursively",
+          "status": "passed",
+          "title": "freezes every public conformance registry recursively",
+          "duration": 16.88686400000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants publishes the exact reviewed tree-conformance profiles",
+          "status": "passed",
+          "title": "publishes the exact reviewed tree-conformance profiles",
+          "duration": 16.86401899999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants publishes the exact attribute-conditional category profiles",
+          "status": "passed",
+          "title": "publishes the exact attribute-conditional category profiles",
+          "duration": 16.85189000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants publishes the complete generated meter and progress relationship profiles",
+          "status": "passed",
+          "title": "publishes the complete generated meter and progress relationship profiles",
+          "duration": 16.843487000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants publishes the exact required and tree-unique attribute profiles",
+          "status": "passed",
+          "title": "publishes the exact required and tree-unique attribute profiles",
+          "duration": 1.087624999999889,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants publishes the exact link-address and meta-charset requirements",
+          "status": "passed",
+          "title": "publishes the exact link-address and meta-charset requirements",
+          "duration": 1.0449399999999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generator invariants"],
+          "fullName": "@beep/html generator invariants publishes the exact responsive-image and preload relationship profiles",
+          "status": "passed",
+          "title": "publishes the exact responsive-image and preload relationship profiles",
+          "duration": 1.033482000000049,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994278,
+      "endTime": 1790386994296.0876,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.generator.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics rejects heading descendants because heading content is phrasing-only",
+          "status": "passed",
+          "title": "rejects heading descendants because heading content is phrasing-only",
+          "duration": 12.59702799999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics rejects non-phrasing flow children in headings",
+          "status": "passed",
+          "title": "rejects non-phrasing flow children in headings",
+          "duration": 12.217513999999937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics rejects a skipped computed heading level in tree order",
+          "status": "passed",
+          "title": "rejects a skipped computed heading level in tree order",
+          "duration": 12.18732799999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics rejects an offset-induced skipped computed heading level",
+          "status": "passed",
+          "title": "rejects an offset-induced skipped computed heading level",
+          "duration": 12.173386000000164,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics applies ancestor offsets and reset boundaries",
+          "status": "passed",
+          "title": "applies ancestor offsets and reset boundaries",
+          "duration": 12.15884300000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics caps computed heading levels at nine",
+          "status": "passed",
+          "title": "caps computed heading levels at nine",
+          "duration": 1.7918600000000424,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics preserves every declared heading level before ancestor adjustments",
+          "status": "passed",
+          "title": "preserves every declared heading level before ancestor adjustments",
+          "duration": 1.7379459999999654,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics keeps the level-one recommendation advisory",
+          "status": "passed",
+          "title": "keeps the level-one recommendation advisory",
+          "duration": 1.727991000000202,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML heading semantics"],
+          "fullName": "HTML heading semantics does not report the advisory when any computed level-one heading exists",
+          "status": "passed",
+          "title": "does not report the advisory when any computed level-one heading exists",
+          "duration": 1.7194879999999557,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994365,
+      "endTime": 1790386994379.7917,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.heading-conformance.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance publishes the exact generator-owned specialized syntax registry",
+          "status": "passed",
+          "title": "publishes the exact generator-owned specialized syntax registry",
+          "duration": 34.48259000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance validates img srcset and sizes syntax at their exact attribute paths",
+          "status": "passed",
+          "title": "validates img srcset and sizes syntax at their exact attribute paths",
+          "duration": 34.105399000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance enforces img descriptor pairing and the narrow lazy auto exception",
+          "status": "passed",
+          "title": "enforces img descriptor pairing and the narrow lazy auto exception",
+          "duration": 34.080761000000166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance enforces picture source width and auto relationships against the following img",
+          "status": "passed",
+          "title": "enforces picture source width and auto relationships against the following img",
+          "duration": 34.071026000000074,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance requires each earlier responsive picture source to differentiate itself",
+          "status": "passed",
+          "title": "requires each earlier responsive picture source to differentiate itself",
+          "duration": 34.06190199999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance enforces link imagesrcset and imagesizes without conflating icon sizes",
+          "status": "passed",
+          "title": "enforces link imagesrcset and imagesizes without conflating icon sizes",
+          "duration": 8.75599299999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html responsive-image conformance"],
+          "fullName": "@beep/html responsive-image conformance preserves exact nested paths through fragments",
+          "status": "passed",
+          "title": "preserves exact nested paths through fragments",
+          "duration": 8.70970199999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994322,
+      "endTime": 1790386994365.756,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html tagged-error declared equivalence"],
+          "fullName": "@beep/html tagged-error declared equivalence compares conformance, policy, and serialization errors by declared fields",
+          "status": "passed",
+          "title": "compares conformance, policy, and serialization errors by declared fields",
+          "duration": 3.554304000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html tagged-error declared equivalence"],
+          "fullName": "@beep/html tagged-error declared equivalence compares the private attribute-domain error by its declared message",
+          "status": "passed",
+          "title": "compares the private attribute-domain error by its declared message",
+          "duration": 3.1889909999999873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html tagged-error declared equivalence"],
+          "fullName": "@beep/html tagged-error declared equivalence compares the import-safe generator error by its declared message",
+          "status": "passed",
+          "title": "compares the import-safe generator error by its declared message",
+          "duration": 3.1607380000000376,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994382,
+      "endTime": 1790386994385.5542,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html generated attribute provenance"],
+          "fullName": "@beep/html generated attribute provenance reconciles reviewed current gaps and reports obsolete or misplaced attributes",
+          "status": "passed",
+          "title": "reconciles reviewed current gaps and reports obsolete or misplaced attributes",
+          "duration": 65.8860279999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html numeric and id conformance"],
+          "fullName": "@beep/html numeric and id conformance enforces generated base, map, and track attribute laws",
+          "status": "passed",
+          "title": "enforces generated base, map, and track attribute laws",
+          "duration": 65.34373299999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html numeric and id conformance"],
+          "fullName": "@beep/html numeric and id conformance enforces generated meter and progress domains and relationships",
+          "status": "passed",
+          "title": "enforces generated meter and progress domains and relationships",
+          "duration": 65.31018100000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html numeric and id conformance"],
+          "fullName": "@beep/html numeric and id conformance keeps generated numeric relationships equivalent to their ordering laws",
+          "status": "passed",
+          "title": "keeps generated numeric relationships equivalent to their ordering laws",
+          "duration": 65.2995649999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html numeric and id conformance"],
+          "fullName": "@beep/html numeric and id conformance reports every duplicate id occurrence at its root-relative attribute path",
+          "status": "passed",
+          "title": "reports every duplicate id occurrence at its root-relative attribute path",
+          "duration": 65.21124899999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html track language conformance"],
+          "fullName": "@beep/html track language conformance accepts registered, grandfathered, private-use, extension, and deprecated tags",
+          "status": "passed",
+          "title": "accepts registered, grandfathered, private-use, extension, and deprecated tags",
+          "duration": 49.8281199999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html track language conformance"],
+          "fullName": "@beep/html track language conformance rejects malformed, unregistered, repeated, and incomplete tags at srclang",
+          "status": "passed",
+          "title": "rejects malformed, unregistered, repeated, and incomplete tags at srclang",
+          "duration": 49.77365699999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html track language conformance"],
+          "fullName": "@beep/html track language conformance requires every registered extlang to follow its IANA primary-language prefix",
+          "status": "passed",
+          "title": "requires every registered extlang to follow its IANA primary-language prefix",
+          "duration": 49.76181900000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html track language conformance"],
+          "fullName": "@beep/html track language conformance keeps non-subtitle kinds exempt from the conditional srclang requirement",
+          "status": "passed",
+          "title": "keeps non-subtitle kinds exempt from the conditional srclang requirement",
+          "duration": 49.753475999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html track language conformance"],
+          "fullName": "@beep/html track language conformance accepts generated registered language/script/region combinations and rejects separator corruption",
+          "status": "passed",
+          "title": "accepts generated registered language/script/region combinations and rejects separator corruption",
+          "duration": 49.75209400000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html missing-attribute issue paths"],
+          "fullName": "@beep/html missing-attribute issue paths reports the one actually missing singleton from a multi-group requirement",
+          "status": "passed",
+          "title": "reports the one actually missing singleton from a multi-group requirement",
+          "duration": 25.37322200000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html missing-attribute issue paths"],
+          "fullName": "@beep/html missing-attribute issue paths keeps ambiguous alternative and multiple-group misses at the attribute bag",
+          "status": "passed",
+          "title": "keeps ambiguous alternative and multiple-group misses at the attribute bag",
+          "duration": 25.32208300000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars enforces description-list and head cardinality",
+          "status": "passed",
+          "title": "enforces description-list and head cardinality",
+          "duration": 25.311786999999867,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars composes mixed transparent child alternatives with inherited fallback content",
+          "status": "passed",
+          "title": "composes mixed transparent child alternatives with inherited fallback content",
+          "duration": 25.30850200000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars requires exactly one first significant summary while keeping other edge grammars optional",
+          "status": "passed",
+          "title": "requires exactly one first significant summary while keeping other edge grammars optional",
+          "duration": 23.413995999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars enforces edge, conditional, media, and alternative grammars",
+          "status": "passed",
+          "title": "enforces edge, conditional, media, and alternative grammars",
+          "duration": 32.277243,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars enforces generated parent-context requirements for source attributes",
+          "status": "passed",
+          "title": "enforces generated parent-context requirements for source attributes",
+          "duration": 32.121614000000136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars evaluates conditional interactive categories from attributes",
+          "status": "passed",
+          "title": "evaluates conditional interactive categories from attributes",
+          "duration": 36.53850499999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars evaluates contextual area, link, and meta placement from generated rules",
+          "status": "passed",
+          "title": "evaluates contextual area, link, and meta placement from generated rules",
+          "duration": 36.73752300000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars enforces link addresses and the meta charset mode",
+          "status": "passed",
+          "title": "enforces link addresses and the meta charset mode",
+          "duration": 36.734288000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars rejects invalid preload destination tokens at decode time",
+          "status": "passed",
+          "title": "rejects invalid preload destination tokens at decode time",
+          "duration": 10.994570000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars keeps representative production URL validation aligned with the WHATWG oracle",
+          "status": "passed",
+          "title": "keeps representative production URL validation aligned with the WHATWG oracle",
+          "duration": 10.926044000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars keeps browser-safe production URL validation aligned with the WHATWG oracle",
+          "status": "passed",
+          "title": "keeps browser-safe production URL validation aligned with the WHATWG oracle",
+          "duration": 160.49645899999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars enforces every generated descendant exclusion through nested fallback content",
+          "status": "passed",
+          "title": "enforces every generated descendant exclusion through nested fallback content",
+          "duration": 131.010174,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars enforces generated main ancestry and document-visible cardinality",
+          "status": "passed",
+          "title": "enforces generated main ancestry and document-visible cardinality",
+          "duration": 131.005496,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars rejects main beneath forms with author-provided accessible names",
+          "status": "passed",
+          "title": "rejects main beneath forms with author-provided accessible names",
+          "duration": 5.582276000000093,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars uses the generated contextual div grammar instead of the lossy index union",
+          "status": "passed",
+          "title": "uses the generated contextual div grammar instead of the lossy index union",
+          "duration": 5.192595999999867,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars rejects tabindex descendants beneath anchors and buttons",
+          "status": "passed",
+          "title": "rejects tabindex descendants beneath anchors and buttons",
+          "duration": 3.196611999999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars allows at most one labelable descendant per label",
+          "status": "passed",
+          "title": "allows at most one labelable descendant per label",
+          "duration": 4.200117999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html generated special-child grammars"],
+          "fullName": "@beep/html generated special-child grammars keeps schema-generated valid grammar fixtures free of grammar issues",
+          "status": "passed",
+          "title": "keeps schema-generated valid grammar fixtures free of grammar issues",
+          "duration": 2.4642339999998057,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute domains"],
+          "fullName": "@beep/html exact attribute domains keeps schema-derived open relation lists at their canonical fixed point",
+          "status": "passed",
+          "title": "keeps schema-derived open relation lists at their canonical fixed point",
+          "duration": 281.4300959999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute domains"],
+          "fullName": "@beep/html exact attribute domains rejects ambiguous factories and uses HTML ASCII case folding",
+          "status": "passed",
+          "title": "rejects ambiguous factories and uses HTML ASCII case folding",
+          "duration": 21.03787699999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute domains"],
+          "fullName": "@beep/html exact attribute domains keeps link relations open while enforcing shortcut-icon and token-list laws",
+          "status": "passed",
+          "title": "keeps link relations open while enforcing shortcut-icon and token-list laws",
+          "duration": 8.067853999999897,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute domains"],
+          "fullName": "@beep/html exact attribute domains keeps extension relations structural and conformant but narrows SafeHtml",
+          "status": "passed",
+          "title": "keeps extension relations structural and conformant but narrows SafeHtml",
+          "duration": 10.8282549999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute domains"],
+          "fullName": "@beep/html exact attribute domains decodes presence booleans, blocking tokens, and exact enumerations",
+          "status": "passed",
+          "title": "decodes presence booleans, blocking tokens, and exact enumerations",
+          "duration": 10.773860999999897,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute domains"],
+          "fullName": "@beep/html exact attribute domains normalizes current metadata and form-control microsyntaxes",
+          "status": "passed",
+          "title": "normalizes current metadata and form-control microsyntaxes",
+          "duration": 139.59848699999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute conformance"],
+          "fullName": "@beep/html exact attribute conformance enforces autocomplete mantle and control compatibility",
+          "status": "passed",
+          "title": "enforces autocomplete mantle and control compatibility",
+          "duration": 3.8151950000001307,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute conformance"],
+          "fullName": "@beep/html exact attribute conformance enforces state-specific input and effective-submit button attributes",
+          "status": "passed",
+          "title": "enforces state-specific input and effective-submit button attributes",
+          "duration": 3.7729300000000876,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute conformance"],
+          "fullName": "@beep/html exact attribute conformance uses exact integer area coordinates without IEEE-754 collapse",
+          "status": "passed",
+          "title": "uses exact integer area coordinates without IEEE-754 collapse",
+          "duration": 22.207127000000128,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute conformance"],
+          "fullName": "@beep/html exact attribute conformance validates media queries, MIME types, and mask-icon colors at exact paths",
+          "status": "passed",
+          "title": "validates media queries, MIME types, and mask-icon colors at exact paths",
+          "duration": 22.186984999999822,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute conformance"],
+          "fullName": "@beep/html exact attribute conformance resolves case-sensitive id references in the same root and nearest table",
+          "status": "passed",
+          "title": "resolves case-sensitive id references in the same root and nearest table",
+          "duration": 22.176950000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html exact attribute conformance"],
+          "fullName": "@beep/html exact attribute conformance enforces generated minlength relationships and schema-backed metadata",
+          "status": "passed",
+          "title": "enforces generated minlength relationships and schema-backed metadata",
+          "duration": 10.089506000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html foreign browser fixed points"],
+          "fullName": "@beep/html foreign browser fixed points covers every standard SVG and MathML adjustment entry",
+          "status": "passed",
+          "title": "covers every standard SVG and MathML adjustment entry",
+          "duration": 22.163579000000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html foreign browser fixed points"],
+          "fullName": "@beep/html foreign browser fixed points accepts registered XML names and lowercase custom names, but rejects mixed-case drift",
+          "status": "passed",
+          "title": "accepts registered XML names and lowercase custom names, but rejects mixed-case drift",
+          "duration": 36.582894000000124,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994373,
+      "endTime": 1790386994796.4302,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states keeps both applicability axes inside their generated finite domains",
+          "status": "passed",
+          "title": "keeps both applicability axes inside their generated finite domains",
+          "duration": 19.169990000000098,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states normalizes every input type while preserving the missing wire state",
+          "status": "passed",
+          "title": "normalizes every input type while preserving the missing wire state",
+          "duration": 18.810215999999855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states correlates button submit state with explicit and Auto-state context",
+          "status": "passed",
+          "title": "correlates button submit state with explicit and Auto-state context",
+          "duration": 18.77799600000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states uses the semantic views in contextual runtime conformance",
+          "status": "passed",
+          "title": "uses the semantic views in contextual runtime conformance",
+          "duration": 18.766828999999916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states rejects impossible discriminants and correlated button bases",
+          "status": "passed",
+          "title": "rejects impossible discriminants and correlated button bases",
+          "duration": 18.755631999999878,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states round-trips schema-derived input semantic states",
+          "status": "passed",
+          "title": "round-trips schema-derived input semantic states",
+          "duration": 4.176150000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML form-control semantic states"],
+          "fullName": "HTML form-control semantic states round-trips schema-derived button semantic states",
+          "status": "passed",
+          "title": "round-trips schema-derived button semantic states",
+          "duration": 4.134866999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994393,
+      "endTime": 1790386994417.1763,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.form-control.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes derives valid presence and integer values from the production schemas",
+          "status": "passed",
+          "title": "derives valid presence and integer values from the production schemas",
+          "duration": 16.409267999999884,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes models boolean presence without a false value",
+          "status": "passed",
+          "title": "models boolean presence without a false value",
+          "duration": 16.13727000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes models heading and popover global microsyntaxes canonically",
+          "status": "passed",
+          "title": "models heading and popover global microsyntaxes canonically",
+          "duration": 16.211253999999826,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes models non-negative and positive integer domains",
+          "status": "passed",
+          "title": "models non-negative and positive integer domains",
+          "duration": 16.20430299999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes models finite, non-negative, and positive floating-point domains",
+          "status": "passed",
+          "title": "models finite, non-negative, and positive floating-point domains",
+          "duration": 16.182270000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes derives only valid floating-point values from the production schemas",
+          "status": "passed",
+          "title": "derives only valid floating-point values from the production schemas",
+          "duration": 21.667226000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes normalizes token lists to lowercase registry order and one space",
+          "status": "passed",
+          "title": "normalizes token lists to lowercase registry order and one space",
+          "duration": 21.64739499999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes uses only the five HTML ASCII whitespace code points as token separators",
+          "status": "passed",
+          "title": "uses only the five HTML ASCII whitespace code points as token separators",
+          "duration": 21.540490999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes canonicalizes encoded enumerated keywords while preserving fixed-point Types",
+          "status": "passed",
+          "title": "canonicalizes encoded enumerated keywords while preserving fixed-point Types",
+          "duration": 21.498975999999857,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes keeps the case-distinguishing ol type keyword contract",
+          "status": "passed",
+          "title": "keeps the case-distinguishing ol type keyword contract",
+          "duration": 21.50312299999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes obeys the enumerated-attribute ASCII-case fixed-point law",
+          "status": "passed",
+          "title": "obeys the enumerated-attribute ASCII-case fixed-point law",
+          "duration": 12.512217999999848,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes rejects non-ASCII and padded enumerated keywords",
+          "status": "passed",
+          "title": "rejects non-ASCII and padded enumerated keywords",
+          "duration": 12.480418999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes canonicalizes the exact enumerated global-attribute inventory",
+          "status": "passed",
+          "title": "canonicalizes the exact enumerated global-attribute inventory",
+          "duration": 12.471534999999903,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes keeps token normalization decode/encode idempotent",
+          "status": "passed",
+          "title": "keeps token normalization decode/encode idempotent",
+          "duration": 20.96714800000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html attribute microsyntaxes"],
+          "fullName": "@beep/html attribute microsyntaxes validates autocomplete and dataset-key grammars",
+          "status": "passed",
+          "title": "validates autocomplete and dataset-key grammars",
+          "duration": 12.401076999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994342,
+      "endTime": 1790386994400.967,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.microsyntax.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states publishes script semantics through the dedicated subpath and root boundary",
+          "status": "passed",
+          "title": "publishes script semantics through the dedicated subpath and root boundary",
+          "duration": 11.86857699999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states recognizes the exact JavaScript MIME essence registry as classic script",
+          "status": "passed",
+          "title": "recognizes the exact JavaScript MIME essence registry as classic script",
+          "duration": 11.505957999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states classifies every author-conforming script type without rewriting its wire",
+          "status": "passed",
+          "title": "classifies every author-conforming script type without rewriting its wire",
+          "duration": 11.480129000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states returns a typed failure and conformance diagnostic for an invalid script type",
+          "status": "passed",
+          "title": "returns a typed failure and conformance diagnostic for an invalid script type",
+          "duration": 11.470493999999917,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states accepts the contextual script attribute matrix",
+          "status": "passed",
+          "title": "accepts the contextual script attribute matrix",
+          "duration": 11.462290999999823,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states rejects attributes outside the contextual script matrix",
+          "status": "passed",
+          "title": "rejects attributes outside the contextual script matrix",
+          "duration": 9.932604999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states enforces script MIME correlations at compile and decode boundaries",
+          "status": "passed",
+          "title": "enforces script MIME correlations at compile and decode boundaries",
+          "duration": 9.883368999999902,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states exhaustively matches every script semantic state",
+          "status": "passed",
+          "title": "exhaustively matches every script semantic state",
+          "duration": 9.872933000000103,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HTML script semantic states"],
+          "fullName": "HTML script semantic states round-trips schema-derived script semantic states",
+          "status": "passed",
+          "title": "round-trips schema-derived script semantic states",
+          "duration": 9.870709999999917,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994391,
+      "endTime": 1790386994412.9326,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.script.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html conformance"],
+          "fullName": "@beep/html conformance uses transparent ancestor context and registry-driven descendant constraints",
+          "status": "passed",
+          "title": "uses transparent ancestor context and registry-driven descendant constraints",
+          "duration": 33.055530999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance"],
+          "fullName": "@beep/html conformance checks document structure and cross-attribute registries",
+          "status": "passed",
+          "title": "checks document structure and cross-attribute registries",
+          "duration": 32.614824,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance"],
+          "fullName": "@beep/html conformance requires foreign integration roots and rejects context-free noscript proofs",
+          "status": "passed",
+          "title": "requires foreign integration roots and rejects context-free noscript proofs",
+          "duration": 32.575922999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html conformance"],
+          "fullName": "@beep/html conformance enforces table child sequence and cardinality",
+          "status": "passed",
+          "title": "enforces table child sequence and cardinality",
+          "duration": 32.56290400000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy keeps schema-derived safe URL attributes at their codec fixed points",
+          "status": "passed",
+          "title": "keeps schema-derived safe URL attributes at their codec fixed points",
+          "duration": 115.54489799999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy applies element-aware URL policies",
+          "status": "passed",
+          "title": "applies element-aware URL policies",
+          "duration": 41.815681999999924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy admits only self targets or protected blank targets",
+          "status": "passed",
+          "title": "admits only self targets or protected blank targets",
+          "duration": 41.78595599999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy treats HTML ASCII whitespace as rel token separators for protected blank targets",
+          "status": "passed",
+          "title": "treats HTML ASCII whitespace as rel token separators for protected blank targets",
+          "duration": 41.77907600000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy denies active, foreign, form, data, event, style, and broad global attributes",
+          "status": "passed",
+          "title": "denies active, foreign, form, data, event, style, and broad global attributes",
+          "duration": 41.771003000000064,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy accepts inert insertion semantics with safe cite and datetime attributes",
+          "status": "passed",
+          "title": "accepts inert insertion semantics with safe cite and datetime attributes",
+          "duration": 19.652652999999873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html safe policy"],
+          "fullName": "@beep/html safe policy checks element attributes whose names overlap AST structural fields",
+          "status": "passed",
+          "title": "checks element attributes whose names overlap AST structural fields",
+          "duration": 2.9177029999998467,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html canonical serialization"],
+          "fullName": "@beep/html canonical serialization escapes text and attributes and emits deterministic attribute order",
+          "status": "passed",
+          "title": "escapes text and attributes and emits deterministic attribute order",
+          "duration": 8.173706999999922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html canonical serialization"],
+          "fullName": "@beep/html canonical serialization serializes real content, name, and value attributes without structural-field loss",
+          "status": "passed",
+          "title": "serializes real content, name, and value attributes without structural-field loss",
+          "duration": 8.142118999999866,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html canonical serialization"],
+          "fullName": "@beep/html canonical serialization sorts dataset and losslessly preserves escaped foreign attributes",
+          "status": "passed",
+          "title": "sorts dataset and losslessly preserves escaped foreign attributes",
+          "duration": 8.136720000000196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html canonical serialization"],
+          "fullName": "@beep/html canonical serialization rejects hostile foreign element names at decode time",
+          "status": "passed",
+          "title": "rejects hostile foreign element names at decode time",
+          "duration": 8.126633999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html canonical serialization"],
+          "fullName": "@beep/html canonical serialization rejects scalar hazards, ambiguous comments, raw end tags, and plaintext",
+          "status": "passed",
+          "title": "rejects scalar hazards, ambiguous comments, raw end tags, and plaintext",
+          "duration": 16.606823000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html proof provenance"],
+          "fullName": "@beep/html proof provenance snapshots and freezes the proven tree before safe serialization",
+          "status": "passed",
+          "title": "snapshots and freezes the proven tree before safe serialization",
+          "duration": 16.57208999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html proof provenance"],
+          "fullName": "@beep/html proof provenance rejects prototype, spread, JSON, and plain-object proof forgeries",
+          "status": "passed",
+          "title": "rejects prototype, spread, JSON, and plain-object proof forgeries",
+          "duration": 16.564108000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994398,
+      "endTime": 1790386994513.545,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.security.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance returns schema-owned analyses and diagnostics",
+          "status": "passed",
+          "title": "returns schema-owned analyses and diagnostics",
+          "duration": 9.645772999999963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance accepts every current CSS length-unit family and literal unitless zero",
+          "status": "passed",
+          "title": "accepts every current CSS length-unit family and literal unitless zero",
+          "duration": 9.366293000000042,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance accepts WHATWG conditional lists and CSS whitespace or comments",
+          "status": "passed",
+          "title": "accepts WHATWG conditional lists and CSS whitespace or comments",
+          "duration": 9.34676300000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance enforces the exact raw first-entry form and placement of auto",
+          "status": "passed",
+          "title": "enforces the exact raw first-entry form and placement of auto",
+          "duration": 9.338819999999942,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance rejects malformed list structure instead of browser processing recovery",
+          "status": "passed",
+          "title": "rejects malformed list structure instead of browser processing recovery",
+          "duration": 9.332261000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance rejects negative literals, percentages, numbers, unknown units, and non-math functions",
+          "status": "passed",
+          "title": "rejects negative literals, percentages, numbers, unknown units, and non-math functions",
+          "duration": 5.92879999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance type-checks the complete CSS Values Level 4 math-function families",
+          "status": "passed",
+          "title": "type-checks the complete CSS Values Level 4 math-function families",
+          "duration": 5.879323999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance rejects math functions with invalid grammar, arity, or numeric types",
+          "status": "passed",
+          "title": "rejects math functions with invalid grammar, arity, or numeric types",
+          "duration": 5.869779999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance matches Chromium's adversarial calc whitespace and ASCII-folding outcomes",
+          "status": "passed",
+          "title": "matches Chromium's adversarial calc whitespace and ASCII-folding outcomes",
+          "duration": 5.859402999999929,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance accepts media conditions but rejects media types, general-enclosed, and mixed operators",
+          "status": "passed",
+          "title": "accepts media conditions but rejects media types, general-enclosed, and mixed operators",
+          "duration": 5.851731999999856,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance accepts Chromium-supported 33, 64, and 100 term, argument, and nesting depths",
+          "status": "passed",
+          "title": "accepts Chromium-supported 33, 64, and 100 term, argument, and nesting depths",
+          "duration": 47.541710000000194,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance handles a large Chromium-supported argument list without validator-only work limits",
+          "status": "passed",
+          "title": "handles a large Chromium-supported argument list without validator-only work limits",
+          "duration": 47.5045520000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance accepts generated nonnegative literal lengths",
+          "status": "passed",
+          "title": "accepts generated nonnegative literal lengths",
+          "duration": 47.496650000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance rejects generated negative literal lengths",
+          "status": "passed",
+          "title": "rejects generated negative literal lengths",
+          "duration": 47.489630000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html source-size author conformance"],
+          "fullName": "@beep/html source-size author conformance is deterministic and total for arbitrary Unicode and UTF-16 input",
+          "status": "passed",
+          "title": "is deterministic and total for arbitrary Unicode and UTF-16 input",
+          "duration": 47.47445599999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994276,
+      "endTime": 1790386994338.5417,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.source-size.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance accepts WHATWG density, width, and descriptorless profiles",
+          "status": "passed",
+          "title": "accepts WHATWG density, width, and descriptorless profiles",
+          "duration": 4.639625000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance keeps commas inside candidate URLs, including data URLs",
+          "status": "passed",
+          "title": "keeps commas inside candidate URLs, including data URLs",
+          "duration": 4.284548000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance delegates candidate URL validity without trimming or rewriting URLs",
+          "status": "passed",
+          "title": "delegates candidate URL validity without trimming or rewriting URLs",
+          "duration": 4.25674499999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance composes with WHATWG URL validation and rejects malformed percent escapes",
+          "status": "passed",
+          "title": "composes with WHATWG URL validation and rejects malformed percent escapes",
+          "duration": 4.246328999999832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance rejects empty candidates and invalid comma placement from Nu conformance cases",
+          "status": "passed",
+          "title": "rejects empty candidates and invalid comma placement from Nu conformance cases",
+          "duration": 4.236092999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance rejects malformed, non-positive, and multiple descriptors",
+          "status": "passed",
+          "title": "rejects malformed, non-positive, and multiple descriptors",
+          "duration": 24.84474799999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance rejects duplicate and mixed descriptor values exactly",
+          "status": "passed",
+          "title": "rejects duplicate and mixed descriptor values exactly",
+          "duration": 24.814432000000124,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance accepts generated positive width lists",
+          "status": "passed",
+          "title": "accepts generated positive width lists",
+          "duration": 24.814061000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance rejects generated numerically duplicate width spellings",
+          "status": "passed",
+          "title": "rejects generated numerically duplicate width spellings",
+          "duration": 24.805436999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance handles a large unique candidate list with one URL validation per candidate",
+          "status": "passed",
+          "title": "handles a large unique candidate list with one URL validation per candidate",
+          "duration": 24.78587800000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/html srcset author conformance"],
+          "fullName": "@beep/html srcset author conformance is total for arbitrary Unicode and UTF-16 input",
+          "status": "passed",
+          "title": "is total for arbitrary Unicode and UTF-16 input",
+          "duration": 4.001050999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994246,
+      "endTime": 1790386994280.001,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.srcset.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes exposes staged conformance and safe-policy facades",
+          "status": "passed",
+          "title": "exposes staged conformance and safe-policy facades",
+          "duration": 26.926504000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes narrows canonical document children without weakening the lossless document",
+          "status": "passed",
+          "title": "narrows canonical document children without weakening the lossless document",
+          "duration": 26.256893999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes decodes and re-encodes a nested tree (JSON identity)",
+          "status": "passed",
+          "title": "decodes and re-encodes a nested tree (JSON identity)",
+          "duration": 26.307780999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes provides .make constructors that auto-inject _tag",
+          "status": "passed",
+          "title": "provides .make constructors that auto-inject _tag",
+          "duration": 26.276562999999896,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes discriminates union members by _tag and rejects unknown tags",
+          "status": "passed",
+          "title": "discriminates union members by _tag and rejects unknown tags",
+          "duration": 26.283694999999852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes treats void elements as childless",
+          "status": "passed",
+          "title": "treats void elements as childless",
+          "duration": 3.1143650000001344,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — structure & nodes"],
+          "fullName": "HtmlNode AST — structure & nodes models raw-text elements with a content field",
+          "status": "passed",
+          "title": "models raw-text elements with a content field",
+          "duration": 3.1078359999999066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — attributes"],
+          "fullName": "HtmlNode AST — attributes enforces enumerated attribute values (input[type])",
+          "status": "passed",
+          "title": "enforces enumerated attribute values (input[type])",
+          "duration": 253.26442300000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — attributes"],
+          "fullName": "HtmlNode AST — attributes accepts global, ARIA, event-handler, and data-* attributes on any element",
+          "status": "passed",
+          "title": "accepts global, ARIA, event-handler, and data-* attributes on any element",
+          "duration": 253.21856200000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — schema laws"],
+          "fullName": "HtmlNode AST — schema laws keeps option-defaulted fields byte-identical on the encoded wire",
+          "status": "passed",
+          "title": "keeps option-defaulted fields byte-identical on the encoded wire",
+          "duration": 253.16788399999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HtmlNode AST — schema laws"],
+          "fullName": "HtmlNode AST — schema laws round-trips schema-derived HTML AST schemas",
+          "status": "passed",
+          "title": "round-trips schema-derived HTML AST schemas",
+          "duration": 253.32101000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ELEMENT_META"],
+          "fullName": "ELEMENT_META covers every WHATWG element from the pinned dataset (conforming + obsolete)",
+          "status": "passed",
+          "title": "covers every WHATWG element from the pinned dataset (conforming + obsolete)",
+          "duration": 253.13905999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ELEMENT_META"],
+          "fullName": "ELEMENT_META rejects tags outside the generated HtmlNode inventory",
+          "status": "passed",
+          "title": "rejects tags outside the generated HtmlNode inventory",
+          "duration": 3.17789300000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ELEMENT_META"],
+          "fullName": "ELEMENT_META tags conformance, void, and raw-text correctly",
+          "status": "passed",
+          "title": "tags conformance, void, and raw-text correctly",
+          "duration": 3.134576000000152,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ELEMENT_META"],
+          "fullName": "ELEMENT_META includes obsolete elements as non-conforming",
+          "status": "passed",
+          "title": "includes obsolete elements as non-conforming",
+          "duration": 3.1238110000001598,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790386994367,
+      "endTime": 1790386994651.1143,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/html/test/Html.test.ts"
+    }
+  ]
+}

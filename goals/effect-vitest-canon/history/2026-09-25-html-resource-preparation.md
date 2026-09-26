@@ -197,3 +197,32 @@ down from 113. Remaining branch-only candidates are still open and are not
 waived by this checkpoint. The existing human-lens spans were refreshed and the
 strict validator again reports valid=true, complete=true, missing=0 for all
 72 rows and 18 files.
+
+## Structural outcome assertions and timing checkpoint
+
+The source-size error check now uses assertFailure over its existing first-issue
+schema guard and diagnostic code. Its pass/fail contract is unchanged. Three
+other assertions are deliberate strengthening: ASCII K decodes to canonical k,
+case-sensitive ID references retain First first, and every generated element
+metadata value survives encode/decode unchanged. The metadata assertion composes
+the two Results, so either operation failing still fails the test. No expected
+SchemaError, Cause or full diagnostic array was inferred from observed output.
+
+Full package proof passed (audit 17.4s, docgen 17.2s). The syntax scan now reports
+90 EV006 candidates, down from 95 before this batch. Remaining branch-only
+contracts are open; this is not an empty-baseline or package-closeout claim.
+The four human lenses revalidate against the changed file bytes and spans.
+
+Node timing before this wave: 193 passed, zero failed/pending, 8.675s.
+After these changes: Node 196 passed, zero failed/pending, 10.605s; Bun 196
+passed, zero failed/pending, 4.492s. Three prior test declaration splits account
+for the count increase. Each invocation had stable source/manifest/lock hashes.
+The committed context receipts include runtime versions, load, pressure and
+limits. Main moved and workstation load differed, so these measurements do not
+isolate migration cost or establish a performance regression or improvement.
+No paired pre-wave Bun timing is claimed.
+
+The reviewed cache census changes exactly ten HTML task dependency lists for
+its development-only test-runner dependency. Commands, configuration, cache
+eligibility and unrelated baseline nodes are identical. Fallow regeneration adds
+only HTML's runtime/type boundary allowance for that declared test dependency.

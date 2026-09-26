@@ -2,7 +2,7 @@ import { inspectSourceSizeList, SourceSizeAnalysis, SourceSizeIssue } from "@bee
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertSuccess, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, strictEqual } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -40,11 +40,13 @@ describe("@beep/html source-size author conformance", () => {
     expect(valid.success.usesAuto).toBe(false);
 
     const invalid = inspectSourceSizeList("10%");
-    assertTrue(Result.isFailure(invalid));
-    if (Result.isFailure(invalid)) {
-      expect(isSourceSizeIssue(invalid.failure[0])).toBe(true);
-      expect(invalid.failure[0]?.code).toBe("invalidSourceSize");
-    }
+    assertFailure(
+      Result.mapError(invalid, (issues) => ({
+        schemaOwned: isSourceSizeIssue(issues[0]),
+        code: issues[0]?.code,
+      })),
+      { schemaOwned: true, code: "invalidSourceSize" }
+    );
   });
 
   it("accepts every current CSS length-unit family and literal unitless zero", () => {

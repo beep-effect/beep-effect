@@ -1316,7 +1316,7 @@ describe("@beep/html exact attribute domains", () => {
     expect(() => makeSpaceSeparatedTokenList([""])).toThrow();
     expect(() => makeSpaceSeparatedTokenList(["foo", "FOO"])).toThrow();
 
-    assertTrue(Result.isSuccess(decodeAsciiKResult("K")));
+    assertSuccess(decodeAsciiKResult("K"), "k");
     assertTrue(Result.isFailure(decodeAsciiKResult("K")));
   });
 
@@ -1336,7 +1336,7 @@ describe("@beep/html exact attribute domains", () => {
 
     const idReferences = decodeHtmlIdReferenceListResult("First\tsecond");
     assertSuccess(idReferences, "First second");
-    assertTrue(Result.isSuccess(decodeHtmlIdReferenceListResult("First first")));
+    assertSuccess(decodeHtmlIdReferenceListResult("First first"), "First first");
     assertTrue(Result.isFailure(decodeHtmlIdReferenceListResult("First First")));
   });
 
@@ -1689,10 +1689,7 @@ describe("@beep/html exact attribute conformance", () => {
 
     for (const meta of R.values(ELEMENT_META)) {
       expect(isHtmlElementMeta(meta)).toBe(true);
-      const encoded = encodeHtmlElementMetaResult(meta);
-      assertTrue(Result.isSuccess(encoded));
-      if (Result.isFailure(encoded)) continue;
-      assertTrue(Result.isSuccess(decodeHtmlElementMetaResult(encoded.success)));
+      assertSuccess(Result.flatMap(encodeHtmlElementMetaResult(meta), decodeHtmlElementMetaResult), meta);
     }
   });
 });
