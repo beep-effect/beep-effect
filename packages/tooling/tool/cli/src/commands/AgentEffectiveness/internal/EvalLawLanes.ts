@@ -383,6 +383,14 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * Run the schema-first, tsgo, and biome law lanes over a fixture's source
  * files and collect their violations.
  *
+ * **Details**
+ *
+ * The schema-first and biome lanes only read the fixture, so they run
+ * concurrently. The tsgo lane runs afterwards on its own: the fixture
+ * tsconfig inherits `incremental: true`, so tsgo writes
+ * `node_modules/.tmp/tsconfig.tsbuildinfo` into the fixture, which would race
+ * the schema-first lane's recursive copy of the fixture directory.
+ *
  * **Example** (Evaluate fixture law lanes)
  *
  * ```ts
@@ -403,8 +411,13 @@ export const evaluateLaw = Effect.fn("AgentEffectivenessEvalScorer.evaluateLaw")
   AgentEffectivenessEvalScorerError,
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const schemaFirst = yield* evaluateSchemaFirst(fixtureDir, repoRoot);
+  const readOnlyLanes = yield* Effect.all(
+    {
+      schemaFirst: evaluateSchemaFirst(fixtureDir, repoRoot),
+      biome: evaluateBiome(fixtureDir, repoRoot),
+    },
+    { concurrency: 2 }
+  );
   const tsgo = yield* evaluateTsgo(fixtureDir, repoRoot, sourceFiles);
-  const biome = yield* evaluateBiome(fixtureDir, repoRoot);
-  return { schemaFirst, tsgo, biome };
+  return { schemaFirst: readOnlyLanes.schemaFirst, tsgo, biome: readOnlyLanes.biome };
 });
