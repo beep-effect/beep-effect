@@ -195,3 +195,17 @@ The diagnostic full scan emitted current rows privately without updating the
 baseline or census artifacts. Before this batch it reported ten package rows;
 remaining findings must still be reconciled individually, including the native
 filesystem boundary and deliberate interruption scope. The baseline is not empty.
+
+## Evidence-backed lens reconciliation
+
+Twelve substantive human findings now cite their implementing commit, and two
+native filesystem subjects have explicit exception reasons. The SQLite child
+ownership finding remains open pending a direct interruption witness; no-findings
+rows are retained unchanged. The complete four-lens package inventory validates
+against its existing 15-file census with current file lengths: valid=true,
+complete=true, missing=0. This package-local validation does not adopt a new
+repository census or satisfy the goal-wide P1 acknowledgement gate.
+
+The final phase-label batch passed full package verification: audit 14.9s,
+docgen 3.0s. The initial check caught a duplicate import introduced in that batch;
+it was corrected before the successful proof and implementation commit.
