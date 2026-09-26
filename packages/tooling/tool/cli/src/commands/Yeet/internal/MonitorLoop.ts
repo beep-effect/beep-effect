@@ -1332,10 +1332,12 @@ const monitorConvergeObservation = (snapshot: YeetStatusSnapshot): O.Option<Yeet
       })
   );
 
+const decodeUuidOption = S.decodeUnknownOption(UUID);
+
 // The detached monitor job that writes a `cleared` receipt; both are absent
 // when the loop runs attached.
 const monitorJobAttribution = Effect.fn("YeetMonitorLoop.jobAttribution")(function* () {
-  const jobId = O.flatMap(yield* configStringOption(PROOF_JOB_ENV.jobId), S.decodeUnknownOption(UUID));
+  const jobId = O.flatMap(yield* configStringOption(PROOF_JOB_ENV.jobId), decodeUuidOption);
   const unit = O.filter(yield* configStringOption(PROOF_JOB_ENV.jobUnit), Str.isNonEmpty);
   return { jobId, unit };
 });
