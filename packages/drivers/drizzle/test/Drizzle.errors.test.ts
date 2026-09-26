@@ -46,9 +46,9 @@ describe("DrizzleError", () => {
     expect(error).toBeInstanceOf(DrizzleError);
     expect(error._tag).toBe("DrizzleError");
     expect(error.operation).toBe("execute");
-    expect(O.isNone(error.cause)).toBe(true);
-    expect(O.isNone(error.query)).toBe(true);
-    expect(O.isNone(error.params)).toBe(true);
+    assert.assertNone(error.cause);
+    assert.assertNone(error.query);
+    assert.assertNone(error.params);
   });
 
   it("normalizes unknown causes into the optional cause field", () => {
@@ -56,7 +56,7 @@ describe("DrizzleError", () => {
     const error = DrizzleError.fromUnknown("withTransaction", cause);
 
     expect(error.operation).toBe("withTransaction");
-    expect(O.isSome(error.cause)).toBe(true);
+    assert.assertSome(error.cause, cause);
     expect(O.getOrThrow(error.cause)).toBe(cause);
   });
 
@@ -129,7 +129,7 @@ describe("DrizzleError", () => {
     };
     const error = DrizzleError.fromUnknown("execute", cause);
 
-    expect(O.isNone(error.query)).toBe(true);
+    assert.assertNone(error.query);
     expect(O.getOrThrow(error.params)).toEqual(["<redacted>"]);
     expect(O.getOrThrow(error.cause)).toBe(cause);
   });
@@ -149,8 +149,8 @@ describe("DrizzleError", () => {
     expect(error).toBeInstanceOf(DrizzleError);
     expect(error.operation).toBe("execute");
     expect(O.getOrThrow(error.cause)).toBe(cause);
-    expect(O.isNone(error.query)).toBe(true);
-    expect(O.isNone(error.params)).toBe(true);
+    assert.assertNone(error.query);
+    assert.assertNone(error.params);
   });
 
   it("does not throw when proxied Cause values hide their reasons", () => {
@@ -172,8 +172,8 @@ describe("DrizzleError", () => {
     expect(error).toBeInstanceOf(DrizzleError);
     expect(error.operation).toBe("execute");
     expect(O.getOrThrow(error.cause)).toBe(cause);
-    expect(O.isNone(error.query)).toBe(true);
-    expect(O.isNone(error.params)).toBe(true);
+    assert.assertNone(error.query);
+    assert.assertNone(error.params);
   });
 
   it("does not retain uninspectable raw proxy causes", () => {
@@ -198,9 +198,9 @@ describe("DrizzleError", () => {
 
     expect(error).toBeInstanceOf(DrizzleError);
     expect(error.operation).toBe("execute");
-    expect(O.isNone(error.cause)).toBe(true);
-    expect(O.isNone(error.query)).toBe(true);
-    expect(O.isNone(error.params)).toBe(true);
+    assert.assertNone(error.cause);
+    assert.assertNone(error.query);
+    assert.assertNone(error.params);
   });
 
   it("does not throw when Cause reasons hide their payload", () => {
@@ -230,8 +230,8 @@ describe("DrizzleError", () => {
 
     expect(error).toBeInstanceOf(DrizzleError);
     expect(error.operation).toBe("execute");
-    expect(O.isNone(error.query)).toBe(true);
-    expect(O.isNone(error.params)).toBe(true);
+    assert.assertNone(error.query);
+    assert.assertNone(error.params);
   });
 
   it("unwraps Cause failures to capture native Drizzle query context", () => {
@@ -289,9 +289,9 @@ describe("DrizzleError", () => {
       });
 
       expect(error.operation).toBe("execute");
-      expect(O.isNone(error.cause)).toBe(true);
-      expect(O.isNone(error.query)).toBe(true);
-      expect(O.isNone(error.params)).toBe(true);
+      assert.assertNone(error.cause);
+      assert.assertNone(error.query);
+      assert.assertNone(error.params);
     })
   );
 
@@ -339,7 +339,7 @@ describe("DrizzleError", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assert.assertTrue);
     })
   );
 
