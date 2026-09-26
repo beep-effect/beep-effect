@@ -16,8 +16,9 @@ import {
 } from "@beep/html";
 import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes";
 import { A as Anchor, Area, Audio, Button, HtmlNode, Li, Link, Meta, Ol } from "@beep/html/Html.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -80,8 +80,9 @@ import {
   Video,
 } from "@beep/html/Html.model";
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Exit, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";

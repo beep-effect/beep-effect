@@ -12,6 +12,9 @@
       "path": "../utils/tsconfig.json"
     },
     {
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
       "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ],

@@ -8,8 +8,9 @@ import {
   ScriptDataBlockMimeType,
   ScriptState,
 } from "@beep/html/Html.script";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";

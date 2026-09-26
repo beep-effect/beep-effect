@@ -47,3 +47,29 @@ Full package verification after these edits passed: audit 16.4s and docgen
 13.9s (html-property-package-001.log). Resource exception review, observability,
 detector migration, final timing and publication remain. This is a checkpoint,
 not package-wave completion or a goal acceptance claim.
+
+## Native boundaries and runner adoption
+
+The remaining resource findings retain their intentional subjects. The ledger
+suite validates actual package artifacts through validateConformanceLedgerArtifacts;
+the annotation suite compares the selected production proof annotations with
+those artifacts. The jsdom suite uses disconnected DOM elements, innerHTML and
+namespace observations as an independent emulator parser oracle. Replacing these
+with memory filesystem fixtures or production predicates would remove the
+integrity/independence claims. This is not real-browser execution evidence.
+
+All 18 test suites now import it from the public @beep/test-runner entrypoint.
+Plain describe/expect imports remain on @effect/vitest. The two child tests have
+spawn, import, exit, drain and cleanup spans with constant names and no captured
+environment values. Their scopes, TestEnv, original process arguments and final
+zero-exit/empty-stderr assertions are preserved. Dependency installation changed
+only the HTML lockfile workspace entry; filtered tsconfig-sync generated the two
+HTML reference updates.
+
+Full package verification passed (html-runner-package-001.log): audit 18.2s,
+docgen 13.8s. Temporary probes in both native child tests observed the runner's
+start diagnostic through TestConsole.logLines with BEEP_TEST_TRACE=1. With
+BEEP_TEST_TRACE=0 and CI=false, both otherwise identical trace assertions failed.
+The original source bytes were restored in finally. Private evidence is
+html-trace-receipt.json and html-trace-{positive,negative}.log. Detector migration,
+ledger reconciliation, cache metadata, final timing and publication remain.

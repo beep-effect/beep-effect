@@ -20,8 +20,9 @@ import {
   Script,
   Span,
 } from "@beep/html/Html.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";

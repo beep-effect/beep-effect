@@ -2,7 +2,8 @@ import { makeAsciiCaseInsensitiveEnumerated, makeSpaceSeparatedTokenList } from 
 import { HtmlConformanceError, HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { HtmlPolicyError, HtmlPolicyIssue } from "@beep/html/Html.policy";
 import { HtmlSerializeError } from "@beep/html/Html.serialize";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { identity } from "effect";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";

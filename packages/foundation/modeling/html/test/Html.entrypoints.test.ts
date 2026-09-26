@@ -1,7 +1,8 @@
 import { Html } from "@beep/html/Html";
 import { Input } from "@beep/html/Html.model";
 import { VERSION } from "@beep/html/Version";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -35,17 +36,17 @@ describe("@beep/html per-module entry points", () => {
             }
           );
           return { child, stderr: new Response(child.stderr).text() };
-        }),
+        }).pipe(Effect.withSpan("Html.entrypointsImport.spawn")),
         ({ child, stderr }) =>
           Effect.promise(() => {
             if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
             return Promise.allSettled([child.exited, stderr]);
-          })
+          }).pipe(Effect.withSpan("Html.entrypointsImport.cleanup"))
       );
       const [exitCode, stderr] = yield* Effect.all([
-        Effect.promise(() => child.exited),
-        Effect.promise(() => readStderr),
-      ]);
+        Effect.promise(() => child.exited).pipe(Effect.withSpan("Html.entrypointsImport.exit")),
+        Effect.promise(() => readStderr).pipe(Effect.withSpan("Html.entrypointsImport.drain")),
+      ]).pipe(Effect.withSpan("Html.entrypointsImport.import"));
 
       expect({ exitCode, stderr }).toStrictEqual({ exitCode: 0, stderr: "" });
     })
