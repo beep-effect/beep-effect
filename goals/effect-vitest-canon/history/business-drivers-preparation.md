@@ -75,3 +75,37 @@ the local proof mode; no live Graph acceptance is claimed.
 Next: observability instrumentation, accurate live skip reporting, final
 Node/Bun timings, inventory remediation attribution and publication gates.
 These package proofs do not establish hosted readiness or goal completion.
+
+## Instrumentation and final local proof
+
+Commit `ed2ebf3ff0` routes all eight test files through the accepted instrumented
+runner. Four explicit devDependencies and the lockfile describe that dependency.
+The cache baseline records36 matching task edges, preserving existing duplicate
+edges and qualification scope; cache audit reports zero blocking findings.
+
+M365 now marks its absent-configuration placeholder skipped. The live path adds
+only operation-name progress logs. Required environment gates, optional user ID,
+request arguments and the60-second live acquisition budget are unchanged.
+No credentials were resolved and no live Graph calls were made.
+
+All four full package audits and docgen runs passed after instrumentation. Eight
+final configured runtime runs exited0 with stable source, manifest and lockfile
+hashes. Raw results and load/pressure contexts are in the matching
+`timings/final/business-drivers` and `timings/context/final/business-drivers`
+directories. Shared-workstation durations are observations, not speedup claims.
+
+| Package | Node command | Bun command | Each runtime |
+| --- | ---: | ---: | --- |
+| FreshBooks | 4.421 s | 1.418 s | 12 passed |
+| HubSpot | 4.181 s | 1.422 s | 8 passed |
+| M365 | 4.286 s | 1.465 s | 11 passed,1 skipped |
+| USPTO | 4.017 s | 1.449 s | 13 passed |
+
+The strict current eight-file inventory validation passed with85 rows and zero
+missing lens coverage. The ledger records57 fixed candidates,27 no-finding
+reviews and one justified exception for M365's privately owned deterministic
+retry clock. The52 resolved detector findings were removed from the ratchet
+baseline; the clock exception retains its ownership rationale.
+
+Publication, hosted checks, review closure and required adversarial review
+remain separate gates. This wave does not close the overall goal.
