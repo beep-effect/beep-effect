@@ -73,3 +73,26 @@ BEEP_TEST_TRACE=0 and CI=false, both otherwise identical trace assertions failed
 The original source bytes were restored in finally. Private evidence is
 html-trace-receipt.json and html-trace-{positive,negative}.log. Detector migration,
 ledger reconciliation, cache metadata, final timing and publication remain.
+
+## Canonical property declarations
+
+Migrated all 19 native Arbitrary.checkEffect wrappers in the eight affected
+suites to it.prop or it.effect.prop. The installed/reference public API accepts
+the same native Arbitrary values and CheckOptions under the arbitrary option.
+Every original fcRuns setting (25, 50, 100, 250 and 500) is retained, with no
+new filtering, reduced domains or seed override. Inline language-tag and URL
+arbitraries preserve their original construction. The input/button laws now
+have separate property declarations, and the URL representative examples and
+invalid enumerated keywords retain separate explicit tests. This adds three
+test declarations without dropping assertions.
+
+Canonical TypeScript AST printing confirmed every property callback unchanged
+apart from formatting. Private receipts: html-property-callback-parity.json and
+html-property-run-floor-parity.json. The preliminary scanner-based comparison
+misread template literal tails as trivia-bearing tokens; the AST printer check
+resolved that diagnostic issue without changing callbacks.
+
+The final package verification passed: audit 16.8s and docgen 14.1s, recorded in
+html-properties-package-002.log. The remaining ordinary Effect runtime-boundary
+and specialized-assertion detector findings are still queued; no baseline rows
+have been removed merely because this property subset passes.

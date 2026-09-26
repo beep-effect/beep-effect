@@ -174,22 +174,17 @@ describe("@beep/html conformance", () => {
 });
 
 describe("@beep/html safe policy", () => {
-  it.effect("keeps schema-derived safe URL attributes at their codec fixed points", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary]),
-        ([href, src]) =>
-          Effect.gen(function* () {
-            expect(yield* decodeSafeUrlAttribute(yield* encodeSafeUrlAttribute(href))).toBe(href);
-            expect(yield* decodeSafeImageUrlAttribute(yield* encodeSafeImageUrlAttribute(src))).toBe(src);
+  it.effect.prop(
+    "keeps schema-derived safe URL attributes at their codec fixed points",
+    [SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary],
+    ([href, src]) =>
+      Effect.gen(function* () {
+        expect(yield* decodeSafeUrlAttribute(yield* encodeSafeUrlAttribute(href))).toBe(href);
+        expect(yield* decodeSafeImageUrlAttribute(yield* encodeSafeImageUrlAttribute(src))).toBe(src);
 
-            return true;
-          }),
-        fcRuns(100)
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+        return true;
+      }),
+    { arbitrary: fcRuns(100) }
   );
 
   it("applies element-aware URL policies", () => {

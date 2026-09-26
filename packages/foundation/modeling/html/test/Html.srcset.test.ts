@@ -2,7 +2,7 @@ import { inspectSrcset } from "@beep/html/Html.srcset";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, pipe } from "effect";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -113,38 +113,30 @@ describe("@beep/html srcset author conformance", () => {
     expect(profileOf("a.png 1e-999x, b.png 2e-999x")).toBe("density");
   });
 
-  it("accepts generated positive width lists", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(10_000))),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(10_001), S.isLessThanOrEqualTo(20_000))),
-          ]),
-          ([small, large]) => {
-            expect(profileOf(`small.png ${small}w, large.png ${large}w`)).toBe("width");
+  it.prop(
+    "accepts generated positive width lists",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(10_000))),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(10_001), S.isLessThanOrEqualTo(20_000))),
+    ],
+    ([small, large]) => {
+      expect(profileOf(`small.png ${small}w, large.png ${large}w`)).toBe("width");
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("rejects generated numerically duplicate width spellings", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(20_000)))]),
-          ([width]) => {
-            expect(O.isNone(inspectSrcset(`a.png ${width}w, b.png 0${width}w`, acceptUrl))).toBe(true);
+  it.prop(
+    "rejects generated numerically duplicate width spellings",
+    [Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(20_000)))],
+    ([width]) => {
+      expect(O.isNone(inspectSrcset(`a.png ${width}w, b.png 0${width}w`, acceptUrl))).toBe(true);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("handles a large unique candidate list with one URL validation per candidate", () => {
     const candidateCount = 4_096;
@@ -163,18 +155,14 @@ describe("@beep/html srcset author conformance", () => {
     expect(validationCount).toBe(candidateCount);
   });
 
-  it("is total for arbitrary Unicode and UTF-16 input", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.String.check(S.isMaxLength(256)))]),
-          ([input]) => {
-            expect(O.isOption(inspectSrcset(input, acceptUrl))).toBe(true);
+  it.prop(
+    "is total for arbitrary Unicode and UTF-16 input",
+    [Arbitrary.schema(S.String.check(S.isMaxLength(256)))],
+    ([input]) => {
+      expect(O.isOption(inspectSrcset(input, acceptUrl))).toBe(true);
 
-            return true;
-          },
-          fcRuns(250)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(250) }
+  );
 });

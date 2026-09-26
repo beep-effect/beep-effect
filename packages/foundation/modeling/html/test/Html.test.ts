@@ -275,34 +275,30 @@ describe("HtmlNode AST — schema laws", () => {
     })
   );
 
-  it("round-trips schema-derived HTML AST schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            GlobalAttributesArbitrary,
-            BooleanAttributeArbitrary,
-            TextArbitrary,
-            CommentArbitrary,
-            DoctypeArbitrary,
-            InputArbitrary,
-            HtmlElementMetaArbitrary,
-          ]),
-          ([attributes, booleanAttribute, text, comment, doctype, input, meta]) => {
-            expectRoundTrip(GlobalAttributesStruct, attributes);
-            expectRoundTrip(BooleanAttribute, booleanAttribute);
-            expectRoundTrip(Text, text);
-            expectRoundTrip(Comment, comment);
-            expectRoundTrip(Doctype, doctype);
-            expectRoundTrip(Input, input);
-            expectRoundTrip(HtmlElementMeta, meta);
+  it.prop(
+    "round-trips schema-derived HTML AST schemas",
+    [
+      GlobalAttributesArbitrary,
+      BooleanAttributeArbitrary,
+      TextArbitrary,
+      CommentArbitrary,
+      DoctypeArbitrary,
+      InputArbitrary,
+      HtmlElementMetaArbitrary,
+    ],
+    ([attributes, booleanAttribute, text, comment, doctype, input, meta]) => {
+      expectRoundTrip(GlobalAttributesStruct, attributes);
+      expectRoundTrip(BooleanAttribute, booleanAttribute);
+      expectRoundTrip(Text, text);
+      expectRoundTrip(Comment, comment);
+      expectRoundTrip(Doctype, doctype);
+      expectRoundTrip(Input, input);
+      expectRoundTrip(HtmlElementMeta, meta);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("ELEMENT_META", () => {

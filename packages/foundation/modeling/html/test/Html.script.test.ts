@@ -11,7 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -271,21 +271,16 @@ describe("HTML script semantic states", () => {
     expect(describeState(ScriptState.cases.dataBlock.make({ mimeType }))).toBe("data-block:application/json");
   });
 
-  it("round-trips schema-derived script semantic states", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ScriptStateArbitrary]),
-          ([state]) => {
-            const encoded = Result.getOrThrow(encodeScriptStateResult(state));
-            const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
-            expect(Eq.equals(decoded, state)).toBe(true);
+  it.prop(
+    "round-trips schema-derived script semantic states",
+    [ScriptStateArbitrary],
+    ([state]) => {
+      const encoded = Result.getOrThrow(encodeScriptStateResult(state));
+      const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
+      expect(Eq.equals(decoded, state)).toBe(true);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

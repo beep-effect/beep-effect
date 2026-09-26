@@ -17,7 +17,7 @@ import { Button, Input, Select } from "@beep/html/Html.model";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -142,36 +142,29 @@ describe("HTML form-control semantic states", () => {
     expect(Result.isFailure(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" }))).toBe(true);
   });
 
-  it("round-trips schema-derived input and button semantic states", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([InputStateArbitrary]),
-          ([state]) => {
-            const encoded = Result.getOrThrow(encodeInputStateResult(state));
-            const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
-            expect(Eq.equals(decoded, state)).toBe(true);
+  it.prop(
+    "round-trips schema-derived input semantic states",
+    [InputStateArbitrary],
+    ([state]) => {
+      const encoded = Result.getOrThrow(encodeInputStateResult(state));
+      const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
+      expect(Eq.equals(decoded, state)).toBe(true);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ButtonStateArbitrary]),
-          ([state]) => {
-            const encoded = Result.getOrThrow(encodeButtonStateResult(state));
-            const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
-            expect(Eq.equals(decoded, state)).toBe(true);
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips schema-derived button semantic states",
+    [ButtonStateArbitrary],
+    ([state]) => {
+      const encoded = Result.getOrThrow(encodeButtonStateResult(state));
+      const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
+      expect(Eq.equals(decoded, state)).toBe(true);
+
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

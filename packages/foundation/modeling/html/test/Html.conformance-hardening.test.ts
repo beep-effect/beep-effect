@@ -287,37 +287,33 @@ describe("@beep/html numeric and id conformance", () => {
     expect(() => Meter.make({ children: [], value: O.some(Number.NaN) })).toThrow();
   });
 
-  it("keeps generated numeric relationships equivalent to their ordering laws", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
-              Arbitrary.map((value) => value / 10)
-            ),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
-              Arbitrary.map((value) => value / 10)
-            ),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
-              Arbitrary.map((value) => value / 10)
-            ),
-          ]),
-          ([minimum, maximum, value]) => {
-            const root = Meter.make({
-              children: [],
-              max: O.some(maximum),
-              min: O.some(minimum),
-              value: O.some(value),
-            });
-            const expected = minimum <= maximum && minimum <= value && value <= maximum;
-            expect(hasRule(root, "attributeRelationship")).toBe(!expected);
+  it.prop(
+    "keeps generated numeric relationships equivalent to their ordering laws",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
+        Arbitrary.map((value) => value / 10)
+      ),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
+        Arbitrary.map((value) => value / 10)
+      ),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(-1000), S.isLessThanOrEqualTo(1000))).pipe(
+        Arbitrary.map((value) => value / 10)
+      ),
+    ],
+    ([minimum, maximum, value]) => {
+      const root = Meter.make({
+        children: [],
+        max: O.some(maximum),
+        min: O.some(minimum),
+        value: O.some(value),
+      });
+      const expected = minimum <= maximum && minimum <= value && value <= maximum;
+      expect(hasRule(root, "attributeRelationship")).toBe(!expected);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("reports every duplicate id occurrence at its root-relative attribute path", () => {
     const element = Div.make({
@@ -477,29 +473,25 @@ describe("@beep/html track language conformance", () => {
     }
   });
 
-  it("accepts generated registered language/script/region combinations and rejects separator corruption", () => {
-    const registeredTag = Arbitrary.all([
-      Arbitrary.schema(S.Literals(["en", "fr", "zh", "qaa", "qtz", "iw"])),
-      Arbitrary.schema(S.Literals(["Latn", "Cyrl", "Hant", "Qaaa", "Qabx"])),
-      Arbitrary.schema(S.Literals(["US", "FR", "TW", "QM", "XZ"])),
-    ]).pipe(Arbitrary.map(([language, script, region]) => `${language}-${script}-${region}`));
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([registeredTag]),
-          ([language]) => {
-            expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
-            expect(languageIssues(language.replaceAll("-", "_"), O.some("captions"))).toContainEqual(
-              expect.objectContaining({ rule: "attributeRelationship" })
-            );
+  it.prop(
+    "accepts generated registered language/script/region combinations and rejects separator corruption",
+    [
+      Arbitrary.all([
+        Arbitrary.schema(S.Literals(["en", "fr", "zh", "qaa", "qtz", "iw"])),
+        Arbitrary.schema(S.Literals(["Latn", "Cyrl", "Hant", "Qaaa", "Qabx"])),
+        Arbitrary.schema(S.Literals(["US", "FR", "TW", "QM", "XZ"])),
+      ]).pipe(Arbitrary.map(([language, script, region]) => `${language}-${script}-${region}`)),
+    ],
+    ([language]) => {
+      expect(languageIssues(language, O.some("captions"))).toStrictEqual([]);
+      expect(languageIssues(language.replaceAll("-", "_"), O.some("captions"))).toContainEqual(
+        expect.objectContaining({ rule: "attributeRelationship" })
+      );
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("@beep/html missing-attribute issue paths", () => {
@@ -999,7 +991,7 @@ describe("@beep/html generated special-child grammars", () => {
     })
   );
 
-  it("keeps browser-safe production URL validation aligned with the WHATWG oracle", () => {
+  it("keeps representative production URL validation aligned with the WHATWG oracle", () => {
     const representative = [
       "/relative/path",
       "#fragment",
@@ -1018,32 +1010,29 @@ describe("@beep/html generated special-child grammars", () => {
     for (const value of representative) {
       expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
     }
-
-    const candidate = Arbitrary.schema(S.Boolean).pipe(
-      Arbitrary.flatMap((choose) =>
-        choose
-          ? Arbitrary.schema(S.String.check(S.isMaxLength(96)))
-          : Arbitrary.all([
-              Arbitrary.schema(S.Literals(["/", "./", "../", "//", "#", "?", "https://", "mailto:", "data:"])),
-              Arbitrary.schema(S.String.check(S.isMaxLength(64))),
-            ]).pipe(Arbitrary.map(([prefix, suffix]) => `${prefix}${suffix}`))
-      )
-    );
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([candidate]),
-          ([value]) => {
-            expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
-
-            return true;
-          },
-          fcRuns(500)
-        )
-      )._tag
-    ).toBe("Passed");
   });
+
+  it.prop(
+    "keeps browser-safe production URL validation aligned with the WHATWG oracle",
+    [
+      Arbitrary.schema(S.Boolean).pipe(
+        Arbitrary.flatMap((choose) =>
+          choose
+            ? Arbitrary.schema(S.String.check(S.isMaxLength(96)))
+            : Arbitrary.all([
+                Arbitrary.schema(S.Literals(["/", "./", "../", "//", "#", "?", "https://", "mailto:", "data:"])),
+                Arbitrary.schema(S.String.check(S.isMaxLength(64))),
+              ]).pipe(Arbitrary.map(([prefix, suffix]) => `${prefix}${suffix}`))
+        )
+      ),
+    ],
+    ([value]) => {
+      expect(isConformantLinkUrl(value), value).toBe(isOracleValidHtmlUrl(value));
+
+      return true;
+    },
+    { arbitrary: fcRuns(500) }
+  );
 
   it("enforces every generated descendant exclusion through nested fallback content", () => {
     const cases = [
@@ -1261,22 +1250,17 @@ describe("@beep/html generated special-child grammars", () => {
 });
 
 describe("@beep/html exact attribute domains", () => {
-  it.effect("keeps schema-derived open relation lists at their canonical fixed point", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([LinkRelationListArbitrary]),
-        ([relation]) =>
-          Effect.gen(function* () {
-            expect(yield* encodeLinkRelationList(relation)).toBe(relation);
-            expect(yield* decodeLinkRelationList(relation)).toBe(relation);
+  it.effect.prop(
+    "keeps schema-derived open relation lists at their canonical fixed point",
+    [LinkRelationListArbitrary],
+    ([relation]) =>
+      Effect.gen(function* () {
+        expect(yield* encodeLinkRelationList(relation)).toBe(relation);
+        expect(yield* decodeLinkRelationList(relation)).toBe(relation);
 
-            return true;
-          }),
-        fcRuns(100)
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+        return true;
+      }),
+    { arbitrary: fcRuns(100) }
   );
 
   it("rejects ambiguous factories and uses HTML ASCII case folding", () => {
