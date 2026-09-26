@@ -26938,15 +26938,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts": {
-          "lines": 100,
-          "statements": 100,
+          "lines": 99.18,
+          "statements": 99.21,
           "branches": 100,
-          "functions": 100,
+          "functions": 98.21,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts": {
@@ -26962,15 +26962,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
+          "lines": 99.21,
+          "statements": 98.51,
+          "branches": 97.43,
+          "functions": 98.33,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts": {
@@ -27091,6 +27091,18 @@
             "statements": 43,
             "branches": 10,
             "functions": 20
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts": {
+          "lines": 98.7,
+          "statements": 98.79,
+          "branches": 75,
+          "functions": 98.11,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts": {
@@ -27286,15 +27298,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Remediation.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
+          "lines": 98.44,
+          "statements": 97.74,
+          "branches": 95.74,
+          "functions": 95,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
+            "lines": 2,
+            "statements": 3,
+            "branches": 2,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts": {
@@ -27455,14 +27467,14 @@
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts": {
           "lines": 100,
-          "statements": 100,
+          "statements": 99.07,
           "branches": 100,
-          "functions": 100,
+          "functions": 97.77,
           "uncovered": {
             "lines": 0,
-            "statements": 0,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts": {
