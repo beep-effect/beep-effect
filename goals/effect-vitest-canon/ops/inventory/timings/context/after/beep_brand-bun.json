@@ -7,11 +7,11 @@
     "--reporter=json",
     "--outputFile=<private-output>"
   ],
-  "phase": "runner-final-bun",
+  "phase": "checkpoint-bun",
   "sourceBefore": [
     {
       "file": "bun.lock",
-      "sha256": "f5137cf34e47fe47d7a6981be31c76e1c10bbd08089fdfc65c3dba70aa4ae373"
+      "sha256": "543121a3012b47d2e1e5b5657a4f833cc80b0e6f3cb47acf6ff15a84a4e13596"
     },
     {
       "file": "packages/foundation/ui-system/brand/package.json",
@@ -62,11 +62,11 @@
       "sha256": "89cccec5353daf6b9d685d218953483745c282f46066cb7b510055ae540cafe1"
     }
   ],
-  "loadBefore": [18.3876953125, 23.2587890625, 26.69287109375],
+  "loadBefore": [44.05078125, 38.515625, 48.2451171875],
   "pressureBefore": {
-    "cpu": "some avg10=0.91 avg60=1.90 avg300=2.92 total=2033461152\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.21 avg60=0.13 avg300=0.03 total=172700458\nfull avg10=0.21 avg60=0.13 avg300=0.02 total=156015847\n",
-    "io": "some avg10=0.12 avg60=0.14 avg300=0.19 total=887342307\nfull avg10=0.05 avg60=0.08 avg300=0.10 total=628908312\n"
+    "cpu": "some avg10=3.33 avg60=7.30 avg300=6.19 total=2224055101\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.24 avg60=0.39 avg300=0.30 total=189931255\nfull avg10=0.24 avg60=0.37 avg300=0.21 total=164954944\n",
+    "io": "some avg10=0.00 avg60=0.28 avg300=0.93 total=938885514\nfull avg10=0.00 avg60=0.00 avg300=0.25 total=643140793\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -78,11 +78,11 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 1.6843756890011718,
+  "wholeCommandSeconds": 1.6814924840000458,
   "sourceAfter": [
     {
       "file": "bun.lock",
-      "sha256": "f5137cf34e47fe47d7a6981be31c76e1c10bbd08089fdfc65c3dba70aa4ae373"
+      "sha256": "543121a3012b47d2e1e5b5657a4f833cc80b0e6f3cb47acf6ff15a84a4e13596"
     },
     {
       "file": "packages/foundation/ui-system/brand/package.json",
@@ -133,11 +133,11 @@
       "sha256": "89cccec5353daf6b9d685d218953483745c282f46066cb7b510055ae540cafe1"
     }
   ],
-  "loadAfter": [18.3876953125, 23.2587890625, 26.69287109375],
+  "loadAfter": [44.05078125, 38.515625, 48.2451171875],
   "pressureAfter": {
-    "cpu": "some avg10=0.91 avg60=1.90 avg300=2.92 total=2033496195\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.21 avg60=0.13 avg300=0.03 total=172700525\nfull avg10=0.21 avg60=0.13 avg300=0.02 total=156015901\n",
-    "io": "some avg10=0.12 avg60=0.14 avg300=0.19 total=887347689\nfull avg10=0.05 avg60=0.08 avg300=0.10 total=628912680\n"
+    "cpu": "some avg10=2.73 avg60=7.06 avg300=6.15 total=2224073003\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.20 avg60=0.37 avg300=0.30 total=189931834\nfull avg10=0.19 avg60=0.35 avg300=0.21 total=164955416\n",
+    "io": "some avg10=0.00 avg60=0.27 avg300=0.92 total=938886316\nfull avg10=0.00 avg60=0.00 avg300=0.25 total=643141226\n"
   },
   "sourceStable": true
 }

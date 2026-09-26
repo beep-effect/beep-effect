@@ -6,7 +6,7 @@
     "--reporter=json",
     "--outputFile=<private-output>"
   ],
-  "phase": "runner-final-node",
+  "phase": "checkpoint-node",
   "sourceBefore": [
     {
       "file": "bun.lock",
@@ -41,11 +41,11 @@
       "sha256": "6776fbf1c2fbb066e820aa0ffe084dbc05d0c5883e52d697f25f24e8e7a75c68"
     }
   ],
-  "loadBefore": [16.5322265625, 44.18408203125, 55.2900390625],
+  "loadBefore": [33.30419921875, 36.48388671875, 47.31689453125],
   "pressureBefore": {
-    "cpu": "some avg10=0.29 avg60=1.32 avg300=6.54 total=2205809278\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.41 total=188827609\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=163883787\n",
-    "io": "some avg10=0.00 avg60=0.17 avg300=2.46 total=937670042\nfull avg10=0.00 avg60=0.08 avg300=0.77 total=642658967\n"
+    "cpu": "some avg10=1.98 avg60=5.22 avg300=5.78 total=2224674947\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.08 avg60=0.29 avg300=0.29 total=190000883\nfull avg10=0.08 avg60=0.27 avg300=0.20 total=165021668\n",
+    "io": "some avg10=0.12 avg60=0.20 avg300=0.85 total=938972784\nfull avg10=0.00 avg60=0.00 avg300=0.23 total=643196879\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -57,7 +57,7 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 4.178118993993849,
+  "wholeCommandSeconds": 4.794772965004086,
   "sourceAfter": [
     {
       "file": "bun.lock",
@@ -92,11 +92,11 @@
       "sha256": "6776fbf1c2fbb066e820aa0ffe084dbc05d0c5883e52d697f25f24e8e7a75c68"
     }
   ],
-  "loadAfter": [16.0888671875, 43.6328125, 55.0517578125],
+  "loadAfter": [31.03759765625, 35.9609375, 47.08935546875],
   "pressureAfter": {
-    "cpu": "some avg10=0.16 avg60=1.19 avg300=6.41 total=2205828139\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.40 total=188827619\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=163883796\n",
-    "io": "some avg10=1.33 avg60=0.49 avg300=2.48 total=937671061\nfull avg10=1.33 avg60=0.40 avg300=0.83 total=642659834\n"
+    "cpu": "some avg10=1.32 avg60=4.89 avg300=5.70 total=2224921676\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.05 avg60=0.27 avg300=0.28 total=190001229\nfull avg10=0.05 avg60=0.26 avg300=0.20 total=165021975\n",
+    "io": "some avg10=0.08 avg60=0.19 avg300=0.83 total=938983282\nfull avg10=0.00 avg60=0.00 avg300=0.22 total=643204327\n"
   },
   "sourceStable": true
 }

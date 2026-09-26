@@ -6,11 +6,11 @@
     "--reporter=json",
     "--outputFile=<private-output>"
   ],
-  "phase": "final-node",
+  "phase": "checkpoint-node",
   "sourceBefore": [
     {
       "file": "bun.lock",
-      "sha256": "e6f05fa38ab0631af3085c10645ed347e802f24044c5aabea39df97c0430cd6d"
+      "sha256": "543121a3012b47d2e1e5b5657a4f833cc80b0e6f3cb47acf6ff15a84a4e13596"
     },
     {
       "file": "packages/foundation/capability/chalk/package.json",
@@ -65,11 +65,11 @@
       "sha256": "547533e677513c81126c2ef4840dd4718e9f01d445eca4f614b291a9ac5551b2"
     }
   ],
-  "loadBefore": [12.2802734375, 33.18701171875, 30.68505859375],
+  "loadBefore": [54.4453125, 39.62451171875, 48.9111328125],
   "pressureBefore": {
-    "cpu": "some avg10=0.08 avg60=0.58 avg300=5.79 total=1993659426\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.08 total=171375418\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=154932170\n",
-    "io": "some avg10=0.00 avg60=0.01 avg300=0.04 total=883288780\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=626066749\n"
+    "cpu": "some avg10=5.36 avg60=9.22 avg300=6.42 total=2222910163\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.25 avg60=0.40 avg300=0.30 total=189788783\nfull avg10=0.17 avg60=0.37 avg300=0.20 total=164815426\n",
+    "io": "some avg10=0.13 avg60=0.44 avg300=1.02 total=938836647\nfull avg10=0.00 avg60=0.01 avg300=0.28 total=643115835\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -81,11 +81,11 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 4.4447498219960835,
+  "wholeCommandSeconds": 4.918264879001072,
   "sourceAfter": [
     {
       "file": "bun.lock",
-      "sha256": "e6f05fa38ab0631af3085c10645ed347e802f24044c5aabea39df97c0430cd6d"
+      "sha256": "543121a3012b47d2e1e5b5657a4f833cc80b0e6f3cb47acf6ff15a84a4e13596"
     },
     {
       "file": "packages/foundation/capability/chalk/package.json",
@@ -140,11 +140,11 @@
       "sha256": "547533e677513c81126c2ef4840dd4718e9f01d445eca4f614b291a9ac5551b2"
     }
   ],
-  "loadAfter": [14.18017578125, 33.23388671875, 30.7138671875],
+  "loadAfter": [51.3662109375, 39.23193359375, 48.73388671875],
   "pressureAfter": {
-    "cpu": "some avg10=0.05 avg60=0.54 avg300=5.71 total=1993679907\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.08 total=171375458\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=154932210\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=883301866\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=626074985\n"
+    "cpu": "some avg10=4.25 avg60=8.76 avg300=6.36 total=2223055138\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.17 avg60=0.37 avg300=0.30 total=189788835\nfull avg10=0.11 avg60=0.35 avg300=0.20 total=164815473\n",
+    "io": "some avg10=0.09 avg60=0.41 avg300=1.00 total=938839912\nfull avg10=0.00 avg60=0.01 avg300=0.28 total=643118397\n"
   },
   "sourceStable": true
 }
