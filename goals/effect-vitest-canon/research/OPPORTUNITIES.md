@@ -2369,3 +2369,13 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: generated boundary parity after test-runner adoption
+
+PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed
+with `standards/fallow.boundaries.generated.jsonc is stale`. The same drift was
+reproduced locally on #1290. The boundary generator added only each touched
+package's test-runner dependency to its value/type import lists. Run both
+tsconfig-sync and fallow:boundaries:write after changing workspace dependencies,
+then check both generated surfaces before early publication. Package audit alone
+does not establish this repository-level parity.
