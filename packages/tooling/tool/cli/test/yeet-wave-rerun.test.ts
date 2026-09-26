@@ -520,9 +520,12 @@ it.layer(platform, { timeout: "30 seconds" })("attached --until-ready on a chang
   );
 });
 
+const decodeUuid = S.decodeEffect(UUID);
+const encodeProofJobRecordJson = S.encodeEffect(S.fromJsonString(ProofJobRecord));
+
 const writeMonitorJob = Effect.fn("waveRerunTest.writeMonitorJob")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  const jobId = yield* S.decodeEffect(UUID)(jobUuid);
+  const jobId = yield* decodeUuid(jobUuid);
   const jobs = `${root}/.beep/yeet/jobs`;
   const record = ProofJobRecord.make({
     jobId,
@@ -548,10 +551,7 @@ const writeMonitorJob = Effect.fn("waveRerunTest.writeMonitorJob")(function* (ro
     }),
   });
   yield* fs.makeDirectory(jobs, { recursive: true });
-  yield* fs.writeFileString(
-    `${jobs}/${jobId}.json`,
-    `${yield* S.encodeEffect(S.fromJsonString(ProofJobRecord))(record)}\n`
-  );
+  yield* fs.writeFileString(`${jobs}/${jobId}.json`, `${yield* encodeProofJobRecordJson(record)}\n`);
   return jobId;
 });
 

@@ -1104,6 +1104,7 @@
         "three": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@storybook/react-vite": "catalog:",
         "@types/node": "catalog:",

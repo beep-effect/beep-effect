@@ -1,5 +1,6 @@
 import { Graph3DDriverError } from "@beep/graph-3d";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const sameGraph3DDriverError = S.toEquivalence(Graph3DDriverError);

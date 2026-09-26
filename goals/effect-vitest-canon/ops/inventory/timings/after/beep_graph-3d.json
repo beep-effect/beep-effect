@@ -1,0 +1,21 @@
+{
+  "package": "@beep/graph-3d",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T13:15:48.198004+00:00",
+  "totalMs": 4011.25634765625,
+  "testCount": 1,
+  "files": [
+    {
+      "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+      "ms": 1.25634765625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+      "testName": "Graph3D declared-field equivalence treats field-equal Graph3DDriverError instances as equivalent and field-different ones as distinct",
+      "ms": 1.2563390000000254
+    }
+  ]
+}

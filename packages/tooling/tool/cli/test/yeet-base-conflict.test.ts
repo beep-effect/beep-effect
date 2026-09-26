@@ -287,6 +287,8 @@ const appendRed = Effect.fn("baseConflictTest.appendRed")(function* (root: strin
 });
 
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
+const decodeJsonObject = S.decodeEffect(JsonObject);
+const encodeJsonObject = S.encodeEffect(JsonObject);
 
 // An it.layer block shares one TestConsole, so a test that counts lines counts
 // only the ones printed after its own mark.
@@ -338,7 +340,7 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
       expect(describeYeetInboxRow(row)).toBe("base conflict with origin/main (pr #7 @ aaaaaaa)");
       const line = yield* YeetInboxRowJson.encode(row);
       assertSome(YeetInboxRowJson.decodeOption(line), row);
-      const encoded = yield* S.decodeEffect(JsonObject)(line);
+      const encoded = yield* decodeJsonObject(line);
       expect(encoded).toMatchObject({
         kind: "base-conflict",
         schemaVersion: "yeet-inbox/v1",
@@ -348,7 +350,7 @@ it.layer(platform, { timeout: "30 seconds" })("base-conflict row", (it) => {
 
       // A row written before generations existed has no key; it decodes as
       // generation 0, the same row, so its id still validates.
-      const legacyLine = yield* S.encodeEffect(JsonObject)({
+      const legacyLine = yield* encodeJsonObject({
         ...encoded,
         capsule: {
           base: "origin/main",
@@ -550,7 +552,7 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       );
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(`${root}/.beep/inbox/acks/${row.id}`);
-      expect(yield* S.decodeEffect(JsonObject)(raw)).toMatchObject({
+      expect(yield* decodeJsonObject(raw)).toMatchObject({
         id: row.id,
         resolution: { kind: "cleared", headSha: head, jobId, unit: jobUnit },
       });
