@@ -2345,3 +2345,12 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+### 2026-09-26 — File-hash receipt mistaken for an API token
+
+The NLP baseline commit hook reported generic-api-key findings for the SHA-256
+of `Core/Token.ts` in both before/after source maps. The value is a locally
+computed source hash, not a credential. Public receipts now represent each hash
+as an explicit `{ file, sha256 }` entry, preserving every path/hash pair while
+avoiding the misleading token-named JSON key. No scanner rule or gate was
+disabled. A typed manifest-entry format would avoid this ambiguity at capture.
