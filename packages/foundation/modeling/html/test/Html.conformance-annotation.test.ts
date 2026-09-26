@@ -1,8 +1,9 @@
 import { ConformantHtml } from "@beep/html/Html.conformance";
 import { SafeHtmlAst } from "@beep/html/Html.policy";
 import * as Conformance from "@beep/schema/Conformance";
+import { it } from "@beep/test-runner";
 import { validateConformanceAnnotationAgainstLedgerArtifacts } from "@beep/test-utils/ConformanceLedger";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
