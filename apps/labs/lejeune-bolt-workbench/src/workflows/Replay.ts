@@ -32,7 +32,7 @@ import type { DuckDb } from "@beep/duckdb";
 import type { VerifiedSpanError } from "@beep/langextract/VerifiedSpan";
 import type { SparqlQueryService } from "@beep/semantic-web";
 import type * as Crypto from "effect/Crypto";
-import type { SqlClient } from "effect/unstable/sql/SqlClient";
+import type { SqlClient } from "effect/sql/SqlClient";
 import type { ProviderRecording, RetentionAuthorization } from "@/domain/Bundle";
 import type { FixtureError } from "@/fixtures/Sources";
 import type { ProjectionError } from "@/runtime/Projections";

@@ -9,7 +9,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect, pipe } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isCheckModeFlags, isDryRunModeFlags, isWriteModeFlags } from "./TsconfigSync.schemas.ts";
 import { syncTsconfigAtRoot } from "./TsconfigSync.service.ts";
@@ -36,7 +36,7 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
  *
  * ```ts
  * import { tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(tsconfigSyncCommand, { version: "0.0.0" })

@@ -4,7 +4,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Rec from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import {
   MemoryCohortEligible,
   TaskIntelligenceAttributionEvent,

@@ -16,9 +16,9 @@ import * as Pg from "@effect/sql-pg/PgClient";
 import * as Pglite from "@effect/sql-pglite/PgliteClient";
 import { Effect, Layer } from "effect";
 import { PgliteError } from "./Pglite.errors.ts";
+import type * as Reactivity from "effect/reactivity/Reactivity";
 import type * as Scope from "effect/Scope";
-import type * as Reactivity from "effect/unstable/reactivity/Reactivity";
-import type * as SqlClient from "effect/unstable/sql/SqlClient";
+import type * as SqlClient from "effect/sql/SqlClient";
 
 /**
  * PGlite client service tag re-exported from `@effect/sql-pglite`. Yield it to

@@ -46,10 +46,10 @@ import {
 } from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
 import { camelCase, snakeCase } from "effect/String";
+import { SqlClient } from "effect/sql/SqlClient";
+import { isSqlError } from "effect/sql/SqlError";
+import { makeRepository as makeSqlRepository } from "effect/sql/SqlModel";
 import * as Tuple from "effect/Tuple";
-import { SqlClient } from "effect/unstable/sql/SqlClient";
-import { isSqlError } from "effect/unstable/sql/SqlError";
-import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
 import {
   SqliteOrganization,
   SqliteUser,

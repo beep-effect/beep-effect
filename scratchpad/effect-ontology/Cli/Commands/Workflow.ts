@@ -13,7 +13,7 @@ import { Clock, Console, DateTime, Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import {LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 import type {DrizzleError} from "drizzle-orm";

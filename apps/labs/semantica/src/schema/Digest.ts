@@ -1,6 +1,7 @@
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, Encoding, Result, Struct } from "effect";
+import { Effect, Result, Struct } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { canonicalJson } from "@/corpus/Canonical";
@@ -32,7 +33,7 @@ const sha256CanonicalEffect = (value: unknown) =>
  * @since 0.0.0
  */
 export const sha256CanonicalSync = (value: unknown): Sha256Hex =>
-  Sha256Hex.make(Encoding.encodeHex(sha256(utf8Encoder.encode(canonicalJson(value)))));
+  Sha256Hex.make(Hex.encode(sha256(utf8Encoder.encode(canonicalJson(value)))));
 
 type DigestEffect<Type> = Type extends unknown
   ? (value: Type) => Effect.Effect<Sha256Hex, S.SchemaError, Crypto.Crypto>
@@ -183,5 +184,4 @@ export const digestOmittingSync: {
  * @category encoding
  * @since 0.0.0
  */
-export const sha256TextSync = (text: string): Sha256Hex =>
-  Sha256Hex.make(Encoding.encodeHex(sha256(utf8Encoder.encode(text))));
+export const sha256TextSync = (text: string): Sha256Hex => Sha256Hex.make(Hex.encode(sha256(utf8Encoder.encode(text))));

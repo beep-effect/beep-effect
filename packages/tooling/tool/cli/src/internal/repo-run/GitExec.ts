@@ -29,7 +29,7 @@ import * as Str from "effect/String";
 import { formatCommandLine, repoRunOutputBound, runCaptured, runCapturedStreams } from "../process/StepExec.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RunCapturedOptions, RunCapturedStreamsOptions } from "../process/StepExec.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/GitExec");

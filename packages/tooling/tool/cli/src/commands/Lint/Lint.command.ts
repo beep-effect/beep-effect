@@ -14,11 +14,11 @@ import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Order, Path, pipe } from "effect";
 import * as Context from "effect/Context";
+import { Command, Flag } from "effect/cli";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isLabsWorkspaceDir, LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
@@ -342,7 +342,7 @@ const runtimeFocusViolations = (file: string, content: string): ReadonlyArray<Li
         file,
         content,
         "native-fetch",
-        "Use effect/unstable/http HttpClient and provide @effect/platform-bun/BunHttpClient.layer instead of native fetch."
+        "Use effect/http HttpClient and provide @effect/platform-bun/BunHttpClient.layer instead of native fetch."
       )
     );
   }

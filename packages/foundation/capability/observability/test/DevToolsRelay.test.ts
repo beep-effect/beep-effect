@@ -1,10 +1,10 @@
 import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server";
 import { Effect } from "effect";
+import * as NetAddress from "effect/net/NetAddress";
 import * as O from "effect/Option";
-import * as NetAddress from "effect/unstable/net/NetAddress";
-import * as SocketServer from "effect/unstable/socket/SocketServer";
+import * as SocketServer from "effect/socket/SocketServer";
 import { describe, expect, it } from "vitest";
-import type * as Socket from "effect/unstable/socket/Socket";
+import type * as Socket from "effect/socket/Socket";
 
 const fakeSocketServerRun = Effect.fn("DevToolsRelayTest.fakeSocketServerRun")(
   <R, E, A>(_handler: (socket: Socket.Socket) => Effect.Effect<A, E, R>) => Effect.never

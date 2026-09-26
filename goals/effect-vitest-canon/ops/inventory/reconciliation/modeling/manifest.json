@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "effect-vitest-reconciliation-candidate/v1",
+  "sourcePin": "d9f74d230a949e37f108a9ad52c0bc16a829d98f",
+  "canonicalApplied": false,
+  "acceptedInventory": false,
+  "packages": ["@beep/types", "@beep/identity", "@beep/utils"],
+  "sourceFiles": [
+    {
+      "file": "packages/foundation/modeling/identity/test/AnnoteError.test.ts",
+      "sha256": "a2091cf043af0b0d0cabd71a8c4da375f3f9d448045b2b203ac40ffd77862138"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+      "sha256": "be0d717eb9b5651579edf7469aee4549fc2439f684d45a920ffa6b95ce11e993"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
+      "sha256": "d4bda101a8cf0de034239aee936716a7421cb26b4b4bce6db2932d52d2b707f2"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Identity.test.ts",
+      "sha256": "781725fa356f008e3ca25bbd6460ad1f14f94dc43f45798ecc4b4dfcc25e6269"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
+      "sha256": "7cc9b6f192b4e374332978870cf3f813737071061bcb40ef21d7b331f7fe84c5"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/IriBinding.test.ts",
+      "sha256": "35727d9848d385e57fc125ccbf5701777f82a88115d93c37985320dcb5937792"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/OntologyEntrypoints.test.ts",
+      "sha256": "55153c30a5995f991c173000a2d26b5bb00a0dab262feae95c37b743b5593b6e"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/PnLocal.test.ts",
+      "sha256": "f883f02bc6b358444e2e3a3959edd7a326ff45fee9b5ef3e30367c36faf0653d"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/TaggedError.equivalence.test.ts",
+      "sha256": "e1065179d1f6a8f47f6736e17b76bbb2260760c5a16eb4e3ddcf15f4de57ecef"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/TemplateGuards.test.ts",
+      "sha256": "adea22e6206b66286f5357c35938422548fb8c8f16a3b4dadbb0b8a7479f7db1"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
+      "sha256": "cf8b3fe8cb8359a9262da10e43abc3d374c6c151ed638a03c02208aeda5920cd"
+    },
+    {
+      "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+      "sha256": "4c6c84a4e79aa7267da7e47c9bc3df8503416339f776f34ad3b572601366128b"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Array.test.ts",
+      "sha256": "4b6f1035411f12d0c63669b89762fbc1f79eb9ef8d5e37b2bc760272f83ccc44"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "sha256": "dbad33bd4b620a39e791c66347bf3cece0ac48686d1fa40201c66db3cec7177f"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Errors.test.ts",
+      "sha256": "180cb51ce3783eab1d514bea955055ca9d7664bcfd054459b7df691341bf69a2"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+      "sha256": "a6fa4338fbeb8149e104b921df719106d73227558c1130b33cc3afb5f9ced415"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Function.test.ts",
+      "sha256": "53b1550f8c1064aeb583b48984ed77cb356a849d73bc0a34ebab43f8d36d6a29"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "sha256": "87fd1a52f9a9e44f69c2308e47c5f1ae2af0d844ae94062deb0e90ff34a0dfb1"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Number.test.ts",
+      "sha256": "bcce9fcf1b6b2e6f1dde0f8900b17ea4df84e510a6f6888502f7f7f93eac416a"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Option.test.ts",
+      "sha256": "ffb64e31218dad1a1cdd6036e665f347df41758604373c9ca3a0351ce6c26620"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Path.test.ts",
+      "sha256": "adedd060995cb8eb2eb2228bc5075cde8d52d2f20f6824226a47a3e38248a0e5"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Predicate.test.ts",
+      "sha256": "b1a9ae661aa40c4aef2a65ae57095a1710bc87e7ce1a54197bd9dcf78a00c264"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Schema.test.ts",
+      "sha256": "4739f24a60457f3d408bf39cb392f864365f9a3555363debdee6c558f77b4637"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "sha256": "0177ebc688c3817b0f30df5f28c63e44b7bbcd3f8d93da459896fd5a36946530"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Str.test.ts",
+      "sha256": "bbb421b1ac34d7cf3bc81f43ce04daa784c955c16336fa7bc2c427ddac9437d1"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/Struct.test.ts",
+      "sha256": "5bae94451d43fb911fba0d54503f4b203aba033ec5ecd64d61c7b914aec076c2"
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/TaggedError.equivalence.test.ts",
+      "sha256": "61ef18c443f450a888f02808ead240ef8f22f2e0fae6e8e4bda18e117e93bc1f"
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "sha256": "f5d3ab18f79e7c3cf0fdd8f405fa8b22fe6de8ee5e90ae777111ba39733fa2d8"
+    }
+  ],
+  "inventories": [
+    {
+      "path": "resource/beep_types.jsonl",
+      "sha256": "81cbb52b6f9efeeaefc54a0c9acb5fcde60a56bb4e6a72a3facdf526cdaa7456",
+      "rows": 1
+    },
+    {
+      "path": "resource/beep_identity.jsonl",
+      "sha256": "063111bee5247baaed83840a64952c3a2b62b3f0b04be2314ad11c04cdbdd150",
+      "rows": 12
+    },
+    {
+      "path": "resource/beep_utils.jsonl",
+      "sha256": "3d95088c78e9f2268ec210a7403a95f5ece65ddf49ad86499a3a7ad9ce3596ff",
+      "rows": 16
+    },
+    {
+      "path": "flake/beep_types.jsonl",
+      "sha256": "cd2dc0c38c5a7cb6840e132c36e54cbf0491be357613b20f3395544ee0d48230",
+      "rows": 1
+    },
+    {
+      "path": "flake/beep_identity.jsonl",
+      "sha256": "b3d9272fa80ba2d5edbdd92dda1d9d2d0273d43ba5bbf96f0f2e270b8ba1f51b",
+      "rows": 12
+    },
+    {
+      "path": "flake/beep_utils.jsonl",
+      "sha256": "2cc126f544eca0035bbda93dcff54a3fa7f30a7618adc4a836d8fcf620454c95",
+      "rows": 15
+    },
+    {
+      "path": "property/beep_types.jsonl",
+      "sha256": "a775e001909b1f0e40fffd63473ac979cbcb4e4cba74461e3a84e7a1b433f84d",
+      "rows": 1
+    },
+    {
+      "path": "property/beep_identity.jsonl",
+      "sha256": "3a105db9111e36230795a186b9930b84d90dba09ff97ab2e370745d3b38fd617",
+      "rows": 19
+    },
+    {
+      "path": "property/beep_utils.jsonl",
+      "sha256": "d585b05ddaf70060dccf0a4c249c71af8a6279cb8e6e9dac4d2519c241591149",
+      "rows": 18
+    },
+    {
+      "path": "observability/beep_types.jsonl",
+      "sha256": "05a7d35bda6f2e1cdbcf36ad7764a7358f0f9db1ef8a7a20cecce1ab13e702e3",
+      "rows": 1
+    },
+    {
+      "path": "observability/beep_identity.jsonl",
+      "sha256": "2a15f127067f09f293435b724eec8122268408697e1c3c5d54f328bf59b3b24d",
+      "rows": 16
+    },
+    {
+      "path": "observability/beep_utils.jsonl",
+      "sha256": "aab9c434062bb90b75996b83a28ff0acf61de5bf81b63e15c5728c045fa775e5",
+      "rows": 15
+    }
+  ],
+  "limits": [
+    "Candidate rows only; frozen canonical inventory, timings and historical receipts remain intact.",
+    "No P1 acknowledgement, new-main census acceptance, runtime proof or new remediation closure is implied.",
+    "Historical fixed/exception dispositions are preserved; Struct runtime raw-path compatibility coverage remains an explicit open finding.",
+    "This modeling-only batch is separated from tooling/tool under D13."
+  ],
+  "publicationBase": "b2a654bc4347d33862d815368e7ca56a9c86da28",
+  "deferredPackages": {
+    "@beep/schema": "Merged remediation changed sources after review pin; reconcile merge receipts separately.",
+    "@beep/data": "Merged runner adoption changed sources after review pin; reconcile merge receipts separately."
+  }
+}

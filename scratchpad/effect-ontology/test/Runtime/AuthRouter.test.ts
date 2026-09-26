@@ -4,7 +4,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { ClaimRepository } from "../../Repository/Claim.ts";
 import { ConflictRepository } from "../../Repository/Conflict.ts";

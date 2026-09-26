@@ -10,11 +10,11 @@ import {
 import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
-import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
 
 const decodeUnknownHttpStatusCodeOption = S.decodeUnknownOption(HttpStatusCode);

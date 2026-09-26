@@ -13,10 +13,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
 import type * as PlatformError from "effect/PlatformError";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));

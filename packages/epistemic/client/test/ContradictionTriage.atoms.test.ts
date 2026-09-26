@@ -26,15 +26,15 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
+import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
-import * as RpcTest from "effect/unstable/rpc/RpcTest";
 
 const decodeSourceRequest = S.decodeUnknownResult(EvidenceSourcePagePayload);
 const decodeDetailRequest = S.decodeUnknownResult(GetContradictionCandidate);

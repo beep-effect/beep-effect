@@ -11,13 +11,13 @@ import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, Ref } from "effect";
+import { Command } from "effect/cli";
 import * as Duration from "effect/Duration";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { NodeTestLayer, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));

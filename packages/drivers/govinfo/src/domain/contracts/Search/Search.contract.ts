@@ -7,8 +7,8 @@
 import { $GovinfoId } from "@beep/identity";
 import { Defect, SchemaUtils } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
+import { HttpApiSchema } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpApiSchema } from "effect/unstable/httpapi";
 import { SearchBody } from "../..//values/index.ts";
 import { SearchResponse } from "../../values/SearchResponse/index.ts";
 

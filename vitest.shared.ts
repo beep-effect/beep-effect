@@ -110,7 +110,7 @@ export const packageTestTimeout = (focusedMs: number): number =>
 // 400-1000 runs with rotating seeds cannot change its outcome. The scan is a
 // cheap synchronous walk of `test/` under the vitest root (the package cwd).
 // The snapshot's native Arbitrary model replaced the fast-check bridge: property
-// files now import `effect/unstable/arbitrary/Arbitrary` and call `it.prop`,
+// files now import `effect/Arbitrary` and call `it.prop`,
 // `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`.
 // The shared assertion helper also runs native properties without a direct Arbitrary
 // import at the call site, so helper-only files must remain in the deep sweep.

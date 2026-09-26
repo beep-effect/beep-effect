@@ -13,9 +13,9 @@ import {
 } from "@beep/ui/hooks/useNumberInput";
 import { ReactContextInvariantError, ReactContextInvariantOptions } from "@beep/ui/lib/react-invariant";
 import { Effect, Equal, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeBoundaryParamsResult = S.decodeResult(BoundaryParams);

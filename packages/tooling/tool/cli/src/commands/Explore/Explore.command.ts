@@ -12,7 +12,7 @@
  */
 
 import { Effect } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { PacketEventStoreLive } from "../Goals/PacketCore/PacketEventStore.ts";
 import { exploreAtlasCommand } from "./Atlas.ts";

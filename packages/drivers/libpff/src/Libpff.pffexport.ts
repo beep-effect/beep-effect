@@ -19,8 +19,8 @@ import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, R, Str, Struct } from "@beep/utils";
 import { Effect, FileSystem, flow, Match, Number as Num, Order, Path, Stream } from "effect";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
   assembleEml,
   PFFEXPORT_EML_FILE_NAME,

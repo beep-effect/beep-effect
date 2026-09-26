@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { HttpApi, HttpApiGroup, OpenApi } from "effect/unstable/httpapi";
+import { HttpApi, HttpApiGroup, OpenApi } from "effect/http-api";
 import * as Search from "./Search/index.ts";
 
 /**

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Ref, Schema } from "effect";
-import * as EventGroup from "effect/unstable/eventlog/EventGroup";
-import * as EventJournal from "effect/unstable/eventlog/EventJournal";
-import * as EventLog from "effect/unstable/eventlog/EventLog";
-import * as EventLogEncryption from "effect/unstable/eventlog/EventLogEncryption";
+import * as EventGroup from "effect/eventlog/EventGroup";
+import * as EventJournal from "effect/eventlog/EventJournal";
+import * as EventLog from "effect/eventlog/EventLog";
+import * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

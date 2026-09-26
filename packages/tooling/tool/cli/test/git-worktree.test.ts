@@ -7,7 +7,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/process";
 
 const runGit = Effect.fn("GitWorktreeTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
   const result = yield* runRepoCommandCapture("git", args, cwd);

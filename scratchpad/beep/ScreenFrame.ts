@@ -679,7 +679,7 @@ export class ScreenFrameAdjudicationRequest extends Model<ScreenFrameAdjudicatio
     purpose: ScreenFrameEgressPurpose.pipe(pg.text(), pg.columnName("purpose")),
     subject: ScreenFrameSubjectIn.pipe(pg.jsonb(), pg.columnName("subject")),
     candidates: S.Array(ScreenFrameCandidateIn)
-      .check(S.isLengthBetween(1, 8))
+      .check(S.isBetweenLength(1, 8))
       .pipe(pg.jsonb(), pg.columnName("candidates")),
   },
   $I.annote("ScreenFrameAdjudicationRequest", {
@@ -901,7 +901,7 @@ export declare namespace NormalizedRect {
  */
 export class ScreenFrameGround extends Model<ScreenFrameGround>("ScreenFrameGround")(
   {
-    stops: S.Array(S.String).check(S.isLengthBetween(2, 2)).pipe(pg.jsonb(), pg.columnName("stops")),
+    stops: S.Array(S.String).check(S.isBetweenLength(2, 2)).pipe(pg.jsonb(), pg.columnName("stops")),
     isNeutral: bool("is_neutral"),
   },
   $I.annote("ScreenFrameGround", {

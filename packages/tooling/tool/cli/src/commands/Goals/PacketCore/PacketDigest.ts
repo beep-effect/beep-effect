@@ -17,7 +17,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Effect, Order, Struct } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -202,7 +202,7 @@ export const sha256Hex = Effect.fn("PacketDigest.sha256Hex")(function* (text: st
  */
 export const sha256HexBytes = Effect.fn("PacketDigest.sha256HexBytes")(function* (bytes: Uint8Array) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", bytes));
+  return Hex.encode(yield* crypto.digest("SHA-256", bytes));
 });
 
 const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);

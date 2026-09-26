@@ -11,8 +11,8 @@
 // concerns share one module rather than one reaching into the other.
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as Duration from "effect/Duration";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
 import { SECURITY_PACKAGE_VERSION, SECURITY_PLUGIN_VERSION } from "./Security.schemas.ts";
 

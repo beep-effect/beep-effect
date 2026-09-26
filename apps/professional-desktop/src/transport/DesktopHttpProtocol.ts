@@ -7,9 +7,9 @@
  */
 
 import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
+import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
 import * as Layer from "effect/Layer";
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
+import { RpcClient, RpcSerialization } from "effect/rpc";
 
 // Packaged-origin detection (Windows `tauri.localhost` included) lives in
 // @beep/agents-client's resolver — one source of truth for the routing rule

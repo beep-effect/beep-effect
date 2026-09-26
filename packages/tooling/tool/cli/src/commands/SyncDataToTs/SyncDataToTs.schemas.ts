@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
 import type { Effect, FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { HttpClient } from "effect/unstable/http";
+import type { HttpClient } from "effect/http";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";
 

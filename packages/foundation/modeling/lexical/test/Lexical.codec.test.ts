@@ -19,11 +19,11 @@ import { refineSafeDocument } from "@beep/md/Md.safe";
 import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
 
 const decodeLexicalNodeResult = S.decodeResult(LexicalNode);

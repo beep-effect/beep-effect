@@ -8,7 +8,7 @@
 import { $PostgresId } from "@beep/identity";
 import * as Pg from "@effect/sql-pg/PgClient";
 import { Context, Effect, Layer } from "effect";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import { PostgresError } from "./Postgres.errors.ts";
 
 const $I = $PostgresId.create("PostgresClient.service");

@@ -15,8 +15,8 @@ import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { JSX } from "react";
 

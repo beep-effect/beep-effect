@@ -11,8 +11,8 @@ import { layerProtocolStdioCommand } from "@beep/mcp-kit/client.node";
 import { withStdioHost } from "@beep/mcp-kit/test/Conformance";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer, Sink, Stream } from "effect";
-import * as ChildProcess from "effect/unstable/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 import type { StdioHost } from "@beep/mcp-kit/test/Conformance";
 

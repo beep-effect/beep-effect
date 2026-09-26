@@ -78,7 +78,7 @@ export type BoxAdoptionResourceKind = typeof BoxAdoptionResourceKind.Type;
 
 const BoxFolderNameChecks = S.makeFilterGroup(
   [
-    S.isLengthBetween(1, 255, {
+    S.isBetweenLength(1, 255, {
       identifier: $I`BoxFolderNameLengthCheck`,
       title: "Box Folder Name Length",
       description: "A Box folder name containing between 1 and 255 characters.",

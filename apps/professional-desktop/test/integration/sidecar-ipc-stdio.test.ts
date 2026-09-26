@@ -23,9 +23,9 @@ import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import { RpcClient, RpcSerialization } from "effect/rpc";
 import * as Stream from "effect/Stream";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import { Socket } from "effect/unstable/socket";
+import { Socket } from "effect/socket";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
 import { SidecarReadyMarker } from "@/runtime/Migrations";
 

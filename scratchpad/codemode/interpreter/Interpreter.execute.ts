@@ -11,7 +11,7 @@ import { A, O, P, pipe, Str } from "@beep/utils";
 import { parse } from "acorn";
 import { Cause, Effect, Result as Rs, Scope } from "effect";
 import * as S from "effect/Schema";
-import type * as Toolkit from "effect/unstable/ai/Toolkit";
+import type * as Toolkit from "effect/ai/Toolkit";
 import {
   DiagnosticCategory,
   flattenDiagnosticMessageText,
@@ -54,7 +54,7 @@ const encodeUnknownDiagnosticModelResult = S.encodeUnknownResult(DiagnosticModel
  * ```ts
  * import { CodeMode } from "@beep/scratchpad/codemode"
  * import { Effect } from "effect"
- * import * as Toolkit from "effect/unstable/ai/Toolkit"
+ * import * as Toolkit from "effect/ai/Toolkit"
  * import { executeWithLimits } from "../../../codemode/interpreter/Interpreter.execute.ts"
  *
  * const result = await Effect.runPromise(

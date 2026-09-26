@@ -22,11 +22,11 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import { vi } from "vitest";
 import type { SqlTestHooks } from "@beep/test-utils";
 

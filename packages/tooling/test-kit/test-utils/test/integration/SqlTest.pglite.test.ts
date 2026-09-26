@@ -14,8 +14,8 @@ import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect } from "@effect/vitest";
 import { Cause, Console, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
 import * as S from "effect/Schema";
+import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
 
 const sharedConnectionUri = Bun.env.BEEP_TEST_DATABASE_URL;

@@ -29,12 +29,12 @@ import { PosInt } from "@beep/schema/Int";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const digest = (n: number) => Sha256Hex.make(Str.padStart(64, "0")(`${n}`));
 const key = CacheQualificationKey.make({

@@ -13,11 +13,11 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBaseIdentityInputOption = S.decodeOption(BaseIdentityInput);
 const decodeUnknownBaseIdentityInputOption = S.decodeUnknownOption(BaseIdentityInput);

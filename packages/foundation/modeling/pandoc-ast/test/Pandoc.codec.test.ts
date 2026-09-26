@@ -38,6 +38,7 @@ import { fcRuns } from "@beep/test-utils";
 import { R } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -45,7 +46,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePandocJsonFromString = S.decodeEffect(PandocJsonFromString);
 const encodeTable = S.encodeEffect(Table);

@@ -10,23 +10,23 @@ import { SchemaUtils } from "@beep/schema";
 import { decodeJsonString } from "@beep/schema/Json";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, Match, pipe, Stream } from "effect";
+import * as AiError from "effect/ai/AiError";
+import * as Sse from "effect/encoding/Sse";
 import { dual } from "effect/Function";
+import { FetchHttpClient } from "effect/http";
+import * as Headers from "effect/http/Headers";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as AiError from "effect/unstable/ai/AiError";
-import * as Sse from "effect/unstable/encoding/Sse";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as Headers from "effect/unstable/http/Headers";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import {
   decodeChatCompletionChunk,
   OpenAiCompatChatCompletionRequest,
   OpenAiCompatChatCompletionResponse,
 } from "./OpenAiCompat.models.ts";
-import type * as HttpBody from "effect/unstable/http/HttpBody";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+import type * as HttpBody from "effect/http/HttpBody";
+import type * as HttpClientError from "effect/http/HttpClientError";
 import type { OpenAiCompatChatCompletionChunk } from "./OpenAiCompat.models.ts";
 
 const $I = $OpenaiCompatId.create("OpenAiCompatClient.service");

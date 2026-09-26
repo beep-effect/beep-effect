@@ -3,7 +3,7 @@
 import { A, Str } from "@beep/utils";
 import { Effect, HashMap, MutableHashMap } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -47,7 +47,7 @@ const EXIT_MODULES = ["effect", "effect/Exit"];
 const CONTEXT_MODULES = ["effect", "effect/Context"];
 const SCHEDULE_MODULES = ["effect", "effect/Schedule"];
 const TEST_CLOCK_MODULES = ["effect/testing", "effect/testing/TestClock"];
-const ARBITRARY_MODULES = ["effect/unstable/arbitrary", "effect/unstable/arbitrary/Arbitrary"];
+const ARBITRARY_MODULES = ["effect", "effect/Arbitrary"];
 const FAST_CHECK_MODULES = ["effect/testing", "effect/testing/FastCheck", "fast-check"];
 const VITEST_MODULES = ["@effect/vitest", "vitest"];
 
@@ -627,7 +627,7 @@ const statementTokenDigest = Effect.fnUntraced(function* (
     return cached.value;
   }
   const crypto = yield* Crypto.Crypto;
-  const tokens = Encoding.encodeHex(
+  const tokens = Hex.encode(
     yield* crypto
       .digest("SHA-256", new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
       .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."))
@@ -647,7 +647,7 @@ const occurrenceAnchor = Effect.fnUntraced(function* (
   const digest = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(`${A.join(harnessLabelParts(node, imports), "")}${tokens}`))
     .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest occurrence identity."));
-  return `v2:${Encoding.encodeHex(digest)}`;
+  return `v2:${Hex.encode(digest)}`;
 });
 
 const assignStableIds = (findings: ReadonlyArray<EffectVitestFinding>): ReadonlyArray<EffectVitestFinding> => {

@@ -20,8 +20,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, HashSet, Order, Path, pipe } from "effect";
+import { Command } from "effect/cli";
 import * as S from "effect/Schema";
-import { Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { JUDGE_PROMPT_TEMPLATE, QaLens } from "../Qa/index.ts";
 

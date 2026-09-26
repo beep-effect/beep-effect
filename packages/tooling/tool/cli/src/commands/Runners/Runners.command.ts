@@ -7,9 +7,9 @@
 
 import { A } from "@beep/utils";
 import { Clock, Console, Effect, Match, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
 import { BakeCheckReportJson, BakeConfig, BakePlanJson, BakeReportJson } from "./Runners.schemas.ts";

@@ -14,12 +14,12 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+import type * as HttpClientError from "effect/http/HttpClientError";
 
 const decodeSanityErrorResult = S.decodeResult(SanityError);
 const decodeSanityQueryResponseResult = S.decodeResult(SanityQueryResponse);

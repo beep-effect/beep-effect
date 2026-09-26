@@ -4,7 +4,7 @@ import { DateTime, Effect, Layer, PubSub, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { KeyValueStore } from "effect/unstable/persistence";
+import { KeyValueStore } from "effect/persistence";
 import { BatchId, OntologyName } from "../../Domain/Identity.ts";
 import { BatchState } from "../../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";

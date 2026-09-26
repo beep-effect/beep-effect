@@ -11,7 +11,7 @@ import type { DockAtomOperation, GroupId, makeDockAtoms, PanelParameters, TabChr
 import type { PretextCapture } from "@beep/pretext";
 import type { Effect, Layer } from "effect";
 import type * as O from "effect/Option";
-import type { Atom } from "effect/unstable/reactivity";
+import type { Atom } from "effect/reactivity";
 import type React from "react";
 import type { RatioOverride, TabDrag } from "./internal/Gesture.models.ts";
 

@@ -47,7 +47,7 @@ import {
 } from "./Restoration.ts";
 import type { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CapturedStep } from "../../../internal/process/StepExec.ts";
 import type {
   ArchiveLedgerRecord,

@@ -52,8 +52,8 @@ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import { Cause, Duration, Effect, flow, Layer, Order, pipe, Result, Semaphore } from "effect";
+import { Atom, AtomRpc, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
 import type { Graph3DDriverError, Graph3DRenderHandle } from "@beep/graph-3d/browser";
 import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
@@ -68,7 +68,7 @@ import type {
   RunOntologySparqlResult,
   RunOntologyValidationResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import type { RpcClient } from "effect/unstable/rpc";
+import type { RpcClient } from "effect/rpc";
 
 const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
 

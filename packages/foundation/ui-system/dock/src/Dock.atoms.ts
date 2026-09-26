@@ -6,7 +6,7 @@
  */
 import { Context, Effect, Layer, Logger } from "effect";
 import { dual } from "effect/Function";
-import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import type {
   DockAtomFeedEntry,
   DockAtomOperation,

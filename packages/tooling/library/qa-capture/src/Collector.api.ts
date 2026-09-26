@@ -10,8 +10,8 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi";
 import { SequenceNumber } from "./ActionEvent.models.ts";
 import { RoundNumber, SessionId } from "./QaCapture.models.ts";
 

@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { Effect, Layer } from "effect";
-import { McpServerClient } from "effect/unstable/ai/McpSchema";
+import { McpServerClient } from "effect/ai/McpSchema";
 
 const fixtureClientInfo = { name: "mcp-kit-test-client", version: "0.0.0" };
 

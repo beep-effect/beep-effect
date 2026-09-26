@@ -19,8 +19,8 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeProofLedgerFactRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerFactRow));
 const decodeProofLedgerShadowRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerShadowRow));

@@ -22,9 +22,9 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));

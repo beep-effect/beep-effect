@@ -11,6 +11,7 @@ import {
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -19,7 +20,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEnvVarNameResult = S.decodeResult(EnvVarName);
 const decodeAuthSnapshot = S.decodeEffect(AuthSnapshot);

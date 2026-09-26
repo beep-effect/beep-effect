@@ -1,5 +1,6 @@
 // Generated from the verified @effect/vitest@4.0.0-rc.117 source snapshot.
 // Regenerate anchors, review semantic diffs, and update the pin as one change.
+// Example import paths track the installed surface: effect/Arbitrary since the 330b7475e2 snapshot.
 {
   "schemaVersion": "effect-vitest-primitives/v1",
   "package": "@effect/vitest",
@@ -180,7 +181,7 @@
       "replaces": [],
       "example": "import { fcRuns } from \"@beep/fc-runs\"\nimport { prop, expect } from \"@effect/vitest\"\nimport * as S from \"effect/Schema\"\nprop(\"finite\", { value: S.Int }, ({ value }) => { expect(Number.isInteger(value)).toBe(true) }, { arbitrary: fcRuns(100) })",
       "gotchas": [
-        "Tuple and record inputs accept Schema or effect/unstable/arbitrary/Arbitrary values; fast-check Arbitraries are not this native type.",
+        "Tuple and record inputs accept Schema or effect/Arbitrary values; fast-check Arbitraries are not this native type.",
         "Returning false, throwing, typed Effect failure or a defect falsifies and shrinks; interruption remains interruption. Normal non-false completion, including void, passes.",
         "Vitest timeout cancels generation, evaluation and shrinking through TestContext.signal; synchronous non-returning JavaScript cannot be preempted.",
         "The old fastCheck parameters and global fast-check run floor are not consumed. The current @beep/fc-runs helper already returns native runs/seed options; use { arbitrary: fcRuns(n) } and verify that callers preserve its env-max floor.",
@@ -278,7 +279,7 @@
       "replaces": [],
       "example": "import type { Vitest } from \"@effect/vitest\"\nimport * as S from \"effect/Schema\"\nconst inputs: Vitest.Arbitraries = { value: S.Int }\nvoid inputs",
       "gotchas": [
-        "Tuple and record inputs accept Schema or effect/unstable/arbitrary/Arbitrary values; fast-check Arbitraries are not this native type."
+        "Tuple and record inputs accept Schema or effect/Arbitrary values; fast-check Arbitraries are not this native type."
       ]
     },
     {
@@ -457,7 +458,7 @@
       "replaces": ["EV007"],
       "example": "import { fcRuns } from \"@beep/fc-runs\"\nimport { it } from \"@effect/vitest\"\nimport * as S from \"effect/Schema\"\nimport * as Effect from \"effect/Effect\"\nit.effect.prop(\"finite\", { value: S.Int }, ({ value }) => Effect.succeed(Number.isInteger(value)), { arbitrary: fcRuns(100) })",
       "gotchas": [
-        "Tuple and record inputs accept Schema or effect/unstable/arbitrary/Arbitrary values; fast-check Arbitraries are not this native type.",
+        "Tuple and record inputs accept Schema or effect/Arbitrary values; fast-check Arbitraries are not this native type.",
         "Returning false, throwing, typed Effect failure or a defect falsifies and shrinks; interruption remains interruption. Normal non-false completion, including void, passes.",
         "Vitest timeout cancels generation, evaluation and shrinking through TestContext.signal; synchronous non-returning JavaScript cannot be preempted.",
         "The old fastCheck parameters and global fast-check run floor are not consumed. The current @beep/fc-runs helper already returns native runs/seed options; use { arbitrary: fcRuns(n) } and verify that callers preserve its env-max floor.",
@@ -537,7 +538,7 @@
       "replaces": [],
       "example": "import { fcRuns } from \"@beep/fc-runs\"\nimport { it, expect } from \"@effect/vitest\"\nimport * as S from \"effect/Schema\"\nit.prop(\"finite\", { value: S.Int }, ({ value }) => { expect(Number.isInteger(value)).toBe(true) }, { arbitrary: fcRuns(100) })",
       "gotchas": [
-        "Tuple and record inputs accept Schema or effect/unstable/arbitrary/Arbitrary values; fast-check Arbitraries are not this native type.",
+        "Tuple and record inputs accept Schema or effect/Arbitrary values; fast-check Arbitraries are not this native type.",
         "Returning false, throwing, typed Effect failure or a defect falsifies and shrinks; interruption remains interruption. Normal non-false completion, including void, passes.",
         "Vitest timeout cancels generation, evaluation and shrinking through TestContext.signal; synchronous non-returning JavaScript cannot be preempted.",
         "The old fastCheck parameters and global fast-check run floor are not consumed. The current @beep/fc-runs helper already returns native runs/seed options; use { arbitrary: fcRuns(n) } and verify that callers preserve its env-max floor.",
@@ -1157,7 +1158,7 @@
       "replaces": [],
       "example": "import { it } from \"@effect/vitest\"\nconst methods = [it.effect, it.live, it.layer, it.prop, it.flakyTest]\nvoid methods",
       "gotchas": [
-        "Tuple and record inputs accept Schema or effect/unstable/arbitrary/Arbitrary values; fast-check Arbitraries are not this native type.",
+        "Tuple and record inputs accept Schema or effect/Arbitrary values; fast-check Arbitraries are not this native type.",
         "Returning false, throwing, typed Effect failure or a defect falsifies and shrinks; interruption remains interruption. Normal non-false completion, including void, passes.",
         "Vitest timeout cancels generation, evaluation and shrinking through TestContext.signal; synchronous non-returning JavaScript cannot be preempted.",
         "The old fastCheck parameters and global fast-check run floor are not consumed. Root must establish native arbitrary.runs/seed policy explicitly.",
@@ -1524,7 +1525,7 @@
       "replaces": [],
       "example": "import { fcRuns } from \"@beep/fc-runs\"\nimport { it } from \"@effect/vitest\"\nimport * as S from \"effect/Schema\"\nimport * as Effect from \"effect/Effect\"\nit.live.prop(\"finite\", { value: S.Int }, ({ value }) => Effect.succeed(Number.isInteger(value)), { arbitrary: fcRuns(100) })",
       "gotchas": [
-        "Tuple and record inputs accept Schema or effect/unstable/arbitrary/Arbitrary values; fast-check Arbitraries are not this native type.",
+        "Tuple and record inputs accept Schema or effect/Arbitrary values; fast-check Arbitraries are not this native type.",
         "Returning false, throwing, typed Effect failure or a defect falsifies and shrinks; interruption remains interruption. Normal non-false completion, including void, passes.",
         "Vitest timeout cancels generation, evaluation and shrinking through TestContext.signal; synchronous non-returning JavaScript cannot be preempted.",
         "The old fastCheck parameters and global fast-check run floor are not consumed. The current @beep/fc-runs helper already returns native runs/seed options; use { arbitrary: fcRuns(n) } and verify that callers preserve its env-max floor.",
@@ -1580,7 +1581,7 @@
       "whenToUse": "No detector replacement: Native property runs, generation size, discard/shrink budgets, seed and replay.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\nconst options: Arbitrary.CheckOptions = { runs: 400, seed: 20260708 }\nvoid options",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\nconst options: Arbitrary.CheckOptions = { runs: 400, seed: 20260708 }\nvoid options",
       "gotchas": [
         "replay controls the recorded seed, attempt, size and shrink path; runs, size, maxDiscards, maxShrinks and seed are ignored during replay."
       ]
@@ -1597,7 +1598,7 @@
       "whenToUse": "No detector replacement: Number of generated successful runs requested; preserve the approved repository floor explicitly.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.runs",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.runs",
       "gotchas": [
         "Number of generated successful runs requested; preserve the approved repository floor explicitly."
       ]
@@ -1614,7 +1615,7 @@
       "whenToUse": "No detector replacement: Maximum local complexity scale; recursive branches share a recursion allowance, not an overall object-size bound.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.size",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.size",
       "gotchas": [
         "Maximum local complexity scale; recursive branches share a recursion allowance, not an overall object-size bound."
       ]
@@ -1631,7 +1632,7 @@
       "whenToUse": "No detector replacement: Discard budget; do not increase to hide invalid generator domains.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.maxDiscards",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.maxDiscards",
       "gotchas": [
         "Discard budget; do not increase to hide invalid generator domains."
       ]
@@ -1648,7 +1649,7 @@
       "whenToUse": "No detector replacement: Maximum candidates inspected, including invalid or failure-class-changing candidates; not merely accepted shrink count.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.maxShrinks",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.maxShrinks",
       "gotchas": [
         "Maximum candidates inspected, including invalid or failure-class-changing candidates; not merely accepted shrink count."
       ]
@@ -1665,7 +1666,7 @@
       "whenToUse": "No detector replacement: String or numeric native seed; not equivalent to a fast-check seed/replay sequence.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.seed",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.seed",
       "gotchas": [
         "String or numeric native seed; not equivalent to a fast-check seed/replay sequence."
       ]
@@ -1682,7 +1683,7 @@
       "whenToUse": "No detector replacement: Opaque native replay token; controls recorded generation and shrink path and overrides other options.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import type * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.replay",
+      "example": "import type * as Arbitrary from \"effect/Arbitrary\"\ntype Options = Arbitrary.CheckOptions\ndeclare const options: Options\nvoid options.replay",
       "gotchas": [
         "Opaque native replay token; controls recorded generation and shrink path and overrides other options."
       ]
@@ -1699,7 +1700,7 @@
       "whenToUse": "No detector replacement: Compile a production Schema into a native Arbitrary; optional custom shrink callback replaces schema shrinking.",
       "whenNotToUse": "Do not infer behavior beyond the pinned source or bypass repository review policy.",
       "replaces": [],
-      "example": "import * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\"\nimport * as S from \"effect/Schema\"\nconst values = Arbitrary.schema(S.Int)\nvoid values",
+      "example": "import * as Arbitrary from \"effect/Arbitrary\"\nimport * as S from \"effect/Schema\"\nconst values = Arbitrary.schema(S.Int)\nvoid values",
       "gotchas": [
         "Custom shrink candidates are schema-validated; invalid candidates consume shrink budget.",
         "Native Schema derivation is distinct from fast-check toArbitrary adapters."

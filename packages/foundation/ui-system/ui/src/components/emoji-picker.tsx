@@ -10,7 +10,7 @@ import { Button } from "@beep/ui/components/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@beep/ui/components/popover";
 import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
 import { SmileyIcon } from "@phosphor-icons/react";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { EmojiPicker as FrimousseEmojiPicker } from "frimousse";
 import { cn } from "../lib/index.ts";
 import type { Emoji, EmojiPickerRootProps } from "frimousse";

@@ -1,6 +1,6 @@
 import { Effect, FileSystem, Path, Stream } from "effect";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { CodegenFormatError } from "../CodegenKit.errors.ts";
 
 export interface Formatter {

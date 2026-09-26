@@ -15,8 +15,8 @@ import {
 } from "@beep/repo-ai-metrics/scorecard";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const schemaCases = [
   ["AiMetricsLabelQueueItem", Arbitrary.schema(AiMetricsLabelQueueItem), S.is(AiMetricsLabelQueueItem)],

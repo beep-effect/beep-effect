@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { acceptsEscapedLocal, escapeLocal, isSafeLocal, prefixedNameOrIri, unescapeLocal } from "@beep/identity";
 

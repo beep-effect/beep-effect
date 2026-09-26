@@ -41,13 +41,13 @@ import * as S from "effect/Schema";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 
 const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 const decodeBunVersionStateEffect = S.decodeEffect(BunVersionState);
 const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/http";
 
 const VersionSyncTestLayer = Layer.mergeAll(
   NodeServices.layer,

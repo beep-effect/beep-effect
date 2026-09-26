@@ -3,9 +3,10 @@ import { Cuid, CuidSeed, CuidState, cuid, sha512 } from "@beep/schema/Cuid";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Encoding, Layer } from "effect";
+import { Effect, Layer } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeCuidEffect = S.encodeEffect(Cuid);
 const encodeCuidSeedEffect = S.encodeEffect(CuidSeed);
@@ -21,7 +22,7 @@ describe("Cuid", () => {
       "computes SHA-512 with the platform Crypto service",
       Effect.fnUntraced(function* () {
         const digest = yield* sha512(new TextEncoder().encode("beep"));
-        expect(Encoding.encodeHex(digest)).toBe(beepSha512Digest);
+        expect(Hex.encode(digest)).toBe(beepSha512Digest);
       })
     );
 

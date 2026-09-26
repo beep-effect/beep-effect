@@ -1,7 +1,7 @@
 /**
  * `@beep/mcp-kit/client.node`, the kit client over a spawned stdio host and
  * the Node entry of the client: it binds {@link layerProtocolNdjson} to a child
- * process's stdin/stdout through `effect/unstable/process`. The caller
+ * process's stdin/stdout through `effect/process`. The caller
  * supplies the `ChildProcessSpawner` (for example
  * `NodeChildProcessSpawner.layer` from `@effect/platform-node`), so this
  * module adds no platform dependency to the kit.
@@ -13,9 +13,9 @@
 import { Effect, Layer, Queue, Stream } from "effect";
 import { decodeLines, layerProtocolNdjson } from "./client.ts";
 import type { PlatformError } from "effect/PlatformError";
-import type * as ChildProcess from "effect/unstable/process/ChildProcess";
-import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
-import type { RpcClient } from "effect/unstable/rpc";
+import type * as ChildProcess from "effect/process/ChildProcess";
+import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import type { RpcClient } from "effect/rpc";
 import type { McpClientOptions } from "./client.ts";
 
 const encoder = new TextEncoder();
@@ -30,7 +30,7 @@ const encoder = new TextEncoder();
  * ```ts
  * import { layerProtocolStdioCommand } from "@beep/mcp-kit/client.node"
  * import * as Layer from "effect/Layer"
- * import * as ChildProcess from "effect/unstable/process/ChildProcess"
+ * import * as ChildProcess from "effect/process/ChildProcess"
  *
  * const protocol = layerProtocolStdioCommand({ command: ChildProcess.make("bun", ["run", "./src/bin.ts"]) })
  * console.log(Layer.isLayer(protocol))

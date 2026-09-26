@@ -10,9 +10,9 @@ import { SchemaUtils } from "@beep/schema";
 import { Context, Effect, Layer, Match, Result, Stream, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { AiProviderCliError } from "./AiProviderCli.errors.ts";
 import {
   AiProviderCliAuthProbe,

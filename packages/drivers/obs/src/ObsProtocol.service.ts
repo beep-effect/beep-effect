@@ -32,9 +32,9 @@ import {
   Stream,
 } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
-import { Socket } from "effect/unstable/socket";
+import { Socket } from "effect/socket";
 import { ObsError } from "./Obs.errors.ts";
 import { resolveObsConfig } from "./Obs.models.ts";
 import {
@@ -138,7 +138,7 @@ const utf8 = new TextEncoder();
 const sha256Base64 = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Crypto.Crypto;
   const bytes = yield* crypto.digest("SHA-256", utf8.encode(value));
-  return Encoding.encodeBase64(bytes);
+  return Base64.encode(bytes);
 });
 
 /**
@@ -577,14 +577,14 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    * **Details**
    *
    * Provide `Socket.layerWebSocketConstructorGlobal` from
-   * `effect/unstable/socket` for the Bun runtime (global `WebSocket`).
+   * `effect/socket` for the Bun runtime (global `WebSocket`).
    *
    * **Example** (Layer with global WebSocket)
    *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
    * import * as Layer from "effect/Layer"
-   * import { Socket } from "effect/unstable/socket"
+   * import { Socket } from "effect/socket"
    *
    * const layer = ObsProtocol.makeLayer().pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal))
    * console.log(layer)

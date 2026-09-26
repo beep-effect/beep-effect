@@ -2,10 +2,10 @@ import * as F from "@beep/firecrawl";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Effect, Exit, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeFFirecrawlApiFailure = S.decodeEffect(F.FirecrawlApiFailure);
 const decodeFFirecrawlConfigInput = S.decodeEffect(F.FirecrawlConfigInput);

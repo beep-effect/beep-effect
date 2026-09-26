@@ -18,9 +18,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { SchemaUtils } from "@beep/schema";
 import { Config, Console, Effect, FileSystem, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
@@ -35,7 +35,7 @@ import {
   renderHeavyAdmissionSummary,
 } from "./HeavyAdmission.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Ci/CiAdmission");
 
@@ -202,7 +202,7 @@ const resolveCiAdmissionInput = Effect.fn("Ci.resolveCiAdmissionInput")(function
  *
  * ```ts
  * import { ciAdmissionCommand } from "@beep/repo-cli/commands/Ci"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  *
  * const ci = Command.make("ci").pipe(Command.withSubcommands([ciAdmissionCommand]))
  * console.log(typeof ci) // "object"

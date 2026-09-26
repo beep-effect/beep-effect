@@ -18,7 +18,7 @@ import { Effect, flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -316,7 +316,7 @@ const utf8 = new TextEncoder();
 const sha256Prefix8 = Effect.fnUntraced(function* (normalized: string) {
   const crypto = yield* Crypto.Crypto;
   const bytes = yield* crypto.digest("SHA-256", utf8.encode(normalized));
-  return pipe(Encoding.encodeHex(bytes), Str.takeLeft(DIGEST_PREFIX_LENGTH));
+  return pipe(Hex.encode(bytes), Str.takeLeft(DIGEST_PREFIX_LENGTH));
 });
 
 const toolNameRow = (input: ToolNameCandidate, normalized: string, digest: O.Option<string>): ToolNameCollisionRow => {

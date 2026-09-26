@@ -38,7 +38,7 @@ import { useAtom } from "@effect/atom-react";
 import { AudioFormat, CommitStrategy, RealtimeEvents, Scribe } from "@elevenlabs/client";
 import { Data, Effect } from "effect";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { useCallback, useEffect, useId, useRef } from "react";
 import type {
   CommittedTranscriptMessage,

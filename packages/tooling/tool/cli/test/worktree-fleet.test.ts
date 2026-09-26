@@ -16,8 +16,8 @@ import {
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, Stream } from "effect";
+import { ChildProcess } from "effect/process";
 import * as Str from "effect/String";
-import { ChildProcess } from "effect/unstable/process";
 import { fixture, ReferenceFixture, referenceFixtureLayer, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
 const FRESH_SECONDS = 30;

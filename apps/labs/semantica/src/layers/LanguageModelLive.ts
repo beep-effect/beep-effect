@@ -10,12 +10,12 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { XAi, XAiLanguageModel } from "@beep/xai";
 import { Config, Crypto, Effect, Layer, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as AiError from "effect/ai/AiError";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as AiError from "effect/unstable/ai/AiError";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as Response from "effect/unstable/ai/Response";
 import { LabConfig, RuntimeMode } from "@/runtime/Config";
 import { contentDigest, sha256TextSync } from "@/schema/Digest";
 import { ModelRevisionUnpinned, ProviderUnavailable } from "@/schema/Errors";
@@ -23,7 +23,7 @@ import { ModelIdentity } from "@/schema/Model";
 import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import { ProviderCache } from "@/services/ProviderCache";
-import type * as Prompt from "effect/unstable/ai/Prompt";
+import type * as Prompt from "effect/ai/Prompt";
 import type { ProviderCacheCorrupt } from "@/schema/Errors";
 import type { TaskType } from "@/schema/Model";
 
@@ -71,7 +71,7 @@ const textParts = (message: Prompt.Message): ReadonlyArray<string> => {
  *
  * ```ts
  * import { promptText } from "@/layers/LanguageModelLive"
- * import * as Prompt from "effect/unstable/ai/Prompt"
+ * import * as Prompt from "effect/ai/Prompt"
  *
  * console.log(promptText(Prompt.make("hello"))) // "hello"
  * ```
@@ -255,7 +255,7 @@ const makeReplayAdapter = makeGenerateTextAdapter(replayGenerateText);
  * ```ts
  * import { CachingLanguageModelLive } from "@/layers/LanguageModelLive"
  * import { Effect, Layer, Stream } from "effect"
- * import * as LanguageModel from "effect/unstable/ai/LanguageModel"
+ * import * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const inner = Layer.succeed(LanguageModel.LanguageModel, LanguageModel.make({
  *   generateText: () => Effect.never,
@@ -305,7 +305,7 @@ export const ReplayLanguageModelLive: Layer.Layer<
  * ```ts
  * import { LanguageModelRuntimeLive } from "@/layers/LanguageModelLive"
  * import { Effect, Layer, Stream } from "effect"
- * import * as LanguageModel from "effect/unstable/ai/LanguageModel"
+ * import * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const live = Layer.effect(LanguageModel.LanguageModel, LanguageModel.make({
  *   generateText: () => Effect.never,

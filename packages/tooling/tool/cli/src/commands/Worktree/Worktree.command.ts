@@ -18,13 +18,13 @@ import * as Str from "@beep/utils/Str";
 import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
+import { Argument, Command, Flag } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constFalse, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
@@ -46,7 +46,7 @@ import {
   WorktreeRemovalServiceLive,
 } from "./Worktree.service.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import type { WorktreeRemovalReceipt, WorktreeUnpushedInspection } from "./Worktree.schemas.ts";
 
@@ -1054,7 +1054,7 @@ const worktreeDoctorCommand = Command.make(
  *
  * ```ts
  * import { worktreeCommand } from "@beep/repo-cli/commands/Worktree"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(worktreeCommand, { version: "0.0.0" })

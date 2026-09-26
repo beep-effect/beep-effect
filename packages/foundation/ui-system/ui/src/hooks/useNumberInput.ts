@@ -11,8 +11,8 @@ import { useAtom, useAtomInitialValues, useAtomSet, useAtomSubscribe, useAtomVal
 import { Effect, flow, Match, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import { constVoid, dual, identity } from "effect/Function";
 import * as P from "effect/Predicate";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { useId, useRef } from "react";
 import { useSpinner } from "./useSpinner";
 import type React from "react";

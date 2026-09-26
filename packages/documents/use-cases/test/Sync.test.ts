@@ -40,10 +40,10 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { DmsMirrorShape, VaultSyncEngineShape } from "@beep/documents-use-cases/aggregates/Sync/server";
 
 const decodeGetVaultSyncStatusPayload = S.decodeEffect(GetVaultSyncStatusPayload);

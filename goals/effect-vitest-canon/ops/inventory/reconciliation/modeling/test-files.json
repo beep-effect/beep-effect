@@ -1,0 +1,198 @@
+[
+  {
+    "file": "packages/foundation/modeling/identity/test/AnnoteError.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 2855,
+    "lines": 73
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/Curie.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 5059,
+    "lines": 143
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/Fibered.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 6998,
+    "lines": 198
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/Identity.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 13693,
+    "lines": 346
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/IdentityRegistry.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 5160,
+    "lines": 141
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/IriBinding.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 5186,
+    "lines": 99
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/OntologyEntrypoints.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 4032,
+    "lines": 105
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/PnLocal.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 7793,
+    "lines": 223
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/TaggedError.equivalence.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 2064,
+    "lines": 47
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/TemplateGuards.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 1405,
+    "lines": 33
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/Vocab.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 3926,
+    "lines": 101
+  },
+  {
+    "file": "packages/foundation/modeling/identity/test/shape-stable.test.ts",
+    "package": "@beep/identity",
+    "kind": "test",
+    "bytes": 16619,
+    "lines": 482
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Array.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 6144,
+    "lines": 194
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 1822,
+    "lines": 52
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Errors.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 6017,
+    "lines": 192
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 4811,
+    "lines": 126
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Function.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 2107,
+    "lines": 79
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 11847,
+    "lines": 334
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Number.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 567,
+    "lines": 18
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Option.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 2406,
+    "lines": 77
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Path.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 2044,
+    "lines": 56
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Predicate.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 2339,
+    "lines": 72
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Schema.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 1589,
+    "lines": 43
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 3440,
+    "lines": 123
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Str.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 9155,
+    "lines": 287
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/Struct.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 12648,
+    "lines": 363
+  },
+  {
+    "file": "packages/foundation/modeling/utils/test/TaggedError.equivalence.test.ts",
+    "package": "@beep/utils",
+    "kind": "test",
+    "bytes": 3600,
+    "lines": 82
+  },
+  {
+    "file": "packages/foundation/primitive/types/test/TString.test.ts",
+    "package": "@beep/types",
+    "kind": "test",
+    "bytes": 2978,
+    "lines": 62
+  }
+]

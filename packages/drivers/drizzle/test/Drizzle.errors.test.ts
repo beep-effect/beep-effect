@@ -4,13 +4,13 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as assert from "@effect/vitest/utils";
 import { Effect, Layer, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Eq from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { DrizzleClient } from "@beep/drizzle";
 
 const decodeDrizzleErrorResult = S.decodeResult(DrizzleError);

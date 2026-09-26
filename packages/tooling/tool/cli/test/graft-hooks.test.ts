@@ -4,8 +4,8 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
 
 const helpers = fileURLToPath(new URL("../../../../../.claude/helpers/", import.meta.url));
 

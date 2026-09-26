@@ -35,7 +35,7 @@ import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutWriteAction } from "./closeout/Closeout.schemas.ts";
 

@@ -15,10 +15,10 @@ import { isTagged } from "effect/Predicate";
 import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
 import { Int, is, isSchema, NonEmptyString, TaggedError, Unknown } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
-import { VariantSchema } from "effect/unstable/schema";
-import { SqlClient } from "effect/unstable/sql/SqlClient";
-import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
-import { findOne } from "effect/unstable/sql/SqlSchema";
+import { VariantSchema } from "effect/schema";
+import { SqlClient } from "effect/sql/SqlClient";
+import { makeRepository as makeSqlRepository } from "effect/sql/SqlModel";
+import { findOne } from "effect/sql/SqlSchema";
 import { isUnknownRecord } from "../internal/guards.ts";
 import { flattenEncoded } from "./classification.ts";
 import * as Field from "./Field.ts";
@@ -26,8 +26,8 @@ import * as Meta from "./Meta.ts";
 import { ModelInvariantError } from "./model.ts";
 import type { Effect, Success } from "effect/Effect";
 import type { SchemaError } from "effect/Schema";
-import type { Model as EffectModel } from "effect/unstable/schema";
-import type { SqlError } from "effect/unstable/sql/SqlError";
+import type { Model as EffectModel } from "effect/schema";
+import type { SqlError } from "effect/sql/SqlError";
 import type { UnknownRecord } from "../internal/guards.ts";
 import type { AnyModel } from "./model.ts";
 
@@ -321,7 +321,7 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  *   "@beep/pglite"
  * import { gen, provide, runPromise } from "effect/Effect"
  * import { Int, String } from "effect/Schema"
- * import { SqlClient } from "effect/unstable/sql/SqlClient"
+ * import { SqlClient } from "effect/sql/SqlClient"
  * import { Model, makeRepository } from
  *   "@beep/effect-drizzle"
  * import { default as defaultValue, identity, integer, primaryKey, version } from

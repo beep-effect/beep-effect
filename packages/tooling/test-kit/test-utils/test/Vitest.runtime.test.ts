@@ -18,7 +18,7 @@ import {
   Schema,
   Stream,
 } from "effect";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type * as PlatformError from "effect/PlatformError";
 
 const packageRoot = NodeURL.fileURLToPath(new URL("..", import.meta.url));

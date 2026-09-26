@@ -8,10 +8,10 @@
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { Effect, Layer } from "effect";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
+import { FetchHttpClient } from "effect/http";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
 import { CodegenGenerateError } from "./CodegenKit.errors.ts";
 import { GenerateConfig as GenerateConfigSchema } from "./CodegenKit.models.ts";
 import { CodegenKit } from "./CodegenKit.service.ts";

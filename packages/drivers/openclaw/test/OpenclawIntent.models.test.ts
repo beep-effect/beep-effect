@@ -21,9 +21,9 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOpenclawDeploymentIntentResult = S.decodeResult(OpenclawDeploymentIntent);
 const decodeOpenclawGatewayIntentResult = S.decodeResult(OpenclawGatewayIntent);

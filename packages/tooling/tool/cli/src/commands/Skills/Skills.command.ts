@@ -11,12 +11,13 @@ import { LiteralKit } from "@beep/schema";
 import { decodeTomlTextAs } from "@beep/schema/Toml";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
-import { Console, Crypto, Effect, Encoding, FileSystem, Order, Path, pipe, Result } from "effect";
+import { Console, Crypto, Effect, FileSystem, Order, Path, pipe, Result } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
@@ -365,7 +366,7 @@ const sha256Hex = Effect.fn("Skills.sha256Hex")(function* (
   const digest = yield* crypto
     .digest("SHA-256", asArrayBufferView(bytes))
     .pipe(SkillsCommandError.mapError(`Failed to compute SHA-256 digest for ${file}.`, file));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 const hashSkillFiles = Effect.fn("Skills.hashSkillFiles")(function* (
@@ -1071,7 +1072,7 @@ const skillsProvenanceCommand = Command.make(
  *
  * ```ts
  * import { skillsCommand } from "@beep/repo-cli/commands/Skills"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(skillsCommand, { version: "0.0.0" })
