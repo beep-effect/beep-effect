@@ -39,7 +39,6 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, expect, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path, Ref } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import { HttpClient, HttpClientResponse } from "effect/http";
@@ -103,41 +102,11 @@ const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const expectSchemaRoundTrip = Effect.fn("expectSchemaRoundTrip")(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  arbitrary = Arbitrary.schema(schema)
+  value: Schema["Type"]
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([arbitrary]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result._tag).toBe("Passed");
-});
-
-const expectEncodedRoundTrip = Effect.fn("expectEncodedRoundTrip")(function* <Schema extends S.Codec<unknown>>(
-  schema: Schema
-) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result._tag).toBe("Passed");
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
 
 const writeText = Effect.fn("AiSyncTest.writeText")(function* (filePath: string, content: string) {
@@ -291,24 +260,106 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
     })
   );
 
-  it.effect(
-    "round-trips crispened schemas with schema-derived arbitraries",
-    Effect.fn(function* () {
-      yield* expectSchemaRoundTrip(AiSyncSourceId);
-      yield* expectSchemaRoundTrip(AiSyncSourceUrl);
-      yield* expectSchemaRoundTrip(AiSyncVersionPin);
-      yield* expectSchemaRoundTrip(AiSyncContentHash);
-      yield* expectSchemaRoundTrip(AiSyncSourceMetadata);
-      yield* expectSchemaRoundTrip(AiSyncSchemaCell);
-      yield* expectSchemaRoundTrip(AiSyncDriftFinding);
-      yield* expectSchemaRoundTrip(AiSyncDriftReport);
-      yield* expectSchemaRoundTrip(AiSyncValidationResult);
-      yield* expectEncodedRoundTrip(AiSyncError);
-      yield* expectSchemaRoundTrip(AgentCommandMetadata);
-      yield* expectSchemaRoundTrip(AgentPluginManifestMetadata);
-      yield* expectSchemaRoundTrip(UnknownNativeSchemaCell);
-      yield* expectSchemaRoundTrip(NormalizedAgentInstructionDocument, NormalizedAgentInstructionDocumentArbitrary);
-    })
+  it.effect.prop(
+    "round-trips AiSyncSourceId through its encoded shape",
+    [AiSyncSourceId],
+    ([value]) => expectSchemaRoundTrip(AiSyncSourceId, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncSourceUrl through its encoded shape",
+    [AiSyncSourceUrl],
+    ([value]) => expectSchemaRoundTrip(AiSyncSourceUrl, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncVersionPin through its encoded shape",
+    [AiSyncVersionPin],
+    ([value]) => expectSchemaRoundTrip(AiSyncVersionPin, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncContentHash through its encoded shape",
+    [AiSyncContentHash],
+    ([value]) => expectSchemaRoundTrip(AiSyncContentHash, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncSourceMetadata through its encoded shape",
+    [AiSyncSourceMetadata],
+    ([value]) => expectSchemaRoundTrip(AiSyncSourceMetadata, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncSchemaCell through its encoded shape",
+    [AiSyncSchemaCell],
+    ([value]) => expectSchemaRoundTrip(AiSyncSchemaCell, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncDriftFinding through its encoded shape",
+    [AiSyncDriftFinding],
+    ([value]) => expectSchemaRoundTrip(AiSyncDriftFinding, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncDriftReport through its encoded shape",
+    [AiSyncDriftReport],
+    ([value]) => expectSchemaRoundTrip(AiSyncDriftReport, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncValidationResult through its encoded shape",
+    [AiSyncValidationResult],
+    ([value]) => expectSchemaRoundTrip(AiSyncValidationResult, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncError through its encoded shape",
+    [AiSyncError],
+    Effect.fn(function* ([value]) {
+      const encoded = yield* encodeAiSyncError(value);
+      const decoded = yield* S.decodeEffect(AiSyncError)(encoded);
+      expect(yield* encodeAiSyncError(decoded)).toEqual(encoded);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AgentCommandMetadata through its encoded shape",
+    [AgentCommandMetadata],
+    ([value]) => expectSchemaRoundTrip(AgentCommandMetadata, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AgentPluginManifestMetadata through its encoded shape",
+    [AgentPluginManifestMetadata],
+    ([value]) => expectSchemaRoundTrip(AgentPluginManifestMetadata, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips UnknownNativeSchemaCell through its encoded shape",
+    [UnknownNativeSchemaCell],
+    ([value]) => expectSchemaRoundTrip(UnknownNativeSchemaCell, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips NormalizedAgentInstructionDocument through its encoded shape",
+    [NormalizedAgentInstructionDocumentArbitrary],
+    ([value]) => expectSchemaRoundTrip(NormalizedAgentInstructionDocument, value),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect(
