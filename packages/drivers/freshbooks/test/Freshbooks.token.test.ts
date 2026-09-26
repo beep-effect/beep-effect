@@ -9,7 +9,8 @@ import {
 } from "@beep/freshbooks";
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
-import { Cause, Context, Deferred, Effect, Fiber, Layer, Redacted, Ref } from "effect";
+import { assertSome } from "@effect/vitest/utils";
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Redacted, Ref } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
@@ -205,16 +206,15 @@ describe("@beep/freshbooks token rotation", () => {
 
         const stored = yield* store.read;
         const currentRefresh = yield* server.currentRefresh;
-        expect(stored._tag).toBe("Some");
-        if (stored._tag === "Some") {
-          // The persisted refresh token matches the server's now-valid one:
-          // the old refresh token is consumed and gone.
-          expect(Redacted.value(stored.value.refreshToken)).toBe(currentRefresh);
-          expect(Redacted.value(stored.value.refreshToken)).not.toBe("refresh-0");
-          // Under the deterministic TestClock (now = 0), expiry is exactly
-          // now + expires_in(43200s) in millis.
-          expect(stored.value.expiresAt).toBe(43_200_000);
-        }
+        assertSome(
+          O.map(stored, (stored) => {
+            // The consumed refresh token must never be persisted again.
+            expect(Redacted.value(stored.refreshToken)).not.toBe("refresh-0");
+            return { refreshToken: Redacted.value(stored.refreshToken), expiresAt: stored.expiresAt };
+          }),
+          // TestClock starts at zero; expires_in is 43200 seconds.
+          { refreshToken: currentRefresh, expiresAt: 43_200_000 }
+        );
       })
     );
   });
@@ -251,14 +251,14 @@ describe("@beep/freshbooks token rotation", () => {
         const auth = yield* FreshbooksAuth;
         const exit = yield* Effect.exit(auth.accessToken);
 
-        expect(exit._tag).toBe("Failure");
-        if (exit._tag === "Failure") {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(error._tag).toBe("Some");
-          if (error._tag === "Some") {
-            expect(error.value.reason).toBe("token refresh");
-          }
-        }
+        const error = Exit.match(exit, {
+          onFailure: Cause.findErrorOption,
+          onSuccess: O.none,
+        });
+        assertSome(
+          O.map(error, (error) => error.reason),
+          "token refresh"
+        );
       })
     );
   });
