@@ -86,8 +86,6 @@ const awaitLatch = (latch: Latch): Effect.Effect<void> => Effect.promise(() => l
 const liveSleep = (millis: number): Effect.Effect<void> =>
   Effect.sleep(Duration.millis(millis)).pipe(TestClock.withLive);
 
-const liveSleepPromise = (millis: number): Promise<void> => Effect.runPromise(Effect.sleep(Duration.millis(millis)));
-
 const latchResolvesWithin = (latch: Latch, millis: number): Effect.Effect<boolean> =>
   Effect.raceFirst(awaitLatch(latch).pipe(Effect.as(true)), liveSleep(millis).pipe(Effect.as(false)));
 
@@ -470,23 +468,22 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           yield* patchDuckDbInstanceCreate(fakeCreate);
 
           const duckdb = yield* DuckDb;
-          yield* Effect.all(
-            [
-              duckdb.query("SELECT 1 AS value").pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-              Effect.gen(function* () {
-                yield* awaitLatch(firstStarted);
-                yield* liveSleep(75);
-                const secondFiber = yield* duckdb
-                  .query("SELECT 2 AS value")
-                  .pipe(Effect.forkChild({ startImmediately: true }));
-                expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
-                releaseFirst.resolve();
-                expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-                expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
-              }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve()))),
-            ],
-            { concurrency: 2, discard: true }
-          );
+          yield* Effect.gen(function* () {
+            const firstFiber = yield* duckdb
+              .query("SELECT 1 AS value")
+              .pipe(Effect.forkChild({ startImmediately: true }));
+            yield* awaitLatch(firstStarted);
+            const interruption = yield* Fiber.interrupt(firstFiber).pipe(Effect.forkChild({ startImmediately: true }));
+            const secondFiber = yield* duckdb
+              .query("SELECT 2 AS value")
+              .pipe(Effect.forkChild({ startImmediately: true }));
+            expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+            releaseFirst.resolve();
+            expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
+            expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+            yield* Fiber.join(interruption);
+            pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+          }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
         })
       );
     }
@@ -525,25 +522,22 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           yield* patchDuckDbInstanceCreate(fakeCreate);
 
           const duckdb = yield* DuckDb;
-          yield* Effect.all(
-            [
-              duckdb
-                .run("CREATE TABLE interrupted_run (value INTEGER)")
-                .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-              Effect.gen(function* () {
-                yield* awaitLatch(runStarted);
-                yield* liveSleep(75);
-                const readFiber = yield* duckdb
-                  .query("SELECT 2 AS value")
-                  .pipe(Effect.forkChild({ startImmediately: true }));
-                expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
-                releaseRun.resolve();
-                expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-                expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
-              }).pipe(Effect.ensuring(Effect.sync(() => releaseRun.resolve()))),
-            ],
-            { concurrency: 2, discard: true }
-          );
+          yield* Effect.gen(function* () {
+            const firstFiber = yield* duckdb
+              .run("CREATE TABLE interrupted_run (value INTEGER)")
+              .pipe(Effect.forkChild({ startImmediately: true }));
+            yield* awaitLatch(runStarted);
+            const interruption = yield* Fiber.interrupt(firstFiber).pipe(Effect.forkChild({ startImmediately: true }));
+            const readFiber = yield* duckdb
+              .query("SELECT 2 AS value")
+              .pipe(Effect.forkChild({ startImmediately: true }));
+            expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+            releaseRun.resolve();
+            expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
+            expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
+            yield* Fiber.join(interruption);
+            pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+          }).pipe(Effect.ensuring(Effect.sync(() => releaseRun.resolve())));
         })
       );
     }
@@ -577,30 +571,27 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           yield* patchDuckDbInstanceCreate(fakeCreate);
 
           const duckdb = yield* DuckDb;
-          yield* Effect.all(
-            [
-              duckdb
-                .copyTableToParquet(
-                  DuckDbParquetExport.make({
-                    filePath: "/tmp/legacy-interrupted-copy.parquet",
-                    tableName: "legacy_events",
-                  })
-                )
-                .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-              Effect.gen(function* () {
-                yield* awaitLatch(copyStarted);
-                yield* liveSleep(75);
-                const readFiber = yield* duckdb
-                  .query("SELECT 2 AS value")
-                  .pipe(Effect.forkChild({ startImmediately: true }));
-                expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
-                releaseCopy.resolve();
-                expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-                expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
-              }).pipe(Effect.ensuring(Effect.sync(() => releaseCopy.resolve()))),
-            ],
-            { concurrency: 2, discard: true }
-          );
+          yield* Effect.gen(function* () {
+            const firstFiber = yield* duckdb
+              .copyTableToParquet(
+                DuckDbParquetExport.make({
+                  filePath: "/tmp/legacy-interrupted-copy.parquet",
+                  tableName: "legacy_events",
+                })
+              )
+              .pipe(Effect.forkChild({ startImmediately: true }));
+            yield* awaitLatch(copyStarted);
+            const interruption = yield* Fiber.interrupt(firstFiber).pipe(Effect.forkChild({ startImmediately: true }));
+            const readFiber = yield* duckdb
+              .query("SELECT 2 AS value")
+              .pipe(Effect.forkChild({ startImmediately: true }));
+            expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+            releaseCopy.resolve();
+            expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
+            expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
+            yield* Fiber.join(interruption);
+            pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+          }).pipe(Effect.ensuring(Effect.sync(() => releaseCopy.resolve())));
         })
       );
     }
@@ -703,18 +694,14 @@ describe("@beep/duckdb", { concurrent: false }, () => {
                 yield* duckdb.query("SELECT 1 AS value");
               }).pipe(Effect.provide(context), Effect.forkChild({ startImmediately: true }));
 
-              yield* Effect.gen(function* () {
-                yield* awaitLatch(connectStarted);
-                yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
-                yield* liveSleep(25);
-                expect(connectionCloseAttempts).toBe(0);
-                expect(instanceCloseAttempts).toBe(0);
-                connect.resolve(fakeConnection as unknown as DuckDBConnection);
-                yield* Fiber.await(queryFiber);
-              }).pipe(
-                Effect.ensuring(Effect.sync(() => connect.resolve(fakeConnection as unknown as DuckDBConnection)))
-              );
-            })
+              yield* awaitLatch(connectStarted);
+              yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
+              yield* liveSleep(25);
+              expect(connectionCloseAttempts).toBe(0);
+              expect(instanceCloseAttempts).toBe(0);
+              connect.resolve(fakeConnection as unknown as DuckDBConnection);
+              yield* Fiber.await(queryFiber);
+            }).pipe(Effect.ensuring(Effect.sync(() => connect.resolve(fakeConnection as unknown as DuckDBConnection))))
           )
         )
       );
@@ -1033,17 +1020,29 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
       Effect.gen(function* () {
         const liveConnection = yield* acquireNativeDuckDbConnection;
 
+        const firstStarted = makeLatch();
+        const releaseFirst = makeLatch();
+        const secondStarted = makeLatch();
+        let firstRead = true;
         let activeExecutions = 0;
         let maxActiveExecutions = 0;
         const runAndReadAll = liveConnection.runAndReadAll.bind(liveConnection);
         liveConnection.runAndReadAll = (...args: Parameters<DuckDBConnection["runAndReadAll"]>) => {
           activeExecutions += 1;
           maxActiveExecutions = activeExecutions > maxActiveExecutions ? activeExecutions : maxActiveExecutions;
-          return liveSleepPromise(20)
-            .then(() => runAndReadAll(...args))
-            .finally(() => {
-              activeExecutions -= 1;
-            });
+          if (firstRead) {
+            firstRead = false;
+            firstStarted.resolve();
+            return releaseFirst.promise
+              .then(() => runAndReadAll(...args))
+              .finally(() => {
+                activeExecutions -= 1;
+              });
+          }
+          secondStarted.resolve();
+          return runAndReadAll(...args).finally(() => {
+            activeExecutions -= 1;
+          });
         };
 
         const client = yield* DuckDbSqlClient.fromClient({
@@ -1052,9 +1051,21 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
         });
         const sql = client.withoutTransforms();
 
-        yield* Effect.all([sql`SELECT 1 AS value`, sql`SELECT 2 AS value`], { concurrency: 2 });
-
-        expect(maxActiveExecutions).toBe(1);
+        yield* Effect.gen(function* () {
+          const firstFiber = yield* sql<{ readonly value: number }>`SELECT 1 AS value`.pipe(
+            Effect.forkChild({ startImmediately: true })
+          );
+          yield* awaitLatch(firstStarted);
+          const secondFiber = yield* sql<{ readonly value: number }>`SELECT 2 AS value`.pipe(
+            Effect.forkChild({ startImmediately: true })
+          );
+          expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+          releaseFirst.resolve();
+          expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
+          expect(yield* Fiber.join(firstFiber)).toEqual([{ value: 1 }]);
+          expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+          expect(maxActiveExecutions).toBe(1);
+        }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
       })
     );
   });
@@ -1127,23 +1138,22 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
         });
         const sql = client.withoutTransforms();
 
-        yield* Effect.all(
-          [
-            sql<{ readonly value: number }>`SELECT 1 AS value`.pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-            Effect.gen(function* () {
-              yield* awaitLatch(firstStarted);
-              yield* liveSleep(75);
-              const secondFiber = yield* sql<{ readonly value: number }>`SELECT 2 AS value`.pipe(
-                Effect.forkChild({ startImmediately: true })
-              );
-              expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
-              releaseFirst.resolve();
-              expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-              expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
-            }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve()))),
-          ],
-          { concurrency: 2, discard: true }
-        );
+        yield* Effect.gen(function* () {
+          const firstFiber = yield* sql<{ readonly value: number }>`SELECT 1 AS value`.pipe(
+            Effect.forkChild({ startImmediately: true })
+          );
+          yield* awaitLatch(firstStarted);
+          const interruption = yield* Fiber.interrupt(firstFiber).pipe(Effect.forkChild({ startImmediately: true }));
+          const secondFiber = yield* sql<{ readonly value: number }>`SELECT 2 AS value`.pipe(
+            Effect.forkChild({ startImmediately: true })
+          );
+          expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+          releaseFirst.resolve();
+          expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
+          expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+          yield* Fiber.join(interruption);
+          pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+        }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve())));
       })
     );
   });
@@ -1186,30 +1196,27 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
           return runAndReadAll(...args);
         };
 
-        yield* Effect.all(
-          [
-            client
-              .copyTableToParquet(
-                DuckDbParquetExport.make({
-                  filePath: parquetPath,
-                  tableName: "raw_interrupt_events",
-                })
-              )
-              .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-            Effect.gen(function* () {
-              yield* awaitLatch(rawStarted);
-              yield* liveSleep(75);
-              const readFiber = yield* sql<{ readonly id: string }>`SELECT id FROM raw_interrupt_events`.pipe(
-                Effect.forkChild({ startImmediately: true })
-              );
-              expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
-              releaseRaw.resolve();
-              expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-              expect(yield* Fiber.join(readFiber)).toEqual([{ id: "raw-1" }]);
-            }).pipe(Effect.ensuring(Effect.sync(() => releaseRaw.resolve()))),
-          ],
-          { concurrency: 2, discard: true }
-        );
+        yield* Effect.gen(function* () {
+          const firstFiber = yield* client
+            .copyTableToParquet(
+              DuckDbParquetExport.make({
+                filePath: parquetPath,
+                tableName: "raw_interrupt_events",
+              })
+            )
+            .pipe(Effect.forkChild({ startImmediately: true }));
+          yield* awaitLatch(rawStarted);
+          const interruption = yield* Fiber.interrupt(firstFiber).pipe(Effect.forkChild({ startImmediately: true }));
+          const readFiber = yield* sql<{ readonly id: string }>`SELECT id FROM raw_interrupt_events`.pipe(
+            Effect.forkChild({ startImmediately: true })
+          );
+          expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+          releaseRaw.resolve();
+          expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
+          expect(yield* Fiber.join(readFiber)).toEqual([{ id: "raw-1" }]);
+          yield* Fiber.join(interruption);
+          pipe(yield* Fiber.await(firstFiber), Exit.hasInterrupts, assertTrue);
+        }).pipe(Effect.ensuring(Effect.sync(() => releaseRaw.resolve())));
         expect(yield* fs.exists(parquetPath)).toBe(true);
       })
     );
