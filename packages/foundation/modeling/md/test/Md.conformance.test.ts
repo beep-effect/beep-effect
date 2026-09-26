@@ -36,7 +36,7 @@ import { ConformanceReport } from "@beep/schema/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
-import { Effect, Result } from "effect";
+import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -109,23 +109,19 @@ describe("Markdown semantic conformance", () => {
     );
   });
 
-  it("round-trips schema-derived headings through their codec", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HeadingArbitrary]),
-          ([heading]) => {
-            const encoded = Result.getOrThrow(encodeHeadingResult(heading));
-            const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
+  it.prop(
+    "round-trips schema-derived headings through their codec",
+    [HeadingArbitrary],
+    ([heading]) => {
+      const encoded = Result.getOrThrow(encodeHeadingResult(heading));
+      const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
 
-            expect(decoded).toEqual(heading);
+      expect(decoded).toEqual(heading);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("rejects unknown Markdown variant tags", () => {
     assertFailure(

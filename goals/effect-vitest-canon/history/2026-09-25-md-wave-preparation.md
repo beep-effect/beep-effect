@@ -55,3 +55,30 @@ proof passed: audit 20.3s and docgen 7.8s. The fresh detector has 18 Markdown
 findings (nine runtime wrappers and nine property wrappers), with no EV006
 assertion findings. Historical detector rows remain pending wave reconciliation.
 Property conversion follows this proof in D12 order.
+
+## Property stage verified
+
+All nine native checkEffect/runSync wrappers now use pure it.prop with the same
+arbitraries and assertions. The three original fcRuns(50) and four original
+fcRuns(100) floors remain. The two omitted floors now explicitly use fcRuns(100)
+in independent registrations under their original named group, preserving
+separate shrinking/replay and increasing reporter cases by one. The five-schema
+child-list union is unchanged; its exact three-text positive control now runs
+after the length assertion in every successful generated case. No domain,
+fixture, budget, retry or timeout was reduced or relaxed.
+
+An independent AST comparison verified all nine callback bodies and floors,
+allowing only the documented child-list positive-control addition. A removed
+runtime wrapper left an unused Effect import; the initial proof caught it and
+the import was removed. Full final package verification passed: audit 21.7s,
+docgen 8.0s. A fresh detector scan emits zero Markdown findings, down from the
+frozen 43; historical ledger and baseline reconciliation remain a later wave
+step rather than being inferred from the scan.
+
+Node and Bun each pass 73 tests, zero failed/pending. Whole-command observations
+are 5.289s (Node) and 3.092s (Bun), with stable source/manifest/lock hashes and
+load/pressure context retained privately in md-properties-node-context.json
+and md-properties-bun-context.json. These are intermediate stage observations,
+not a claim of performance improvement or final runner-instrumentation proof.
+Runner adoption, final lens validation, timing publication and HTML-first PR
+publication remain outstanding.
