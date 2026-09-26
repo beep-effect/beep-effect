@@ -226,3 +226,17 @@ Bun retained null there while signalCode was SIGKILL; the final witness checks
 signalCode and observed drain completion directly. The previously open resource
 row now cites the existing scoped-child repair commit. All 15 substantive human
 findings have dispositions: 13 fixed and two native-boundary exceptions.
+
+## Detector reconciliation
+
+The seven original runtime-boundary and Option-assertion findings are fixed at
+07d5205179. Three current findings retain explicit judgment exceptions: the
+inner scope is the interruption-test subject, the existing codec assertion has
+only a failure-branch oracle, and the SQLite filesystem is a native cross-process
+subject. All unrelated baseline rows were checked for exact semantic equality.
+
+The full ratchet check scanned 1170 files and found 8059 rows. It reported no
+new Effect Drizzle findings, but exited 1 for the two previously attributed
+refs-refresh-plan findings outside this package. This is a red root check,
+not a green package-wide or repository-wide closeout claim. The prerequisite
+was tracked in PR #1272; base integration and exact-head proof remain required.
