@@ -107,22 +107,26 @@ const expectEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema:
 };
 
 describe("Uspto service", () => {
-  it.layer(usptoLayer(respondWith(applicationEnvelope)), { timeout: "5 seconds" })((it) => {
-    it.effect(
-      "resolves application metadata from a file wrapper envelope",
-      Effect.fnUntraced(function* () {
-        const seenUrls: Array<string> = [];
-        const uspto = yield* Uspto;
-        const metadata = yield* uspto.getApplication("16138242");
+  {
+    const requestedUrls: Array<string> = [];
+    it.layer(usptoLayer(respondWith(applicationEnvelope, 200, requestedUrls)), { timeout: "5 seconds" })((it) => {
+      it.effect(
+        "resolves application metadata from a file wrapper envelope",
+        Effect.fnUntraced(function* () {
+          const seenUrls: Array<string> = [];
+          const uspto = yield* Uspto;
+          const metadata = yield* uspto.getApplication("16138242");
 
-        expect(metadata.applicationNumberText).toBe("16138242");
-        assertSome(metadata.inventionTitle, NonEmptyTrimmedStr.make("Adjustable widget assembly"));
-        assertSome(metadata.patentNumber, NonEmptyTrimmedStr.make("10772255"));
-        assertSome(metadata.firstApplicantName, NonEmptyTrimmedStr.make("Precision Widgets LLC"));
-        expect(seenUrls).toHaveLength(0);
-      })
-    );
-  });
+          expect(metadata.applicationNumberText).toBe("16138242");
+          assertSome(metadata.inventionTitle, NonEmptyTrimmedStr.make("Adjustable widget assembly"));
+          assertSome(metadata.patentNumber, NonEmptyTrimmedStr.make("10772255"));
+          assertSome(metadata.firstApplicantName, NonEmptyTrimmedStr.make("Precision Widgets LLC"));
+          expect(seenUrls).toHaveLength(0);
+          expect(requestedUrls).toStrictEqual(["https://api.uspto.gov/api/v1/patent/applications/16138242"]);
+        })
+      );
+    });
+  }
 
   {
     const seenUrls: Array<string> = [];
