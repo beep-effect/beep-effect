@@ -1682,11 +1682,15 @@
         "from": "@beep/effect-drizzle",
         "allow": [
           "@beep/effect-drizzle",
-          "@beep/pglite"
+          "@beep/fc-runs",
+          "@beep/pglite",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
-          "@beep/pglite"
+          "@beep/fc-runs",
+          "@beep/pglite",
+          "@beep/test-runner"
         ]
       },
       {

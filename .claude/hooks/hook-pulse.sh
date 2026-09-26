@@ -170,6 +170,28 @@ sha256_private_identifier() {
   printf '%s' "${digest}"
 }
 
+# The context-surface digest is deliberately UNSALTED, unlike the three private
+# identifiers above: a surface key (`skill:yeet`, `hook:law-pulse.sh`,
+# `mcp-server:notion`) names a public repo surface, not a person or a path, and
+# the digest has to join across clones and with the TypeScript
+# `contextSurfaceId(kind, name)`. The preimage is `printf '%s'` of the key with
+# no trailing newline. Same discovered tool, same shape verification.
+sha256_public_text() {
+  if [ -z "$1" ]; then
+    return 0
+  fi
+
+  local digest
+  digest="$(printf '%s' "$1" | hash_stdin)" || return 1
+  digest="${digest%% *}"
+  case "${digest}" in
+    "" | *[!0-9a-f]*) return 1 ;;
+  esac
+  [ "${#digest}" -eq 64 ] || return 1
+
+  printf '%s' "${digest}"
+}
+
 # Millisecond precision is load-bearing: the spike measured `PreToolUse` and its
 # `PermissionRequest` in the same second, and P4's two-hop join pairs each
 # `PermissionRequest` with the nearest preceding unpaired `PreToolUse`. Fall back
@@ -229,6 +251,108 @@ session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || exit 0
 cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || exit 0
 transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || exit 0
 
+# Context surface (goals/harness-evidence-ledger, D8): which repo surface a
+# successful tool call touched, as an unsalted digest of `${kind}:${name}`. The
+# TypeScript mirror is `hookPulseContextSurfaceKey` in `hook-pulse.ts`, and the
+# writer conformance test compares both digests. Only `PostToolUse` owns
+# `surface`, so every other event skips the extra jq pass and the root walk;
+# the substring gate may false-positive (the program re-checks the event) but
+# can never false-negative, since a PostToolUse payload always carries the
+# quoted event name. The raw skill name or path lives only in these locals and
+# the jq pass; the row receives the digest or nothing.
+surface_hash=""
+case "${payload}" in
+  *'"PostToolUse"'*)
+    # The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md`
+    # and `.git`: `AGENTS.md` alone would stop at a nested app's own guide
+    # (`apps/*/AGENTS.md`) and misfile every root surface. No match falls back to
+    # `cwd`, which is also the TypeScript codec's default. Only an absolute
+    # `cwd` enters the walk (a relative one yields no surface in the jq program
+    # and the codec alike), and the loop stops once a strip makes no progress,
+    # so a segment without `/` can never spin forever.
+    repo_root="${raw_cwd}"
+    case "${raw_cwd}" in
+      /*) probe="${raw_cwd}" ;;
+      *) probe="" ;;
+    esac
+    while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
+      if [ -e "${probe}/AGENTS.md" ] && [ -e "${probe}/.git" ]; then
+        repo_root="${probe}"
+        break
+      fi
+      next_probe="${probe%/*}"
+      [ "${next_probe}" = "${probe}" ] && break
+      probe="${next_probe}"
+    done
+
+    # Every branch yields a string, never `empty` (see the `capture()` note in the
+    # header). `segments` is a lexical fold: `..` pops, `.` and `""` vanish.
+    surface_program='
+def as_string: if type == "string" then . else null end;
+def as_present: as_string | if . == "" then null else . end;
+def segments: split("/")
+  | reduce .[] as $s ([];
+      if $s == "" or $s == "." then .
+      elif $s == ".." then .[:-1]
+      else . + [$s]
+      end);
+def absolute($path):
+  if ($path | startswith("/")) then $path
+  elif ($cwd | startswith("/")) then $cwd + "/" + $path
+  else null
+  end;
+def repo_relative($path):
+  (absolute($path)) as $abs
+  | ($root | segments) as $r
+  | if $abs == null then null
+    else ($abs | segments) as $a
+    | if ($r | length) > 0 and ($a | length) > ($r | length) and $a[0:($r | length)] == $r
+      then $a[($r | length):]
+      else null
+      end
+    end;
+def classify:
+  if . == null then null
+  elif length == 1 and (.[0] == "AGENTS.md" or .[0] == "CLAUDE.md") then "agents-md:AGENTS.md"
+  elif length >= 4 and .[0] == ".claude" and .[1] == "skills" then "skill:" + .[2]
+  elif length == 3 and .[0] == ".claude" and .[1] == "hooks" then "hook:" + .[2]
+  elif length == 3 and .[0] == ".claude" and .[1] == "agents" then "agent-definition:" + .[2]
+  elif length == 2 and .[0] == ".claude" and (.[1] | test("^settings(\\..+)?\\.json$")) then "settings:" + .[1]
+  elif length == 2 and .[0] == ".patterns" then "pattern:" + .[1]
+  else null
+  end;
+def file_tools: [ "Read", "Edit", "Write", "MultiEdit", "NotebookEdit" ];
+
+(.hook_event_name | as_present) as $event
+| (.tool_name | as_present) as $tool
+| (if (.tool_input | type) == "object" then .tool_input else {} end) as $input
+| (if $event != "PostToolUse" or $tool == null then null
+   elif $tool == "Skill" then
+     ((($input.skill | as_string) // "") | sub("^/+"; "")) as $name
+     | if $name == "" then null else "skill:" + $name end
+   elif ($tool | startswith("mcp__")) then
+     ($tool[5:]) as $rest
+     | ($rest | index("__")) as $i
+     | if $i == null or $i == 0 then null else "mcp-server:" + $rest[0:$i] end
+   elif (file_tools | index($tool)) != null then
+     (($input.file_path | as_present)
+      // ($input.notebook_path | as_present)
+      // ($input.path | as_present)) as $path
+     | if $path == null then null else (repo_relative($path) | classify) end
+   else null
+   end) as $key
+# A newline in the key would be stripped by command substitution before
+# hashing, minting a digest TypeScript cannot reproduce; refuse it on both sides.
+| if $key == null or ($key | contains("\n")) then "" else $key end
+'
+    surface_key="$(jq -j --arg cwd "${raw_cwd}" --arg root "${repo_root}" "${surface_program}" <<<"${payload}" 2>/dev/null)" ||
+      surface_key=""
+    # A failed digest drops the surface, not the row: the event itself is still
+    # evidence the ledger wants.
+    surface_hash="$(sha256_public_text "${surface_key}")" || surface_hash=""
+    ;;
+esac
+
 jq_program='
 def as_string: if type == "string" then . else null end;
 def as_present: as_string | if . == "" then null else . end;
@@ -278,6 +402,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 | (.tool_use_id | as_present) as $toolUseId
 | (.prompt_id | as_present) as $promptId
 | ($transcriptPathHash | as_present) as $transcriptPath
+| ($surfaceHash | as_present) as $surface
 | (.permission_mode | as_present) as $permissionMode
 | (.notification_type | as_present) as $notificationTypeRaw
 | (.duration_ms | as_non_negative) as $durationMs
@@ -321,6 +446,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("durationMs"; $durationMs)
      | put("sessionEndReason"; (if $hookEvent == "SessionEnd" then $reason else null end))
      | put("isInterrupt"; (if $hookEvent == "PostToolUseFailure" then $isInterrupt else null end))
+     | put("surface"; (if $hookEvent == "PostToolUse" then $surface else null end))
     ) as $row
     # No filename sanitizer here any more, and none is needed: `$sessionId` is a
     # digest the shell already proved matches `^[0-9a-f]{64}$`, which contains no
@@ -341,6 +467,7 @@ output="$(
     --arg sessionIdHash "${session_id_hash}" \
     --arg cwdHash "${cwd_hash}" \
     --arg transcriptPathHash "${transcript_path_hash}" \
+    --arg surfaceHash "${surface_hash}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
 )" || exit 0
 
