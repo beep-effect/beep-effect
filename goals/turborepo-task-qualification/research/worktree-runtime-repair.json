@@ -1,0 +1,42 @@
+{
+  "authority": "attributed-test-runtime-repair-with-focused-coverage",
+  "headBeforeRepair": "625acfe606b36d4fb6a7a227abf4236a5de8618f",
+  "mainInspected": "5488de57c7b68667f0d31f4d2f0a4b0af4b38ae4",
+  "source": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+  "attribution": "Inherited test assumption is present unchanged on origin/main. Node-based Vitest process.execPath launches the Bun-only CLI under Node.",
+  "failure": {
+    "suite": "worktree-fleet.test.ts",
+    "error": "ReferenceError: Bun is not defined",
+    "passedTestsInCoverageRun": 4668,
+    "failedTestsInCoverageRun": 1
+  },
+  "repair": "Resolve Bun from the ambient PATH before adding the fixture executable directory to the child PATH; retain the fixture Bun stub for nested install.",
+  "validation": [
+    {
+      "command": "vitest run --config vitest.config.ts test/worktree-fleet.test.ts",
+      "passed": 36,
+      "exit": 0
+    },
+    {
+      "command": "vitest run --config vitest.config.ts --coverage test/worktree-fleet.test.ts",
+      "passed": 36,
+      "exit": 0
+    },
+    {
+      "command": "bun run beep quality package-verify @beep/repo-cli --quick",
+      "lint": "passed",
+      "check": "passed",
+      "exit": 0
+    }
+  ],
+  "limits": [
+    "Focused coverage is not repository coverage or full proof.",
+    "No cache tuple or signed remote comparison is qualified."
+  ],
+  "retention": {
+    "fileCount": 5,
+    "archiveManifestSha256": "748d4f81d420a6870c9e593e376073ef4646c557aff56bb1ab5959d1e5878f9e"
+  },
+  "headAfterRepair": "16a4352daa3e5afd6a60c9176d831f89d2900710",
+  "repairedSourceSha256": "a711d085a694bec6c0a6677353728d708f261eb01951a46249e6d2c1e3a70069"
+}

@@ -1,0 +1,276 @@
+{
+  "authority": "source-diff-review-only",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "reviewRevision": "7468d15b178bbd19a22917e1783e5acfd410c317",
+  "historicalChangedPopulation": 133,
+  "reviewedDirectDeltas": 48,
+  "groups": {
+    "compilerLibrarySelection": 20,
+    "compilerProjectReferences": 10,
+    "compilerDiagnosticsAndAmbientTypes": 2,
+    "packageManifests": 16
+  },
+  "findings": [
+    "All 16 reviewed manifests preserve their script blocks. Changes affect dependencies, patches, export routes or descriptive metadata.",
+    "TypeScript config deltas affect declaration selection, project-reference dependencies or compiler diagnostics; no transitive/runtime equivalence is inferred.",
+    "19 of the historical 133 files changed again after the drift checkpoint. Their current hashes are retained; historical hash matches cannot substitute for current review."
+  ],
+  "sources": [
+    {
+      "path": "packages/agents/client/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4",
+      "baselineSha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "path": "packages/agents/tables/tsconfig.check.json",
+      "sha256": "a7695c4011a067f21396015d3f9003a0ce026f117fce27ce76b67d9006be055a",
+      "baselineSha256": "6745f633f29d4a057ab7cf7dae2e15f306086b537867fef98545e6a1c75dee44"
+    },
+    {
+      "path": "packages/agents/tables/tsconfig.json",
+      "sha256": "006f099bc45d0c918148c01ad181c0f503128e0b9e8e5a22755dccc26bf80985",
+      "baselineSha256": "223461d1793f3adb4628d83d53d8ee6549d93ee122463d6349f098fb735ee7f8"
+    },
+    {
+      "path": "packages/documents/tables/tsconfig.check.json",
+      "sha256": "02a271b42de586e79d6cb59a3c817199704ae310dc55f7e5bb3583894f4a46df",
+      "baselineSha256": "549276259b931121a4f1771279f6a3eae626483b455633a6212bb94d2f7a8698"
+    },
+    {
+      "path": "packages/documents/tables/tsconfig.json",
+      "sha256": "ccf623c0501b1e4fd60be8e47ec39ae0014de3a66473a72758da5aeb3de8474d",
+      "baselineSha256": "998fbd0d29798d57b4be8532afa930c5be73992c46594fcfa460ad8914037836"
+    },
+    {
+      "path": "packages/drivers/cosmos/tsconfig.json",
+      "sha256": "1128d023edc016a68b5e83d9e4729c30c3e2e8984b8119044a8320535c0c811b",
+      "baselineSha256": "39352b0b3bc9d8e64e4ec60a3971f2b8ff0667fcd453a2dcfeb84c7a9e4bc571"
+    },
+    {
+      "path": "packages/drivers/cosmos/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4",
+      "baselineSha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "path": "packages/drivers/graph-3d/tsconfig.json",
+      "sha256": "1128d023edc016a68b5e83d9e4729c30c3e2e8984b8119044a8320535c0c811b",
+      "baselineSha256": "39352b0b3bc9d8e64e4ec60a3971f2b8ff0667fcd453a2dcfeb84c7a9e4bc571"
+    },
+    {
+      "path": "packages/drivers/graph-3d/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4",
+      "baselineSha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "path": "packages/ecosystem/effect-drizzle/tsconfig.json",
+      "sha256": "90d63645b2662b64438c5c30a45b2abe32d858b3e4e30285a6affe038f1cd6b5",
+      "baselineSha256": "fa75f27095a6b215f469e22383612c8c7c0cc4dc67df64078844c86db5e4b2c8"
+    },
+    {
+      "path": "packages/ecosystem/effect-drizzle/tsconfig.test.json",
+      "sha256": "c5ef5a9c5c66a3d649cb2b5a5661614e91a86ab92e34b0fdf1f4f5bda1461c86",
+      "baselineSha256": "e148e7a1e4cfdf3bd65ace13a42639ffb4a0c30b9d2b1c12e265cca8f28b8814"
+    },
+    {
+      "path": "packages/epistemic/client/tsconfig.json",
+      "sha256": "1a96f21d355c54d166423c0597ce6df65edc1ee60dc0df3ef8572ac4bb215eed",
+      "baselineSha256": "b8472a16d494b6bc9825bc7f3ea829f61dd09ddfeeed3407441aa27ebdd91cbc"
+    },
+    {
+      "path": "packages/epistemic/client/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4",
+      "baselineSha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "path": "packages/epistemic/ui/tsconfig.json",
+      "sha256": "952773f53cd20060846be4bf073da85a8da8f2774a5eaf38e071e03f63c5da39",
+      "baselineSha256": "a2cb60c71d16785a63546fa74a065981e670bc50e6e9559b27511fe9fadf682e"
+    },
+    {
+      "path": "packages/epistemic/ui/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4",
+      "baselineSha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/tsconfig.check.json",
+      "sha256": "e6ae8bf3fa10408e072fa153355231da16350d5bafaaca4fa50e9d32d3728463",
+      "baselineSha256": "0e9fa9d810e2d285cca004d701245377725987584c724977b2830015788961cf"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/tsconfig.json",
+      "sha256": "091ecfd0812379700335605a0f17169fea0d4e51a15fbf7132d869a12d1fcbdd",
+      "baselineSha256": "153b16cb72ac2e4c3952f7d41ed3e9fd5c9d577060778610f94af7dd93807adf"
+    },
+    {
+      "path": "packages/foundation/ui-system/brand/tsconfig.test.json",
+      "sha256": "4bc8b995312e83e4b24e609fe386a5d828824fb6e44122c0f2e93a24db0f4d38",
+      "baselineSha256": "e1e88b9d353e587cf5314e67953e68a3f453e885b2b9b782f5b832c43863b6c9"
+    },
+    {
+      "path": "packages/foundation/ui-system/dock-react/tsconfig.json",
+      "sha256": "263b0736d1e5dee138a8be898d54ac3ac80f54d78a94175ba6bfb75a2036103c",
+      "baselineSha256": "dbf3ca36b6ff9dd64fc46d067640fe667a7eddb3fa3da3df0c53834f3c09e17e"
+    },
+    {
+      "path": "packages/foundation/ui-system/dock-react/tsconfig.test.json",
+      "sha256": "24fc16aa174d3b55f2a9d6189724bc5ccdd375bb6d3b546852619c547553deb7",
+      "baselineSha256": "7effabb63acc2851a3ad260446d2d931c2c2be2aadd433163fff830b181c6ca1"
+    },
+    {
+      "path": "packages/foundation/ui-system/editor/tsconfig.json",
+      "sha256": "75cda83a8deb0b2f715d39d46efb4dee42805d571eb3c5bb79e68c01dcac8822",
+      "baselineSha256": "7a4035c7ff2aa4d4369b6319578f2f3d64f0e3568119059dcadbbb112546145f"
+    },
+    {
+      "path": "packages/foundation/ui-system/editor/tsconfig.test.json",
+      "sha256": "24fc16aa174d3b55f2a9d6189724bc5ccdd375bb6d3b546852619c547553deb7",
+      "baselineSha256": "7effabb63acc2851a3ad260446d2d931c2c2be2aadd433163fff830b181c6ca1"
+    },
+    {
+      "path": "packages/foundation/ui-system/ui/tsconfig.json",
+      "sha256": "e091cf7a60ccfc1d6219c04120d63abbe90c5e996e9b3fd46b3c9b2515558263",
+      "baselineSha256": "ad06e0192fbd191acf136024e3cc039c8869c29bc22c39a308d8fa2e0dba09dc"
+    },
+    {
+      "path": "packages/foundation/ui-system/ui/tsconfig.test.json",
+      "sha256": "52684668d2f9ed22b8e78fa9a438f51bcb321dcc355a82c03c5d3031ff37dcbd",
+      "baselineSha256": "45b1ae24bc2117f43df56366527b8dfabf7553a70af4a885f449a154b45d59eb"
+    },
+    {
+      "path": "packages/ontology/client/tsconfig.json",
+      "sha256": "e71d5c37a61dfe840fb0d7c3b9a5258598a1682e45aa4472eb9ec9045961ef8c",
+      "baselineSha256": "39c36eeeadecead249bbfa4ea01c00c5cf28550fb7a21f03eb9cca3443d7ee44"
+    },
+    {
+      "path": "packages/ontology/client/tsconfig.test.json",
+      "sha256": "a629c97631d4c876cbd2437877918ed4d56e98ce9bd81fda6144f2a5302f3992",
+      "baselineSha256": "7a99f829997a30ce8999ae332340bbb352dc77018e0b813201caa47408444ec1"
+    },
+    {
+      "path": "packages/ontology/ui/tsconfig.json",
+      "sha256": "916b748bf2f377b631a81100026fd78703f4723d334c7ba107bf80a76f16cf16",
+      "baselineSha256": "e76e514c2a9d7cd8f0addf3e213e3e41a67aff97bb2667a11cb189a1b0f9a11d"
+    },
+    {
+      "path": "packages/ontology/ui/tsconfig.test.json",
+      "sha256": "25d1dd69a49ad29a442a389f95e253054686173ed30a46833fdbccbac8b9efb7",
+      "baselineSha256": "d83c53808ad9e9c827ee0239fe56a4b43bdc190d2658ae9e627038949e9a71fd"
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/tsconfig.check.json",
+      "sha256": "f7f747930718a172e96e10054587b3dbc49aada721a215f59d76a523dee7a692",
+      "baselineSha256": "665c87c0176054da72a717665dde3a040637ec7fa312e4ca358ba401bb3bdec0"
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/tsconfig.json",
+      "sha256": "6fb75e01a3abdc230954779060a79d47ae960c3990c656741eb0342d90774aa2",
+      "baselineSha256": "020bb2ce930ec18e9d3f40c199d2ebd0fb42fcb03ddb84fe4f13efb328b1eac0"
+    },
+    {
+      "path": "packages/workspace/tables/tsconfig.check.json",
+      "sha256": "5de6575921b7d500c853c6dbd8834d31e23863f6f09232fd10b58be84b011f61",
+      "baselineSha256": "30ba2344c5312fa12d6b0a89d80ca65b65b7b5e0bf474eae7b1c362c058ac39e"
+    },
+    {
+      "path": "packages/workspace/tables/tsconfig.json",
+      "sha256": "154be9db99f12f0e02ed29e5a50af23de7557561f315ceec5064c9eaa0fcaa13",
+      "baselineSha256": "607315de2a0243a0b0679367446c416b5da3a268c9767723a670982d59032824"
+    },
+    {
+      "path": "apps/oip-web/package.json",
+      "sha256": "754d51cb30c81e860229aabc5b7d348b065f4877c61cc9cee18e95e54776c4ed",
+      "baselineSha256": "e65a7f7487a007063ac5e4671cc53ecd3769f1865527f72c4fb5d758ca80aa2c"
+    },
+    {
+      "path": "infra/package.json",
+      "sha256": "4b1450430e021d4d7c0173733550a269d5fc54ccdf02407999d1009c98fbea49",
+      "baselineSha256": "2ca6779fadfe1c60464b3539900d3c2a64d0495d7c0a519b6dbbb1f36ab32058"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a786b5b77f17f786f5988ccade2d48c49d0c8f8f46d332a8b5f4c8e441a5951f",
+      "baselineSha256": "f8e3b4f7258c12ec8353d813912c5fc17a769bb3ebca569749fa1d680cc5c062"
+    },
+    {
+      "path": "packages/agents/tables/package.json",
+      "sha256": "dd4bf010fa4323f504aafbfa4804ee8076c30811864239d5a9ab540a067ed16f",
+      "baselineSha256": "13077c873aa85bf328aa6ed3e3251f7ae0de447de1aca246c96cc4b7fad7e7e5"
+    },
+    {
+      "path": "packages/documents/tables/package.json",
+      "sha256": "b1c7ca12224a33981b2190a3530514ca310db64718091cf5b4f443081910e332",
+      "baselineSha256": "6efc38f406b2dfa24170e5c4c4d0a9a27ddab1f199ccc37a7ebb1919048bc9a3"
+    },
+    {
+      "path": "packages/drivers/box-provisioning/package.json",
+      "sha256": "5e0786e9e039efdeb0ad6619beb6e62577fdbb2ecc819cc76c05d5600fb126f9",
+      "baselineSha256": "59ce2d6fabbbd793f75ed797d3d7db52f206dbf9909056b5b553c6666d8901e2"
+    },
+    {
+      "path": "packages/drivers/box/package.json",
+      "sha256": "a81e3b63b04c5edfca77bc3bfb9214791ea2aa388940fd6eae721a1f916b289b",
+      "baselineSha256": "c327ba2b826e2118205de5639a4adfb8cc7c1c30a2ed6224ec1836ae0e072a72"
+    },
+    {
+      "path": "packages/drivers/face-detection/package.json",
+      "sha256": "dc2b3836e0bf424d9ec3043480b9b2b55003650a6e56da21548be593abd08f50",
+      "baselineSha256": "feae0f1bc2491143005b32b281a97583768ce8e41c5cfe8e65b3c0a38acd2057"
+    },
+    {
+      "path": "packages/drivers/gov-legal-mcp/package.json",
+      "sha256": "ff44f168f06e6f7ceb9cb4afbef99579f9fc4070641fa9f99eb27862d5f308a5",
+      "baselineSha256": "080ee5a9d6fc60b6ee64a1db7fc37d9a73464c0821b0676a48a03c729c383f50"
+    },
+    {
+      "path": "packages/drivers/obs/package.json",
+      "sha256": "a97f8209b5b36b54404ba62a2985ec560237e482194b67ca0e3572fe6bbe0d01",
+      "baselineSha256": "cc37f346a79fc2861749bae84aadd4d8378008e177dea1e631379721b0475b69"
+    },
+    {
+      "path": "packages/drivers/openclaw/package.json",
+      "sha256": "20c2d671becf375ffaab9acaa29eab66e2318e1f42d48946a4201d0c75868f3e",
+      "baselineSha256": "a4c17df04acf2a3213f745bc39c29ec9c7632fbac3f346b70fdc5dceb3c2db5f"
+    },
+    {
+      "path": "packages/foundation/capability/mcp-kit/package.json",
+      "sha256": "5f4da5f738997f01c58cc8b5ced869423ebdb974e5e33e51b5eee65991e9586b",
+      "baselineSha256": "4b8c3ee6ffa94f2edcf814e05ee407c3f933b3e80a93d807be4f6ebad6fecd01"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/package.json",
+      "sha256": "46a43fbeb72f2a35f36ad79d2cf87f8fbd34418b9efa33b63e316760ffb2ecf5",
+      "baselineSha256": "84b36e74eb554f2c7faf39b6291d5f85f3aa8e487401f4ee25f5f478ffed9925"
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/package.json",
+      "sha256": "3ba54e343b18c8be2a6e8f6874ed2249335414cdd67c2a5cc54f31385c3b7269",
+      "baselineSha256": "1b781e1c7ebeec3d4ef86024939c2a9ee538ab1242b6364a30211919c08fa9a0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/package.json",
+      "sha256": "ba4232534d6e5f0616dffc1574549a2b2655e6509ee2112ae4c9f00a00581847",
+      "baselineSha256": "917dc5e460d2a61b7a9acdc969bb851e475fd4f74015b43a81ad40a111ee60f1"
+    },
+    {
+      "path": "packages/workspace/tables/package.json",
+      "sha256": "fa344cda07977db57562e0caf38b80a6c525cf6849c98efc67600a891a033e07",
+      "baselineSha256": "1378de76692b4f46f7f745a910b0a1b1cfb6ecbd1290b73c69047db585e4a7d5"
+    }
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 25,
+    "unresolved": 13,
+    "sha256": "60cf2e21088c15fb12e29ceede5cad9ef0e68bfdce0f3c01520d9ae36540a863"
+  },
+  "retention": {
+    "files": 57,
+    "archiveManifestSha256": "1e0462d24d837ced2a8ad932dcaaa5b69af6f5cd2bed9461ba82efbfe7612389"
+  },
+  "remaining": [
+    "The other 85 members of the historical population are outside this direct-delta review; some have separate scoped evidence that must be evaluated individually.",
+    "All 13 broad attachment obligations are retained; this batch does not establish transitive semantic closure, runtime proof or signed replay.",
+    "No computation is qualified."
+  ]
+}

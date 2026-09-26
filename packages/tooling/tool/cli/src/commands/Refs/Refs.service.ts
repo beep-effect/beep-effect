@@ -573,8 +573,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
  * Layer.isLayer(referenceWorkspaceLayer("/checkout")) // => true
  * ```
  *
- * @param owner - Absolute path of the checkout that owns scripts/references.json.
- * @returns The reference workspace layer bound to that checkout.
+ * @param owner - Checkout containing the reference manifest used by these operations.
+ * @returns A layer providing reference operations for the supplied checkout.
  * @category layers
  * @since 0.0.0
  */

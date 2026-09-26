@@ -1,0 +1,333 @@
+{
+  "authority": "compiled-output-static-review-delta",
+  "head": "b88102f8ed9a46d02b4ed532a2e2283f96edb6e1",
+  "historicalReceiptSha256": "73c0834dcab037cd799ab01768fc927ff51a3d7cf6c9700566aebb7adb6b33bd",
+  "sources": [
+    {
+      "path": "node_modules/@babel/cli/package.json",
+      "sha256": "e556943685a4d97266de91a20d29d6adb0765972224559ebb5a54ef8041e9199"
+    },
+    {
+      "path": "node_modules/@babel/cli/lib/babel/index.js",
+      "sha256": "d1e226978c56036093bb25390d859f58814910dbe95f11335fae65b974d13b35"
+    },
+    {
+      "path": "node_modules/babel-plugin-annotate-pure-calls/package.json",
+      "sha256": "b98772906da75909fbe1cbfaf0c73f25b30e89ce4081564819d619b966df1e8a"
+    },
+    {
+      "path": "node_modules/babel-plugin-annotate-pure-calls/dist/babel-plugin-annotate-pure-calls.cjs.js",
+      "sha256": "7f974040a9aa75f4bca63b3b3945c6077a5d3d12f6e3dec17a382ea9fed7a649"
+    }
+  ],
+  "unchangedCommandDefinitions": [
+    "@beep/acp#babel",
+    "@beep/agents-client#babel",
+    "@beep/agents-server#babel",
+    "@beep/agents-tables#babel",
+    "@beep/ai-provider-cli#babel",
+    "@beep/ai-sync#babel",
+    "@beep/anthropic#babel",
+    "@beep/api-transport#babel",
+    "@beep/architecture-lab-client#babel",
+    "@beep/architecture-lab-config#babel",
+    "@beep/architecture-lab-domain#babel",
+    "@beep/architecture-lab-proof#babel",
+    "@beep/architecture-lab-server#babel",
+    "@beep/architecture-lab-tables#babel",
+    "@beep/architecture-lab-ui#babel",
+    "@beep/architecture-lab-use-cases#babel",
+    "@beep/box-provisioning#babel",
+    "@beep/brand#babel",
+    "@beep/chalk#babel",
+    "@beep/codegen-kit#babel",
+    "@beep/colors#babel",
+    "@beep/cosmos#babel",
+    "@beep/db-admin#babel",
+    "@beep/discord#babel",
+    "@beep/doc-text#babel",
+    "@beep/dock#babel",
+    "@beep/dock-react#babel",
+    "@beep/documents-domain#babel",
+    "@beep/documents-server#babel",
+    "@beep/documents-tables#babel",
+    "@beep/documents-use-cases#babel",
+    "@beep/drizzle#babel",
+    "@beep/duckdb#babel",
+    "@beep/ecfr#babel",
+    "@beep/effect-drizzle#babel",
+    "@beep/epistemic-client#babel",
+    "@beep/epistemic-config#babel",
+    "@beep/epistemic-tables#babel",
+    "@beep/epistemic-ui#babel",
+    "@beep/exiftool#babel",
+    "@beep/face-detection#babel",
+    "@beep/fc-runs#babel",
+    "@beep/ffmpeg#babel",
+    "@beep/file-processing#babel",
+    "@beep/firecrawl#babel",
+    "@beep/freshbooks#babel",
+    "@beep/gov-legal-mcp#babel",
+    "@beep/govinfo#babel",
+    "@beep/graph-3d#babel",
+    "@beep/html#babel",
+    "@beep/hubspot#babel",
+    "@beep/identity#babel",
+    "@beep/langextract#babel",
+    "@beep/law-practice-tables#babel",
+    "@beep/lexical-schema#babel",
+    "@beep/libpff#babel",
+    "@beep/m365#babel",
+    "@beep/m365-mcp#babel",
+    "@beep/mcp-kit#babel",
+    "@beep/md#babel",
+    "@beep/n3#babel",
+    "@beep/nlp#babel",
+    "@beep/nlp-mcp#babel",
+    "@beep/nlp-processing#babel",
+    "@beep/obs#babel",
+    "@beep/observability#babel",
+    "@beep/onepassword-cli#babel",
+    "@beep/ontology#babel",
+    "@beep/ontology-client#babel",
+    "@beep/ontology-config#babel",
+    "@beep/ontology-domain#babel",
+    "@beep/ontology-server#babel",
+    "@beep/ontology-ui#babel",
+    "@beep/ontology-use-cases#babel",
+    "@beep/openai#babel",
+    "@beep/openai-compat#babel",
+    "@beep/openclaw#babel",
+    "@beep/oxigraph#babel",
+    "@beep/pacer#babel",
+    "@beep/pandoc-ast#babel",
+    "@beep/pglite#babel",
+    "@beep/phoenix#babel",
+    "@beep/postgres#babel",
+    "@beep/pretext#babel",
+    "@beep/provenance#babel",
+    "@beep/qa-capture#babel",
+    "@beep/rdf#babel",
+    "@beep/rdf-canonize#babel",
+    "@beep/repo-ai-metrics#babel",
+    "@beep/repo-cli#babel",
+    "@beep/repo-configs#babel",
+    "@beep/repo-docgen#babel",
+    "@beep/repo-utils#babel",
+    "@beep/runpod#babel",
+    "@beep/sanity#babel",
+    "@beep/schema#babel",
+    "@beep/semantic-web#babel",
+    "@beep/shacl#babel",
+    "@beep/shared-domain#babel",
+    "@beep/shared-tables#babel",
+    "@beep/shared-use-cases#babel",
+    "@beep/skill-contract#babel",
+    "@beep/tailscale#babel",
+    "@beep/test-utils#babel",
+    "@beep/tika#babel",
+    "@beep/types#babel",
+    "@beep/uspto#babel",
+    "@beep/uspto-mcp#babel",
+    "@beep/utils#babel",
+    "@beep/venice-ai#babel",
+    "@beep/wink#babel",
+    "@beep/workspace-server#babel",
+    "@beep/workspace-tables#babel",
+    "@beep/workspace-use-cases#babel",
+    "@beep/xai#babel",
+    "@beep/box#babel",
+    "@beep/data#babel"
+  ],
+  "manifestDeltas": [
+    {
+      "path": "packages/agents/tables/package.json",
+      "changedFields": [
+        "dependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/tooling/library/ai-sync/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/box-provisioning/package.json",
+      "changedFields": [
+        "dependencies",
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/foundation/capability/colors/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/cosmos/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/documents/tables/package.json",
+      "changedFields": [
+        "dependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/face-detection/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/gov-legal-mcp/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/foundation/modeling/identity/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/foundation/capability/mcp-kit/package.json",
+      "changedFields": [
+        "description",
+        "exports",
+        "publishConfig"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/obs/package.json",
+      "changedFields": [
+        "dependencies",
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/ontology/config/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/openclaw/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/pglite/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/tooling/tool/cli/package.json",
+      "changedFields": [
+        "devDependencies",
+        "exports",
+        "publishConfig"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/foundation/modeling/schema/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/tailscale/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/package.json",
+      "changedFields": [
+        "dependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/foundation/modeling/utils/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/workspace/tables/package.json",
+      "changedFields": [
+        "dependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/drivers/box/package.json",
+      "changedFields": [
+        "dependencies"
+      ],
+      "changedScripts": {}
+    },
+    {
+      "path": "packages/foundation/primitive/data/package.json",
+      "changedFields": [
+        "devDependencies"
+      ],
+      "changedScripts": {}
+    }
+  ],
+  "retainedStaticObservations": [
+    "117 sites use two command variants, both reading dist and writing --out-dir dist with --source-maps; two sites additionally specify --compact false.",
+    "Installed Babel CLI is 8.0.6; installed annotate-pure-calls plugin is 0.5.0. Full transitive tool identity remains separate.",
+    "Directory runner sorts discovered files, tests compilable extensions, invokes transformFileAsync and writes source maps then transformed code. Writes happen per file; this loop has no rollback of earlier outputs when a later transformation throws.",
+    "Default success log contains process.hrtime-derived milliseconds and compiled-file count. These commands do not request --quiet. Unnormalized terminal logs therefore have a clock-dependent field.",
+    "Plugin visits CallExpression/NewExpression and conditionally adds leading PURE comments using AST context. Annotation is a transform, not runtime proof of expression purity.",
+    "The commands do not request --delete-dir-on-start, --copy-files or watch mode; this describes argv, not every possible config effect."
+  ],
+  "limits": [
+    "117 recorded Babel command definitions remain unchanged; 23 changed manifests have no scripts-field delta.",
+    "Only four installed CLI/plugin source/package files are hash-matched here; full transitive tool identity is not proven.",
+    "Dependency/export changes can affect preceding compiler output and module resolution, so command equality is not compiled-output equivalence.",
+    "No transformation or cache replay executed; clock-dependent CLI logs and in-place writes remain unresolved runtime concerns.",
+    "No qualification, lifecycle, cache policy or runtime evidence renewal."
+  ],
+  "acceptedAttachment": {
+    "sources": 1002,
+    "artifacts": 6,
+    "reviews": 45,
+    "unresolved": 14
+  },
+  "attachmentLimitation": "Tool identities are retained in this review only; no installed Babel source bindings were accepted because the existing path schema rejects scoped npm paths."
+}

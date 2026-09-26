@@ -13,13 +13,12 @@ import {
   rankContestedPaths,
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
-import { provideScopedLayer } from "@beep/test-utils";
-import { A, O, Str } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Config, Effect, FileSystem, Path, Stream } from "effect";
-import { constFalse } from "effect/Function";
+import { Config, Effect, Stream } from "effect";
+import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
-import { fixture, testPlatform, writeExecutable } from "./refs-test-utils.ts";
+import { fixture, ReferenceFixture, referenceFixtureLayer, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
 const FRESH_SECONDS = 30;
 const STALE_SECONDS = FLEET_LIVENESS_WINDOW_SECONDS * 2;
@@ -343,60 +342,53 @@ describe("contestedSwampingNotes", () => {
 
 // The same step runWorktreeNew invokes immediately after copyLocalFiles.
 describe("worktree reference linking", () => {
-  it.effect(
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
     "links and repairs every manifest member plus the workspace",
-    Effect.fnUntraced(function* () {
-      const f = yield* fixture();
-      const target = f.path.join(f.temp, "new-worktree");
-      yield* f.fs.makeDirectory(target);
-      const lines = yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config));
-      expect(lines).toHaveLength(3);
-      for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
-        const link = f.path.join(target, ".repos", name);
-        expect(yield* f.fs.readLink(link)).toBe(name === "effect-workspace" ? f.root : f.path.join(f.root, name));
-        yield* f.fs.remove(link);
-        yield* f.fs.symlink(f.path.join(f.temp, "missing"), link);
-      }
-      expect(yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config))).toEqual(lines);
-      const collision = f.path.join(target, ".repos/effect");
-      yield* f.fs.remove(collision);
-      yield* f.fs.makeDirectory(collision);
-      yield* f.fs.writeFileString(f.path.join(collision, "keep"), "preserve");
-      const preserved = yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config));
-      expect(preserved[0]).toContain("warning:");
-      expect(yield* f.fs.readFileString(f.path.join(collision, "keep"))).toBe("preserve");
-    }, testPlatform)
+    (it) => {
+      it.effect(
+        "links and repairs every manifest member plus the workspace",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          const target = f.path.join(f.temp, "new-worktree");
+          yield* f.fs.makeDirectory(target);
+          const lines = yield* linkReferences(f.owner, target);
+          expect(lines).toHaveLength(3);
+          for (const name of ["effect", "effect-tsgo", "effect-workspace"]) {
+            const link = f.path.join(target, ".repos", name);
+            expect(yield* f.fs.readLink(link)).toBe(name === "effect-workspace" ? f.root : f.path.join(f.root, name));
+            yield* f.fs.remove(link);
+            yield* f.fs.symlink(f.path.join(f.temp, "missing"), link);
+          }
+          expect(yield* linkReferences(f.owner, target)).toEqual(lines);
+          const collision = f.path.join(target, ".repos/effect");
+          yield* f.fs.remove(collision);
+          yield* f.fs.makeDirectory(collision);
+          yield* f.fs.writeFileString(f.path.join(collision, "keep"), "preserve");
+          const preserved = yield* linkReferences(f.owner, target);
+          expect(preserved[0]).toContain("warning:");
+          expect(yield* f.fs.readFileString(f.path.join(collision, "keep"))).toBe("preserve");
+        })
+      );
+    }
   );
 
-  it.effect(
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
     "returns a warning without failing creation when the reference root is missing",
-    Effect.fnUntraced(function* () {
-      const f = yield* fixture();
-      yield* f.fs.remove(f.root, { recursive: true });
-      const target = f.path.join(f.temp, "new-worktree");
-      yield* f.fs.makeDirectory(target);
-      const lines = yield* linkReferences(f.owner, target).pipe(provideScopedLayer(f.config));
-      expect(lines[0]).toContain("warning: Reference root is missing");
-      expect(yield* f.fs.exists(f.path.join(target, ".repos"))).toBe(false);
-    }, testPlatform)
+    (it) => {
+      it.effect(
+        "returns a warning without failing creation when the reference root is missing",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          yield* f.fs.remove(f.root, { recursive: true });
+          const target = f.path.join(f.temp, "new-worktree");
+          yield* f.fs.makeDirectory(target);
+          const lines = yield* linkReferences(f.owner, target);
+          expect(lines[0]).toContain("warning: Reference root is missing");
+          expect(yield* f.fs.exists(f.path.join(target, ".repos"))).toBe(false);
+        })
+      );
+    }
   );
-});
-
-// `src/bin.ts` is a Bun-only entry point, so the CLI child must run under Bun
-// even when the suite runs on Node. `process.versions.bun` is the runtime
-// probe because vitest.setup.ts installs a `Bun` global shim under Node. The
-// real executable comes from the ambient PATH (POSIX `:`-separated, like the
-// child PATH below), never the fixture bin whose `bun` stub no-ops the nested
-// install.
-const resolveBunExecutable = Effect.fn("WorktreeFleetTest.resolveBunExecutable")(function* (ambientPath: string) {
-  if (process.versions.bun !== undefined) return process.execPath;
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const found = yield* Effect.findFirst(
-    A.map(A.filter(Str.split(ambientPath, ":"), Str.isNonEmpty), (directory) => path.join(directory, "bun")),
-    (candidate) => fs.exists(candidate).pipe(Effect.orElseSucceed(constFalse))
-  );
-  return yield* Effect.fromOption(found, () => `no bun executable on the ambient PATH: ${ambientPath}`);
 });
 
 it.effect(
@@ -419,7 +411,41 @@ esac
     yield* writeExecutable(f.path.join(f.bin, "bun"), "#!/bin/sh\nexit 0\n");
     const cli = yield* f.path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
     const ambientPath = yield* Config.String("PATH");
-    const bun = yield* resolveBunExecutable(ambientPath);
+    // Real Bun must be on ambient PATH even when Vitest runs under Node.
+    // Resolve and verify it before the fixture shadows the bun command.
+    const runtime = yield* ChildProcess.make("bun", ["-p", "process.execPath"], {
+      env: { PATH: ambientPath },
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [resolveExitCode, resolveStdout, resolveStderr] = yield* Effect.all(
+      [
+        runtime.exitCode,
+        runtime.stdout.pipe(Stream.decodeText(), Stream.mkString),
+        runtime.stderr.pipe(Stream.decodeText(), Stream.mkString),
+      ],
+      { concurrency: "unbounded" }
+    );
+    expect(resolveExitCode, resolveStderr).toBe(0);
+    const bun = Str.trim(resolveStdout);
+    expect(bun).not.toBe("");
+    const probe = yield* ChildProcess.make(bun, ["-p", "typeof Bun"], {
+      env: { PATH: ambientPath },
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [probeExitCode, probeStdout, probeStderr] = yield* Effect.all(
+      [
+        probe.exitCode,
+        probe.stdout.pipe(Stream.decodeText(), Stream.mkString),
+        probe.stderr.pipe(Stream.decodeText(), Stream.mkString),
+      ],
+      { concurrency: "unbounded" }
+    );
+    expect(probeExitCode, probeStderr).toBe(0);
+    expect(Str.trim(probeStdout)).toBe("object");
     const handle = yield* ChildProcess.make(bun, [cli, "worktree", "new", "topic"], {
       cwd: f.owner,
       env: { HOME: f.home, PATH: `${f.bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: f.root },

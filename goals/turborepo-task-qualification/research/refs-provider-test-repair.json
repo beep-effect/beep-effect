@@ -1,0 +1,49 @@
+{
+  "authority": "isolated-reference-fixture-provider-repair",
+  "baseHead": "92ab5c3f5fe4bc6a991093605ece8d2cd39a3cd5",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/test/refs-test-utils.ts",
+      "sha256": "9f6e5c896f9da3c21ebab9a40a53a3b1491f8e5fad97abb43362537d4dd674da"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "sha256": "4d5306e2c62da88a8357594ce29ec845cc9d04cb65afe9596916acf0313b5a80"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "sha256": "f2dcf98cfc978b574d235c891f4cd501e1b5ac64ee6bf4490d1516231f9ddb4b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "sha256": "757f68ff5bfc02e0ac504ded481fe6ffe99b408af365be64060b4440c1f45aab"
+    }
+  ],
+  "changes": [
+    "Ten separate one-test layer registrations replace sixteen per-operation service/config provisions. Each registration uses a fresh default layer memo map, fixture root and configuration.",
+    "ReferenceFixture exposes existing fixture state; referenceFixtureLayer acquires the temporary directory, ConfigProvider and reference service within the registration lifetime.",
+    "Existing test bodies retain operations, fixture stub commands, warnings, failure checks and expected values. Property tests and the separate real-Bun worktree-new test retain their existing registration."
+  ],
+  "validation": {
+    "tests": 47,
+    "testFiles": 3,
+    "biome": "passed",
+    "effectVitest": {
+      "introduced": 0,
+      "resolved": 8,
+      "exit": 0
+    },
+    "packageQuick": "lint 3.5s, check 6.2s; exit 0",
+    "canonicalTestTypecheck": "package-test-typecheck launched; completion pending",
+    "fullPackageVerify": "Original full package verification session remains live; completion pending"
+  },
+  "limits": [
+    "Stateless platform services may be shared within one registration, but no mutable fixture is shared across tests.",
+    "Direct test tsconfig invocation failed inherited rootDir configuration; canonical package command is the required typecheck evidence.",
+    "Full package and exact-head hosted proof remain incomplete. No inventory baseline or exception changed."
+  ],
+  "retention": {
+    "fileCount": 7,
+    "archiveManifestSha256": "20d449e05dfca822adfdfcc7fdef8c97b9faec4986fdf56fce41a020503a8955"
+  }
+}
