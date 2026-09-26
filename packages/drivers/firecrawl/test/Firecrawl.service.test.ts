@@ -1,6 +1,8 @@
 import * as F from "@beep/firecrawl";
 import { fcRuns } from "@beep/test-utils";
+import { thunkTrue } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -204,7 +206,7 @@ describe("@beep/firecrawl", () => {
       const payload = yield* decodeFFirecrawlScrapePayload({ url: "https://example.com" });
 
       expect(payload.url).toBe("https://example.com");
-      expect(O.isNone(payload.options)).toBe(true);
+      assertNone(payload.options);
     })
   );
 
@@ -221,9 +223,9 @@ describe("@beep/firecrawl", () => {
       const encoded = yield* encodeFFirecrawlConfigInput(config);
 
       expect(config.apiUrl).toBe("https://api.firecrawl.dev");
-      expect(config.backoffFactor).toEqual(O.some(2));
-      expect(config.maxRetries).toEqual(O.some(3));
-      expect(config.timeoutMs).toEqual(O.some(1_000));
+      assertSome(config.backoffFactor, 2);
+      assertSome(config.maxRetries, 3);
+      assertSome(config.timeoutMs, 1_000);
       expect(encoded).toEqual({
         apiKey: "fc-test-key",
         apiUrl: "https://api.firecrawl.dev",
@@ -244,14 +246,14 @@ describe("@beep/firecrawl", () => {
       });
       const encoded = yield* encodeFFirecrawlApiFailure(failure);
 
-      expect(failure.status).toEqual(O.some(429));
+      assertSome(failure.status, 429);
       expect(encoded).toEqual({
         error: "Unauthorized",
         status: 429,
         success: false,
       });
-      expect(F.FirecrawlError.fromReason("transport", { status: -1 }).status).toEqual(O.none());
-      expect(O.isSome(decodeWatcherEventOption({ error: "watcher error", type: "error" }))).toBe(true);
+      assertNone(F.FirecrawlError.fromReason("transport", { status: -1 }).status);
+      assertSome(O.map(decodeWatcherEventOption({ error: "watcher error", type: "error" }), thunkTrue), true);
     })
   );
 
@@ -301,12 +303,12 @@ describe("@beep/firecrawl", () => {
           { futureField: { enabled: true }, markdown: "document" },
         ],
       });
-      expect(O.isNone(decodeUnknownFFirecrawlScrapeOptionsOption(42))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlScrapeOptionsOption([]))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlDocumentOption({ markdown: 42 }))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlSearchDataOption({ web: [{ url: 42 }] }))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlMonitorListDataOption([42]))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlScrapeSuccessOption({ data: 42 }))).toBe(true);
+      assertNone(decodeUnknownFFirecrawlScrapeOptionsOption(42));
+      assertNone(decodeUnknownFFirecrawlScrapeOptionsOption([]));
+      assertNone(decodeUnknownFFirecrawlDocumentOption({ markdown: 42 }));
+      assertNone(decodeUnknownFFirecrawlSearchDataOption({ web: [{ url: 42 }] }));
+      assertNone(decodeUnknownFFirecrawlMonitorListDataOption([42]));
+      assertNone(decodeUnknownFFirecrawlScrapeSuccessOption({ data: 42 }));
     })
   );
 
@@ -445,16 +447,15 @@ describe("@beep/firecrawl", () => {
           firecrawl.scrape(F.FirecrawlScrapePayload.make({ url: "https://example.com" }))
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(F.FirecrawlError);
-            expect(error.value.reason).toBe("sdk thrown");
-            expect(error.value.status).toEqual(O.some(429));
-          }
-        }
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, F.FirecrawlError);
+            assertSome(error.status, 429);
+            return error.reason;
+          }),
+          "sdk thrown"
+        );
       })
     );
   });
@@ -477,16 +478,15 @@ describe("@beep/firecrawl", () => {
         const firecrawl = yield* F.Firecrawl;
         const exit = yield* Effect.exit(firecrawl.getQueueStatus(F.FirecrawlGetQueueStatusPayload.make({})));
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(F.FirecrawlError);
-            expect(error.value.method).toEqual(O.some("getQueueStatus"));
-            expect(error.value.reason).toBe("response decoding");
-          }
-        }
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, F.FirecrawlError);
+            assertSome(error.method, "getQueueStatus");
+            return error.reason;
+          }),
+          "response decoding"
+        );
       })
     );
   });
@@ -535,16 +535,15 @@ describe("@beep/firecrawl", () => {
           firecrawl.watcher(F.FirecrawlWatcherPayload.make({ jobId: "crawl-id" })).pipe(Stream.runCollect)
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
         expect(invalidDoneWatcher.closed).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(F.FirecrawlError);
-            expect(error.value.reason).toBe("response decoding");
-          }
-        }
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, F.FirecrawlError);
+            return error.reason;
+          }),
+          "response decoding"
+        );
       })
     );
   });

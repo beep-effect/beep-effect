@@ -1,6 +1,7 @@
 import * as F from "@beep/firecrawl";
 import { Str } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 
@@ -18,7 +19,7 @@ pipe(
     onNone: () =>
       describe("@beep/firecrawl live integration (FIRECRAWL_API_KEY)", () => {
         it("skips live API calls when FIRECRAWL_API_KEY is absent", () => {
-          expect(O.isNone(apiKey)).toBe(true);
+          assertNone(apiKey);
         });
       }),
     onSome: () =>

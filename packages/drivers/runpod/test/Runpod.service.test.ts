@@ -22,6 +22,7 @@ import {
 import { decodeJsonString } from "@beep/schema/Json";
 import { A, Str } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -341,10 +342,10 @@ describe("@beep/runpod", () => {
         const transportError = yield* runpod.listPods().pipe(Effect.flip);
 
         expect(statusError.reason).toBe("response status");
-        expect(statusError.status).toEqual(O.some(500));
-        expect(statusError.operationId).toEqual(O.some("ListPods"));
+        assertSome(statusError.status, 500);
+        assertSome(statusError.operationId, "ListPods");
         expect(transportError.reason).toBe("transport");
-        expect(transportError.cause).toEqual(O.some("HttpClientError:TransportError"));
+        assertSome(transportError.cause, "HttpClientError:TransportError");
       })
     )
   );
@@ -389,7 +390,10 @@ describe("@beep/runpod", () => {
         expect(parsed.title).toBe("Runpod Documentation");
         expect(parsed.entries).toHaveLength(2);
         expect(parsed.entries[0]?.title).toBe("Pods");
-        expect(parsed.entries[0]?.description).toEqual(O.some("Manage GPU pods"));
+        assertSome(
+          O.flatMap(A.head(parsed.entries), (entry) => entry.description),
+          "Manage GPU pods"
+        );
 
         const testHttp = yield* RunpodTestHttp;
         yield* testHttp.reset;
