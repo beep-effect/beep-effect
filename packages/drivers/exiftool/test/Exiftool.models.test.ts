@@ -26,6 +26,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Equal, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -153,11 +154,11 @@ describe("@beep/exiftool models", () => {
   );
 
   it("rejects tag names that could smuggle extra arguments", () => {
-    expect(O.isSome(decodeUnknownSafeTagNameOption("XMP-beepQA:sessionId"))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption(""))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption("tag name"))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption("tag=value"))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption("tag<file"))).toBe(true);
+    pipe(decodeUnknownSafeTagNameOption("XMP-beepQA:sessionId"), O.isSome, assertTrue);
+    assertNone(decodeUnknownSafeTagNameOption(""));
+    assertNone(decodeUnknownSafeTagNameOption("tag name"));
+    assertNone(decodeUnknownSafeTagNameOption("tag=value"));
+    assertNone(decodeUnknownSafeTagNameOption("tag<file"));
   });
 
   it("builds read, write, and version arguments with -config first", () => {
@@ -263,7 +264,7 @@ describe("@beep/exiftool models", () => {
         "XMP-beepQA:ToolVersions": '{"exiftool":"13.55"}',
       });
 
-      expect(O.isSome(decoded)).toBe(true);
+      pipe(decoded, O.isSome, assertTrue);
       expect(
         yield* pipe(
           decoded,
@@ -272,15 +273,13 @@ describe("@beep/exiftool models", () => {
         )
       ).toEqual(yield* encodeBeepQaProvenance(fullProvenance));
 
-      expect(
-        O.isNone(
-          provenanceFromRawTags({
-            "XMP-beepQA:ActionId": "act-9",
-            "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
-            "XMP-beepQA:ScenarioName": "sash-drag",
-          })
-        )
-      ).toBe(true);
+      assertNone(
+        provenanceFromRawTags({
+          "XMP-beepQA:ActionId": "act-9",
+          "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
+          "XMP-beepQA:ScenarioName": "sash-drag",
+        })
+      );
     })
   );
 });

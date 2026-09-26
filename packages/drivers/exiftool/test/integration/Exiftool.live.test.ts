@@ -9,6 +9,7 @@ import {
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
@@ -62,7 +63,7 @@ const roundTrip = Effect.fn("ExiftoolLive.roundTrip")(function* (fileName: strin
   expect(read.metadata.raw["XMP-beepQA:SessionId"]).toBe(sessionId);
 
   const decoded = provenanceFromRawTags(read.metadata.raw);
-  expect(O.isSome(decoded)).toBe(true);
+  pipe(decoded, O.isSome, assertTrue);
   const provenance = pipe(
     decoded,
     O.getOrElse(() => BeepQaProvenance.make({ actionId: "", capturedAtEpochMs: 0, scenarioName: "", sessionId: "" }))
@@ -71,30 +72,10 @@ const roundTrip = Effect.fn("ExiftoolLive.roundTrip")(function* (fileName: strin
   expect(provenance.scenarioName).toBe("sash-drag");
   expect(provenance.actionId).toBe("act-9");
   expect(provenance.capturedAtEpochMs).toBe(1753900000000);
-  expect(
-    pipe(
-      provenance.clockOffsetMs,
-      O.getOrElse(() => 0)
-    )
-  ).toBe(12.5);
-  expect(
-    pipe(
-      provenance.commitSha,
-      O.getOrElse(() => "")
-    )
-  ).toBe("abc1234");
-  expect(
-    pipe(
-      provenance.sourceVideo,
-      O.getOrElse(() => "")
-    )
-  ).toBe("video/capture.webm");
-  expect(
-    pipe(
-      provenance.toolVersions,
-      O.getOrElse((): Readonly<Record<string, string>> => ({}))
-    )
-  ).toEqual({ exiftool: "13.55" });
+  assertSome(provenance.clockOffsetMs, 12.5);
+  assertSome(provenance.commitSha, "abc1234");
+  assertSome(provenance.sourceVideo, "video/capture.webm");
+  assertSome(provenance.toolVersions, { exiftool: "13.55" });
 
   return read;
 });
@@ -108,18 +89,8 @@ it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep
       }
 
       const read = yield* roundTrip("frame.png", TINY_PNG_BASE64, "sess-live-png");
-      expect(
-        pipe(
-          read.metadata.fileType,
-          O.getOrElse(() => "")
-        )
-      ).toBe("PNG");
-      expect(
-        pipe(
-          read.metadata.imageWidth,
-          O.getOrElse(() => 0)
-        )
-      ).toBe(8);
+      assertSome(read.metadata.fileType, "PNG");
+      assertSome(read.metadata.imageWidth, 8);
     })
   );
 
@@ -131,12 +102,7 @@ it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep
       }
 
       const read = yield* roundTrip("frame.gif", TINY_GIF_BASE64, "sess-live-gif");
-      expect(
-        pipe(
-          read.metadata.fileType,
-          O.getOrElse(() => "")
-        )
-      ).toBe("GIF");
+      assertSome(read.metadata.fileType, "GIF");
     })
   );
 

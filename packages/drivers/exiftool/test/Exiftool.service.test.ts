@@ -11,6 +11,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -125,30 +126,10 @@ describe("@beep/exiftool service", () => {
           const exiftool = yield* Exiftool;
           const result = yield* exiftool.readTags(ReadTagsRequest.make({ filePath }));
 
-          expect(
-            pipe(
-              result.metadata.fileType,
-              O.getOrElse(() => "")
-            )
-          ).toBe("PNG");
-          expect(
-            pipe(
-              result.metadata.fileName,
-              O.getOrElse(() => "")
-            )
-          ).toBe("frame.png");
-          expect(
-            pipe(
-              result.metadata.imageWidth,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(8);
-          expect(
-            pipe(
-              result.metadata.imageHeight,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(8);
+          assertSome(result.metadata.fileType, "PNG");
+          assertSome(result.metadata.fileName, "frame.png");
+          assertSome(result.metadata.imageWidth, 8);
+          assertSome(result.metadata.imageHeight, 8);
           expect(result.metadata.raw["XMP-beepQA:SessionId"]).toBe("sess-1");
 
           const args = commands[0]?.args ?? [];
@@ -156,12 +137,7 @@ describe("@beep/exiftool service", () => {
           expect(A.contains(args, "-j")).toBe(true);
           expect(A.contains(args, "-G1")).toBe(true);
           expect(A.contains(args, "-n")).toBe(false);
-          expect(
-            pipe(
-              A.last(args),
-              O.getOrElse(() => "")
-            )
-          ).toBe(filePath);
+          assertSome(A.last(args), filePath);
 
           const numericRequest = yield* exiftool.readTags(ReadTagsRequest.make({ filePath, numeric: true }));
           expect(numericRequest.filePath).toBe(filePath);
@@ -200,12 +176,7 @@ describe("@beep/exiftool service", () => {
           expect(args[0]).toBe("-config");
           expect(A.contains(args, "-XMP-beepQA:sessionId=sess-1")).toBe(true);
           expect(A.contains(args, "-o")).toBe(true);
-          expect(
-            pipe(
-              A.last(args),
-              O.getOrElse(() => "")
-            )
-          ).toBe(filePath);
+          assertSome(A.last(args), filePath);
         })
       );
     });
@@ -312,12 +283,7 @@ describe("@beep/exiftool service", () => {
 
           expect(error).toBeInstanceOf(ExiftoolError);
           expect(pipe(error.message, Str.includes("could not write tags"))).toBe(true);
-          expect(
-            pipe(
-              error.exitCode,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(7);
+          assertSome(error.exitCode, 7);
           expect(yield* fs.readFileString(filePath)).toBe("original bytes");
           expect(yield* fs.readDirectory(tmpDir)).toEqual(["frame.png"]);
         })
