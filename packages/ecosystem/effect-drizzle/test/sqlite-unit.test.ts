@@ -64,6 +64,13 @@ import {
   sqliteUserTable,
 } from "./sqlite-fixtures.ts";
 
+const encodeSqliteUserInsert = S.encodeEffect(SqliteUser.insert);
+const decodeSqliteUserInsert = S.decodeEffect(SqliteUser.insert);
+const isSqliteUserInsert = S.is(SqliteUser.insert);
+const encodeSqliteUserUpdate = S.encodeEffect(SqliteUser.update);
+const decodeSqliteUserUpdate = S.decodeEffect(SqliteUser.update);
+const isSqliteUserUpdate = S.is(SqliteUser.update);
+
 describe("SQLite name invariants", () => {
   it("rejects empty and NUL identifiers plus normalized column collisions", () => {
     expect(_sqliteEmptyColumnName).toThrow("must not be empty");
@@ -173,12 +180,12 @@ describe("SQLite derivation and family invariants", () => {
     [SqliteUser.insert],
     ([value]) =>
       Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(SqliteUser.insert)(value);
-        const decoded = yield* S.decodeEffect(SqliteUser.insert)(encoded);
+        const encoded = yield* encodeSqliteUserInsert(value);
+        const decoded = yield* decodeSqliteUserInsert(encoded);
         expect(decoded).toEqual(value);
-        expect(yield* S.encodeEffect(SqliteUser.insert)(decoded)).toEqual(encoded);
+        expect(yield* encodeSqliteUserInsert(decoded)).toEqual(encoded);
         expect(encoded.nickname).toEqual(O.getOrNull(value.nickname));
-        expect(S.is(SqliteUser.insert)(decoded)).toBe(true);
+        expect(isSqliteUserInsert(decoded)).toBe(true);
       }),
     { arbitrary: fcRuns(100) }
   );
@@ -188,12 +195,12 @@ describe("SQLite derivation and family invariants", () => {
     [SqliteUser.update],
     ([value]) =>
       Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(SqliteUser.update)(value);
-        const decoded = yield* S.decodeEffect(SqliteUser.update)(encoded);
+        const encoded = yield* encodeSqliteUserUpdate(value);
+        const decoded = yield* decodeSqliteUserUpdate(encoded);
         expect(decoded).toEqual(value);
-        expect(yield* S.encodeEffect(SqliteUser.update)(decoded)).toEqual(encoded);
+        expect(yield* encodeSqliteUserUpdate(decoded)).toEqual(encoded);
         expect(decoded.rowVersion).toBe(value.rowVersion);
-        expect(S.is(SqliteUser.update)(decoded)).toBe(true);
+        expect(isSqliteUserUpdate(decoded)).toBe(true);
       }),
     { arbitrary: fcRuns(100) }
   );

@@ -2359,3 +2359,13 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+
+### Drizzle full-proof follow-up: compiled codecs and private output references
+
+PR #1277 full proof reached Lint Policy and rejected eight inline schema compiler
+applications in the SQLite properties and two private timing-output references.
+Hoist the unchanged insert/update codecs and guards to module scope, and redact
+the timing command output destination as `<private-output>`. Package proof alone
+did not cover these root policies; running the focused root policies before
+publication would have caught both failures earlier.
