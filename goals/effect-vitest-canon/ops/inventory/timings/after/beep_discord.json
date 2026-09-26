@@ -1,0 +1,93 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 4,
+  "numPassedTests": 4,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790404305064,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Discord declared-field equivalence"],
+          "fullName": "Discord declared-field equivalence treats field-equal DiscordError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal DiscordError instances as equivalent and field-different ones as distinct",
+          "duration": 1.1435409999999138,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790404308828,
+      "endTime": 1790404308829.1436,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/discord/test/Discord.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/discord"],
+          "fullName": "@beep/discord keeps encoded Discord schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded Discord schema wire shapes byte-identical",
+          "duration": 22.37350000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/discord"],
+          "fullName": "@beep/discord round-trips schema-derived Discord payloads through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived Discord payloads through encoded form",
+          "duration": 22.176496999999927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/discord"],
+          "fullName": "@beep/discord probes channel liveness and sends a test message with mentions disabled",
+          "status": "passed",
+          "title": "probes channel liveness and sends a test message with mentions disabled",
+          "duration": 22.416475999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790404308870,
+      "endTime": 1790404308893.4165,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/discord/test/Discord.service.test.ts"
+    }
+  ]
+}

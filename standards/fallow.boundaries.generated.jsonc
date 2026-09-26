@@ -1446,12 +1446,14 @@
           "@beep/discord",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/discord",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

@@ -20,3 +20,7 @@ Ciops adds 7 dependency lists: audit, build, check, dev, lint:deprecated-apis, p
 Both existing Ciops test files use the instrumented runner. The tracked policy
 and golden journal remain native filesystem inputs; policy decoding is shared
 through a read-only test service within the suite layer.
+
+Discord adds 9 dependency lists: audit, build, check, coverage, lint:deprecated-apis, package-test-typecheck, test, test:integration, test:property.
+Both existing Discord files use the instrumented runner, preserving the local
+injected HTTP fixture and the existing fifty-case native property.
