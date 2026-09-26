@@ -1,0 +1,245 @@
+{
+  "numTotalTestSuites": 10,
+  "numPassedTestSuites": 10,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 17,
+  "numPassedTests": 17,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790402492312,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["beep identity"],
+          "fullName": "beep identity round-trips through its schema",
+          "status": "passed",
+          "title": "round-trips through its schema",
+          "duration": 6.956331999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["beep identity"],
+          "fullName": "beep identity shares every brand step between schemes except the two light accents",
+          "status": "passed",
+          "title": "shares every brand step between schemes except the two light accents",
+          "duration": 6.55261100000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["beep identity"],
+          "fullName": "beep identity names five mark paths: two strokes, one frame, two lenses",
+          "status": "passed",
+          "title": "names five mark paths: two strokes, one frame, two lenses",
+          "duration": 6.579672000000073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss starts with the generated banner and ends with a newline",
+          "status": "passed",
+          "title": "starts with the generated banner and ends with a newline",
+          "duration": 6.573222999999871,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss declares every scale step and surface step in both schemes",
+          "status": "passed",
+          "title": "declares every scale step and surface step in both schemes",
+          "duration": 6.566522000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss puts the light scheme in @theme and the dark scheme under .dark",
+          "status": "passed",
+          "title": "puts the light scheme in @theme and the dark scheme under .dark",
+          "duration": 14.832560999999941,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss references the brand scale from glow layers instead of baking rgba",
+          "status": "passed",
+          "title": "references the brand scale from glow layers instead of baking rgba",
+          "duration": 14.815755000000081,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss quotes named families and leaves generic keywords bare",
+          "status": "passed",
+          "title": "quotes named families and leaves generic keywords bare",
+          "duration": 14.807321999999886,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss escapes quotes, backslashes, and delimiters in named families",
+          "status": "passed",
+          "title": "escapes quotes, backslashes, and delimiters in named families",
+          "duration": 0.48735000000010587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderThemeCss"],
+          "fullName": "renderThemeCss rejects control characters, lone surrogates, and noncharacters at the schema boundary",
+          "status": "passed",
+          "title": "rejects control characters, lone surrogates, and noncharacters at the schema boundary",
+          "duration": 0.4473790000001827,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderWordmarkSvg escaping"],
+          "fullName": "renderWordmarkSvg escaping escapes XML metacharacters in the name and quotes multi-word families",
+          "status": "passed",
+          "title": "escapes XML metacharacters in the name and quotes multi-word families",
+          "duration": 14.799790999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BrandIdentity properties"],
+          "fullName": "BrandIdentity properties round-trips arbitrary identities through encode and decode",
+          "status": "passed",
+          "title": "round-trips arbitrary identities through encode and decode",
+          "duration": 15.40918899999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790402493468,
+      "endTime": 1790402493490.4873,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/ui-system/brand/test/Brand.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["generated assets"],
+          "fullName": "generated assets match their render exactly (run `bun run render` after changing tokens)",
+          "status": "passed",
+          "title": "match their render exactly (run `bun run render` after changing tokens)",
+          "duration": 9.226499000000103,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["generated assets"],
+          "fullName": "generated assets bridge.css only references custom properties that brand.css declares",
+          "status": "passed",
+          "title": "bridge.css only references custom properties that brand.css declares",
+          "duration": 8.41030099999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["generated assets"],
+          "fullName": "generated assets renders the favicon on a brand-900 ground with the mark scaled to 32 units",
+          "status": "passed",
+          "title": "renders the favicon on a brand-900 ground with the mark scaled to 32 units",
+          "duration": 6.563587000000098,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790402493461,
+      "endTime": 1790402493470.2266,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/ui-system/brand/test/assets.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["BeepMark"],
+          "fullName": "BeepMark renders the five mark paths inside a labelled svg",
+          "status": "passed",
+          "title": "renders the five mark paths inside a labelled svg",
+          "duration": 52.52608699999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BeepWordmark"],
+          "fullName": "BeepWordmark renders the brand name beside a hidden mark",
+          "status": "passed",
+          "title": "renders the brand name beside a hidden mark",
+          "duration": 52.252336000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790402493671,
+      "endTime": 1790402493723.5261,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/ui-system/brand/test/react.test.tsx"
+    }
+  ]
+}

@@ -60,6 +60,6 @@ files validate as complete with zero missing coverage.
 The detector emits no Chalk findings. Three current baseline rows were removed
 while 8033 unrelated raw records remain unchanged. Historical detector row IDs
 are retained alongside the current baseline rows. The historical runSync row
-is credited to upstream PR #1200; local rows await this implementation commit.
+is credited to upstream PR #1200; the remaining 5 rows credit 2477457561f3a6613b443399918831ff6c48e2d8.
 The root ratchet passes with introduced=0 and resolved=0. These results do not
 close the remaining capability packages or the repository-wide goal.

@@ -85,6 +85,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
