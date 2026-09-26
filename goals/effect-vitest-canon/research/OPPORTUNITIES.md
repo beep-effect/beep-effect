@@ -2445,3 +2445,12 @@ check rejected both positive and negative runs. Source was restored byte for
 byte. Read the actual registered name from the JSON reporter and rerun that
 case. Reusing reporter names instead of reconstructing them prevents this
 false-positive verification path. No product test or deadline was changed.
+
+## 2026-09-26: Inventory line-count convention
+
+Repository-config strict validation rejected census line counts that included the
+trailing empty line. Use the active validator bridge's source-line count rather
+than inheriting a previous wave's newline convention. Preserve file bytes and
+membership, correct only owned counts and spans, and rerun the unchanged
+validator. A shared count function in receipt generation would prevent this
+off-by-one evidence drift.

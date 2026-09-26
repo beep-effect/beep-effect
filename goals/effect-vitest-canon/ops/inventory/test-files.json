@@ -5764,78 +5764,78 @@
     "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 25094,
-    "lines": 607
+    "bytes": 25897,
+    "lines": 627
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 2263,
-    "lines": 72
+    "bytes": 2129,
+    "lines": 65
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 6407,
-    "lines": 190
+    "bytes": 7313,
+    "lines": 189
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 3619,
-    "lines": 107
+    "bytes": 3685,
+    "lines": 109
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 2267,
-    "lines": 53
+    "bytes": 1980,
+    "lines": 45
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 11263,
-    "lines": 366
+    "bytes": 8867,
+    "lines": 285
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 1365,
-    "lines": 24
+    "bytes": 1401,
+    "lines": 25
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 7770,
-    "lines": 244
+    "bytes": 7534,
+    "lines": 234
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 1621,
-    "lines": 34
+    "bytes": 1657,
+    "lines": 35
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 4737,
-    "lines": 105
+    "bytes": 4753,
+    "lines": 106
   },
   {
     "file": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
-    "bytes": 1550,
-    "lines": 38
+    "bytes": 1613,
+    "lines": 39
   },
   {
     "file": "packages/tooling/test-kit/fc-runs/test/FastCheckRuns.test.ts",
