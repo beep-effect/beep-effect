@@ -1,6 +1,7 @@
 import { HTML_ATTRIBUTE_SYNTAXES, inspectConformance } from "@beep/html";
 import { Fragment, Img, Link, Picture, Source } from "@beep/html/Html.model";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 

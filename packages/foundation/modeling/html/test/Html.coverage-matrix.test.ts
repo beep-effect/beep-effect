@@ -46,8 +46,12 @@ import {
   Title,
 } from "@beep/html/Html.model";
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
+import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ConformantHtml, SafeHtml, SafeHtmlAst } from "@beep/html";
@@ -58,9 +62,6 @@ const text = Text.fromValue;
 const comment = Comment.fromValue;
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
   inspectConformance(root).some((issue) => issue.rule === rule);
-const inspectSafe = (root: Parameters<typeof conform>[0]) =>
-  pipe(root, conform, Effect.map(inspectSafeHtml), Effect.runSync);
-const serializeExit = (root: Parameters<typeof serialize>[0]) => Effect.runSyncExit(serialize(root));
 
 describe("@beep/html conformance branch matrix", () => {
   it("rejects a structurally invalid recursive conformance view", () => {
@@ -231,153 +232,276 @@ describe("@beep/html conformance branch matrix", () => {
     expect(hasRule(Button.make({ children: [foreignWithoutTabIndex] }), "forbiddenDescendant")).toBe(false);
   });
 
-  it("fails malformed JavaScript callers at the schema snapshot boundary", () => {
-    const rawHref = {
-      ...Anchor.make({ children: [text("link")] }),
-      href: "/docs",
-    } as unknown as Anchor;
-    const buttonWithRawHref = {
-      ...Button.make({ children: [] }),
-      children: [rawHref],
-    } as unknown as Button;
-    expect(hasRule(buttonWithRawHref, "forbiddenDescendant")).toBe(true);
+  it.effect("fails malformed JavaScript callers at the schema snapshot boundary", () =>
+    Effect.gen(function* () {
+      const rawHref = {
+        ...Anchor.make({ children: [text("link")] }),
+        href: "/docs",
+      } as unknown as Anchor;
+      const buttonWithRawHref = {
+        ...Button.make({ children: [] }),
+        children: [rawHref],
+      } as unknown as Button;
+      expect(hasRule(buttonWithRawHref, "forbiddenDescendant")).toBe(true);
 
-    const malformedText = { _tag: "#text", value: 42 };
-    const malformedParagraph = {
-      ...P.make({ children: [] }),
-      children: [malformedText],
-    } as unknown as P;
-    expect(Exit.isFailure(Effect.runSyncExit(conform(malformedParagraph)))).toBe(true);
+      const malformedText = { _tag: "#text", value: 42 };
+      const malformedParagraph = {
+        ...P.make({ children: [] }),
+        children: [malformedText],
+      } as unknown as P;
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(conform(malformedParagraph)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlConformanceError")
+      );
 
-    const malformedForeign = {
-      _tag: "#foreign",
-      namespace: "future",
-      name: 42,
-      children: [],
-    } as unknown as Parameters<typeof inspectConformance>[0];
-    expect(inspectConformance(malformedForeign)).toContainEqual(
-      expect.objectContaining({ rule: "foreignIntegration" })
-    );
+      const malformedForeign = {
+        _tag: "#foreign",
+        namespace: "future",
+        name: 42,
+        children: [],
+      } as unknown as Parameters<typeof inspectConformance>[0];
+      expect(inspectConformance(malformedForeign)).toContainEqual(
+        expect.objectContaining({ rule: "foreignIntegration" })
+      );
 
-    const unknownNode = {
-      _tag: "future-element",
-      children: [],
-    } as unknown as Parameters<typeof inspectConformance>[0];
-    expect(inspectConformance(unknownNode)).toStrictEqual([]);
-    expect(Exit.isFailure(Effect.runSyncExit(conform(unknownNode)))).toBe(true);
-  });
+      const unknownNode = {
+        _tag: "future-element",
+        children: [],
+      } as unknown as Parameters<typeof inspectConformance>[0];
+      expect(inspectConformance(unknownNode)).toStrictEqual([]);
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(conform(unknownNode)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlConformanceError")
+      );
+    })
+  );
 });
 
 describe("@beep/html safe-policy branch matrix", () => {
-  it("applies role compatibility across matching, mismatching, and absent roles", () => {
-    const safe = [
-      Anchor.make({ href: O.some("/docs"), role: O.some("link"), children: [text("docs")] }),
-      Table.make({ role: O.some("table"), children: [] }),
-      Div.make({ children: [] }),
-    ];
-    for (const root of safe) {
-      expect(inspectSafe(root)).toStrictEqual([]);
-    }
+  it.effect("applies role compatibility across matching, mismatching, and absent roles", () =>
+    Effect.gen(function* () {
+      const safe = [
+        Anchor.make({ href: O.some("/docs"), role: O.some("link"), children: [text("docs")] }),
+        Table.make({ role: O.some("table"), children: [] }),
+        Div.make({ children: [] }),
+      ];
+      for (const root of safe) {
+        expect(yield* conform(root).pipe(Effect.map(inspectSafeHtml))).toStrictEqual([]);
+      }
 
-    const issues = inspectSafe(Anchor.make({ href: O.some("/docs"), role: O.some("table"), children: [text("docs")] }));
-    expect(issues).toContainEqual(expect.objectContaining({ rule: "deniedAttribute" }));
-  });
+      const issues = yield* conform(
+        Anchor.make({ href: O.some("/docs"), role: O.some("table"), children: [text("docs")] })
+      ).pipe(Effect.map(inspectSafeHtml));
+      expect(issues).toContainEqual(expect.objectContaining({ rule: "deniedAttribute" }));
+    })
+  );
 
-  it("applies each element-aware ARIA compatibility rule", () => {
-    const safe = [
-      Anchor.make({ href: O.some("/docs"), "aria-current": O.some("page"), children: [text("docs")] }),
-      Li.make({ "aria-current": O.some("step"), children: [text("step")] }),
-      Div.make({ "aria-hidden": O.some("true"), children: [] }),
-      Anchor.make({ href: O.some("/docs"), "aria-label": O.some("Docs"), children: [] }),
-      Img.make({ alt: O.some("logo"), src: O.some("/logo.png") }),
-    ];
-    for (const root of safe) {
-      expect(inspectSafe(root)).toStrictEqual([]);
-    }
+  it.effect("applies each element-aware ARIA compatibility rule", () =>
+    Effect.gen(function* () {
+      const safe = [
+        Anchor.make({ href: O.some("/docs"), "aria-current": O.some("page"), children: [text("docs")] }),
+        Li.make({ "aria-current": O.some("step"), children: [text("step")] }),
+        Div.make({ "aria-hidden": O.some("true"), children: [] }),
+        Anchor.make({ href: O.some("/docs"), "aria-label": O.some("Docs"), children: [] }),
+        Img.make({ alt: O.some("logo"), src: O.some("/logo.png") }),
+      ];
+      for (const root of safe) {
+        expect(yield* conform(root).pipe(Effect.map(inspectSafeHtml))).toStrictEqual([]);
+      }
 
-    const denied = [
-      [Div.make({ "aria-current": O.some("page"), children: [] }), "deniedAttribute"],
-      [
-        Anchor.make({ href: O.some("/docs"), "aria-hidden": O.some("true"), children: [text("docs")] }),
-        "deniedAttribute",
-      ],
-      [Summary.make({ "aria-hidden": O.some("true"), children: [] }), "deniedAttribute"],
-      [P.make({ "aria-label": O.some("paragraph"), children: [] }), "deniedAttribute"],
-      [Img.make({ alt: O.some("logo"), src: O.some("javascript:alert(1)") }), "unsafeUrl"],
-    ] as const;
-    for (const [root, rule] of denied) {
-      expect(inspectSafe(root)).toContainEqual(expect.objectContaining({ rule }));
-    }
-  });
+      const denied = [
+        [Div.make({ "aria-current": O.some("page"), children: [] }), "deniedAttribute"],
+        [
+          Anchor.make({ href: O.some("/docs"), "aria-hidden": O.some("true"), children: [text("docs")] }),
+          "deniedAttribute",
+        ],
+        [Summary.make({ "aria-hidden": O.some("true"), children: [] }), "deniedAttribute"],
+        [P.make({ "aria-label": O.some("paragraph"), children: [] }), "deniedAttribute"],
+        [Img.make({ alt: O.some("logo"), src: O.some("javascript:alert(1)") }), "unsafeUrl"],
+      ] as const;
+      for (const [root, rule] of denied) {
+        expect(yield* conform(root).pipe(Effect.map(inspectSafeHtml))).toContainEqual(
+          expect.objectContaining({ rule })
+        );
+      }
+    })
+  );
 });
 
 describe("@beep/html serialization branch matrix", () => {
-  it("serializes text/comment factories and each text-content mode", () => {
-    expect(text("value")).toEqual(Text.make({ value: "value" }));
-    expect(comment("note")).toEqual(Comment.make({ value: "note" }));
-    expect(pipe(comment("note"), serialize, Effect.runSync, untrustedHtmlValue)).toBe("<!--note-->");
-    expect(pipe(Title.make({ content: "<title>" }), serialize, Effect.runSync, untrustedHtmlValue)).toBe(
-      "<title>&lt;title&gt;</title>"
-    );
-    expect(pipe(Textarea.make({ content: "a & b" }), serialize, Effect.runSync, untrustedHtmlValue)).toBe(
-      "<textarea>a &amp; b</textarea>"
-    );
-    expect(
-      pipe(Style.make({ content: "body > p { color: red; }" }), serialize, Effect.runSync, untrustedHtmlValue)
-    ).toBe("<style>body > p { color: red; }</style>");
-    expect(Exit.isFailure(serializeExit(Plaintext.make({ content: "remainder" })))).toBe(true);
-  });
+  it.effect("serializes text/comment factories and each text-content mode", () =>
+    Effect.gen(function* () {
+      expect(text("value")).toEqual(Text.make({ value: "value" }));
+      expect(comment("note")).toEqual(Comment.make({ value: "note" }));
+      expect(yield* pipe(comment("note"), serialize, Effect.map(untrustedHtmlValue))).toBe("<!--note-->");
+      expect(yield* pipe(Title.make({ content: "<title>" }), serialize, Effect.map(untrustedHtmlValue))).toBe(
+        "<title>&lt;title&gt;</title>"
+      );
+      expect(yield* pipe(Textarea.make({ content: "a & b" }), serialize, Effect.map(untrustedHtmlValue))).toBe(
+        "<textarea>a &amp; b</textarea>"
+      );
+      expect(
+        yield* pipe(Style.make({ content: "body > p { color: red; }" }), serialize, Effect.map(untrustedHtmlValue))
+      ).toBe("<style>body > p { color: red; }</style>");
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" }))), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlSerializeError")
+      );
+    })
+  );
 
-  it("serializes optional and canonical doctypes and rejects every noncanonical component", () => {
-    expect(pipe(Document.make({ children: [] }), serialize, Effect.runSync, untrustedHtmlValue)).toBe("");
-    expect(
-      pipe(
-        Document.make({ doctype: O.some(Doctype.html()), children: [] }),
-        serialize,
-        Effect.runSync,
-        untrustedHtmlValue
-      )
-    ).toBe("<!doctype html>");
+  it.effect("serializes optional and canonical doctypes and rejects every noncanonical component", () =>
+    Effect.gen(function* () {
+      expect(yield* pipe(Document.make({ children: [] }), serialize, Effect.map(untrustedHtmlValue))).toBe("");
+      expect(
+        yield* pipe(
+          Document.make({ doctype: O.some(Doctype.html()), children: [] }),
+          serialize,
+          Effect.map(untrustedHtmlValue)
+        )
+      ).toBe("<!doctype html>");
 
-    for (const doctype of [
-      Doctype.make({}),
-      Doctype.make({ name: O.some("HTML") }),
-      Doctype.make({ name: O.some("html"), publicId: O.some("legacy") }),
-      Doctype.make({ name: O.some("html"), systemId: O.some("legacy") }),
-    ]) {
-      expect(Exit.isFailure(serializeExit(Document.make({ doctype: O.some(doctype), children: [] })))).toBe(true);
-    }
-  });
+      for (const doctype of [
+        Doctype.make({}),
+        Doctype.make({ name: O.some("HTML") }),
+        Doctype.make({ name: O.some("html"), publicId: O.some("legacy") }),
+        Doctype.make({ name: O.some("html"), systemId: O.some("legacy") }),
+      ]) {
+        assertExitFailure(
+          Exit.match(yield* Effect.exit(serialize(Document.make({ doctype: O.some(doctype), children: [] }))), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
+          Cause.fail("HtmlSerializeError")
+        );
+      }
+    })
+  );
 
-  it("accepts namespace-matching qualified foreign names and rejects mismatches", () => {
-    const svg = ForeignElement.make({ namespace: "svg", name: "svg:path", children: [] });
-    const math = ForeignElement.make({ namespace: "mathml", name: "mathml:math", children: [] });
-    expect(pipe(svg, serialize, Effect.runSync, untrustedHtmlValue)).toBe("<svg:path></svg:path>");
-    expect(pipe(math, serialize, Effect.runSync, untrustedHtmlValue)).toBe("<mathml:math></mathml:math>");
+  it.effect("accepts namespace-matching qualified foreign names and rejects mismatches", () =>
+    Effect.gen(function* () {
+      const svg = ForeignElement.make({ namespace: "svg", name: "svg:path", children: [] });
+      const math = ForeignElement.make({ namespace: "mathml", name: "mathml:math", children: [] });
+      expect(yield* pipe(svg, serialize, Effect.map(untrustedHtmlValue))).toBe("<svg:path></svg:path>");
+      expect(yield* pipe(math, serialize, Effect.map(untrustedHtmlValue))).toBe("<mathml:math></mathml:math>");
 
-    const mismatched = ForeignElement.make({ namespace: "svg", name: "mathml:path", children: [] });
-    expect(Exit.isFailure(serializeExit(mismatched))).toBe(true);
-    const badAttribute = ForeignElement.make({
-      namespace: "svg",
-      name: "svg",
-      attributes: O.some({ viewbox: "0 0 1 1" }),
-      children: [],
-    });
-    expect(Exit.isFailure(serializeExit(badAttribute))).toBe(true);
-  });
+      const mismatched = ForeignElement.make({ namespace: "svg", name: "mathml:path", children: [] });
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(serialize(mismatched)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlSerializeError")
+      );
+      const badAttribute = ForeignElement.make({
+        namespace: "svg",
+        name: "svg",
+        attributes: O.some({ viewbox: "0 0 1 1" }),
+        children: [],
+      });
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(serialize(badAttribute)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlSerializeError")
+      );
+    })
+  );
 
-  it("exercises conformant and safe serializer entrypoints", () => {
-    const root = Div.make({ children: [text("safe")] });
-    const conformant = Effect.runSync(conform(root));
-    expect(pipe(conformant, serializeConformant, Effect.runSync, untrustedHtmlValue)).toBe("<div>safe</div>");
-    expect(Exit.isSuccess(Effect.runSyncExit(enforceSafeHtml(conformant)))).toBe(true);
-  });
+  it.effect("exercises conformant and safe serializer entrypoints", () =>
+    Effect.gen(function* () {
+      const root = Div.make({ children: [text("safe")] });
+      const conformant = yield* conform(root);
+      expect(yield* pipe(conformant, serializeConformant, Effect.map(untrustedHtmlValue))).toBe("<div>safe</div>");
+      yield* enforceSafeHtml(conformant);
+    })
+  );
 
-  it("rejects forged opaque proof values at every public unwrapping boundary", () => {
-    expect(() => conformantRoot({} as ConformantHtml)).toThrow();
-    expect(() => safeHtmlAstConformant({} as SafeHtmlAst)).toThrow();
-    expect(() => safeHtmlValue({} as SafeHtml)).toThrow();
-    expect(Exit.isFailure(serializeExit({} as Parameters<typeof serialize>[0]))).toBe(true);
-    expect(Exit.isFailure(Effect.runSyncExit(serializeSafe({} as SafeHtmlAst)))).toBe(true);
-  });
+  it.effect("rejects forged opaque proof values at every public unwrapping boundary", () =>
+    Effect.gen(function* () {
+      expect(() => conformantRoot({} as ConformantHtml)).toThrow();
+      expect(() => safeHtmlAstConformant({} as SafeHtmlAst)).toThrow();
+      expect(() => safeHtmlValue({} as SafeHtml)).toThrow();
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0])), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlSerializeError")
+      );
+      assertExitFailure(
+        Exit.match(yield* Effect.exit(serializeSafe({} as SafeHtmlAst)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("HtmlSerializeError")
+      );
+    })
+  );
 });

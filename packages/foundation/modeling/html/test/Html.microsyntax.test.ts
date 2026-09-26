@@ -16,10 +16,14 @@ import {
 } from "@beep/html";
 import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes";
 import { A as Anchor, Area, Audio, Button, HtmlNode, Li, Link, Meta, Ol } from "@beep/html/Html.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure, assertFailure, assertSome } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -65,22 +69,18 @@ const HtmlNonNegativeNumberArbitrary = Arbitrary.schema(HtmlNonNegativeNumber);
 const HtmlPositiveNumberArbitrary = Arbitrary.schema(HtmlPositiveNumber);
 
 describe("@beep/html attribute microsyntaxes", () => {
-  it("derives valid presence and integer values from the production schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([BooleanAttributeArbitrary, HtmlNonNegativeIntegerArbitrary, HtmlPositiveIntegerArbitrary]),
-          ([presence, nonNegative, positive]) => {
-            expect(isBooleanAttribute(presence)).toBe(true);
-            expect(isHtmlNonNegativeInteger(nonNegative)).toBe(true);
-            expect(isHtmlPositiveInteger(positive)).toBe(true);
+  it.prop(
+    "derives valid presence and integer values from the production schemas",
+    [BooleanAttributeArbitrary, HtmlNonNegativeIntegerArbitrary, HtmlPositiveIntegerArbitrary],
+    ([presence, nonNegative, positive]) => {
+      expect(isBooleanAttribute(presence)).toBe(true);
+      expect(isHtmlNonNegativeInteger(nonNegative)).toBe(true);
+      expect(isHtmlPositiveInteger(positive)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("models boolean presence without a false value", () => {
     expect(isBooleanAttribute(true)).toBe(true);
@@ -122,7 +122,20 @@ describe("@beep/html attribute microsyntaxes", () => {
           value: "-2",
         })
       );
-      expect(Exit.isFailure(encodedStringValue)).toBe(true);
+      assertExitFailure(
+        Exit.match(encodedStringValue, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -136,22 +149,18 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(isHtmlPositiveNumber(0)).toBe(false);
   });
 
-  it("derives only valid floating-point values from the production schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HtmlFiniteNumberArbitrary, HtmlNonNegativeNumberArbitrary, HtmlPositiveNumberArbitrary]),
-          ([finite, nonNegative, positive]) => {
-            expect(isHtmlFiniteNumber(finite)).toBe(true);
-            expect(isHtmlNonNegativeNumber(nonNegative)).toBe(true);
-            expect(isHtmlPositiveNumber(positive)).toBe(true);
+  it.prop(
+    "derives only valid floating-point values from the production schemas",
+    [HtmlFiniteNumberArbitrary, HtmlNonNegativeNumberArbitrary, HtmlPositiveNumberArbitrary],
+    ([finite, nonNegative, positive]) => {
+      expect(isHtmlFiniteNumber(finite)).toBe(true);
+      expect(isHtmlNonNegativeNumber(nonNegative)).toBe(true);
+      expect(isHtmlPositiveNumber(positive)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect("normalizes token lists to lowercase registry order and one space", () =>
     Effect.gen(function* () {
@@ -181,7 +190,20 @@ describe("@beep/html attribute microsyntaxes", () => {
         const value = `noopener${separator}noreferrer`;
         expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
         const invalidRel = yield* Effect.exit(decodeRel(value));
-        expect(Exit.isFailure(invalidRel)).toBe(true);
+        assertExitFailure(
+          Exit.match(invalidRel, {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
+          Cause.fail("SchemaError")
+        );
         expect(() => Rel.make(value)).toThrow();
       }
     })
@@ -215,11 +237,11 @@ describe("@beep/html attribute microsyntaxes", () => {
       expect(Result.getOrThrow(encodeHtmlNodeResult(decoded))).toStrictEqual(expected);
     }
 
-    expect(Area.make({ shape: O.some("circle") }).shape).toStrictEqual(O.some("circle"));
-    expect(Audio.make({ children: [], preload: O.some("metadata") }).preload).toStrictEqual(O.some("metadata"));
-    expect(Button.make({ children: [], type: O.some("submit") }).type).toStrictEqual(O.some("submit"));
-    expect(Link.make({ as: O.some("image") }).as).toStrictEqual(O.some("image"));
-    expect(Meta.make({ "http-equiv": O.some("content-type") })["http-equiv"]).toStrictEqual(O.some("content-type"));
+    assertSome(Area.make({ shape: O.some("circle") }).shape, "circle");
+    assertSome(Audio.make({ children: [], preload: O.some("metadata") }).preload, "metadata");
+    assertSome(Button.make({ children: [], type: O.some("submit") }).type, "submit");
+    assertSome(Link.make({ as: O.some("image") }).as, "image");
+    assertSome(Meta.make({ "http-equiv": O.some("content-type") })["http-equiv"], "content-type");
   });
 
   it.effect("keeps the case-distinguishing ol type keyword contract", () =>
@@ -229,38 +251,55 @@ describe("@beep/html attribute microsyntaxes", () => {
         expect(Result.getOrThrow(encodeOlResult(decoded)).type).toBe(value);
       }
       const invalidOlType = yield* Effect.exit(decodeUnknownOl({ _tag: "ol", children: [], type: "ALPHA" }));
-      expect(Exit.isFailure(invalidOlType)).toBe(true);
+      assertExitFailure(
+        Exit.match(invalidOlType, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
-  it("obeys the enumerated-attribute ASCII-case fixed-point law", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.Array(S.Boolean).check(S.isMinLength(5), S.isMaxLength(5)))]),
-          ([uppercase]) => {
-            const encoded = [..."image"]
-              .map((character, index) => (uppercase[index] === true ? character.toUpperCase() : character))
-              .join("");
-            const canonical = Result.getOrThrow(decodeEnumeratedResult(encoded));
-            expect(canonical).toBe("image");
-            const reencoded = Result.getOrThrow(encodeEnumeratedResult(canonical));
-            expect(reencoded).toBe("image");
-            expect(Result.getOrThrow(decodeEnumeratedResult(reencoded))).toBe(canonical);
-            if (encoded !== canonical) {
-              expect(() => Reflect.apply(Enumerated.make, Enumerated, [encoded])).toThrow();
-            }
+  it.prop(
+    "obeys the enumerated-attribute ASCII-case fixed-point law",
+    [Arbitrary.schema(S.Array(S.Boolean).check(S.isMinLength(5), S.isMaxLength(5)))],
+    ([uppercase]) => {
+      const encoded = [..."image"]
+        .map((character, index) => (uppercase[index] === true ? character.toUpperCase() : character))
+        .join("");
+      const canonical = Result.getOrThrow(decodeEnumeratedResult(encoded));
+      expect(canonical).toBe("image");
+      const reencoded = Result.getOrThrow(encodeEnumeratedResult(canonical));
+      expect(reencoded).toBe("image");
+      expect(Result.getOrThrow(decodeEnumeratedResult(reencoded))).toBe(canonical);
+      if (encoded !== canonical) {
+        expect(() => Reflect.apply(Enumerated.make, Enumerated, [encoded])).toThrow();
+      }
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it("rejects non-ASCII and padded enumerated keywords", () => {
     for (const invalid of [" image", "image ", "ımage"]) {
-      expect(Result.isFailure(decodeEnumeratedResult(invalid))).toBe(true);
+      assertFailure(
+        Result.mapError(decodeEnumeratedResult(invalid), ({ _tag }) => _tag),
+        "SchemaError"
+      );
     }
-    expect(Result.isFailure(decodeAsciiKResult("\u212A"))).toBe(true);
+    assertFailure(
+      Result.mapError(decodeAsciiKResult("\u212A"), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it("canonicalizes the exact enumerated global-attribute inventory", () => {
@@ -296,32 +335,21 @@ describe("@beep/html attribute microsyntaxes", () => {
     });
   });
 
-  it.effect("keeps token normalization decode/encode idempotent", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([
-          Arbitrary.schema(
-            S.Literals([
-              "noopener",
-              "noreferrer",
-              "noopener noreferrer",
-              "noreferrer noopener",
-              "  NOOPENER   noreferrer ",
-            ])
-          ),
-        ]),
-        ([input]) =>
-          Effect.gen(function* () {
-            const canonical = yield* decodeRel(input);
-            expect(yield* decodeRel(yield* encodeRel(canonical))).toBe(canonical);
+  it.effect.prop(
+    "keeps token normalization decode/encode idempotent",
+    [
+      Arbitrary.schema(
+        S.Literals(["noopener", "noreferrer", "noopener noreferrer", "noreferrer noopener", "  NOOPENER   noreferrer "])
+      ),
+    ],
+    ([input]) =>
+      Effect.gen(function* () {
+        const canonical = yield* decodeRel(input);
+        expect(yield* decodeRel(yield* encodeRel(canonical))).toBe(canonical);
 
-            return true;
-          }),
-        fcRuns(50)
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+        return true;
+      }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect("validates autocomplete and dataset-key grammars", () =>

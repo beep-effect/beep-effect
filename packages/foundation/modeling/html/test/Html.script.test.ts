@@ -8,9 +8,11 @@ import {
   ScriptDataBlockMimeType,
   ScriptState,
 } from "@beep/html/Html.script";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertNone, assertSuccess } from "@effect/vitest/utils";
+import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -61,7 +63,7 @@ describe("HTML script semantic states", () => {
 
   it("classifies every author-conforming script type without rewriting its wire", () => {
     const missing = Script.make({ content: "" });
-    expect(O.isNone(missing.type)).toBe(true);
+    assertNone(missing.type);
     expect(Result.getOrThrow(resolveScriptState(missing))).toStrictEqual(ScriptState.cases.classic.make({}));
     expect(Result.getOrThrow(resolveScriptState(Script.make({ content: "", type: O.some("") })))).toStrictEqual(
       ScriptState.cases.classic.make({})
@@ -107,7 +109,10 @@ describe("HTML script semantic states", () => {
         Script.make({ content: "", type: O.some("text/javascript;") }),
       ],
       (script) => {
-        expect(Result.isFailure(resolveScriptState(script))).toBe(true);
+        assertFailure(
+          Result.mapError(resolveScriptState(script), ({ _tag }) => _tag),
+          "InvalidScriptType"
+        );
         expect(
           A.some(
             inspectConformance(script),
@@ -247,10 +252,19 @@ describe("HTML script semantic states", () => {
     expect(validState.state).toBe("dataBlock");
     expect(invalidMimeType).toBe("application/json");
     expect(invalidState.state).toBe("unsupported");
-    expect(Result.isSuccess(decodeHtmlMimeTypeResult("application/json"))).toBe(true);
-    expect(Result.isFailure(decodeHtmlMimeTypeResult("beep"))).toBe(true);
-    expect(Result.isFailure(decodeScriptDataBlockMimeTypeResult("text/javascript"))).toBe(true);
-    expect(Result.isFailure(decodeScriptStateResult({ state: "dataBlock", mimeType: "text/javascript" }))).toBe(true);
+    assertSuccess(decodeHtmlMimeTypeResult("application/json"), HtmlMimeType.make("application/json"));
+    assertFailure(
+      Result.mapError(decodeHtmlMimeTypeResult("beep"), ({ _tag }) => _tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(decodeScriptDataBlockMimeTypeResult("text/javascript"), ({ _tag }) => _tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(decodeScriptStateResult({ state: "dataBlock", mimeType: "text/javascript" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
   it("exhaustively matches every script semantic state", () => {
@@ -270,21 +284,16 @@ describe("HTML script semantic states", () => {
     expect(describeState(ScriptState.cases.dataBlock.make({ mimeType }))).toBe("data-block:application/json");
   });
 
-  it("round-trips schema-derived script semantic states", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ScriptStateArbitrary]),
-          ([state]) => {
-            const encoded = Result.getOrThrow(encodeScriptStateResult(state));
-            const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
-            expect(Eq.equals(decoded, state)).toBe(true);
+  it.prop(
+    "round-trips schema-derived script semantic states",
+    [ScriptStateArbitrary],
+    ([state]) => {
+      const encoded = Result.getOrThrow(encodeScriptStateResult(state));
+      const decoded = Result.getOrThrow(decodeScriptStateResult(encoded));
+      expect(Eq.equals(decoded, state)).toBe(true);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });
