@@ -1,7 +1,8 @@
 import { Drizzle, DrizzleError, DrizzleErrorContext } from "@beep/drizzle";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Deferred, Effect, Exit, Fiber, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -65,7 +66,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Drizzle PgLite integration", () => {});
 } else {
   describe.concurrent("Drizzle PgLite integration", () => {
-    layer(DrizzlePgliteLayer, { timeout: "2 minutes" })((it) => {
+    it.layer(DrizzlePgliteLayer, { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs execute and transaction flows against a PgLite-backed adapter",
         Effect.fnUntraced(function* () {
@@ -99,7 +100,7 @@ if (!shouldRunPgliteIntegration) {
         120_000
       );
     });
-    layer(Layer.fresh(DrizzlePgliteLayer), { timeout: "2 minutes" })((it) => {
+    it.layer(Layer.fresh(DrizzlePgliteLayer), { timeout: "2 minutes" })((it) => {
       it.effect(
         "rolls back an interrupted transaction and remains usable",
         Effect.fnUntraced(function* () {

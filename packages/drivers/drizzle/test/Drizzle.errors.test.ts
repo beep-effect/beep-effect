@@ -1,7 +1,8 @@
 import { Drizzle, DrizzleError, DrizzleErrorContext, DrizzleOperation, DrizzleRows } from "@beep/drizzle";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as assert from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -403,7 +404,7 @@ describe("Drizzle", () => {
   describe("exposes adapter execute failures as DrizzleError", () => {
     const cause = new Error("execute failed");
     const client = makeClient(() => Effect.fail(DrizzleError.fromUnknown("execute", cause)));
-    it.layer(Drizzle.makeLayer(client))((it) => {
+    it.layer(Drizzle.makeLayer(client), { timeout: "10 seconds" })((it) => {
       it.effect(
         "exposes adapter execute failures as DrizzleError",
         Effect.fnUntraced(function* () {
@@ -438,10 +439,12 @@ describe("Drizzle", () => {
         }),
       withTransaction: (use) => use(transactionClient),
     };
-    it.layer(Drizzle.makeLayer(client))((it) => {
+    it.layer(Drizzle.makeLayer(client), { timeout: "10 seconds" })((it) => {
       it.effect(
         "provides execute and transaction through Drizzle.makeLayer",
         Effect.fnUntraced(function* () {
+          rootExecutions = 0;
+          transactionExecutions = 0;
           const program = Effect.gen(function* () {
             const drizzle = yield* Drizzle;
             const executed = yield* drizzle.execute("select 1", ["root"]);
@@ -462,7 +465,7 @@ describe("Drizzle", () => {
   describe("preserves callback failures inside transactions", () => {
     const expected = DrizzleError.fromUnknown("withTransaction", new Error("callback failed"));
     const client = makeClient((statement) => Effect.succeed([statement]));
-    it.layer(Drizzle.makeLayer(client))((it) => {
+    it.layer(Drizzle.makeLayer(client), { timeout: "10 seconds" })((it) => {
       it.effect(
         "preserves callback failures inside transactions",
         Effect.fnUntraced(function* () {
@@ -484,7 +487,7 @@ describe("Drizzle", () => {
       execute: (statement) => Effect.succeed([statement]),
       withTransaction: () => Effect.fail(expected),
     };
-    it.layer(Drizzle.makeLayer(client))((it) => {
+    it.layer(Drizzle.makeLayer(client), { timeout: "10 seconds" })((it) => {
       it.effect(
         "preserves adapter failures from transactions",
         Effect.fnUntraced(function* () {
@@ -502,7 +505,7 @@ describe("Drizzle", () => {
 
   describe("uses explicit Effect-native transaction callbacks", () => {
     const client = makeClient((statement) => Effect.succeed([statement]));
-    it.layer(Drizzle.makeLayer(client))((it) => {
+    it.layer(Drizzle.makeLayer(client), { timeout: "10 seconds" })((it) => {
       it.effect(
         "uses explicit Effect-native transaction callbacks",
         Effect.fnUntraced(function* () {

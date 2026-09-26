@@ -9,10 +9,11 @@ import {
   DuckDbRows,
   DuckDbSqlClient,
 } from "@beep/duckdb";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Exit, Fiber, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

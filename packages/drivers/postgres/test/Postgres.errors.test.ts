@@ -17,11 +17,12 @@ import {
   PostgresError,
   PostgresErrorContext,
 } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -548,7 +549,7 @@ describe("Postgres interop", () => {
 });
 
 describe("Postgres Drizzle migrations", () => {
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
     it.effect(
       "normalizes synchronous native migrator setup failures",
       Effect.fnUntraced(function* () {
@@ -566,7 +567,7 @@ describe("Postgres Drizzle migrations", () => {
     );
   });
 
-  it.layer(NodeCrypto.layer)((it) => {
+  it.layer(NodeCrypto.layer, { timeout: "10 seconds" })((it) => {
     it.effect(
       "validates and prepares in-memory migration bundles before native execution",
       Effect.fnUntraced(function* () {
@@ -598,7 +599,7 @@ describe("Postgres Drizzle migrations", () => {
 describe("Postgres client", () => {
   const client = { fixture: "pg-client" } as unknown as PostgresClientValue;
 
-  it.layer(PostgresClient.fromPgClient(client))((it) => {
+  it.layer(PostgresClient.fromPgClient(client), { timeout: "10 seconds" })((it) => {
     it.effect("provides all client service keys from an existing PgClient", () =>
       Effect.gen(function* () {
         const beepClient = yield* PostgresClient;

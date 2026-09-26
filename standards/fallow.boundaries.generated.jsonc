@@ -1600,6 +1600,7 @@
           "@beep/drizzle",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1607,6 +1608,7 @@
           "@beep/drizzle",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1617,6 +1619,7 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1624,6 +1627,7 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2869,6 +2873,7 @@
           "@beep/identity",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2877,6 +2882,7 @@
           "@beep/identity",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

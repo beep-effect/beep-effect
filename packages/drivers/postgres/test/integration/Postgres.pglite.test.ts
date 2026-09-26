@@ -9,10 +9,11 @@ import {
   PostgresClient,
   PostgresDrizzle,
 } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { formatToMillis } from "drizzle-orm/migrator.utils";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { Effect, Layer, pipe } from "effect";
@@ -97,7 +98,7 @@ if (!shouldRunPgliteIntegration) {
   // The shared PgLite wire-protocol server is single-connection; keep the layer
   // acquisitions sequential so Drizzle and migration tests do not race it.
   describe("Postgres PgLite integration", { concurrent: false }, () => {
-    layer(makePostgresClientLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makePostgresClientLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "provides PostgresClient over the PgLite PgClient",
         Effect.fnUntraced(function* () {
@@ -121,7 +122,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makePostgresDrizzleLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makePostgresDrizzleLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs Drizzle CRUD and transactions through makeDrizzleLayer",
         Effect.fnUntraced(function* () {
@@ -153,7 +154,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makePgliteLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makePgliteLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs Drizzle migrations from a fixture folder through PgLite",
         Effect.fnUntraced(function* () {
@@ -182,7 +183,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(Layer.merge(makePgliteLayer(), NodeServices.layer), { timeout: "2 minutes" })((it) => {
+    it.layer(Layer.merge(makePgliteLayer(), NodeServices.layer), { timeout: "2 minutes" })((it) => {
       it.effect(
         "continues a folder-migrated journal from an in-memory bundle",
         Effect.fnUntraced(function* () {
