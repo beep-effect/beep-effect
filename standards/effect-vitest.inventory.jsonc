@@ -111569,13 +111569,13 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:556:assertTrue@8#1",
+      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:557:assertTrue@8#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 556,
-      "endLine": 556,
+      "line": 557,
+      "endLine": 557,
       "symbol": "assertTrue",
       "occurrence": "v2:a3c2b8a0767972197d9cdf16b98281ddeac16d366a6521403d9f45eaa4d49b7c",
       "class": "hand-rolled-data-assertion",
@@ -111591,13 +111591,13 @@
       "reason": "Canonical assertTrue preserves the original Boolean predicate and polarity. No independent expected payload or Cause exists; the detector still flags the nested Option/Exit expression as a judgment candidate."
     },
     {
-      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:467:assertTrue@6#1",
+      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:468:assertTrue@6#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 467,
-      "endLine": 467,
+      "line": 468,
+      "endLine": 468,
       "symbol": "assertTrue",
       "occurrence": "v2:e36f8e9eb6df091fa6d776c6cc8382ef0230df06b090c1564bb5cc2735bc9859",
       "class": "hand-rolled-data-assertion",

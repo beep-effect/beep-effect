@@ -54,6 +54,7 @@ const decodeStructInlineSchemaJson = S.decodeEffect(
     })
   )
 );
+const decodeAiSyncError = S.decodeEffect(AiSyncError);
 const decodeNormalizedAgentInstructionDocument = S.decodeEffect(NormalizedAgentInstructionDocument);
 const decodeRecordStringJson = S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeUnknownRecordStringOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
@@ -329,7 +330,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
     [AiSyncError],
     Effect.fn(function* ([value]) {
       const encoded = yield* encodeAiSyncError(value);
-      const decoded = yield* S.decodeEffect(AiSyncError)(encoded);
+      const decoded = yield* decodeAiSyncError(encoded);
       expect(yield* encodeAiSyncError(decoded)).toEqual(encoded);
     }),
     { arbitrary: fcRuns(25) }

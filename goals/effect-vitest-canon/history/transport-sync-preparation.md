@@ -108,3 +108,28 @@ The runner dependencies add 19 reviewed cache edges with no removals and preserv
 existing multiplicity. Cache audit reports zero blocking findings and 1,251
 unassessed computations. Full hosted proof, review closure and operator merge
 remain required.
+
+
+## PR1292 Heavy Lint Policy remediation — 2026-09-26
+
+Hosted Lint Policy identified an introduced no-inline-schema-compile diagnostic
+in the AiSyncError property. The exact decoder is now compiled once at module
+scope and reused. Schema, encoded input, re-encoded equality, domain and 25-run
+floor remain unchanged. This is a test-only two-edit correction.
+
+Full @beep/ai-sync package verification exited 0 (audit 9.6s, docgen 3.0s).
+The root oxlint script focused on ai-sync.test.ts also exited 0. Current detector
+output retains the same three reviewed AI Sync exceptions; moved assertion
+anchors are reconciled with their current occurrence IDs. API Transport records
+and source are unchanged.
+
+Corrected ai-sync.test.ts SHA-256:
+`97cb60cf1d2610fbfbdc9e324d5ed6d95bd43dbb7b60ac8daab1aeb0180e6d63`.
+The timing table above measures the earlier source revision and is retained as
+historical evidence; it is not a timing measurement of this correction. No new
+runtime timing or mergeability claim follows from these local proofs. Hosted
+checks and outstanding review gates remain the publication owner's responsibility.
+
+The bounded strict validation also exposed inherited stale census metadata for
+AiSync.equivalence.test.ts. Its existing byte/line record was refreshed to the
+unchanged source (21 lines); no equivalence test source or oracle changed.
