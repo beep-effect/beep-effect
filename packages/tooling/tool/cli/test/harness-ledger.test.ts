@@ -260,6 +260,40 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("disposition refuses a row id the ledger never recorded", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const ledger = yield* HarnessLedgerService;
+      yield* proposePending(root);
+      const missing = yield* Effect.flip(
+        ledger.disposition(
+          HarnessLedgerDispositionOptions.make({
+            repoRoot: root,
+            rowId: "hl-20260101-00000000",
+            to: "accepted",
+            evidence: "never recorded",
+          })
+        )
+      );
+      expect(missing._tag).toBe("HarnessLedgerChainError");
+      expect(missing.message).toBe("No ledger row hl-20260101-00000000.");
+      expect(yield* readLedgerLines(root)).toHaveLength(1);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("list filters chains by the month their latest row was written", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const ledger = yield* HarnessLedgerService;
+      const row = yield* proposePending(root);
+      const thisMonth = Str.slice(0, 7)(DateTime.formatIso(row.createdAt));
+      const current = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, month: O.some(thisMonth) }));
+      expect(A.map(current, (entry) => entry.row.rowId)).toStrictEqual([row.rowId]);
+      const elsewhere = yield* ledger.list(HarnessLedgerListOptions.make({ repoRoot: root, month: O.some("2000-01") }));
+      expect(elsewhere).toHaveLength(0);
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("list folds chains to their latest row and flags stale fingerprints", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
@@ -324,7 +358,6 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(dryRun.undecodableLines).toBe(1);
       expect(dryRun.candidates).toBe(3);
       expect(dryRun.touchedCandidates).toBe(1);
-      expect(dryRun.written).toBe(false);
       const proposed = A.map(dryRun.proposals, (proposal) => `${proposal.candidate.kind}:${proposal.candidate.name}`);
       expect(proposed).toStrictEqual(["skill:beta", "mcp-server:notion"]);
       expect(A.map(dryRun.proposals, (proposal) => proposal.row.mechanismClass)).toStrictEqual([
@@ -350,6 +383,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
 
+      // An open chain head without a target surface is read but never dedupes a candidate.
+      yield* proposePending(root);
       const again = yield* ledger.pruneProposals(options);
       expect(again.proposals).toHaveLength(2);
       expect(again.alreadyProposed).toBe(0);

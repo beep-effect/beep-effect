@@ -513,7 +513,6 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
     touchedCandidates: S.Finite,
     alreadyProposed: S.Finite,
     proposals: S.Array(PruneProposal),
-    written: S.Boolean,
   },
   $I.annote("HarnessLedgerPruneReport", {
     description: "Session window, decode tallies, and the zero-touch proposals of one pruning scan.",

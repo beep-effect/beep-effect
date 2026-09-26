@@ -263,9 +263,9 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
   );
 });
 
-// Reads open proposals and, with `write`, appends fresh ones. The caller runs
-// it under the write fence when `write` is set so the dedupe check and the
-// append cannot interleave with another writer.
+// Reads open proposals and plans fresh ones without writing. Appending waits
+// on hook-pulse sessions being scoped by the current harness hash; until then
+// `pruneProposalsImpl` refuses `write` before this runs.
 const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(function* (
   options: HarnessLedgerPruneOptions,
   candidates: ReadonlyArray<PruneSurfaceCandidate>,
@@ -287,13 +287,6 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     onNone: () => Effect.succeed(A.empty<PruneProposal>()),
     onSome: (windowEnd) => buildPruneProposals(options, fresh, observed.sessionsObserved, windowEnd),
   });
-  const written = options.write && A.isArrayNonEmpty(proposals);
-  if (written) {
-    yield* appendLedgerRows(
-      options.repoRoot,
-      A.map(proposals, (proposal) => proposal.row)
-    );
-  }
   return HarnessLedgerPruneReport.make({
     windowSessions: options.windowSessions,
     sessionsObserved: observed.sessionsObserved,
@@ -304,7 +297,6 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     touchedCandidates: A.length(candidates) - A.length(untouched),
     alreadyProposed: A.length(zeroTouch) - A.length(fresh),
     proposals,
-    written,
   });
 });
 
@@ -316,8 +308,7 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
   }
   const candidates = yield* enumeratePruneCandidates(options.repoRoot);
   const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions);
-  const plan = planPruneProposals(options, candidates, observed);
-  return yield* options.write ? withLedgerWriteFence(options.repoRoot, plan) : plan;
+  return yield* planPruneProposals(options, candidates, observed);
 });
 
 /**

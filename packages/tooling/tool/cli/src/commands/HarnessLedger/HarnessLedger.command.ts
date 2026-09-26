@@ -424,9 +424,7 @@ const pruneLines = (report: HarnessLedgerPruneReport): ReadonlyArray<string> => 
           `${proposal.row.rowId}\t${proposal.candidate.kind}:${proposal.candidate.name}\t${proposal.row.mechanismClass}\t${O.getOrElse(proposal.row.dispositionEvidence, () => "-")}`
       ),
   }),
-  report.written
-    ? `appended ${A.length(report.proposals)} proposal row(s) to harness-ledger/rows/.`
-    : "dry run: nothing written (pass --write to append).",
+  "dry run: nothing written (--write is refused until sessions are scoped by harness hash).",
 ];
 
 /**
