@@ -99,3 +99,14 @@ the original JSON string bytes/order. Package audit/docgen passed (8.0 / 2.9
 seconds). Some-cause coverage is a separate next change, followed by the
 cancellation/clock phase. This registration checkpoint makes no claim that
 the generated-domain gap or five permit-clock findings are already repaired.
+
+
+Some-cause expansion commit `a964e75f40` adds two separate generated laws
+without changing the original seven laws or their None filters. Generated
+name/message/stack objects have independently specified complete wire payloads.
+Options and errors traverse JSON serialization and decoding; raw error
+normalization checks reference identity only before serialization. All nine
+DuckDB laws passed at 400 runs with seed 20260708, and full package audit/docgen
+passed (8.0 / 2.7 seconds). No valid-input counterexample or production repair
+was found. The typed JSON-string decoder corrected an introduced compiler
+diagnostic without altering the domains.

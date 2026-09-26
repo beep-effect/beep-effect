@@ -2449,3 +2449,15 @@ Effect encoder retains the independently specified expected wire payloads.
 A pinned example checked against the installed declaration surface would
 have prevented both edit/proof iterations. This is migration-tooling friction,
 not evidence of a production codec defect.
+
+
+## Generated infra SDK declarations missing after lane install
+
+The media wave's full proof stopped in infra docgen on TypeScript diagnostics
+inside node_modules/@pulumi/gharunners. Source and docgen configuration matched
+main; main passed its 101 examples while the worktree lacked bin/index.d.ts.
+Running the dependency's existing build script restored declarations, after
+which the same infra docgen command passed. No tracked source or compiler rule
+changed. An install preflight checking generated file dependencies for their
+declared build artifacts would prevent this expensive late-proof failure.
+The full proof was resubmitted; focused docgen alone is not full proof credit.
