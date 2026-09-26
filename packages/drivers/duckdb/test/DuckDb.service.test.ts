@@ -13,7 +13,8 @@ import { fcRuns } from "@beep/test-utils";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Context, Effect, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Context, Effect, Exit, Fiber, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -220,10 +221,10 @@ describe("@beep/duckdb", { concurrent: false }, () => {
 
     expect(error).toBeInstanceOf(DuckDbError);
     expect(O.getOrThrow(error.cause)).toBe(cause);
-    expect(O.getOrThrow(error.databasePath)).toBe("metrics.duckdb");
+    assertSome(error.databasePath, "metrics.duckdb");
     expect(error.message).toBe("Custom DuckDB failure.");
     expect(error.operation).toBe("query");
-    expect(O.getOrThrow(error.statement)).toBe("SELECT broken");
+    assertSome(error.statement, "SELECT broken");
   });
 
   it("preserves existing DuckDB errors and supports the data-last normalizer form", () => {
@@ -323,7 +324,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           )
           .pipe(Effect.exit);
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         expect(yield* fs.exists(parquetPath)).toBe(false);
 
         const rows = yield* duckdb.query("SELECT id FROM transaction_export_events ORDER BY id");
@@ -538,7 +539,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
         Effect.exit
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       expect(instanceCloseAttempts).toBe(1);
     })
   );
@@ -680,7 +681,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             return yield* Fiber.await(transactionFiber);
           }).pipe(Effect.ensuring(Effect.sync(() => releaseBegin.resolve())));
 
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
           expect(statements).toEqual(["BEGIN TRANSACTION", "ROLLBACK"]);
         })
       );
@@ -722,7 +723,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             yield* duckdb.withTransaction(() => Effect.void);
           }).pipe(Effect.exit);
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          pipe(exit, Exit.isFailure, assertTrue);
           expect(yield* latchResolvesWithin(rollbackStarted, 50)).toBe(false);
           expect(statements).toEqual(["BEGIN TRANSACTION"]);
         })
@@ -760,7 +761,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           )
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         const rows = yield* duckdb.query("SELECT count(*) AS count FROM tx_events");
         expect(rows).toEqual([{ count: "0" }]);
       })
@@ -901,7 +902,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
 
         const exit = yield* DuckDbSqlClient.make({ databasePath: ":memory:" }).pipe(Effect.scoped, Effect.exit);
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         expect(instanceCloseAttempts).toBe(1);
       })
     );
@@ -1185,7 +1186,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
           )
           .pipe(Effect.exit);
 
-        expect(Exit.isFailure(transactionExport)).toBe(true);
+        pipe(transactionExport, Exit.isFailure, assertTrue);
         expect(yield* fs.exists(transactionParquetPath)).toBe(false);
 
         const transactionRows = yield* sql<{ readonly id: string }>`
@@ -1225,7 +1226,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
             })
           )
         );
-        expect(Exit.isFailure(rollbackExit)).toBe(true);
+        pipe(rollbackExit, Exit.isFailure, assertTrue);
 
         yield* sql.withTransaction(
           Effect.gen(function* () {
@@ -1271,7 +1272,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
             })
           )
         );
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
 
         const rows = yield* sql<{ readonly id: string }>`
       SELECT id
