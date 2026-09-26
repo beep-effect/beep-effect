@@ -2444,3 +2444,12 @@ result-capture generators with a single yielded effect. Full package verificatio
 reported TS377083. Flattening the redundant generators preserved the exact effects
 and assertions; the next full audit and docgen passed. Include this compiler check
 when removing fixture wrappers so redundant generators are caught in the same phase.
+
+## 2026-09-26: ACP diagnostic level verification
+
+ACP package verification passed with debug-level phase events, but a temporary
+TestConsole positive control under BEEP_TEST_TRACE=1 captured the runner start
+and none of those events. The current minimum log level filters debug messages.
+Promote only the static phase events to info and repeat positive/negative capture
+controls before crediting observability. Package behavior alone cannot establish
+that the intended diagnostics are visible. The temporary probe was restored.

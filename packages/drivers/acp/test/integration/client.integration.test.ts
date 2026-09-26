@@ -1,8 +1,9 @@
 import { Client as AcpClient, Errors as AcpError, Schema as AcpSchema } from "@beep/acp";
+import { it } from "@beep/test-runner";
 import { currentHostPlatform } from "@beep/utils/HostProcess";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, it } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -91,6 +92,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
           Ref.update(typedNotifications, (current) => [...current, payload])
         );
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         const init = yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -102,6 +104,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
         assert.equal(init.protocolVersion, 1);
 
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
@@ -112,13 +115,17 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
         });
         assert.equal(session.sessionId, "mock-session-1");
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         const prompt = yield* acp.agent.prompt({
           sessionId: session.sessionId,
           prompt: [{ type: "text", text: "hello" }],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
         assert.equal(prompt.stopReason, "end_turn");
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.notifications", state: "waiting" });
         const streamed = yield* Stream.runCollect(Stream.take(acp.raw.notifications, 2));
+        yield* Effect.logInfo("ACP test phase", { phase: "client.notifications", state: "completed" });
         assert.equal(streamed.length, 2);
         assert.equal(streamed[0]?._tag, "SessionUpdate");
         assert.equal(streamed[1]?._tag, "ElicitationComplete");
@@ -172,6 +179,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
         );
         yield* acp.handleExtRequest("x/typed_request", TypedRequestPayload, () => Effect.succeed({ ok: true }));
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -183,6 +191,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
 
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
 
@@ -191,12 +200,14 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
           mcpServers: [],
         });
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         const result = yield* Effect.exit(
           acp.agent.prompt({
             sessionId: session.sessionId,
             prompt: [{ type: "text", text: "hello" }],
           })
         );
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
 
         if (result._tag !== "Failure") {
           assert.fail("Expected prompt to fail for invalid typed extension payload");
@@ -250,6 +261,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
           Ref.update(typedNotifications, (current) => [...current, payload])
         );
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -261,16 +273,19 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
 
         const session = yield* acp.agent.createSession({
           cwd: process.cwd(),
           mcpServers: [],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         yield* acp.agent.prompt({
           sessionId: session.sessionId,
           prompt: [{ type: "text", text: "hello" }],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
 
         yield* acp.handleSessionUpdate((notification) => Ref.update(updates, (current) => [...current, notification]));
         yield* acp.handleElicitationComplete((notification) =>
@@ -319,6 +334,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
         );
         yield* acp.handleSessionUpdate(() => Ref.update(successfulHandlers, (count) => count + 1));
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -330,16 +346,19 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
 
         const session = yield* acp.agent.createSession({
           cwd: process.cwd(),
           mcpServers: [],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         yield* acp.agent.prompt({
           sessionId: session.sessionId,
           prompt: [{ type: "text", text: "hello" }],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
 
         assert.equal(yield* Ref.get(successfulHandlers), 1);
       })

@@ -1,7 +1,8 @@
 import { Agent as AcpAgent, Schema as AcpSchema } from "@beep/acp";
 import { $AcpId } from "@beep/identity/packages";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, it } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -104,7 +105,9 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         })
         .pipe(Effect.forkScoped);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.permission-output", state: "waiting" });
       const permissionRequest = yield* decodeRequestPermissionRequest(yield* Queue.take(output));
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.permission-output", state: "completed" });
       assert.equal(permissionRequest.jsonrpc, "2.0");
       assert.equal(permissionRequest.method, "session/request_permission");
       assert.deepEqual(permissionRequest.params, {
@@ -131,7 +134,9 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         })
       );
 
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.permission-response", state: "waiting" });
       const permission = yield* Fiber.join(permissionFiber);
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.permission-response", state: "completed" });
       assert.equal(permission.outcome.outcome, "selected");
 
       yield* Queue.offer(
@@ -155,7 +160,9 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         })
       );
 
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.initialize-response", state: "waiting" });
       const initResponse = yield* decodeInitializeResponse(yield* Queue.take(output));
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.initialize-response", state: "completed" });
       assert.deepEqual(initResponse, {
         jsonrpc: "2.0",
         id: 2,
@@ -188,8 +195,12 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         })
       );
 
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.cancellation", state: "waiting" });
       yield* Deferred.await(cancelReceived);
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.cancellation", state: "completed" });
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.extension-notification", state: "waiting" });
       yield* Deferred.await(extReceived);
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.extension-notification", state: "completed" });
       assert.deepEqual(yield* Ref.get(cancelNotifications), ["session-1"]);
       assert.deepEqual(yield* Ref.get(extNotifications), [2]);
     })
@@ -215,8 +226,12 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         .pipe(Effect.forkScoped);
       const extFiber = yield* agent.client.extRequest("x/test", { hello: "world" }).pipe(Effect.forkScoped);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.first-outbound", state: "waiting" });
       const firstOutbound = yield* Queue.take(output);
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.first-outbound", state: "completed" });
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.second-outbound", state: "waiting" });
       const secondOutbound = yield* Queue.take(output);
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.second-outbound", state: "completed" });
 
       const firstIsPermission = yield* decodeRequestPermissionRequest(firstOutbound).pipe(
         Effect.match({
@@ -256,7 +271,9 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         })
       );
 
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.permission-response", state: "waiting" });
       const permission = yield* Fiber.join(permissionFiber);
+      yield* Effect.logInfo("ACP test phase", { phase: "agent.permission-response", state: "completed" });
       assert.equal(permission.outcome.outcome, "selected");
       assert.deepEqual(yield* Fiber.join(extFiber), { ok: true });
     })

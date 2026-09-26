@@ -5,11 +5,12 @@ import {
   Protocol as AcpProtocol,
   Schema as AcpSchema,
 } from "@beep/acp";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, it } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
@@ -592,9 +593,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
   it.effect(
     "propagates the real child exit code when the input stream ends",
     Effect.fnUntraced(function* () {
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "waiting" });
       const handle = yield* makeHandle({
         ACP_MOCK_EXIT_IMMEDIATELY_CODE: "7",
       });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "completed" });
       assert.isDefined(AcpClient.layerChildProcess({ handle }));
       const firstMessage = yield* Deferred.make<unknown>();
       const termination = yield* Deferred.make<AcpError.AcpError>();
@@ -609,8 +612,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         .run(0, (message) => Deferred.succeed(firstMessage, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "waiting" });
       const message = yield* Deferred.await(firstMessage);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "completed" });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "waiting" });
       const exitError = yield* Deferred.await(termination);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "completed" });
       assert.instanceOf(exitError, AcpError.AcpProcessExitedError);
       assertSome((exitError as AcpError.AcpProcessExitedError).code, 7);
       assert.equal(
@@ -641,10 +648,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
   it.effect(
     "does not emit a second process-exit error after a decode failure",
     Effect.fnUntraced(function* () {
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "waiting" });
       const handle = yield* makeHandle({
         ACP_MOCK_MALFORMED_OUTPUT: "1",
         ACP_MOCK_MALFORMED_OUTPUT_EXIT_CODE: "23",
       });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "completed" });
       const terminationCalls = yield* Ref.make(0);
       const terminationObserved = yield* Deferred.make<void>();
       const firstMessage = yield* Deferred.make<unknown>();
@@ -662,8 +671,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         .run(0, (message) => Deferred.succeed(firstMessage, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "waiting" });
       const message = yield* Deferred.await(firstMessage);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "completed" });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "waiting" });
       yield* Deferred.await(terminationObserved);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "completed" });
       assert.equal(yield* Ref.get(terminationCalls), 1);
       assert.equal(
         (
@@ -686,7 +699,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       assert.equal(defect._tag, "RpcClientDefect");
       assert.instanceOf(defect.cause, AcpError.AcpProtocolParseError);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.native-exit", state: "waiting" });
       assert.equal(yield* handle.exitCode, 23);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.native-exit", state: "completed" });
       assert.equal(yield* Ref.get(terminationCalls), 1);
     }),
     childProcessProtocolTestTimeout
