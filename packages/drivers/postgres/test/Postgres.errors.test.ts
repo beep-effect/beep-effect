@@ -21,6 +21,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -326,24 +327,24 @@ describe("PostgresError", () => {
     const diagnostics = extractPostgresDiagnostics(makeHostileProxy());
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.cause)).toBe(true);
-    expect(O.isNone(diagnostics.sqlState)).toBe(true);
+    assertNone(diagnostics.cause);
+    assertNone(diagnostics.sqlState);
   });
 
   it("does not retain proxied Cause values with throwing reasons getters", () => {
     const diagnostics = extractPostgresDiagnostics(makeCauseWithThrowingReasons());
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.cause)).toBe(true);
-    expect(O.isNone(diagnostics.sqlState)).toBe(true);
+    assertNone(diagnostics.cause);
+    assertNone(diagnostics.sqlState);
   });
 
   it("ignores hostile Cause reason entries without throwing", () => {
     const diagnostics = extractPostgresDiagnostics(makeCauseWithHostileReason());
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.cause)).toBe(true);
-    expect(O.isNone(diagnostics.sqlState)).toBe(true);
+    assertNone(diagnostics.cause);
+    assertNone(diagnostics.sqlState);
   });
 
   it("ignores hostile Error.stack getters", () => {
@@ -357,7 +358,7 @@ describe("PostgresError", () => {
     const diagnostics = extractPostgresDiagnostics(cause);
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.sourceLocation)).toBe(true);
+    assertNone(diagnostics.sourceLocation);
   });
 
   it("follows reason fallbacks when sibling getters throw", () => {
