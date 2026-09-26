@@ -13,7 +13,7 @@ import { fcRuns } from "@beep/test-utils";
 import { DuckDBInstance } from "@duckdb/node-api";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
+import { Context, Effect, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -25,57 +25,48 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
+// These two uses deliberately close the production layer before close-count assertions.
+// Suite teardown would occur after the oracle and change the lifecycle subject.
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
+class NativeTestDirectory extends Context.Service<NativeTestDirectory, string>()(
+  "@beep/duckdb/test/DuckDb.service.test/NativeTestDirectory"
+) {}
+
+const nativeDirectoryLayer = Layer.effect(
+  NativeTestDirectory,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.makeTempDirectoryScoped();
+  })
+).pipe(Layer.provideMerge(NodeServices.layer));
+
+const acquireNativeDuckDbConnection = Effect.gen(function* () {
+  const instance = yield* Effect.acquireRelease(
+    Effect.promise(() => DuckDBInstance.create(":memory:")),
+    (instance) => Effect.sync(() => instance.closeSync())
+  );
+  return yield* Effect.acquireRelease(
+    Effect.promise(() => instance.connect()),
+    (connection) => Effect.sync(() => connection.closeSync())
+  );
+});
+
+const patchDuckDbInstanceCreate = (create: typeof DuckDBInstance.create) =>
+  Effect.acquireRelease(
+    Effect.sync(() => {
+      const original = DuckDBInstance.create;
+      DuckDBInstance.create = create;
+      return original;
     }),
-    use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
+    (original) =>
+      Effect.sync(() => {
+        DuckDBInstance.create = original;
       })
   );
-
-const withNativeDuckDbConnection = <A, E, R>(
-  use: (connection: DuckDBConnection) => Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R> =>
-  Effect.acquireUseRelease(
-    Effect.promise(() =>
-      DuckDBInstance.create(":memory:").then((instance) =>
-        instance.connect().then((connection) => ({ connection, instance }))
-      )
-    ),
-    ({ connection }) => use(connection),
-    ({ connection, instance }) =>
-      Effect.sync(() => {
-        connection.closeSync();
-        instance.closeSync();
-      })
-  );
-
-const withDuckDbInstanceCreate =
-  (create: typeof DuckDBInstance.create) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-    Effect.acquireUseRelease(
-      Effect.sync(() => {
-        const original = DuckDBInstance.create;
-        DuckDBInstance.create = create;
-        return original;
-      }),
-      () => effect,
-      (original) =>
-        Effect.sync(() => {
-          DuckDBInstance.create = original;
-        })
-    );
 
 type Latch = {
   readonly promise: Promise<void>;
@@ -251,261 +242,277 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     expect(normalized.operation).toBe("run");
   });
 
-  it.effect(
-    "runs statements, queries rows, and exports parquet",
-    Effect.fnUntraced(function* () {
-      yield* withTempDirectory(
-        Effect.fnUntraced(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const fs = yield* FileSystem.FileSystem;
-          const databasePath = path.join(tmpDir, "metrics.duckdb");
-          const parquetPath = path.join(tmpDir, "exports", "events.parquet");
-          yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
+  it.layer(
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const databasePath = path.join(tmpDir, "metrics.duckdb");
+        return DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }));
+      })
+    ).pipe(Layer.provideMerge(nativeDirectoryLayer)),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect(
+      "runs statements, queries rows, and exports parquet",
+      Effect.fnUntraced(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
 
-          yield* Effect.gen(function* () {
-            const duckdb = yield* DuckDb;
-            yield* duckdb.withTransaction(
-              Effect.fnUntraced(function* (transaction) {
-                yield* transaction.run("CREATE TABLE events (id VARCHAR, value INTEGER)");
-                yield* transaction.run("INSERT INTO events VALUES ($id, $value)", { id: "run-1", value: 42 });
-              })
-            );
+        const parquetPath = path.join(tmpDir, "exports", "events.parquet");
+        yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
 
-            const rows = yield* duckdb.query("SELECT id, value FROM events ORDER BY id");
-            expect(rows).toEqual([{ id: "run-1", value: 42 }]);
-
-            yield* duckdb.copyTableToParquet(
-              DuckDbParquetExport.make({
-                filePath: parquetPath,
-                tableName: "events",
-              })
-            );
-            expect(yield* fs.exists(parquetPath)).toBe(true);
-          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))));
-        })
-      ).pipe(provideScopedLayer(NodeServices.layer));
-    })
-  );
-
-  it.effect(
-    "rejects legacy parquet export inside transactions",
-    Effect.fnUntraced(function* () {
-      yield* withTempDirectory(
-        Effect.fnUntraced(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const fs = yield* FileSystem.FileSystem;
-          const databasePath = path.join(tmpDir, "legacy-transaction-export.duckdb");
-          const parquetPath = path.join(tmpDir, "exports", "transaction_events.parquet");
-          yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
-
-          yield* Effect.gen(function* () {
-            const duckdb = yield* DuckDb;
-            yield* duckdb.run("CREATE TABLE transaction_export_events (id VARCHAR)");
-
-            const exit = yield* duckdb
-              .withTransaction(
-                Effect.fnUntraced(function* (transaction) {
-                  yield* transaction.run("INSERT INTO transaction_export_events VALUES ('rolled-back')");
-                  yield* transaction.copyTableToParquet(
-                    DuckDbParquetExport.make({
-                      filePath: parquetPath,
-                      tableName: "transaction_export_events",
-                    })
-                  );
-                })
-              )
-              .pipe(Effect.exit);
-
-            expect(Exit.isFailure(exit)).toBe(true);
-            expect(yield* fs.exists(parquetPath)).toBe(false);
-
-            const rows = yield* duckdb.query("SELECT id FROM transaction_export_events ORDER BY id");
-            expect(rows).toEqual([]);
-          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))));
-        })
-      ).pipe(provideScopedLayer(NodeServices.layer));
-    })
-  );
-
-  it.effect(
-    "preserves in-memory state across client operations",
-    Effect.fnUntraced(function* () {
-      yield* Effect.gen(function* () {
         const duckdb = yield* DuckDb;
-        yield* duckdb.run("CREATE TABLE memory_events (id VARCHAR, value INTEGER)");
-        yield* duckdb.run("INSERT INTO memory_events VALUES ($id, $value)", { id: "memory-1", value: 7 });
-
-        const rows = yield* duckdb.query("SELECT id, value FROM memory_events ORDER BY id");
-        expect(rows).toEqual([{ id: "memory-1", value: 7 }]);
-      }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))));
-    })
-  );
-
-  it.effect(
-    "keeps legacy query permits held until interrupted native operations settle",
-    Effect.fnUntraced(function* () {
-      const firstStarted = makeLatch();
-      const releaseFirst = makeLatch();
-      const secondStarted = makeLatch();
-      let firstRead = true;
-      const fakeConnection = {
-        closeSync: () => undefined,
-        run: () => Promise.resolve(fakeRunResult),
-        runAndReadAll: () => {
-          if (firstRead) {
-            firstRead = false;
-            firstStarted.resolve();
-            return releaseFirst.promise.then(() => fakeRowReader([{ value: 1 }] satisfies DuckDbRows));
-          }
-          secondStarted.resolve();
-          return Promise.resolve(fakeRowReader([{ value: 2 }] satisfies DuckDbRows));
-        },
-      };
-      const fakeInstance = {
-        closeSync: () => undefined,
-        connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
-
-      yield* Effect.gen(function* () {
-        const duckdb = yield* DuckDb;
-        yield* Effect.all(
-          [
-            duckdb.query("SELECT 1 AS value").pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-            Effect.gen(function* () {
-              yield* awaitLatch(firstStarted);
-              yield* liveSleep(75);
-              const secondFiber = yield* duckdb
-                .query("SELECT 2 AS value")
-                .pipe(Effect.forkChild({ startImmediately: true }));
-              expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
-              releaseFirst.resolve();
-              expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
-              expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
-            }),
-          ],
-          { concurrency: 2, discard: true }
+        yield* duckdb.withTransaction(
+          Effect.fnUntraced(function* (transaction) {
+            yield* transaction.run("CREATE TABLE events (id VARCHAR, value INTEGER)");
+            yield* transaction.run("INSERT INTO events VALUES ($id, $value)", { id: "run-1", value: 42 });
+          })
         );
-      }).pipe(
-        provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        withDuckDbInstanceCreate(fakeCreate)
-      );
-    })
-  );
 
-  it.effect(
-    "keeps legacy run permits held until interrupted native operations settle",
-    Effect.fnUntraced(function* () {
-      const runStarted = makeLatch();
-      const releaseRun = makeLatch();
-      const readStarted = makeLatch();
-      let firstRun = true;
-      const fakeConnection = {
-        closeSync: () => undefined,
-        run: () => {
-          if (firstRun) {
-            firstRun = false;
-            runStarted.resolve();
-            return releaseRun.promise.then(() => fakeRunResult);
-          }
-          return Promise.resolve(fakeRunResult);
-        },
-        runAndReadAll: () => {
-          readStarted.resolve();
-          return Promise.resolve(fakeRowReader([{ value: 2 }] satisfies DuckDbRows));
-        },
-      };
-      const fakeInstance = {
-        closeSync: () => undefined,
-        connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+        const rows = yield* duckdb.query("SELECT id, value FROM events ORDER BY id");
+        expect(rows).toEqual([{ id: "run-1", value: 42 }]);
 
-      yield* Effect.gen(function* () {
-        const duckdb = yield* DuckDb;
-        yield* Effect.all(
-          [
-            duckdb
-              .run("CREATE TABLE interrupted_run (value INTEGER)")
-              .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-            Effect.gen(function* () {
-              yield* awaitLatch(runStarted);
-              yield* liveSleep(75);
-              const readFiber = yield* duckdb
-                .query("SELECT 2 AS value")
-                .pipe(Effect.forkChild({ startImmediately: true }));
-              expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
-              releaseRun.resolve();
-              expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-              expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
-            }),
-          ],
-          { concurrency: 2, discard: true }
+        yield* duckdb.copyTableToParquet(
+          DuckDbParquetExport.make({
+            filePath: parquetPath,
+            tableName: "events",
+          })
         );
-      }).pipe(
-        provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        withDuckDbInstanceCreate(fakeCreate)
-      );
-    })
-  );
+        expect(yield* fs.exists(parquetPath)).toBe(true);
+      })
+    );
+  });
 
-  it.effect(
-    "keeps legacy parquet export permits held until interrupted native operations settle",
-    Effect.fnUntraced(function* () {
-      const copyStarted = makeLatch();
-      const releaseCopy = makeLatch();
-      const readStarted = makeLatch();
-      const fakeConnection = {
-        closeSync: () => undefined,
-        run: () => {
-          copyStarted.resolve();
-          return releaseCopy.promise.then(() => fakeRunResult);
-        },
-        runAndReadAll: () => {
-          readStarted.resolve();
-          return Promise.resolve(fakeRowReader([{ value: 2 }] satisfies DuckDbRows));
-        },
-      };
-      const fakeInstance = {
-        closeSync: () => undefined,
-        connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+  it.layer(
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const databasePath = path.join(tmpDir, "legacy-transaction-export.duckdb");
+        return DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }));
+      })
+    ).pipe(Layer.provideMerge(nativeDirectoryLayer)),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect(
+      "rejects legacy parquet export inside transactions",
+      Effect.fnUntraced(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
 
-      yield* Effect.gen(function* () {
+        const parquetPath = path.join(tmpDir, "exports", "transaction_events.parquet");
+        yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
+
         const duckdb = yield* DuckDb;
-        yield* Effect.all(
-          [
-            duckdb
-              .copyTableToParquet(
+        yield* duckdb.run("CREATE TABLE transaction_export_events (id VARCHAR)");
+
+        const exit = yield* duckdb
+          .withTransaction(
+            Effect.fnUntraced(function* (transaction) {
+              yield* transaction.run("INSERT INTO transaction_export_events VALUES ('rolled-back')");
+              yield* transaction.copyTableToParquet(
                 DuckDbParquetExport.make({
-                  filePath: "/tmp/legacy-interrupted-copy.parquet",
-                  tableName: "legacy_events",
+                  filePath: parquetPath,
+                  tableName: "transaction_export_events",
                 })
-              )
-              .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-            Effect.gen(function* () {
-              yield* awaitLatch(copyStarted);
-              yield* liveSleep(75);
-              const readFiber = yield* duckdb
-                .query("SELECT 2 AS value")
-                .pipe(Effect.forkChild({ startImmediately: true }));
-              expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
-              releaseCopy.resolve();
-              expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-              expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
-            }),
-          ],
-          { concurrency: 2, discard: true }
-        );
-      }).pipe(
-        provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        withDuckDbInstanceCreate(fakeCreate)
+              );
+            })
+          )
+          .pipe(Effect.exit);
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(yield* fs.exists(parquetPath)).toBe(false);
+
+        const rows = yield* duckdb.query("SELECT id FROM transaction_export_events ORDER BY id");
+        expect(rows).toEqual([]);
+      })
+    );
+  });
+
+  it.layer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        "preserves in-memory state across client operations",
+        Effect.fnUntraced(function* () {
+          const duckdb = yield* DuckDb;
+          yield* duckdb.run("CREATE TABLE memory_events (id VARCHAR, value INTEGER)");
+          yield* duckdb.run("INSERT INTO memory_events VALUES ($id, $value)", { id: "memory-1", value: 7 });
+
+          const rows = yield* duckdb.query("SELECT id, value FROM memory_events ORDER BY id");
+          expect(rows).toEqual([{ id: "memory-1", value: 7 }]);
+        })
       );
-    })
+    }
+  );
+
+  it.layer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        "keeps legacy query permits held until interrupted native operations settle",
+        Effect.fnUntraced(function* () {
+          const firstStarted = makeLatch();
+          const releaseFirst = makeLatch();
+          const secondStarted = makeLatch();
+          let firstRead = true;
+          const fakeConnection = {
+            closeSync: () => undefined,
+            run: () => Promise.resolve(fakeRunResult),
+            runAndReadAll: () => {
+              if (firstRead) {
+                firstRead = false;
+                firstStarted.resolve();
+                return releaseFirst.promise.then(() => fakeRowReader([{ value: 1 }] satisfies DuckDbRows));
+              }
+              secondStarted.resolve();
+              return Promise.resolve(fakeRowReader([{ value: 2 }] satisfies DuckDbRows));
+            },
+          };
+          const fakeInstance = {
+            closeSync: () => undefined,
+            connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
+          };
+          const fakeCreate: typeof DuckDBInstance.create = () =>
+            Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+          yield* patchDuckDbInstanceCreate(fakeCreate);
+
+          const duckdb = yield* DuckDb;
+          yield* Effect.all(
+            [
+              duckdb.query("SELECT 1 AS value").pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
+              Effect.gen(function* () {
+                yield* awaitLatch(firstStarted);
+                yield* liveSleep(75);
+                const secondFiber = yield* duckdb
+                  .query("SELECT 2 AS value")
+                  .pipe(Effect.forkChild({ startImmediately: true }));
+                expect(yield* latchResolvesWithin(secondStarted, 50)).toBe(false);
+                releaseFirst.resolve();
+                expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
+                expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
+              }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve()))),
+            ],
+            { concurrency: 2, discard: true }
+          );
+        })
+      );
+    }
+  );
+
+  it.layer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        "keeps legacy run permits held until interrupted native operations settle",
+        Effect.fnUntraced(function* () {
+          const runStarted = makeLatch();
+          const releaseRun = makeLatch();
+          const readStarted = makeLatch();
+          let firstRun = true;
+          const fakeConnection = {
+            closeSync: () => undefined,
+            run: () => {
+              if (firstRun) {
+                firstRun = false;
+                runStarted.resolve();
+                return releaseRun.promise.then(() => fakeRunResult);
+              }
+              return Promise.resolve(fakeRunResult);
+            },
+            runAndReadAll: () => {
+              readStarted.resolve();
+              return Promise.resolve(fakeRowReader([{ value: 2 }] satisfies DuckDbRows));
+            },
+          };
+          const fakeInstance = {
+            closeSync: () => undefined,
+            connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
+          };
+          const fakeCreate: typeof DuckDBInstance.create = () =>
+            Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+          yield* patchDuckDbInstanceCreate(fakeCreate);
+
+          const duckdb = yield* DuckDb;
+          yield* Effect.all(
+            [
+              duckdb
+                .run("CREATE TABLE interrupted_run (value INTEGER)")
+                .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
+              Effect.gen(function* () {
+                yield* awaitLatch(runStarted);
+                yield* liveSleep(75);
+                const readFiber = yield* duckdb
+                  .query("SELECT 2 AS value")
+                  .pipe(Effect.forkChild({ startImmediately: true }));
+                expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+                releaseRun.resolve();
+                expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
+                expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
+              }).pipe(Effect.ensuring(Effect.sync(() => releaseRun.resolve()))),
+            ],
+            { concurrency: 2, discard: true }
+          );
+        })
+      );
+    }
+  );
+
+  it.layer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        "keeps legacy parquet export permits held until interrupted native operations settle",
+        Effect.fnUntraced(function* () {
+          const copyStarted = makeLatch();
+          const releaseCopy = makeLatch();
+          const readStarted = makeLatch();
+          const fakeConnection = {
+            closeSync: () => undefined,
+            run: () => {
+              copyStarted.resolve();
+              return releaseCopy.promise.then(() => fakeRunResult);
+            },
+            runAndReadAll: () => {
+              readStarted.resolve();
+              return Promise.resolve(fakeRowReader([{ value: 2 }] satisfies DuckDbRows));
+            },
+          };
+          const fakeInstance = {
+            closeSync: () => undefined,
+            connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
+          };
+          const fakeCreate: typeof DuckDBInstance.create = () =>
+            Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+          yield* patchDuckDbInstanceCreate(fakeCreate);
+
+          const duckdb = yield* DuckDb;
+          yield* Effect.all(
+            [
+              duckdb
+                .copyTableToParquet(
+                  DuckDbParquetExport.make({
+                    filePath: "/tmp/legacy-interrupted-copy.parquet",
+                    tableName: "legacy_events",
+                  })
+                )
+                .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
+              Effect.gen(function* () {
+                yield* awaitLatch(copyStarted);
+                yield* liveSleep(75);
+                const readFiber = yield* duckdb
+                  .query("SELECT 2 AS value")
+                  .pipe(Effect.forkChild({ startImmediately: true }));
+                expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+                releaseCopy.resolve();
+                expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
+                expect(yield* Fiber.join(readFiber)).toEqual([{ value: 2 }]);
+              }).pipe(Effect.ensuring(Effect.sync(() => releaseCopy.resolve()))),
+            ],
+            { concurrency: 2, discard: true }
+          );
+        })
+      );
+    }
   );
 
   it.effect(
@@ -521,14 +528,14 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       };
       const fakeCreate: typeof DuckDBInstance.create = () =>
         Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+      yield* patchDuckDbInstanceCreate(fakeCreate);
 
       const exit = yield* Effect.gen(function* () {
         const duckdb = yield* DuckDb;
         yield* duckdb.query("SELECT 1 AS value");
       }).pipe(
         provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        Effect.exit,
-        withDuckDbInstanceCreate(fakeCreate)
+        Effect.exit
       );
 
       expect(Exit.isFailure(exit)).toBe(true);
@@ -557,14 +564,12 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       };
       const fakeCreate: typeof DuckDBInstance.create = () =>
         Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+      yield* patchDuckDbInstanceCreate(fakeCreate);
 
       yield* Effect.gen(function* () {
         const duckdb = yield* DuckDb;
         yield* duckdb.run("SELECT 1 AS value");
-      }).pipe(
-        provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        withDuckDbInstanceCreate(fakeCreate)
-      );
+      }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))));
 
       expect(connectionCloseAttempts).toBe(1);
       expect(instanceCloseAttempts).toBe(1);
@@ -596,6 +601,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       };
       const fakeCreate: typeof DuckDBInstance.create = () =>
         Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+      yield* patchDuckDbInstanceCreate(fakeCreate);
 
       yield* Effect.scoped(
         Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
@@ -606,157 +612,167 @@ describe("@beep/duckdb", { concurrent: false }, () => {
                 yield* duckdb.query("SELECT 1 AS value");
               }).pipe(Effect.provide(context), Effect.forkChild({ startImmediately: true }));
 
-              yield* awaitLatch(connectStarted);
-              yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
-              yield* liveSleep(25);
-              expect(connectionCloseAttempts).toBe(0);
-              expect(instanceCloseAttempts).toBe(0);
-              connect.resolve(fakeConnection as unknown as DuckDBConnection);
-              yield* Fiber.await(queryFiber);
+              yield* Effect.gen(function* () {
+                yield* awaitLatch(connectStarted);
+                yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
+                yield* liveSleep(25);
+                expect(connectionCloseAttempts).toBe(0);
+                expect(instanceCloseAttempts).toBe(0);
+                connect.resolve(fakeConnection as unknown as DuckDBConnection);
+                yield* Fiber.await(queryFiber);
+              }).pipe(
+                Effect.ensuring(Effect.sync(() => connect.resolve(fakeConnection as unknown as DuckDBConnection)))
+              );
             })
           )
         )
-      ).pipe(withDuckDbInstanceCreate(fakeCreate));
+      );
 
       expect(connectionCloseAttempts).toBe(1);
       expect(instanceCloseAttempts).toBe(1);
     })
   );
 
-  it.effect(
-    "rolls back legacy transactions interrupted after delayed begin",
-    Effect.fnUntraced(function* () {
-      const beginStarted = makeLatch();
-      const releaseBegin = makeLatch();
-      const rollbackStarted = makeLatch();
-      const statements: Array<string> = [];
-      const fakeConnection = {
-        closeSync: () => undefined,
-        run: (statement: string) => {
-          statements.push(statement);
-          if (statement === "BEGIN TRANSACTION") {
-            beginStarted.resolve();
-            return releaseBegin.promise.then(() => fakeRunResult);
-          }
-          if (statement === "ROLLBACK") {
-            rollbackStarted.resolve();
-          }
-          return Promise.resolve(fakeRunResult);
-        },
-        runAndReadAll: () => Promise.resolve(fakeRowReader([] satisfies DuckDbRows)),
-      };
-      const fakeInstance = {
-        closeSync: () => undefined,
-        connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+  it.layer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        "rolls back legacy transactions interrupted after delayed begin",
+        Effect.fnUntraced(function* () {
+          const beginStarted = makeLatch();
+          const releaseBegin = makeLatch();
+          const rollbackStarted = makeLatch();
+          const statements: Array<string> = [];
+          const fakeConnection = {
+            closeSync: () => undefined,
+            run: (statement: string) => {
+              statements.push(statement);
+              if (statement === "BEGIN TRANSACTION") {
+                beginStarted.resolve();
+                return releaseBegin.promise.then(() => fakeRunResult);
+              }
+              if (statement === "ROLLBACK") {
+                rollbackStarted.resolve();
+              }
+              return Promise.resolve(fakeRunResult);
+            },
+            runAndReadAll: () => Promise.resolve(fakeRowReader([] satisfies DuckDbRows)),
+          };
+          const fakeInstance = {
+            closeSync: () => undefined,
+            connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
+          };
+          const fakeCreate: typeof DuckDBInstance.create = () =>
+            Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+          yield* patchDuckDbInstanceCreate(fakeCreate);
 
-      const result = yield* Effect.gen(function* () {
-        const duckdb = yield* DuckDb;
-        const transactionFiber = yield* duckdb
-          .withTransaction(() => Effect.sleep("1 hour"))
-          .pipe(Effect.forkChild({ startImmediately: true }));
-
-        yield* awaitLatch(beginStarted);
-        yield* liveSleep(75);
-        yield* Fiber.interrupt(transactionFiber).pipe(Effect.forkChild({ startImmediately: true }));
-        expect(statements).toEqual(["BEGIN TRANSACTION"]);
-        releaseBegin.resolve();
-        expect(yield* latchResolvesWithin(rollbackStarted, 1000)).toBe(true);
-        return yield* Fiber.await(transactionFiber);
-      }).pipe(
-        provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        withDuckDbInstanceCreate(fakeCreate)
-      );
-
-      expect(Exit.isFailure(result)).toBe(true);
-      expect(statements).toEqual(["BEGIN TRANSACTION", "ROLLBACK"]);
-    })
-  );
-
-  it.effect(
-    "does not roll back legacy transactions when begin fails",
-    Effect.fnUntraced(function* () {
-      const beginError = new Error("begin failed");
-      const rollbackStarted = makeLatch();
-      const statements: Array<string> = [];
-      const fakeConnection = {
-        closeSync: () => undefined,
-        run: (statement: string) => {
-          statements.push(statement);
-          if (statement === "BEGIN TRANSACTION") {
-            return Promise.reject(beginError);
-          }
-          if (statement === "ROLLBACK") {
-            rollbackStarted.resolve();
-          }
-          return Promise.resolve(fakeRunResult);
-        },
-        runAndReadAll: () => Promise.resolve(fakeRowReader([] satisfies DuckDbRows)),
-      };
-      const fakeInstance = {
-        closeSync: () => undefined,
-        connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
-
-      const exit = yield* Effect.gen(function* () {
-        const duckdb = yield* DuckDb;
-        yield* duckdb.withTransaction(() => Effect.void);
-      }).pipe(
-        provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-        Effect.exit,
-        withDuckDbInstanceCreate(fakeCreate)
-      );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(yield* latchResolvesWithin(rollbackStarted, 50)).toBe(false);
-      expect(statements).toEqual(["BEGIN TRANSACTION"]);
-    })
-  );
-
-  it.effect(
-    "rolls back failed nested transactions on the same connection",
-    Effect.fnUntraced(function* () {
-      yield* withTempDirectory(
-        Effect.fnUntraced(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const databasePath = path.join(tmpDir, "metrics.duckdb");
-
-          yield* Effect.gen(function* () {
+          const result = yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
-            yield* duckdb.run("CREATE TABLE tx_events (id VARCHAR)");
+            const transactionFiber = yield* duckdb
+              .withTransaction(() => Effect.sleep("1 hour"))
+              .pipe(Effect.forkChild({ startImmediately: true }));
 
-            const exit = yield* Effect.exit(
-              duckdb.withTransaction(
-                Effect.fnUntraced(function* (transaction) {
-                  yield* transaction.run("INSERT INTO tx_events VALUES ('outer')");
-                  yield* transaction.withTransaction((nested) => nested.run("INSERT INTO tx_events VALUES ('inner')"));
-                  return yield* DuckDbError.make({
-                    message: "force rollback",
-                    operation: "withTransaction",
-                  });
-                })
-              )
-            );
+            yield* awaitLatch(beginStarted);
+            yield* liveSleep(75);
+            yield* Fiber.interrupt(transactionFiber).pipe(Effect.forkChild({ startImmediately: true }));
+            expect(statements).toEqual(["BEGIN TRANSACTION"]);
+            releaseBegin.resolve();
+            expect(yield* latchResolvesWithin(rollbackStarted, 1000)).toBe(true);
+            return yield* Fiber.await(transactionFiber);
+          }).pipe(Effect.ensuring(Effect.sync(() => releaseBegin.resolve())));
 
-            expect(Exit.isFailure(exit)).toBe(true);
-            const rows = yield* duckdb.query("SELECT count(*) AS count FROM tx_events");
-            expect(rows).toEqual([{ count: "0" }]);
-          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))));
+          expect(Exit.isFailure(result)).toBe(true);
+          expect(statements).toEqual(["BEGIN TRANSACTION", "ROLLBACK"]);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
-    })
+      );
+    }
   );
+
+  it.layer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        "does not roll back legacy transactions when begin fails",
+        Effect.fnUntraced(function* () {
+          const beginError = new Error("begin failed");
+          const rollbackStarted = makeLatch();
+          const statements: Array<string> = [];
+          const fakeConnection = {
+            closeSync: () => undefined,
+            run: (statement: string) => {
+              statements.push(statement);
+              if (statement === "BEGIN TRANSACTION") {
+                return Promise.reject(beginError);
+              }
+              if (statement === "ROLLBACK") {
+                rollbackStarted.resolve();
+              }
+              return Promise.resolve(fakeRunResult);
+            },
+            runAndReadAll: () => Promise.resolve(fakeRowReader([] satisfies DuckDbRows)),
+          };
+          const fakeInstance = {
+            closeSync: () => undefined,
+            connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
+          };
+          const fakeCreate: typeof DuckDBInstance.create = () =>
+            Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+          yield* patchDuckDbInstanceCreate(fakeCreate);
+
+          const exit = yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* duckdb.withTransaction(() => Effect.void);
+          }).pipe(Effect.exit);
+
+          expect(Exit.isFailure(exit)).toBe(true);
+          expect(yield* latchResolvesWithin(rollbackStarted, 50)).toBe(false);
+          expect(statements).toEqual(["BEGIN TRANSACTION"]);
+        })
+      );
+    }
+  );
+
+  it.layer(
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const databasePath = path.join(tmpDir, "metrics.duckdb");
+        return DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }));
+      })
+    ).pipe(Layer.provideMerge(nativeDirectoryLayer)),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect(
+      "rolls back failed nested transactions on the same connection",
+      Effect.fnUntraced(function* () {
+        const duckdb = yield* DuckDb;
+        yield* duckdb.run("CREATE TABLE tx_events (id VARCHAR)");
+
+        const exit = yield* Effect.exit(
+          duckdb.withTransaction(
+            Effect.fnUntraced(function* (transaction) {
+              yield* transaction.run("INSERT INTO tx_events VALUES ('outer')");
+              yield* transaction.withTransaction((nested) => nested.run("INSERT INTO tx_events VALUES ('inner')"));
+              return yield* DuckDbError.make({
+                message: "force rollback",
+                operation: "withTransaction",
+              });
+            })
+          )
+        );
+
+        expect(Exit.isFailure(exit)).toBe(true);
+        const rows = yield* duckdb.query("SELECT count(*) AS count FROM tx_events");
+        expect(rows).toEqual([{ count: "0" }]);
+      })
+    );
+  });
 });
 
 describe("DuckDbSqlClient", { concurrent: false }, () => {
-  it.effect(
-    "provides the generic SqlClient tag and executes core statement paths",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "provides the generic SqlClient tag and executes core statement paths",
+      Effect.fnUntraced(function* () {
         const duckdbSql = yield* DuckDbSqlClient;
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
@@ -802,15 +818,14 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
           sql<{ readonly id: string }>`SELECT id FROM sql_events ORDER BY id`.stream
         );
         expect(A.fromIterable(streamedRows)).toEqual([{ id: "sql-1" }]);
-      },
-      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "normalizes Date and Uint8Array bind values for generic SQL callers",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "normalizes Date and Uint8Array bind values for generic SQL callers",
+      Effect.fnUntraced(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         const timestamp = DateTime.toDateUtc(DateTime.makeUnsafe("2026-01-02T03:04:05.000Z"));
         const bytes = new Uint8Array([1, 2, 3]);
@@ -836,14 +851,15 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
             timestamp_value: "2026-01-02 03:04:05",
           },
         ]);
-      },
-      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect("builds from a caller-owned live connection", () =>
-    withNativeDuckDbConnection((liveConnection) =>
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("builds from a caller-owned live connection", () =>
       Effect.gen(function* () {
+        const liveConnection = yield* acquireNativeDuckDbConnection;
+
         const client = yield* DuckDbSqlClient.fromClient({
           databasePath: ":memory:",
           liveConnection,
@@ -863,68 +879,69 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
           ORDER BY id
         `;
         expect(rows).toEqual([{ id: "live-1" }]);
-      }).pipe(provideScopedLayer(Reactivity.layer))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "closes a created instance when managed connection acquisition fails",
-    Effect.fnUntraced(function* () {
-      const connectError = new Error("connect failed");
-      let instanceCloseAttempts = 0;
-      const fakeInstance = {
-        closeSync: () => {
-          instanceCloseAttempts += 1;
-        },
-        connect: () => Promise.reject(connectError),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "closes a created instance when managed connection acquisition fails",
+      Effect.fnUntraced(function* () {
+        const connectError = new Error("connect failed");
+        let instanceCloseAttempts = 0;
+        const fakeInstance = {
+          closeSync: () => {
+            instanceCloseAttempts += 1;
+          },
+          connect: () => Promise.reject(connectError),
+        };
+        const fakeCreate: typeof DuckDBInstance.create = () =>
+          Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+        yield* patchDuckDbInstanceCreate(fakeCreate);
 
-      const exit = yield* DuckDbSqlClient.make({ databasePath: ":memory:" }).pipe(
-        provideScopedLayer(Reactivity.layer),
-        Effect.exit,
-        withDuckDbInstanceCreate(fakeCreate)
-      );
+        const exit = yield* DuckDbSqlClient.make({ databasePath: ":memory:" }).pipe(Effect.scoped, Effect.exit);
 
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(instanceCloseAttempts).toBe(1);
-    })
-  );
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(instanceCloseAttempts).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "closes the managed instance even when connection close fails",
-    Effect.fnUntraced(function* () {
-      let connectionCloseAttempts = 0;
-      let instanceCloseAttempts = 0;
-      const fakeConnection = {
-        closeSync: () => {
-          connectionCloseAttempts += 1;
-          throw new Error("connection close failed");
-        },
-      };
-      const fakeInstance = {
-        closeSync: () => {
-          instanceCloseAttempts += 1;
-        },
-        connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
-      };
-      const fakeCreate: typeof DuckDBInstance.create = () =>
-        Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "closes the managed instance even when connection close fails",
+      Effect.fnUntraced(function* () {
+        let connectionCloseAttempts = 0;
+        let instanceCloseAttempts = 0;
+        const fakeConnection = {
+          closeSync: () => {
+            connectionCloseAttempts += 1;
+            throw new Error("connection close failed");
+          },
+        };
+        const fakeInstance = {
+          closeSync: () => {
+            instanceCloseAttempts += 1;
+          },
+          connect: () => Promise.resolve(fakeConnection as unknown as DuckDBConnection),
+        };
+        const fakeCreate: typeof DuckDBInstance.create = () =>
+          Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
+        yield* patchDuckDbInstanceCreate(fakeCreate);
 
-      yield* DuckDbSqlClient.make({ databasePath: ":memory:" }).pipe(
-        provideScopedLayer(Reactivity.layer),
-        withDuckDbInstanceCreate(fakeCreate)
-      );
+        yield* DuckDbSqlClient.make({ databasePath: ":memory:" }).pipe(Effect.scoped);
 
-      expect(connectionCloseAttempts).toBe(1);
-      expect(instanceCloseAttempts).toBe(1);
-    })
-  );
+        expect(connectionCloseAttempts).toBe(1);
+        expect(instanceCloseAttempts).toBe(1);
+      })
+    );
+  });
 
-  it.effect("serializes normal statements on the shared connection", () =>
-    withNativeDuckDbConnection((liveConnection) =>
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("serializes normal statements on the shared connection", () =>
       Effect.gen(function* () {
+        const liveConnection = yield* acquireNativeDuckDbConnection;
+
         let activeExecutions = 0;
         let maxActiveExecutions = 0;
         const runAndReadAll = liveConnection.runAndReadAll.bind(liveConnection);
@@ -947,13 +964,15 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
         yield* Effect.all([sql`SELECT 1 AS value`, sql`SELECT 2 AS value`], { concurrency: 2 });
 
         expect(maxActiveExecutions).toBe(1);
-      }).pipe(provideScopedLayer(Reactivity.layer))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect("streams rows through DuckDB streaming results", () =>
-    withNativeDuckDbConnection((liveConnection) =>
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("streams rows through DuckDB streaming results", () =>
       Effect.gen(function* () {
+        const liveConnection = yield* acquireNativeDuckDbConnection;
+
         const client = yield* DuckDbSqlClient.fromClient({
           databasePath: ":memory:",
           liveConnection,
@@ -987,13 +1006,15 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
         expect(A.fromIterable(streamedRows)).toEqual([{ id: "stream-1" }, { id: "stream-2" }]);
         expect(streamCalls).toBe(1);
         expect(runAndReadAllCalls).toBe(0);
-      }).pipe(provideScopedLayer(Reactivity.layer))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect("keeps read permits held until interrupted native operations settle", () =>
-    withNativeDuckDbConnection((liveConnection) =>
+  it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("keeps read permits held until interrupted native operations settle", () =>
       Effect.gen(function* () {
+        const liveConnection = yield* acquireNativeDuckDbConnection;
+
         const firstStarted = makeLatch();
         const releaseFirst = makeLatch();
         const secondStarted = makeLatch();
@@ -1028,155 +1049,159 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
               releaseFirst.resolve();
               expect(yield* latchResolvesWithin(secondStarted, 1000)).toBe(true);
               expect(yield* Fiber.join(secondFiber)).toEqual([{ value: 2 }]);
-            }),
+            }).pipe(Effect.ensuring(Effect.sync(() => releaseFirst.resolve()))),
           ],
           { concurrency: 2, discard: true }
         );
-      }).pipe(provideScopedLayer(Reactivity.layer))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "keeps raw permits held until interrupted native operations settle",
-    Effect.fnUntraced(function* () {
-      yield* withTempDirectory(
-        Effect.fnUntraced(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const fs = yield* FileSystem.FileSystem;
-          const parquetPath = path.join(tmpDir, "raw-interrupt.parquet");
+  it.layer(Layer.merge(nativeDirectoryLayer, Reactivity.layer), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "keeps raw permits held until interrupted native operations settle",
+      Effect.fnUntraced(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
+        const parquetPath = path.join(tmpDir, "raw-interrupt.parquet");
 
-          yield* withNativeDuckDbConnection((liveConnection) =>
-            Effect.gen(function* () {
-              const client = yield* DuckDbSqlClient.fromClient({
-                databasePath: ":memory:",
-                liveConnection,
-              });
-              const sql = client.withoutTransforms();
+        const liveConnection = yield* acquireNativeDuckDbConnection;
 
-              yield* sql`
+        const client = yield* DuckDbSqlClient.fromClient({
+          databasePath: ":memory:",
+          liveConnection,
+        });
+        const sql = client.withoutTransforms();
+
+        yield* sql`
                 CREATE TABLE raw_interrupt_events (
                   id VARCHAR
                 )
               `;
-              yield* sql`INSERT INTO raw_interrupt_events VALUES (${"raw-1"})`;
+        yield* sql`INSERT INTO raw_interrupt_events VALUES (${"raw-1"})`;
 
-              const rawStarted = makeLatch();
-              const releaseRaw = makeLatch();
-              const readStarted = makeLatch();
-              const run = liveConnection.run.bind(liveConnection);
-              const runAndReadAll = liveConnection.runAndReadAll.bind(liveConnection);
-              liveConnection.run = (...args: Parameters<DuckDBConnection["run"]>) => {
-                rawStarted.resolve();
-                return releaseRaw.promise.then(() => run(...args));
-              };
-              liveConnection.runAndReadAll = (...args: Parameters<DuckDBConnection["runAndReadAll"]>) => {
-                readStarted.resolve();
-                return runAndReadAll(...args);
-              };
+        const rawStarted = makeLatch();
+        const releaseRaw = makeLatch();
+        const readStarted = makeLatch();
+        const run = liveConnection.run.bind(liveConnection);
+        const runAndReadAll = liveConnection.runAndReadAll.bind(liveConnection);
+        liveConnection.run = (...args: Parameters<DuckDBConnection["run"]>) => {
+          rawStarted.resolve();
+          return releaseRaw.promise.then(() => run(...args));
+        };
+        liveConnection.runAndReadAll = (...args: Parameters<DuckDBConnection["runAndReadAll"]>) => {
+          readStarted.resolve();
+          return runAndReadAll(...args);
+        };
 
-              yield* Effect.all(
-                [
-                  client
-                    .copyTableToParquet(
-                      DuckDbParquetExport.make({
-                        filePath: parquetPath,
-                        tableName: "raw_interrupt_events",
-                      })
-                    )
-                    .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
-                  Effect.gen(function* () {
-                    yield* awaitLatch(rawStarted);
-                    yield* liveSleep(75);
-                    const readFiber = yield* sql<{ readonly id: string }>`SELECT id FROM raw_interrupt_events`.pipe(
-                      Effect.forkChild({ startImmediately: true })
-                    );
-                    expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
-                    releaseRaw.resolve();
-                    expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
-                    expect(yield* Fiber.join(readFiber)).toEqual([{ id: "raw-1" }]);
-                  }),
-                ],
-                { concurrency: 2, discard: true }
+        yield* Effect.all(
+          [
+            client
+              .copyTableToParquet(
+                DuckDbParquetExport.make({
+                  filePath: parquetPath,
+                  tableName: "raw_interrupt_events",
+                })
+              )
+              .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
+            Effect.gen(function* () {
+              yield* awaitLatch(rawStarted);
+              yield* liveSleep(75);
+              const readFiber = yield* sql<{ readonly id: string }>`SELECT id FROM raw_interrupt_events`.pipe(
+                Effect.forkChild({ startImmediately: true })
               );
-              expect(yield* fs.exists(parquetPath)).toBe(true);
-            }).pipe(provideScopedLayer(Reactivity.layer))
-          );
-        })
-      ).pipe(provideScopedLayer(NodeServices.layer));
-    })
-  );
+              expect(yield* latchResolvesWithin(readStarted, 50)).toBe(false);
+              releaseRaw.resolve();
+              expect(yield* latchResolvesWithin(readStarted, 1000)).toBe(true);
+              expect(yield* Fiber.join(readFiber)).toEqual([{ id: "raw-1" }]);
+            }).pipe(Effect.ensuring(Effect.sync(() => releaseRaw.resolve()))),
+          ],
+          { concurrency: 2, discard: true }
+        );
+        expect(yield* fs.exists(parquetPath)).toBe(true);
+      })
+    );
+  });
 
-  it.effect(
-    "exports parquet outside transactions and rejects transaction-scoped exports",
-    Effect.fnUntraced(function* () {
-      yield* withTempDirectory(
-        Effect.fnUntraced(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const fs = yield* FileSystem.FileSystem;
-          const databasePath = path.join(tmpDir, "sql-client.duckdb");
-          const parquetPath = path.join(tmpDir, "exports", "sql_events.parquet");
-          const transactionParquetPath = path.join(tmpDir, "exports", "sql_transaction_events.parquet");
-          yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
+  it.layer(
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const databasePath = path.join(tmpDir, "sql-client.duckdb");
+        return DuckDbSqlClient.makeLayer({ databasePath });
+      })
+    ).pipe(Layer.provideMerge(nativeDirectoryLayer)),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect(
+      "exports parquet outside transactions and rejects transaction-scoped exports",
+      Effect.fnUntraced(function* () {
+        const tmpDir = yield* NativeTestDirectory;
+        const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
 
-          yield* Effect.gen(function* () {
-            const client = yield* DuckDbSqlClient;
-            const sql = client.withoutTransforms();
+        const parquetPath = path.join(tmpDir, "exports", "sql_events.parquet");
+        const transactionParquetPath = path.join(tmpDir, "exports", "sql_transaction_events.parquet");
+        yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
 
-            yield* sql`
+        const client = yield* DuckDbSqlClient;
+        const sql = client.withoutTransforms();
+
+        yield* sql`
               CREATE TABLE parquet_events (
                 id VARCHAR,
                 value INTEGER
               )
             `;
-            yield* sql`INSERT INTO parquet_events VALUES (${"parquet-1"}, ${1})`;
-            yield* client.copyTableToParquet(
-              DuckDbParquetExport.make({
-                filePath: parquetPath,
-                tableName: "parquet_events",
-              })
-            );
+        yield* sql`INSERT INTO parquet_events VALUES (${"parquet-1"}, ${1})`;
+        yield* client.copyTableToParquet(
+          DuckDbParquetExport.make({
+            filePath: parquetPath,
+            tableName: "parquet_events",
+          })
+        );
 
-            expect(yield* fs.exists(parquetPath)).toBe(true);
+        expect(yield* fs.exists(parquetPath)).toBe(true);
 
-            yield* sql`
+        yield* sql`
               CREATE TABLE transaction_parquet_events (
                 id VARCHAR,
                 value INTEGER
               )
             `;
-            const transactionExport = yield* sql
-              .withTransaction(
-                Effect.gen(function* () {
-                  yield* sql`INSERT INTO transaction_parquet_events VALUES (${"transaction-parquet-1"}, ${1})`;
-                  yield* client.copyTableToParquet(
-                    DuckDbParquetExport.make({
-                      filePath: transactionParquetPath,
-                      tableName: "transaction_parquet_events",
-                    })
-                  );
+        const transactionExport = yield* sql
+          .withTransaction(
+            Effect.gen(function* () {
+              yield* sql`INSERT INTO transaction_parquet_events VALUES (${"transaction-parquet-1"}, ${1})`;
+              yield* client.copyTableToParquet(
+                DuckDbParquetExport.make({
+                  filePath: transactionParquetPath,
+                  tableName: "transaction_parquet_events",
                 })
-              )
-              .pipe(Effect.exit);
+              );
+            })
+          )
+          .pipe(Effect.exit);
 
-            expect(Exit.isFailure(transactionExport)).toBe(true);
-            expect(yield* fs.exists(transactionParquetPath)).toBe(false);
+        expect(Exit.isFailure(transactionExport)).toBe(true);
+        expect(yield* fs.exists(transactionParquetPath)).toBe(false);
 
-            const transactionRows = yield* sql<{ readonly id: string }>`
+        const transactionRows = yield* sql<{ readonly id: string }>`
               SELECT id
               FROM transaction_parquet_events
               ORDER BY id
             `;
-            expect(transactionRows).toEqual([]);
-          }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath })));
-        })
-      ).pipe(provideScopedLayer(NodeServices.layer));
-    })
-  );
+        expect(transactionRows).toEqual([]);
+      })
+    );
+  });
 
-  it.effect(
-    "commits, rolls back, and reuses the active transaction for nested calls",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "commits, rolls back, and reuses the active transaction for nested calls",
+      Effect.fnUntraced(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         yield* sql`
       CREATE TABLE tx_events (
@@ -1215,15 +1240,14 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
       ORDER BY id
     `;
         expect(rows).toEqual([{ id: "committed" }, { id: "inner" }, { id: "outer" }]);
-      },
-      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "marks the outer transaction rollback-only when a nested transaction fails",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "marks the outer transaction rollback-only when a nested transaction fails",
+      Effect.fnUntraced(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         yield* sql`
       CREATE TABLE nested_failure_events (
@@ -1255,8 +1279,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
       ORDER BY id
     `;
         expect(rows).toEqual([]);
-      },
-      provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" }))
-    )
-  );
+      })
+    );
+  });
 });
