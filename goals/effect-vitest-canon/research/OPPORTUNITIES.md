@@ -2345,3 +2345,29 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+
+### Runner dependency protocol preflight
+
+The Provenance full proof rejected the newly added runner dependency because
+Syncpack requires workspace:^ while the install command had requested workspace:*.
+The same uncommitted addition existed in NLP and MCP kit. Correct the manifests
+and run Syncpack immediately after adding workspace dependencies; cheap gates
+and package verification alone did not expose this pin policy.
+
+## MCP kit assertion reconciliation
+
+The final detector pass found the inherited SanitizedSpan parent Option assertion
+still open after the assertion phase. Replaced its structural Some equality with
+assertSome using the unchanged parent operand. A detector check at each phase
+boundary would have caught this before final timing collection; the prior final
+measurements are preserved and a new measurement is required for the repair.
+
+## MCP kit census scope drift
+
+The authoritative `beep lint effect-vitest --census` emits both
+`src/test/Conformance.test-kit.ts` and the generated
+`dist/test/Conformance.test-kit.d.ts`, beyond the earlier test-directory delta.
+Partial validation therefore reports 28 missing lens entries, not 20. A
+source-aware delta against the full D9 census would prevent that undercount;
+the generated declaration requires scope reconciliation before final coverage.

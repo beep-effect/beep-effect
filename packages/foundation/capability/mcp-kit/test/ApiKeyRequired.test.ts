@@ -5,8 +5,10 @@ import {
   SourceAuthRegistration,
   sanitizedToolkit,
 } from "@beep/mcp-kit";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Tool, Toolkit } from "effect/ai";
@@ -71,7 +73,7 @@ const assertSchemaRoundTrip = Effect.fnUntraced(function* <Schema extends S.Code
 });
 
 describe("api_key_required envelope", () => {
-  layer(buildLayer({}))("when the credential is absent", (it) => {
+  it.layer(buildLayer({}), { timeout: "5 seconds" })("when the credential is absent", (it) => {
     it.effect(
       "api_key_required stays a non-error result with the envelope mirrored into content[].text",
       Effect.fnUntraced(function* () {
@@ -92,29 +94,29 @@ describe("api_key_required envelope", () => {
     );
   });
 
-  layer(buildLayer({ MCP_KIT_TEST_SOFT_KEY: "fixture-secret" }))("when the credential is present", (it) => {
-    it.effect(
-      "stays registered and succeeds normally",
-      Effect.fnUntraced(function* () {
-        const server = yield* McpServer.McpServer;
-        const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });
+  it.layer(buildLayer({ MCP_KIT_TEST_SOFT_KEY: "fixture-secret" }), { timeout: "5 seconds" })(
+    "when the credential is present",
+    (it) => {
+      it.effect(
+        "stays registered and succeeds normally",
+        Effect.fnUntraced(function* () {
+          const server = yield* McpServer.McpServer;
+          const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });
 
-        assert.isFalse(result.isError);
-        const [first] = result.content;
-        assert.strictEqual(first?.type, "text");
-        const decoded = yield* decodeStringFromJson((first as { readonly text: string }).text);
-        assert.strictEqual(decoded, "ok");
-      })
-    );
-  });
+          assert.isFalse(result.isError);
+          const [first] = result.content;
+          assert.strictEqual(first?.type, "text");
+          const decoded = yield* decodeStringFromJson((first as { readonly text: string }).text);
+          assert.strictEqual(decoded, "ok");
+        })
+      );
+    }
+  );
 });
 
 describe("schema parity laws", () => {
   it("round-trips SourceAuthRegistration with schema-owned signupUrl defaults", () => {
-    assert.deepStrictEqual(
-      SourceAuthRegistration.make({ name: "No Signup", envVar: "NO_SIGNUP", gate: "none" }).signupUrl,
-      O.none()
-    );
+    assertNone(SourceAuthRegistration.make({ name: "No Signup", envVar: "NO_SIGNUP", gate: "none" }).signupUrl);
   });
 
   it.effect.prop(
