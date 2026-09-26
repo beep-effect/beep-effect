@@ -176,16 +176,20 @@ const commentRow = Effect.fnUntraced(function* (root: string, prNumber: number, 
 });
 
 // A wait that must not return is driven to its timeout on the TestClock: the timeout
-// timer registers the moment the wait starts, so one adjust past it fails the wait
-// deterministically however long the poll ticks take on a loaded runner. A wait that
+// timer registers the moment the wait starts, so one adjust just past its own timeoutMs
+// fails the wait deterministically however long the poll ticks take on a loaded runner. A wait that
 // must return finds its row on the first poll tick and never touches the clock.
 const waitTimesOut = Effect.fnUntraced(function* (
   launcher: Job.ProofJobLauncherShape,
   jobId: UUID,
   options: Job.ProofJobWaitOptions
 ) {
+  const timeoutMs = yield* O.match(options.timeoutMs, {
+    onNone: () => Effect.die("waitTimesOut needs a bounded timeoutMs: an unbounded wait never times out"),
+    onSome: Effect.succeed,
+  });
   const waiter = yield* Effect.forkChild(launcher.wait(jobId, options), { startImmediately: true });
-  yield* TestClock.adjust(Duration.minutes(1));
+  yield* TestClock.adjust(Duration.millis(timeoutMs + 1));
   expect((yield* Fiber.join(waiter).pipe(Effect.flip)).message).toContain("Timed out");
 });
 
