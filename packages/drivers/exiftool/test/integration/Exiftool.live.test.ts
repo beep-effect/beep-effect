@@ -6,9 +6,10 @@ import {
   ReadTagsRequest,
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as Base64 from "effect/encoding/Base64";

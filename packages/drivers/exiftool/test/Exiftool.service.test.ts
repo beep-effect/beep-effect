@@ -8,9 +8,10 @@ import {
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
