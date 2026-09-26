@@ -1,17 +1,45 @@
 import * as F from "@beep/firecrawl";
+import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 // Skip when the key is absent, blank, or an unresolved `op://` reference (present
 // when secrets are not resolved, e.g. no local `op` session).
-const apiKey = pipe(
-  Bun.env.FIRECRAWL_API_KEY,
-  O.fromUndefinedOr,
-  O.filter((value) => Str.isNonEmpty(value) && !Str.startsWith("op://")(value))
-);
+const usableApiKey = (value: string | undefined): O.Option<string> =>
+  pipe(
+    value,
+    O.fromUndefinedOr,
+    O.map(Str.trim),
+    O.filter((value) => Str.isNonEmpty(value) && !Str.startsWith("op://")(value))
+  );
+
+const apiKey = usableApiKey(Bun.env.FIRECRAWL_API_KEY);
+
+describe("Firecrawl live credential gate", () => {
+  it("rejects absent, blank and unresolved synthetic references", () => {
+    assertNone(usableApiKey(undefined));
+    assertNone(usableApiKey(""));
+    assertNone(usableApiKey(" "));
+    assertNone(usableApiKey("\t\n"));
+    assertNone(usableApiKey("op://synthetic/item/key"));
+    assertNone(usableApiKey(" \top://synthetic/item/key\n "));
+  });
+
+  it.prop(
+    "preserves normalized synthetic configured keys",
+    [Arbitrary.schema(S.String)],
+    ([suffix]) => {
+      const key = `synthetic-${suffix}`;
+      assertSome(usableApiKey(` \t${key}\n `), Str.trim(key));
+    },
+    { arbitrary: fcRuns(25) }
+  );
+});
 
 pipe(
   apiKey,
