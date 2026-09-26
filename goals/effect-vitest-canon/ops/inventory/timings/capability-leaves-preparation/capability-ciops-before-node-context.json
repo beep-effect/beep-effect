@@ -1,0 +1,142 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "f5137cf34e47fe47d7a6981be31c76e1c10bbd08089fdfc65c3dba70aa4ae373"
+    },
+    {
+      "file": "apps/labs/ciops/package.json",
+      "sha256": "e470aeb844c2034916dbfce96a20fb33866b4a15e46ec7ec9c35ace61582fe55"
+    },
+    {
+      "file": "apps/labs/ciops/src/Api.ts",
+      "sha256": "735a04050a0de990d7512ab4d3742ee284c6e325554fa62875cd480915d5e9a0"
+    },
+    {
+      "file": "apps/labs/ciops/src/main.ts",
+      "sha256": "dcf41a43da9e3b8991cc3066c286a8f1e318d59482f02c000d67d45c0350107c"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/AboxPolicy.ts",
+      "sha256": "bfa003080501553172ff171e39c53d19e086e9d7c37dcd71605675ed72916606"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/CiOpsProjection.ts",
+      "sha256": "51c9ceafebee40f531fd0ced90f73a6b07a0424f98c802d4dd56b85ef463b5d1"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Engine.ts",
+      "sha256": "1856773428bdb9742f7942faea585ea2c886752729e1126172dfc13495574db1"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "sha256": "40ad196671375d25404fe7d1b6b33e1c8b4ee99149c5912cd44d7c89964e9809"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "sha256": "620521e5fdf496039e5483bae6167a16de618426b5ed6b56b24c2a22552a4356"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Turtle.ts",
+      "sha256": "e6430af0b4e0a428dd49384d9f679b1a5257c39532b8e91a94c9d441d50b10e1"
+    },
+    {
+      "file": "apps/labs/ciops/src/runtime/Layer.ts",
+      "sha256": "25d53c061ece813b7f56f704d625abd035322580f7df24b499711dfd0dd28750"
+    },
+    {
+      "file": "apps/labs/ciops/test/health.test.ts",
+      "sha256": "912233f8c78d5c4ce4afd81d78270c73ffb7e8915695a493f0a34a2d0a64f8f9"
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "sha256": "52870862ecac9d724318f7cc61be8577a129382a6ae93f8cb0b7e35626e549d5"
+    }
+  ],
+  "loadBefore": [19.451171875, 15.5380859375, 19.3369140625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.28 avg60=1.35 avg300=1.03 total=2040398789\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.01 avg60=0.11 avg300=0.04 total=173037325\nfull avg10=0.01 avg60=0.09 avg300=0.03 total=156316063\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.10 total=888917411\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=630018408\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 4.346849126988673,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "f5137cf34e47fe47d7a6981be31c76e1c10bbd08089fdfc65c3dba70aa4ae373"
+    },
+    {
+      "file": "apps/labs/ciops/package.json",
+      "sha256": "e470aeb844c2034916dbfce96a20fb33866b4a15e46ec7ec9c35ace61582fe55"
+    },
+    {
+      "file": "apps/labs/ciops/src/Api.ts",
+      "sha256": "735a04050a0de990d7512ab4d3742ee284c6e325554fa62875cd480915d5e9a0"
+    },
+    {
+      "file": "apps/labs/ciops/src/main.ts",
+      "sha256": "dcf41a43da9e3b8991cc3066c286a8f1e318d59482f02c000d67d45c0350107c"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/AboxPolicy.ts",
+      "sha256": "bfa003080501553172ff171e39c53d19e086e9d7c37dcd71605675ed72916606"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/CiOpsProjection.ts",
+      "sha256": "51c9ceafebee40f531fd0ced90f73a6b07a0424f98c802d4dd56b85ef463b5d1"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Engine.ts",
+      "sha256": "1856773428bdb9742f7942faea585ea2c886752729e1126172dfc13495574db1"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "sha256": "40ad196671375d25404fe7d1b6b33e1c8b4ee99149c5912cd44d7c89964e9809"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "sha256": "620521e5fdf496039e5483bae6167a16de618426b5ed6b56b24c2a22552a4356"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Turtle.ts",
+      "sha256": "e6430af0b4e0a428dd49384d9f679b1a5257c39532b8e91a94c9d441d50b10e1"
+    },
+    {
+      "file": "apps/labs/ciops/src/runtime/Layer.ts",
+      "sha256": "25d53c061ece813b7f56f704d625abd035322580f7df24b499711dfd0dd28750"
+    },
+    {
+      "file": "apps/labs/ciops/test/health.test.ts",
+      "sha256": "912233f8c78d5c4ce4afd81d78270c73ffb7e8915695a493f0a34a2d0a64f8f9"
+    },
+    {
+      "file": "apps/labs/ciops/test/projection.test.ts",
+      "sha256": "52870862ecac9d724318f7cc61be8577a129382a6ae93f8cb0b7e35626e549d5"
+    }
+  ],
+  "loadAfter": [19.0146484375, 15.51220703125, 19.30810546875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.19 avg60=1.26 avg300=1.02 total=2040422157\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.01 avg60=0.10 avg300=0.04 total=173037327\nfull avg10=0.00 avg60=0.08 avg300=0.03 total=156316065\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.10 total=888919231\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=630019729\n"
+  },
+  "sourceStable": true
+}

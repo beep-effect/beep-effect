@@ -1,0 +1,151 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/package.json",
+      "sha256": "238f1ded74330539b5cedb1b88ff18d4abcd0ae28660c14118f4d5921c1b667c"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
+      "sha256": "311a6b5e59340694515602fc2c74263cb48a6c417f45eb69ae5774645f442274"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/Chalk.ts",
+      "sha256": "810e27bf5bc3f00b2ad6dd44ee3c3b2e1b02b6f63f9d40e3f4f24d486d1906d4"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/index.ts",
+      "sha256": "cd9aa6d4976e5c3589ecac9f5637b42be3d58ea9ed3bdb6aeef52d16970d769f"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+      "sha256": "5d7489e03a66597c0b6f3b7633373901622eb6f1534a4fed1a2a32d9994e565c"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+      "sha256": "ac7648cce8c86ab0c3773e6768194d9c4ed64c96f82a27f5a0171cf918cb5245"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "sha256": "b24b47e75cd99a4a7b8a198b96d7670a81e914e6a8e758c7cfb77e3d3c81ad2e"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+      "sha256": "c31d63890c202eccdf929ddac81ab64c5fdf6e453512c119b234a2e28f4e5b40"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+      "sha256": "af640bc44d095da655fe425a37dad92b23bf9c64089b6abbe4ede59543a86656"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+      "sha256": "54aea37313f575bd57b8afe49f08aa90027749b382a80523916823bd955c8fdd"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/Utilities.ts",
+      "sha256": "a6576ef1e13b51f294ca2ceac3ad366525f142832bf08f30dcc3751219c11647"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/TaggedError.equivalence.test.ts",
+      "sha256": "c0693a27c7d470b9899a3a1797f9e99b20e646770d8983e2e457f5f132c85d41"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "sha256": "9eb669f58aba49a2ec889d3424518cb48b6bd18552141a5d44520133f5a7ef0a"
+    }
+  ],
+  "loadBefore": [82.384765625, 41.421875, 22.40576171875],
+  "pressureBefore": {
+    "cpu": "some avg10=27.50 avg60=18.05 avg300=7.19 total=1935019650\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.38 avg60=1.06 avg300=0.50 total=169964685\nfull avg10=1.25 avg60=0.98 avg300=0.45 total=153675948\n",
+    "io": "some avg10=0.19 avg60=0.21 avg300=0.19 total=882012354\nfull avg10=0.00 avg60=0.01 avg300=0.03 total=625465789\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 9.73275425400061,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/package.json",
+      "sha256": "238f1ded74330539b5cedb1b88ff18d4abcd0ae28660c14118f4d5921c1b667c"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
+      "sha256": "311a6b5e59340694515602fc2c74263cb48a6c417f45eb69ae5774645f442274"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/Chalk.ts",
+      "sha256": "810e27bf5bc3f00b2ad6dd44ee3c3b2e1b02b6f63f9d40e3f4f24d486d1906d4"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/index.ts",
+      "sha256": "cd9aa6d4976e5c3589ecac9f5637b42be3d58ea9ed3bdb6aeef52d16970d769f"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+      "sha256": "5d7489e03a66597c0b6f3b7633373901622eb6f1534a4fed1a2a32d9994e565c"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+      "sha256": "ac7648cce8c86ab0c3773e6768194d9c4ed64c96f82a27f5a0171cf918cb5245"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "sha256": "b24b47e75cd99a4a7b8a198b96d7670a81e914e6a8e758c7cfb77e3d3c81ad2e"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+      "sha256": "c31d63890c202eccdf929ddac81ab64c5fdf6e453512c119b234a2e28f4e5b40"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+      "sha256": "af640bc44d095da655fe425a37dad92b23bf9c64089b6abbe4ede59543a86656"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+      "sha256": "54aea37313f575bd57b8afe49f08aa90027749b382a80523916823bd955c8fdd"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/Utilities.ts",
+      "sha256": "a6576ef1e13b51f294ca2ceac3ad366525f142832bf08f30dcc3751219c11647"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/TaggedError.equivalence.test.ts",
+      "sha256": "c0693a27c7d470b9899a3a1797f9e99b20e646770d8983e2e457f5f132c85d41"
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "sha256": "9eb669f58aba49a2ec889d3424518cb48b6bd18552141a5d44520133f5a7ef0a"
+    }
+  ],
+  "loadAfter": [83.62548828125, 43.07763671875, 23.15087890625],
+  "pressureAfter": {
+    "cpu": "some avg10=30.66 avg60=20.15 avg300=8.01 total=1938500584\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.71 avg60=1.20 avg300=0.55 total=170285646\nfull avg10=1.41 avg60=1.07 avg300=0.49 total=153925680\n",
+    "io": "some avg10=0.31 avg60=0.24 avg300=0.19 total=882123682\nfull avg10=0.00 avg60=0.01 avg300=0.03 total=625480570\n"
+  },
+  "sourceStable": true
+}

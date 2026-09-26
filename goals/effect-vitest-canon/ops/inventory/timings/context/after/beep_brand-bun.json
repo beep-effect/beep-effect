@@ -1,0 +1,143 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>"
+  ],
+  "phase": "checkpoint-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "543121a3012b47d2e1e5b5657a4f833cc80b0e6f3cb47acf6ff15a84a4e13596"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/package.json",
+      "sha256": "c37cf0009d85e96859704d2e0eff47f7df1414316264fa6c3a8d59a3a0889414"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.asset.d.ts",
+      "sha256": "ed19a149ccc8c7664a164b9a9ba71a231b4e506998aeaa36244bdd6b86d8d27e"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.assets.ts",
+      "sha256": "52699c7e5676483ab71ab6f7b240d87c4d4725eacf3e5b2da67db13846184904"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.css.ts",
+      "sha256": "8f645991fc05a60c38094f0312f3e61ad6f4d28c7630c7957b879db01e121223"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "sha256": "0edd9f0f56b58c4c426bf4b0b4bdfce3be7661002872b35da64fc06391044c75"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.svg.ts",
+      "sha256": "6977fb07eb3d60f041f839a5e1d46564d08938b4137c2fb1b8dbf082835b2e06"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.tokens.ts",
+      "sha256": "6ce6cdb5129ec9278646984aba049cd40d5e5372ee16a01cc2ae65be51aa8f66"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/index.ts",
+      "sha256": "883909c52a3e0027a0bb67a3c7a2ece884b48842b08fb7f4b901e95e02ac4dc1"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/react.tsx",
+      "sha256": "4c745752cbe50db93570ea510b52e628c783e56d777e9d89a42b03d85cf86ab0"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "sha256": "3b5912de3a59021422bc2427c4435adec4916ddc4d7889a83ddbe0e5b49577ac"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "sha256": "8af25934ecb0a94b710f6bbc941978d5cc3c47ddbd9ca0e6ee18ea755c28d39b"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/react.test.tsx",
+      "sha256": "89cccec5353daf6b9d685d218953483745c282f46066cb7b510055ae540cafe1"
+    }
+  ],
+  "loadBefore": [44.05078125, 38.515625, 48.2451171875],
+  "pressureBefore": {
+    "cpu": "some avg10=3.33 avg60=7.30 avg300=6.19 total=2224055101\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.24 avg60=0.39 avg300=0.30 total=189931255\nfull avg10=0.24 avg60=0.37 avg300=0.21 total=164954944\n",
+    "io": "some avg10=0.00 avg60=0.28 avg300=0.93 total=938885514\nfull avg10=0.00 avg60=0.00 avg300=0.25 total=643140793\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 1.6814924840000458,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "543121a3012b47d2e1e5b5657a4f833cc80b0e6f3cb47acf6ff15a84a4e13596"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/package.json",
+      "sha256": "c37cf0009d85e96859704d2e0eff47f7df1414316264fa6c3a8d59a3a0889414"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.asset.d.ts",
+      "sha256": "ed19a149ccc8c7664a164b9a9ba71a231b4e506998aeaa36244bdd6b86d8d27e"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.assets.ts",
+      "sha256": "52699c7e5676483ab71ab6f7b240d87c4d4725eacf3e5b2da67db13846184904"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.css.ts",
+      "sha256": "8f645991fc05a60c38094f0312f3e61ad6f4d28c7630c7957b879db01e121223"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+      "sha256": "0edd9f0f56b58c4c426bf4b0b4bdfce3be7661002872b35da64fc06391044c75"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.svg.ts",
+      "sha256": "6977fb07eb3d60f041f839a5e1d46564d08938b4137c2fb1b8dbf082835b2e06"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/Brand.tokens.ts",
+      "sha256": "6ce6cdb5129ec9278646984aba049cd40d5e5372ee16a01cc2ae65be51aa8f66"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/index.ts",
+      "sha256": "883909c52a3e0027a0bb67a3c7a2ece884b48842b08fb7f4b901e95e02ac4dc1"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/src/react.tsx",
+      "sha256": "4c745752cbe50db93570ea510b52e628c783e56d777e9d89a42b03d85cf86ab0"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "sha256": "3b5912de3a59021422bc2427c4435adec4916ddc4d7889a83ddbe0e5b49577ac"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "sha256": "8af25934ecb0a94b710f6bbc941978d5cc3c47ddbd9ca0e6ee18ea755c28d39b"
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/react.test.tsx",
+      "sha256": "89cccec5353daf6b9d685d218953483745c282f46066cb7b510055ae540cafe1"
+    }
+  ],
+  "loadAfter": [44.05078125, 38.515625, 48.2451171875],
+  "pressureAfter": {
+    "cpu": "some avg10=2.73 avg60=7.06 avg300=6.15 total=2224073003\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.20 avg60=0.37 avg300=0.30 total=189931834\nfull avg10=0.19 avg60=0.35 avg300=0.21 total=164955416\n",
+    "io": "some avg10=0.00 avg60=0.27 avg300=0.92 total=938886316\nfull avg10=0.00 avg60=0.00 avg300=0.25 total=643141226\n"
+  },
+  "sourceStable": true
+}

@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { beep } from "@beep/brand";
 import { BeepMark, BeepWordmark } from "@beep/brand/react";
+import { it } from "@beep/test-runner";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "vitest";
 
 describe("BeepMark", () => {
   it("renders the five mark paths inside a labelled svg", () => {

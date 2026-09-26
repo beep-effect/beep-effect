@@ -34764,363 +34764,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:135:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 135,
-      "endLine": 135,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:044c2f9987d6a13deed35f81ed4073cfdf09748ad9fda9694a182a9f7a02026b",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:164:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 164,
-      "endLine": 164,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:225a42d2427bb2e22f786f579e279b430f8d50e8cc4e401bdc3689e9d9e0bfdb",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:192:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 192,
-      "endLine": 192,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:15c76a88c8d1c434e46d97ed00b7d39c9b2c257967b6a66a65d0755451c829dc",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:224:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 224,
-      "endLine": 224,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:410bebac33cd72d085354672b4d1213cb030d9f491ee2e102b1b3331bb44e4ac",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:297:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 297,
-      "endLine": 297,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3dac926da903b47ad8b2cc25a0ff680765271f25bc8b63073d6e937ae80ad561",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:323:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 323,
-      "endLine": 323,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:6c7c71cbacd493c77d741f42bcaaa261bc3e464a179efe6643468b83ccd54e94",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:341:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 341,
-      "endLine": 341,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:8a81ff0be64ac6bff7d99778ddd37cee2b86fd6ec06ddafab4dd81e82afa83a0",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:377:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 377,
-      "endLine": 377,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:2e26a64d067af55f67ce1da2bd11e703c5ef3405b99e37ce06446c71589b282f",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:466:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 466,
-      "endLine": 466,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:60bd4379ea10476538b18e2a68616fea520d86893c0a7096cf4c193617fff5de",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:497:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 497,
-      "endLine": 497,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:5e917fa03b964579e834bada8e3259427cc70907594f78bc8ffd5c0e157cb0c2",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:529:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 529,
-      "endLine": 529,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:bebb4d4d85b66a19c3d75d3597ebf7b852707b6984b4bd24b7b0af6accde1d1d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:555:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 555,
-      "endLine": 555,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:ee17958b19a799216a565e78a42eb9d6f9c521b03e38855685816f677f951c29",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:567:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 567,
-      "endLine": 567,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:51c89b5ad99c67db8f2d205d90ade49795e1382819231695333c4045a6c61021",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:589:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 589,
-      "endLine": 589,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:983ac0800007dbbd1b839720f249f187c5434a1a5ef4ca47b435f4c4fc8f74c9",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:617:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 617,
-      "endLine": 617,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:8b375efc0d2bf901444b80356cf9d0581b5f47e8b5814b8f2d50b00eaac3f461",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:622:provideScopedLayer@46#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 622,
-      "endLine": 622,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:2b231b4fa629baf7b36e139b08a3ef60c51e52a1de9de031aa62127a861894ed",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunFileSystem.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/labs/ciops/test/projection.test.ts:636:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 636,
-      "endLine": 636,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:ccceac1ecc0556adec02ec24b265e26da5c3692cf5b422cc6845e1a5fc236d77",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(CiOpsProjectionLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts:1006:provideBunCrypto@96#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -70970,27 +70613,6 @@
       "reason": "The scoped Bun.Glob toggle deliberately exercises the real Node fallback backend. Every Glob consumer is in the same concurrent:false suite within an isolated test file; acquireUseRelease restores the original global on every exit. A MemoryFileSystem or generic layer replacement would not test backend selection."
     },
     {
-      "id": "EV003:packages/foundation/ui-system/brand/test/assets.test.ts:10:withBunServices@24#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
-      "line": 10,
-      "endLine": 11,
-      "symbol": "withBunServices",
-      "occurrence": "v2:681be871484e8f38869ecd5c292641e3339814846ff4f40d2a9c1f7b3c6a626f",
-      "class": "resource-wrapper",
-      "evidence": "<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) => Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/ontology/client/test/Session.atoms.test.ts:70:provideScopedLayer@2#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -76997,27 +76619,6 @@
       "status": "open"
     },
     {
-      "id": "EV004:apps/labs/ciops/test/health.test.ts:23:scoped@60#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/health.test.ts",
-      "line": 23,
-      "endLine": 23,
-      "symbol": "scoped",
-      "occurrence": "v2:953a2c0aeb22868d377659a8fa9820f8cdfbf467afedbd4efc193cf22544a604",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV004:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:302:scoped@91#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -79096,27 +78697,6 @@
       "occurrence": "v2:863191a87b55ad71d3ba21491eeafad29ce706ceb70a536146df663e7dfdd558",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Layer.build(sanitizedToolkit(StrictDynamicToolkit).pipe(Layer.provide(StrictDynamicHandlersLive))) )",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/foundation/ui-system/brand/test/assets.test.ts:11:scoped@2#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
-      "line": 11,
-      "endLine": 11,
-      "symbol": "scoped",
-      "occurrence": "v2:681be871484e8f38869ecd5c292641e3339814846ff4f40d2a9c1f7b3c6a626f",
-      "class": "shared-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped(Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))))",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -84034,27 +83614,6 @@
       "status": "open"
     },
     {
-      "id": "EV005:packages/foundation/capability/chalk/test/index.test.ts:174:result@29#1",
-      "lens": "resource",
-      "ruleId": "EV005",
-      "package": "@beep/chalk",
-      "file": "packages/foundation/capability/chalk/test/index.test.ts",
-      "line": 174,
-      "endLine": 174,
-      "symbol": "result",
-      "occurrence": "v2:8e395d4b63885fb1cce2ddac621006ab59e86ada341bb07b0a1bbaa39195e34c",
-      "class": "result-outcome-assertion",
-      "evidence": "Effect.result(decodeUnknownChalkConstructorOptions({ level: 4 }))",
-      "replacement": {
-        "primitive": "readme.exit",
-        "sketch": "utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. readme.exit: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV005:packages/foundation/capability/file-processing/test/PathSafety.test.ts:100:result@28#1",
       "lens": "resource",
       "ruleId": "EV005",
@@ -84619,27 +84178,6 @@
       "severity": "minor",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:apps/labs/ciops/test/projection.test.ts:624:expect@6#1",
-      "lens": "detector",
-      "ruleId": "EV006",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 624,
-      "endLine": 624,
-      "symbol": "expect",
-      "occurrence": "v2:e0b0e1eac126f5b2621dbddb0aa94b488458cd26dd6e1b95dd7ef8147b0c1868",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isNone(yield* service.currentProposal)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
       "status": "open"
     },
     {
@@ -100604,27 +100142,6 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/foundation/capability/chalk/test/index.test.ts:175:expect@6#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/chalk",
-      "file": "packages/foundation/capability/chalk/test/index.test.ts",
-      "line": 175,
-      "endLine": 175,
-      "symbol": "expect",
-      "occurrence": "v2:6e8d484211075409dd1c7a23ea6a438ff8756c48141a8213d6a7a7b284cad612",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isFailure(invalid)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV006:packages/foundation/capability/file-processing/test/PathSafety.test.ts:104:expect@6#1",
       "lens": "resource",
       "ruleId": "EV006",
@@ -108961,132 +108478,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The assertion contracts only that native stat supplies an mtime. Its OS-assigned timestamp is intentionally not prescribed; assertTrue(Option.isSome(fileInfo.mtime)) preserves that contract without inventing an expected payload for assertSome."
-    },
-    {
-      "id": "EV006:packages/foundation/ui-system/brand/test/Brand.test.ts:104:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
-      "line": 104,
-      "endLine": 104,
-      "symbol": "expect",
-      "occurrence": "v2:bc35840dd253f4d76eb3befd8e393c0d6618433e35c84229676a8375c5ad41a1",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isFailure(family)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/ui-system/brand/test/Brand.test.ts:105:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
-      "line": 105,
-      "endLine": 105,
-      "symbol": "expect",
-      "occurrence": "v2:eb109f33b5f8240c232673582ebaea7c4b771f04382402c7baf30a4915126316",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isFailure(name)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/ui-system/brand/test/Brand.test.ts:106:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
-      "line": 106,
-      "endLine": 106,
-      "symbol": "expect",
-      "occurrence": "v2:8da77a8ac3eef4b0852432ff708f0365af6f5521ab7166df2258d14dec111e59",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isFailure(noncharacter)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/ui-system/brand/test/Brand.test.ts:107:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
-      "line": 107,
-      "endLine": 107,
-      "symbol": "expect",
-      "occurrence": "v2:ed3881241ebef652bbed9461a7373725126b7d8b5ec3836c00547e468ba725d4",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isFailure(loneSurrogate)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/ui-system/brand/test/Brand.test.ts:108:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
-      "line": 108,
-      "endLine": 108,
-      "symbol": "expect",
-      "occurrence": "v2:25460a3c9581849d669f6e15b7c49661ddf2a4682c8115dac5e28063fee6d1d4",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isSuccess(decodePrintableTextResult(\"Inter Variable\"))).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isSuccess Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/foundation/ui-system/brand/test/Brand.test.ts:109:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/brand",
-      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
-      "line": 109,
-      "endLine": 109,
-      "symbol": "expect",
-      "occurrence": "v2:c608f8de1142a1c7a11f52ae7289ba82a0b70ca8fa6d34be89301172ad3ae095",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Result.isSuccess(decodePrintableTextResult(\"beep \\u{1f680}\"))).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Result.isSuccess Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV006:packages/foundation/ui-system/dock-react/test/Floating.test.tsx:221:expect@6#1",
@@ -140964,90 +140355,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:apps/labs/ciops/test/projection.test.ts:145:checkEffect@16#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 145,
-      "endLine": 162,
-      "symbol": "checkEffect",
-      "occurrence": "v2:958edd188dd61622526754e4656467074937ab37196e6ba440cb33d6d5ed6f63",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( pendingArbitrary(policy), (pending) => { const input = inputFor(policy, pending); const first = runSync(projectSchedule(input)); const second = runSync(projectSchedule(input));",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:apps/labs/ciops/test/projection.test.ts:174:checkEffect@16#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 174,
-      "endLine": 190,
-      "symbol": "checkEffect",
-      "occurrence": "v2:d7c2d034bd05102266ee569be417035b412ef7d83b280a28d1d01e364decb9a3",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( pendingArbitrary(policy), (pending) => { const proposal = runSync(projectSchedule(inputFor(policy, pending))); let active = 0; for (const step of proposal.steps) { const scope:",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:apps/labs/ciops/test/projection.test.ts:202:checkEffect@16#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 202,
-      "endLine": 222,
-      "symbol": "checkEffect",
-      "occurrence": "v2:c9efa5cd6e6efb7313d7b0841db4f370ca1cd08d21bd43c22597a271c3f0dc72",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( pendingArbitrary(policy), (pending) => { const proposal = runSync(projectSchedule(inputFor(policy, pending))); const expected = HashSet.fromIterable(A.map(pending, (request) =>",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:apps/labs/ciops/test/projection.test.ts:234:checkEffect@16#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/ciops",
-      "file": "apps/labs/ciops/test/projection.test.ts",
-      "line": 234,
-      "endLine": 265,
-      "symbol": "checkEffect",
-      "occurrence": "v2:63cde30e592d7d54e3276982d7be12179372b9b58dd11903a91ad7e1b2a30bfd",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([ PendingRequestArbitrary, PendingRequestArbitrary, Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 1_000_000 }))), ]), ([publishSeed, verifySeed,",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts:88:checkEffect@29#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -143159,27 +142466,6 @@
       "occurrence": "v2:9ce0f36da782247659f1f6f74ac665b3e049ac8172f3ab7506c89d1d0ee6a2b7",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.all([HeaderRoundTripSnapshotArbitrary]), ([snapshot]) => { const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot)); O.match(parsed, { onNone: () => expect(ha",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/foundation/capability/chalk/test/index.test.ts:200:checkEffect@30#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/chalk",
-      "file": "packages/foundation/capability/chalk/test/index.test.ts",
-      "line": 200,
-      "endLine": 211,
-      "symbol": "checkEffect",
-      "occurrence": "v2:d407734ec4dbac163bb3d9d5177dbc8053f246fa58bff221e8d1321b7305ae04",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([Arbitrary.schema(schema)]), ([value]) => Effect.gen(function* () { const encoded = yield* S.encodeEffect(schema)(value); const decoded = yield* S.decodeEffect(sch",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
@@ -153148,7 +152434,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "These tests read the tracked ratified S6 policy, frozen admission journal and golden Turtle/NDJSON fixtures. Native file bytes are the independent oracle, so replacing them with MemoryFileSystem contents would change the subject. Retain BunFileSystem through the instrumented suite layer with a five-second hook budget; decode the read-only policy once through TestPolicy and retain exact golden comparisons."
     },
     {
       "id": "EV010:apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts:6:@effect/platform-bun/BunServices@0#1",
@@ -154540,7 +153827,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native tracked golden assets are the subject. readPackageFile obtains FileSystem and Path from BunServices and reads the checked-in asset and bridge files; replacing those bytes with MemoryFileSystem fixtures would remove the independent on-disk oracle. Retain BunServices through the instrumented it.layer suite with an explicit five-second hook budget, the exact five-path assertion and all existing content checks."
     },
     {
       "id": "EV010:packages/law-practice/server/test/PracticeKg.projections.test.ts:36:@effect/platform-node@0#1",
@@ -163362,27 +162650,6 @@
       "occurrence": "v2:b160ab38d0564a624979f9b59e6cf6704355885276b8763943ac8dbe3bed9088",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer( B.Box.makeLayerFromClient( makeFakeClient({ downloads: { getDownloadFileUrl: (fileId, optionalsInput) => { generatedOptionalsCancellationProbe.received = ( optionalsInput as { readonly cancella",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/discord/test/Discord.service.test.ts:259:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/discord",
-      "file": "packages/drivers/discord/test/Discord.service.test.ts",
-      "line": 259,
-      "endLine": 259,
-      "symbol": "it.layer",
-      "occurrence": "v2:4dbef2a64b7105d36a7c83c671b8bfb9d1f388e5b423f3735cbd1475b4c1b22b",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(makeLayer())",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."

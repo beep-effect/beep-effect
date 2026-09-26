@@ -1,0 +1,102 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "dc869610b28ea1e218466592160dd2fd340aeecc6196ff4ed1e04dd1e1637fac"
+    },
+    {
+      "file": "packages/drivers/discord/package.json",
+      "sha256": "6d19d6b1660a7bf6aaec8403840e8fd2669907485b9fff0a3afa9a973c9da5d9"
+    },
+    {
+      "file": "packages/drivers/discord/src/Discord.errors.ts",
+      "sha256": "75dc55067a859d080140b67bf71a60c557064ad64c27e23c3808f7a2f81ad05d"
+    },
+    {
+      "file": "packages/drivers/discord/src/Discord.models.ts",
+      "sha256": "3131149b01b4da6ab27da9c58ff652bd7d10fa4a30159d4b827e593fc2e138b1"
+    },
+    {
+      "file": "packages/drivers/discord/src/Discord.service.ts",
+      "sha256": "eb254835a937911988459a38a751efa5c7354b7e8173ededc13545fb42cd5579"
+    },
+    {
+      "file": "packages/drivers/discord/src/index.ts",
+      "sha256": "aba60efc05edabd048861fb96dbf38635daf90513faa4e777ec2b970240c49cc"
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.equivalence.test.ts",
+      "sha256": "2f98ce5e0f5147dc5e8fb59c6d71a3e589f54730101ff8d8292b24e2b65f750a"
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "sha256": "76c8e7ce19608dcf64ef4fb654c77f14461c9df708b5c4411e28f8b41ae19d89"
+    }
+  ],
+  "loadBefore": [24.7841796875, 62.0390625, 62.0146484375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.38 avg60=3.01 avg300=10.46 total=2202519338\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.15 avg300=0.76 total=188784567\nfull avg10=0.00 avg60=0.04 avg300=0.26 total=163841416\n",
+    "io": "some avg10=0.01 avg60=1.90 avg300=4.32 total=937203551\nfull avg10=0.00 avg60=0.94 avg300=1.38 total=642290427\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 4.68113918400195,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "dc869610b28ea1e218466592160dd2fd340aeecc6196ff4ed1e04dd1e1637fac"
+    },
+    {
+      "file": "packages/drivers/discord/package.json",
+      "sha256": "6d19d6b1660a7bf6aaec8403840e8fd2669907485b9fff0a3afa9a973c9da5d9"
+    },
+    {
+      "file": "packages/drivers/discord/src/Discord.errors.ts",
+      "sha256": "75dc55067a859d080140b67bf71a60c557064ad64c27e23c3808f7a2f81ad05d"
+    },
+    {
+      "file": "packages/drivers/discord/src/Discord.models.ts",
+      "sha256": "3131149b01b4da6ab27da9c58ff652bd7d10fa4a30159d4b827e593fc2e138b1"
+    },
+    {
+      "file": "packages/drivers/discord/src/Discord.service.ts",
+      "sha256": "eb254835a937911988459a38a751efa5c7354b7e8173ededc13545fb42cd5579"
+    },
+    {
+      "file": "packages/drivers/discord/src/index.ts",
+      "sha256": "aba60efc05edabd048861fb96dbf38635daf90513faa4e777ec2b970240c49cc"
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.equivalence.test.ts",
+      "sha256": "2f98ce5e0f5147dc5e8fb59c6d71a3e589f54730101ff8d8292b24e2b65f750a"
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "sha256": "76c8e7ce19608dcf64ef4fb654c77f14461c9df708b5c4411e28f8b41ae19d89"
+    }
+  ],
+  "loadAfter": [24.8017578125, 61.423828125, 61.8154296875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.58 avg60=2.88 avg300=10.33 total=2202595003\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.14 avg300=0.75 total=188784678\nfull avg10=0.00 avg60=0.04 avg300=0.25 total=163841518\n",
+    "io": "some avg10=0.00 avg60=1.77 avg300=4.26 total=937205041\nfull avg10=0.00 avg60=0.88 avg300=1.36 total=642291408\n"
+  },
+  "sourceStable": true
+}

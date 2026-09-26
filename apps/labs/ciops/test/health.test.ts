@@ -1,4 +1,5 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import { HttpRouter } from "effect/http";
 import * as S from "effect/Schema";
@@ -20,5 +21,5 @@ const verifyHealth = Effect.fn("CiOps.test.verifyHealth")(function* () {
 });
 
 describe("@beep/ciops", () => {
-  it.effect("serves GET /health", () => verifyHealth().pipe(Effect.scoped));
+  it.effect("serves GET /health", verifyHealth);
 });

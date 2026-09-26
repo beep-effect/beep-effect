@@ -2360,6 +2360,43 @@ No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
 
+## Runner dependency and receipt generation
+
+`bun add --dev @beep/test-runner@workspace:^` wrote workspace:* in Chalk,
+which Syncpack rejected. The manifest was corrected and verified. The generator
+should preserve the workspace protocol policy. Separately, PR #1282 review
+found that its scoped dependency projection retained an inherited Graph3D
+review receipt; a package-specific receipt and hash now identify its Provenance
+edges. Dependency reconciliation should require a matching review basis.
+
+## 2026-09-26 — unrelated proof-job timeouts block HTML coverage
+
+While closing HTML PR #1279, Heavy / Coverage Regression failed in two
+`test/proof-job.test.ts` job-wait wave-return cases with `Timed out waiting for
+proof job`. The HTML diff changes neither that test nor ProofJobLauncher.
+Evidence: GitHub run 36216289583, job 108333072900. The unchanged focused command
+`bunx vitest run test/proof-job.test.ts -t 'job wait wave return' --coverage`
+passed all four selected cases (81 filtered out) in 10.68 seconds. Only the
+failed hosted job was retried; that retry is not yet passing evidence. The
+existing full local proof remains active and its inputs were left intact.
+A deterministic timing seam for wave-return tests, or stronger failure telemetry
+for their bounded waits, would make coverage-load failures easier to attribute.
+No timeout increase, retry configuration, CLI source change or waiver was made.
+
+## 2026-09-26 — Box audit regenerates an invalid SDK operation
+
+During the Box scope phase, `bun run beep quality package-verify @beep/box`
+regenerated bindings from installed SDK 10.16.0 and failed audit with TS6133:
+`signal` is declared but never read in generated Box.operations.gen.ts.
+The generator always renders `(decoded, signal)` although getCachedUploadPart
+has no cancellationToken or optionalsInput argument. The test changes do not
+alter generator inputs, the package manifest or the lockfile. Docgen passed;
+test typechecking and all 32 configured tests pass on the committed bindings.
+The generated diff was retained as evidence and generated files restored.
+A generator regression case covering SDK methods without cancellation arguments
+would have exposed this before the mandatory package audit. A separate narrow
+repair requires the operator's production-code exception; no waiver was made.
+
 
 ### Drizzle full-proof follow-up: compiled codecs and private output references
 

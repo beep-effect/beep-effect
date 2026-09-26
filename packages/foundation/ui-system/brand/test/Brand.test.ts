@@ -13,9 +13,11 @@ import {
   SvgPaint,
   WordmarkSvgRequest,
 } from "@beep/brand";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -101,12 +103,24 @@ describe("renderThemeCss", () => {
     const noncharacter = decodePrintableTextResult("bad\ufffe");
     const loneSurrogate = decodePrintableTextResult("bad\ud83d");
 
-    expect(Result.isFailure(family)).toBe(true);
-    expect(Result.isFailure(name)).toBe(true);
-    expect(Result.isFailure(noncharacter)).toBe(true);
-    expect(Result.isFailure(loneSurrogate)).toBe(true);
-    expect(Result.isSuccess(decodePrintableTextResult("Inter Variable"))).toBe(true);
-    expect(Result.isSuccess(decodePrintableTextResult("beep \u{1f680}"))).toBe(true);
+    assertFailure(
+      Result.mapError(family, (error) => error._tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(name, (error) => error._tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(noncharacter, (error) => error._tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(loneSurrogate, (error) => error._tag),
+      "SchemaError"
+    );
+    assertSuccess(decodePrintableTextResult("Inter Variable"), "Inter Variable");
+    assertSuccess(decodePrintableTextResult("beep \u{1f680}"), "beep \u{1f680}");
   });
 });
 
