@@ -2436,3 +2436,11 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: ACP scope wrapper cleanup
+
+The ACP scope phase removed manual context provision and cleanup, leaving two
+result-capture generators with a single yielded effect. Full package verification
+reported TS377083. Flattening the redundant generators preserved the exact effects
+and assertions; the next full audit and docgen passed. Include this compiler check
+when removing fixture wrappers so redundant generators are caught in the same phase.

@@ -241,7 +241,7 @@ it.prop(
   { arbitrary: fcRuns(25) }
 );
 
-it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (it) => {
   it.effect(
     "emits exact JSON-RPC notifications and decodes inbound session/update and elicitation completion",
     Effect.fnUntraced(function* () {
@@ -729,7 +729,7 @@ const stringifyWireIds = (message: unknown): unknown => {
 
 const oracle = (line: string): ReadonlyArray<unknown> => A.map(effectFrameParser.decode(`${line}\n`), stringifyWireIds);
 
-it.layer(NodeServices.layer)("effect-acp frame decoder parity", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decoder parity", (it) => {
   it.effect(
     "routes every JSON-RPC frame kind exactly like effect's ndjson serializer",
     Effect.fnUntraced(function* () {
@@ -843,7 +843,7 @@ const expectParseTermination = (error: AcpError.AcpError): unknown =>
     AcpTransportError: () => assert.fail("expected a protocol parse error"),
   });
 
-it.layer(NodeServices.layer)("effect-acp frame decoder edge cases", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decoder edge cases", (it) => {
   it.effect(
     "routes the remaining control frames, cause shapes, and params-less requests",
     Effect.fnUntraced(function* () {

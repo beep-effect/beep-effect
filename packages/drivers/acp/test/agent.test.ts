@@ -1,16 +1,16 @@
 import { Agent as AcpAgent, Schema as AcpSchema } from "@beep/acp";
+import { $AcpId } from "@beep/identity/packages";
 import { fcRuns } from "@beep/test-utils";
 import { assert, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
-import * as Scope from "effect/Scope";
 import { encodeJsonl, jsonRpcNotification, jsonRpcRequest, jsonRpcResponse, makeInMemoryStdio } from "./helpers.ts";
 
 const RequestPermissionRequest = jsonRpcRequest("session/request_permission", AcpSchema.RequestPermissionRequest);
@@ -29,6 +29,18 @@ const encodeInitializeResponse = Schema.encodeEffect(Schema.fromJsonString(Initi
 const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonString(SessionCancelNotification));
 const InitializeResponseArbitrary = Arbitrary.schema(InitializeResponse);
 const SessionCancelNotificationArbitrary = Arbitrary.schema(SessionCancelNotification);
+
+const $I = $AcpId.create("test/agent.test");
+class AgentTransport extends Context.Service<AgentTransport, Effect.Success<ReturnType<typeof makeInMemoryStdio>>>()(
+  $I`AgentTransport`
+) {}
+
+// Each single-case registration owns a fresh transport and public agent layer.
+const agentFixtureLayer = Layer.unwrap(
+  Effect.map(makeInMemoryStdio(), (transport) =>
+    Layer.merge(AcpAgent.layer({ stdio: transport.stdio }), Layer.succeed(AgentTransport, transport))
+  )
+);
 
 it("constructs the stdio agent layer with default options", () => {
   assert.isDefined(AcpAgent.layerStdio());
@@ -49,18 +61,15 @@ it.prop(
   { arbitrary: fcRuns(25) }
 );
 
-it.effect(
-  "effect-acp agent handles core agent requests and outbound client requests",
-  Effect.fnUntraced(function* () {
-    const { stdio, input, output } = yield* makeInMemoryStdio();
-    const cancelNotifications = yield* Ref.make<Array<string>>([]);
-    const extNotifications = yield* Ref.make<Array<number>>([]);
-    const cancelReceived = yield* Deferred.make<void>();
-    const extReceived = yield* Deferred.make<void>();
-    const scope = yield* Scope.make();
-    const context = yield* Layer.buildWithScope(AcpAgent.layer({ stdio }), scope);
-
-    yield* Effect.gen(function* () {
+it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "effect-acp agent handles core agent requests and outbound client requests",
+    Effect.fnUntraced(function* () {
+      const { input, output } = yield* AgentTransport;
+      const cancelNotifications = yield* Ref.make<Array<string>>([]);
+      const extNotifications = yield* Ref.make<Array<number>>([]);
+      const cancelReceived = yield* Deferred.make<void>();
+      const extReceived = yield* Deferred.make<void>();
       const agent = yield* AcpAgent.AcpAgent;
 
       yield* agent.handleInitialize(() =>
@@ -183,18 +192,15 @@ it.effect(
       yield* Deferred.await(extReceived);
       assert.deepEqual(yield* Ref.get(cancelNotifications), ["session-1"]);
       assert.deepEqual(yield* Ref.get(extNotifications), [2]);
-    }).pipe(Effect.provide(context), Effect.ensuring(Scope.close(scope, Exit.void)));
-  })
-);
+    })
+  );
+});
 
-it.effect(
-  "effect-acp agent uses distinct ids for RPC calls and extension requests",
-  Effect.fnUntraced(function* () {
-    const { stdio, input, output } = yield* makeInMemoryStdio();
-    const scope = yield* Scope.make();
-    const context = yield* Layer.buildWithScope(AcpAgent.layer({ stdio }), scope);
-
-    yield* Effect.gen(function* () {
+it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "effect-acp agent uses distinct ids for RPC calls and extension requests",
+    Effect.fnUntraced(function* () {
+      const { input, output } = yield* AgentTransport;
       const agent = yield* AcpAgent.AcpAgent;
 
       const permissionFiber = yield* agent.client
@@ -253,6 +259,6 @@ it.effect(
       const permission = yield* Fiber.join(permissionFiber);
       assert.equal(permission.outcome.outcome, "selected");
       assert.deepEqual(yield* Fiber.join(extFiber), { ok: true });
-    }).pipe(Effect.provide(context), Effect.ensuring(Scope.close(scope, Exit.void)));
-  })
-);
+    })
+  );
+});
