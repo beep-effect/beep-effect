@@ -1,9 +1,11 @@
 import { AnthropicToolJsonResponse, collectToolParamsJson, collectToolParamsJsonWithUsage } from "@beep/anthropic";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import { Effect, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Response } from "effect/ai";
+import { constTrue } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -70,27 +72,18 @@ describe("Anthropic repair helpers", () => {
     })
   );
 
-  it.effect("round-trips schema-derived repair responses through JSON", () =>
-    Effect.sync(() =>
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([AnthropicToolJsonResponseArbitrary]),
-            ([response]) => {
-              const encoded = encodeJsonAnthropicToolJsonResponseOption(response);
-              const reencoded = O.flatMap(encoded, (json) =>
-                O.flatMap(decodeJsonAnthropicToolJsonResponseOption(json), encodeJsonAnthropicToolJsonResponseOption)
-              );
+  it.prop(
+    "round-trips schema-derived repair responses through JSON",
+    [AnthropicToolJsonResponseArbitrary],
+    ([response]) => {
+      const encoded = encodeJsonAnthropicToolJsonResponseOption(response);
+      const reencoded = O.flatMap(encoded, (json) =>
+        O.flatMap(decodeJsonAnthropicToolJsonResponseOption(json), encodeJsonAnthropicToolJsonResponseOption)
+      );
 
-              expect(O.isSome(encoded)).toBe(true);
-              expect(reencoded).toStrictEqual(encoded);
-
-              return true;
-            },
-            fcRuns(25)
-          )
-        )
-      ).toMatchObject({ _tag: "Passed" })
-    )
+      assertSome(encoded.pipe(O.map(constTrue)), true);
+      deepStrictEqual(reencoded, encoded);
+    },
+    { arbitrary: fcRuns(25) }
   );
 });
