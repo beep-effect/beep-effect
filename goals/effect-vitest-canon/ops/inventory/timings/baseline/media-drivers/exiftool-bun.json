@@ -1,0 +1,254 @@
+{
+  "numTotalTestSuites": 8,
+  "numPassedTestSuites": 8,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 17,
+  "numPassedTests": 17,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790416611037,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Exiftool declared-field equivalence"],
+          "fullName": "Exiftool declared-field equivalence compares diagnostic fields and ignores the opaque defect cause",
+          "status": "passed",
+          "title": "compares diagnostic fields and ignores the opaque defect cause",
+          "duration": 3.186727000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790416612884,
+      "endTime": 1790416612887.1868,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/exiftool/test/Exiftool.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models round-trips schema-modeled public payloads",
+          "status": "passed",
+          "title": "round-trips schema-modeled public payloads",
+          "duration": 47.33162400000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models keeps Option-modeled optional metadata encoded as omitted keys",
+          "status": "passed",
+          "title": "keeps Option-modeled optional metadata encoded as omitted keys",
+          "duration": 39.626629000000094,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models rejects tag names that could smuggle extra arguments",
+          "status": "passed",
+          "title": "rejects tag names that could smuggle extra arguments",
+          "duration": 39.535368999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models builds read, write, and version arguments with -config first",
+          "status": "passed",
+          "title": "builds read, write, and version arguments with -config first",
+          "duration": 39.5901429999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models renders the XMP-beepQA exiftool config template",
+          "status": "passed",
+          "title": "renders the XMP-beepQA exiftool config template",
+          "duration": 39.58572600000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models encodes provenance into ordered XMP-beepQA tag assignments",
+          "status": "passed",
+          "title": "encodes provenance into ordered XMP-beepQA tag assignments",
+          "duration": 1.4275289999998222,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool models"],
+          "fullName": "@beep/exiftool models decodes provenance back out of ucfirst-capitalized -j -G1 keys",
+          "status": "passed",
+          "title": "decodes provenance back out of ucfirst-capitalized -j -G1 keys",
+          "duration": 1.3897699999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790416612926,
+      "endTime": 1790416612973.3315,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/exiftool/test/Exiftool.models.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/exiftool service"],
+          "fullName": "@beep/exiftool service reports the exiftool version through the fake child-process layer",
+          "status": "passed",
+          "title": "reports the exiftool version through the fake child-process layer",
+          "duration": 11.380063999999948,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool service"],
+          "fullName": "@beep/exiftool service reads tags into cleaned metadata with the -config file first",
+          "status": "passed",
+          "title": "reads tags into cleaned metadata with the -config file first",
+          "duration": 17.870197999999846,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool service"],
+          "fullName": "@beep/exiftool service writes tags temp-then-commit without leaving staging behind",
+          "status": "passed",
+          "title": "writes tags temp-then-commit without leaving staging behind",
+          "duration": 19.43410599999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool service"],
+          "fullName": "@beep/exiftool service embeds provenance packets through the write-tags path",
+          "status": "passed",
+          "title": "embeds provenance packets through the write-tags path",
+          "duration": 19.232054000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool service"],
+          "fullName": "@beep/exiftool service refuses unwritable extensions before spawning and points at FFmpeg",
+          "status": "passed",
+          "title": "refuses unwritable extensions before spawning and points at FFmpeg",
+          "duration": 17.5184569999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool service"],
+          "fullName": "@beep/exiftool service normalizes failed exiftool exits into ExiftoolError",
+          "status": "passed",
+          "title": "normalizes failed exiftool exits into ExiftoolError",
+          "duration": 8.27536299999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790416612971,
+      "endTime": 1790416612990.434,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/exiftool/test/Exiftool.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/exiftool live"],
+          "fullName": "@beep/exiftool live round-trips XMP-beepQA provenance through a real PNG",
+          "status": "passed",
+          "title": "round-trips XMP-beepQA provenance through a real PNG",
+          "duration": 214.27415199999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool live"],
+          "fullName": "@beep/exiftool live round-trips XMP-beepQA provenance through a real GIF",
+          "status": "passed",
+          "title": "round-trips XMP-beepQA provenance through a real GIF",
+          "duration": 213.6840840000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/exiftool live"],
+          "fullName": "@beep/exiftool live refuses video containers with a pointer at FFmpeg.writeContainerMetadata",
+          "status": "passed",
+          "title": "refuses video containers with a pointer at FFmpeg.writeContainerMetadata",
+          "duration": 57.00971700000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790416613005,
+      "endTime": 1790416613219.684,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts"
+    }
+  ]
+}
