@@ -127,45 +127,33 @@ describe("@beep/api-transport", () => {
     })
   );
 
-  it("round-trips schema-derived RateLimitSnapshot values through the encoded shape", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([RateLimitSnapshotArbitrary]),
-          ([snapshot]) => {
-            const encoded = Effect.runSync(encodeRateLimitSnapshot(snapshot));
-            const decoded = Effect.runSync(decodeRateLimitSnapshot(encoded));
-            const reencoded = Effect.runSync(encodeRateLimitSnapshot(decoded));
+  it.effect.prop(
+    "round-trips schema-derived RateLimitSnapshot values through the encoded shape",
+    [RateLimitSnapshotArbitrary],
+    Effect.fnUntraced(function* ([snapshot]) {
+      const encoded = yield* encodeRateLimitSnapshot(snapshot);
+      const decoded = yield* decodeRateLimitSnapshot(encoded);
+      const reencoded = yield* encodeRateLimitSnapshot(decoded);
 
-            expect(reencoded).toEqual(encoded);
-            expect(RateLimitSnapshotEquivalence(decoded, snapshot)).toBe(true);
+      expect(reencoded).toEqual(encoded);
+      expect(RateLimitSnapshotEquivalence(decoded, snapshot)).toBe(true);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "round-trips parseable schema-derived snapshots through rate-limit headers",
+    [HeaderRoundTripSnapshotArbitrary],
+    ([snapshot]) => {
+      const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot));
 
-  it("round-trips parseable schema-derived snapshots through rate-limit headers", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HeaderRoundTripSnapshotArbitrary]),
-          ([snapshot]) => {
-            const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot));
-
-            O.match(parsed, {
-              onNone: () => expect(hasAnyField(snapshot)).toBe(false),
-              onSome: (value) => expect(RateLimitSnapshotEquivalence(value, snapshot)).toBe(true),
-            });
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      O.match(parsed, {
+        onNone: () => expect(hasAnyField(snapshot)).toBe(false),
+        onSome: (value) => expect(RateLimitSnapshotEquivalence(value, snapshot)).toBe(true),
+      });
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("parses rate-limit aliases and ignores non-numeric headers", () => {
     assertSome(
