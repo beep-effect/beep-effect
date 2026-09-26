@@ -101,6 +101,16 @@ export * from "./flight-record.ts";
  */
 export * from "./forwarder.ts";
 /**
+ * Harness evidence ledger: context surface ids, harness fingerprints, ledger
+ * rows, and the derived harness-edit, budget, staleness, and warm-restart
+ * predicates. Examples live on the owning declarations in
+ * `./harness-ledger.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./harness-ledger.ts";
+/**
  * Hook-pulse ledger contract: the schema-versioned record emitted once per
  * coding-agent hook event, and the derivation that turns a raw hook payload
  * into it. Examples live on the owning declarations in `./hook-pulse.ts`.
