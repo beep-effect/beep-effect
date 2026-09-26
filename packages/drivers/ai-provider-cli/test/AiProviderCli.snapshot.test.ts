@@ -9,6 +9,7 @@ import {
 } from "@beep/ai-provider-cli";
 import * as HostPath from "@beep/utils/Path";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Logger, Ref, References, Result } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -43,9 +44,9 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
 
         expect(snapshot.provider).toBe("claude");
         expect(snapshot.status).toBe("authenticated");
-        expect(snapshot.email).toEqual(O.some("dev@example.com"));
-        expect(snapshot.subscriptionLabel).toEqual(O.some("Claude Max Subscription"));
-        expect(snapshot.tokenSource).toEqual(O.some("claude.ai"));
+        assertSome(snapshot.email, "dev@example.com");
+        assertSome(snapshot.subscriptionLabel, "Claude Max Subscription");
+        assertSome(snapshot.tokenSource, "claude.ai");
       })
     );
   });
@@ -68,7 +69,7 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
         const snapshot = yield* providerCli.checkAuthSnapshot("claude");
 
         expect(snapshot.status).toBe("authenticated");
-        expect(snapshot.subscriptionLabel).toEqual(O.some("Claude Subscription"));
+        assertSome(snapshot.subscriptionLabel, "Claude Subscription");
       })
     );
   });
@@ -85,9 +86,9 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
         const snapshot = yield* providerCli.checkAuthSnapshot("claude");
 
         expect(snapshot.status).toBe("not-authenticated");
-        expect(snapshot.email).toEqual(O.none());
-        expect(snapshot.subscriptionLabel).toEqual(O.none());
-        expect(snapshot.tokenSource).toEqual(O.none());
+        assertNone(snapshot.email);
+        assertNone(snapshot.subscriptionLabel);
+        assertNone(snapshot.tokenSource);
       })
     );
   });
@@ -104,9 +105,9 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
         const snapshot = yield* providerCli.checkAuthSnapshot("claude");
 
         expect(snapshot.status).toBe("authenticated");
-        expect(snapshot.email).toEqual(O.none());
-        expect(snapshot.subscriptionLabel).toEqual(O.none());
-        expect(snapshot.tokenSource).toEqual(O.none());
+        assertNone(snapshot.email);
+        assertNone(snapshot.subscriptionLabel);
+        assertNone(snapshot.tokenSource);
       })
     );
   });
@@ -124,9 +125,9 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
 
         expect(snapshot.provider).toBe("codex");
         expect(snapshot.status).toBe("authenticated");
-        expect(snapshot.email).toEqual(O.none());
-        expect(snapshot.subscriptionLabel).toEqual(O.none());
-        expect(snapshot.tokenSource).toEqual(O.some("chatgpt"));
+        assertNone(snapshot.email);
+        assertNone(snapshot.subscriptionLabel);
+        assertSome(snapshot.tokenSource, "chatgpt");
       })
     );
   });
@@ -143,7 +144,7 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
         const snapshot = yield* providerCli.checkAuthSnapshot("codex");
 
         expect(snapshot.status).toBe("authenticated");
-        expect(snapshot.tokenSource).toEqual(O.some("api-key"));
+        assertSome(snapshot.tokenSource, "api-key");
       })
     );
   });
@@ -160,7 +161,7 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
         const snapshot = yield* providerCli.checkAuthSnapshot("codex");
 
         expect(snapshot.status).toBe("not-authenticated");
-        expect(snapshot.tokenSource).toEqual(O.none());
+        assertNone(snapshot.tokenSource);
       })
     );
   });
@@ -229,8 +230,8 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
           }).pipe(Effect.flip);
 
           expect(error._tag).toBe("AiProviderCliError");
-          expect(error.command).toEqual(O.none());
-          expect(error.stderr).toEqual(O.some("unknown"));
+          assertNone(error.command);
+          assertSome(error.stderr, "unknown");
           expect(error.message).not.toContain(secret);
           expect(error.message).not.toContain(executable);
           expect(annotations).toEqual([
