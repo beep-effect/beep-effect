@@ -10,9 +10,10 @@ import {
   SanityQueryResponse,
 } from "@beep/sanity";
 import { fcRuns } from "@beep/test-utils";
-import { A } from "@beep/utils";
+import { A, thunkTrue } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertFailure, assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -200,16 +201,14 @@ describe("@beep/sanity", () => {
       status: 500,
       url: "https://api.sanity.io/v2025-05-14/data/query/production",
     });
-    expect(Result.isFailure(decodeSanityQueryResponseResult({ ms: -1, result: null }))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeSanityErrorResult({
-          _tag: "SanityError",
-          reason: "response status",
-          status: 99,
-        })
-      )
-    ).toBe(true);
+    assertFailure(Result.mapError(decodeSanityQueryResponseResult({ ms: -1, result: null }), thunkTrue), true);
+    assertFailure(
+      Result.mapError(
+        decodeSanityErrorResult({ _tag: "SanityError", reason: "response status", status: 99 }),
+        thunkTrue
+      ),
+      true
+    );
   });
 
   it.prop(
@@ -247,7 +246,7 @@ describe("@beep/sanity", () => {
         const captures = yield* testHttp.captures;
 
         expect(response.result).toEqual({ ok: true });
-        expect(response.ms).toEqual(O.some(3));
+        assertSome(response.ms, 3);
         expect(captures[0]?.method).toBe("POST");
         expect(captures[0]?.url).toBe("https://oip.api.sanity.io/v2025-05-14/data/query/production");
         expect(captures[0]?.headers.authorization).toBe("Bearer sanity-token");
@@ -269,16 +268,14 @@ describe("@beep/sanity", () => {
         const sanity = yield* Sanity;
         const exit = yield* Effect.exit(sanity.fetch(SanityQueryRequest.make({ query: "*[]" })));
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(SanityError);
-            expect(error.value.reason).toBe("response status");
-            expect(error.value.status).toBe(500);
-          }
-        }
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, SanityError);
+            return { reason: error.reason, status: error.status };
+          }),
+          { reason: "response status", status: 500 }
+        );
       })
     );
   });
