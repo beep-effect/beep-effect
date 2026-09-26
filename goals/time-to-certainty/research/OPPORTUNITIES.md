@@ -2495,3 +2495,117 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   handoff cannot diverge. The runtime still assembles its own list; adopting
   `githubCheckPrePushLanes` in `Quality.command.ts` with a runtime-parity fixture is left for a later
   PR.
+
+## 2026-09-26 — a code PR cannot adopt a coverage drop main already carries, so the drop needs its own baseline-only PR
+
+- Doing: clearing the reds main carried from #1257, #1247, #1262 and #1270 in one lint-only PR
+  (#1272, `MonitorLoop.ts` plus four yeet test suites, 5 files).
+- Evidence: `Heavy / Coverage Regression` on #1272 (run 36208076536, job 108308987554) passed 4779
+  tests (5 skipped) and failed on 13 rows under
+  `Yeet/internal/{Inbox,InboxView,Remediation,WatchStream}.ts` that the PR has zero diff lines on.
+  Main's own run on the #1234 merge (job 108303821874) printed the same 13 rows at the same values,
+  among 18 (the other five were rows #1276 recorded). The rows entered main through #1270 (merged
+  2026-09-25 22:50Z); main's coverage run on that merge (job 108281762575) was already red, and the
+  coverage runs on #1272's earlier heads and on #1276 died in `worktree-fleet.test.ts`
+  (`ReferenceError: Bun is not defined`) before the ratchet could report anything. That is the
+  2026-09-22 receipt recurring. The ratchet judges a package this PR touched at the base floor, so
+  #1272 could not turn the lane green itself; it merged at 02:58Z with the lane still red (not a
+  required context). The rows went to a baseline-only PR (#1280), which merged main to pick up
+  #1272's oxlint fix and ran three Heavy matrices before it merged at 07:22Z. #1276 had done the same
+  earlier that day for the rows #1272's `5824b0e71b` run printed. One inherited coverage red cost
+  four matrices across two PRs.
+- Prevention: when the base revision's own hosted run reports the same drop on the same rows, the
+  drop is inherited by construction and the ratchet could accept the lowered row in the code PR, or
+  print one ready-to-commit baseline fragment, instead of withholding it. The coverage lane should
+  also print its ratchet verdict (or `ratchet not evaluated`) when a test fails, so a red test cannot
+  hide a PR's own drops. Until then a baseline-only PR is the only way to record the rows.
+
+## 2026-09-26 — the ratchet's lowered-floor evidence block reads as a second failure list
+
+- Doing: attributing #1280's first `Heavy / Coverage Regression` (run 36211383886,
+  job 108318837641).
+- Evidence: the red run printed four `new file has 1 uncovered unit(s) … (no baseline file
+  identity)` lines for `Yeet/internal/MonitorPolicy.ts`, then `13 floor(s) lowered by this pull
+  request on packages it could not have moved (judged at the lowered value):` followed by thirteen
+  `100 -> <measured>; lane measured <measured>` lines (the first is `100 -> 98.21; lane measured
+  98.21`). Read top to bottom in a failing job, the second block looks like thirteen more
+  rejections even though its header says "judged at the lowered value"; it is the acceptance
+  evidence (`renderCoverageLoweredFloors` in
+  `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts` prints it in
+  green and red runs alike). Attribution stalled until the renderer's source showed the block
+  lists accepted rows.
+- Prevention: label the block by outcome (`accepted:` or `adopted at the lowered value`) and print
+  it after the remediation paragraph, or fold a count into the failure summary
+  (`4 failure(s); 13 lowered floor(s) accepted`). A reader should not need the renderer's source
+  to tell a failure from evidence.
+
+## 2026-09-26 — hosted totals move by one unit between runs, so raising the totals row from one printout puts it beyond reach
+
+- Doing: recording the rows the ratchet printed under `measured rows for the reported paths` into
+  `standards/coverage.regression-baseline.jsonc` on #1280.
+- Evidence: run 36211383886 (a merge onto `fb5b01146f`) printed `@beep/repo-cli` totals
+  `statements` 85.03 (8640 uncovered) and `functions` 3249 uncovered. On the same repo-cli source,
+  #1272's run (job 108308987554) and main's #1234 run (job 108303821874) printed 85.02 (8641) and
+  3250; their per-file tables differ only in `QualityScheduler.ts`, where one function is covered
+  in one run and not the other. The next push (run 36220590501, job 108345168377, after merging
+  main) measured 85.02 (8641) and failed with `row raised beyond hosted reach: this pull request
+  raised the row from 84.91 (8626 uncovered) to 85.03 (8640 uncovered) but the lane measured 85.02
+  (8641 uncovered)`. Nothing else was red, and nothing required the totals to move: no run reported
+  a totals failure and main's committed 84.91 was below every measurement. The PR had raised the
+  row by hand from a printout, twice. One more Heavy matrix and its queue wait paid for the lesson.
+- Prevention: the paste block should omit the totals row when only file rows were reported, or
+  the ratchet should give totals a one-unit tolerance on a baseline-only PR. Operator rule
+  meanwhile, refining the 2026-09-16 advice to paste the printed rows: paste file rows, not totals;
+  a baseline-only PR only lowers rows and adds new-file rows, and never raises a row from a
+  printout.
+
+## 2026-09-26 — two open lanes hoisted the same codecs, and the merge of main kept both copies without a conflict
+
+- Doing: merging `origin/main` into the #1272 lane after #1234 (the effect snapshot bump) merged.
+- Evidence: #1272 had carried the hoists since 19:15Z (`fe3657a429`); #1234 re-did them at 22:41Z
+  (`a5bb70af53`) with the same names, and neither lane named the other, the pattern of the
+  2026-09-16 receipt on two branches fixing the same settle regression. Git's auto-merge kept both
+  blocks with no `CONFLICT` marker: `packages/foundation/modeling/schema/test/HttpHeaders.test.ts`
+  carried two `const isExpectCtError = S.is(HeaderErrors.ExpectCtError)` declarations (lines 48
+  and 71) and the Tailscale suite two `encodeTailscaleStatusJson`. A redeclared `const` is a parse
+  error (oxlint, esbuild and Bun all fail with "has already been declared"), so the tier-1 Lint and
+  Test Unit lanes would have failed within minutes of a push; a per-file `git diff origin/main`
+  after the merge caught it before the push.
+- Prevention: before fixing an inherited red, search open PRs for the same files and land the fix
+  once. After any merge of main, diff every touched file against `origin/main` and restore any
+  file whose only remaining diff is `+const` lines main already declares, or run the filtered
+  `check` for every package the merge auto-merged; it reports the duplicate declaration without a
+  new detector.
+
+## 2026-09-26 — `yeet sweep --retire` is fenced out by the lane's own detached monitor a minute after the merge
+
+- Doing: retiring the #1280 lane right after the PR merged.
+- Evidence: `Refusing to retire …: pid N (bun) via cwd still hold it … outside this command's own
+  session`. The holder was the `beep-proof-<jobId>.service` unit that
+  `yeet publish --start-pr-early --monitor --pr --detach` had started for the lane's last push; it
+  had been polling for 39 minutes and was still running when the retire ran, about 70 seconds
+  after the merge, while the PR's own Coverage and Lint Policy lanes had not finished. Both monitor
+  policies end on `MERGED` (`yeetMonitorPolicyTerminals`) and poll every 30 seconds, so whether
+  the unit would have exited on its own was not observed: stopping it with
+  `systemctl --user stop beep-proof-<jobId>.service` let the retire proceed.
+- Prevention: operator rule: after the merge, `yeet job wait <jobId>` for the lane's own detached
+  job (or stop its unit) before `yeet sweep --retire`. Tooling: when a holder is one of the lane's
+  recorded yeet jobs (`.beep/yeet/jobs/<jobId>.json`), the refusal should name it as such and
+  offer `--stop-own-jobs`; today the holder list names only terminals, editors, other sessions
+  and pipelines.
+
+## 2026-09-26 — two heavy runners for the whole fleet: queue time was the largest term of the train
+
+- Doing: babysitting the #1272 → #1280 train through four Heavy matrices.
+- Evidence: queue time (job created to started) for the `Heavy / *` jobs was 19–34 min on #1272
+  (run 36208076536, during a burst), 150–173 min on #1280's first matrix (run 36211383886, jobs
+  created 02:22:54Z, on the standing two `beep-ec2-heavy` runners after the earlier burst to six
+  had been restored at 01:47Z), then 52–61 min (run 36220590501) and 21–33 min (run 36224724252).
+  The Coverage lane itself ran about 20 minutes each time, so most of the train's push-to-ready
+  time was queue time, not lane time.
+- Prevention: pool size is the operator's lever (ruling 57, `docs/runbooks/ci-runner-reliability.md`).
+  The measurement gap is this packet's: `research/economics.md` section G defines hosted duration as
+  job `startedAt -> completedAt`, so the KPI's hosted tier leaves the queue out, and
+  `research/baseline.md` already lists fleet queue share as unmeasured. Record hosted queue time
+  (`created_at -> started_at`) per Heavy job as its own term before the B9 merge-queue capture is
+  judged.
