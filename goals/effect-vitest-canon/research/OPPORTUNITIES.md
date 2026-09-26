@@ -2381,3 +2381,15 @@ acceptance. Move ownership to the test harness without suppressing diagnostics
 or rebuilding a manual layer wrapper. Preparation should check both D14 and
 the active language-service diagnostic before recommending a direct stub
 provide; this would have avoided a failed proof in each package.
+
+### 2026-09-26 — Runner trace events reach a fixture diagnostic logger
+
+The CLI snapshot trace-enabled proof failed its exact diagnostic log record:
+runner `start`/`end` events reached a logger installed for the entire harness
+layer. The production diagnostic payload was unchanged. Keep the full exact
+assertion and supply the logger reference only around the provider call;
+runner lifecycle logs remain outside that capture. A trace-enabled example
+for exact logger assertions would prevent this scope mismatch. The first
+attempt used the deep-property environment floor, which excludes this
+non-property file; its zero-test exit was rejected as proof and the real
+13-test snapshot suite was run without that filter.

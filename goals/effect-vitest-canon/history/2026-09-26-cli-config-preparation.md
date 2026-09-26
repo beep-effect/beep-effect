@@ -60,3 +60,35 @@ enabled: three provider service tests and three config tests.
 Source flake review found no sleep, retry, external probe or timeout repair
 needed. Single-test captures reset at invocation; path expectations use the
 actual host home path. No 30-day hosted flake-clearance claim is made.
+
+## Instrumented runner proof
+
+All four test files now import the accepted `@beep/test-runner`. The two
+manifests declare it, four generated project-reference lists include it, and
+four generated Fallow entries preserve package boundaries. Cache maintenance
+adds only 18 reviewed runner edges; it does not promote cache qualification.
+
+The exact diagnostics logger now applies only to the provider call through
+logger/minimum-level references. An initial trace run demonstrated that a
+harness-wide logger captured runner lifecycle events; the corrected fixture
+keeps those events observable outside the exact production diagnostic capture.
+The full snapshot suite passes with CI and tracing enabled: 13 tests, no skips.
+Its one-record expectation and redaction assertions remain intact.
+
+Final full audit/docgen passes: provider 7.2 / 2.7 seconds; config 6.6 / 2.8
+seconds. Architecture operation-plan replay passes all 17 tests with the new
+dependency. A read-only persistence-stage Ticket plan for research-lab carries
+both the runner devDependency and its test import. These proofs cover accepted
+replay and fresh generated slices; they do not establish dependency augmentation
+for an existing target manifest, which the generator deliberately preserves.
+
+Final Node/Bun reports and source/load/pressure receipts are in the `cli-config`
+final timing subdirectories. No performance improvement is claimed from these
+shared-workstation samples.
+
+- ai-provider-cli node: 18 passed, 0 skipped; 3.368 seconds
+- ai-provider-cli bun: 18 passed, 0 skipped; 1.346 seconds
+- architecture-lab-config node: 3 passed, 0 skipped; 4.046 seconds
+- architecture-lab-config bun: 3 passed, 0 skipped; 1.321 seconds
+
+Ledger, ratchet reconciliation and hosted gates remain before publication.

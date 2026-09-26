@@ -7,8 +7,9 @@ import {
   AiProviderCliProcessResult,
   expandTildePath,
 } from "@beep/ai-provider-cli";
+import { it } from "@beep/test-runner";
 import * as HostPath from "@beep/utils/Path";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Logger, Ref, References, Result } from "effect";
 import * as O from "effect/Option";
@@ -192,10 +193,6 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
   describe("native failure diagnostics", () => {
     const executable = "/nonexistent/claude-secret-path";
     const secret = "AI_PROVIDER_SECRET_MARKER";
-    const annotations: Array<Record<string, unknown>> = [];
-    const logger = Logger.make<unknown, void>((options) => {
-      annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
-    });
     const failingSpawnerLayer = Layer.succeed(
       ChildProcessSpawner.ChildProcessSpawner,
       ChildProcessSpawner.make(() =>
@@ -211,23 +208,25 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
       )
     );
     const nativeLayer = AiProviderCli.makeLayer({ claudePath: executable }).pipe(Layer.provide(failingSpawnerLayer));
-    const testLayer = Layer.mergeAll(
-      nativeLayer,
-      Logger.layer([logger]),
-      Layer.succeed(References.MinimumLogLevel, "Debug")
-    );
-
-    it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.layer(nativeLayer, { timeout: "30 seconds" })((it) => {
       it.effect(
         "logs safe process diagnostics before translating native failures",
         Effect.fnUntraced(function* () {
+          const annotations: Array<Record<string, unknown>> = [];
+          const logger = Logger.make<unknown, void>((options) => {
+            annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+          });
           const error = yield* Effect.gen(function* () {
             const providerCli = yield* AiProviderCli;
             return yield* providerCli.checkAuth(
               "claude",
               AiProviderCliProbeOptions.make({ env: { TEST_AI_PROVIDER_SECRET: secret } })
             );
-          }).pipe(Effect.flip);
+          }).pipe(
+            Effect.provideService(Logger.CurrentLoggers, new Set([logger])),
+            Effect.provideService(References.MinimumLogLevel, "Debug"),
+            Effect.flip
+          );
 
           expect(error._tag).toBe("AiProviderCliError");
           assertNone(error.command);
