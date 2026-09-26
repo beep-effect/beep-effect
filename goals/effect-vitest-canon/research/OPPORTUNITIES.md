@@ -2369,3 +2369,23 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+### Service-driver property preparation: optional redacted generator branch
+
+Sanity's added token-present property initially filtered the default config
+arbitrary for a present token. Package audit failed with `Property exhausted
+after 0 run(s) and 501 discard(s)`. This is an introduced generator construction
+error, not a production counterexample. The field accepts `S.String` wrapped
+in `RedactedFromValue`; compose the existing valid token-absent config arbitrary
+with a generated string and `Redacted.make` to cover that branch directly.
+The original seven laws remain intact. Full package proof and the400-run
+fixed-seed property lane pass after this repair. Check branch reachability
+before relying on optional transformed-schema generation for coverage.
+
+## 2026-09-26: runner dependency project references
+
+PR #1290 Repo Sanity failed with `tsconfig-sync: drift detected (8 file change(s))`
+after test-runner devDependencies were added. Package audit and docgen had passed,
+but they did not establish generated project-reference parity. Run tsconfig-sync
+and its check after adding runner dependencies, before early publication. The
+service-driver wave applied the generator to its six affected configs as well.

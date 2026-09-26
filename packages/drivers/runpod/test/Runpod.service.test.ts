@@ -20,8 +20,11 @@ import {
   RunpodRawResponse,
 } from "@beep/runpod";
 import { decodeJsonString } from "@beep/schema/Json";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -82,25 +85,6 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
   expect(reencoded).toEqual(encoded);
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
-
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  arbitrary = Arbitrary.schema(schema)
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        { runs: 25 }
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
 };
 
 const RunpodRawRequestArbitrary = Arbitrary.schema(RunpodRawRequest).pipe(
@@ -231,7 +215,7 @@ const llmsText = `# Runpod Documentation
 `;
 
 describe("@beep/runpod", () => {
-  layer(makeRunpodUnitLayer())((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect("keeps the generated operation surface complete", () =>
       Effect.sync(() => {
         const operationKeys = R.keys(RUNPOD_OPERATION_SPECS);
@@ -245,7 +229,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "sends typed operations with expected auth, query, path, and JSON body encoding",
       Effect.fnUntraced(function* () {
@@ -294,7 +278,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
       Effect.fnUntraced(function* () {
@@ -317,7 +301,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps status and transport failures into typed errors",
       Effect.fnUntraced(function* () {
@@ -341,15 +325,15 @@ describe("@beep/runpod", () => {
         const transportError = yield* runpod.listPods().pipe(Effect.flip);
 
         expect(statusError.reason).toBe("response status");
-        expect(statusError.status).toEqual(O.some(500));
-        expect(statusError.operationId).toEqual(O.some("ListPods"));
+        assertSome(statusError.status, 500);
+        assertSome(statusError.operationId, "ListPods");
         expect(transportError.reason).toBe("transport");
-        expect(transportError.cause).toEqual(O.some("HttpClientError:TransportError"));
+        assertSome(transportError.cause, "HttpClientError:TransportError");
       })
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "supports raw requests for ahead-of-spec endpoints",
       Effect.fnUntraced(function* () {
@@ -381,7 +365,7 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodDocsUnitLayer())((it) =>
+  it.layer(makeRunpodDocsUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "parses and fetches the Runpod llms.txt documentation index",
       Effect.fnUntraced(function* () {
@@ -389,7 +373,10 @@ describe("@beep/runpod", () => {
         expect(parsed.title).toBe("Runpod Documentation");
         expect(parsed.entries).toHaveLength(2);
         expect(parsed.entries[0]?.title).toBe("Pods");
-        expect(parsed.entries[0]?.description).toEqual(O.some("Manage GPU pods"));
+        assertSome(
+          O.flatMap(A.head(parsed.entries), (entry) => entry.description),
+          "Manage GPU pods"
+        );
 
         const testHttp = yield* RunpodTestHttp;
         yield* testHttp.reset;
@@ -417,33 +404,35 @@ describe("@beep/runpod", () => {
     )
   );
 
-  layer(makeRunpodUnitLayer())((it) =>
-    it("round-trips schema-derived config, error, raw, and docs models", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(RunpodConfigInput)]),
-            ([value]) => {
-              expectRoundTrip(RunpodConfigInput, value);
-
-              return true;
-            },
-            { runs: 25 }
-          )
-        )
-      ).toMatchObject({ _tag: "Passed" });
-      assertSchemaRoundTrip(RunpodDocsConfigInput);
+  it.prop(
+    "round-trips schema-derived config, error, raw, and docs models",
+    [
+      Arbitrary.schema(RunpodConfigInput),
+      Arbitrary.schema(RunpodDocsConfigInput),
+      RunpodRawRequestArbitrary,
+      Arbitrary.schema(RunpodRawResponse),
+      Arbitrary.schema(RunpodErrorOptions),
+      Arbitrary.schema(RunpodError),
+      Arbitrary.schema(RunpodDocsErrorOptions),
+      Arbitrary.schema(RunpodDocsError),
+      Arbitrary.schema(RunpodDocsIndexEntry),
+      Arbitrary.schema(RunpodDocsIndex),
+    ],
+    ([config, docsConfig, rawRequest, rawResponse, errorOptions, error, docsErrorOptions, docsError, entry, index]) => {
+      expectRoundTrip(RunpodConfigInput, config);
+      expectRoundTrip(RunpodDocsConfigInput, docsConfig);
+      expectRoundTrip(RunpodRawRequest, rawRequest);
+      expectRoundTrip(RunpodRawResponse, rawResponse);
+      expectRoundTrip(RunpodErrorOptions, errorOptions);
+      expectRoundTrip(RunpodError, error);
+      expectRoundTrip(RunpodDocsErrorOptions, docsErrorOptions);
+      expectRoundTrip(RunpodDocsError, docsError);
+      expectRoundTrip(RunpodDocsIndexEntry, entry);
+      expectRoundTrip(RunpodDocsIndex, index);
       expect(encode(RunpodRawRequest, RunpodRawRequest.make({ method: "GET", path: "future" }))).toMatchObject({
         path: "/future",
       });
-      assertSchemaRoundTrip(RunpodRawRequest, RunpodRawRequestArbitrary);
-      assertSchemaRoundTrip(RunpodRawResponse);
-      assertSchemaRoundTrip(RunpodErrorOptions);
-      assertSchemaRoundTrip(RunpodError);
-      assertSchemaRoundTrip(RunpodDocsErrorOptions);
-      assertSchemaRoundTrip(RunpodDocsError);
-      assertSchemaRoundTrip(RunpodDocsIndexEntry);
-      assertSchemaRoundTrip(RunpodDocsIndex);
-    })
+    },
+    { arbitrary: fcRuns(25) }
   );
 });

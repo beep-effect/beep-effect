@@ -1,0 +1,115 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 6,
+  "numPassedTests": 6,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790411478088,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Sanity declared-field equivalence"],
+          "fullName": "Sanity declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+          "status": "passed",
+          "title": "treats field-equal errors as equivalent and field-different errors as distinct",
+          "duration": 1.9188839999999345,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Sanity declared-field equivalence"],
+          "fullName": "Sanity declared-field equivalence treats defect-only differences as equivalent",
+          "status": "passed",
+          "title": "treats defect-only differences as equivalent",
+          "duration": 1.6127830000000358,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790411479833,
+      "endTime": 1790411479834.919,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/sanity/test/Sanity.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/sanity"],
+          "fullName": "@beep/sanity keeps encoded Sanity schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded Sanity schema wire shapes byte-identical",
+          "duration": 35.01155400000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/sanity"],
+          "fullName": "@beep/sanity round-trips schema-derived Sanity payloads through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived Sanity payloads through encoded form",
+          "duration": 41.999683000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/sanity"],
+          "fullName": "@beep/sanity submits a GROQ query and decodes the result envelope",
+          "status": "passed",
+          "title": "submits a GROQ query and decodes the result envelope",
+          "duration": 34.74955100000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/sanity"],
+          "fullName": "@beep/sanity maps non-success responses to typed driver errors",
+          "status": "passed",
+          "title": "maps non-success responses to typed driver errors",
+          "duration": 34.73249499999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790411479871,
+      "endTime": 1790411479912.9998,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/sanity/test/Sanity.service.test.ts"
+    }
+  ]
+}
