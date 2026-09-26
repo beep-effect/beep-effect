@@ -38,11 +38,12 @@ import * as Str from "@beep/utils/Str";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Encoding, pipe, Result } from "effect";
+import { Crypto, Effect, pipe, Result } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeOpenClawHostedProviderConfigResult = S.decodeResult(OpenClawHostedProviderConfig);
 const encodeUnknownOpenClawBackupConfig = S.encodeUnknownEffect(OpenClawBackupConfig);
@@ -106,7 +107,7 @@ const deploymentConfig = OpenClawDeploymentConfig.make({
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(text));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) {

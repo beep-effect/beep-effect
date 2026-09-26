@@ -14,8 +14,8 @@
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, Match, Path } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { CatalogSnapshot } from "./Models.catalog.schemas.ts";

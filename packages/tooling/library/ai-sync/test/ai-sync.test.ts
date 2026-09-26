@@ -37,15 +37,13 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect, layer } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Path, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import type { TUnsafe } from "@beep/types";
-import type { Layer } from "effect";
 
 const decodeStructInlineSchemaJson = S.decodeEffect(
   S.fromJsonString(
@@ -161,7 +159,7 @@ const writeText = Effect.fn("AiSyncTest.writeText")(function* (filePath: string,
   yield* fs.writeFileString(filePath, content);
 });
 
-layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
+layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
   it.effect(
     "validates the generated artifact set offline",
     Effect.fn(function* () {

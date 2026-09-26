@@ -9,9 +9,9 @@ import { Md } from "@beep/md";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, Struct, thunkEffectVoid, thunkTrue } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, JsonPointer, Match, Path, pipe, Result } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.ts";
 import { formatJson } from "./internal/Source.ts";
@@ -24,7 +24,7 @@ import {
 import { syncDataTargets } from "./targets/index.ts";
 import type { JsonPatch } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { HttpClient } from "effect/unstable/http";
+import type { HttpClient } from "effect/http";
 import type { SyncDataFileResult, SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 
 const targetFlag = Flag.String("target").pipe(
@@ -533,7 +533,7 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  *
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })

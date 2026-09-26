@@ -10,7 +10,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -29,7 +29,7 @@ import { jsdocMigrateExtractCodec } from "./JSDocMigrateData.ts";
 import { jsdocMigrateBlockStats } from "./JSDocMigrateRewrite.ts";
 import { hasGeneratedFileHeader, isPackageSourceFile, jsdocGitErrorAdapter } from "./JSDocRatchet.ts";
 import { tagsFromComment } from "./QualityArtifactSupport.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateExtract");
 
@@ -80,12 +80,19 @@ export type JSDocMigrateScannedBlock = typeof JSDocMigrateScannedBlock.Type;
  *
  * ```ts
  * import { jsdocMigrateSourceHash } from "@beep/repo-cli/test/Quality"
+ * import { NodeCrypto } from "@effect/platform-node"
+ * import { Effect } from "effect"
+ * import * as Str from "effect/String"
  *
- * console.log(jsdocMigrateSourceHash("/** Doc. *" + "/").startsWith("sha256:")) // true
+ * const program = jsdocMigrateSourceHash("/** Doc. *" + "/").pipe(
+ *   Effect.map(Str.startsWith("sha256:")),
+ *   Effect.provide(NodeCrypto.layer)
+ * )
+ * Effect.runPromise(program).then(console.log) // true
  * ```
  *
  * @param blockText - Exact block bytes to hash.
- * @returns `sha256:`-prefixed hex digest of the block bytes.
+ * @returns An Effect requiring Crypto that produces the `sha256:`-prefixed hex digest.
  * @category use-cases
  * @since 0.0.0
  */
@@ -94,7 +101,7 @@ export const jsdocMigrateSourceHash = Effect.fn("JSDocMigrateExtract.sourceHash"
   const bytes = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(blockText))
     .pipe(QualityScriptCommandError.mapError("Failed to hash JSDoc source."));
-  return `sha256:${Encoding.encodeHex(bytes)}`;
+  return `sha256:${Hex.encode(bytes)}`;
 });
 
 const containerName = (node: Node): string | undefined =>
@@ -281,6 +288,8 @@ const extractRecordsForFile = (filePath: string, sourceText: string) =>
  *
  * ```ts
  * import { jsdocMigrateExtractRecordsForFile } from "@beep/repo-cli/test/Quality"
+ * import { NodeCrypto } from "@effect/platform-node"
+ * import { Effect } from "effect"
  *
  * const source = [
  *   "/**",
@@ -294,14 +303,16 @@ const extractRecordsForFile = (filePath: string, sourceText: string) =>
  *   "export const a = 1",
  *   ""
  * ].join("\n")
- * const records = jsdocMigrateExtractRecordsForFile("packages/x/src/a.ts", source)
- * console.log(records.length) // 1
- * console.log(records[0]?.exampleTagCount) // 1
+ * const program = jsdocMigrateExtractRecordsForFile("packages/x/src/a.ts", source).pipe(
+ *   Effect.map((records) => [records.length, records[0]?.exampleTagCount]),
+ *   Effect.provide(NodeCrypto.layer)
+ * )
+ * Effect.runPromise(program).then(console.log) // [1, 1]
  * ```
  *
  * @param filePath - Repo-relative path used in anchors.
  * @param sourceText - Full source text to scan.
- * @returns Extract records for the affected blocks in source order.
+ * @returns An Effect requiring Crypto that produces affected-block records in source order.
  * @category use-cases
  * @since 0.0.0
  */

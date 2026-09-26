@@ -22,7 +22,7 @@ import * as O from "@beep/utils/Option";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import {
   ComposerNotice,
@@ -83,7 +83,7 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
  * import { composerDocumentSafetyGateAtoms } from "@/chat/ui/Composer.atoms"
  * import * as Md from "@beep/md/Md.model"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import { AtomRegistry } from "effect/unstable/reactivity"
+ * import { AtomRegistry } from "effect/reactivity"
  *
  * const seed = Md.Document.make({ children: [] })
  * const registry = AtomRegistry.make()

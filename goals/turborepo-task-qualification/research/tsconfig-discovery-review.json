@@ -1,0 +1,89 @@
+{
+  "authority": "bounded-tsconfig-discovery-dependency-review",
+  "head": "e5f7012b01131c417aa8be4cdb9a48d2eb6ef605",
+  "sources": [
+    {
+      "path": "packages/tooling/library/repo-utils/src/Workspaces.ts",
+      "sha256": "3fd37151a18dd113af2609af790f1a04813375e8b1865c10f3b5f4c5a369c3b1"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/src/DependencyIndex.ts",
+      "sha256": "cfcfa9fdc34ab481c528c7e650cca62120e228087fa8c7185c94ccf121c53f44"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/src/Dependencies.ts",
+      "sha256": "c8f3ffc764be687b423ed74dd6ed11e522aaf6143fd2e45f8dac9ce742467238"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/src/TsConfig.ts",
+      "sha256": "da57d6f5eac51f029ef9772d2dfd3b3613d4dc5238e8c68f80e0c6edfda9ca7a"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+      "sha256": "0a9a6dd51850bf5137ae79609e0916fb19a66f560d9c02e33c26e73940da6c3b"
+    },
+    {
+      "path": "packages/foundation/modeling/utils/src/Glob.ts",
+      "sha256": "7df7185ed6c7bfd9e27affca38542fc814d2a9eeb48e168e243b299781550826"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "sha256": "3d1878b7d282d6b3bbbd888834500e89615114b9aa8000e25b6d154601514a4c"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "sha256": "afef66a9ab80c720a46620d25ae3aa3b3cbd29a25308cb89c5c2bbde12e537a7"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "sha256": "7c8e8bdf6f6e63c133608fe4889dd90ddd0ba1c2d6553c943036dd2b22c7b1e4"
+    },
+    {
+      "path": "packages/foundation/modeling/utils/test/Glob.test.ts",
+      "sha256": "87fd1a52f9a9e44f69c2308e47c5f1ae2af0d844ae94062deb0e90ff34a0dfb1"
+    }
+  ],
+  "reviewScope": "Workspace resolver, dependency-index builder and classification, tsconfig collector, filesystem read/realpath/glob adapters and glob backend selection. Other exports and schema internals are not exhaustively reviewed.",
+  "findings": [
+    "Workspace discovery reads root workspace patterns and rejects empty/absolute/parent-traversal patterns; canonical workspace paths must remain inside the canonical root.",
+    "Directory population, symlinks, canonical paths, manifest content and read success affect the discovered workspace map. Duplicate package names overwrite the earlier map entry; no duplicate-name rejection is shown in the reviewed resolver.",
+    "FsUtils readJson maps all read failures to NoSuchFileError. Child discovery and dependency-index reads skip this tag, so skipped entries cannot be assumed to mean absent files alone. Parse/decode failures instead fail the operation.",
+    "Dependency classification covers dependencies, devDependencies, peerDependencies and optionalDependencies; membership in the discovered workspace-name set decides internal versus npm, not the version prefix alone. Root has the synthetic @beep/root key.",
+    "Tsconfig discovery scans tsconfig*.json at root and each workspace with absolute results; ignores ci-runners/sdks; absent matches omit the map entry.",
+    "SharedGlob selects Bun.Glob when globalThis.Bun.Glob exists; otherwise it uses the Node/picomatch scanner. Both finalize deduplicated string-sorted paths. Node skips missing entries and does not recurse through symlinked child directories. This review does not prove all backend behavior equivalent.",
+    "Repeated discovery/manifest reads are not a filesystem snapshot. Mutation between reads remains a concurrency input and is not closed by stable fixture tests."
+  ],
+  "tests": {
+    "discoverySuites": 3,
+    "discoveryPassed": 28,
+    "discoveryExit": 0,
+    "globPackageExit": 0,
+    "rootGlobSelectionExit": 1,
+    "rootGlobSelectionMeaning": "No test files found; corrected by running the suite from the package directory.",
+    "logs": [
+      {
+        "path": ".beep/qualification-v23-publication/tsconfig-discovery-tests.log",
+        "sha256": "579a3b92e1f73ed6fd69054136637d13c3efc2640d27b563141af67b0fe5458c"
+      },
+      {
+        "path": ".beep/qualification-v23-publication/tsconfig-glob-tests.log",
+        "sha256": "80390f10b268558cb863c1f14641b289907f48f0d456ba79f93f9b7400b43e40"
+      },
+      {
+        "path": ".beep/qualification-v23-publication/tsconfig-glob-package-tests.log",
+        "sha256": "6c697ce2991a43f986852c25abbfd626148cefb521f7c9934908b32ca4876912"
+      }
+    ]
+  },
+  "remaining": [
+    "Full schema, formatter/docgen and graph helper closure remains incomplete.",
+    "Runtime and filesystem perturbation matrix, signed remote evidence and real pilot qualification remain required.",
+    "Preserve all 14 unresolved census obligations."
+  ],
+  "acceptedAttachment": {
+    "sources": 990,
+    "artifacts": 6,
+    "reviews": 42,
+    "unresolved": 14
+  }
+}

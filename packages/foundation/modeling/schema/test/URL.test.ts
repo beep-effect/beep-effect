@@ -3,8 +3,8 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Array as A, Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownHttpsUrl = S.decodeUnknownEffect(HttpsUrl);
 

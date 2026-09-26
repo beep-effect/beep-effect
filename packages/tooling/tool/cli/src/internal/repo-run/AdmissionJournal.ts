@@ -16,10 +16,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Clock, Console, Context, Duration, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
+import { Clock, Console, Context, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Eq from "effect/Equal";
+import * as Base64Url from "effect/encoding/Base64Url";
+import * as Hex from "effect/encoding/Hex";
 import { constant, dual, flow } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -804,16 +806,14 @@ const randomIdentity = Effect.orDie(Effect.flatMap(Crypto.Crypto, (crypto) => cr
 
 const journalLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
   const crypto = yield* Crypto.Crypto;
-  const digest = Encoding.encodeHex(
-    yield* Effect.orDie(crypto.digest("SHA-256", new TextEncoder().encode(observedToken)))
-  );
+  const digest = Hex.encode(yield* Effect.orDie(crypto.digest("SHA-256", new TextEncoder().encode(observedToken))));
   return `${lockPath}.reap-${digest}`;
 });
 
 const journalLockReapAdopterPrefix = (claimPath: string): string => `${claimPath}.adopt-`;
 
 const journalLockReapAdopterPath = (claimPath: string, adopter: AdmissionJournalLockReapAdopter): string =>
-  `${journalLockReapAdopterPrefix(claimPath)}${adopter.generation.pid}.${Encoding.encodeBase64Url(adopter.generation.procStart)}.${Encoding.encodeBase64Url(adopter.generation.ownerToken)}.${adopter.claimedAtMillis}`;
+  `${journalLockReapAdopterPrefix(claimPath)}${adopter.generation.pid}.${Base64Url.encode(adopter.generation.procStart)}.${Base64Url.encode(adopter.generation.ownerToken)}.${adopter.claimedAtMillis}`;
 
 const journalLockReapTombstonePath = Effect.fnUntraced(function* (claimPath: string) {
   return `${claimPath}.tombstone-${process.pid}-${yield* randomIdentity}`;

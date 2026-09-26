@@ -4,8 +4,8 @@ import { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as A from "effect/Array";
+import { Response } from "effect/ai";
 import * as O from "effect/Option";
-import { Response } from "effect/unstable/ai";
 
 const invalidParagraph = IssueReport.make({
   index: 0,

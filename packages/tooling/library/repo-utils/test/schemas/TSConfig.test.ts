@@ -12,9 +12,9 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTSConfigFieldsCompilerOptions = S.decodeEffect(TSConfig.fields.compilerOptions);
 const encodeTSConfigFieldsCompilerOptions = S.encodeEffect(TSConfig.fields.compilerOptions);

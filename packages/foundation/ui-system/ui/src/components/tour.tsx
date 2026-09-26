@@ -23,7 +23,7 @@ import { XIcon } from "@phosphor-icons/react";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import Link from "next/link";
 import * as React from "react";
 import { createPortal } from "react-dom";

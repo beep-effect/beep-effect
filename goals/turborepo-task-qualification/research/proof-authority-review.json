@@ -1,0 +1,65 @@
+{
+  "authority": "bounded-shadow-versus-verified-state-control",
+  "head": "8e1cfa9630217fc7d82246fcb2c438fa22457b8e",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "sha256": "b1a4dd7f87b7d7c545235bb42f713cb0177f27ef54d8bbd4e5d7e29e169e20f0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+      "sha256": "9bcd1b79ddb157e93b4775069765dac5d0fdf5fc15f47685758b778f3771b67b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+      "sha256": "558d1a70de7fa092b37b087bddab1e34c5d5104e15e7a796f97fbbd191e117e3"
+    }
+  ],
+  "findings": [
+    "Within the current CLI source population, enforcementReady is constructed and rendered by ProofShadow; no execution consumer of that field was found. loadProofShadowReport serves the proof-report command.",
+    "Handler records shadow observations during verdict writing after execution, catches ledger errors, and does not use shadow decisions to alter which lanes ran.",
+    "Publish with reuseVerified calls assertReusableVerifiedState before commit preparation. That guard loads the separate verified-state artifact and compares branch, base and head selectors, current commit, Git status/diff fingerprint and full proof tier.",
+    "The inspected guard does not independently compare actual toolchain binaries, ambient environment, or current proof command. Exact-state reuse is not this packet\u2019s complete qualified-tuple contract."
+  ],
+  "controls": {
+    "synthetic": true,
+    "readyShadowReport": true,
+    "results": [
+      {
+        "name": "ready-shadow-without-verified-state",
+        "accepted": false
+      },
+      {
+        "name": "synthetic-exact-full-state",
+        "accepted": true
+      },
+      {
+        "name": "tracked-content-change",
+        "accepted": false
+      },
+      {
+        "name": "non-full-state",
+        "accepted": false
+      }
+    ],
+    "limits": [
+      "Synthetic verified state was written only inside a disposable fixture; no real proof authority was minted.",
+      "The exact-state acceptance control does not constitute a successful full proof."
+    ]
+  },
+  "scope": "Selected Handler publish/verdict paths, ProofState verified-state guard/fingerprint, and ProofShadow report consumer. This does not review full Handler or coordinator ownership machinery.",
+  "remaining": [
+    "Full executable semantic closure, actual signed remote comparisons, accepted sibling authorities, and final adoption/closeout proof remain required.",
+    "No real ledger, verified-state artifact or cache configuration was changed by these controls."
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 33,
+    "unresolved": 13
+  },
+  "retention": {
+    "fileCount": 9,
+    "archiveManifestSha256": "bb45864ad3cd6b24f1b92d218634cae23ee47c881ccbf868b304b236be03e6ef"
+  }
+}

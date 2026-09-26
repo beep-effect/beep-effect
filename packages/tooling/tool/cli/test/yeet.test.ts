@@ -3,6 +3,8 @@ import {
   FallowReportOk,
   FallowReportPayload,
   FindingAttributionSummary,
+  githubCheckChangesetStatusLane,
+  githubCheckPrePushLanes,
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
 } from "@beep/repo-cli/test/Quality";
@@ -42,6 +44,7 @@ import {
   collectDiffFingerprintForTesting,
   collectPublishIntent,
   commandTextForStep,
+  DEFAULT_GATE_ORDER_SEED,
   decodeTurboPlanTasksFromQueryJsonForTesting,
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
@@ -71,6 +74,7 @@ import {
   loadVerifiedStateForTesting,
   normalizeYeetMonitorIssueCommentForTesting,
   normalizeYeetMonitorReviewCommentForTesting,
+  orderWaveLanes,
   overlappingBasePathsForTesting,
   PrCloseoutOptions,
   PrCloseoutReport,
@@ -150,16 +154,17 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, DateTime, Deferred, Effect, Encoding, Fiber, FileSystem, Layer, Path, Ref } from "effect";
+import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Hex from "effect/encoding/Hex";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 const decodeRepoStepRunResult = S.decodeEffect(RepoStepRunResult);
@@ -226,7 +231,7 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
 const proofLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedText: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedText));
-  return `${lockPath}.reap-${Encoding.encodeHex(digest)}.claim`;
+  return `${lockPath}.reap-${Hex.encode(digest)}.claim`;
 });
 const proofLockReapClaimTombstonePath = proofLockReapClaimPath;
 
@@ -798,7 +803,8 @@ describe("yeet planner", () => {
         A.dedupe
       )
     ).toEqual(["readonly", "write"]);
-    expect(A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds)).toEqual([
+    const prePushLaneIds = A.flatMap(findStep(plan.steps, "full:pre-push").waves ?? [], (wave) => wave.laneIds);
+    expect(prePushLaneIds).toEqual([
       "fallow:audit",
       "fallow:dead-code",
       "fallow:health",
@@ -818,6 +824,7 @@ describe("yeet planner", () => {
       "repo-sanity:syncpack",
       "repo-sanity:sherif",
       "repo-sanity:config-typecheck",
+      "quality:cache-policy",
       "quality:build",
       "quality:desktop-ipc",
       "quality:jsdoc-ratchet",
@@ -830,8 +837,18 @@ describe("yeet planner", () => {
       "quality:test-unit",
       "quality:storybook",
       "quality:coverage",
-      "quality:cache-policy",
     ]);
+    // Plan half of the gate-order handoff fixture 5 (TTC ruling 78): the rendered plan and
+    // the committed handoff both come from the same pure orderWaveLanes over the same lanes.
+    expect(prePushLaneIds).toEqual(
+      A.map(
+        orderWaveLanes(
+          DEFAULT_GATE_ORDER_SEED,
+          githubCheckPrePushLanes(context.repoRoot, [githubCheckChangesetStatusLane(context.repoRoot)])
+        ),
+        (lane) => lane.id
+      )
+    );
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
       expect.objectContaining({
         id: "preflight",
@@ -1005,11 +1022,12 @@ describe("yeet planner", () => {
       "--json",
       "number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision",
     ]);
+    // The dry run names the seven fields the remote status collector requests.
     expect(findStep(remotePlan.steps, "status:remote-checks").args).toEqual([
       "pr",
       "checks",
       "--json",
-      "name,state,bucket",
+      "name,state,bucket,link,workflow,completedAt,startedAt",
     ]);
   });
 

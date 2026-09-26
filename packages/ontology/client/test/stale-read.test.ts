@@ -19,7 +19,7 @@ import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import { AtomRegistry, Reactivity } from "effect/reactivity";
 
 const sessionId = SessionId.make("session-1");
 

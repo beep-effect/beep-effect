@@ -10,8 +10,8 @@ import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Console, Effect, FileSystem, HashSet, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>("@beep/db-admin/MigrationsDriftError")(
   "MigrationsDriftError",

@@ -28,7 +28,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/unstable/reactivity";
+import { AtomRegistry } from "effect/reactivity";
 import {
   dispatch,
   envelope,

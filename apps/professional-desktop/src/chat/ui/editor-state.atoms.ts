@@ -16,7 +16,7 @@
 "use client";
 
 import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type * as Md from "@beep/md/Md.model";
 

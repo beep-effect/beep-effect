@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { AtomRegistry } from "effect/unstable/reactivity";
 import {
   clampSidebarPercent,
   persistSidebarLayoutAtom,

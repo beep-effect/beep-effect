@@ -10,7 +10,7 @@ import { none, some as someOption } from "effect/Option";
 import { isTagged } from "effect/Predicate";
 import { isSchema } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
-import { VariantSchema } from "effect/unstable/schema";
+import { VariantSchema } from "effect/schema";
 import { classify as classifyCore, DeriveColumnError, flattenEncoded } from "../core/classification.ts";
 import { EntityIdLike as EntityIdLikeSchema, isEntityIdLike } from "../core/entity-id.ts";
 import { stringLiteralValues as collectStringLiteralValues } from "../core/literals.ts";

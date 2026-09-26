@@ -10,9 +10,9 @@ import { DomainError, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-util
 import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, MutableHashSet, Number as Num, Path } from "effect";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 
 const $I = $RepoCliId.create("purge");
 /**

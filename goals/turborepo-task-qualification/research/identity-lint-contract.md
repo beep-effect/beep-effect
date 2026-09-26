@@ -5,7 +5,47 @@ the [successful-warning canary failure](./unsafe-lint-review.md).
 This source inspection identifies the experiment obligations; it does not
 prove purity, portability, log safety or a cache qualification.
 
-## Current experiment boundary at `028262e8c0`
+## Current source boundary and retained runtime evidence — 2026-09-25
+
+The latest source snapshot is the census at `3df15e7a3e`; see
+[current-census-handoff-review.json](./current-census-handoff-review.json).
+It does not replace the frozen source revisions of the runtime observations.
+The command remains `lint` → `bun run beep:lint` →
+`biome check . > /dev/null 2>&1`. The verbose entrypoint remains distinct.
+
+| Computation | Cache enabled | Snapshot input count | Dependency lint tasks |
+| --- | --- | --- | --- |
+| `@beep/identity#lint` | No | 933 | types, fc-runs, test-runner |
+| `@beep/types#lint` | No | 28 | None |
+| `@beep/fc-runs#lint` | No | 25 | None |
+| `@beep/test-runner#lint` | No | 32 | None |
+
+These are observed counts in a live checkout with generated files, not fixed
+semantic-input denominators. Identity hashes `BEEP_CACHE_TOOLCHAIN_DIGEST` and
+passes through the governed `BIOME_CONFIG_PATH`. All four tasks have no declared
+output trees and are finite, noninteractive commands. Dependency lint remains
+verbose: quiet identity output does not establish safety or determinism for
+the complete dependency/CLI stream.
+
+The [v23 stable/canary evidence](./local-matrix-v23.md) retains exact client pins
+2.11.3 and 2.11.5-canary.2 at its own frozen source. Separate
+[ordinary CLI replay](./ordinary-real-local-replay.json) and
+[source invalidation controls](./ordinary-real-invalidation.json) at `8f11af6e49`
+prove local identity hits, source invalidation, failed-task non-reuse and recovery.
+Only disposable overlays enable identity caching; host settings stay disabled.
+A malformed imported barrel fails during CLI loading, while a malformed
+unimported file reaches the lint task. Those failures are separate observations.
+
+The successful local cache archive contains a 53-byte task log. Its exact
+bytes agree with replay; full command streams include dependency diagnostics
+and timing and are not asserted equal. Native I/O, resource-state and input
+perturbation controls retain their bounded claims in the v23 receipt. They do
+not prove complete semantic closure. Signed remote comparisons, accepted
+conformance/trust receipts, current-contract matrix validation and promotion
+remain outstanding. Historical sections below keep their original pins and
+input footprints; they are not the current source worksheet.
+
+## Historical experiment boundary at `028262e8c0`
 
 This checkpoint supersedes the initial worksheet values below. The operational
 census and source references are bound by

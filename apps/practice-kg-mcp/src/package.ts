@@ -10,13 +10,14 @@
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
-import { Effect, Encoding, FileSystem, Match, Path } from "effect";
+import { Effect, FileSystem, Match, Path } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
 import { runEntrypoint } from "./entrypoint.ts";
 import { PackageFailure } from "./PracticeKgMcp.errors.ts";
 
@@ -154,7 +155,7 @@ const ensureWindowsBindings = Effect.fn("PracticeKgPackage.ensureWindowsBindings
     try: () => globalThis.crypto.subtle.digest("SHA-512", Uint8Array.from(tarballBytes).buffer),
     catch: (cause) => PackageFailure.make({ cause, message: "Failed hashing bindings tarball." }),
   });
-  const digestBase64 = Encoding.encodeBase64(new Uint8Array(digest));
+  const digestBase64 = Base64.encode(new Uint8Array(digest));
   if (digestBase64 !== WindowsBindingsSha512) {
     yield* fs.remove(tarball, { force: true });
     return yield* PackageFailure.make({

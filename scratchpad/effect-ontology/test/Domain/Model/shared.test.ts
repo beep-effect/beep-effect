@@ -3,7 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { Attributes, AttributeValue, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
 const decodeOptionalConfidenceResult = S.decodeResult(OptionalConfidence);
 

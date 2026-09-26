@@ -23,7 +23,7 @@ import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import type {
   DecisionRecordHash as DecisionRecordHashType,
   ExecutionDecisionRecord,

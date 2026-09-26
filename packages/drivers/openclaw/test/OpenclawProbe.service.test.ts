@@ -14,8 +14,8 @@ import { coordinateOpenclawLiveAcceptance, probeOpenclawLocalModels } from "@bee
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 
 const validInput = OpenclawLiveAcceptanceInput.make({
   channelAccounts: [

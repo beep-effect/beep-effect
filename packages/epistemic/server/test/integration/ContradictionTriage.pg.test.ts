@@ -59,8 +59,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as SqlClient from "effect/sql/SqlClient";
 import { TestClock } from "effect/testing";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
 const externalUrl = pipe(

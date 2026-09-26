@@ -1067,8 +1067,8 @@ layer(BunCrypto.layer)((it) => {
   it.effect("detects native Arbitrary checks through public barrel, subpath and named aliases", () =>
     Effect.gen(function* () {
       for (const declaration of [
-        'import { Arbitrary as Ar } from "effect/unstable/arbitrary";',
-        'import * as Ar from "effect/unstable/arbitrary/Arbitrary";',
+        'import { Arbitrary as Ar } from "effect";',
+        'import * as Ar from "effect/Arbitrary";',
       ]) {
         const rows = yield* findings(`${declaration}\nit.effect("native", () => Ar.checkEffect(arb, predicate));`);
         const row = A.findFirst(rows, (candidate) => candidate.ruleId === "EV007");
@@ -1079,13 +1079,13 @@ layer(BunCrypto.layer)((it) => {
       }
       assertTrue(
         yield* hasRule(
-          'import * as Native from "effect/unstable/arbitrary"; it.effect("barrel", () => Native.Arbitrary.checkEffect(arb, predicate));',
+          'import * as Native from "effect"; it.effect("barrel", () => Native.Arbitrary.checkEffect(arb, predicate));',
           "EV007"
         )
       );
       assertTrue(
         yield* hasRule(
-          'import { checkEffect as check } from "effect/unstable/arbitrary/Arbitrary"; it.effect("native", () => check(arb, predicate));',
+          'import { checkEffect as check } from "effect/Arbitrary"; it.effect("native", () => check(arb, predicate));',
           "EV007"
         )
       );
@@ -1095,10 +1095,10 @@ layer(BunCrypto.layer)((it) => {
   it.effect("keeps native property checks lexical and excludes canonical registrations and sampling", () =>
     Effect.gen(function* () {
       for (const body of [
-        'import { Arbitrary as Ar } from "effect/unstable/arbitrary"; it.effect("shadow", (Ar) => Ar.checkEffect(arb, predicate));',
+        'import { Arbitrary as Ar } from "effect"; it.effect("shadow", (Ar) => Ar.checkEffect(arb, predicate));',
         'import { Arbitrary as Ar } from "unrelated"; it.effect("other", () => Ar.checkEffect(arb, predicate));',
-        'import { Arbitrary as Ar } from "effect/unstable/arbitrary"; it.effect("sample", () => Ar.sampleEffect(arb));',
-        'import { Arbitrary as Ar } from "effect/unstable/arbitrary"; it.effect.prop("canonical", { value: arb }, predicate);',
+        'import { Arbitrary as Ar } from "effect"; it.effect("sample", () => Ar.sampleEffect(arb));',
+        'import { Arbitrary as Ar } from "effect"; it.effect.prop("canonical", { value: arb }, predicate);',
       ])
         assertFalse(yield* hasRule(body, "EV007"));
     })
@@ -1106,7 +1106,7 @@ layer(BunCrypto.layer)((it) => {
 
   it.effect("retains native property helper reachability, shared judgment and callback execution", () =>
     Effect.gen(function* () {
-      const prefix = 'import { Arbitrary as Ar } from "effect/unstable/arbitrary";';
+      const prefix = 'import { Arbitrary as Ar } from "effect";';
       const local = yield* findings(`${prefix}
     const check = Fx.fnUntraced(function* () { yield* Ar.checkEffect(arb, () => Fx.sync(() => true)); });
     it.effect("first", () => check()); it.effect("second", () => check());`);

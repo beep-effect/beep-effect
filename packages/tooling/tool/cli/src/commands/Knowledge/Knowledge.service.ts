@@ -66,7 +66,7 @@ import {
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
@@ -1061,7 +1061,7 @@ const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/Por
 const commandProbeSource = (rootCommandModule: string, inputPath: string): string => `
 import { BunRuntime, BunServices } from "@effect/platform-bun"
 import { Console, Effect, Result } from "effect"
-import { Command } from "effect/unstable/cli"
+import { Command } from "effect/cli"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
 const input = await Bun.file(${JSON.stringify(inputPath)}).text()

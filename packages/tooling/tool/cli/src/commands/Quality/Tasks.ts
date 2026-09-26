@@ -130,7 +130,7 @@ import {
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Crypto, Scope } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
@@ -1879,7 +1879,29 @@ const stopAfterRed = (): GateRedSchedulingDecision => GateRedSchedulingDecision.
 const continueAfterImpreciseRed = (): GateRedSchedulingDecision =>
   GateRedSchedulingDecision.Enum["continue-after-imprecise-red"];
 
-const redSchedulingDecision = (
+/**
+ * Decide whether a red lane stops the local proof wave.
+ *
+ * **Details**
+ *
+ * An unseeded lane and a lane whose seed row is `precise` stop scheduling
+ * after a red; only an explicitly `imprecise` lane lets the wave continue.
+ *
+ * **Example** (Stop after an unseeded red)
+ *
+ * ```ts
+ * import { redSchedulingDecision } from "@beep/repo-cli/test/Quality"
+ * import * as O from "effect/Option"
+ *
+ * console.log(redSchedulingDecision(O.none())) // "stop-after-red"
+ * ```
+ *
+ * @param estimate - The lane's gate-order seed row, when the seed covers it.
+ * @returns The scheduling decision applied when the lane turns red.
+ * @category policies
+ * @since 0.0.0
+ */
+export const redSchedulingDecision = (
   estimate: GithubCheckLaneWaveSpec["lanes"][number]["orderEstimate"]
 ): GateRedSchedulingDecision =>
   O.match(estimate, {

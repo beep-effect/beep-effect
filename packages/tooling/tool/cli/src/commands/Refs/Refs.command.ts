@@ -1,14 +1,15 @@
 /**
  * Operator commands for the manifest-defined Effect reference workspace.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 import { Config, Console, Effect } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { Command, Flag } from "effect/unstable/cli";
 import { resolveOperatorPath, resolveUnitBunPath } from "../../internal/systemd/index.ts";
 import { ReferenceWorkspaceError } from "./Refs.errors.ts";
 import { RefsRefreshStatus } from "./Refs.schemas.ts";
@@ -117,6 +118,7 @@ const timerCommand = Command.make(
  * import { refsCommand } from "@beep/repo-cli/commands/Refs"
  * refsCommand.name // => "refs"
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

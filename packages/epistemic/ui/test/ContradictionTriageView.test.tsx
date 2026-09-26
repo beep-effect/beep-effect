@@ -1,5 +1,5 @@
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 // @vitest-environment jsdom
 
 import { ContradictionCandidate, ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
@@ -15,10 +15,10 @@ import { fcRuns } from "@beep/test-utils";
 import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as RpcClientError from "effect/rpc/RpcClientError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
-import * as RpcClientError from "effect/unstable/rpc/RpcClientError";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";

@@ -13,10 +13,10 @@ import { M365Toolkit, M365ToolkitHandlersLive } from "@beep/m365-mcp";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import { McpServerClient } from "effect/ai/McpSchema";
+import * as McpServer from "effect/ai/McpServer";
 import * as O from "effect/Option";
 import * as Tracer from "effect/Tracer";
-import { McpServerClient } from "effect/unstable/ai/McpSchema";
-import * as McpServer from "effect/unstable/ai/McpServer";
 
 const site = GraphSite.make({ id: "contoso.sharepoint.com,secret-site-id,web", name: O.none() });
 

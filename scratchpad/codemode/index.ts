@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-export * as Tool from "effect/unstable/ai/Tool";
-export * as Toolkit from "effect/unstable/ai/Toolkit";
+export * as Tool from "effect/ai/Tool";
+export * as Toolkit from "effect/ai/Toolkit";
 export * as CodeMode from "./Codemode.service.ts";
 export { ToolError } from "./Codemode.tool-error.ts";
 export * as ToolRuntime from "./Codemode.tool-runtime.ts";

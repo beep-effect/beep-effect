@@ -29,7 +29,7 @@ import { $I, usesUnsupportedWindowsNamespacePrefix } from "./FilePath.shared.ts"
  * @since 0.0.0
  */
 export const HasNullByte = S.String.check(
-  S.isIncludes("\u0000", {
+  S.isIncluding("\u0000", {
     identifier: $I`HasNullByteCheck`,
     title: "Has Null Byte",
     description: "A string that contains an embedded NUL byte.",
@@ -128,7 +128,7 @@ export type SupportedWindowsNamespace = typeof SupportedWindowsNamespace.Type;
  * @since 0.0.0
  */
 export const UsesPosixSeparator = S.String.check(
-  S.isIncludes("/", {
+  S.isIncluding("/", {
     identifier: $I`UsesPosixSeparatorCheck`,
     title: "Uses Posix Separator",
     description: "A string that contains the POSIX path separator /.",

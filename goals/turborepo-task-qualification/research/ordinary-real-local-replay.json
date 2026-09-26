@@ -1,0 +1,55 @@
+{
+  "authority": "independent-retained-summary-and-local-archive-review",
+  "sourceRevision": "8f11af6e4980180c35c8ff3c63b13f35b3accc70",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6254b55f5128cf2f7b5de1cad411555ba6598905d0ac046e701a970d26d1a964",
+      "version": "2.11.3"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "task": "@beep/identity#lint",
+  "taskHash": "6a84b46803676f04",
+  "cases": [
+    {
+      "case": "fresh",
+      "origin": "MISS"
+    },
+    {
+      "case": "replay",
+      "origin": "HIT"
+    },
+    {
+      "case": "repeat",
+      "origin": "HIT"
+    }
+  ],
+  "dependenciesFreshEveryRun": true,
+  "inputMapsEqual": true,
+  "hashedEnvironmentEqual": true,
+  "archiveOnlyContainsTaskLog": true,
+  "taskLogBytes": 53,
+  "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3",
+  "runtimeReceiptSha256": "d188ac0e837aeec095b1dfd428109a122b1fc52faf21eb47693385789df2bf24",
+  "sourceConfigsUnchanged": true,
+  "limits": [
+    "One fresh run and two local replays, stable client only; not the required full matrix.",
+    "Only identity caching enabled in isolated disposable overlays; normal checkout policy unchanged.",
+    "Task log byte equality established; complete CLI streams include non-deterministic dependency logs and outer summaries and are not asserted equal.",
+    "No signed remote, semantic-input closure, shadow completion, qualification promotion or latest-head runtime renewal."
+  ],
+  "archiveManifestSha256": "a583de9bb3a05dab131fa54ee10d93e2f9c222f648eb92b4d64064d01679316b",
+  "archiveFiles": 1535
+}

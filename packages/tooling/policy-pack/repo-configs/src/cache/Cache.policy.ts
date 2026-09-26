@@ -261,7 +261,7 @@ export class CacheClientPin extends S.Class<CacheClientPin>($I`CacheClientPin`)(
 export class CacheEvidenceReference extends S.Class<CacheEvidenceReference>($I`CacheEvidenceReference`)(
   {
     path: S.NonEmptyString.check(
-      S.isPattern(/^(?:\.?[A-Za-z0-9_-][A-Za-z0-9._-]*)(?:\/\.?[A-Za-z0-9_-][A-Za-z0-9._-]*)*$/)
+      S.isPattern(/^(?:[.@]?[A-Za-z0-9_-][A-Za-z0-9._-]*)(?:\/[.@]?[A-Za-z0-9_-][A-Za-z0-9._-]*)*$/)
     ),
     sha256: Sha256Hex,
   },

@@ -3,7 +3,7 @@ import { makeOpenAiEmbeddingModelLive } from "@beep/openai";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Layer, Logger } from "effect";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder";
 import { F1CatalogLive } from "@/fixtures/F1";
 import { CanaryC0Live } from "@/layers/CanaryC0Live";

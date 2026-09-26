@@ -105,8 +105,8 @@ readable without JS.
 ## Laws checklist for the implementer
 
 - Effect v4 only; validate any API against `.repos/effect` or existing repo
-  usage before writing it — never from priors. `effect/unstable/http` /
-  `effect/unstable/httpapi` only, never `node:http`.
+  usage before writing it — never from priors. `effect/http` /
+  `effect/http-api` only, never `node:http`.
 - `Effect.fn` / `Effect.fnUntraced` for generator-returning functions.
 - `HashMap`/`HashSet` (or their Mutable variants) — never native `Map`/`Set`.
 - `LiteralKit` for literal unions; no `as const` on inline arrays passed to it.

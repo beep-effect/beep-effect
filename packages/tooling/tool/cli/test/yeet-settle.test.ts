@@ -16,6 +16,7 @@ import {
   renderYeetSettleDetail,
   rulesetRequiredContextsFromRules,
   runYeetMonitorUntilMerged,
+  YeetCheckSignal,
   YeetExpectedContextCensus,
   YeetExpectedContextInput,
   YeetGatedContextFamily,
@@ -39,6 +40,7 @@ import {
   YeetStatusWorktree,
   YeetUntilMergedPolicy,
   YeetUntilReadyPolicy,
+  YeetWatchCheck,
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
   yeetHeadTimelineStamp,
@@ -58,13 +60,13 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Result, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const at = "2026-09-16T00:00:00.000Z";
 const decodeBranchRules = S.decodeUnknownEffect(S.Array(GhBranchRule));
@@ -80,6 +82,10 @@ const expected = (contexts: ReadonlyArray<string>) =>
   );
 const check = (name: string, outcome: YeetSettleCheck["outcome"] = "pass", required = true) =>
   YeetSettleCheck.make({ name, outcome, required });
+// The status snapshot carries each check's whole record; these fixtures only
+// set what the settle rule reads.
+const recordOf = (value: YeetSettleCheck) =>
+  YeetWatchCheck.make({ name: value.name, outcome: value.outcome, required: value.required });
 const admission = (verdict: HeavyAdmission["verdict"], docsOnly = false) =>
   O.some(
     HeavyAdmission.make({
@@ -207,7 +213,7 @@ const snapshot = (
       checked: true,
       detail: "PR",
       headSha: O.some(headSha),
-      checks,
+      checks: A.map(checks, recordOf),
       state,
       labels,
     }),
@@ -906,7 +912,7 @@ describe("closeout follow-up gate", () => {
       checked: true,
       detail: "PR",
       headSha: O.some("aaa111"),
-      checks: [check("Lint")],
+      checks: [recordOf(check("Lint"))],
       state: "OPEN",
       isDraft: false,
       requiredCheckCount: 1,
@@ -967,81 +973,97 @@ describe("settle policy boundaries", () => {
   );
 });
 
-it.effect("status retains classified checks from the existing two gh views", () =>
-  temporary((root) =>
-    Effect.gen(function* () {
-      const checkReads = yield* Ref.make(0);
-      // fallow-ignore-next-line complexity -- Fixture routes git and GitHub command families to fixed census responses.
-      const runner = ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-        const [first, second] = command.args;
-        if (command.command === "git") return Effect.succeed(handle(0, ""));
-        if (first === "pr" && second === "view")
-          return Effect.succeed(
-            handle(
-              0,
-              JSON.stringify({
-                id: "PR_settle",
-                number: 1,
-                url: "https://github.com/beep/repo/pull/1",
-                state: "OPEN",
-                mergeable: "MERGEABLE",
-                mergeStateStatus: "CLEAN",
-                isDraft: false,
-                reviewDecision: null,
-                headRefOid: "aaa111",
-                labels: [{ id: "L1", name: "ready-for-heavy", color: "0e8a16" }, { name: "size/M" }],
-              })
-            )
-          );
-        if (first === "pr" && second === "checks")
-          return Ref.update(checkReads, (n) => n + 1).pipe(
-            Effect.as(
+it.layer(platform, { timeout: "30 seconds" })((it) =>
+  it.effect("status retains classified checks from the existing two gh views", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        const checkReads = yield* Ref.make(0);
+        // fallow-ignore-next-line complexity -- Fixture routes git and GitHub command families to fixed census responses.
+        const runner = ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+          const [first, second] = command.args;
+          if (command.command === "git") return Effect.succeed(handle(0, ""));
+          if (first === "pr" && second === "view")
+            return Effect.succeed(
               handle(
                 0,
-                JSON.stringify(
-                  A.contains(command.args, "--required")
-                    ? [{ name: "Lint", bucket: "pending", state: "QUEUED" }]
-                    : [
-                        { name: "Lint", bucket: "pending", state: "QUEUED" },
-                        { name: "Vercel", bucket: "fail", state: "FAILURE" },
-                      ]
+                JSON.stringify({
+                  id: "PR_settle",
+                  number: 1,
+                  url: "https://github.com/beep/repo/pull/1",
+                  state: "OPEN",
+                  mergeable: "MERGEABLE",
+                  mergeStateStatus: "CLEAN",
+                  isDraft: false,
+                  reviewDecision: null,
+                  headRefOid: "aaa111",
+                  labels: [{ id: "L1", name: "ready-for-heavy", color: "0e8a16" }, { name: "size/M" }],
+                })
+              )
+            );
+          if (first === "pr" && second === "checks")
+            return Ref.update(checkReads, (n) => n + 1).pipe(
+              Effect.as(
+                handle(
+                  0,
+                  JSON.stringify(
+                    A.contains(command.args, "--required")
+                      ? [{ name: "Lint", bucket: "pending", state: "QUEUED" }]
+                      : [
+                          { name: "Lint", bucket: "pending", state: "QUEUED" },
+                          { name: "Vercel", bucket: "fail", state: "FAILURE" },
+                        ]
+                  )
                 )
               )
-            )
-          );
-        if (first === "api")
-          return Effect.succeed(
-            handle(
-              0,
-              JSON.stringify({
-                data: {
-                  node: {
-                    reviewThreads: { nodes: [], pageInfo: { hasNextPage: false } },
+            );
+          if (first === "api")
+            return Effect.succeed(
+              handle(
+                0,
+                JSON.stringify({
+                  data: {
+                    node: {
+                      reviewThreads: { nodes: [], pageInfo: { hasNextPage: false } },
+                    },
                   },
-                },
-              })
-            )
-          );
-        return Effect.succeed(handle(0, "[]"));
-      });
-      const result = yield* collectYeetStatus(contextFor(root), true).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
-      );
-      expect(yield* Ref.get(checkReads)).toBe(2);
-      expect(result.remote.checks).toEqual([check("Lint", "pending"), check("Vercel", "fail", false)]);
-      expect(result.remote.pendingRequiredCheckCount).toBe(1);
-      expect(result.remote.failingOptionalCheckCount).toBe(1);
-      expect(result.remote.labels).toEqual(["ready-for-heavy", "size/M"]);
-      const legacy = yield* decodeStatusRemote({
-        available: false,
-        checked: false,
-        detail: "legacy",
-      });
-      expect(legacy.checks).toEqual([]);
-      expect(legacy.labels).toEqual([]);
-    })
-  ).pipe(provideScopedLayer(platform))
+                })
+              )
+            );
+          return Effect.succeed(handle(0, "[]"));
+        });
+        const result = yield* collectYeetStatus(contextFor(root), true).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
+        );
+        expect(yield* Ref.get(checkReads)).toBe(2);
+        // A census row without link/workflow/instants keeps them absent rather than failing.
+        expect(result.remote.checks).toEqual([
+          YeetWatchCheck.make({
+            name: "Lint",
+            outcome: "pending",
+            required: true,
+            signal: YeetCheckSignal.make({ bucket: "pending", state: "QUEUED" }),
+          }),
+          YeetWatchCheck.make({
+            name: "Vercel",
+            outcome: "fail",
+            required: false,
+            signal: YeetCheckSignal.make({ bucket: "fail", state: "FAILURE" }),
+          }),
+        ]);
+        expect(result.remote.pendingRequiredCheckCount).toBe(1);
+        expect(result.remote.failingOptionalCheckCount).toBe(1);
+        expect(result.remote.labels).toEqual(["ready-for-heavy", "size/M"]);
+        const legacy = yield* decodeStatusRemote({
+          available: false,
+          checked: false,
+          detail: "legacy",
+        });
+        expect(legacy.checks).toEqual([]);
+        expect(legacy.labels).toEqual([]);
+      })
+    )
+  )
 );
 
 it.effect("status refuses a review-thread page that names itself as its own successor", () =>

@@ -14,7 +14,7 @@ import * as BrowserWorkerRunner from "@effect/platform-browser/BrowserWorkerRunn
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as RpcServer from "effect/unstable/rpc/RpcServer";
+import * as RpcServer from "effect/rpc/RpcServer";
 import { CosmosSpikeRpcs, SyntheticProjectionResponse } from "./CosmosSpike.rpc.ts";
 import type { ProjectSyntheticGraphRequest } from "./CosmosSpike.rpc.ts";
 

@@ -42,8 +42,8 @@ import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../internal/artifacts/index.ts";
 import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {

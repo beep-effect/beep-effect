@@ -14,9 +14,9 @@ import { Runpod, RunpodConfigInput } from "@beep/runpod";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Console, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlag } from "../../internal/cli/Flags.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -1196,7 +1196,7 @@ const docgenDoctestCommand = Command.make("doctest", {}).pipe(
  *
  * ```ts
  * import { docgenCommand } from "@beep/repo-cli/commands/Docgen"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * const runDocgen = Command.runWith(docgenCommand, { version: "0.0.0" })
  * const qualityArgs = ["quality", "-p", "packages/tooling/tool/cli", "--json", "--score", "codex"]
  * const program = runDocgen(qualityArgs)

@@ -5,7 +5,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import { canonicalJson } from "@/corpus/Canonical";
 import { RuntimeMode } from "@/runtime/Config";
 import { sha256TextSync } from "@/schema/Digest";
@@ -17,7 +17,7 @@ import { LedgerDocumentSnapshot, LedgerSnapshot } from "@/schema/Ledger";
 import { ProvenanceEvent } from "@/schema/Provenance";
 import { Chunk } from "@/schema/Text";
 import { Ledger } from "@/services/Ledger";
-import type * as SqlError from "effect/unstable/sql/SqlError";
+import type * as SqlError from "effect/sql/SqlError";
 
 const $I = $SemanticaId.create("layers/LedgerLive");
 

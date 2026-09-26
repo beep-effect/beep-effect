@@ -14,11 +14,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Crypto, DateTime, Effect, Encoding, FileSystem, Layer, Path } from "effect";
+import { Crypto, DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as Context from "effect/Context";
+import * as Hex from "effect/encoding/Hex";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { runCaptured } from "../../internal/process/StepExec.ts";
 import {
@@ -374,7 +375,7 @@ const makeCatalog = Effect.fnUntraced(function* () {
     return CatalogSnapshot.make({
       summary: CatalogSnapshotSummary.make({
         fetchedAt: now,
-        contentSha256: Encoding.encodeHex(digest),
+        contentSha256: Hex.encode(digest),
         sources: sourcesAnswered({ upstream, codex, grok, cursor, proxy }),
         modelCount: A.length(models),
       }),

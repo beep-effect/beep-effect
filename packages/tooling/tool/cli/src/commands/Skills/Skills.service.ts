@@ -9,10 +9,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";
 import {
@@ -642,7 +642,7 @@ const makeSkillUpstreamContentSource = Effect.gen(function* () {
  * ```ts
  * import { SkillUpstreamContentSourceLive } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import { Layer } from "effect"
- * import { FetchHttpClient } from "effect/unstable/http"
+ * import { FetchHttpClient } from "effect/http"
  *
  * const ready = SkillUpstreamContentSourceLive.pipe(Layer.provide(FetchHttpClient.layer))
  *
@@ -920,7 +920,7 @@ export const SkillProvenanceServiceLayer = Layer.effect(SkillProvenanceService, 
  * ```ts
  * import { SkillProvenanceServiceLive } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import { Layer } from "effect"
- * import { FetchHttpClient } from "effect/unstable/http"
+ * import { FetchHttpClient } from "effect/http"
  *
  * const withHttp = SkillProvenanceServiceLive.pipe(Layer.provide(FetchHttpClient.layer))
  *

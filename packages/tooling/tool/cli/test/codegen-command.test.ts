@@ -3,8 +3,8 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import { Command } from "effect/cli";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 
 const runCodegenCommand = Command.runWith(codegenCommand, { version: "0.0.0" });

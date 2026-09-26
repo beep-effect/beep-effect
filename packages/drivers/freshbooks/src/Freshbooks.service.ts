@@ -16,10 +16,10 @@
 import { $FreshbooksId } from "@beep/identity";
 import { O } from "@beep/utils";
 import { Config, Context, Effect, Layer, pipe } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { FreshbooksBaseUrl, FreshbooksConfigInput } from "./Freshbooks.config.ts";
 import { FreshbooksError } from "./Freshbooks.errors.ts";
 import { FreshbooksDecode, FreshbooksPagination } from "./Freshbooks.models.ts";

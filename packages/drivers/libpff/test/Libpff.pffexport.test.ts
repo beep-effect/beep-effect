@@ -18,13 +18,13 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Encoding, FileSystem, Path, Result } from "effect";
+import { Effect, FileSystem, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
@@ -291,30 +291,6 @@ const readExported = Effect.fn(function* (exportRoot: string, relativePath: stri
   return yield* fs.readFileString(path.join(exportRoot, relativePath));
 });
 
-/**
- * Runs an effect with a spawner whose child processes see `PATH` pinned to `searchPath`.
- *
- * The engine's shebang-interpreter resolver runs `command -v` in the child environment, so a host
- * shell whose `bash` lives outside the sandbox runtime roots (a Nix dev shell, for example) would
- * otherwise leak into the bwrap plan and make these assertions host-dependent. Scoping the override
- * to the spawner service keeps it safe under the shared config's concurrent test sequence, unlike a
- * `process.env.PATH` mutation.
- */
-const withSearchPath = (searchPath: string) =>
-  Effect.updateService(ChildProcessSpawner.ChildProcessSpawner, (spawner) =>
-    ChildProcessSpawner.make((command) =>
-      spawner.spawn(
-        command._tag === "StandardCommand"
-          ? ChildProcess.make(command.command, command.args, {
-              ...command.options,
-              env: { ...command.options.env, PATH: searchPath },
-              extendEnv: true,
-            })
-          : command
-      )
-    )
-  );
-
 describe("makePffexportFileProcessingEngine", () => {
   it.prop(
     "round-trips schema-derived message records through the JSONL string codec",
@@ -451,16 +427,14 @@ exec "$mapped_command" "\${mapped[@]}"`
           )
         );
         yield* fs.chmod(bwrapPath, 0o755);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
+        );
         const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
 
-        const result = yield* Effect.gen(function* () {
-          const engine = yield* makePffexportFileProcessingEngine(
-            PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
-          );
-          return yield* engine.exportArchive(
-            ExportArchiveOperation.make({ ...operation, source: SourceArtifact.make(sourceWithoutBytes) })
-          );
-        }).pipe(withSearchPath("/usr/bin:/bin"));
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({ ...operation, source: SourceArtifact.make(sourceWithoutBytes) })
+        );
 
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
@@ -564,17 +538,18 @@ exec "$mapped_command" "\${mapped[@]}"`
         const interpreterPrefix = path.join(fixtureRoot, "interpreter");
         const commandName = `${path.basename(fixtureRoot)} bash`;
         const interpreterPath = path.join(interpreterPrefix, "bin", commandName);
-        const commandDirectory = path.join(fixtureRoot, "path", "bin");
+        const commandDirectory = path.dirname(process.execPath);
         const commandPath = path.join(commandDirectory, commandName);
         const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
         const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
         const bwrapArgumentsPath = path.join(fixtureRoot, "bwrap-arguments");
         yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
         yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
-        yield* fs.makeDirectory(commandDirectory, { recursive: true });
         yield* fs.copy("/bin/bash", interpreterPath);
         yield* fs.chmod(interpreterPath, 0o755);
-        yield* fs.symlink(interpreterPath, commandPath);
+        yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
+          fs.remove(commandPath).pipe(Effect.ignore)
+        );
         const splitString = `'${commandName}' -c 'exec /bin/bash "$0" "$@"'`;
         yield* fs.writeFileString(
           launcherPath,
@@ -586,23 +561,21 @@ exec "$mapped_command" "\${mapped[@]}"`
           bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
         );
         yield* fs.chmod(bwrapPath, 0o755);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            pffexportPath: launcherPath,
+          })
+        );
         const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
 
-        const result = yield* Effect.gen(function* () {
-          const engine = yield* makePffexportFileProcessingEngine(
-            PffexportEngineConfig.make({
-              bwrapPath: O.some(bwrapPath),
-              exportRoot,
-              pffexportPath: launcherPath,
-            })
-          );
-          return yield* engine.exportArchive(
-            ExportArchiveOperation.make({
-              ...operation,
-              source: SourceArtifact.make(sourceWithoutBytes),
-            })
-          );
-        }).pipe(withSearchPath(`${commandDirectory}:/usr/bin:/bin`));
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({
+            ...operation,
+            source: SourceArtifact.make(sourceWithoutBytes),
+          })
+        );
 
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
@@ -998,7 +971,7 @@ exec "$mapped_command" "\${mapped[@]}"`
 
         const payload = eml.slice(eml.indexOf("\r\n\r\n") + 4);
         expect(payload.split("\r\n").every((line) => line.length <= 76)).toBe(true);
-        expect(Result.getOrElse(Encoding.decodeBase64String(payload.split("\r\n").join("")), () => "")).toBe(
+        expect(Result.getOrElse(Base64.decodeString(payload.split("\r\n").join("")), () => "")).toBe(
           `<p>${"x".repeat(1200)}</p>`
         );
       },

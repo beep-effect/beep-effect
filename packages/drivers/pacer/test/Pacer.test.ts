@@ -17,11 +17,11 @@ import * as HttpStatus from "@beep/schema/HttpStatus";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");

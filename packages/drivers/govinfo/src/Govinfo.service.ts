@@ -17,10 +17,10 @@ import { $GovinfoId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Cache, Config, Context, Effect, Layer } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpApiClient from "effect/http-api/HttpApiClient";
+import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpApiClient from "effect/unstable/httpapi/HttpApiClient";
-import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import { GovinfoApi } from "./domain/index.ts";
 import {
   GOVINFO_API_KEY_ENV,
@@ -33,8 +33,8 @@ import {
 } from "./Govinfo.config.ts";
 import { GovinfoError, GovinfoErrorOptions, GovinfoHttpStatus } from "./Govinfo.errors.ts";
 import type { RateLimitSnapshot } from "@beep/api-transport";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Redacted from "effect/Redacted";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type * as Search from "./domain/contracts/Search/Search.contract.ts";
 
 const $I = $GovinfoId.create("Govinfo.service");

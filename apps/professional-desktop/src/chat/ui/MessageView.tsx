@@ -17,7 +17,7 @@
 import { EditorViewer } from "@beep/editor/viewer";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { useAtomValue } from "@effect/atom-react";
-import { AsyncResult } from "effect/unstable/reactivity";
+import { AsyncResult } from "effect/reactivity";
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type * as Md from "@beep/md/Md.model";
 import type { JSX } from "react";

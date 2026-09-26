@@ -1,0 +1,101 @@
+{
+  "authority": "source-diff-review-with-native-synthetic-controls",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "headBeforeDocumentationCorrection": "16a4352daa3e5afd6a60c9176d831f89d2900710",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+      "sha256": "b3dc86b32c11630dec93face9da62d48da8a3dc69f2f5e5467883c4c0de5c278",
+      "review": [
+        "Reviewed delta propagates Effect Crypto through capture-dependent Git operations; Git argument and parsing behavior are unchanged by this delta.",
+        "Structured capture separates stderr from stdout. Shared structuredCapture still trims and bounds decoded text; raw Git output uses the separate untrimmed route. NUL parsing alone does not prove byte-preserving capture.",
+        "Git calls read repository/index/config state; ensureOriginMain can fetch remote refs and write local Git state. Freshness and external authority are not pure file-computation inputs."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts",
+      "sha256": "fbec031093f78f1a50e0f9172e43f039d3d03e2c78eef9c76dee826a094fad89",
+      "review": [
+        "Adds capture-shape selection: the default merges streams and trims; runRepoCommandCaptureRaw selects stdout and disables trimming. Both extend the ambient environment, inherit stdin, and retain the repo-run output bound.",
+        "Native controls preserve leading whitespace and NUL in raw text and exclude stderr, while default capture trims and merges. Invalid UTF-8 becomes replacement characters in both modes; oversized output sets truncated and includes a notice.",
+        "Corrected byte-for-byte documentation to decoded-text semantics; no runtime behavior was changed by this review. Callers needing complete output must inspect truncated."
+      ]
+    }
+  ],
+  "controls": {
+    "runtime": "1.4.2",
+    "rows": [
+      {
+        "case": "nul-and-warning",
+        "mode": "raw",
+        "exitCode": 0,
+        "truncated": false,
+        "chars": 23,
+        "sha256": "9431704022a4ae76828706c70a0c89112e7f22a724193b6c330386c8174905d8",
+        "output": " M leading space\u0000tail \u0000"
+      },
+      {
+        "case": "nul-and-warning",
+        "mode": "default",
+        "exitCode": 0,
+        "truncated": false,
+        "chars": 40,
+        "sha256": "a58a4bac1e77c8a8b49fa18afeafbe0fde9002eb2f73174772f1a41db800c828",
+        "output": "M leading space\u0000tail \u0000warning: synthetic"
+      },
+      {
+        "case": "invalid-utf8",
+        "mode": "raw",
+        "exitCode": 0,
+        "truncated": false,
+        "chars": 3,
+        "sha256": "2557d29d725d758dcc654089199ef3f942084e76c52941ca11326a2bfcac3717",
+        "output": "\ufffd\u0000a"
+      },
+      {
+        "case": "invalid-utf8",
+        "mode": "default",
+        "exitCode": 0,
+        "truncated": false,
+        "chars": 3,
+        "sha256": "2557d29d725d758dcc654089199ef3f942084e76c52941ca11326a2bfcac3717",
+        "output": "\ufffd\u0000a"
+      },
+      {
+        "case": "oversized",
+        "mode": "raw",
+        "exitCode": 0,
+        "truncated": true,
+        "chars": 524340,
+        "sha256": "0ba3b652eb00e014b3a19c99714a43d48cd00a9eabb2d8e7224406cf92fc4616"
+      },
+      {
+        "case": "oversized",
+        "mode": "default",
+        "exitCode": 0,
+        "truncated": true,
+        "chars": 524340,
+        "sha256": "0ba3b652eb00e014b3a19c99714a43d48cd00a9eabb2d8e7224406cf92fc4616"
+      }
+    ]
+  },
+  "tests": {
+    "suite": "step-git-exec.test.ts",
+    "passed": 22,
+    "exit": 0
+  },
+  "limits": [
+    "Synthetic capture controls do not establish arbitrary filename preservation, raw byte fidelity, transitive input closure, or hosted freshness.",
+    "Six native subprocess controls were run with only PATH, HOME and CI explicitly supplied to the parent. No signed remote replay or cache qualification is established."
+  ],
+  "retention": {
+    "fileCount": 18,
+    "archiveManifestSha256": "2fd556550bd8d552387f95f3fc9b691b624cd4b77eef59dcdf911801e0f16210"
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 29,
+    "unresolved": 13
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "authority": "bounded-ledger-policy-and-shadow-report-review",
+  "head": "2d4f3869b4bffab3d4702a091d0fd632a5f27f0f",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "sha256": "b1b607d4c26ead9111cf1e69188da1444efcb5c8fe2f7675a03148e0b039cd3a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+      "sha256": "558d1a70de7fa092b37b087bddab1e34c5d5104e15e7a796f97fbbd191e117e3"
+    }
+  ],
+  "scope": [
+    "ProofLedger loading, batch append, lookup policy and snapshot; ProofShadow changed-package capture, candidate selection, record ordering and report bar. This is not a complete review of every ProofShadow entrypoint or downstream enforcement consumer."
+  ],
+  "findings": [
+    "Newest appended self-consistent exact fact is selected; failed or expired exact facts miss. Undeclared inputs and changed-package tripwire miss. Identity includes lane, command, input, profile and epoch.",
+    "Batch lookup shares one file load; batch append encodes rows and appends once, recovering an unterminated tail with a newline. No cross-process transaction or concurrency guarantee is inferred.",
+    "Shadow candidates exclude reused and early-stopped lanes and require command text. All lookups precede the batch of new shadow/fact rows. Missing lane input digests remain undeclared.",
+    "Changed-package capture includes committed and worktree paths; unavailable capture trips scoped lanes. Empty scopes rely on the input digest. This does not establish semantic input closure.",
+    "The default report bar counts distinct pre-push/local attempts and branches and hit-versus-failure disagreements. It does not require successful reuse hits or zero malformed rows."
+  ],
+  "controls": {
+    "synthetic": true,
+    "results": [
+      {
+        "name": "all-undeclared-misses",
+        "attempts": 200,
+        "branches": 10,
+        "wouldReuse": 0,
+        "malformedRows": 0,
+        "enforcementReady": true
+      },
+      {
+        "name": "all-undeclared-misses-with-malformed-history",
+        "attempts": 200,
+        "branches": 10,
+        "wouldReuse": 0,
+        "malformedRows": 9,
+        "enforcementReady": true
+      },
+      {
+        "name": "merged-preview-only",
+        "attempts": 0,
+        "branches": 0,
+        "wouldReuse": 0,
+        "malformedRows": 0,
+        "enforcementReady": false
+      },
+      {
+        "name": "below-attempt-bar",
+        "attempts": 199,
+        "branches": 10,
+        "wouldReuse": 0,
+        "malformedRows": 0,
+        "enforcementReady": false
+      }
+    ]
+  },
+  "tests": {
+    "command": "bun run --cwd packages/tooling/tool/cli test test/proof-ledger.test.ts test/proof-shadow.test.ts",
+    "passed": 37,
+    "suites": 2,
+    "exit": 0
+  },
+  "remaining": [
+    "The report readiness flag is not qualification, signed remote evidence, successful-hit coverage, or authorization to change Yeet proof ownership.",
+    "All 13 existing broad census obligations remain open. Production enforcement consumers, concurrency, semantic closure and signed sibling receipts remain separately required."
+  ],
+  "retention": {
+    "fileCount": 8,
+    "archiveManifestSha256": "7d39c97ecec3aec802e3c82f587e950b0b18e7e308ebf4331b28bc1aa667a069"
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 32,
+    "unresolved": 13
+  }
+}

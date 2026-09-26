@@ -13,13 +13,13 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Option as O, Result } from "effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { fixtureText, makeExtractOperationFixture, tikaRmetaResponse, tikaVersionResponse } from "./fixtures.ts";
-import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 import type { TikaFixtureFormat } from "./fixtures.ts";
 
 const decodeTikaServerEngineConfigResult = S.decodeResult(TikaServerEngineConfig);

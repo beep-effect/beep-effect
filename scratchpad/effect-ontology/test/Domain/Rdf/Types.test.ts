@@ -3,7 +3,7 @@ import { SafePnLocal } from "@beep/identity";
 import * as CanonicalRdf from "@beep/rdf";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { Triple } from "../../../Domain/Rdf/Types.ts";
 const isSafePnLocal = S.is(SafePnLocal);
 

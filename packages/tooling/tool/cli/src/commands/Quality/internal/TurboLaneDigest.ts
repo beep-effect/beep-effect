@@ -4,7 +4,7 @@ import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -230,7 +230,7 @@ const digestRows = Effect.fnUntraced(function* (
     A.map(sorted, (row) => `${row.taskId}=${row.hash}`),
     "\n"
   );
-  const digest = Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  const digest = Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
   return TurboLaneDigest.make({ digest, summaryIds, tasks: sorted });
 });
 

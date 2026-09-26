@@ -17,7 +17,7 @@ import { A } from "@beep/utils";
 import { SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { Model } from "effect/unstable/schema";
+import { Model } from "effect/schema";
 
 const $I = $SchemaId.create("Float16Array");
 const float16ArrayConstructor = globalThis.Float16Array;

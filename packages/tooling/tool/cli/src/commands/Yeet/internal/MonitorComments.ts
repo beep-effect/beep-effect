@@ -7,7 +7,10 @@
  * raced against. Durable: the per-collection watermarks are persisted to a
  * branch-scoped artifact after every emitted batch, so a comment posted while
  * no monitor was attached is printed by the next run instead of falling into
- * the gap between a process exit and the next process start.
+ * the gap between a process exit and the next process start. The merge loop's
+ * two modes keep their own artifacts ({@link YeetMonitorCommentConsumer}), so a
+ * `--watch` and a detached `--until-ready` on one branch never advance each
+ * other's position.
  * Independent: a poll that fails degrades this stream alone — the surrounding
  * race can never be decided by a GitHub read error, because the poller's error
  * channel is `never` by construction.
@@ -17,6 +20,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, Match, Order, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import { dual, flow } from "effect/Function";
@@ -33,12 +37,32 @@ import { writeTextFile } from "./IssueArtifacts.ts";
 import { parseYeetReviewBodySignal, YeetReviewBodySignal, YeetReviewBodySignalInput } from "./ReviewBodySignal.ts";
 import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorComments");
 const monitorPollInterval = Duration.seconds(10);
-const commentExcerptLength = 200;
+
+/**
+ * How many characters of a comment body an operator line or an inbox row keeps.
+ *
+ * **Details**
+ *
+ * Shared by the stdout rendering and the `pr-comment` row excerpt, so a row
+ * carries the same bounded text a monitor prints.
+ *
+ * **Example** (Read the bound)
+ *
+ * ```ts
+ * import { YEET_MONITOR_COMMENT_EXCERPT_LENGTH } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_MONITOR_COMMENT_EXCERPT_LENGTH) // 200
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_MONITOR_COMMENT_EXCERPT_LENGTH = 200;
 
 /**
  * Position of the latest comment seen by a Yeet monitor poller.
@@ -67,6 +91,11 @@ export class YeetMonitorCommentCursor extends S.Class<YeetMonitorCommentCursor>(
 
 /**
  * Normalized pull request review comment emitted by Yeet monitor.
+ *
+ * **Details**
+ *
+ * `authorType` is the REST account type of the author (`"User"`, `"Bot"`),
+ * when the payload carried one; the two other comment variants carry it too.
  *
  * **Example** (Describe an inline review)
  *
@@ -99,6 +128,7 @@ export class YeetMonitorReviewComment extends S.TaggedClass<YeetMonitorReviewCom
     line: S.OptionFromNullOr(S.Finite),
     path: S.String,
     url: S.String,
+    authorType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetMonitorReviewComment", {
     description: "Normalized GitHub inline review comment streamed during Yeet monitoring.",
@@ -134,6 +164,7 @@ export class YeetMonitorIssueComment extends S.TaggedClass<YeetMonitorIssueComme
     createdAt: S.String,
     id: S.Finite,
     url: S.String,
+    authorType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetMonitorIssueComment", {
     description: "Normalized GitHub pull request conversation comment streamed during Yeet monitoring.",
@@ -184,6 +215,7 @@ export class YeetMonitorReviewBody extends S.TaggedClass<YeetMonitorReviewBody>(
     state: S.String,
     submittedAt: S.String,
     url: S.String,
+    authorType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetMonitorReviewBody", {
     description: "Normalized GitHub pull request review body streamed during Yeet monitoring.",
@@ -276,6 +308,51 @@ export type YeetMonitorThreadComment = YeetMonitorReviewComment | YeetMonitorIss
  */
 export const isYeetMonitorThreadComment = (comment: YeetMonitorComment): comment is YeetMonitorThreadComment =>
   !isYeetMonitorReviewBody(comment);
+
+/**
+ * Whether a streamed comment was written by a bot rather than a person.
+ *
+ * **Details**
+ *
+ * Three rules the stream already knows. GitHub's REST API types a GitHub App
+ * actor `Bot` (`authorType`), which is the only signal for an App posting
+ * under a plain login, such as Copilot's reviewer as `Copilot`. It also names
+ * most App actors with a `[bot]` login suffix. A review bot posting under
+ * another login is caught by the review-body signal rules: a CodeRabbit
+ * login, or a Greptile login or Greptile-format body, reads as a non-`plain`
+ * signal. Every other author is read as a person.
+ *
+ * **Example** (A GitHub App is a bot)
+ *
+ * ```ts
+ * import { YeetMonitorIssueComment, yeetMonitorCommentFromBot } from "@beep/repo-cli/test/Yeet"
+ *
+ * const comment = YeetMonitorIssueComment.make({
+ *   author: "github-actions[bot]",
+ *   body: "Deployment ready.",
+ *   createdAt: "2026-09-25T00:00:00Z",
+ *   id: 44,
+ *   url: "https://github.com/o/r/pull/1#issuecomment-44",
+ * })
+ * console.log(yeetMonitorCommentFromBot(comment)) // true
+ * ```
+ *
+ * @param comment - One row from the monitor comment stream.
+ * @returns Whether the author is a bot by REST account type, login suffix, or review-body signal.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetMonitorCommentFromBot = (comment: YeetMonitorComment): boolean =>
+  O.contains(comment.authorType, "Bot") ||
+  Str.endsWith("[bot]")(Str.toLowerCase(comment.author)) ||
+  Match.value(comment).pipe(
+    Match.tag("review-body", (body) => body.signal.signal !== "plain"),
+    Match.orElse(
+      (other) =>
+        parseYeetReviewBodySignal(YeetReviewBodySignalInput.make({ authorLogin: other.author, body: other.body }))
+          .signal !== "plain"
+    )
+  );
 
 /**
  * GitHub REST inline review payload used by monitor normalization tests.
@@ -490,7 +567,70 @@ const YeetMonitorCommentStateStoredJson = JsonStringCodec(YeetMonitorCommentStat
 export const YEET_MONITOR_COMMENT_STATE_FILE_NAME = "monitor-comments.json";
 
 /**
- * Resolve the branch-scoped comment stream position artifact path.
+ * The comment consumers that keep their own position on one branch.
+ *
+ * **Details**
+ *
+ * The artifact directory is keyed by branch alone, so one shared position let
+ * a `--watch` and a detached `--until-ready` steal each other's comments
+ * (pr-event-awareness D21). `shared` is the original `monitor-comments.json`,
+ * kept by every surface that printed comments before the split: `--watch`, the
+ * classic `yeet monitor` stream, `yeet status --remote` and `yeet closeout`.
+ * They resume exactly as before, and `--watch` is otherwise unchanged. The
+ * merge loop's two modes each get their own file: `until-ready` turns comments
+ * into inbox rows, and `until-merged` replays its first-cycle backlog to its
+ * own log.
+ *
+ * **Example** (Check a consumer)
+ *
+ * ```ts
+ * import { YeetMonitorCommentConsumer } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetMonitorCommentConsumer.is["until-ready"]("until-ready")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetMonitorCommentConsumer = LiteralKit(["shared", "until-ready", "until-merged"]).pipe(
+  $I.annoteSchema("YeetMonitorCommentConsumer", {
+    title: "Yeet Monitor Comment Consumer",
+    description: "A comment consumer mode that keeps its own comment stream position on one branch.",
+  })
+);
+
+/**
+ * The comment consumers that keep their own position on one branch.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetMonitorCommentConsumer = typeof YeetMonitorCommentConsumer.Type;
+
+/**
+ * Name one consumer's comment stream position artifact.
+ *
+ * **Example** (Name the until-ready artifact)
+ *
+ * ```ts
+ * import { yeetMonitorCommentStateFileName } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetMonitorCommentStateFileName("shared")) // "monitor-comments.json"
+ * console.log(yeetMonitorCommentStateFileName("until-ready")) // "monitor-comments.until-ready.json"
+ * ```
+ *
+ * @param consumer - The consumer mode that owns the position.
+ * @returns The artifact file name inside the branch's run directory.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetMonitorCommentStateFileName = (consumer: YeetMonitorCommentConsumer): string =>
+  YeetMonitorCommentConsumer.is.shared(consumer)
+    ? YEET_MONITOR_COMMENT_STATE_FILE_NAME
+    : `monitor-comments.${consumer}.json`;
+
+/**
+ * Resolve one consumer's branch-scoped comment stream position artifact path.
  *
  * **Example** (Resolve the artifact path)
  *
@@ -502,14 +642,17 @@ export const YEET_MONITOR_COMMENT_STATE_FILE_NAME = "monitor-comments.json";
  * ```
  *
  * @param context - Repo run context carrying the artifact directory and branch.
- * @returns Absolute path to the branch-scoped `monitor-comments.json`.
+ * @param consumer - The consumer mode whose position is resolved; the shared position by default.
+ * @returns Absolute path to the consumer's position artifact on this branch.
  * @category utilities
  * @since 0.0.0
  */
-export const yeetMonitorCommentStatePath = (
-  context: RepoRunContext
-): Effect.Effect<string, YeetCommandError, Crypto.Crypto | Path.Path> =>
-  runArtifactPathForContext(context, YEET_MONITOR_COMMENT_STATE_FILE_NAME);
+export const yeetMonitorCommentStatePath = Effect.fn("YeetMonitor.commentStatePath")(function* (
+  context: RepoRunContext,
+  consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | Path.Path> {
+  return yield* runArtifactPathForContext(context, yeetMonitorCommentStateFileName(consumer));
+});
 
 const commentCursorOrder: Order.Order<YeetMonitorCommentCursor> = Order.combine(
   Order.mapInput(Order.String, (cursor: YeetMonitorCommentCursor) => cursor.createdAt),
@@ -586,6 +729,8 @@ const authorLogin = (user: GhActor | null): string =>
     O.map((actor) => actor.login),
     O.getOrElse(() => "unknown")
   );
+const authorType = (user: GhActor | null): O.Option<string> =>
+  O.flatMap(O.fromNullishOr(user), (actor) => O.fromUndefinedOr(actor.type));
 const commentBody = (body: string | null): string => O.getOrElse(O.fromNullishOr(body), () => Str.empty);
 
 // GitHub comment fields are attacker-controlled terminal input. Strip OSC,
@@ -605,6 +750,7 @@ const reviewLine: (line: O.Option<number>) => string = flow(
 const normalizeReviewComment = (comment: GhRestReviewComment): YeetMonitorReviewComment =>
   YeetMonitorReviewComment.make({
     author: authorLogin(comment.user),
+    authorType: authorType(comment.user),
     body: commentBody(comment.body),
     createdAt: comment.created_at,
     id: comment.id,
@@ -619,6 +765,7 @@ const normalizeReviewComment = (comment: GhRestReviewComment): YeetMonitorReview
 const normalizeIssueComment = (comment: GhRestIssueComment): YeetMonitorIssueComment =>
   YeetMonitorIssueComment.make({
     author: authorLogin(comment.user),
+    authorType: authorType(comment.user),
     body: commentBody(comment.body),
     createdAt: comment.created_at,
     id: comment.id,
@@ -638,6 +785,7 @@ const normalizeReviewBody = (review: GhRestReview): O.Option<YeetMonitorReviewBo
         O.map((body) =>
           YeetMonitorReviewBody.make({
             author: authorLogin(review.user),
+            authorType: authorType(review.user),
             body,
             id: review.id,
             signal: parseYeetReviewBodySignal(
@@ -709,7 +857,7 @@ export const yeetCommentExcerpt: {
   return Str.length(normalized) <= maxLength ? normalized : `${pipe(normalized, Str.takeLeft(maxLength))}…`;
 });
 
-const excerpt = (body: string): string => yeetCommentExcerpt(body, commentExcerptLength);
+const excerpt = (body: string): string => yeetCommentExcerpt(body, YEET_MONITOR_COMMENT_EXCERPT_LENGTH);
 
 /**
  * Summarize what a review body reports, when it reports anything structural.
@@ -896,6 +1044,49 @@ const salvageClippedJsonArray = (text: string): string => {
  */
 export const salvageYeetMonitorClippedJson = salvageClippedJsonArray;
 
+/**
+ * Read the GitHub login this process acts as.
+ *
+ * **Details**
+ *
+ * One `gh api user` read. The merge loop compares comment authors against it
+ * so the monitor's own comments (a Greptile retrigger, a `yeet reply`) never
+ * become inbox rows. Every failure, a non-zero exit, clipped output or a value
+ * that is not a single login, reads as `None`; the caller waits for a later
+ * read rather than guessing.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readYeetMonitorActingLogin } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readYeetMonitorActingLogin({ repoRoot: "/repo" }))) // true
+ * ```
+ *
+ * @param context - The checkout gh runs in.
+ * @param capture - The command capture boundary; the live runner by default.
+ * @returns The acting login, or `None` when gh cannot name it; never fails.
+ * @category processes
+ * @since 0.0.0
+ */
+export const readYeetMonitorActingLogin = Effect.fn("YeetMonitor.readActingLogin")(function* (
+  context: Pick<RepoRunContext, "repoRoot">,
+  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* capture("gh", ["api", "user", "--jq", ".login"], context.repoRoot).pipe(
+    Effect.map((result) =>
+      result.exitCode === 0 && !result.truncated
+        ? pipe(
+            Str.trim(result.output),
+            O.liftPredicate((login) => Str.isNonEmpty(login) && !/\s/u.test(login))
+          )
+        : O.none<string>()
+    ),
+    Effect.orElseSucceed(O.none<string>)
+  );
+});
+
 const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>(
   context: RepoRunContext,
   endpoint: string,
@@ -968,16 +1159,18 @@ const nextCursor = (cursor: YeetMonitorCommentCursor, comments: ReadonlyArray<Ye
  *
  * @param context - Repo run context carrying the artifact directory and branch.
  * @param pullRequestNumber - The pull request the position must belong to.
+ * @param consumer - The consumer mode whose position is read; the shared position by default.
  * @returns The persisted watermark, or `None` when there is no usable one.
  * @category utilities
  * @since 0.0.0
  */
 export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommentWatermark")(function* (
   context: RepoRunContext,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
 ): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const statePath = yield* yeetMonitorCommentStatePath(context).pipe(Effect.option);
+  const statePath = yield* yeetMonitorCommentStatePath(context, consumer).pipe(Effect.option);
   if (O.isNone(statePath)) return O.none();
   const text = yield* Effect.option(fs.readFileString(statePath.value));
   return pipe(
@@ -1009,11 +1202,12 @@ const mergeWatermarks = (
 const writeCommentState = Effect.fn("YeetMonitor.writeCommentState")(function* (
   context: RepoRunContext,
   pullRequestNumber: number,
-  watermark: YeetMonitorCommentWatermark
+  watermark: YeetMonitorCommentWatermark,
+  consumer: YeetMonitorCommentConsumer
 ): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  const statePath = yield* yeetMonitorCommentStatePath(context);
+  const statePath = yield* yeetMonitorCommentStatePath(context, consumer);
   const updatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
+  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
   const json = yield* YeetMonitorCommentStateJson.encode(
     YeetMonitorCommentState.make({
       schemaVersion: "yeet-monitor-comments/v2",
@@ -1050,9 +1244,10 @@ export const renderYeetMonitorCommentStateWarning = (reason: string): string =>
 const persistCommentState = (
   context: RepoRunContext,
   pullRequestNumber: number,
-  watermark: YeetMonitorCommentWatermark
+  watermark: YeetMonitorCommentWatermark,
+  consumer: YeetMonitorCommentConsumer
 ): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
-  writeCommentState(context, pullRequestNumber, watermark).pipe(
+  writeCommentState(context, pullRequestNumber, watermark, consumer).pipe(
     Effect.catch((error) => Console.warn(renderYeetMonitorCommentStateWarning(error.message)))
   );
 
@@ -1153,6 +1348,7 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
  * @param pullRequestNumber - The pull request whose rows were emitted.
  * @param watermarkRef - The session watermark to advance.
  * @param comments - The successfully emitted comments to acknowledge.
+ * @param consumer - The consumer mode whose position is persisted; the shared position by default.
  * @returns Nothing after the in-memory and durable cursors are advanced.
  * @category processes
  * @since 0.0.0
@@ -1161,7 +1357,8 @@ export const acknowledgeYeetMonitorComments = Effect.fn("YeetMonitor.acknowledge
   context: RepoRunContext,
   pullRequestNumber: number,
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
-  comments: ReadonlyArray<YeetMonitorComment>
+  comments: ReadonlyArray<YeetMonitorComment>,
+  consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
 ): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   if (A.isReadonlyArrayEmpty(comments)) {
     return;
@@ -1176,7 +1373,7 @@ export const acknowledgeYeetMonitorComments = Effect.fn("YeetMonitor.acknowledge
     reviewBody: nextCursor(watermark.reviewBody, reviewBodies),
   });
   yield* Ref.set(watermarkRef, advanced);
-  yield* persistCommentState(context, pullRequestNumber, advanced);
+  yield* persistCommentState(context, pullRequestNumber, advanced, consumer);
 });
 
 const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
@@ -1297,19 +1494,41 @@ export const renderYeetMonitorCommentStreamStart: (resumedFrom: O.Option<string>
   })
 );
 
+// Where a consumer with no position of its own starts. The shared position
+// starts at the window as it always has; a namespaced consumer also reads the
+// shared position and takes the later cursor per collection, so its first run
+// cannot replay what that file already covered.
+const seedCommentWatermark = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  pullRequestNumber: number,
+  consumer: YeetMonitorCommentConsumer,
+  windowStart: string
+): Effect.fn.Return<YeetMonitorCommentWatermark, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const cursor = YeetMonitorCommentCursor.make({ createdAt: windowStart, id: 0 });
+  const start = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor });
+  if (YeetMonitorCommentConsumer.is.shared(consumer)) return start;
+  return mergeWatermarks(yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber), start);
+});
+
 /**
- * Open a comment-stream session against the branch's persisted position.
+ * Open a comment-stream session against one consumer's persisted position.
  *
  * **Details**
  *
- * Loads the branch-scoped watermark artifact and falls back to "start from
- * now" when there is none. A first session on this branch writes its starting
- * position immediately rather than only when it observes something — otherwise
- * a quiet session leaves no position at all, and the next run starts from
- * *its* own clock, which is precisely the gap a comment posted between the two
- * runs falls into. The watermark comes back as a `Ref` so
- * {@link acknowledgeYeetMonitorComments} can advance it after every batch has
- * been emitted successfully.
+ * Loads the consumer's branch-scoped watermark artifact and falls back to
+ * "start from now" when there is none. A first session on this branch writes
+ * its starting position immediately rather than only when it observes
+ * something — otherwise a quiet session leaves no position at all, and the
+ * next run starts from *its* own clock, which is precisely the gap a comment
+ * posted between the two runs falls into. The watermark comes back as a `Ref`
+ * so {@link acknowledgeYeetMonitorComments} can advance it after every batch
+ * has been emitted successfully.
+ *
+ * A namespaced consumer (not `shared`) with no position of its own is seeded
+ * from `windowStart` (now, when absent) or the shared position in the original
+ * `monitor-comments.json`, whichever is later, per collection. The first
+ * namespaced run therefore replays none of the history the shared file already
+ * covered, as lines or as rows, and nothing from before its window.
  *
  * **Example** (Build the opener effect)
  *
@@ -1322,23 +1541,31 @@ export const renderYeetMonitorCommentStreamStart: (resumedFrom: O.Option<string>
  *
  * @param context - Repo run context carrying the repo root and artifact directory.
  * @param pullRequestNumber - The pull request the session belongs to.
+ * @param consumer - The consumer mode whose position is opened; the shared position by default.
+ * @param windowStart - Where a first namespaced position may start at the earliest; now when absent.
  * @returns The live watermark feeding {@link collectNewYeetMonitorComments}.
  * @category constructors
  * @since 0.0.0
  */
 export const openYeetMonitorCommentStream = Effect.fn("YeetMonitor.openCommentStream")(function* (
   context: RepoRunContext,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared,
+  windowStart: O.Option<string> = O.none()
 ): Effect.fn.Return<Ref.Ref<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const initialCursor = YeetMonitorCommentCursor.make({ createdAt: startedAt, id: 0 });
-  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
-  const watermark = O.getOrElse(persisted, () =>
-    YeetMonitorCommentWatermark.make({ issue: initialCursor, review: initialCursor, reviewBody: initialCursor })
-  );
+  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
+  const watermark = O.isSome(persisted)
+    ? persisted.value
+    : yield* seedCommentWatermark(
+        context,
+        pullRequestNumber,
+        consumer,
+        O.getOrElse(windowStart, () => startedAt)
+      );
   const watermarkRef = yield* Ref.make(watermark);
   if (O.isNone(persisted)) {
-    yield* persistCommentState(context, pullRequestNumber, watermark);
+    yield* persistCommentState(context, pullRequestNumber, watermark, consumer);
   }
   return watermarkRef;
 });
@@ -1529,20 +1756,22 @@ export const renderYeetMonitorCommentReplayFailure = (reason: string): string =>
  *
  * @param context - Repo run context carrying the repo root and artifact directory.
  * @param pullRequestNumber - The pull request whose stream is replayed.
+ * @param consumer - The consumer mode whose position is replayed; the shared position by default.
  * @returns Nothing once the missed rows have been printed and acknowledged.
  * @category processes
  * @since 0.0.0
  */
 export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")(function* (
   context: RepoRunContext,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
 ): Effect.fn.Return<
   void,
   never,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
-  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
-  const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber);
+  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
+  const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber, consumer);
   const since = earliestWatermarkAt(yield* Ref.get(watermarkRef));
   if (O.isNone(persisted)) {
     return yield* Console.log(renderYeetMonitorCommentReplayStart(pullRequestNumber, since));
@@ -1556,5 +1785,5 @@ export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")
     concurrency: 1,
     discard: true,
   });
-  yield* acknowledgeYeetMonitorComments(context, pullRequestNumber, watermarkRef, collected.success);
+  yield* acknowledgeYeetMonitorComments(context, pullRequestNumber, watermarkRef, collected.success, consumer);
 });

@@ -35,11 +35,11 @@ import {
 import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { Deferred, Effect, Fiber, Layer, Queue, Stream } from "effect";
 import * as A from "effect/Array";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { RpcClient } from "effect/rpc";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { RpcClient } from "effect/unstable/rpc";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 
 // One JSON-RPC frame is exactly one wire line, so the kit's own codec builds

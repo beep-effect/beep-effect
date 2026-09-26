@@ -3,7 +3,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, HashSet } from "effect";
 import * as A from "effect/Array";
-import { OpenApi } from "effect/unstable/httpapi";
+import { OpenApi } from "effect/http-api";
 import { Catalog, resolveCatalogSpecPath } from "@/Catalog";
 import { CatalogSource } from "@/Catalog.models";
 

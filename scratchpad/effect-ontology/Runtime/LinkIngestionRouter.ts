@@ -17,7 +17,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
 import { BatchStage, BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -96,7 +96,7 @@ export class LinkIngestionBackgroundTasks extends Context.Service<LinkIngestionB
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { LinkIngestionRouter } from "@effect-ontology/Runtime/LinkIngestionRouter"
  *
  * const served = Layer.provide(LinkIngestionRouter, HttpRouter.layer)

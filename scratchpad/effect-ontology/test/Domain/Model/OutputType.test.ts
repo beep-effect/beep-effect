@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { OutputFilename, OutputType, OutputTypeRegistry } from "../../../Domain/Model/OutputType.ts";
 const isOutputFilename = S.is(OutputFilename);
 

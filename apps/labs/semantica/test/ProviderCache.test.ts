@@ -17,12 +17,12 @@ import {
   Stream,
 } from "effect";
 import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as Response from "effect/unstable/ai/Response";
 import { describe, expect, it } from "vitest";
 import {
   ActiveModelIdentityLive,

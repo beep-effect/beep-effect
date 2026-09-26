@@ -19,10 +19,10 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
 
 const lawFixture: RuntimeFixtureInput = {

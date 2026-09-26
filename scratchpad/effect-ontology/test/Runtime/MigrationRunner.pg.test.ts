@@ -14,7 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { SqlClient, SqlSchema } from "effect/unstable/sql";
+import { SqlClient, SqlSchema } from "effect/sql";
 import { databaseReady } from "../../Runtime/Persistence/DatabaseReady.ts";
 import { migrateFromFolder, migrateOnBoot, migrationsFolder } from "../../Runtime/Persistence/MigrationRunner.ts";
 

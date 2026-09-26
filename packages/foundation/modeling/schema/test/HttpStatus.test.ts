@@ -5,9 +5,9 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeHttpStatusHttpStatus1XXEffect = S.decodeEffect(HttpStatus.HttpStatus1XX);
 const decodeHttpStatusHttpStatus2XXEffect = S.decodeEffect(HttpStatus.HttpStatus2XX);

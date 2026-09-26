@@ -3,8 +3,8 @@ import { CspDirectives } from "@beep/schema/Csp";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownCspDirectivesEffect = S.decodeUnknownEffect(CspDirectives);
 const encodeCspDirectivesEffect = S.encodeEffect(CspDirectives);

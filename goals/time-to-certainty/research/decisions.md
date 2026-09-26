@@ -497,7 +497,7 @@ states are one `LiteralKit` (`merged`, `closed`, `ready`, `required-red`, `settl
 Rejected: changing plain monitor's fail-fast default (breaks `publish --monitor`); readiness as an
 event on `--until-merged` only (no exit-0 terminal to block on).
 
-Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): under `--until-ready` a required red and a base conflict stop being terminal — the loop keeps polling across heads and re-pins the wave per head — and `yeet job wait` gains a second return, a distinct exit code when a new P0/P1 wave lands on the job's PR, so the blocking recipe hands control back and is re-run on the same job after the fix push. Exit 0 stays `ready`; `merged`, `closed`, `settle-timeout` and `poll-error-budget` stay terminal (pr-event-awareness D16). The exit-code table changes accordingly with the producer slice.
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): under `--until-ready` a required red and a base conflict stop being terminal — the loop keeps polling across heads, writes them as P0 inbox rows, and re-pins the wave per head — and `yeet job wait` gains a second return, exit 2 (`wave`), when a new wave lands on the job's PR, so the blocking recipe hands control back and is re-run on the same job after the fix push; a job terminated without a verdict moves from exit 2 to exit 3. Exit 0 stays `ready`; `merged`, `closed`, `settle-timeout` and `poll-error-budget` stay terminal (pr-event-awareness D16, D31). The terminal kit drops `required-red` and gains `wave` (exit 2), which only an attached `--until-ready` loop reaches because it has no job to wait on. A wave is new rows in the wake set: every P0 row (a required red, a base conflict) plus P1 `review-thread` and `pr-comment` rows. A required red set that changes on the same head is also a new wave: a rerun that comes back red keeps its row id but has a new job link, and the per-head wave record carries the red set the waiters compare. Optional checks still never affect the exit code in any mode: an optional red, a rate-limited Vercel deployment included, is written as a P1 inbox row but never wakes `job wait` or ends an attached `--until-ready`.
 
 **Ruling 43 (B7-3) — the loop composes the read-first closeout itself.** When the required
 census settles for a head that has no closeout artifact bound to that head, the loop runs the
@@ -544,7 +544,7 @@ optional. No webhooks. Rejected: row + hook only (rests on the unverified compos
 PR bar as canonical (no green event, needs the app open); P2 (session-start only) and P0 (a gate
 on good news).
 
-Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): the FileChanged/asyncRewake idle-wake spike was proposed and not exercised (`research/b7-implementation.md:671-672`) and is superseded by pr-event-awareness D10/D15/D20 — a probe-gated, SessionStart-spawned shell tail posts one cross-session message per new wave into its own session. The `pr-merge-ready` row and hook injection stand.
+Amendment, pr-event-awareness grill-with-docs (2026-09-25, proposed by the orchestrator; ratified by merge of that packet's producer PR): the FileChanged/asyncRewake idle-wake spike was proposed and not exercised (`research/b7-implementation.md:671-672`) and is superseded by pr-event-awareness D10/D15/D20 — a probe-gated, SessionStart-spawned shell tail posts one cross-session message per new wave into its own session (built in that packet's second slice only if its socket probe passes; the producer PR ships no tail). The `pr-merge-ready` row and hook injection stand.
 
 **Ruling 47 (B7-7) — naming.** Flag `--until-ready`; row kind `pr-merge-ready`; settle wait
 reasons as one `LiteralKit` (`registration`, `required-pending`, `closeout-pending`,
@@ -1045,3 +1045,126 @@ Amended in review round 1 of #1239 before the lock: rulings 73, 74 and 75.
   `Ci/LaneTimings.ts` (`nearestRank`, ~L2194) is promoted to a shared internal module and
   `Cache/Cache.command.ts` (~L342) points at it; no third copy.
 
+## 2026-09-25 — SPEC D1 ordering handoff, round 24 (four rulings, proposed by the orchestrator; the merge of this PR is the lock)
+
+Context: PLAN D1 orders the pre-push wave by (cost, red probability, precision) from A1 and hands
+its inputs to the ontology packet's planner seam with a receipt. The design contract is
+`research/d1-ordering-handoff.md`; its §0 findings are why D1 adds no planner, command or service:
+B3 (#1006) already ships the order, one declared lane (`quality:cache-policy`) has no seed row, the
+seed's pointers were never read, and the ontology's seam is S7-v2 `planEpisode`, which takes
+repo-cli facts only as documents. "D1" is SPEC §D D1. It is not the C3 table's D1 (ruling 26),
+pr-event-awareness D1, or the 2026-09-09 quality-lane audit's `REPORT-local.md` finding D1 and PLAN
+decisions D2, D4 and D8 (round 8 above; the seed comments in `WaveOrder.ts` cite D2 and D8). Rulings
+71–72 stay reserved for the C5 grill draft (`research/c5-must-fail-fixtures-grill.md:127`, `:142`), so
+these rulings are 76–79. Lane ranks below are 0-based execution positions (rank 0 runs first), as
+`GateOrderHandoffLane.rank` records them.
+
+**Ruling 76 (D1-1) — the D1 order is B3's lexicographic key, named, over a seed that covers every
+declared pre-push lane.** The pre-push wave keeps B3's `orderWaveLanes` key over
+`DEFAULT_GATE_ORDER_SEED` and names it `gate-order-lexicographic/v1`: seeded first, policy-preflight
+before heavy, A1 cost P50 ascending, A1 first-red share descending, precise before imprecise, then
+declaration index. This is D1's reading of "(cost, red probability, precision)"; any change of key,
+sequence or direction is a new literal. Every lane the non-main full-tier pre-push plan declares
+(the lanes `githubCheckPrePushLanes` in `GithubChecks.ts` returns with
+`githubCheckChangesetStatusLane`) carries exactly one seed row, and every
+seed row names a lane of that plan. `quality:cache-policy` gets the Repo Sanity aggregate proxy (183 s
+at `/hosted/laneRows/7/p50DurationMs`, first-red share 0 by absence because the lane postdates the A1
+window, precise, policy-preflight); the four seeded lanes that already postdate the window
+(`fallow:health`, `quality:doctest`, `quality:storybook`, `repo-sanity:config-typecheck`) get the same
+postdates-the-window first-red basis in place of "zero of 832 was observed", with values, pointers and
+order unchanged. `quality:cache-policy` moves from rank 31 to rank 19 (ranks are 0-based
+execution positions), after `repo-sanity:config-typecheck` and before `quality:build`; the other 31
+lanes keep their relative order. The A1 window is the one the seed pins, ending at its
+`measurementAsOf` 2026-09-03T06:29:38.367Z (the ruling-8 baseline window 2026-08-04 to 2026-09-03). A
+lane that joins the plan after that window gets a seed row and a cost-source entry in the PR that adds
+it: the A1 row its group or wrapper siblings use (`a1-proxy-row`), or a named external run behind the
+`/hosted/laneRows` sentinel (`external-run`) when no A1 row covers it; first-red share 0 by absence;
+precise unless A4 says otherwise; policy-preflight when its wave is `preflight`, else heavy. This
+seeding rule holds while the seed is `gate-order/v1` over the pinned `37e854ef…` bytes; the ruling
+that reseeds replaces it and restates the rule for its own window. Rationale: SPEC B3 fixed (lane
+class, cost, precision); B3 (#1006) added the first-red tiebreak; ruling 76 records that key as D1's
+order. The unseeded lane has run after the 603-second coverage lane since #1068. A ratio order is
+admissible under SPEC D1, which puts only the lane-DAG planner out of scope, but would be a new
+literal; it is rejected here because it reorders 20 of 32 lanes on a rank weight that is not P(red).
+UC-001 does not support cost-first ordering: its main flow puts ascending cost third, after
+diff-touched and topological tie-break, and its goal, minimizing expected
+time-to-first-actionable-failure, is closer to the rejected ratio order; D1 rejects that order for
+want of a probability to divide by (CQ-018 stays deferred), not on UC-001's authority. Naming the
+rule makes a later objective change detectable. Rejected: a cost/red ratio order in D1 (it reorders 20 of 32 positions on a share
+that is not a probability; admissible, but a new literal with no evidence behind it); a reseed from
+live `yeet-economics/v1` (a policy change that needs its own ruling); the live 7.493 s value for
+`quality:cache-policy` (mixes sources in one seed); a receipt without the row (the handed order would
+stay wrong).
+
+**Ruling 77 (D1-2) — the seed's A1 provenance is checked against pinned bytes, and the red term is
+carried as counts.** A repo-cli fixture resolves every seed duration and first-red pointer, plus
+`measurementAsOf` and the 832 population, against the bytes of `research/economics.json` (sha256
+pinned as a `CacheEvidenceReference`), decoded through a schema view of only the resolved subset, with
+pointers parsed into a closed kind set; an unknown shape is a finding, never a guess. Each seeded lane
+has one cost source with a closed basis (`a1-lane-row`, `a1-proxy-row` or `external-run`), and the
+fixture checks that each resolved A1 row's context or wrapper id equals that source's key and names
+exactly one row of its array; an `external-run` cost is not fixture-verified and the handoff says so.
+The red check multiplies each share by the seed's own 832; one separate check compares 832 with A1's
+reconstructable first failures, and another checks that the actionable-lane mix sums to A1's 1610 red
+attempts. The handoff carries the 832 first-failure population, the 1610 red attempts the counts come
+from, and the resolved A1 lane key for exact rows. The field `redProbability` stays at `gate-order/v1`,
+and it means a first-red share, a rank weight and not P(red). The pre-push runtime never reads the
+file. The seed pins the P0 baseline bytes (sha256 `37e854ef…`); where the P4 close report lands is
+P4's call under `SPEC.md:185`. If P4 rewrites `economics.json`, fixtures 2–4 go red and any reseed
+needs its own ruling. A PR that edits `research/scripts/economics.py` and re-renders
+`economics.json` without a P4 re-run (the script's self-receipt moves, as in #964, #978 and #1026)
+is a pin move: it updates `GATE_ORDER_SOURCE.sha256` and regenerates the handoff with no ruling,
+provided every value, row key and population the seed resolves is unchanged; otherwise it is a
+reseed. Receipts citing `37e854ef…` are not edited. Rationale: provenance handed to another packet
+must be checked rather than asserted, and the population mismatch, the `pre-push:*` alias ids and the shared duration rows are
+what a consumer would misread from prose. Rejected: reading the file at runtime (an I/O failure mode
+on every push); a `gate-order/v2` bump or a rename; re-denominating the share (a uniform rescale
+changes nothing and D1 has no evidence for a denominator); an untyped pointer walk; binding the P4
+close re-run to reseed in its PR.
+
+**Ruling 78 (D1-3) — the handoff is one committed, fixture-guarded `gate-order-handoff/v1`
+document.** `goals/time-to-certainty/research/gate-order-handoff.json` is a `GateOrderHandoff`
+carrying the `gate-order/v1` seed verbatim, the `orderRule`, `scope: "pre-push:non-main"`, the pinned
+source with both populations, and the 32 lanes in execution order with 0-based rank, declaration
+index, deciding key, red-scheduling consequence, cost basis, resolved A1 duration row with its P50 and
+P95, and resolved A1 lane key. No repo-cli command writes it; it holds no clock, host path or commit
+id; its bytes are two-space pretty JSON of the encoded value with a trailing newline; a repo-cli
+fixture fails whenever its bytes differ from the bytes the checkout computes, and those computed
+bytes must decode back to the computed value, so the committed value is guarded through its bytes;
+its only writer is that fixture's vitest file snapshot, updated by a `-u` run and a plain run after
+it, with the diff reviewed by a person. The repo-cli `test` and
+`test:property` tasks declare `economics.json` and `gate-order-handoff.json` as inputs, so a change to
+either reruns the fixture; naming two files one fixture reads is not the blanket cache-key tuning the
+SPEC rejects. Rationale: the ciops lab takes repo-cli facts only as documents read by path and sha256
+and S7 forbids repo-cli integration, so a TypeScript constant is not a handoff. The consumer is the
+ontology steward through the receipt. The fixture guards freshness only. No code reads the document
+until the S7-v2 seam widens, which is that packet's call. Rejected: a new subcommand (the lab cannot
+run repo-cli, and stdout has nothing to pin); a `yeet economics` section (live window and clock);
+carrying the order in a `gate-order/v2` seed (circular); an embedded commit SHA (a file cannot name
+its own commit, and squash merges rewrite it); `blockedBy` edges (all empty, nothing reads them); a
+mirrored `gate-order` schema in `apps/labs/ciops`.
+
+**Ruling 79 (D1-4) — the receipt lands in both packets; the ontology seam stays as it is.** SPEC D1's
+"hands its inputs to that packet's S8/S9 stages" is discharged by the committed document offered, by
+path and not wired, as input to the ontology packet's S7-v2 `planEpisode` seam, with S8 formalizing
+the cost and red terms and S9 dogfooding them, as SPEC D1 already says; `SPEC.md` gains one dated
+parenthetical on D1 that names where the document is offered and these rulings, recording a landing
+rather than a SPEC error, and D1's sentence is not rewritten. The same PR adds one dated entry to
+`explorations/beep-ci-operational-ontology/research/OPPORTUNITIES.md` naming the document, its
+sha256, its target, the unit and measure mismatches, and one open item for the ontology steward:
+`iv-1006-wave-order`, with draft values in the design contract (the steward may promote it to that
+packet's DECISIONS log and manifest `openQuestions`, which this PR does not touch); one
+`research/SOURCES.md` §4 REUSE clause; and one README Trail line. `research/control-interventions.yaml`,
+`PlanEpisodeInput`, `apps/labs/ciops`, the S7 contract, the ontology DECISIONS log, every vocabulary
+file, `ontology/extraction/**` and the run-4 intake stay unchanged. Rationale: ruling 14 (#964) set
+the one-line receipt precedent and ruling 41 (#1149) the Trail-plus-SOURCES pair; the ontology's
+purity-vs-control-interventions ruling asks for the cost-ordered fail-fast ladder to be recorded
+against the KPI before and after, but a `control-interventions.yaml` row is an A-Box seed individual,
+so the receipt names it for the steward instead of writing it; the PR takes a stated exception to the
+explorations session law (next open question, manifest sync, Atlas writer), as the #964 and #1149
+receipts did, because a ttc receipt writer is not a session of that packet, and the steward's next
+session syncs them; and widening the seam, emitting A-Box facts or promoting CQ-003/CQ-018 belong to
+that packet's steward and auditor. Rejected: writing the
+`iv-1006-wave-order` row from a ttc PR; a ciops mirror with a widened `PlanEpisodeInput`; a
+provisional lane-order A-Box; ontology DECISIONS rulings ratified by a ttc merge; `links.goals`
+(graduation semantics); an INBOX entry; a run-4 docket row; rewriting SPEC D1's sentence.

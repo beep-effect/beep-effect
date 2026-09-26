@@ -11,10 +11,10 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import { dual } from "effect/Function";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 import { DomainError } from "../errors/index.ts";
 import { findRepoRoot } from "../Root.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const require = createRequire(import.meta.url);
 const biomeExecutable = require.resolve("@biomejs/biome/bin/biome");

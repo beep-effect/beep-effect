@@ -13,7 +13,7 @@ import { cn } from "@beep/ui/lib/utils";
 import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
 import { CalendarBlankIcon } from "@phosphor-icons/react";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 
 const DATE_FORMAT = {
   year: "numeric",

@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 import { agentEffectivenessCommand } from "./AgentEffectiveness/index.ts";
 import { aiMetricsCommand } from "./AIMetrics/index.ts";
 import { architectureCommand } from "./Architecture/index.ts";

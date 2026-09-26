@@ -11,8 +11,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as P from "effect/Predicate";
+import { ChildProcess } from "effect/process";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess } from "effect/unstable/process";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

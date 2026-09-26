@@ -24,8 +24,8 @@ import {
 } from "./Tools.ts";
 import type { EcfrDatedTitleParams, EcfrSearchParams } from "@beep/ecfr";
 import type { GovinfoError, Search } from "@beep/govinfo";
+import type * as AiTool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
-import type * as AiTool from "effect/unstable/ai/Tool";
 
 const sensitiveHttpSpanAttributeKeys = ["url.full", "url.path", "url.query"];
 

@@ -12,8 +12,9 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Encoding, Result, SchemaIssue, SchemaTransformation } from "effect";
+import { Effect, Result, SchemaIssue, SchemaTransformation } from "effect";
 import * as Eq from "effect/Equal";
+import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("ArrayBuffer");
@@ -38,11 +39,11 @@ const Base64String = S.String.annotate({
 
 const arrayBufferFromBase64String = SchemaTransformation.transformEffect<globalThis.ArrayBuffer, string>({
   decode: (encoded, options) =>
-    Result.match(Encoding.decodeBase64(encoded), {
+    Result.match(Base64.decode(encoded), {
       onFailure: (error) => Effect.fail(new SchemaIssue.InvalidValue({ message: error.message }, encoded, options)),
       onSuccess: (bytes) => Effect.succeed(bytes.slice().buffer),
     }),
-  encode: (buffer) => Effect.succeed(Encoding.encodeBase64(new globalThis.Uint8Array(buffer))),
+  encode: (buffer) => Effect.succeed(Base64.encode(new globalThis.Uint8Array(buffer))),
 });
 
 const byteEquivalence = (self: globalThis.ArrayBuffer, that: globalThis.ArrayBuffer): boolean =>

@@ -115,7 +115,7 @@ import type { FileProcessingEngineShape, FileProcessingService } from "@beep/fil
 import type { FileFormatFamily, FileProcessingEngineFamily, SelectedStrategy } from "@beep/file-processing/Strategy";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CorpusArchiveMoveError } from "../Corpus.errors.ts";
 import type {
   CorpusArchiveMoveOptions,

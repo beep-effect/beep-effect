@@ -24,8 +24,8 @@ import {
 } from "@beep/wink";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Equal, Exit, Layer, Schema, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBowCosineSimilaritySuccess = Schema.decodeEffect(BowCosineSimilarity.successSchema);
 const decodeChunkBySentencesParameters = Schema.decodeEffect(ChunkBySentences.parametersSchema);

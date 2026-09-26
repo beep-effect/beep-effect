@@ -8,7 +8,19 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { UUID } from "@beep/schema/String";
-import { ConfigProvider, Console, Context, Crypto, DateTime, Duration, Effect, FileSystem, Order, Path } from "effect";
+import {
+  ConfigProvider,
+  Console,
+  Context,
+  Crypto,
+  DateTime,
+  Duration,
+  Effect,
+  FileSystem,
+  HashSet,
+  Order,
+  Path,
+} from "effect";
 import * as A from "effect/Array";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
@@ -29,6 +41,7 @@ import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./Ack.ts";
 import { appendYeetInboxRowOnce, YeetProofJobFinishedRow, yeetProofJobRowId } from "./Inbox.ts";
+import { loadYeetPrWave, YeetPrWave } from "./InboxView.ts";
 import {
   forwardedProofJobEnvironment,
   isDeniedProofJobEnvName,
@@ -53,7 +66,7 @@ import {
   terminationReasonForServiceResult,
   YeetProofJobCapsule,
 } from "./ProofJob.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schemas.ts";
 import type { ProofJobOutcome, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
 
@@ -65,6 +78,73 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
 const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 200;
 const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
+
+/**
+ * `wait` returned because the job settled.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofJobWaitSettled extends S.Class<ProofJobWaitSettled>($I`ProofJobWaitSettled`)(
+  {
+    kind: S.tag("settled"),
+    record: ProofJobRecord,
+  },
+  $I.annote("ProofJobWaitSettled", { description: "A job wait that returned because the job settled." })
+) {}
+
+/**
+ * `wait` returned on a new inbox wave while the job keeps running.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofJobWaitWave extends S.Class<ProofJobWaitWave>($I`ProofJobWaitWave`)(
+  {
+    kind: S.tag("wave"),
+    record: ProofJobRecord,
+    wave: YeetPrWave,
+  },
+  $I.annote("ProofJobWaitWave", {
+    description: "A job wait that returned on a new P0/P1 inbox wave on the job's pull request; the job keeps running.",
+  })
+) {}
+
+/**
+ * How `wait` returned: the job settled, or a new inbox wave landed on the
+ * pull request a monitor job follows.
+ *
+ * **Details**
+ *
+ * The wave return never acknowledges the wave rows: they stay in the inbox so
+ * the hook keeps injecting them and the P0 Stop gate holds until the fix
+ * lands. Only a settled return writes the proof-job row's observed ack.
+ *
+ * **Example** (Tell the returns apart)
+ *
+ * ```ts
+ * import { ProofJobWaitResult } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(Object.keys(ProofJobWaitResult.cases)) // ["settled", "wave"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofJobWaitResult = S.Union([ProofJobWaitSettled, ProofJobWaitWave]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("ProofJobWaitResult", {
+    description: "How a job wait returned: the job settled, or a new inbox wave landed on its pull request.",
+  })
+);
+
+/**
+ * How `wait` returned.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProofJobWaitResult = typeof ProofJobWaitResult.Type;
 
 /**
  * Operations over one checkout's detached proof jobs.
@@ -84,6 +164,11 @@ const decodeUUID = S.decodeEffect(UUID);
  *   share that definition. Reads recover unstamped finished records with an unknown stamp.
  * - Each transition uses a per-record file mutex for consistency, not an admission lock.
  * - Cancel saves its request under that mutex before asking systemd to stop the unit.
+ * - `bindPullRequest` records the pull request a monitor job follows; `wait` then
+ *   also returns when a new wave lands on that pull request (wake-set rows no
+ *   earlier wait returned, or a required red set on the same head that names a
+ *   red the last return did not), and records the returned row ids and red set
+ *   so a re-run waits for the next wave.
  *
  * **Example** (Name a launcher operation)
  *
@@ -97,6 +182,7 @@ const decodeUUID = S.decodeEffect(UUID);
  * @since 0.0.0
  */
 export interface ProofJobLauncherShape {
+  readonly bindPullRequest: (jobId: UUID, prNumber: number) => Effect.Effect<ProofJobRecord, YeetCommandError>;
   readonly cancel: (jobId: UUID) => Effect.Effect<ProofJobCancelOutcome, YeetCommandError>;
   readonly finalize: (
     jobId: UUID,
@@ -109,7 +195,7 @@ export interface ProofJobLauncherShape {
   readonly read: (jobId: UUID) => Effect.Effect<O.Option<ProofJobRecord>, YeetCommandError>;
   readonly submit: (submission: ProofJobSubmission) => Effect.Effect<ProofJobRecord, YeetCommandError>;
   readonly support: Effect.Effect<RunScopeSupport>;
-  readonly wait: (jobId: UUID, options: ProofJobWaitOptions) => Effect.Effect<ProofJobRecord, YeetCommandError>;
+  readonly wait: (jobId: UUID, options: ProofJobWaitOptions) => Effect.Effect<ProofJobWaitResult, YeetCommandError>;
 }
 
 const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
@@ -404,6 +490,39 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     }
     return A.map(stale, (record) => record.jobId);
   });
+  // The returned row ids and red set are the waiter's memory, not an
+  // acknowledgement: the rows stay live for the hook. A failed write only means
+  // a re-run may return the same wave again, so it is reported and the wave is
+  // still returned.
+  const rememberReturnedWaveLocked = Effect.fn("ProofJob.rememberReturnedWaveLocked")(function* (
+    id: UUID,
+    wave: YeetPrWave
+  ) {
+    const record = yield* requireRecord(id);
+    const returned = A.dedupe(
+      A.appendAll(
+        record.returnedWaveRowIds,
+        A.map(wave.entries, (entry) => entry.row.id)
+      )
+    );
+    const redSetKey = O.orElse(wave.redSetKey, () => record.returnedWaveRedSetKey);
+    if (
+      A.length(returned) === A.length(record.returnedWaveRowIds) &&
+      O.makeEquivalence(Str.Equivalence)(redSetKey, record.returnedWaveRedSetKey)
+    )
+      return record;
+    return yield* save(
+      ProofJobRecord.make({ ...record, returnedWaveRowIds: returned, returnedWaveRedSetKey: redSetKey })
+    );
+  });
+  const rememberReturnedWave = (record: ProofJobRecord, wave: YeetPrWave) =>
+    withRecordLock(rememberReturnedWaveLocked(record.jobId, wave), record.jobId).pipe(
+      Effect.catch((error) =>
+        Console.error(
+          `[yeet] could not record the returned wave on proof job ${record.jobId} (${error.message}); a re-run of job wait may return it again.`
+        ).pipe(Effect.as(record))
+      )
+    );
   const support = detectRunScopeSupport().pipe(Effect.provide(context));
   return {
     support,
@@ -495,8 +614,13 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
         ? ProofJobCancelOutcome.Enum["unit-absent"]
         : ProofJobCancelOutcome.Enum["stop-failed"];
     }),
+    bindPullRequest: Effect.fn("ProofJob.bindPullRequest")(function* (id: UUID, prNumber: number) {
+      const record = yield* requireRecord(id);
+      if (O.contains(record.prNumber, prNumber)) return record;
+      return yield* save(ProofJobRecord.make({ ...record, prNumber: O.some(prNumber) }));
+    }, withRecordLock),
     wait: Effect.fn("ProofJob.wait")(function* (id: UUID, options: ProofJobWaitOptions) {
-      const pollUntilTerminal = Effect.fnUntraced(function* () {
+      const pollUntilReturn = Effect.fnUntraced(function* (): Effect.fn.Return<ProofJobWaitResult, YeetCommandError> {
         while (true) {
           const found = yield* read(id);
           if (O.isNone(found)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
@@ -510,12 +634,27 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
                 resolution: YeetAckObservedResolution.make({ via: "job-wait" }),
               })
             ).pipe(Effect.provide(context));
-            return record;
+            return ProofJobWaitSettled.make({ record });
+          }
+          // A red that changed on the same head is a new wave even when its row
+          // id was returned already; no red set handed back yet reads as none.
+          const wave = yield* O.match(record.prNumber, {
+            onNone: () => Effect.succeedNone,
+            onSome: (prNumber) =>
+              loadYeetPrWave(
+                repoRoot,
+                prNumber,
+                HashSet.fromIterable(record.returnedWaveRowIds),
+                O.some(O.getOrElse(record.returnedWaveRedSetKey, () => Str.empty))
+              ),
+          }).pipe(Effect.provide(context));
+          if (O.isSome(wave)) {
+            return ProofJobWaitWave.make({ record: yield* rememberReturnedWave(record, wave.value), wave: wave.value });
           }
           yield* Effect.sleep(Duration.millis(options.pollIntervalMs));
         }
       });
-      const poll = pollUntilTerminal();
+      const poll = pollUntilReturn();
       return yield* O.isSome(options.timeoutMs)
         ? poll.pipe(
             Effect.timeoutOrElse({
@@ -588,6 +727,43 @@ export const updateProofJobBookkeeping = Effect.fn("Yeet.updateProofJobBookkeepi
 );
 
 /**
+ * Read the record of the detached proof job this process runs inside.
+ *
+ * **Details**
+ *
+ * The job id comes from `BEEP_YEET_JOB_ID`, which only the job's unit sets, so
+ * outside a job this is `None`. A failed read is logged and also reads as
+ * `None`, so the caller proceeds as if it ran attached. The merge loop starts
+ * its pull request comment window at the record's `submittedAt`
+ * (pr-event-awareness D32).
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readCurrentProofJobRecord } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readCurrentProofJobRecord("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - The checkout that owns the job record.
+ * @returns The job's record, or `None` outside a job or when it cannot be read.
+ * @category services
+ * @since 0.0.0
+ */
+export const readCurrentProofJobRecord = Effect.fn("Yeet.readCurrentProofJobRecord")(
+  function* (repoRoot: string) {
+    const job = yield* configStringOption("BEEP_YEET_JOB_ID");
+    if (O.isNone(job)) return O.none<ProofJobRecord>();
+    const jobId = yield* decodeUUID(job.value).pipe(Effect.mapError(YeetCommandError.new("Invalid proof job id.")));
+    return yield* (yield* ProofJobLauncher.make(repoRoot)).read(jobId);
+  },
+  Effect.catch((error) =>
+    Console.error(`[yeet] job record read failed: ${error.message}`).pipe(Effect.as(O.none<ProofJobRecord>()))
+  )
+);
+
+/**
  * Run a command so the detached proof job it runs inside records its start and its outcome.
  *
  * **Details**
@@ -595,10 +771,10 @@ export const updateProofJobBookkeeping = Effect.fn("Yeet.updateProofJobBookkeepi
  * The verify and repair paths record their outcome through the run verdict. The
  * porcelain monitor loops (`--until-ready`, `--until-merged`, `--watch`) write no
  * verdict, so without this the finalizer read a clean `ready` exit as
- * `terminated` and `yeet job wait` exited 2 on a green loop. The wrapper marks
- * the job running with this process's identity, runs the command, and records
- * the outcome {@link proofJobOutcomeForExit} derives from its exit. Outside a job
- * both transitions are no-ops.
+ * `terminated` and `yeet job wait` reported termination on a green loop. The
+ * wrapper marks the job running with this process's identity, runs the
+ * command, and records the outcome {@link proofJobOutcomeForExit} derives from
+ * its exit. Outside a job both transitions are no-ops.
  *
  * **Example** (Wrap a command)
  *

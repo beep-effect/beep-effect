@@ -15,26 +15,14 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  Cause,
-  ConfigProvider,
-  Duration,
-  Effect,
-  Encoding,
-  Exit,
-  FileSystem,
-  Layer,
-  Path,
-  pipe,
-  Result,
-  Schedule,
-} from "effect";
+import { Cause, ConfigProvider, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Result, Schedule } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Command } from "effect/cli";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -949,7 +937,7 @@ describe("ai-metrics command", () => {
         const homeDir = path.join(tmpDir, "home");
         const repoRoot = path.join(tmpDir, "repo");
         const dataRoot = path.join(tmpDir, "metrics");
-        const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(11));
+        const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(11));
 
         yield* writeText(
           path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
@@ -995,7 +983,7 @@ describe("ai-metrics command", () => {
   it.effect("emits retention enforcement summary for forwarder run JSON", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(13)),
+        Base64.encode(new Uint8Array(32).fill(13)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const fs = yield* FileSystem.FileSystem;
@@ -1067,7 +1055,7 @@ describe("ai-metrics command", () => {
             const homeDir = path.join(tmpDir, "home");
             const repoRoot = path.join(tmpDir, "repo");
             const dataRoot = path.join(tmpDir, "metrics");
-            const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(23));
+            const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(23));
 
             yield* writeText(
               path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
@@ -1141,7 +1129,7 @@ describe("ai-metrics command", () => {
               const homeDir = path.join(tmpDir, "home");
               const repoRoot = path.join(tmpDir, "repo");
               const dataRoot = path.join(tmpDir, "metrics");
-              const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(29));
+              const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(29));
 
               yield* writeText(
                 path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
@@ -1219,7 +1207,7 @@ describe("ai-metrics command", () => {
         const homeDir = path.join(tmpDir, "home");
         const repoRoot = path.join(tmpDir, "repo");
         const dataRoot = path.join(tmpDir, "metrics");
-        const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(13));
+        const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(13));
         const sourcePath = path.join(homeDir, ".codex/sessions/private-source.jsonl");
 
         yield* writeText(sourcePath, '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}');
@@ -1263,7 +1251,7 @@ describe("ai-metrics command", () => {
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
           const dataRoot = path.join(tmpDir, "metrics");
-          const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(19));
+          const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(19));
 
           yield* writeText(
             path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
@@ -1432,7 +1420,7 @@ describe("ai-metrics command", () => {
             const homeDir = path.join(tmpDir, "home");
             const repoRoot = path.join(tmpDir, "repo");
             const dataRoot = path.join(tmpDir, "metrics");
-            const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(17));
+            const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(17));
 
             yield* writeText(
               path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
@@ -1500,7 +1488,7 @@ describe("ai-metrics command", () => {
     withOtlpSink((otlpBaseUrl, requests) =>
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
-          const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(31));
+          const rawArchiveKey = Base64.encode(new Uint8Array(32).fill(31));
           const { dataRoot } = yield* withRawArchiveKeyEnv(rawArchiveKey, seedAiMetricsData(tmpDir));
 
           yield* runAiMetricsCommand([
@@ -1566,7 +1554,7 @@ describe("ai-metrics command", () => {
   it.effect("builds a sanitized mirror bundle and plans rsync by default", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(9)),
+        Base64.encode(new Uint8Array(32).fill(9)),
         Effect.gen(function* () {
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
 
@@ -1599,7 +1587,7 @@ describe("ai-metrics command", () => {
   it.effect("rejects unsafe mirror bundles before confirmed sync", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(12)),
+        Base64.encode(new Uint8Array(32).fill(12)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
@@ -1629,7 +1617,7 @@ describe("ai-metrics command", () => {
   it.effect("rejects mirror bundles with undeclared parquet files before sync", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(17)),
+        Base64.encode(new Uint8Array(32).fill(17)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
@@ -1659,7 +1647,7 @@ describe("ai-metrics command", () => {
   it.effect("runs confirmed mirror sync only after local manifest validation", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(13)),
+        Base64.encode(new Uint8Array(32).fill(13)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const fs = yield* FileSystem.FileSystem;
@@ -1706,7 +1694,7 @@ describe("ai-metrics command", () => {
   it.effect("runs a retention restore drill without printing transcript text", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(10)),
+        Base64.encode(new Uint8Array(32).fill(10)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
@@ -1745,7 +1733,7 @@ describe("ai-metrics command", () => {
   it.effect("keeps retention delete in dry-run mode until confirmed", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(11)),
+        Base64.encode(new Uint8Array(32).fill(11)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
@@ -1776,7 +1764,7 @@ describe("ai-metrics command", () => {
   it.effect("enforces preventive Parquet snapshot retention only after confirmation", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(12)),
+        Base64.encode(new Uint8Array(32).fill(12)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const fs = yield* FileSystem.FileSystem;
@@ -1835,7 +1823,7 @@ describe("ai-metrics command", () => {
   it.effect("rejects invalid retention confirmations and unbounded confirmed windows", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(14)),
+        Base64.encode(new Uint8Array(32).fill(14)),
         Effect.gen(function* () {
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
 
@@ -1874,7 +1862,7 @@ describe("ai-metrics command", () => {
   it.effect("runs confirmed retention compact and preserves raw archive objects", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(15)),
+        Base64.encode(new Uint8Array(32).fill(15)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const fs = yield* FileSystem.FileSystem;
@@ -1910,7 +1898,7 @@ describe("ai-metrics command", () => {
   it.effect("runs confirmed retention delete with an explicit bounded window", () =>
     withTempDirectory((tmpDir) =>
       withRawArchiveKeyEnv(
-        Encoding.encodeBase64(new Uint8Array(32).fill(16)),
+        Base64.encode(new Uint8Array(32).fill(16)),
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const fs = yield* FileSystem.FileSystem;

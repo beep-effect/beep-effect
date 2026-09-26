@@ -1,5 +1,6 @@
 /**
  * Pull-only reference workspace operations and nightly scheduling.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -37,7 +38,7 @@ import {
   RefsTimerUnit,
 } from "./Refs.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { ReferenceMember } from "./Refs.schemas.ts";
 
 const isPositiveInteger = S.is(S.Int.check(S.isGreaterThan(0)));
@@ -60,6 +61,7 @@ const $I = $RepoCliId.create("commands/Refs/Refs.service");
 
 /**
  * Read-only planning, pull-only refresh, checkout linking, and unit rendering.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -103,6 +105,7 @@ export interface ReferenceWorkspaceShape {
  * import { Effect } from "effect"
  * Effect.isEffect(ReferenceWorkspace.use((workspace) => workspace.plan("/home/op", "/refs"))) // => true
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -569,6 +572,9 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
  * import * as Layer from "effect/Layer"
  * Layer.isLayer(referenceWorkspaceLayer("/checkout")) // => true
  * ```
+ *
+ * @param owner - Checkout containing the reference manifest used by these operations.
+ * @returns A layer providing reference operations for the supplied checkout.
  * @category layers
  * @since 0.0.0
  */
@@ -589,6 +595,7 @@ export const referenceWorkspaceLayer = (
  * import * as Layer from "effect/Layer"
  * Layer.isLayer(ReferenceWorkspaceLive) // => true
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */

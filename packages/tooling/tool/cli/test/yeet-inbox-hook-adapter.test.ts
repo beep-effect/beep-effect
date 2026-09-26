@@ -1,11 +1,22 @@
 import { fileURLToPath } from "node:url";
+import {
+  YeetAckClearedResolution,
+  YeetAckReceipt,
+  YeetAckReceiptJson,
+  YeetHookSessionStateJson,
+  YeetInboxObservedRowKind,
+  YeetInboxWaveExemptRowKind,
+} from "@beep/repo-cli/test/Yeet";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Stream } from "effect";
+import { Effect, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/unstable/process";
+import * as Str from "effect/String";
 import type * as PlatformError from "effect/PlatformError";
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -509,3 +520,208 @@ itEffect(
     ).pipe(provideTestLayer),
   15000
 );
+
+describe("Yeet inbox hook first-seen stamps", () => {
+  itEffect(
+    "stamps each row's first injection once and keeps the session file's shape",
+    () =>
+      withInbox(({ root }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const sessionsDir = path.join(root, ".beep", "inbox", "sessions");
+          const sessionFile = Effect.gen(function* () {
+            const names = A.filter(yield* fs.readDirectory(sessionsDir), (name) => !Str.startsWith(".")(name));
+            expect(names).toHaveLength(1);
+            return path.join(sessionsDir, A.getUnsafe(names, 0));
+          });
+          const readState = Effect.gen(function* () {
+            const text = yield* fs.readFileString(yield* sessionFile);
+            expect(yield* decodeObject(text)).toMatchObject({ schemaVersion: "yeet-hook-session/v1" });
+            return yield* YeetHookSessionStateJson.decode(text);
+          });
+          const tool = {
+            cwd: root,
+            hook_event_name: "PreToolUse",
+            session_id: "stamp-session",
+            tool_input: {},
+            tool_name: "Read",
+          };
+
+          // A P0 reaches the session at PreToolUse without entering seenIds; its
+          // first injection is still stamped.
+          yield* runHookUntil(root, "claude", tool, (result) => result.stdout !== "");
+          const first = yield* readState;
+          expect(first.seenIds).toStrictEqual([]);
+          expect(R.keys(first.firstSeenAt)).toStrictEqual(["coverage-live"]);
+          const coverageSeen = first.firstSeenAt["coverage-live"];
+          expect(coverageSeen).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+
+          // A later injection of the same row never moves its stamp.
+          yield* Effect.sleep("1100 millis");
+          yield* runHook(root, "claude", tool);
+          expect((yield* readState).firstSeenAt["coverage-live"]).toBe(coverageSeen);
+
+          // mark_seen stamps only the ids not already stamped.
+          yield* runHook(root, "claude", {
+            cwd: root,
+            hook_event_name: "UserPromptSubmit",
+            session_id: "stamp-session",
+          });
+          const marked = yield* readState;
+          expect(marked.seenIds).toStrictEqual(["coverage-live", "thread-live"]);
+          expect(marked.firstSeenAt["coverage-live"]).toBe(coverageSeen);
+          expect(marked.firstSeenAt["thread-live"] ?? "").not.toBe(coverageSeen);
+
+          // A file written before the map existed gains it additively: seenIds
+          // and schemaVersion are kept, nothing is pruned.
+          yield* fs.writeFileString(
+            yield* sessionFile,
+            '{"schemaVersion":"yeet-hook-session/v1","incidentId":null,"seenIds":["coverage-live","thread-live"]}\n'
+          );
+          yield* runHook(root, "claude", { cwd: root, hook_event_name: "SessionStart", session_id: "stamp-session" });
+          const upgraded = yield* readState;
+          expect(upgraded.seenIds).toStrictEqual(["coverage-live", "drift-live", "thread-live"]);
+          expect(R.keys(upgraded.firstSeenAt)).toStrictEqual(["drift-live"]);
+        })
+      ).pipe(provideTestLayer),
+    15_000
+  );
+});
+
+const hookExemptMarker = "# yeet-inbox: wave-exempt-kinds (parity-tested)";
+const HookExemptKinds = S.String.pipe(S.Array, S.fromJsonString);
+
+// The JSON array on the one line under the marker, sorted. Any other shape,
+// including a missing marker or a second line, reads as None.
+const hookExemptKindsIn = (hookText: string): O.Option<ReadonlyArray<string>> => {
+  const lines = Str.split(hookText, "\n");
+  return pipe(
+    A.findFirstIndex(lines, (line) => line === hookExemptMarker),
+    O.flatMap((index) => A.get(lines, index + 1)),
+    O.flatMap(Str.match(/^wave_exempt_kinds='(\[.*\])'$/)),
+    O.flatMap((match) => O.fromUndefinedOr(match[1])),
+    O.flatMap(S.decodeUnknownOption(HookExemptKinds)),
+    O.map(A.sort(Order.String))
+  );
+};
+
+const kitExemptKinds = A.sort(
+  [...YeetInboxWaveExemptRowKind.Options, ...YeetInboxObservedRowKind.Options],
+  Order.String
+);
+
+describe("Yeet inbox hook wave-exempt kinds", () => {
+  itEffect("carries exactly the wave-exempt and observed kits on its one marked literal line", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const hookText = yield* fs.readFileString(hookPath);
+      expect(A.filter(Str.split(hookText, "\n"), (line) => line === hookExemptMarker)).toHaveLength(1);
+      expect(hookExemptKindsIn(hookText)).toStrictEqual(O.some(kitExemptKinds));
+      // The same parse notices drift on either side: a kind missing from the hook,
+      // or a kind the hook carries that no kit has.
+      const dropped = Str.replace('"review-thread"', '"review-threads"')(hookText);
+      expect(hookExemptKindsIn(dropped)).not.toStrictEqual(O.some(kitExemptKinds));
+      const extra = Str.replace('["pr-comment",', '["base-drift","pr-comment",')(hookText);
+      expect(hookExemptKindsIn(extra)).not.toStrictEqual(O.some(kitExemptKinds));
+    }).pipe(provideTestLayer)
+  );
+
+  itEffect(
+    "keeps review threads and comments across a push, drops superseded drift and conflicts, and honours a cleared ack",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-yeet-hook-exempt-" });
+        const inbox = path.join(root, ".beep", "inbox");
+        yield* fs.makeDirectory(path.join(root, ".git"), { recursive: true });
+        yield* fs.makeDirectory(path.join(inbox, "acks"), { recursive: true });
+        const onHead = (headSha: string) => ({ headSha, prNumber: 900 });
+        const row = (kind: string, id: string, severity: string, capsule: object) => ({
+          schemaVersion: "yeet-inbox/v1",
+          kind,
+          id,
+          severity,
+          checkout: root,
+          ts: "2026-09-25T00:00:00Z",
+          capsule,
+        });
+        const conflict = (headSha: string) => ({
+          ...onHead(headSha),
+          base: "origin/main",
+          link: "https://github.com/beep/beep/pull/900",
+          mergeable: "CONFLICTING",
+          mergeStateStatus: "DIRTY",
+        });
+        const rows = [
+          row("review-thread", "thread-old", "P1", { ...onHead("old111"), threadId: "PRRT_1", link: null }),
+          row("pr-comment", "comment-old", "P1", {
+            ...onHead("old111"),
+            author: "reviewer",
+            link: "https://github.com/beep/beep/pull/900#issuecomment-1",
+          }),
+          row("base-drift", "drift-old", "P2", { ...onHead("old111"), base: "origin/main" }),
+          row("base-conflict", "conflict-old", "P0", conflict("old111")),
+          row("base-conflict", "conflict-new", "P0", conflict("new222")),
+        ];
+        const encodedRows = yield* Effect.forEach(rows, (value) => encodeUnknown(value));
+        yield* fs.writeFileString(path.join(inbox, "failures.ndjson"), `${A.join(encodedRows, "\n")}\n`);
+        yield* fs.writeFileString(
+          path.join(inbox, "dispatch.json"),
+          yield* encodeUnknown({
+            schemaVersion: "yeet-dispatch/v1",
+            capsuleIds: ["conflict-new"],
+            headSha: "new222",
+            prNumber: 900,
+            sessionStartedAt: "2026-09-25T00:00:00Z",
+            updatedAt: "2026-09-25T00:00:00Z",
+          })
+        );
+
+        const started = yield* runHookUntil(
+          root,
+          "claude",
+          { cwd: root, hook_event_name: "SessionStart", session_id: "exempt-session" },
+          (result) => result.stdout !== ""
+        );
+        expect(started.exitCode).toBe(0);
+        expect(started.stdout).toContain("[thread-old]");
+        // A comment row renders its PR and comment URL through the hook's generic
+        // label, with no comment-specific branch in the hook.
+        expect(started.stdout).toContain(
+          "P1 pr-comment [comment-old] PR #900 https://github.com/beep/beep/pull/900#issuecomment-1"
+        );
+        expect(started.stdout).toContain("P0 origin/main [conflict-new] PR #900 https://github.com/beep/beep/pull/900");
+        expect(started.stdout).not.toContain("drift-old");
+        expect(started.stdout).not.toContain("conflict-old");
+
+        const blocked = yield* decodeObject(
+          (yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop", session_id: "exempt-session" })).stdout
+        );
+        expect(blocked).toMatchObject({ decision: "block", reason: expect.stringContaining("conflict-new") });
+
+        // The monitor's cleared receipt acknowledges the row like any closing move.
+        const receipt = YeetAckReceipt.make({
+          ackedAt: "2026-09-25T00:05:00Z",
+          id: "conflict-new",
+          resolution: YeetAckClearedResolution.make({
+            headSha: "new222",
+            mergeable: "MERGEABLE",
+            mergeStateStatus: "CLEAN",
+            jobId: O.none(),
+            unit: O.none(),
+          }),
+        });
+        yield* fs.writeFileString(
+          path.join(inbox, "acks", "conflict-new"),
+          `${yield* YeetAckReceiptJson.encode(receipt)}\n`
+        );
+        const stopped = yield* decodeObject(
+          (yield* runHook(root, "claude", { cwd: root, hook_event_name: "Stop", session_id: "exempt-session" })).stdout
+        );
+        expect(stopped).toStrictEqual({});
+      }).pipe(Effect.scoped, provideTestLayer),
+    15_000
+  );
+});

@@ -53,7 +53,7 @@ import {
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Settle");
@@ -617,6 +617,45 @@ export const yeetBaseConflictFor: {
   (mergeable: O.Option<string>, mergeStateStatus: O.Option<string>): boolean =>
     O.exists(mergeable, (value) => Str.toUpperCase(value) === "CONFLICTING") ||
     O.exists(mergeStateStatus, (value) => Str.toUpperCase(value) === "DIRTY")
+);
+
+/**
+ * Whether the pull request view positively says the head merges into its base.
+ *
+ * **Details**
+ *
+ * The complement of {@link yeetBaseConflictFor} is not enough: GitHub reports
+ * `mergeable: UNKNOWN` while it recomputes after the base moves, and a missing
+ * field is not evidence either. The merge loop clears a `base-conflict` row on
+ * the same head only on `mergeable: MERGEABLE` with no conflict signal in
+ * either field, so a transient read cannot acknowledge a conflict that is
+ * still there. The comparison is case-insensitive.
+ *
+ * **Example** (Unknown is not mergeable)
+ *
+ * ```ts
+ * import { yeetBaseMergeableFor } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(yeetBaseMergeableFor(O.some("MERGEABLE"), O.some("CLEAN"))) // true
+ * console.log(yeetBaseMergeableFor(O.some("UNKNOWN"), O.some("UNKNOWN"))) // false
+ * console.log(yeetBaseMergeableFor(O.some("MERGEABLE"), O.some("DIRTY"))) // false
+ * ```
+ *
+ * @param mergeable - The view's `mergeable` field, when reported.
+ * @param mergeStateStatus - The view's `mergeStateStatus` field, when reported.
+ * @returns Whether the head is observed mergeable with no conflict signal.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetBaseMergeableFor: {
+  (mergeStateStatus: O.Option<string>): (mergeable: O.Option<string>) => boolean;
+  (mergeable: O.Option<string>, mergeStateStatus: O.Option<string>): boolean;
+} = dual(
+  2,
+  (mergeable: O.Option<string>, mergeStateStatus: O.Option<string>): boolean =>
+    O.exists(mergeable, (value) => Str.toUpperCase(value) === "MERGEABLE") &&
+    !yeetBaseConflictFor(mergeable, mergeStateStatus)
 );
 
 /**

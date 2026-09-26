@@ -22,7 +22,7 @@ import { WORKTREES_ROOT_SUFFIX } from "../../commands/Worktree/Worktree.constant
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import { TmpfsReapCandidate, TmpfsReapClass, TmpfsReapReport } from "./TmpfsReap.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/TmpfsReap");

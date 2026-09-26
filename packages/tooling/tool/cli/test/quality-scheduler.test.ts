@@ -83,7 +83,6 @@ import {
   Deferred,
   Duration,
   Effect,
-  Encoding,
   Fiber,
   FileSystem,
   Layer,
@@ -93,16 +92,18 @@ import {
   Ref,
   Schedule,
 } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import { Command } from "effect/cli";
+import * as Base64Url from "effect/encoding/Base64Url";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { TestClock } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
 
 const decodeUUID = S.decodeEffect(UUID);
 const encodeUnknownAdmissionJournalEventJson = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
@@ -137,14 +138,14 @@ const JOURNALED_ATTEMPT_ID = UUID.make("550e8400-e29b-41d4-a716-446655440020");
 const reapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedToken));
-  return `${lockPath}.reap-${Encoding.encodeHex(digest)}`;
+  return `${lockPath}.reap-${Hex.encode(digest)}`;
 });
 const reapAdopterPath = (
   claimPath: string,
   generation: Pick<AdmissionJournalLockGeneration, "ownerToken" | "pid" | "procStart">,
   claimedAtMillis: number
 ): string =>
-  `${claimPath}.adopt-${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}.${claimedAtMillis}`;
+  `${claimPath}.adopt-${generation.pid}.${Base64Url.encode(generation.procStart)}.${Base64Url.encode(generation.ownerToken)}.${claimedAtMillis}`;
 
 describe("admission escalation", () => {
   it("maps each wait threshold to its escalation level", () => {
@@ -2352,7 +2353,7 @@ describe("quality-scheduler", () => {
             const legacyLockPath = path.join(tempRoot.root, "legacy-live-adopter.lock");
             const legacyToken = `${DEAD_PID}:legacy-live-adopter-generation`;
             const legacyClaimPath = yield* reapClaimPath(legacyLockPath, legacyToken);
-            const legacyAdopterPath = `${legacyClaimPath}.adopt-${process.pid}.${Encoding.encodeBase64Url(procStart)}.${Encoding.encodeBase64Url(`${process.pid}:legacy-live-adopter`)}`;
+            const legacyAdopterPath = `${legacyClaimPath}.adopt-${process.pid}.${Base64Url.encode(procStart)}.${Base64Url.encode(`${process.pid}:legacy-live-adopter`)}`;
             yield* fs.writeFileString(legacyLockPath, legacyToken);
             yield* fs.link(legacyLockPath, legacyAdopterPath);
             expect(yield* acquireJournalFileLock(legacyLockPath, `${process.pid}:contender-legacy`, 1)).toBe(false);
@@ -3051,11 +3052,11 @@ describe("quality-scheduler", () => {
             );
             const reusedPid = path.join(
               tempRoot.leases,
-              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Encoding.encodeHex("proc:1")}-${yield* crypto.randomUUIDv4}`
+              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Hex.encode("proc:1")}-${yield* crypto.randomUUIDv4}`
             );
             const current = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Encoding.encodeHex(ownIdentity)}-${yield* crypto.randomUUIDv4}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Hex.encode(ownIdentity)}-${yield* crypto.randomUUIDv4}`
             );
             yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
               fs.writeFileString(file, "")
@@ -4572,59 +4573,62 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("enriches active lease scopes with live memory and task telemetry", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(
-          gibRef,
-          (tempRoot) =>
-            Effect.gen(function* () {
-              const fs = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
-              yield* fs.makeDirectory(binDirectory, { recursive: true });
-              yield* writeExecutable(
-                path.join(binDirectory, "systemctl"),
-                "#!/bin/sh\nprintf 'MemoryPeak=16384\\nTasksCurrent=7\\n'\n"
-              );
-              yield* writeFakeLease(tempRoot, {
-                weightTokens: 10,
-                runScope: RunScopeRecord.make({
-                  unitName: "agent-run-telemetry.scope",
-                  support: "active",
-                  attachedPid: process.pid,
-                  attachedAt: "2026-08-29T00:00:00.000Z",
-                }),
-              });
+  // Queue polling and subprocess telemetry observe the live filesystem and clock.
+  it.effect("enriches active lease scopes with live memory and task telemetry", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(
+        gibRef,
+        (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(
+              path.join(binDirectory, "systemctl"),
+              "#!/bin/sh\nprintf 'MemoryPeak=16384\\nTasksCurrent=7\\n'\n"
+            );
+            yield* writeFakeLease(tempRoot, {
+              weightTokens: 10,
+              runScope: RunScopeRecord.make({
+                unitName: "agent-run-telemetry.scope",
+                support: "active",
+                attachedPid: process.pid,
+                attachedAt: "2026-08-29T00:00:00.000Z",
+              }),
+            });
 
-              const queued = yield* Effect.forkChild(
-                withQualityAdmission(
-                  request({ originKey: "origin-telemetry-contender" }),
-                  noAdmissionOriginGate,
-                  Effect.void,
-                  fastConfig
-                )
-              );
-              yield* Effect.sleep("100 millis");
+            const queued = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-telemetry-contender" }),
+                noAdmissionOriginGate,
+                Effect.void,
+                fastConfig
+              )
+            );
+            yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
 
-              const snapshot = yield* withPrependedPath(binDirectory, admissionStatus());
-              expect(snapshot.leases[0]?.runScope).toMatchObject({
-                memoryPeakBytes: 16_384,
-                tasksCurrent: 7,
-              });
-              expect(snapshot.tickets).toHaveLength(1);
-              yield* Fiber.interrupt(queued);
-              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
-              const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
-              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
-              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("tasksCurrent");
-            }),
-          128,
-          true
-        );
-      })
-    ));
+            const snapshot = yield* withPrependedPath(binDirectory, admissionStatus());
+            expect(snapshot.leases[0]?.runScope).toMatchObject({
+              memoryPeakBytes: 16_384,
+              tasksCurrent: 7,
+            });
+            expect(snapshot.tickets).toHaveLength(1);
+            yield* Fiber.interrupt(queued);
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+            const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
+            expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
+            expect(unavailable.leases[0]?.runScope).not.toHaveProperty("tasksCurrent");
+          }),
+        128,
+        true
+      );
+    }).pipe(TestClock.withLive)
+  );
 
   // it.live: the reaper reads the real clock to age heartbeats, as every sibling test here does.
   it.live.each(["agent-run-deadbeef.scope", "beep-proof-deadbeef.service"])(

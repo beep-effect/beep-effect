@@ -23,14 +23,14 @@ import { decodeJsonString } from "@beep/schema/Json";
 import { A, Str } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const decodeUnknownPodCreateInput = S.decodeUnknownEffect(PodCreateInput);
 

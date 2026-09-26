@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 
-import { Toolkit } from "effect/unstable/ai";
+import { Toolkit } from "effect/ai";
 import { Analyze } from "./Analyze.ts";
 import { BagOfWords } from "./BagOfWords.ts";
 import { BowCosineSimilarity } from "./BowCosineSimilarity.ts";

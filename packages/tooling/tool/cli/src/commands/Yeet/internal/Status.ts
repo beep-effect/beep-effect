@@ -29,6 +29,7 @@ import {
 } from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
+import { YEET_STATUS_CHECK_FIELDS } from "./Planner.ts";
 import {
   deriveYeetReviewThreadState,
   summarizeYeetReviewThreadStates,
@@ -37,7 +38,6 @@ import {
   yeetReviewCommentAuthorKind,
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
-import { YeetSettleCheck } from "./Settle.ts";
 import {
   mergeReadyCriterionHolds,
   YeetMergeReady,
@@ -46,9 +46,15 @@ import {
   YeetMergeReadyFromEncoded,
   YeetVerdict,
 } from "./Verdict.ts";
-import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
+import {
+  classifyYeetCheckOutcome,
+  YeetCheckSignal,
+  YeetWatchCheck,
+  yeetCheckRecordInstant,
+  yeetCheckRecordText,
+} from "./WatchStream.ts";
 import type { Crypto } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
 import type { GateStalenessVerdict } from "./GateStaleness.ts";
@@ -246,7 +252,10 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     available: S.Boolean,
     checked: S.Boolean,
     detail: S.String,
-    checks: YeetSettleCheck.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<YeetSettleCheck>())),
+    // Each check's whole record (signal, link, workflow, GitHub's instants), so
+    // a row the merge loop writes carries the same capsule a --watch row does.
+    // The key default keeps artifacts written before checks existed decoding.
+    checks: YeetWatchCheck.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<YeetWatchCheck>())),
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
@@ -491,14 +500,25 @@ export class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatu
 /**
  * GitHub check row used to derive required and optional status counts.
  *
+ * **Details**
+ *
+ * `link`, `workflow`, `startedAt`, and `completedAt` are optional keys that may
+ * also arrive `null`: external status contexts carry no workflow and may carry
+ * no instants, and gh reports a missing instant as Go's zero time, which
+ * {@link yeetCheckRecordInstant} reads as absent.
+ *
  * @category models
  * @since 0.0.0
  */
 export class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
   {
     bucket: S.String,
+    completedAt: S.NullOr(S.String).pipe(S.optionalKey),
+    link: S.NullOr(S.String).pipe(S.optionalKey),
     name: S.String,
+    startedAt: S.NullOr(S.String).pipe(S.optionalKey),
     state: S.String,
+    workflow: S.NullOr(S.String).pipe(S.optionalKey),
   },
   $I.annote("GhStatusCheck", {
     description: "GitHub PR check payload used by yeet status remote summaries.",
@@ -513,6 +533,22 @@ const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Arra
 const reviewThreadsQuery =
   "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{author{login} reviewThreads(first:100,after:$cursor){nodes{id isResolved isOutdated path line resolvedBy{login} comments(first:1){nodes{author{__typename login} body databaseId}} latest:comments(last:1){nodes{author{__typename login} body databaseId}}} pageInfo{hasNextPage endCursor}}}}}";
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
+
+// The same record the --watch collector builds (WatchMode), plus GitHub's
+// instants: one classifier and one normalization for both loops' capsules.
+const statusWatchCheck = (row: GhStatusCheck, required: boolean): YeetWatchCheck => {
+  const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
+  return YeetWatchCheck.make({
+    name: row.name,
+    outcome: classifyYeetCheckOutcome(signal),
+    required,
+    link: O.getOrNull(yeetCheckRecordText(row.link)),
+    signal,
+    workflow: O.getOrNull(yeetCheckRecordText(row.workflow)),
+    startedAt: yeetCheckRecordInstant(row.startedAt),
+    completedAt: yeetCheckRecordInstant(row.completedAt),
+  });
+};
 
 const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
   A.filter(Str.isNonEmpty),
@@ -865,7 +901,7 @@ export const collectRemoteChecks: {
     YeetCommandError,
     Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   > {
-    const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
+    const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", YEET_STATUS_CHECK_FIELDS];
     const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
       Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
     );
@@ -1312,14 +1348,13 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
     checks: A.map(O.getOrElse(checks, A.empty), (row) =>
-      YeetSettleCheck.make({
-        name: row.name,
-        outcome: classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state })),
-        required: O.exists(
+      statusWatchCheck(
+        row,
+        O.exists(
           requiredChecks,
           A.some((required) => required.name === row.name)
-        ),
-      })
+        )
+      )
     ),
     isDraft: view.isDraft,
     labels: A.map(view.labels, (label) => label.name),

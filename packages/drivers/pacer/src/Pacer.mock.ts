@@ -16,10 +16,10 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { O } from "@beep/utils";
 import { Effect, Layer, Number as N, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { CsoLogoutRequest } from "./CsoAuth.models.ts";
 import {
   authInvalidBody,

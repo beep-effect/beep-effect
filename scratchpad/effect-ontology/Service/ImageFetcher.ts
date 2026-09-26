@@ -22,7 +22,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
+import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
 import { Milliseconds } from "../Domain/Error/Base.ts";
 import type { ImageError } from "../Domain/Error/Image.ts";
 import {

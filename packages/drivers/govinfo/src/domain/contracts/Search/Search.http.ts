@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { HttpApiEndpoint, HttpApiSchema, OpenApi } from "effect/unstable/httpapi";
+import { HttpApiEndpoint, HttpApiSchema, OpenApi } from "effect/http-api";
 import * as Contract from "./Search.contract.ts";
 
 /**
@@ -15,7 +15,7 @@ import * as Contract from "./Search.contract.ts";
  *
  * ```ts
  * import { Http } from "@beep/govinfo/domain/contracts/Search/Search.http"
- * import { HttpApiEndpoint } from "effect/unstable/httpapi"
+ * import { HttpApiEndpoint } from "effect/http-api"
  *
  * const isEndpoint = HttpApiEndpoint.isHttpApiEndpoint(Http)
  *

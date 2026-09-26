@@ -11,7 +11,7 @@
  */
 
 import { A, O, R, Str } from "@beep/utils";
-import { Encoding } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 
 const CRLF = "\r\n";
 const base64LineLength = 76;
@@ -392,7 +392,7 @@ const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
         `Content-Type: ${body.contentType}`,
         "Content-Transfer-Encoding: base64",
         "",
-        foldBase64Lines(Encoding.encodeBase64(body.content)),
+        foldBase64Lines(Base64.encode(body.content)),
       ]
     : [`Content-Type: ${body.contentType}`, "Content-Transfer-Encoding: 8bit", "", body.content];
 
@@ -461,7 +461,7 @@ export const assembleEml = (input: EmlAssemblyInput): string => {
       `Content-Disposition: attachment; filename="${fileName}"`,
       "Content-Transfer-Encoding: base64",
       "",
-      foldBase64Lines(Encoding.encodeBase64(attachment.bytes))
+      foldBase64Lines(Base64.encode(attachment.bytes))
     );
   }
 

@@ -6,7 +6,7 @@
  *
  * @since 0.0.0
  */
-import { VariantSchema } from "effect/unstable/schema";
+import { VariantSchema } from "effect/schema";
 import type { Top } from "effect/Schema";
 import type { Apply, Lambda } from "effect/Struct";
 

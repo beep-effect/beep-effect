@@ -15,9 +15,9 @@ import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import { UserId } from "@beep/shared-domain/identity/Shared";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import { constVoid } from "effect/Function";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { renderToStaticMarkup } from "react-dom/server";
 
 const digest = "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca";

@@ -27,7 +27,6 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   Crypto,
   Effect,
-  Encoding,
   FileSystem,
   flow,
   Layer,
@@ -43,6 +42,7 @@ import {
 } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -4145,7 +4145,7 @@ const program = Effect.gen(function* () {
     path.join(dataDir, "iana/language-subtag-registry.txt")
   );
   const crypto = yield* Crypto.Crypto;
-  const registryHash = Encoding.encodeHex(
+  const registryHash = Hex.encode(
     yield* crypto.digest("SHA-256", new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
       Effect.mapError((cause) =>
         HtmlGenerationError.make({

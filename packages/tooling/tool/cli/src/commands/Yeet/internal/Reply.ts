@@ -86,7 +86,7 @@ import {
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { GhRepoView } from "./closeout/Gh.schemas.ts";

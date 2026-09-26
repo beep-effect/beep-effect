@@ -24,8 +24,8 @@ import {
 import { UsptoSourceAuthRegistration } from "./UsptoSourceAuth.ts";
 import { UsptoGetDocumentsTool, UsptoSearchApplicationsTool, UsptoToolError, UsptoToolkit } from "./UsptoTools.ts";
 import type { UsptoError } from "@beep/uspto";
+import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
-import type * as Tool from "effect/unstable/ai/Tool";
 import type { UsptoGetDocumentsParams } from "./UsptoTools.ts";
 
 const toUsptoToolError =
@@ -86,7 +86,7 @@ const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFe
  * import { UsptoToolkitHandlersLive } from "@beep/uspto-mcp/UsptoHandlers"
  * import { Uspto, UsptoConfigInput } from "@beep/uspto"
  * import { Layer, Redacted } from "effect"
- * import { FetchHttpClient } from "effect/unstable/http"
+ * import { FetchHttpClient } from "effect/http"
  *
  * const layer = UsptoToolkitHandlersLive.pipe(
  *   Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") }))),

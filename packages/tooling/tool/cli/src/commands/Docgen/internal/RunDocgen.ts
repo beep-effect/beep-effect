@@ -12,7 +12,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { DocgenGenerationResult, isDocgenWorkspacePackage } from "../Docgen.schemas.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
+import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
 const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;

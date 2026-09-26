@@ -14,11 +14,11 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeClaimEvidenceReview = S.encodeEffect(ClaimEvidenceReview);
 const decodeUnknownClaimEvidenceReview = S.decodeUnknownEffect(ClaimEvidenceReview);

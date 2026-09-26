@@ -39,7 +39,7 @@ import {
   valuesForTag,
 } from "./QualityArtifactSupport.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { SourceFile } from "ts-morph";
 import type { JSDocSectionName } from "../../../internal/jsdoc/JSDocSections.ts";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";

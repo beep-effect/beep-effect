@@ -14,10 +14,10 @@ import { NonNegativeInt } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Duration, Effect, Fiber, Layer, Stream } from "effect";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as Response from "effect/unstable/ai/Response";
 
 const TestUsage = Response.Usage.make({
   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },

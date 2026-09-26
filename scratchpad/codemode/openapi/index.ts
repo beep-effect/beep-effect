@@ -8,9 +8,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { A, O, pipe, R, Str, Struct } from "@beep/utils";
 import { Effect, HashSet, JsonSchema as JsonSchemaDocument, Result, SchemaRepresentation } from "effect";
 import * as S from "effect/Schema";
-import * as Tool from "effect/unstable/ai/Tool";
-import * as Toolkit from "effect/unstable/ai/Toolkit";
-import { HttpClient } from "effect/unstable/http";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
+import { HttpClient } from "effect/http";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { invoke } from "./OpenAPI.runtime.ts";
 import {

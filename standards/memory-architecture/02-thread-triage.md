@@ -28,7 +28,7 @@ Definitions:
 `archive/pre-repo-architecture-automation-2026-04-27`
 
 **Status:** Substantially built. Tauri v2 desktop app, Effect runtime on
-`effect/unstable/cluster`, ts-morph deterministic indexing, 15+ query classes,
+`effect/cluster`, ts-morph deterministic indexing, 15+ query classes,
 durable workflows with interrupt/resume, grounded retrieval with citations.
 Remaining P0 gaps: RunProjector extraction seams, projection bootstrap/cursor
 ownership, query-preparation acceptance surface.

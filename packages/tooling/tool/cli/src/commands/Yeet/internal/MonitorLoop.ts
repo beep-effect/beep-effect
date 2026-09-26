@@ -52,13 +52,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Console, DateTime, Duration, Effect, flow, HashSet, Match, pipe } from "effect";
+import { UUID } from "@beep/schema/String";
+import { Console, DateTime, Duration, Effect, flow, HashSet, Match, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import {
   detectGithubJobShapeClass,
   GithubJobRecord,
@@ -70,25 +72,62 @@ import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../intern
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { writeYeetAckReceipt, YeetAckFixResolution, YeetAckReceipt } from "./Ack.ts";
+import {
+  readYeetAckState,
+  writeYeetAckReceipt,
+  YeetAckClearedResolution,
+  YeetAckFixResolution,
+  YeetAckReceipt,
+} from "./Ack.ts";
 import { runYeetAutomaticCloseout } from "./Closeout.ts";
+import { convergeYeetInbox, pollYeetPrCommentRows, YeetConvergeObservation, YeetPrCommentWindow } from "./Converge.ts";
 import {
   appendYeetInboxRowOnce,
+  YeetBaseConflictCapsule,
   YeetPrMergeReadyCapsule,
   YeetPrMergeReadyRow,
+  yeetBaseConflictRowId,
+  yeetInboxHoldsRow,
   yeetPrMergeReadyRowId,
 } from "./Inbox.ts";
-import { replayYeetMonitorComments } from "./MonitorComments.ts";
+import {
+  loadYeetInboxRowIds,
+  loadYeetPrWave,
+  loadYeetPushToAckTimeline,
+  renderYeetPrWaveLine,
+  YeetPrWaveReturn,
+} from "./InboxView.ts";
+import {
+  readYeetMonitorActingLogin,
+  replayYeetMonitorComments,
+  YeetMonitorCommentConsumer,
+} from "./MonitorComments.ts";
 import {
   renderYeetHeadTimeline,
+  renderYeetPushToAckTimeline,
   YEET_MONITOR_POLL_ERROR_BUDGET,
   YeetHeadTimeline,
+  YeetMonitorAttachment,
   YeetMonitorTerminalState,
   YeetUntilMergedPolicy,
   yeetHeadTimelineStamp,
+  yeetHeadTimelineStampRed,
+  yeetMonitorLoopTerminals,
+  yeetMonitorPolicyConverges,
   yeetMonitorPolicyTerminals,
   yeetPushToReadyMillis,
 } from "./MonitorPolicy.ts";
+import { PROOF_JOB_ENV } from "./ProofJob.ts";
+import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
+import {
+  dispatchYeetBaseConflict,
+  stampYeetWaveRedSet,
+  supersedeYeetDispatchState,
+  yeetBaseConflictGeneration,
+  yeetBaseConflictWalk,
+  yeetRedSetKey,
+  yeetWaveRedSetKey,
+} from "./Remediation.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -97,9 +136,11 @@ import {
   renderYeetSettleDetail,
   YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
+  YeetSettleCheck,
   YeetSettleInput,
   YeetSettleVerdict,
   yeetBaseConflictFor,
+  yeetBaseMergeableFor,
   yeetGatedFamiliesFor,
   yeetSettleCensusRequires,
   yeetSettleClockReset,
@@ -118,11 +159,15 @@ import {
   YeetMergeReadyCriteria,
   YeetMergeReadyCriterion,
 } from "./Verdict.ts";
+import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetPrCommentRow } from "./Inbox.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
+import type { YeetBaseConflictWalk } from "./Remediation.ts";
+import type { YeetStatusReviewThread } from "./Status.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 
@@ -975,9 +1020,36 @@ export const applyYeetMonitorJobDecision = Effect.fn("YeetMonitorLoop.applyDecis
  * operator-authorized wrapper can substitute a plan-only run.
  */
 interface YeetMonitorUntilMergedOptions {
+  // Whether the loop runs attached or inside a detached proof job; absent is
+  // detached. The porcelain sets it from `BEEP_YEET_JOB_ID`. An attached
+  // until-ready loop ends with `wave` on the first new wake-set inbox row on its
+  // pull request, or on a changed required red set on the same head; a detached
+  // one keeps polling and `yeet job wait` carries the wave. `waveRerunCommand`
+  // is the re-run the attached gate line names.
+  readonly attachment?: YeetMonitorAttachment | undefined;
+  // Under until-ready, binds the pull request to the detached job this loop
+  // runs in, once per head right after the wave record is pinned to it. The
+  // seam lets a test observe the order without a job record.
+  readonly bindPullRequest?:
+    | ((
+        context: RepoRunContext,
+        prNumber: number
+      ) => Effect.Effect<
+        void,
+        never,
+        Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+      >)
+    | undefined;
   readonly capture?: typeof runRepoCommandCapture | undefined;
   readonly closeout?: typeof runYeetAutomaticCloseout | undefined;
   readonly collectStatus?: typeof collectYeetStatus | undefined;
+  // Under until-ready every poll turns new pull request comments into inbox rows
+  // rather than replaying them (pr-event-awareness D13/D21/D32). `commentsSince`
+  // starts the comment window: the monitor job's submit time, or the loop's
+  // start when absent (an attached run). The `commentRows` seam lets a test
+  // drive the consumer without a GitHub read.
+  readonly commentRows?: typeof pollYeetPrCommentRows | undefined;
+  readonly commentsSince?: string | undefined;
   readonly now?: Effect.Effect<DateTime.Utc> | undefined;
   readonly onMerged?:
     | ((
@@ -990,13 +1062,26 @@ interface YeetMonitorUntilMergedOptions {
     | undefined;
   readonly policy?: YeetMonitorLoopPolicy | undefined;
   readonly pollInterval?: Duration.Duration | undefined;
-  // Runs once, on the first cycle only: the durable comment stream is replayed
-  // where the session starts, not on every poll, because after that this loop
-  // is attached and nothing can be missed. The seam exists so a test can prove
-  // the call without a GitHub read.
+  // Runs once, on the first cycle only, under until-merged: the durable comment
+  // stream is replayed from that mode's own position where the session starts,
+  // not on every poll, because after that this loop is attached and nothing can
+  // be missed. The seam exists so a test can prove the call without a GitHub read.
   readonly replayComments?: typeof replayYeetMonitorComments | undefined;
   readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
+  readonly waveRerunCommand?: string | undefined;
 }
+
+// The attached re-run when the porcelain names none: the canonical attached
+// `--until-ready` recipe.
+const defaultWaveRerunCommand = "bun run beep yeet monitor --until-ready";
+
+// Inside a detached job, the job record learns the pull request only once the
+// wave record is pinned to the head this loop observes. Binding earlier let
+// `yeet job wait` read the previous head's rows, still live against the stale
+// wave record, as a new wave the moment the job started. Outside a job this is
+// a no-op, and a failed bind is reported, never fatal.
+const bindMonitorJobPullRequest = (context: RepoRunContext, prNumber: number) =>
+  updateProofJobBookkeeping(context.repoRoot, (launcher, jobId) => launcher.bindPullRequest(jobId, prNumber));
 
 const renderMergeReadyGateDetail = (mergeReady: YeetMergeReady): string =>
   O.match(mergeReady.failing, {
@@ -1031,6 +1116,32 @@ class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
     // Every check name ever reported for this head: an absent one later is pending, not missing.
     registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
     announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // The head's open P0 base-conflict row (until-ready only): the id of the
+    // latest conflict generation, written once when that conflict is first read
+    // and reset when a `cleared` ack closes it, so a conflict that returns on
+    // the same head writes the next generation.
+    conflictRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // Whether this loop already knows the head's conflict row, from writing it or
+    // from an inbox lookup, so a restarted loop recalls it once, not every poll.
+    conflictRecalled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    // Whether this loop already said why a conflict on this head writes no row
+    // (its generation carries another ack kind than `cleared`): once per head.
+    conflictAckNoticed: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    // The conflict generations on this head whose ack receipt does not decode
+    // and that this loop already named: the walk passes them silently on every
+    // conflicted poll, so each is said once per head.
+    conflictCorruptNoticed: S.HashSet(S.Int).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<number>())),
+    // Whether the wave record has been pinned to this head (until-ready only);
+    // a new head starts unpinned, so the first converging poll supersedes.
+    wavePinned: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    // The red set the last conclusive triage classified on this head; the same
+    // set again skips the failed-job and log reads (the loop polls through reds).
+    triagedReds: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // The required red set an attached until-ready loop takes as already known
+    // on this head, set when the head is pinned: the key an earlier monitor
+    // stamped for it, or else this loop's first observation. A red set that
+    // names a red beyond it is a new wave even if its row id was already there.
+    waveRedSet: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("MonitorHeadState", {
@@ -1108,6 +1219,36 @@ const bindRequiredCensus = (snapshot: YeetStatusSnapshot, verdict: YeetSettleVer
   });
 };
 
+// The one base-conflict reading per poll: the settle wait names it, and under
+// until-ready the same reading writes and clears the head's conflict row.
+const monitorBaseConflict = (snapshot: YeetStatusSnapshot): boolean =>
+  yeetBaseConflictFor(
+    O.fromUndefinedOr(snapshot.remote.mergeable),
+    O.fromUndefinedOr(snapshot.remote.mergeStateStatus)
+  );
+
+// The settle rule reads only name, outcome, and required; the status snapshot
+// carries each check's whole record for the inbox capsule.
+const settleChecksOf = (snapshot: YeetStatusSnapshot): ReadonlyArray<YeetSettleCheck> =>
+  A.map(snapshot.remote.checks, (check) =>
+    YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
+  );
+
+// One head's push → row → ack line (pr-event-awareness W1), printed when the
+// loop leaves a head it never announced ready and beside the final gate line.
+const reportMonitorPushToAck = Effect.fn("YeetMonitorLoop.reportPushToAck")(function* (
+  context: RepoRunContext,
+  timeline: YeetHeadTimeline,
+  snapshot: YeetStatusSnapshot
+) {
+  const joined = yield* loadYeetPushToAckTimeline(
+    context.repoRoot,
+    timeline,
+    O.fromUndefinedOr(snapshot.remote.number)
+  );
+  yield* Console.log(`[yeet] ${renderYeetPushToAckTimeline(joined)}`);
+});
+
 class MonitorObservation extends S.Class<MonitorObservation>($I`MonitorObservation`)(
   {
     snapshot: YeetStatusSnapshot,
@@ -1127,6 +1268,10 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
   const headSha = snapshot.remote.headSha;
   if (O.isNone(headSha)) return observation;
   if (O.exists(poll.head, (head) => head.timeline.headSha === headSha.value)) return observation;
+  const leaving = O.filter(poll.head, (head) => O.isNone(head.announcedRow));
+  if (O.isSome(leaving)) {
+    yield* reportMonitorPushToAck(context, leaving.value.timeline, snapshot);
+  }
   const oldRow = O.flatMap(poll.head, (head) => head.announcedRow);
   if (O.isSome(oldRow)) {
     yield* writeYeetAckReceipt(
@@ -1155,6 +1300,347 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
   return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });
 });
 
+const statusWatchThreads = (
+  threads: O.Option<ReadonlyArray<YeetStatusReviewThread>>,
+  state: YeetWatchThread["state"]
+): ReadonlyArray<YeetWatchThread> =>
+  pipe(
+    O.getOrElse(threads, A.empty<YeetStatusReviewThread>),
+    A.filter((thread) => Str.isNonEmpty(thread.threadId)),
+    A.map((thread) => YeetWatchThread.make({ id: thread.threadId, state }))
+  );
+
+// The status snapshot narrowed to what convergence reads. The status gate
+// already partitions threads with the watch's classifier, so its unresolved
+// and follow-up lists are exactly the watch's outstanding states.
+const monitorConvergeObservation = (snapshot: YeetStatusSnapshot): O.Option<YeetConvergeObservation> =>
+  O.map(
+    O.all({
+      headSha: O.filter(snapshot.remote.headSha, Str.isNonEmpty),
+      prNumber: O.fromUndefinedOr(snapshot.remote.number),
+    }),
+    ({ headSha, prNumber }) =>
+      YeetConvergeObservation.make({
+        checks: snapshot.remote.checks,
+        headSha,
+        mergeStateStatus: snapshot.remote.mergeStateStatus ?? "UNKNOWN",
+        prNumber,
+        threads: A.appendAll(
+          statusWatchThreads(snapshot.remote.unresolvedThreads, "unresolved"),
+          statusWatchThreads(snapshot.remote.followUpThreads, "resolved-follow-up")
+        ),
+      })
+  );
+
+// The detached monitor job that writes a `cleared` receipt; both are absent
+// when the loop runs attached.
+const monitorJobAttribution = Effect.fn("YeetMonitorLoop.jobAttribution")(function* () {
+  const jobId = O.flatMap(yield* configStringOption(PROOF_JOB_ENV.jobId), S.decodeUnknownOption(UUID));
+  const unit = O.filter(yield* configStringOption(PROOF_JOB_ENV.jobUnit), Str.isNonEmpty);
+  return { jobId, unit };
+});
+
+// The row id of the head's latest conflict generation; `None` when the
+// generation walk fails.
+const monitorConflictRowId = (repoRoot: string, observed: YeetConvergeObservation) =>
+  yeetBaseConflictGeneration(repoRoot, observed).pipe(
+    Effect.flatMap((generation) =>
+      yeetBaseConflictRowId({ generation, headSha: observed.headSha, prNumber: observed.prNumber })
+    ),
+    Effect.option
+  );
+
+// A restarted monitor has no memory of the head's conflict row. It recalls the
+// latest generation's row when the inbox still holds it unacked: on the head's
+// first positively mergeable poll, so a conflict that cleared while no monitor
+// watched it can still be cleared, and on a conflicted poll whose dispatch
+// found that row already written. Every earlier generation is already
+// consumed (acked `cleared`, or with a receipt that does not decode), so only
+// the latest is ever recalled, and only it is cleared. The first poll after a
+// restart often reads UNKNOWN while GitHub recomputes, so the recall waits for
+// a conclusive read instead of the first poll.
+const recallMonitorConflictRow = Effect.fn("YeetMonitorLoop.recallConflictRow")(function* (
+  repoRoot: string,
+  observed: YeetConvergeObservation
+) {
+  const id = yield* monitorConflictRowId(repoRoot, observed);
+  if (O.isNone(id) || !(yield* yeetInboxHoldsRow(repoRoot, id.value))) return O.none<string>();
+  const ack = yield* readYeetAckState(repoRoot, id.value);
+  return ack.acked ? O.none<string>() : id;
+});
+
+// A conflicted poll that wrote no row and recalled none: when the latest
+// generation's row carries a decodable ack receipt of another kind than
+// `cleared` (an operator acked it wontfix, waived it, ...), the append skips
+// that id, the recall ignores it, and only a `cleared` receipt moves the head
+// to the next generation, so the conflict raises nothing until a push. Say so
+// once per head; the caller keeps the flag. Returns whether the line printed.
+const noticeMonitorConflictAck = Effect.fn("YeetMonitorLoop.noticeConflictAck")(function* (
+  repoRoot: string,
+  observed: YeetConvergeObservation
+) {
+  const id = yield* monitorConflictRowId(repoRoot, observed);
+  if (O.isNone(id)) return false;
+  const ack = yield* readYeetAckState(repoRoot, id.value);
+  const receipt = O.filter(O.fromNullOr(ack.receipt), (value) => value.resolution.kind !== "cleared");
+  if (O.isNone(receipt)) return false;
+  yield* Console.error(
+    `[yeet] base conflict on head ${Str.slice(0, 7)(observed.headSha)} raises no new row: ${id.value} carries a ${receipt.value.resolution.kind} ack receipt, not cleared, so this head writes no further conflict row; the next push re-arms it`
+  );
+  return true;
+});
+
+// The generation walk counts an undecodable-but-acked receipt as consumed and
+// returns it without printing, because the walk runs from the dispatch, the
+// recall, and the ack notice on every conflicted poll. Name each such receipt
+// once per head and generation; the caller keeps the noticed set.
+const noticeMonitorCorruptReceipts = Effect.fn("YeetMonitorLoop.noticeCorruptReceipts")(function* (
+  observed: YeetConvergeObservation,
+  walk: YeetBaseConflictWalk,
+  noticed: HashSet.HashSet<number>
+) {
+  const fresh = A.filter(walk.corruptReceipts, (receipt) => !HashSet.has(noticed, receipt.generation));
+  yield* Effect.forEach(
+    fresh,
+    (receipt) =>
+      Console.error(
+        `[yeet] base-conflict ack receipt ${receipt.path} does not decode; counting conflict generation ${receipt.generation} on head ${Str.slice(0, 7)(observed.headSha)} as consumed`
+      ),
+    { discard: true }
+  );
+  return A.reduce(fresh, noticed, (acc, receipt) => HashSet.add(acc, receipt.generation));
+});
+
+// The conflict row's same-head clear (pr-event-awareness D17): the head read
+// mergeable again without a push, so the loop acknowledges its own row, the
+// latest conflict generation's (every earlier one already has its receipt),
+// with a `cleared` receipt attributed to the monitor job. That receipt is what
+// moves the head's next conflict to a new generation. A failed write keeps the
+// row open and the next mergeable poll retries.
+const clearMonitorConflictRow = Effect.fn("YeetMonitorLoop.clearConflictRow")(function* (
+  repoRoot: string,
+  id: string,
+  observed: YeetConvergeObservation,
+  snapshot: YeetStatusSnapshot,
+  at: string
+) {
+  const attribution = yield* monitorJobAttribution();
+  const written = yield* writeYeetAckReceipt(
+    repoRoot,
+    YeetAckReceipt.make({
+      id,
+      ackedAt: at,
+      resolution: YeetAckClearedResolution.make({
+        headSha: observed.headSha,
+        mergeable: snapshot.remote.mergeable ?? "MERGEABLE",
+        mergeStateStatus: snapshot.remote.mergeStateStatus ?? null,
+        jobId: attribution.jobId,
+        unit: attribution.unit,
+      }),
+    })
+  ).pipe(
+    Effect.as(true),
+    Effect.catch((error) =>
+      Console.error(`[yeet] failed to clear base-conflict row ${id}: ${error.message}; retrying next poll`).pipe(
+        Effect.as(false)
+      )
+    )
+  );
+  if (written) {
+    yield* Console.log(
+      `[yeet] base conflict cleared on head ${Str.slice(0, 7)(observed.headSha)} without a push; row ${id} acked cleared`
+    );
+  }
+  return written;
+});
+
+// The head's base-conflict row (pr-event-awareness D6/D17), from the same
+// reading the settle wait uses. A conflict writes one P0 row per conflict
+// generation on the head and joins it to the head's wave, so the fix push
+// supersedes it with the rest of the wave. The same head read positively
+// mergeable again clears it, and a conflict that returns on that head after
+// the clear is the next generation: a new row and a new wave. The wait itself
+// stays non-terminal and unbudgeted.
+const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConflict")(function* (
+  context: RepoRunContext,
+  observation: MonitorObservation,
+  observed: YeetConvergeObservation,
+  current: MonitorHeadState
+) {
+  const { snapshot, at } = observation;
+  if (monitorBaseConflict(snapshot)) {
+    if (O.isSome(current.conflictRow)) return current;
+    const walk = yield* yeetBaseConflictWalk(context.repoRoot, observed).pipe(
+      Effect.asSome,
+      Effect.catch((error) =>
+        Console.error(
+          `[yeet] failed to derive the base-conflict generation for head ${Str.slice(0, 7)(observed.headSha)}: ${error.message}; retrying next poll`
+        ).pipe(Effect.as(O.none<YeetBaseConflictWalk>()))
+      )
+    );
+    const corruptNoticed = O.isSome(walk)
+      ? yield* noticeMonitorCorruptReceipts(observed, walk.value, current.conflictCorruptNoticed)
+      : current.conflictCorruptNoticed;
+    const written = O.isSome(walk)
+      ? yield* dispatchYeetBaseConflict(
+          context.repoRoot,
+          YeetBaseConflictCapsule.make({
+            base: context.base,
+            generation: walk.value.generation,
+            headSha: observed.headSha,
+            link: snapshot.remote.url ?? null,
+            mergeable: snapshot.remote.mergeable ?? null,
+            mergeStateStatus: snapshot.remote.mergeStateStatus ?? null,
+            prNumber: observed.prNumber,
+          }),
+          at
+        ).pipe(Effect.map(O.map((row) => row.id)))
+      : O.none<string>();
+    // `None` means this poll wrote nothing: the generation's row is already in
+    // the inbox (a restarted loop), an ack receipt closes it, or the write
+    // failed. Recall it only when it is live, so the guard above stops
+    // re-dispatching and a later mergeable read clears it. A row closed by
+    // another ack kind than `cleared` is not re-raised; the loop says so once.
+    const open = O.isSome(written) ? written : yield* recallMonitorConflictRow(context.repoRoot, observed);
+    const noticed =
+      O.isNone(open) && !current.conflictAckNoticed
+        ? yield* noticeMonitorConflictAck(context.repoRoot, observed)
+        : current.conflictAckNoticed;
+    return MonitorHeadState.make({
+      ...current,
+      conflictRow: open,
+      conflictRecalled: true,
+      conflictAckNoticed: noticed,
+      conflictCorruptNoticed: corruptNoticed,
+    });
+  }
+  const mergeable = yeetBaseMergeableFor(
+    O.fromUndefinedOr(snapshot.remote.mergeable),
+    O.fromUndefinedOr(snapshot.remote.mergeStateStatus)
+  );
+  if (!mergeable) return current;
+  const open =
+    O.isSome(current.conflictRow) || current.conflictRecalled
+      ? current.conflictRow
+      : yield* recallMonitorConflictRow(context.repoRoot, observed);
+  const recalled = MonitorHeadState.make({ ...current, conflictRecalled: true });
+  if (O.isNone(open)) return recalled;
+  const cleared = yield* clearMonitorConflictRow(context.repoRoot, open.value, observed, snapshot, at);
+  return MonitorHeadState.make({ ...recalled, conflictRow: cleared ? O.none() : open });
+});
+
+// The until-ready comment consumer's loop-scoped inputs: where the comment
+// window starts, and the acting login once a read has named it. The login is
+// read once per loop, not per poll; a failed read is retried on the next poll.
+interface MonitorCommentConsumer {
+  readonly actingLogin: Ref.Ref<O.Option<string>>;
+  readonly since: string;
+}
+
+const monitorActingLogin = Effect.fn("YeetMonitorLoop.actingLogin")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  consumer: MonitorCommentConsumer
+) {
+  const known = yield* Ref.get(consumer.actingLogin);
+  if (O.isSome(known)) return known;
+  const read = yield* readYeetMonitorActingLogin(context, options.capture ?? runRepoCommandCapture);
+  yield* Ref.set(consumer.actingLogin, read);
+  return read;
+});
+
+// The until-ready comment consumer (pr-event-awareness D13/D21/D32): each poll
+// turns new top-level comments from people other than the acting login into P1
+// `pr-comment` rows instead of printing them, from the mode's own watermark.
+// Nothing here fails the loop: without a login, or on a failed read or append,
+// the watermark holds and the next poll retries.
+const convergeMonitorComments = Effect.fn("YeetMonitorLoop.convergeComments")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observed: YeetConvergeObservation,
+  consumer: MonitorCommentConsumer,
+  at: string
+) {
+  const actingLogin = yield* monitorActingLogin(context, options, consumer);
+  if (O.isNone(actingLogin)) {
+    return yield* Console.error(
+      "[yeet] comment rows wait: gh could not name the acting login; the comment watermark holds and the next poll retries"
+    );
+  }
+  const window = YeetPrCommentWindow.make({
+    actingLogin: actingLogin.value,
+    headSha: observed.headSha,
+    prNumber: observed.prNumber,
+    since: consumer.since,
+  });
+  const appended = yield* (options.commentRows ?? pollYeetPrCommentRows)(context, window, at).pipe(
+    Effect.catch((error) =>
+      Console.error(
+        `[yeet] comment rows: ${error.message}; the comment watermark holds and the next poll retries`
+      ).pipe(Effect.as(A.empty<YeetPrCommentRow>()))
+    )
+  );
+  yield* Effect.forEach(
+    appended,
+    (row) =>
+      Console.log(
+        `[yeet] P1 pr-comment row ${row.id}: comment by @${row.capsule.author} on PR #${row.capsule.prNumber} ${row.capsule.link}`
+      ),
+    { discard: true }
+  );
+});
+
+// Under until-ready the loop is the inbox producer (pr-event-awareness D2/D16):
+// the first converging poll of each head pins the wave record to it, which
+// supersedes the previous head's wave, and every poll converges the status
+// snapshot and the new pull request comments into rows, then stamps the head's
+// required red set on the record, after the rows, so a rerun that comes back
+// red on the same head reaches both waiters as a new wave. That first poll then
+// binds the pull request to a detached job, so the job's waiter first reads
+// the inbox with the previous head's rows already superseded and this head's
+// rows already written. Every step is idempotent and never fails the loop.
+const convergeMonitorInbox = Effect.fn("YeetMonitorLoop.convergeInbox")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observation: MonitorObservation,
+  comments: MonitorCommentConsumer
+) {
+  if (!yeetMonitorPolicyConverges(options.policy ?? YeetUntilMergedPolicy.make({}))) return observation;
+  const observed = monitorConvergeObservation(observation.snapshot);
+  const head = observation.poll.head;
+  if (O.isNone(observed) || O.isNone(head)) return observation;
+  const pinning = !head.value.wavePinned;
+  if (pinning) {
+    yield* supersedeYeetDispatchState(
+      context.repoRoot,
+      observed.value.headSha,
+      observed.value.prNumber,
+      observation.at
+    );
+  }
+  yield* convergeYeetInbox(context, observed.value, observation.at);
+  const redSet = yeetWaveRedSetKey(observed.value.checks);
+  const stamped = yield* stampYeetWaveRedSet(context.repoRoot, observed.value, redSet, observation.at);
+  const conflicted = yield* convergeMonitorBaseConflict(context, observation, observed.value, head.value);
+  yield* convergeMonitorComments(context, options, observed.value, comments, observation.at);
+  if (pinning) {
+    yield* (options.bindPullRequest ?? bindMonitorJobPullRequest)(context, observed.value.prNumber);
+  }
+  return MonitorObservation.make({
+    ...observation,
+    poll: MonitorPoll.make({
+      ...observation.poll,
+      head: O.some(
+        MonitorHeadState.make({
+          ...conflicted,
+          wavePinned: true,
+          waveRedSet: pinning ? O.orElse(stamped, () => O.some(redSet)) : conflicted.waveRedSet,
+        })
+      ),
+    }),
+  });
+});
+
 // Re-decide heavy admission from this poll's labels; a verdict flip is logged
 // and restarts the settle clock so time spent held never counts (ttc B8).
 const admitMonitorHead = Effect.fn("YeetMonitorLoop.admitHead")(function* (
@@ -1167,7 +1653,7 @@ const admitMonitorHead = Effect.fn("YeetMonitorLoop.admitHead")(function* (
   if (flipped) {
     yield* Console.log(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
   }
-  const recall = rememberRegistered(current.registered, observation.snapshot.remote.checks);
+  const recall = rememberRegistered(current.registered, settleChecksOf(observation.snapshot));
   if (A.isReadonlyArrayNonEmpty(recall.recalled)) {
     yield* Console.log(
       `[yeet] rollup: ${A.length(recall.recalled)} registered context(s) absent this poll, kept pending`
@@ -1189,16 +1675,13 @@ const settleMonitorHead = (
   deriveSettleVerdict(
     YeetSettleInput.make({
       expected: current.expected,
-      checks: rememberRegistered(current.registered, observation.snapshot.remote.checks).checks,
+      checks: rememberRegistered(current.registered, settleChecksOf(observation.snapshot)).checks,
       closeoutBound: O.exists(observation.snapshot.mergeReady, (ready) => ready.criteria.closeoutRun),
       waitedMs: observation.millis - current.settleClockMs,
       timeoutMs: policy.settleTimeoutMs,
       families: current.families,
       admission: current.admission,
-      baseConflict: yeetBaseConflictFor(
-        O.fromUndefinedOr(observation.snapshot.remote.mergeable),
-        O.fromUndefinedOr(observation.snapshot.remote.mergeStateStatus)
-      ),
+      baseConflict: monitorBaseConflict(observation.snapshot),
     })
   );
 
@@ -1260,6 +1743,10 @@ const stampMonitorReadiness = Effect.fn("YeetMonitorLoop.stampReadiness")(functi
   const { at, poll } = observation;
   let snapshot = bindRequiredCensus(observation.snapshot, verdict);
   let timeline = O.getOrThrow(poll.head).timeline;
+  const firstRed = yeetFirstRed(snapshot.remote.checks);
+  if (O.isSome(firstRed)) {
+    timeline = yeetHeadTimelineStampRed(timeline, firstRed.value);
+  }
   if (O.exists(snapshot.mergeReady, (ready) => ready.criteria.closeoutRun)) {
     timeline = yeetHeadTimelineStamp(timeline, "closeoutAt", at);
   }
@@ -1393,6 +1880,7 @@ const announceMonitorReadiness = Effect.fn("YeetMonitorLoop.announceReadiness")(
     })
   );
   yield* Console.log(`${renderMergeReadyGate(snapshot)}; ${renderYeetHeadTimeline(current.timeline)}`);
+  yield* reportMonitorPushToAck(context, current.timeline, snapshot);
   const terminals = yeetMonitorPolicyTerminals(options.policy ?? YeetUntilMergedPolicy.make({}));
   if (!HashSet.has(terminals, "ready")) {
     yield* Console.log(`[yeet] merge-ready announced for head ${Str.slice(0, 7)(current.timeline.headSha)}`);
@@ -1413,6 +1901,19 @@ const monitorReadyTerminal = (observation: MonitorObservation, policy: YeetMonit
       O.exists(observation.snapshot.mergeReady, (ready) => ready.ready)
   );
 
+// One head's red set as triage sees it: each failing check's name, job link and
+// completion stamp. A rerun, a new red, or a re-reported result changes it. The
+// wave record keys the same entries for the failing required checks only.
+const monitorRedSetKey = (snapshot: YeetStatusSnapshot): string =>
+  yeetRedSetKey(A.filter(snapshot.remote.checks, (check) => check.outcome === "fail"));
+
+// Every red job is a needs-code-fix or a spent rerun: re-reading the same red
+// set cannot decide anything new. Pending logs, active runs and a rerun just
+// issued are not conclusive, so those keep being re-read.
+const monitorTriageConclusive = (decisions: ReadonlyArray<YeetMonitorJobDecision>): boolean =>
+  A.isReadonlyArrayNonEmpty(decisions) &&
+  A.every(decisions, (decision) => decision.status === "needs-code-fix" || decision.status === "rerun-spent");
+
 const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
@@ -1422,10 +1923,16 @@ const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
   const { budget, head, replayed } = poll;
   const headSha = snapshot.remote.headSha;
   const policy = options.policy ?? YeetUntilMergedPolicy.make({});
-  const terminals = yeetMonitorPolicyTerminals(policy);
   const readyTerminal = monitorReadyTerminal(observation, policy);
   const verdict = O.flatMap(head, (value) => value.verdict);
   if ((snapshot.remote.failingCheckCount ?? 0) === 0 || O.isNone(headSha)) {
+    return MonitorPoll.make({ budget, head, terminal: readyTerminal, replayed });
+  }
+  // A red no longer ends the loop (pr-event-awareness D16), so the same red can
+  // sit through many polls: once a triage of this red set was conclusive, skip
+  // the run, job and failed-log reads until a rerun, a new red or a push moves it.
+  const redSet = monitorRedSetKey(snapshot);
+  if (O.exists(head, (value) => O.contains(value.triagedReds, redSet))) {
     return MonitorPoll.make({ budget, head, terminal: readyTerminal, replayed });
   }
   const failedJobs = yield* collectYeetMonitorFailedJobs(context, headSha.value);
@@ -1439,24 +1946,78 @@ const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
       (decision.status === "needs-code-fix" || decision.status === "rerun-spent") &&
       requiredName(snapshot, verdict, decision.name)
   );
-  if (HashSet.has(terminals, "required-red") && A.isReadonlyArrayNonEmpty(requiredReds)) {
+  // A required red is not terminal (pr-event-awareness D16): under until-ready
+  // the converged rows are the wave. A detached loop keeps polling for the fix
+  // push; an attached one may stop on this poll with `wave`, so its line makes
+  // no polling promise and the wave line that follows says it stopped.
+  if (yeetMonitorPolicyConverges(policy) && A.isReadonlyArrayNonEmpty(requiredReds)) {
     yield* Console.log(
       `[yeet] required-red: ${A.join(
         A.map(requiredReds, (job) => job.name),
         ", "
+      )}; not terminal under --until-ready: the wave is in the inbox${YeetMonitorAttachment.$match(
+        options.attachment ?? YeetMonitorAttachment.Enum.detached,
+        {
+          attached: () => Str.empty,
+          detached: () => " and the loop keeps polling for the fix push",
+        }
       )}`
     );
-    return MonitorPoll.make({ budget: plan.budget, terminal: O.some("required-red"), head, replayed });
   }
-  return MonitorPoll.make({ budget: plan.budget, head, terminal: readyTerminal, replayed });
+  const triaged = monitorTriageConclusive(plan.decisions)
+    ? O.map(head, (value) => MonitorHeadState.make({ ...value, triagedReds: O.some(redSet) }))
+    : head;
+  return MonitorPoll.make({ budget: plan.budget, head: triaged, terminal: readyTerminal, replayed });
 });
+
+// An attached until-ready loop has no job for `yeet job wait` to return on, so
+// it hands the wave back itself: the first poll whose inbox holds a wake-set
+// row on this pull request that was not there when the loop started, or whose
+// required red set names a red beyond the one the head was pinned with, ends
+// the loop with `wave` (exit 2). The row selection is the job wait's, with the
+// ids the inbox held at loop start in place of the ids a wait returned. The
+// rows stay unacknowledged. Readiness and the pull-request terminals win.
+const returnOnMonitorWave = Effect.fn("YeetMonitorLoop.returnOnWave")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  snapshot: YeetStatusSnapshot,
+  poll: MonitorPoll,
+  scope: MonitorLoopScope
+) {
+  const prNumber = O.fromUndefinedOr(snapshot.remote.number);
+  if (O.isSome(poll.terminal) || O.isNone(scope.waveBaseline) || O.isNone(prNumber)) return poll;
+  const wave = yield* loadYeetPrWave(
+    context.repoRoot,
+    prNumber.value,
+    scope.waveBaseline.value,
+    O.flatMap(poll.head, (head) => head.waveRedSet)
+  );
+  if (O.isNone(wave)) return poll;
+  yield* Console.log(
+    renderYeetPrWaveLine(
+      wave.value,
+      YeetPrWaveReturn.Enum["attached-monitor"],
+      options.waveRerunCommand ?? defaultWaveRerunCommand
+    )
+  );
+  return MonitorPoll.make({ ...poll, terminal: O.some(YeetMonitorTerminalState.Enum.wave) });
+});
+
+// Loop-scoped inputs every poll reads: the comment consumer, and, for an
+// attached until-ready loop only, the row ids the inbox held when the loop
+// started, which never count as a new wave.
+interface MonitorLoopScope {
+  readonly comments: MonitorCommentConsumer;
+  readonly waveBaseline: O.Option<HashSet.HashSet<string>>;
+}
 
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
   budget: YeetMonitorRerunBudget,
   previous: O.Option<MonitorHeadState>,
-  firstCycle: boolean
+  firstCycle: boolean,
+  scope: MonitorLoopScope
 ) {
   const collected = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
   if (Result.isFailure(collected)) {
@@ -1464,10 +2025,18 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   }
   // The first poll is the first time this session knows the pull request
   // number, and the last moment before it starts reporting state the operator
-  // will act on, so the comments they missed are printed here.
+  // will act on, so under until-merged the comments they missed are printed
+  // here. Under until-ready the comment consumer turns them into inbox rows on
+  // every poll instead (convergeMonitorInbox), so there is nothing to replay.
   let replayed = false;
   if (firstCycle && collected.success.remote.number !== undefined) {
-    yield* (options.replayComments ?? replayYeetMonitorComments)(context, collected.success.remote.number);
+    if (!yeetMonitorPolicyConverges(options.policy ?? YeetUntilMergedPolicy.make({}))) {
+      yield* (options.replayComments ?? replayYeetMonitorComments)(
+        context,
+        collected.success.remote.number,
+        YeetMonitorCommentConsumer.Enum["until-merged"]
+      );
+    }
     replayed = true;
   }
   const now = yield* options.now ?? DateTime.now;
@@ -1481,14 +2050,16 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
       millis: DateTime.toEpochMillis(now),
     })
   );
-  const settled = yield* settleAndCloseoutMonitorHead(context, options, observed);
+  const converged = yield* convergeMonitorInbox(context, options, observed, scope.comments);
+  const settled = yield* settleAndCloseoutMonitorHead(context, options, converged);
   if (Result.isFailure(settled)) return settled.failure;
   const observation = settled.success;
   const detail = yield* reportMonitorObservation(observation);
   const terminal = yield* decideMonitorTerminal(context, options, observation, detail);
   if (O.isSome(terminal)) return terminal.value;
   const poll = yield* announceMonitorReadiness(context, options, observation);
-  return yield* triageMonitorReds(context, options, MonitorObservation.make({ ...observation, poll }));
+  const triaged = yield* triageMonitorReds(context, options, MonitorObservation.make({ ...observation, poll }));
+  return yield* returnOnMonitorWave(context, options, observation.snapshot, triaged, scope);
 });
 
 const stepMonitorFailureBudget = Effect.fn("YeetMonitorLoop.stepFailureBudget")(function* (
@@ -1530,9 +2101,26 @@ const nextMonitorSleep = (next: MonitorPoll, interval: Duration.Duration): Durat
  * Each poll re-reads `yeet status --remote`, so a push landing mid-session is
  * picked up without restarting: the new head SHA simply becomes the budget
  * scope for the next red wave. Settled heads receive a read-first closeout and
- * one durable readiness row. The policy selects whether readiness or a required
- * red ends the session; both policies bound unsettled waits and consecutive read
- * errors. Only an already merged PR runs the supplied sweep.
+ * one durable readiness row. The policy selects whether readiness ends the
+ * session; both policies bound unsettled waits and consecutive read errors.
+ * Under `until-ready` the loop is also the inbox producer: every poll converges
+ * the status snapshot into `check-failed`, `review-thread` and `base-drift`
+ * rows, a base conflict writes one P0 `base-conflict` row per conflict on a
+ * head (acked `cleared` by the loop if the same head turns mergeable again; a
+ * conflict that returns on that head is the next generation's row), the first
+ * poll of each head pins the wave record to it, every poll stamps the head's
+ * required red set on the record, and a required red or a base conflict keeps
+ * the loop polling instead of ending it. Inside a detached job that first poll
+ * then binds the pull request to the job record, and `yeet job wait` hands the
+ * wave back. An attached run (`attachment`) has no job, so it ends with `wave`
+ * on the first new wake-set row on its pull request, or on a required red set
+ * that names a red beyond the one the head was pinned with (a rerun that came
+ * back red), printing the gate line with `waveRerunCommand`. Each poll also turns
+ * new top-level comments from people other than the acting login, created
+ * after `commentsSince` (the monitor job's submit time, or the loop's start),
+ * into P1 `pr-comment` rows from the mode's own comment watermark, where
+ * `until-merged` instead replays its first-cycle backlog to the log. Only an
+ * already merged PR runs the supplied sweep.
  *
  * **Example** (Reference the merge loop)
  *
@@ -1583,8 +2171,25 @@ export const runYeetMonitorUntilMerged: {
     let head = O.none<MonitorHeadState>();
     let failures = 0;
     let firstCycle = true;
+    const terminals = yeetMonitorLoopTerminals(
+      options.policy ?? YeetUntilMergedPolicy.make({}),
+      options.attachment ?? YeetMonitorAttachment.Enum.detached
+    );
+    // Wall-clock loop start, not `options.now`, so the window never spends a
+    // tick of an injected poll clock.
+    const scope: MonitorLoopScope = {
+      comments: {
+        since: options.commentsSince ?? DateTime.formatIso(yield* DateTime.now),
+        actingLogin: yield* Ref.make(O.none<string>()),
+      },
+      // Read before the first poll converges anything, so every row this loop
+      // writes, and every row another writer adds meanwhile, counts as new.
+      waveBaseline: HashSet.has(terminals, YeetMonitorTerminalState.Enum.wave)
+        ? O.some(yield* loadYeetInboxRowIds(context.repoRoot))
+        : O.none(),
+    };
     while (true) {
-      const next: MonitorPoll = yield* pollUntilMerged(context, options, budget, head, firstCycle);
+      const next: MonitorPoll = yield* pollUntilMerged(context, options, budget, head, firstCycle, scope);
       firstCycle = firstCycle && !next.replayed;
       budget = next.budget;
       head = next.head;

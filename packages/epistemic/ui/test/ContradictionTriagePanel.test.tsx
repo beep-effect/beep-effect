@@ -4,7 +4,7 @@ import { contradictionKnownAtAtom, contradictionValidAtAtom } from "@beep/episte
 import { ContradictionTriagePanel } from "@beep/epistemic-ui";
 import { RegistryProvider } from "@effect/atom-react";
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";

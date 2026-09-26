@@ -1,4 +1,4 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 /**
  * Contradiction-triage command and read-model contracts.
  *
@@ -473,7 +473,7 @@ export class ReviewContradictionCandidate extends S.Class<ReviewContradictionCan
  *
  * ```ts
  * import { SubmitContradictionCandidateArbitrary } from "@beep/epistemic-use-cases/server"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(SubmitContradictionCandidateArbitrary, { count: 1 })
  * ```

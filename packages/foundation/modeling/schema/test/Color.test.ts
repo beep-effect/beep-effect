@@ -3,8 +3,8 @@ import * as Color from "@beep/schema/Color";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeColorDarken = S.decodeUnknownEffect(Color.Darken);
 const decodeColorGenerateAlphaScale = S.decodeUnknownEffect(Color.GenerateAlphaScale);

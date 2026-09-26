@@ -5,16 +5,12 @@
  * @since 0.0.0
  */
 
-import * as A from "@beep/utils/Array";
 import { escapeHtml } from "@beep/utils/Html";
-import { thunkEmptyStr } from "@beep/utils/thunk";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
+import { Effect, FileSystem, Layer, Match } from "effect";
+import * as A from "effect/Array";
+import { HttpRouter, HttpServerResponse } from "effect/http";
+import { HttpApiScalar, OpenApi } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
-import { HttpApiScalar, OpenApi } from "effect/unstable/httpapi";
 import { ApiAudience } from "./Catalog.models.ts";
 import { Catalog, resolveCatalogSpecPath } from "./Catalog.ts";
 import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Catalog.models.ts";
@@ -22,7 +18,7 @@ import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Cat
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
 const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.43.5.js";
-const ScalarScriptModuleUrl = new URL("./internal/httpApiScalar.js", import.meta.resolve("effect/unstable/httpapi"));
+const ScalarScriptModuleUrl = new URL("./internal/httpApiScalar.js", import.meta.resolve("effect/http-api"));
 const ScalarScriptModule = S.Struct({ javascript: S.String });
 const decodeScalarScriptModule = S.decodeUnknownEffect(ScalarScriptModule);
 const SPEC_DOCS_SECURITY_HEADERS = {
@@ -47,7 +43,7 @@ const docsLink = (entry: CatalogEntry): string =>
     Match.tag("ContractSource", () => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`),
     Match.tag("SpecSource", (source) =>
       Match.value(source.dialect).pipe(
-        Match.when("json-schema-2020-12", thunkEmptyStr),
+        Match.when("json-schema-2020-12", () => ""),
         Match.orElse(() => `<a href="${docsPath(entry.meta.slug)}">docs UI</a>`)
       )
     ),

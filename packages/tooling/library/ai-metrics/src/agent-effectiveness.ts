@@ -19,28 +19,16 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { Defect, UnknownRecord } from "@beep/schema";
-import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Defect, LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import * as A from "@beep/utils/Array";
-import * as O from "@beep/utils/Option";
-import * as P from "@beep/utils/Predicate";
-import * as Str from "@beep/utils/Str";
-import * as DateTime from "effect/DateTime";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
-import * as HashMap from "effect/HashMap";
-import * as Match from "effect/Match";
-import * as Path from "effect/Path";
+import { A, O, P, Str } from "@beep/utils";
+import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
+import { dual } from "effect/Function";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
 import type { PhoenixError, PhoenixShape } from "@beep/phoenix";
 
@@ -674,7 +662,7 @@ export class AgentEffectivenessPhoenixSection extends S.Class<AgentEffectiveness
     promptCount: S.Finite,
     serverInsufficientStorage: S.Boolean,
     status: AgentEffectivenessStatus,
-    version: S.String.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault),
+    version: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentEffectivenessPhoenixSection", {
     description: "Non-mutating Phoenix readiness section for the agent-effectiveness doctor.",
@@ -723,7 +711,7 @@ export class AgentEffectivenessSourceCoverage extends S.Class<AgentEffectiveness
 )(
   {
     acceptedEvents: S.Finite,
-    lastTimestamp: S.String.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault),
+    lastTimestamp: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
     rejectedLines: S.Finite,
     sourceFileCount: S.Finite,
     sourceKind: S.String,
@@ -2339,22 +2327,10 @@ const sectionStatus = (
   readonly warnings: ReadonlyArray<string>;
 } =>
   AgentEffectivenessStatus.$match(status, {
-    failed: () => ({
-      failures: [`${label}: ${message}`],
-      unavailable: [],
-      warnings: [],
-    }),
+    failed: () => ({ failures: [`${label}: ${message}`], unavailable: [], warnings: [] }),
     passed: () => ({ failures: [], unavailable: [], warnings: [] }),
-    unavailable: () => ({
-      failures: [],
-      unavailable: [`${label}: ${message}`],
-      warnings: [],
-    }),
-    warning: () => ({
-      failures: [],
-      unavailable: [],
-      warnings: [`${label}: ${message}`],
-    }),
+    unavailable: () => ({ failures: [], unavailable: [`${label}: ${message}`], warnings: [] }),
+    warning: () => ({ failures: [], unavailable: [], warnings: [`${label}: ${message}`] }),
   });
 
 const aggregateSummary = (
@@ -2518,18 +2494,12 @@ const probePhoenixEndpoints = Effect.fn("AiMetrics.agentEffectiveness.probePhoen
   const projects = yield* client.get(`${baseUrl}/projects`).pipe(Effect.option);
 
   if (O.isNone(root) || O.isNone(projects)) {
-    return {
-      _tag: "Unavailable" as const,
-      message: "Phoenix endpoint was not reachable.",
-    };
+    return { _tag: "Unavailable" as const, message: "Phoenix endpoint was not reachable." };
   }
 
   return isReachableHttpStatus(root.value.status) && isReachableHttpStatus(projects.value.status)
     ? { _tag: "Available" as const, projects: projects.value, root: root.value }
-    : {
-        _tag: "Unavailable" as const,
-        message: "Phoenix endpoint returned a non-success status.",
-      };
+    : { _tag: "Unavailable" as const, message: "Phoenix endpoint returned a non-success status." };
 });
 
 const queryPhoenixInventory = Effect.fn("AiMetrics.agentEffectiveness.queryPhoenixInventory")(function* (
@@ -2540,20 +2510,14 @@ const queryPhoenixInventory = Effect.fn("AiMetrics.agentEffectiveness.queryPhoen
     query: phoenixInventoryQuery,
   }).pipe(Effect.option);
   if (O.isNone(request)) {
-    return {
-      _tag: "Unavailable" as const,
-      message: "Phoenix GraphQL request could not be encoded.",
-    };
+    return { _tag: "Unavailable" as const, message: "Phoenix GraphQL request could not be encoded." };
   }
 
   const response = yield* client
     .execute(pipe(request.value, HttpClientRequest.accept("application/json")))
     .pipe(Effect.option);
   if (O.isNone(response) || !isOkHttpStatus(response.value.status)) {
-    return {
-      _tag: "Unavailable" as const,
-      message: "Phoenix GraphQL inventory query failed.",
-    };
+    return { _tag: "Unavailable" as const, message: "Phoenix GraphQL inventory query failed." };
   }
 
   const inventory = yield* HttpClientResponse.schemaBodyJson(S.Unknown)(response.value).pipe(
@@ -2980,11 +2944,7 @@ export const makeAgentEffectivenessDoctorReport: (
   );
   const summary = aggregateSummary([
     { label: "phoenix", message: phoenix.message, status: phoenix.status },
-    {
-      label: "aiMetrics",
-      message: aiMetrics.message,
-      status: aiMetrics.status,
-    },
+    { label: "aiMetrics", message: aiMetrics.message, status: aiMetrics.status },
     {
       label: "jsdocWorkerEval",
       message: jsdocWorkerEval.message,
@@ -4080,19 +4040,10 @@ const forbiddenPatterns = [
   // tilde home (`~/` or `~user/`), and the `%USERPROFILE%`/`%HOMEPATH%` env refs.
   { code: "private-home-path", pattern: /\/home\/[A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /\/Users\/[A-Za-z0-9_.-]+/u },
-  {
-    code: "private-home-path",
-    pattern: /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9_.-]+/u,
-  },
+  { code: "private-home-path", pattern: /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /(?:^|[\s"'`(=:])~[\\/]/u },
-  {
-    code: "private-home-path",
-    pattern: /(?:^|[\s"'`(=:])~[A-Za-z0-9_.-]+[\\/]/u,
-  },
-  {
-    code: "private-home-path",
-    pattern: /%(?:USERPROFILE|HOMEPATH|HOMEDRIVE)%/iu,
-  },
+  { code: "private-home-path", pattern: /(?:^|[\s"'`(=:])~[A-Za-z0-9_.-]+[\\/]/u },
+  { code: "private-home-path", pattern: /%(?:USERPROFILE|HOMEPATH|HOMEDRIVE)%/iu },
   { code: "onepassword-ref", pattern: /op:\/\//u },
   // Deliberately require assignment-shaped labels or key-like values here. Standalone words like TOKEN can appear
   // in benign policy/status labels, and broader matching produced false positives on metrics such as provider_model_token_cost.
@@ -4481,9 +4432,8 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
   report: AgentEffectivenessAnnotationCheckReport
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn(
   "AiMetrics.agentEffectivenessAnnotationCheckReportToJson"
-)(
-  flow(
-    AgentEffectivenessAnnotationCheckReport.encodeJsonEffect,
+)((report) =>
+  AgentEffectivenessAnnotationCheckReport.encodeJsonEffect(report).pipe(
     Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness annotation-check report as JSON."))
   )
 );
@@ -4524,10 +4474,10 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
 export const agentEffectivenessDatasetBundleToJson: (
   bundle: AgentEffectivenessDatasetBundle
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessDatasetBundleToJson")(
-  flow(
-    AgentEffectivenessDatasetBundle.encodeJsonEffect,
-    Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness dataset bundle as JSON."))
-  )
+  (bundle) =>
+    AgentEffectivenessDatasetBundle.encodeJsonEffect(bundle).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness dataset bundle as JSON."))
+    )
 );
 
 /**
@@ -4561,10 +4511,10 @@ export const agentEffectivenessDatasetBundleToJson: (
 export const agentEffectivenessPromptBundleToJson: (
   bundle: AgentEffectivenessPromptBundle
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessPromptBundleToJson")(
-  flow(
-    AgentEffectivenessPromptBundle.encodeJsonEffect,
-    Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness prompt bundle as JSON."))
-  )
+  (bundle) =>
+    AgentEffectivenessPromptBundle.encodeJsonEffect(bundle).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness prompt bundle as JSON."))
+    )
 );
 
 /**
@@ -4605,10 +4555,10 @@ export const agentEffectivenessPromptBundleToJson: (
 export const agentEffectivenessExperimentBundleToJson: (
   bundle: AgentEffectivenessExperimentBundle
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessExperimentBundleToJson")(
-  flow(
-    AgentEffectivenessExperimentBundle.encodeJsonEffect,
-    Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness experiment bundle as JSON."))
-  )
+  (bundle) =>
+    AgentEffectivenessExperimentBundle.encodeJsonEffect(bundle).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness experiment bundle as JSON."))
+    )
 );
 
 /**
@@ -4654,8 +4604,8 @@ export const agentEffectivenessExperimentBundleToJson: (
 export const agentEffectivenessPhoenixSyncResultToJson: (
   result: AgentEffectivenessPhoenixSyncResult
 ) => Effect.Effect<string, AgentEffectivenessError> = Effect.fn("AiMetrics.agentEffectivenessPhoenixSyncResultToJson")(
-  flow(
-    AgentEffectivenessPhoenixSyncResult.encodeJsonEffect,
-    Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness Phoenix sync result as JSON."))
-  )
+  (result) =>
+    AgentEffectivenessPhoenixSyncResult.encodeJsonEffect(result).pipe(
+      Effect.mapError(agentEffectivenessFailure("Failed to encode agent-effectiveness Phoenix sync result as JSON."))
+    )
 );

@@ -6,7 +6,7 @@
  */
 
 import { Console, Effect } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { resolveRunMode } from "../../internal/cli/RunMode.ts";
 import { handleVersionSync } from "./internal/Handler.ts";
@@ -37,7 +37,7 @@ const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode =>
  *
  * ```ts
  * import { versionSyncCommand } from "@beep/repo-cli/commands/VersionSync"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(versionSyncCommand, { version: "0.0.0" })

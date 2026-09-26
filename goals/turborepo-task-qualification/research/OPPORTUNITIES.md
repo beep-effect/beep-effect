@@ -1792,3 +1792,404 @@ packages' real symlink topology would have exposed this before the runtime run.
 - Remediation: replace nested fault-selection conditionals with Effect Match;
   retain all negative cases and rerun the exact Fallow checks.
 - Prevention: run the changed-function Fallow check before early publication.
+
+### 2026-09-25 — Hosted failure attribution and user-bus recovery
+
+PR #1233 coverage failed in identity, utils, and Wink from shared test state; upstream PR #1240 supplies isolation overrides for all three. Lint Policy failed because the self-hosted runner lost communication; job logs returned HTTP 404, but the check annotation retained the cause. Inspect check annotations when job logs are unavailable. The initial Yeet job cancellation returned `stop-failed` without user-bus environment; retrying with explicit XDG runtime and D-Bus settings succeeded. Always verify inactive state before mutating a checkout held by a proof; this merge ran before that verification, so the queued proof was then stopped and superseded without accepting its evidence.
+
+Early publication pushed the main-refresh commit successfully, then stopped at PR discovery on a GraphQL quota error. REST confirmed the existing draft PR had the new head. A separate detached local verification preserves forward progress without repeating publication; quota recovered on the next bounded check.
+
+### 2026-09-25 — Initial pilot divergence lacks retained diagnostics
+
+The expanded stable pilot passed installed-runtime and exact-client checks, then exited 1: `Initial real-pilot comparisons diverged`. The initial comparison guard in `Cache.pilot.ts` emits neither failed check names nor bounded run metadata; scoped cleanup removes the fixture directory. Retain safe comparison metadata before rejecting, so a long admitted run explains which invariant failed without exposing raw logs or rerunning blindly. Reuse stopped and the canary is held.
+
+### Hosted lint runner interruption, PR #1233
+
+- Work: finish the heavy lint policy gate after the other hosted jobs passed.
+- Evidence: GitHub reports “self-hosted runner lost communication”; job logs
+  return HTTP 404 and verification never reported a result.
+- Action: one targeted retry of the affected job; preserve passing jobs and
+  the independent local proof.
+- Prevention: retain runner termination and resource telemetry outside the runner.
+
+### 2026-09-25 — Heavy label applied without registered workflow
+
+The human ready-for-heavy label event on PR #1250 is present, but no
+Heavy Admit run was returned by the workflow runs API. The workflow is
+active and the PR targets main. Treat admission as requested, not running.
+GraphQL quota exhaustion also required REST status reads. A registration
+receipt tied to the label event would distinguish delayed dispatch from
+missing admission without replaying passing first-tier jobs.
+
+### 2026-09-25 — Activation bytes changed formatting as well as cache policy
+
+Stable v22 passed all nine fresh/root/concurrency executions, but its two
+cache-enabled executions exited 1. The bounded diagnostic receipt isolated
+activation-capture-equivalence and local-replay as the failures. Formatter
+round-trip evidence shows the disabled config is unchanged while the enabled
+config rewrites four arrays. Generate activation bytes by changing only the
+cache boolean, then require both sides to be formatter-stable before capturing
+the activation. The replacement passes that byte check; runtime attribution
+still requires the fresh matrix. Keep the failed v22 evidence and stop reuse.
+
+### 2026-09-25 — Hosted knowledge-reference gate blocks checkpoint
+
+PR #1233 job 108078612513 failed `knowledge:refs-check` with 32 live gated references, all in the sibling `effect-reference-workspace` packet. The failure is a policy finding, not a runner outage. Preserve the job log and compare inherited packet content before remediation; packet reference validation before publication would have caught it earlier.
+
+### 2026-09-25 — Reference binding repair exposed a semantic prerequisite
+
+The #1233 local publish proof stopped at `quality:lint-policy`: the
+`knowledge:semantic-delta` gate reported one introduced `broken-tracked-path`
+finding in the sibling reference-workspace PLAN. The earlier portability
+repair named its planned manifest as though it already existed. The repair
+now makes S1 manifest creation an explicit prerequisite to resolving the
+operator binding. Running both reference and semantic-delta checks before
+publishing the earlier prose change would have caught this sooner. No
+baseline or gate exemption is warranted.
+
+### 2026-09-25 — Quality output changed the live pilot input population
+
+Refreshing the census after the symlink repair found no added or removed graph
+nodes and no command/configuration changes, but 67 nodes had changed input
+observations. Comparing native identity lint plans exposed generated Next.js
+and Storybook manifests, Python cache ignore files, and utils build outputs
+and task logs in the proof checkout's declared input globs. The clean source
+worktrees did not contain those files. Changing exclusions or accepting the
+mismatch would conceal the observation; a dedicated clean runtime worktree at
+the same code revision instead restored exact agreement across all four pilot
+tasks. The queued dependency capture from the proof checkout was cancelled
+and replaced by one from this isolated runtime. Keep quality proof generation
+separate from qualification input capture; native plan parity is preparation,
+not a completed runtime matrix or a remote qualification.
+
+### 2026-09-25 — Keep the observation runner free of ledger edits
+
+The v23 native I/O observer exited before trace collection because its clean
+tracked-source assertion found an earlier friction note in the runner checkout.
+The note was preserved in the working goal ledger and a private backup before
+restoring the pinned runner file. Git status was then clean, and the unchanged
+observer was resubmitted through admission. Record ongoing notes in the working
+packet checkout rather than the frozen evidence runner.
+
+### 2026-09-25 — Derive probe pins from retained receipts
+
+The refreshed synthetic capture probe stopped before native execution because
+its hand-copied stable-client SHA-256 did not match. The binary matched the
+v23 activation receipt; the probe literal was wrong. The corrected expected
+value was read from that receipt, the failed attempt was retained, and the
+probe was resubmitted without relaxing the identity assertion. Derive exact
+pins from validated input receipts instead of transcribing long digests.
+
+### 2026-09-25 — Capture admission observer lost before execution
+
+The v23 synthetic capture process stopped while queued: its session handle was
+missing, no process remained in the frozen runner worktree, and no channel
+location receipts existed. The final log only recorded admission waiting.
+Preserved it as `run-interrupted-admission.log` and restarted the unchanged
+admission wrapper after checking that the two PR proof services remained live.
+A durable admitted job with a terminal receipt would distinguish interruption
+from a long queue without relying on a session handle. No failed attempt counts
+as capture evidence.
+
+The queued capture session was lost a second time before execution. Confirmed
+its missing handle and absence from the runner worktree in `/proc`; no channel
+receipts existed. Preserved `run-interrupted-admission-2.log` and moved the
+unchanged canonical admission wrapper into `qualification-capture-v23.service`
+with a two-hour runtime ceiling and retained output. Service activation is not
+a passing experiment result. This avoids session-lifetime coupling while
+preserving scheduler admission and exact toolchain/dependency checks.
+
+### 2026-09-25 — Hosted build runner lost communication
+
+PR #1233 at `b757063430` failed `Heavy / Build` with the GitHub annotation
+“The self-hosted runner lost communication with the server.” The job log
+returned HTTP 404; no compiler diagnostic was available. A scoped job retry
+returned HTTP 403 because the containing workflow was still running. Retain
+the failed status until the workflow settles and the job can be retried; do
+not infer a source defect or a successful build from this infrastructure error.
+Runner-loss recovery that queues a retry after sibling jobs settle would avoid
+manual polling.
+
+### 2026-09-25 — Capture runtime preflight rejected after admission
+
+The durable capture service reached admission but rejected the runtime before
+fixture execution: “Synthetic capture observation runtime differs from its
+preview.” No capture result is accepted. A separate admitted diagnostic retains
+the observed toolchain for comparison with the frozen preview. Per-field
+difference reporting at this boundary would identify drift without a second
+collection; do not replace the preview merely to make the guard pass.
+
+The admitted diagnostic exited zero. After normalizing Option serialization,
+only Node differed: systemd resolved v24.19.0 instead of the pinned v24.20.0.
+The original binary remained available. Relaunched the unchanged wrapper with
+the pinned Node directory first on PATH; the preview was preserved. Explicit
+PATH parity when moving an experiment into a user service prevents this
+environment-only preflight failure.
+
+### 2026-09-25 — Synthetic replay fixture included its generated log
+
+Both clients completed the capture commands, but independent review rejected
+the requested replay: it was a cache miss with a different hash. Native
+summaries showed one added input, `.turbo/turbo-probe.log`, and no changed
+existing input. The disposable fixture lacked a `.turbo/` ignore rule. Added
+that rule to both client fixtures and retained the failed observations before
+rerunning. Validate input-set stability before labeling a run as a replay.
+
+### 2026-09-25: mixed-stream reviewer omitted the runner command line
+
+The v23 repeated-output reviewer stopped on its first retained observation:
+`AssertionError` at the expected payload-line multiset. The native stream
+contained the three intended task lines plus Bun's `$ python3 emit.py` line.
+This is a reviewer expectation defect, not evidence of lost task output.
+Preserved the failed stream, summary, script and service log; the successor
+expects all four lines and writes into a distinct observation directory.
+Prevention: derive the explicit runner framing from the already-reviewed
+capture fixture before launching repeated observations. Do not normalize
+away unknown lines to make an exact-log check pass.
+
+### 2026-09-25: Bun startup requires usable sandbox device/process mounts
+
+The synthetic runtime-key fixture aborted before loading the CLI. A minimal
+Bun `console.log` reproduced exit 134 inside the read-only root sandbox, both
+with and without a private `/tmp`; the same command passed outside the sandbox.
+Adding fresh `/dev` and `/proc` mounts alongside private `/tmp` restored startup.
+Preserved all four diagnostic logs and the failed fixture before rerunning.
+This attributes the failure to the sandbox setup, not the cache-key guard;
+the combined mount repair does not identify which mount was individually
+necessary. A minimal runtime startup preflight would catch this earlier.
+
+The repaired sandbox then reached the runtime collector but failed with the
+generic census-subprocess diagnostic. Direct native query and selection passed.
+A bounded process trace identified `git rev-parse HEAD` exiting 128 because the
+new fixture had no commit. The successor creates an initial fixture commit;
+no runtime guard was weakened. Validate fixture HEAD before expensive toolchain
+fingerprinting, and retain the failing subprocess identity in bounded diagnostics.
+
+### Planner reproduction needs a complete environment recipe — 2026-09-25
+
+Refreshing the local CI/Quality planner document produced local-only cache
+arguments and an explicit cache directory where the retained document selected
+remote-read cache. The only differences were these arguments. A controlled
+synthetic complete remote-read configuration with HOME absent reproduced the
+old JSON exactly; this does not identify its actual historical environment.
+Planner receipts should bind every environment input that affects the plan,
+including HOME and cache-directory presence, without retaining credentials.
+
+### PR observation API disagreement — 2026-09-25
+
+`gh pr view 1268` reported GraphQL rate-limit exhaustion during evidence
+publication. The subsequent rate-limit endpoint reported available quota, and
+the REST pull-request endpoint returned the current head and open state.
+Preserve the failed observation and use bounded alternate read surfaces;
+do not interpret this transient failure as a terminated proof or restart it.
+
+### Debugger status is not target status — 2026-09-25
+
+A focused ring-queue observation used GDB with startup-with-shell disabled.
+Adding redirection to `run` replaced the target arguments, so Node attempted
+to load a module named `>` and exited 1 while batch GDB returned 0. Preserve
+that failed attempt. The corrected run retained the configured target arguments
+and recorded the inferior exit event explicitly; target exit 0 and the expected
+Biome completion were both required. Future debugger recipes should assert
+inferior completion, not infer it from the debugger process status.
+
+### ZIP determinism needs file-mode evidence — 2026-09-25
+
+While classifying nested commands, five isolated `package-zip.sh` controls found
+that normalized timestamps do not normalize ZIP permission metadata. Equal
+payloads with 0644 versus 0600 modes produced different archive digests. The
+undersize guard also leaves its rejected archive on disk. Evidence:
+`research/lambda-zip-controls-current.json`. Explicit mode normalization or a
+mode-bound qualification contract, and cleanup of rejected outputs, would make
+the packaging boundary easier to qualify. This observation does not authorize
+changing the deployment artifact format or prove normal builds vary modes.
+
+### CI path-reader documentation mismatch — 2026-09-25
+
+The `HeavyAdmission.ts` review at `1504e77bcf` found a comment describing
+`git diff --name-only --no-renames -z`, while `readHeavyAdmissionChangedPaths`
+still requests `git diff --name-only` and splits/trim lines. Source receipt:
+`research/ci-entrypoint-delta-review.json`. Tests for unusual filenames tied
+to the actual reader, and synchronized documentation, would prevent treating
+the comment as evidence of lossless handling. This review does not establish
+a hosted admission exploit or qualify external verdict reuse.
+
+### Generated alias drift discovered in merged preview — 2026-09-25
+
+The full merged-preview proof failed `lint:tsgo-rules` because main added the
+Refs command path without its `vitest.aliases.generated.json` projection.
+Regenerating from root `compilerOptions.paths` added three lines and restored
+the parity check. Evidence: `research/main-alias-integration-repair.json`.
+Updating both projections when adding command exports would avoid discovering
+this after a long proof queue. No baseline was weakened.
+
+### Generated utils artifacts enter the pilot hash — 2026-09-25
+
+The current native identity-lint plan contains 123 untracked files under utils
+`dist` and `.turbo`. Ephemeral read-only masking of those directories removes
+exactly those entries and changes the hash; repeat masked plans agree. Evidence:
+`research/post-main-census-refresh.json`. Explicit generated-artifact controls
+in input-profile validation would expose this before a long comparison matrix.
+Do not remove live proof artifacts or add exclusions without establishing their
+semantic relevance. No task body was executed by these controls.
+
+### Node-hosted worktree test launched a Bun-only CLI — 2026-09-25
+
+The older merged-preview coverage run passed 4,668 tests but failed the worktree
+reference-linking integration test with `ReferenceError: Bun is not defined`.
+The test used `process.execPath`, which names Node in the Vitest coverage
+process, to launch the Bun-only CLI. The same assumption remains in main.
+Resolving Bun before adding the fixture's stub executable to the child PATH
+preserves the simulated install while selecting the intended runtime. An
+explicit runtime contract in subprocess fixtures would catch this before the
+full coverage lane. Evidence: `research/worktree-runtime-repair.json`.
+
+### Raw capture is decoded and bounded text — 2026-09-25
+
+`runRepoCommandCaptureRaw` advertised byte-for-byte stdout, but native controls
+show invalid UTF-8 becomes replacement characters and oversized output is
+truncated with a notice. The API correctly preserves leading whitespace and
+separates stderr for text protocols. Its documentation now names the decoding
+and truncation limits; callers requiring byte fidelity need a byte contract.
+Evidence: `research/process-boundary-delta-review.json`. No byte-preserving
+qualification is inferred from the raw name or NUL-delimited parsing.
+
+### Inherited Effect/Vitest inventory drift — 2026-09-25
+
+The full proof reports 21 new detector findings across six test files. Each
+file matches main before the qualification branch's runtime-only worktree test
+repair; five still match byte for byte. Inventory-aware checks when the source
+tests land would prevent a later qualification proof inheriting this red.
+The attribution is retained with the process-boundary archive. No inventory
+baseline was expanded to waive the findings.
+
+- 2026-09-25: While reviewing the JSDoc migration hash delta, two public
+  examples still dereferenced Effects as direct results after the Crypto
+  migration (`JSDocMigrateExtract.ts`). Repaired both examples; bounded docgen
+  and direct example controls pass. Updating caller examples in the same API
+  migration would prevent this documentation drift.
+
+
+### 2026-09-25 — Source attachment missed the Refs entrypoint
+- While integrating #1271, comparing the four changed Refs implementation files
+  against the census attachment found no existing bindings.
+- A normal census refresh preserved 144 workspaces and 3473 nodes; adding those
+  four sources explicitly raised the attachment to 972 sources.
+- Exhaustive command-registry traversal and a missing-binding check would have
+  surfaced this gap before historical-delta review. Their semantics remain an
+  explicit unresolved obligation.
+
+
+### 2026-09-25 — Use the generated package test typecheck entrypoint
+- Direct tsgo invocation against repo-cli's test config failed TS6059 because
+  its inherited rootDir excludes tests.
+- The generated package-test-typecheck script invokes the canonical synthetic
+  config builder. Read that script before selecting a direct compiler command.
+
+### 2026-09-25 — Dependency repair omitted generated boundary permissions
+- Removing the AI-sync types development dependency updated the lockfile and
+  TypeScript references but left Fallow boundary permissions stale. Both local
+  publication and #1268 Repo Sanity failed `fallow:boundaries:config-check`.
+- `bun run fallow:boundaries:write` removes two obsolete permission entries;
+  `bun run fallow:boundaries:check` passes. Dependency repair should refresh this
+  projection alongside TypeScript references before publication.
+
+### 2026-09-25 — Root test selection omitted the Glob suite
+- Root `bunx vitest run packages/foundation/modeling/utils/test/Glob.test.ts`
+  returned `No test files found` (exit 1). The same suite run from the utils
+  package passed all 14 tests. Do not count an unselected suite as proof.
+- The executable census must retain runner project selection and package
+  working directory, alongside the literal test command.
+
+### 2026-09-25 — Scoped npm source paths rejected by attachment schema
+- Attaching verified Babel tool sources failed decoding at `sources[1002].path`
+  because the path schema rejects `node_modules/@babel/cli/package.json`.
+- Removed the proposed tool source bindings and retained their hashes inside
+  the bounded review receipt. No path rewrite or schema exception was applied.
+- A future tool-identity attachment contract must explicitly model scoped npm
+  paths and installed dependency provenance before counting these as bindings.
+
+### Package verifier plural help mismatch — 2026-09-25
+
+While verifying the scoped evidence-path repair, `beep quality package-verify
+@beep/repo-configs @beep/repo-cli` was rejected with “expected at most one package
+argument, received 2.” Help advertises `[<package...>]`. Run one package per
+invocation; matching help cardinality to the command guard would prevent this
+failed invocation. No proof credit is assigned to it.
+
+### Refs quality repair feedback — 2026-09-25
+
+Full lint-policy identified a branch-introduced deterministic service key after
+narrow fixture tests had passed. Canonical `quality test-tsgo` now verifies the
+repair. Run that diagnostic when adding test services. An initial focused test
+invocation named nonexistent refs-worktree/refs-provider files; selecting the
+actual refresh-plan, timer and schema suites passed 16 tests. That failed
+selection earns no proof credit. `docgen:local` also correctly refused bounded
+proof for the branch lockfile change; full docgen remains required.
+
+### Generic cheap-gate repair hint — 2026-09-25
+
+The publication verdict suggested config-sync, while the lane record showed
+config-sync passed and Effect/Vitest failed on the new attachment test. Use the
+specific lane result before running a generator. The test now uses `it.layer`
+with an explicit timeout; the unchanged ratchet passes. A failed wrapper-level
+hint should name the actual failing inner lane.
+
+### Imported-source invalidation stopped before Turbo — 2026-09-25
+
+The ordinary real lint invalidation probe put malformed syntax in identity's
+imported barrel. Bun rejected that file while loading the Cache CLI, before
+Turbo emitted a run summary. The experiment's one-summary assertion then failed.
+Retain this as a CLI-loading failure, not failed-task-cache evidence. The
+continued control uses a new unimported source file so Biome, rather than CLI
+module loading, owns the intended failure. Phase-aware assertions would have
+classified the first result without confusing the two boundaries.
+
+### Canary version delegation during ordinary-CLI preflight — 2026-09-25
+
+Invoking the retained canary executable with `--version` from inside the frozen
+repository reported the installed stable version (`2.11.3`) despite a matching
+canary executable digest. Running it outside the repository reported
+`2.11.5-canary.2`. The isolated experiment overlaid the native executable and
+verified `turboVersion` in every native summary. Preflight should distinguish
+executable identity from repository-local delegation; filename and direct
+version output alone do not prove the client that executed the task.
+
+### Publication preflight interruptions — 2026-09-25
+
+The canary evidence push succeeded, then the PR lookup failed with GitHub
+`API rate limit already exceeded`; local proof had not started. A separate
+verification job retained the proof obligation. The next evidence publication
+was correctly refused after main changed the cache baseline. A three-way JSON
+review preserved both independent projection changes and recorded their basis.
+An existing-PR lookup that can recover after rate-limit reset, plus structured
+baseline diffs, would reduce repeated publication and conflict-review work.
+
+### Job wait journal recovery warning — 2026-09-25
+
+While waiting on an admitted proof, Yeet reported `journal lock generation
+displaced during release` and retained a recovery record. Systemd still
+reported the same runner active, and the wait handle remained live. Recovery
+files were preserved; no lock was removed and no proof was restarted. A
+waiter diagnostic that clearly distinguishes journal recovery from runner
+termination would prevent unnecessary retries.
+
+### Hosted scheduler telemetry failure during qualification closeout
+
+- Evidence: PR #1268 at `90fdc29897`, Property Laws job `108267028865` failed
+  `quality-scheduler` / `enriches active lease scopes with live memory and task
+  telemetry`: expected one queue ticket, observed zero. The test source is
+  byte-identical to the current local `origin/main` reference.
+- A focused local reproduction passed (one selected test, 132 skipped); this
+  does not clear the hosted failure or prove its cause. The test sleeps for
+  100 ms before reading queue state, so delayed enqueue remains a candidate
+  explanation. Hosted stack-map lines also differ from source locations.
+- Prevention candidate: synchronize on observable queue admission with a bounded
+  wait, retaining the telemetry assertions, rather than relying on elapsed time.
+  Keep the failure attributed separately from cache qualification evidence.
+
+- Remediation: the telemetry test now waits for a non-empty queue with the
+  existing 10 ms polling / five-second timeout pattern. All telemetry and
+  ticket-count assertions remain intact. The full scheduler file passed all
+  133 tests; repo-cli quick package verification passed lint and type checks.
+  Hosted verification and full-proof completion remain outstanding.
