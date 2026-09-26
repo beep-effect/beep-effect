@@ -1,0 +1,80 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=~/.cache/beep/effect-vitest-canon/p1/md-before.json"
+  ],
+  "phase": "before",
+  "sourceBefore": {
+    "bun.lock": "618d715a0b98b4ea7a3b507984b5f01cc466f199d13eba096f62044c5de89efa",
+    "packages/foundation/modeling/md/package.json": "047440be9769d7a1da4185010c292f5b07fbfe573c586151bdf7b9e69db1a356",
+    "packages/foundation/modeling/md/src/Md.behavior.ts": "bf50b67f1b10ba07a01f530d4cfafbc8382654701041a5d789d0a3f1bd323232",
+    "packages/foundation/modeling/md/src/Md.conformance.ts": "364d900c5a3f88fd7d7abcbd01d0ab59070bd24e931d97373d5fe79e60b309f1",
+    "packages/foundation/modeling/md/src/Md.escape.ts": "a6af6dc79755114c2bf347eeb7fa65b779f7f6891f9fd9b43689d4317c41960e",
+    "packages/foundation/modeling/md/src/Md.html.ts": "fe48c8c8acd5023398d76eb80af2964b38bfcb7446c9cffb6824b6e88408b322",
+    "packages/foundation/modeling/md/src/Md.model.ts": "0887f65318d5ecf71eee9eefe8a2ef8ac85362a33ccc42aa5d49f32ed1167371",
+    "packages/foundation/modeling/md/src/Md.render.ts": "4932551b6eb2af215f4c236ec38da582fa062c266307df0603f8ea0a5779b685",
+    "packages/foundation/modeling/md/src/Md.safe.ts": "8752ad8b63d4ca1a498afc468f52700b43030f0111f2ae53512fe9ec2518b101",
+    "packages/foundation/modeling/md/src/Md.ts": "c78a4605f6be4832d3faa66679a923afe7d457ff7637cf524fa4fa8dbf1845c2",
+    "packages/foundation/modeling/md/src/Version.ts": "ee59fbf3f61b86e5ae9eeee22d0e177b82136e1a6b8fc4cf0c6eb695851b39b4",
+    "packages/foundation/modeling/md/src/index.ts": "2e4845d19208155895204ba33cb4ee297436429d9c6a89d3ffd423238eb23f1c",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts": "7584ba35b3613a11597b853d220623c6ab64ad2f31d281efb8b004294d237659",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts": "065ccd15f561f90a5cc14d925b4675272c079caf5f288f64540eb48bfccb5499",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts": "9712d7bdbb486aec36804646b0a3d509aa6fbdff67f664bc6f488948d08301b1",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts": "10da246a14c3abca4aed033064afb41f316915c4a1bc75ce0fba0181afe0ac4d",
+    "packages/foundation/modeling/md/test/ConformanceLedger.test.ts": "8487e2b174bd69533b9de66f17d418c7c6a724e91800302fe7a735a8f59e53e7",
+    "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts": "06b96c310a95fcb429607944dd62bf664ce16f9fae82ea5dc30e55d3d4ad9e91",
+    "packages/foundation/modeling/md/test/Md.conformance.test.ts": "f33c7ec0fcdce6ab12e8bdc587e3c2cc203e577006e24e703e6186df31fbee0e",
+    "packages/foundation/modeling/md/test/Md.test.ts": "c4c813f048309cc697b4a723c98ba0fed63aa3aaccc0bd0e2ee4ec7aeb8258b7",
+    "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts": "678e8b6fdb4f4b12504f185aaa5612d4d911edce217f7854aef02349f2679afb"
+  },
+  "loadBefore": [4.37646484375, 9.37158203125, 14.5107421875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.18 avg60=0.08 avg300=0.54 total=1599768855\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.05 total=141864432\nfull avg10=0.00 avg60=0.04 avg300=0.05 total=130287309\n",
+    "io": "some avg10=0.05 avg60=0.68 avg300=0.45 total=770983929\nfull avg10=0.03 avg60=0.57 avg300=0.37 total=555395303\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 5.687505494992365,
+  "sourceAfter": {
+    "bun.lock": "618d715a0b98b4ea7a3b507984b5f01cc466f199d13eba096f62044c5de89efa",
+    "packages/foundation/modeling/md/package.json": "047440be9769d7a1da4185010c292f5b07fbfe573c586151bdf7b9e69db1a356",
+    "packages/foundation/modeling/md/src/Md.behavior.ts": "bf50b67f1b10ba07a01f530d4cfafbc8382654701041a5d789d0a3f1bd323232",
+    "packages/foundation/modeling/md/src/Md.conformance.ts": "364d900c5a3f88fd7d7abcbd01d0ab59070bd24e931d97373d5fe79e60b309f1",
+    "packages/foundation/modeling/md/src/Md.escape.ts": "a6af6dc79755114c2bf347eeb7fa65b779f7f6891f9fd9b43689d4317c41960e",
+    "packages/foundation/modeling/md/src/Md.html.ts": "fe48c8c8acd5023398d76eb80af2964b38bfcb7446c9cffb6824b6e88408b322",
+    "packages/foundation/modeling/md/src/Md.model.ts": "0887f65318d5ecf71eee9eefe8a2ef8ac85362a33ccc42aa5d49f32ed1167371",
+    "packages/foundation/modeling/md/src/Md.render.ts": "4932551b6eb2af215f4c236ec38da582fa062c266307df0603f8ea0a5779b685",
+    "packages/foundation/modeling/md/src/Md.safe.ts": "8752ad8b63d4ca1a498afc468f52700b43030f0111f2ae53512fe9ec2518b101",
+    "packages/foundation/modeling/md/src/Md.ts": "c78a4605f6be4832d3faa66679a923afe7d457ff7637cf524fa4fa8dbf1845c2",
+    "packages/foundation/modeling/md/src/Version.ts": "ee59fbf3f61b86e5ae9eeee22d0e177b82136e1a6b8fc4cf0c6eb695851b39b4",
+    "packages/foundation/modeling/md/src/index.ts": "2e4845d19208155895204ba33cb4ee297436429d9c6a89d3ffd423238eb23f1c",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts": "7584ba35b3613a11597b853d220623c6ab64ad2f31d281efb8b004294d237659",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts": "065ccd15f561f90a5cc14d925b4675272c079caf5f288f64540eb48bfccb5499",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts": "9712d7bdbb486aec36804646b0a3d509aa6fbdff67f664bc6f488948d08301b1",
+    "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts": "10da246a14c3abca4aed033064afb41f316915c4a1bc75ce0fba0181afe0ac4d",
+    "packages/foundation/modeling/md/test/ConformanceLedger.test.ts": "8487e2b174bd69533b9de66f17d418c7c6a724e91800302fe7a735a8f59e53e7",
+    "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts": "06b96c310a95fcb429607944dd62bf664ce16f9fae82ea5dc30e55d3d4ad9e91",
+    "packages/foundation/modeling/md/test/Md.conformance.test.ts": "f33c7ec0fcdce6ab12e8bdc587e3c2cc203e577006e24e703e6186df31fbee0e",
+    "packages/foundation/modeling/md/test/Md.test.ts": "c4c813f048309cc697b4a723c98ba0fed63aa3aaccc0bd0e2ee4ec7aeb8258b7",
+    "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts": "678e8b6fdb4f4b12504f185aaa5612d4d911edce217f7854aef02349f2679afb"
+  },
+  "loadAfter": [5.2275390625, 9.46533203125, 14.513671875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.30 avg60=0.10 avg300=0.54 total=1599807013\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.05 total=141864768\nfull avg10=0.00 avg60=0.04 avg300=0.04 total=130287630\n",
+    "io": "some avg10=0.03 avg60=0.64 avg300=0.44 total=770987197\nfull avg10=0.02 avg60=0.53 avg300=0.36 total=555397473\n"
+  },
+  "sourceStable": true
+}
