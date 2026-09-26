@@ -2453,3 +2453,11 @@ and none of those events. The current minimum log level filters debug messages.
 Promote only the static phase events to info and repeat positive/negative capture
 controls before crediting observability. Package behavior alone cannot establish
 that the intended diagnostics are visible. The temporary probe was restored.
+
+## 2026-09-26: ACP inventory line-count convention
+
+The first strict ACP inventory validation rejected refreshed census line counts
+although all 55 rows were schema-valid and every lens had coverage. The source
+validator counts the terminal newline differently from splitlines. Use the
+public validator's line-count convention when refreshing both census entries
+and whole-file spans; do not weaken validation or alter source to fit metadata.
