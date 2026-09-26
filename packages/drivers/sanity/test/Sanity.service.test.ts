@@ -237,7 +237,7 @@ describe("@beep/sanity", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(TestLayer)((it) => {
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "submits a GROQ query and decodes the result envelope",
       Effect.fnUntraced(function* () {
@@ -257,7 +257,9 @@ describe("@beep/sanity", () => {
         });
       })
     );
+  });
 
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps non-success responses to typed driver errors",
       Effect.fnUntraced(function* () {
