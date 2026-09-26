@@ -2318,3 +2318,13 @@ The test-only repair targets the adapter public `PgClient.makeClient` entry poin
 while retaining the real test-utils layer/retry implementation. A mock-hit assertion
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
+
+## Markdown CLI resume report-root mismatch
+
+Resuming the read-only preparation session for bounded assertion edits did not
+retain the additional writable private report directory. The child stopped
+before writing its required report or editing source because approvals were
+disabled. Start a fresh bounded CLI lane with explicit worktree and report
+write roots; do not turn this into permission prompts or treat the stopped
+resume as implementation progress. A resume launcher should verify and restore
+all required writable roots before dispatch.

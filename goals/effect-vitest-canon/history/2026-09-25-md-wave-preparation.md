@@ -28,3 +28,30 @@ point before any test migration. Current test sources and manifest remain
 unchanged. The Codex preparation review is still in progress and has not yet
 supplied a complete migration plan; do not treat its preliminary count as
 implementation or ledger closure.
+
+## Resource dispositions
+
+The source review confirms no local acquired resource or effectful layer in the
+five files. The two authored-ledger boundary findings are now reasoned native
+exceptions: preserve actual artifact/source reads and their complete error and
+profile checks. These are human-lens dispositions, not detector exceptions.
+No MemoryFileSystem conversion or production change is needed. The review is
+still completing its later property/observability sections; source migration
+has not begun.
+
+## Assertion stage verified
+
+The bounded preparation review is complete. Outcome assertions now use canonical
+Result/Exit helpers, retaining identity, subset, equivalence, exact byte and
+Cause-message checks. Typed Exit projections deliberately reject defects and
+interruptions. Generic safety failures assert a nonempty array of schema-valid
+DocumentSafetyViolation values; no invented issue payload is used. Branded string
+expectations use the existing RenderError contract with a string type parameter;
+safe-document expectations use SafeDocument.make on the original documents.
+
+The initial package proof found introduced branded expected-value type errors;
+those were repaired without casts or changed bytes. The full repeat package
+proof passed: audit 20.3s and docgen 7.8s. The fresh detector has 18 Markdown
+findings (nine runtime wrappers and nine property wrappers), with no EV006
+assertion findings. Historical detector rows remain pending wave reconciliation.
+Property conversion follows this proof in D12 order.
