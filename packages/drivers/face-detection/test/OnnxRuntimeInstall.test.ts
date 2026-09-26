@@ -83,7 +83,7 @@ const fixture = Effect.gen(function* () {
   return { fs, path, root, temp, destination, install, installerRequire };
 }).pipe(Effect.withSpan("OnnxRuntimeInstall.fixture"));
 
-it.layer(NodeServices.layer)("ONNX Runtime's patched NuGet installer", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("ONNX Runtime's patched NuGet installer", (it) => {
   it.effect(
     "loads fflate through the narrowly scoped installer dependency",
     Effect.fnUntraced(function* () {

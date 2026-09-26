@@ -33,11 +33,6 @@ const encodeFaceDetectionErrorFromUnknownOptionsResult = S.encodeResult(FaceDete
 const encodeFaceDetectionImageRequestResult = S.encodeResult(FaceDetectionImageRequest);
 const encodeFaceDetectionResultResult = S.encodeResult(FaceDetectionResult);
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const point = FaceDetectionPoint.make({ x: 1, y: 2 });
 
 const fakeFace = FaceDetection.make({
@@ -240,27 +235,27 @@ describe("@beep/face-detection", () => {
     });
   });
 
-  it.effect("runs workflows through the service contract", () =>
-    withDetector({ modelPath: "./model.onnx" }, (detector) =>
-      detector.detect(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" }))
-    ).pipe(
-      Effect.map((result) => {
-        expect(result.faces).toEqual([fakeFace]);
-        expect(result.imagePath).toBe("./photo.jpg");
-      }),
-      provideScopedLayer(fakeLayer)
-    )
-  );
+  it.layer(fakeLayer)((it) => {
+    it.effect("runs workflows through the service contract", () =>
+      withDetector({ modelPath: "./model.onnx" }, (detector) =>
+        detector.detect(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" }))
+      ).pipe(
+        Effect.map((result) => {
+          expect(result.faces).toEqual([fakeFace]);
+          expect(result.imagePath).toBe("./photo.jpg");
+        })
+      )
+    );
 
-  it.effect("supports data-last detector workflows", () =>
-    withDetector((detector) => detector.detect(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" })))(
-      FaceDetectionModelConfig.make({ modelPath: "./model.onnx" })
-    ).pipe(
-      Effect.map((result) => {
-        expect(result.faces).toEqual([fakeFace]);
-        expect(result.width).toBe(100);
-      }),
-      provideScopedLayer(fakeLayer)
-    )
-  );
+    it.effect("supports data-last detector workflows", () =>
+      withDetector((detector) => detector.detect(FaceDetectionImageRequest.make({ imagePath: "./photo.jpg" })))(
+        FaceDetectionModelConfig.make({ modelPath: "./model.onnx" })
+      ).pipe(
+        Effect.map((result) => {
+          expect(result.faces).toEqual([fakeFace]);
+          expect(result.width).toBe(100);
+        })
+      )
+    );
+  });
 });
