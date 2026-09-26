@@ -21359,14 +21359,14 @@
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
       "lines": 85.22,
-      "statements": 85.02,
+      "statements": 85.03,
       "branches": 76.73,
       "functions": 81.3,
       "uncovered": {
         "lines": 8075,
-        "statements": 8641,
+        "statements": 8640,
         "branches": 4855,
-        "functions": 3250
+        "functions": 3249
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -27007,6 +27007,18 @@
             "statements": 43,
             "branches": 10,
             "functions": 20
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts": {
+          "lines": 98.7,
+          "statements": 98.79,
+          "branches": 75,
+          "functions": 98.11,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts": {
