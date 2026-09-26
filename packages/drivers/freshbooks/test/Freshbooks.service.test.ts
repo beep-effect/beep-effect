@@ -194,7 +194,7 @@ describe("@beep/freshbooks models", () => {
 });
 
 describe("@beep/freshbooks read service", () => {
-  layer(TestLayer)((it) => {
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "resolves the identity with distinct account and business namespaces",
       Effect.fnUntraced(function* () {
