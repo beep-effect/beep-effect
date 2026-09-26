@@ -155,3 +155,24 @@ line counts. The strict four-lens validator reports valid=true, complete=true,
 missing=0 for 72 rows covering the same 18 existing files (private result
 inventory-wrcfusd0/result.json). This is package lens coverage, not accepted P1
 inventory, an empty detector baseline, or goal completion.
+
+## Current-main snapshot refresh
+
+Merged main fb5b01146f into the HTML branch at 14d4c0cc5d. The five conflicts
+were import blocks: retain instrumented it and assertion helpers, adopt the new
+effect/Arbitrary path, and keep the prior removal of unused Effect imports.
+The installed Effect packages now use the 330b7475e2 snapshot from main.
+Full package proof passed on this merge: audit 34.1s and docgen 15.2s
+(html-main-refresh-package-001.log). The four human lenses revalidate against
+current file bytes/lines: valid=true, complete=true, missing=0. The post-merge
+syntax scan reports 113 EV006 rows; the remaining branch-only review and its
+historical receipts are not closed merely because pipe syntax changes whether
+a particular assertion is discovered.
+
+During this refresh, PR #1277's import conflict was resolved and pushed at
+38c00919ba, with package proof audit 19.5s/docgen 3.1s. Its SQLite interruption
+review thread was answered and resolved after narrowing the PR body to distinguish
+the committed bundle test from temporary SQLite controls. PRs #1273 and #1274
+were confirmed MERGED and their lanes retired through Yeet. Hosted readiness
+for #1277 remains separate; its OIP preview build failure and exhausted retry
+quota are recorded in the opportunity ledger.

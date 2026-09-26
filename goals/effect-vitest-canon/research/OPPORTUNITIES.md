@@ -2328,3 +2328,16 @@ TS2551. The test uses the supported equivalent `S.fromJsonString(S.Unknown)`;
 no dependency upgrade or diagnostic suppression is needed. API grounding should
 pair reference-source inspection with an installed-export check whenever the
 reference revision and lockfile release differ.
+
+### 2026-09-25 — Effect snapshot preview failure and exhausted retry quota
+
+After merging main into PR #1277 at 38c00919ba, full effect-drizzle package
+verification passed, but OIP's Vercel preview failed webpack compilation on
+Effect's isBetweenLength and onExitUnsafe exports. The new exports exist in the
+local snapshot; the hosted build restored a previous deployment cache. A retry
+of that exact preview through the deployment API with forceNew=1 was rejected
+with HTTP 402, api-deployments-free-per-day. No new deployment was created.
+The cache hypothesis is unproven, and the original build failure is not a
+rate-limit-only deployment failure. A cache-free preview retry after quota
+reset, with installed-package provenance, would separate stale cache from a
+snapshot packaging/bundler regression without weakening merge gates.
