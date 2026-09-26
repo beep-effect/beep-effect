@@ -1,4 +1,4 @@
-import { NonNegativeInt } from "@beep/schema";
+import { NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import {
   makeUsptoError,
@@ -14,7 +14,9 @@ import {
   UsptoErrorReason,
   UsptoPatentNumber,
 } from "@beep/uspto";
+import { thunkTrue } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -114,9 +116,9 @@ describe("Uspto service", () => {
         const metadata = yield* uspto.getApplication("16138242");
 
         expect(metadata.applicationNumberText).toBe("16138242");
-        expect(metadata.inventionTitle).toStrictEqual(O.some("Adjustable widget assembly"));
-        expect(metadata.patentNumber).toStrictEqual(O.some("10772255"));
-        expect(metadata.firstApplicantName).toStrictEqual(O.some("Precision Widgets LLC"));
+        assertSome(metadata.inventionTitle, NonEmptyTrimmedStr.make("Adjustable widget assembly"));
+        assertSome(metadata.patentNumber, NonEmptyTrimmedStr.make("10772255"));
+        assertSome(metadata.firstApplicantName, NonEmptyTrimmedStr.make("Precision Widgets LLC"));
         expect(seenUrls).toHaveLength(0);
       })
     );
@@ -189,7 +191,10 @@ describe("Uspto service", () => {
         const uspto = yield* Uspto;
         const results = yield* uspto.searchApplications('applicationMetaData.patentNumber:"10772255"');
         expect(results).toHaveLength(1);
-        expect(results[0]?.patentNumber).toStrictEqual(O.some("10772255"));
+        assertSome(
+          O.flatMap(O.fromUndefinedOr(results[0]), (result) => result.patentNumber),
+          NonEmptyTrimmedStr.make("10772255")
+        );
       })
     );
   });
@@ -200,21 +205,21 @@ describe("Uspto identifier normalization", () => {
     const error = makeUsptoError({ cause: "socket hang up" })("transport");
 
     expect(error.reason).toBe("transport");
-    expect(error.cause).toStrictEqual(O.some("socket hang up"));
+    assertSome(error.cause, "socket hang up");
   });
 
   it("normalizes application numbers", () => {
-    expect(normalizeUsptoApplicationNumber("16/138,242")).toStrictEqual(O.some("16138242"));
-    expect(normalizeUsptoApplicationNumber("16-138-242")).toStrictEqual(O.some("16138242"));
-    expect(O.isNone(normalizeUsptoApplicationNumber("12345"))).toBe(true);
-    expect(O.isNone(normalizeUsptoApplicationNumber("not a number"))).toBe(true);
+    assertSome(normalizeUsptoApplicationNumber("16/138,242"), "16138242");
+    assertSome(normalizeUsptoApplicationNumber("16-138-242"), "16138242");
+    assertNone(normalizeUsptoApplicationNumber("12345"));
+    assertNone(normalizeUsptoApplicationNumber("not a number"));
   });
 
   it("normalizes patent numbers", () => {
-    expect(normalizeUsptoPatentNumber("US 10,772,255 B2")).toStrictEqual(O.some("10772255"));
-    expect(normalizeUsptoPatentNumber("10772255")).toStrictEqual(O.some("10772255"));
-    expect(normalizeUsptoPatentNumber("RE46,604")).toStrictEqual(O.some("RE46604"));
-    expect(O.isNone(normalizeUsptoPatentNumber("ABC"))).toBe(true);
+    assertSome(normalizeUsptoPatentNumber("US 10,772,255 B2"), "10772255");
+    assertSome(normalizeUsptoPatentNumber("10772255"), "10772255");
+    assertSome(normalizeUsptoPatentNumber("RE46,604"), "RE46604");
+    assertNone(normalizeUsptoPatentNumber("ABC"));
   });
 });
 
@@ -251,7 +256,7 @@ describe("Uspto schema parity", () => {
       apiKey: "test-key",
       apiUrl: "https://api.uspto.gov",
     });
-    expect(Result.isFailure(decodeUsptoConfigInputResult({ apiUrl: "//" }))).toBe(true);
+    assertFailure(Result.mapError(decodeUsptoConfigInputResult({ apiUrl: "//" }), thunkTrue), true);
     expect(encode(UsptoApplicationMetadata, metadata)).toEqual({
       applicationNumberText: "16138242",
       firstApplicantName: "Precision Widgets LLC",
