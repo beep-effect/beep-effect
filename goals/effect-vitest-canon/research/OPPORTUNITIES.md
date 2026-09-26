@@ -2355,3 +2355,14 @@ The separate Todox failure is explicitly rate limited. Do not classify OIP as
 the rate-limit exception. A clean preview build with inspected package exports
 would distinguish these causes; the prior no-cache deployment request remains
 quota-blocked, so it was not retried here.
+
+## HTML frozen/current detector identity drift
+
+At package closeout, the frozen HTML ledger had 177 rows while current main's
+baseline had 181; only 85 ids were shared. Line-based identities moved as main
+changed. Preserve the union as 273 historical identities, not 273 distinct
+findings, and remove only HTML baseline rows after a fresh zero scan. Four
+retired wrapper ranges extended beyond their shorter canonical property files;
+re-anchor those rows to the replacement property blocks while keeping original
+ids and evidence. A stable occurrence key with explicit source-revision/span
+provenance would prevent this reconciliation ambiguity.

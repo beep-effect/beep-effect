@@ -259,3 +259,29 @@ passed in 3.362s, both zero failed/pending with stable input hashes. The current
 after timing/context artifacts supersede the previous checkpoint measurements;
 those earlier values remain historical observations above. Runtime, load and
 pressure are retained, and no isolated performance effect is claimed.
+
+## HTML detector-zero checkpoint
+
+Source commit 9de811f2b4 completes the remaining outcome assertions. Schema,
+conformance, serialization, script-type and safe-policy rejections now check
+explicit documented error tags through canonical Result/Exit helpers. Successful
+codec checks assert fixed canonical attribute values, preserve custom command
+spelling/presence values, or compare decoded documents with independently
+constructed fixtures. Existing inspection and byte-output assertions remain.
+These are deliberate contract strengthenings, not claims that branch-only
+predicates originally specified all these values.
+
+The complete syntax scan examined 1,179 files and reported 7,855 findings, none
+for HTML. This package milestone does not imply an empty repository baseline.
+Full HTML package verification passed: audit 18.1s, docgen 14.7s. Node and Bun each
+passed all 196 tests with zero failed/pending, in 8.270s and 3.093s respectively;
+inputs were stable within both runs. The current after receipts bind this source
+checkpoint and preserve workstation context without causal speed claims.
+
+Baseline reconciliation exposed identity drift since the frozen inventory:
+177 frozen detector rows versus 181 current-main baseline rows, with 85 identical
+ids. The union contains 273 historical identities, all now fixed at 9de811f2b4;
+this is not a claim of 273 distinct original defects. All 181 HTML baseline rows
+were removed after the fresh zero scan. Every unrelated baseline entry is kept
+byte-for-byte. Human-lens validation remains valid=true, complete=true, missing=0.
+Publication and hosted proof remain outstanding.
