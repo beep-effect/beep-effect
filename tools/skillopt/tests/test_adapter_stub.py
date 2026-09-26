@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from beep_skillopt.adapter import BeepLawAdapter
+from beep_skillopt.adapter import BeepLawAdapter, _scorer_model_args
 
 
 def _repo_root() -> Path:
@@ -44,6 +44,15 @@ def main() -> None:
         assert results[0]["hard"] == 1.0
         assert results[0]["agent_ok"] is True
         assert Path(results[0]["scratch_dir"]).is_dir()
+    assert _scorer_model_args("", "") == []
+    assert _scorer_model_args("gpt-6-astra", "") == ["--model", "gpt-6-astra"]
+    assert _scorer_model_args("", "medium") == ["--reasoning-effort", "medium"]
+    assert _scorer_model_args("gpt-6-astra", "medium") == [
+        "--model",
+        "gpt-6-astra",
+        "--reasoning-effort",
+        "medium",
+    ]
     print("stub-ok")
 
 
