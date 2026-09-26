@@ -646,12 +646,16 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         ACP_MOCK_MALFORMED_OUTPUT_EXIT_CODE: "23",
       });
       const terminationCalls = yield* Ref.make(0);
+      const terminationObserved = yield* Deferred.make<void>();
       const firstMessage = yield* Deferred.make<unknown>();
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio: makeChildStdio(handle),
         terminationError: makeTerminationError(handle),
         serverRequestMethods: HashSet.empty(),
-        onTermination: () => Ref.update(terminationCalls, (count) => count + 1),
+        onTermination: () =>
+          Ref.update(terminationCalls, (count) => count + 1).pipe(
+            Effect.andThen(Deferred.succeed(terminationObserved, undefined))
+          ),
       });
 
       yield* transport.clientProtocol
@@ -659,6 +663,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         .pipe(Effect.forkScoped);
 
       const message = yield* Deferred.await(firstMessage);
+      yield* Deferred.await(terminationObserved);
       assert.equal(yield* Ref.get(terminationCalls), 1);
       assert.equal(
         (
@@ -680,6 +685,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       };
       assert.equal(defect._tag, "RpcClientDefect");
       assert.instanceOf(defect.cause, AcpError.AcpProtocolParseError);
+
+      assert.equal(yield* handle.exitCode, 23);
+      assert.equal(yield* Ref.get(terminationCalls), 1);
     }),
     childProcessProtocolTestTimeout
   );
