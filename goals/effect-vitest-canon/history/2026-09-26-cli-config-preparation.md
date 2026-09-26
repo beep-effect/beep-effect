@@ -42,3 +42,21 @@ byte-for-byte accepted-template replay and second-apply idempotence.
 
 Assertions, property parameters, flake policy and instrumentation have not
 yet been migrated in this checkpoint.
+
+## Assertions, property and flake proof
+
+Provider assertion commit `edeb403a1e` replaces seven Some assertions and ten
+None assertions with native helpers, retaining every payload and polarity.
+Full provider audit/docgen passed (8.7 / 3.3 seconds). Config has no applicable
+Option/Result/Exit assertion migration.
+
+Both property surfaces already use native registration. The config's former
+runSync/checkEffect/Passed-tag findings were fixed upstream in `b1aa7e320c`
+(#1200); all four domains now have separate equality assertions. Preserve the
+six provider domains at `fcRuns(50)` and four config domains at `fcRuns(25)`.
+Both focused suites passed with `BEEP_FC_NUM_RUNS=400`, seed `20260708`, and CI
+enabled: three provider service tests and three config tests.
+
+Source flake review found no sleep, retry, external probe or timeout repair
+needed. Single-test captures reset at invocation; path expectations use the
+actual host home path. No 30-day hosted flake-clearance claim is made.
