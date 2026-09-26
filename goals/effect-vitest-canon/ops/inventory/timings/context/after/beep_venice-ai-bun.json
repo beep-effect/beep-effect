@@ -1,0 +1,103 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-report>"
+  ],
+  "phase": "after-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5ab88dbd9b8b7ac597c9b2d243c7ad83e578459a5642dcfe9fac01753283457b"
+    },
+    {
+      "file": "packages/drivers/venice-ai/package.json",
+      "sha256": "6d0b4d181e3368313e16f7cb0dc93d33b318b9fb6f084224188872acf4068b5c"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sha256": "4c66eb5e68f4c97f856faa8538049d6f5a38ad6b9934ede67b97fea97552084e"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+      "sha256": "71a56ebb813c015bfa21a82c7e5672b288c5d3623f76d13fe0d66c14b75bfa60"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/index.ts",
+      "sha256": "1a80cfba61703695b2fe2ce0c3b433ce15fef9c21658dc012c42223a6c11e827"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
+      "sha256": "d3e4f31864fcb4a86b5ee48b014fd385f6f1ca1c75c46d2e75fa32875e1b3d25"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "sha256": "bea38606c1d217033a6830b936a31a165926588937dae1b44c3738827b6c50b7"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "sha256": "c698694f24fa25643d524075aa87bc026aac0de137e1c9a8fb901b7612434570"
+    }
+  ],
+  "loadBefore": [29.646484375, 33.876953125, 37.13427734375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.32 avg60=1.67 avg300=3.71 total=2353529023\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.06 total=200592690\nfull avg10=0.00 avg60=0.03 avg300=0.04 total=173938252\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=956770103\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=652480974\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 1.6344775280012982,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5ab88dbd9b8b7ac597c9b2d243c7ad83e578459a5642dcfe9fac01753283457b"
+    },
+    {
+      "file": "packages/drivers/venice-ai/package.json",
+      "sha256": "6d0b4d181e3368313e16f7cb0dc93d33b318b9fb6f084224188872acf4068b5c"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sha256": "4c66eb5e68f4c97f856faa8538049d6f5a38ad6b9934ede67b97fea97552084e"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+      "sha256": "71a56ebb813c015bfa21a82c7e5672b288c5d3623f76d13fe0d66c14b75bfa60"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/index.ts",
+      "sha256": "1a80cfba61703695b2fe2ce0c3b433ce15fef9c21658dc012c42223a6c11e827"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
+      "sha256": "d3e4f31864fcb4a86b5ee48b014fd385f6f1ca1c75c46d2e75fa32875e1b3d25"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "sha256": "bea38606c1d217033a6830b936a31a165926588937dae1b44c3738827b6c50b7"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "sha256": "c698694f24fa25643d524075aa87bc026aac0de137e1c9a8fb901b7612434570"
+    }
+  ],
+  "loadAfter": [29.646484375, 33.876953125, 37.13427734375],
+  "pressureAfter": {
+    "cpu": "some avg10=0.26 avg60=1.61 avg300=3.68 total=2353535027\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.04 avg300=0.06 total=200593045\nfull avg10=0.00 avg60=0.03 avg300=0.04 total=173938553\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=956776073\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=652485557\n"
+  },
+  "sourceStable": true
+}

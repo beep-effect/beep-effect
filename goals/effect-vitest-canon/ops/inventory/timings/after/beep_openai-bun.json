@@ -1,0 +1,208 @@
+{
+  "numTotalTestSuites": 12,
+  "numPassedTestSuites": 12,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 12,
+  "numPassedTests": 12,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790407301946,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["OpenAI declared-field equivalence"],
+          "fullName": "OpenAI declared-field equivalence compares embedding options by model and dimensions",
+          "status": "passed",
+          "title": "compares embedding options by model and dimensions",
+          "duration": 1.6936570000000302,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OpenAI declared-field equivalence"],
+          "fullName": "OpenAI declared-field equivalence compares language options by model",
+          "status": "passed",
+          "title": "compares language options by model",
+          "duration": 1.3472229999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407303274,
+      "endTime": 1790407303275.6936,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/openai/test/OpenAi.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "OpenAI model Layers",
+            "provides Dimensions and round-trips embedMany through a stubbed HttpClient fixture"
+          ],
+          "fullName": "OpenAI model Layers provides Dimensions and round-trips embedMany through a stubbed HttpClient fixture provides Dimensions and round-trips embedMany through a stubbed HttpClient",
+          "status": "passed",
+          "title": "provides Dimensions and round-trips embedMany through a stubbed HttpClient",
+          "duration": 17.075460999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAI model Layers",
+            "forwards an explicit language model and exposes its model metadata through the stubbed client boundary fixture"
+          ],
+          "fullName": "OpenAI model Layers forwards an explicit language model and exposes its model metadata through the stubbed client boundary fixture forwards an explicit language model and exposes its model metadata through the stubbed client boundary",
+          "status": "passed",
+          "title": "forwards an explicit language model and exposes its model metadata through the stubbed client boundary",
+          "duration": 16.67214100000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAI model Layers",
+            "retains malformed provider output as AiError fixture"
+          ],
+          "fullName": "OpenAI model Layers retains malformed provider output as AiError fixture retains malformed provider output as AiError",
+          "status": "passed",
+          "title": "retains malformed provider output as AiError",
+          "duration": 16.64759200000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAI model Layers",
+            "resolves default model ids when the model environment variables are absent fixture"
+          ],
+          "fullName": "OpenAI model Layers resolves default model ids when the model environment variables are absent fixture resolves default model ids when the model environment variables are absent",
+          "status": "passed",
+          "title": "resolves default model ids when the model environment variables are absent",
+          "duration": 16.55663299999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAI model Layers",
+            "resolves model id overrides from the language and embedding environment bindings fixture"
+          ],
+          "fullName": "OpenAI model Layers resolves model id overrides from the language and embedding environment bindings fixture resolves model id overrides from the language and embedding environment bindings",
+          "status": "passed",
+          "title": "resolves model id overrides from the language and embedding environment bindings",
+          "duration": 16.60902299999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "OpenAI model Layers",
+            "fails acquisition when the API key is missing and defaults blank model overrides fixture"
+          ],
+          "fullName": "OpenAI model Layers fails acquisition when the API key is missing and defaults blank model overrides fixture fails acquisition when the API key is missing and defaults blank model overrides",
+          "status": "passed",
+          "title": "fails acquisition when the API key is missing and defaults blank model overrides",
+          "duration": 0.7466699999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407303275,
+      "endTime": 1790407303295.7466,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/openai/test/OpenAi.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/openai"],
+          "fullName": "@beep/openai pins defaults from the upstream OpenAI model unions",
+          "status": "passed",
+          "title": "pins defaults from the upstream OpenAI model unions",
+          "duration": 10.4207550000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/openai"],
+          "fullName": "@beep/openai keeps encoded OpenAI option wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded OpenAI option wire shapes byte-identical",
+          "duration": 10.120672999999897,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/openai"],
+          "fullName": "@beep/openai rejects empty model identifiers and non-positive embedding dimensions",
+          "status": "passed",
+          "title": "rejects empty model identifiers and non-positive embedding dimensions",
+          "duration": 10.097406999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/openai"],
+          "fullName": "@beep/openai round-trips schema-derived OpenAI options through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived OpenAI options through encoded form",
+          "duration": 10.097446999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407303281,
+      "endTime": 1790407303291.4207,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/openai/test/OpenAi.test.ts"
+    }
+  ]
+}

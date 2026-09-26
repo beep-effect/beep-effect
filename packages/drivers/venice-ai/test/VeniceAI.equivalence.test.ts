@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { VeniceAIError } from "@beep/venice-ai";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const sameVeniceAIError = S.toEquivalence(VeniceAIError);

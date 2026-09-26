@@ -1,0 +1,127 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-report>"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/drivers/xai/package.json",
+      "sha256": "557a98a3424526719c18ed086d91857e137cf7885fd11876fdae2a2cf4d82d06"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.config.ts",
+      "sha256": "7d89c662ff87d7c6854beea27c5895e3a08156ee001b131d209d9511b4193a0a"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.errors.ts",
+      "sha256": "2bba6c676cb2116760f99e9b93ba23a67cd99431172ba485594c0e33a8a87e7d"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.models.ts",
+      "sha256": "90617588fcb7d9040262aab8861cf5ecbab5c4f6dc426b4f27992aea74c3ed79"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.service.ts",
+      "sha256": "8b107c40cc58d8900b24e2f3ea0b6153da88912020a6ff2ca9c8582902f01eb8"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+      "sha256": "9b8f66d3baf41dea93324f1ee5195504b5bd4541c74ed78fbfc7a570df49ff86"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+      "sha256": "a70e18dd0af93618a9d66f2320c7eeb3734c57092c60db5705a692bb23c4c9f0"
+    },
+    {
+      "file": "packages/drivers/xai/src/index.ts",
+      "sha256": "6610717811ff8f87a8472608f082808ad09b71017fee8506c97e23c476f1848d"
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.equivalence.test.ts",
+      "sha256": "7b9ada98a9592f5318d81ad3def1efe0b9eab8c93214480dc47a9530e3f99939"
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "sha256": "c7e9babf3c8f6112d6217822726e7c2a9fdf3b481440f863532958748b6033cd"
+    }
+  ],
+  "loadBefore": [32.671875, 34.1572265625, 35.8359375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.90 avg60=1.92 avg300=4.02 total=2281291448\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.22 avg60=1.16 avg300=0.80 total=197725909\nfull avg10=0.21 avg60=1.12 avg300=0.67 total=171439192\n",
+    "io": "some avg10=0.01 avg60=0.18 avg300=0.92 total=951500266\nfull avg10=0.00 avg60=0.04 avg300=0.40 total=649964593\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 3.1198015290137846,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/drivers/xai/package.json",
+      "sha256": "557a98a3424526719c18ed086d91857e137cf7885fd11876fdae2a2cf4d82d06"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.config.ts",
+      "sha256": "7d89c662ff87d7c6854beea27c5895e3a08156ee001b131d209d9511b4193a0a"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.errors.ts",
+      "sha256": "2bba6c676cb2116760f99e9b93ba23a67cd99431172ba485594c0e33a8a87e7d"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.models.ts",
+      "sha256": "90617588fcb7d9040262aab8861cf5ecbab5c4f6dc426b4f27992aea74c3ed79"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAi.service.ts",
+      "sha256": "8b107c40cc58d8900b24e2f3ea0b6153da88912020a6ff2ca9c8582902f01eb8"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+      "sha256": "9b8f66d3baf41dea93324f1ee5195504b5bd4541c74ed78fbfc7a570df49ff86"
+    },
+    {
+      "file": "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+      "sha256": "a70e18dd0af93618a9d66f2320c7eeb3734c57092c60db5705a692bb23c4c9f0"
+    },
+    {
+      "file": "packages/drivers/xai/src/index.ts",
+      "sha256": "6610717811ff8f87a8472608f082808ad09b71017fee8506c97e23c476f1848d"
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.equivalence.test.ts",
+      "sha256": "7b9ada98a9592f5318d81ad3def1efe0b9eab8c93214480dc47a9530e3f99939"
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "sha256": "c7e9babf3c8f6112d6217822726e7c2a9fdf3b481440f863532958748b6033cd"
+    }
+  ],
+  "loadAfter": [32.61767578125, 34.12109375, 35.81494140625],
+  "pressureAfter": {
+    "cpu": "some avg10=1.46 avg60=1.98 avg300=4.01 total=2281384497\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.18 avg60=1.12 avg300=0.79 total=197752151\nfull avg10=0.17 avg60=1.08 avg300=0.67 total=171464689\n",
+    "io": "some avg10=0.01 avg60=0.17 avg300=0.92 total=951510759\nfull avg10=0.00 avg60=0.04 avg300=0.39 total=649969946\n"
+  },
+  "sourceStable": true
+}

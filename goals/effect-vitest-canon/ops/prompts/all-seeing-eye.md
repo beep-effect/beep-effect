@@ -7,7 +7,7 @@ P0e designs and proves the runner; other packages adopt it only in P2.
 
 Give a failed or hung Effect test a concrete name, last observed log, outcome
 and duration without changing its TestEnv, resource ownership or semantics.
-Use the public instrumented it subpath in @beep/test-utils after P0e acceptance.
+Use the accepted public instrumented it from @beep/test-runner after P0e acceptance.
 Do not recreate per-package runner wrappers or switch to live for logging.
 
 Start/end/duration/outcome logs use Effect.log and annotations through a Logger
@@ -67,11 +67,11 @@ it.effect("finishes the operation", Effect.fnUntraced(function* () {
 }))
 ~~~
 
-After P0e acceptance, adopt the instrumented subpath during the P2 observability
+After P0e acceptance, adopt the instrumented runner during the P2 observability
 step. The test remains effect-based; tracing is controlled by the environment.
 
 ~~~ts
-import { it } from "@beep/test-utils/Vitest"
+import { it } from "@beep/test-runner"
 import { strictEqual } from "@effect/vitest/utils"
 import { Effect } from "effect"
 

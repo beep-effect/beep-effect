@@ -2360,6 +2360,37 @@ No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
 
+## 2026-09-26: Observability charter retained the old runner import
+
+Preparing the twelve recorded Anthropic, OpenAI, OpenAI compatibility, Venice,
+and xAI tests exposed a stale All Seeing Eye charter: it still directed new
+adopters to the historical test-utils/Vitest subpath. Current merged test
+suites use the accepted test-runner package. The charter now names that public
+package while retaining the historical rc.112/rc.113 evidence and semantics.
+Updating consumer instructions in the runner extraction PR would have prevented
+new remediation lanes from repeating the obsolete import.
+
+## 2026-09-26: Scoped test typecheck did not prove package audit diagnostics
+
+OpenAI compatibility scope migration passed its configured nineteen tests and
+package-test-typecheck, but mandatory package-verify failed in beep:check:tests
+with five TS377083 nestedEffectGenYield diagnostics. Removing layer provision
+left redundant nested generators on error-capture paths. These diagnostics are
+introduced by the test refactor, not inherited source failures. The repair
+inlines the redundant generator boundary while retaining Effect.flip on the
+failing operation and the same error assertions. Running the package's actual
+audit check path before handoff would have caught this distinction earlier.
+
+## 2026-09-26: Git signer socket failed after green provider proofs
+
+Saving the OpenAI, Venice, and xAI phase repairs failed after all commit hooks
+passed: `1Password: Could not connect to socket`, followed by `failed to write
+commit object`. The prescribed op-doctor check found the automation backend
+healthy, but the configured Git signer still failed. The source changes are
+preserved in the index and a private patch; signing was not disabled and no
+credential was exported. A signer-health preflight distinct from automation
+secret-backend health would have exposed this publication boundary earlier.
+
 
 ### Drizzle full-proof follow-up: compiled codecs and private output references
 
@@ -2369,3 +2400,12 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: Cache merge must preserve dependency multiplicity
+
+Merging the provider wave with main used a set to combine task dependency lists.
+That removed six duplicate utils transit edges, causing cache audit configuration
+drift despite unchanged task configuration. The current census and main both
+retain those edges. Restored their exact multiplicity; future merge checks must
+compare dependency multisets and serialized lists, not just membership. The
+provider proof queued on the incorrect metadata was cancelled before correction.

@@ -1,0 +1,203 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 14,
+  "numPassedTests": 14,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790405964653,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["xAI declared-field equivalence"],
+          "fullName": "xAI declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+          "status": "passed",
+          "title": "treats field-equal errors as equivalent and field-different errors as distinct",
+          "duration": 3.6614270000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["xAI declared-field equivalence"],
+          "fullName": "xAI declared-field equivalence treats defect-only differences as equivalent",
+          "status": "passed",
+          "title": "treats defect-only differences as equivalent",
+          "duration": 3.118461000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790405967309,
+      "endTime": 1790405967312.6614,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/xai/test/XAi.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai constructs language models in data-last form",
+          "status": "passed",
+          "title": "constructs language models in data-last form",
+          "duration": 65.12042599999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai keeps encoded xAI schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded xAI schema wire shapes byte-identical",
+          "duration": 64.75311099999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai round-trips crispened xAI schemas through their encoded form",
+          "status": "passed",
+          "title": "round-trips crispened xAI schemas through their encoded form",
+          "duration": 65.27735799999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai keeps endpoint manifest and service surface aligned",
+          "status": "passed",
+          "title": "keeps endpoint manifest and service surface aligned",
+          "duration": 67.051289,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai sends every HTTP endpoint with the expected method, path, auth, query, and body mode",
+          "status": "passed",
+          "title": "sends every HTTP endpoint with the expected method, path, auth, query, and body mode",
+          "duration": 103.08798799999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai maps status, malformed JSON, multipart, and SSE failures",
+          "status": "passed",
+          "title": "maps status, malformed JSON, multipart, and SSE failures",
+          "duration": 36.63464000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai redacts xAI transport and WebSocket failure causes before rendering",
+          "status": "passed",
+          "title": "redacts xAI transport and WebSocket failure causes before rendering",
+          "duration": 36.32639500000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai maps language-model transport failures to retryable network errors",
+          "status": "passed",
+          "title": "maps language-model transport failures to retryable network errors",
+          "duration": 35.93682600000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai rejects non-JSON chat completion responses in the language model adapter",
+          "status": "passed",
+          "title": "rejects non-JSON chat completion responses in the language model adapter",
+          "duration": 34.37280899999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai rejects request payloads that do not match the endpoint body mode",
+          "status": "passed",
+          "title": "rejects request payloads that do not match the endpoint body mode",
+          "duration": 5.14742299999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai maps invalid WebSocket URL configuration into a typed driver error",
+          "status": "passed",
+          "title": "maps invalid WebSocket URL configuration into a typed driver error",
+          "duration": 5.2058429999997315,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/xai"],
+          "fullName": "@beep/xai parses SSE streams for chat, responses, and legacy-compatible endpoints",
+          "status": "passed",
+          "title": "parses SSE streams for chat, responses, and legacy-compatible endpoints",
+          "duration": 5.24037700000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790405967326,
+      "endTime": 1790405967435.2405,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/xai/test/XAi.service.test.ts"
+    }
+  ]
+}
