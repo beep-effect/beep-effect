@@ -21,7 +21,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Equal, Layer, Result } from "effect";
+import { Cause, Effect, Equal, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -29,11 +29,6 @@ import * as SqlClient from "effect/sql/SqlClient";
 import type { PostgresClientValue, PostgresDrizzleDatabase } from "@beep/postgres";
 
 const NativeDate = globalThis.Date;
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const makeHostileProxy = (): unknown =>
   new Proxy(
@@ -560,48 +555,49 @@ describe("Postgres Drizzle migrations", () => {
     })
   );
 
-  it.effect(
-    "validates and prepares in-memory migration bundles before native execution",
-    Effect.fnUntraced(function* () {
-      const config = MigrationBundleConfig.make({
-        migrations: [
-          MigrationBundleEntry.make({
-            name: "20260512000000_create_example",
-            sql: "CREATE TABLE example (id TEXT PRIMARY KEY);\n",
-          }),
-        ],
-        migrationsSchema: "drizzle",
-        migrationsTable: "__drizzle_migrations",
-      });
-      const execute = () => Effect.void;
-      const session = {
-        execute,
-        objects: () => Effect.succeed([]),
-        transaction: (run: (tx: { readonly execute: typeof execute }) => Effect.Effect<unknown>) => run({ execute }),
-      };
-      const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config).pipe(
-        provideScopedLayer(NodeCrypto.layer)
-      );
+  it.layer(NodeCrypto.layer)((it) => {
+    it.effect(
+      "validates and prepares in-memory migration bundles before native execution",
+      Effect.fnUntraced(function* () {
+        const config = MigrationBundleConfig.make({
+          migrations: [
+            MigrationBundleEntry.make({
+              name: "20260512000000_create_example",
+              sql: "CREATE TABLE example (id TEXT PRIMARY KEY);\n",
+            }),
+          ],
+          migrationsSchema: "drizzle",
+          migrationsTable: "__drizzle_migrations",
+        });
+        const execute = () => Effect.void;
+        const session = {
+          execute,
+          objects: () => Effect.succeed([]),
+          transaction: (run: (tx: { readonly execute: typeof execute }) => Effect.Effect<unknown>) => run({ execute }),
+        };
+        const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config);
 
-      expectRoundTrip(MigrationBundleConfig, config);
-      expect(result).toBeUndefined();
-    })
-  );
+        expectRoundTrip(MigrationBundleConfig, config);
+        expect(result).toBeUndefined();
+      })
+    );
+  });
 });
 
 describe("Postgres client", () => {
-  it.effect("provides all client service keys from an existing PgClient", () => {
-    const client = { fixture: "pg-client" } as unknown as PostgresClientValue;
-    const program = Effect.gen(function* () {
-      const beepClient = yield* PostgresClient;
-      const nativeClient = yield* NativePgClient.PgClient;
-      const sqlClient = yield* SqlClient.SqlClient;
+  const client = { fixture: "pg-client" } as unknown as PostgresClientValue;
 
-      assert.strictEqual(beepClient, client);
-      assert.strictEqual(nativeClient, client);
-      assert.strictEqual(sqlClient, client);
-    });
+  it.layer(PostgresClient.fromPgClient(client))((it) => {
+    it.effect("provides all client service keys from an existing PgClient", () =>
+      Effect.gen(function* () {
+        const beepClient = yield* PostgresClient;
+        const nativeClient = yield* NativePgClient.PgClient;
+        const sqlClient = yield* SqlClient.SqlClient;
 
-    return program.pipe(provideScopedLayer(PostgresClient.fromPgClient(client)));
+        assert.strictEqual(beepClient, client);
+        assert.strictEqual(nativeClient, client);
+        assert.strictEqual(sqlClient, client);
+      })
+    );
   });
 });
