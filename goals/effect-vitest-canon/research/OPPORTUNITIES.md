@@ -2369,3 +2369,15 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+### Service-driver property preparation: optional redacted generator branch
+
+Sanity's added token-present property initially filtered the default config
+arbitrary for a present token. Package audit failed with `Property exhausted
+after 0 run(s) and 501 discard(s)`. This is an introduced generator construction
+error, not a production counterexample. The field accepts `S.String` wrapped
+in `RedactedFromValue`; compose the existing valid token-absent config arbitrary
+with a generated string and `Redacted.make` to cover that branch directly.
+The original seven laws remain intact. Full package proof and the400-run
+fixed-seed property lane pass after this repair. Check branch reachability
+before relying on optional transformed-schema generation for coverage.

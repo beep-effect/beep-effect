@@ -42,3 +42,34 @@ Firecrawl credential-gate boundaries and Sanity's omitted token-present domain
 without weakening existing predicates. Flake review precedes instrumentation
 and honest live-test skip reporting. No production fixes are authorized by
 this preparation, and no inventory remediation is claimed yet.
+
+## Scope, assertion and property checkpoint
+
+Sanity's fixture isolation is committed in `1cd30e96b9`; Firecrawl and Runpod
+scope changes are in `80040ad26f`. Five Firecrawl and seven Runpod unit layers
+have five-second acquisition limits. Runpod's two live cases use explicit
+30-second layers, preserving their Config-based credential guards. Existing
+service bodies and assertions were retained during this phase.
+
+Native typed assertions landed in `5cd7d753fc` and `5f108d1e61`. They preserve
+plain-value assertions and first typed error observations without constructing
+a new failure-cause expectation. Each package passed full audit and docgen.
+
+Property commit `6cc5138000` migrates Firecrawl's16 schema domains and Runpod's10
+to native registration with `fcRuns(25)`. Firecrawl retains Effect codecs and
+schema equivalence. Runpod retains exact re-encoding, its equality-or-schema-
+equivalence predicate, normalized raw-path arbitrary and `/future` oracle.
+Sanity's `032cb23fc1` adds token-present configurations while retaining the
+original seven-domain50-run property. Synthetic string tokens are generated
+from the accepted token field domain; no real credentials are read.
+
+Firecrawl's credential gate now trims before classification. Synthetic boundary
+checks cover missing/empty/whitespace and unresolved references, and a generated
+law preserves normalized configured keys. Existing live assertions remain.
+Full package audit/docgen passed for all three final property surfaces.
+All three configured Node suites also passed with `BEEP_FC_NUM_RUNS=400` and
+`BEEP_FC_SEED=20260708`, with both provider key variables explicitly blank.
+
+Flake review and final observability adoption, runtime timings, inventory
+closure and PR gates remain. No live-provider acceptance or goal completion
+is claimed by these local checks.
