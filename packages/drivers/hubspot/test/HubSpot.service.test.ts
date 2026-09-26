@@ -259,7 +259,7 @@ describe("@beep/hubspot", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(TestLayer)((it) => {
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "submits a form through the secure Forms API endpoint",
       Effect.fnUntraced(function* () {
@@ -276,7 +276,9 @@ describe("@beep/hubspot", () => {
         expect(captures[0]?.headers.authorization).toBe("Bearer hubspot-service-key");
       })
     );
+  });
 
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps non-success responses to typed driver errors",
       Effect.fnUntraced(function* () {
@@ -298,7 +300,9 @@ describe("@beep/hubspot", () => {
         }
       })
     );
+  });
 
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "upserts contacts through the CRM batch endpoint",
       Effect.fnUntraced(function* () {
@@ -324,7 +328,9 @@ describe("@beep/hubspot", () => {
         expect(capture?.headers.authorization).toBe("Bearer hubspot-service-key");
       })
     );
+  });
 
+  layer(TestLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "maps upsert response status failures with email context",
       Effect.fnUntraced(function* () {
