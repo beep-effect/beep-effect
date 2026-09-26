@@ -1,0 +1,368 @@
+{
+  "numTotalTestSuites": 5,
+  "numPassedTestSuites": 5,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 29,
+  "numPassedTests": 29,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790414099974,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AI Sync declared-field equivalence"],
+          "fullName": "AI Sync declared-field equivalence treats field-equal AiSyncError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal AiSyncError instances as equivalent and field-different ones as distinct",
+          "duration": 3.0765989999999874,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790414106290,
+      "endTime": 1790414106293.0767,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync validates the generated artifact set offline",
+          "status": "passed",
+          "title": "validates the generated artifact set offline",
+          "duration": 122.29791300000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync reports strict upstream drift through the typed failure channel",
+          "status": "passed",
+          "title": "reports strict upstream drift through the typed failure channel",
+          "duration": 59.027068999999756,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps crispened schema encoded wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps crispened schema encoded wire shapes byte-identical",
+          "duration": 17.869464000000335,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncSourceId through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncSourceId through its encoded shape",
+          "duration": 29.46414300000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncSourceUrl through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncSourceUrl through its encoded shape",
+          "duration": 30.74245299999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncVersionPin through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncVersionPin through its encoded shape",
+          "duration": 10.89563299999918,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncContentHash through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncContentHash through its encoded shape",
+          "duration": 9.12217099999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncSourceMetadata through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncSourceMetadata through its encoded shape",
+          "duration": 13.12353499999972,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncSchemaCell through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncSchemaCell through its encoded shape",
+          "duration": 13.073135999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncDriftFinding through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncDriftFinding through its encoded shape",
+          "duration": 17.990569999999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncDriftReport through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncDriftReport through its encoded shape",
+          "duration": 25.41233199999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncValidationResult through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncValidationResult through its encoded shape",
+          "duration": 21.15914099999918,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AiSyncError through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AiSyncError through its encoded shape",
+          "duration": 10.833466000000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AgentCommandMetadata through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AgentCommandMetadata through its encoded shape",
+          "duration": 9.131706000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips AgentPluginManifestMetadata through its encoded shape",
+          "status": "passed",
+          "title": "round-trips AgentPluginManifestMetadata through its encoded shape",
+          "duration": 7.971418000000085,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips UnknownNativeSchemaCell through its encoded shape",
+          "status": "passed",
+          "title": "round-trips UnknownNativeSchemaCell through its encoded shape",
+          "duration": 6.356540999999197,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips NormalizedAgentInstructionDocument through its encoded shape",
+          "status": "passed",
+          "title": "round-trips NormalizedAgentInstructionDocument through its encoded shape",
+          "duration": 4.5456819999999425,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync renders generated literal domains through LiteralKit",
+          "status": "passed",
+          "title": "renders generated literal domains through LiteralKit",
+          "duration": 0.39584000000013475,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps check and audit cache keys coupled to repository safety configs",
+          "status": "passed",
+          "title": "keeps check and audit cache keys coupled to repository safety configs",
+          "duration": 9.147820000000138,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps checked-in Claude grants inside the exact 64-value allow domain",
+          "status": "passed",
+          "title": "keeps checked-in Claude grants inside the exact 64-value allow domain",
+          "duration": 25.43623899999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync reports synthetic source drift against an injected upstream response",
+          "status": "passed",
+          "title": "reports synthetic source drift against an injected upstream response",
+          "duration": 1.977776000000631,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips Codex-compatible MCP fields through Claude-style MCP JSON",
+          "status": "passed",
+          "title": "round-trips Codex-compatible MCP fields through Claude-style MCP JSON",
+          "duration": 0.7948150000001988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips the modeled Junie and Claude MCP JSON shape",
+          "status": "passed",
+          "title": "round-trips the modeled Junie and Claude MCP JSON shape",
+          "duration": 0.24130200000035984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync normalizes lossy instruction and shared skill transform candidates",
+          "status": "passed",
+          "title": "normalizes lossy instruction and shared skill transform candidates",
+          "duration": 0.28359699999964505,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps unsupported and unknown V1 cells explicit",
+          "status": "passed",
+          "title": "keeps unsupported and unknown V1 cells explicit",
+          "duration": 0.1932779999997365,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync synthetic config validation"],
+          "fullName": "@beep/ai-sync synthetic config validation validates a Codex TOML config and rejects typed invalid fields",
+          "status": "passed",
+          "title": "validates a Codex TOML config and rejects typed invalid fields",
+          "duration": 7.233592000000499,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync synthetic config validation"],
+          "fullName": "@beep/ai-sync synthetic config validation separates native config compatibility from checked-in repository safety policy",
+          "status": "passed",
+          "title": "separates native config compatibility from checked-in repository safety policy",
+          "duration": 120.45252100000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync synthetic config validation"],
+          "fullName": "@beep/ai-sync synthetic config validation reads each mandatory config exactly once during combined validation",
+          "status": "passed",
+          "title": "reads each mandatory config exactly once during combined validation",
+          "duration": 114.4792210000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790414106994,
+      "endTime": 1790414107141.4363,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/ai-sync/test/ai-sync.test.ts"
+    }
+  ]
+}

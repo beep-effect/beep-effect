@@ -73,3 +73,38 @@ Both packages have completed scope, assertion and property phases. Final flake
 review, instrumentation, dependency-generated artifacts, final runtime timing,
 ledger reconciliation and PR gates remain. Native checkout reads require their
 subject-specific filesystem exception rather than a fabricated memory copy.
+
+## Final local instrumentation and inventory
+
+Flake review found no new clock, retry or ordering change needed. Injected HTTP
+responses, per-test counters, scoped unique directories and real-checkout
+subjects remain. No flakyTest, skip or timeout increase was introduced.
+Commit `82e287e0b3` adopts the instrumented test-runner across all five files.
+Both full package audit/docgen proofs pass after instrumentation. Generated
+TypeScript references and Fallow boundary configs pass their parity checks.
+
+| Package | Node before / after | Bun before / after | Final pass / skip |
+| --- | ---: | ---: | ---: |
+| AI Sync | 6.809 / 7.961 s | 3.947 / 3.323 s | 29 / 0 |
+| API Transport | 7.129 / 7.276 s | 4.140 / 3.739 s | 9 / 0 |
+
+All four final runs exited zero with stable source, manifest and lockfile hashes.
+AI Sync's registration count increases by 13 because one aggregate case now
+contains 14 separately named laws. The Node timings increased on the shared
+workstation; no controlled speedup is claimed. Raw reports and resource-pressure
+contexts are retained under final/transport-sync and the matching context path.
+
+The ledger contains 42 rows: 20 fixed, three explicit exceptions and 19
+no-findings rows. One owned-source delta row records API Transport's three
+Option comparisons missing from the frozen detector inventory. Strict validation
+covers all five current files and every lens with zero missing coverage.
+Fifteen baseline entries are removed; three reviewed entries remain: native
+filesystem provenance for real-checkout subjects, and two canonical assertTrue
+calls whose inner Option/Exit Boolean predicates still trigger judgment review.
+These predicate-only oracles have no independent expected payload or Cause.
+This checkpoint does not claim that the baseline is empty.
+
+The runner dependencies add 19 reviewed cache edges with no removals and preserve
+existing multiplicity. Cache audit reports zero blocking findings and 1,251
+unassessed computations. Full hosted proof, review closure and operator merge
+remain required.

@@ -5952,216 +5952,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:104:runSync@22#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 104,
-      "endLine": 104,
-      "symbol": "runSync",
-      "occurrence": "v2:cd4c5bfa1116e940e775581035b3535c62c1057da3c9845327d11506a1d8cc09",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(decodeUnknownApiTransportOptions(option))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:111:runSync@24#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 111,
-      "endLine": 113,
-      "symbol": "runSync",
-      "occurrence": "v2:a7f886d994ceed9e123167825eb5875a99e66b5ab8c7b6f7d3c03f114aca02e7",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( encodeRateLimitSnapshot(RateLimitSnapshot.make({ limit: 1000, remaining: 42, reset: 60 })) )",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:114:runSync@27#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 114,
-      "endLine": 114,
-      "symbol": "runSync",
-      "occurrence": "v2:074f07bfe8836bbbccbeef69ed267e3c4f4af0fa20aff04d85fea43d48de7ca2",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(encodeRateLimitSnapshot(RateLimitSnapshot.make({ remaining: 42 })))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:122:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 122,
-      "endLine": 137,
-      "symbol": "runSync",
-      "occurrence": "v2:6728d40251d8f98341c04efc856b953eda882a9114227d63e9d74a4e8494ea69",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.all([RateLimitSnapshotArbitrary]), ([snapshot]) => { const encoded = Effect.runSync(encodeRateLimitSnapshot(snapshot)); const decoded = Effect.runSync(",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:126:runSync@28#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 126,
-      "endLine": 126,
-      "symbol": "runSync",
-      "occurrence": "v2:d20df667b0265f0982b286a49d849e9ae90689c02bb546304973873b86282ebb",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(encodeRateLimitSnapshot(snapshot))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:127:runSync@28#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 127,
-      "endLine": 127,
-      "symbol": "runSync",
-      "occurrence": "v2:a6dbf81466f433e0428349338625ec9456dd1ae23388940fa2e82f2362aae461",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(decodeRateLimitSnapshot(encoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:128:runSync@30#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 128,
-      "endLine": 128,
-      "symbol": "runSync",
-      "occurrence": "v2:76f5365b2c8a28cc26fe866b65722ce546a92e37fa959d59186d2c865fd33825",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(encodeRateLimitSnapshot(decoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:142:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 142,
-      "endLine": 157,
-      "symbol": "runSync",
-      "occurrence": "v2:9ce0f36da782247659f1f6f74ac665b3e049ac8172f3ab7506c89d1d0ee6a2b7",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( Arbitrary.all([HeaderRoundTripSnapshotArbitrary]), ([snapshot]) => { const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot)); O.match(parsed, { onNone:",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:61:runSync@20#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 61,
-      "endLine": 61,
-      "symbol": "runSync",
-      "occurrence": "v2:4aac1b1f2382215c394432ef329b369164289a3740c484debc60052a14c6429e",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(encodeApiTransportOptions(options))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/foundation/capability/api-transport/test/Transport.test.ts:62:runSync@20#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 62,
-      "endLine": 62,
-      "symbol": "runSync",
-      "occurrence": "v2:5f0bed9d39cb7606e81296fddd92f079d80dc0ca4dd3f58a274315b230bf95a3",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(decodeApiTransportOptions(encoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/foundation/capability/file-processing/test/FileProcessing.test.ts:135:runSync@6#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -71516,27 +71306,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/library/ai-sync/test/ai-sync.test.ts:141:withTempDirectory@26#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/ai-sync",
-      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 141,
-      "endLine": 153,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:f2f46518b346817609034f7cb6f26a22c38833d528c4022da764e68105182523",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory(); }), use",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts:16:provideScopedLayer@2#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -115202,17 +114971,17 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:359:expect@10#1",
+      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:556:assertTrue@8#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 359,
-      "endLine": 359,
-      "symbol": "expect",
-      "occurrence": "v2:0114796150d81a9e2739e5a87920322cf051f24bec4766b23edb859032ee9e71",
+      "line": 556,
+      "endLine": 556,
+      "symbol": "assertTrue",
+      "occurrence": "v2:a3c2b8a0767972197d9cdf16b98281ddeac16d366a6521403d9f45eaa4d49b7c",
       "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Exit.isFailure(invalid)).toBe(true)",
+      "evidence": "assertTrue(Exit.isFailure(invalid))",
       "replacement": {
         "primitive": "utils.assertTrue",
         "sketch": "Preserve this Exit.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
@@ -115220,20 +114989,21 @@
       "severity": "minor",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Canonical assertTrue preserves the original Boolean predicate and polarity. No independent expected payload or Cause exists; the detector still flags the nested Option/Exit expression as a judgment candidate."
     },
     {
-      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:702:expect@6#1",
+      "id": "EV006:packages/tooling/library/ai-sync/test/ai-sync.test.ts:467:assertTrue@6#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 702,
-      "endLine": 702,
-      "symbol": "expect",
-      "occurrence": "v2:2327d48fd89794010026ce5b7bf35cd1fc224fe3e0cb77e405780d0a67810f98",
+      "line": 467,
+      "endLine": 467,
+      "symbol": "assertTrue",
+      "occurrence": "v2:e36f8e9eb6df091fa6d776c6cc8382ef0230df06b090c1564bb5cc2735bc9859",
       "class": "hand-rolled-data-assertion",
-      "evidence": "expect(findings[0] !== undefined && O.isSome(findings[0].expectedHash)).toBe(true)",
+      "evidence": "assertTrue(findings[0] !== undefined && O.isSome(findings[0].expectedHash))",
       "replacement": {
         "primitive": "utils.deepStrictEqual",
         "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
@@ -115241,7 +115011,8 @@
       "severity": "minor",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Canonical assertTrue preserves the original Boolean predicate and polarity. No independent expected payload or Cause exists; the detector still flags the nested Option/Exit expression as a judgment candidate."
     },
     {
       "id": "EV006:packages/tooling/library/repo-utils/test/DependencyIndex.test.ts:37:expect@8#1",
@@ -143127,48 +142898,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/foundation/capability/api-transport/test/Transport.test.ts:123:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 123,
-      "endLine": 136,
-      "symbol": "checkEffect",
-      "occurrence": "v2:6728d40251d8f98341c04efc856b953eda882a9114227d63e9d74a4e8494ea69",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([RateLimitSnapshotArbitrary]), ([snapshot]) => { const encoded = Effect.runSync(encodeRateLimitSnapshot(snapshot)); const decoded = Effect.runSync(decodeRateLimitS",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/foundation/capability/api-transport/test/Transport.test.ts:143:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/api-transport",
-      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
-      "line": 143,
-      "endLine": 156,
-      "symbol": "checkEffect",
-      "occurrence": "v2:9ce0f36da782247659f1f6f74ac665b3e049ac8172f3ab7506c89d1d0ee6a2b7",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([HeaderRoundTripSnapshotArbitrary]), ([snapshot]) => { const parsed = RateLimitSnapshot.fromHeaders(toHeaders(snapshot)); O.match(parsed, { onNone: () => expect(ha",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/foundation/capability/chalk/test/index.test.ts:200:checkEffect@30#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -146540,48 +146269,6 @@
       "occurrence": "v2:36feadf863776c917daf61c2d936383a7d9b3537fc11799051a596ba21f314ac",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.all([EvidenceTier.pipe(S.Array, Arbitrary.schema)]), ([tiers]) => { expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers))); expect(weakestEvide",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/library/ai-sync/test/ai-sync.test.ts:106:checkEffect@24#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/ai-sync",
-      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 106,
-      "endLine": 117,
-      "symbol": "checkEffect",
-      "occurrence": "v2:2cfb178e65411577a03af058c880bebc51e358809c63f42dd74d4f132d141584",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([arbitrary]), ([value]) => Effect.gen(function* () { const encoded = yield* S.encodeEffect(schema)(value); const decoded = yield* S.decodeEffect(schema)(encoded);",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/library/ai-sync/test/ai-sync.test.ts:125:checkEffect@24#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/ai-sync",
-      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 125,
-      "endLine": 136,
-      "symbol": "checkEffect",
-      "occurrence": "v2:104deafa93a0faee0aa84ff20825172d1a26ce2d6fbf5ff52f890aaf073e685c",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([Arbitrary.schema(schema)]), ([value]) => Effect.gen(function* () { const encoded = yield* S.encodeEffect(schema)(value); const decoded = yield* S.decodeEffect(sch",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
@@ -154921,13 +154608,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/library/ai-sync/test/ai-sync.test.ts:37:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/library/ai-sync/test/ai-sync.test.ts:39:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/ai-sync",
       "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-      "line": 37,
-      "endLine": 37,
+      "line": 39,
+      "endLine": 39,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -154939,7 +154626,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native NodeServices is retained only for assertions about real checked-in generated artifacts, safety policy and turbo config. Three synthetic filesystem cases now use MemoryFileSystem with unique scoped directories."
     },
     {
       "id": "EV010:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:3:@effect/platform-node@0#1",
