@@ -70,6 +70,44 @@ Full package audit/docgen passed for all three final property surfaces.
 All three configured Node suites also passed with `BEEP_FC_NUM_RUNS=400` and
 `BEEP_FC_SEED=20260708`, with both provider key variables explicitly blank.
 
-Flake review and final observability adoption, runtime timings, inventory
-closure and PR gates remain. No live-provider acceptance or goal completion
-is claimed by these local checks.
+## Final local checkpoint
+
+The flake pass retained Firecrawl's deterministic watcher startup, completion,
+failure and close oracles. Runpod keeps seven independent unit fixtures and
+Sanity now isolates its mutable responder per block. No retries, sleeps or
+suite-wide timeout changes were introduced.
+
+Commit `30035e3b38` adopts the instrumented runner across all eight files.
+Firecrawl's missing-key placeholder is now a skip. Runpod preserves Config-based
+credential lookup and reports its two missing-key branches through the native
+TestContext skip operation. These paths passed on Node and Bun. No live provider
+acceptance is claimed.
+
+All three packages passed full package audit and docgen after instrumentation.
+The final configured runtime runs exited zero with stable source, manifest and
+lockfile hashes. API-key variables were explicitly blank.
+
+| Package | Node before / after | Bun before / after | Final pass / skip |
+| --- | ---: | ---: | ---: |
+| Firecrawl | 4.786 / 4.681 s | 2.099 / 1.437 s | 15 / 1 |
+| Runpod | 4.805 / 4.368 s | 2.350 / 1.459 s | 9 / 2 |
+| Sanity | 4.360 / 4.223 s | 2.052 / 1.401 s | 7 / 0 |
+
+Final reports and resource-load contexts are in the final/service-drivers timing
+and matching context directories. These are shared-workstation observations,
+not controlled speedup claims.
+
+The existing 85-row ledger has 59 fixed findings and 26 no-findings rows.
+Strict validation covers all eight current files and four lenses with no missing
+coverage. Three whole-file Runpod ranges were refreshed after source shortening.
+Firecrawl's historical EV001 finding is attributed to upstream `b1aa7e320cde`,
+not to this wave. The baseline removes exactly 52 currently tracked findings;
+the current detector reports zero new findings and no remaining findings in
+these three packages. The full scan still takes about 12.3 seconds, exceeding
+the goal's ten-second target; that broader acceptance gate remains open.
+
+Runner dependencies add 30 reviewed cache edges, retaining multiplicity and
+removing none. The cache audit has zero blocking findings and 1,251 unassessed
+computations. Generated TypeScript references were refreshed with tsconfig-sync
+and its check reports no drift. Hosted proof, adversarial review and operator
+merge remain outstanding; this checkpoint does not close the goal.

@@ -1,0 +1,135 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/service-runpod-runner-final-node.json"
+  ],
+  "phase": "runner-final-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "c5f20f5f3e997f459a69c7d22ce11907db3e12202004a141158f6edf4befacff"
+    },
+    {
+      "file": "packages/drivers/runpod/package.json",
+      "sha256": "1fadbb4fb0dfdb1281c21e5ad52cca86aa1d4f7b1c621204ba6977c858d70f0c"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.config.ts",
+      "sha256": "8ce08b7330ff4aed2a9bee03d904bc0defa5cf1a6ad28cf961acaed166c8fbd1"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+      "sha256": "e93c780091e4c75451edc74975459085fb43e7184aa4b442ba944278134e39d4"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.service.ts",
+      "sha256": "0f234a0a9cde9a7d65b5807ae71ae124147b71e0ed182c7f0a5da82a685b1b8f"
+    },
+    {
+      "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+      "sha256": "e8eb14640a3959c0c1966afb820bf1ec358c7be4be830426b3f814a6742e5d42"
+    },
+    {
+      "file": "packages/drivers/runpod/src/index.ts",
+      "sha256": "610ced43e468bf48080d4fe753a778694cc735954ada07205bd67ee651b4f626"
+    },
+    {
+      "file": "packages/drivers/runpod/src/_generated/Runpod.models.gen.ts",
+      "sha256": "973eedda358f65ff5dd99efa3e01390ceb3c7a0b6ec82578997b4d9b351558fa"
+    },
+    {
+      "file": "packages/drivers/runpod/src/_generated/Runpod.operations.gen.ts",
+      "sha256": "1326702834caa2f8e41c45a23517a8df25e217523312efe7597635fa2c6b9cfa"
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
+      "sha256": "e2384836d4a2cd12ac8a62fcd4f0ee51b44d5568ccf5e0998a62c8d9ffc2af40"
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "sha256": "79cf216f8bc96ac0f6bb03c14073f66cea31be21ae5a05316d6f2da46a48872d"
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "sha256": "ef16cc68c8ba49400f7d048d33ed8502708e104d42a74204d587c045bb44915a"
+    }
+  ],
+  "loadBefore": [22.81201171875, 13.69580078125, 17.31787109375],
+  "pressureBefore": {
+    "cpu": "some avg10=3.40 avg60=2.00 avg300=1.03 total=2532287818\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.82 avg60=0.83 avg300=0.28 total=213904091\nfull avg10=1.53 avg60=0.72 avg300=0.24 total=185826568\n",
+    "io": "some avg10=0.51 avg60=0.20 avg300=0.13 total=992347650\nfull avg10=0.05 avg60=0.02 avg300=0.05 total=676770624\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Firecrawl and Runpod live gates disabled with blank key variables; no live-provider proof",
+  "exit": 0,
+  "wholeCommandSeconds": 4.36837862500397,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "c5f20f5f3e997f459a69c7d22ce11907db3e12202004a141158f6edf4befacff"
+    },
+    {
+      "file": "packages/drivers/runpod/package.json",
+      "sha256": "1fadbb4fb0dfdb1281c21e5ad52cca86aa1d4f7b1c621204ba6977c858d70f0c"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.config.ts",
+      "sha256": "8ce08b7330ff4aed2a9bee03d904bc0defa5cf1a6ad28cf961acaed166c8fbd1"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+      "sha256": "e93c780091e4c75451edc74975459085fb43e7184aa4b442ba944278134e39d4"
+    },
+    {
+      "file": "packages/drivers/runpod/src/Runpod.service.ts",
+      "sha256": "0f234a0a9cde9a7d65b5807ae71ae124147b71e0ed182c7f0a5da82a685b1b8f"
+    },
+    {
+      "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+      "sha256": "e8eb14640a3959c0c1966afb820bf1ec358c7be4be830426b3f814a6742e5d42"
+    },
+    {
+      "file": "packages/drivers/runpod/src/index.ts",
+      "sha256": "610ced43e468bf48080d4fe753a778694cc735954ada07205bd67ee651b4f626"
+    },
+    {
+      "file": "packages/drivers/runpod/src/_generated/Runpod.models.gen.ts",
+      "sha256": "973eedda358f65ff5dd99efa3e01390ceb3c7a0b6ec82578997b4d9b351558fa"
+    },
+    {
+      "file": "packages/drivers/runpod/src/_generated/Runpod.operations.gen.ts",
+      "sha256": "1326702834caa2f8e41c45a23517a8df25e217523312efe7597635fa2c6b9cfa"
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
+      "sha256": "e2384836d4a2cd12ac8a62fcd4f0ee51b44d5568ccf5e0998a62c8d9ffc2af40"
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "sha256": "79cf216f8bc96ac0f6bb03c14073f66cea31be21ae5a05316d6f2da46a48872d"
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "sha256": "ef16cc68c8ba49400f7d048d33ed8502708e104d42a74204d587c045bb44915a"
+    }
+  ],
+  "loadAfter": [21.38525390625, 13.55126953125, 17.25146484375],
+  "pressureAfter": {
+    "cpu": "some avg10=2.28 avg60=1.87 avg300=1.02 total=2532300197\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.22 avg60=0.78 avg300=0.27 total=213905139\nfull avg10=1.03 avg60=0.67 avg300=0.24 total=185827511\n",
+    "io": "some avg10=0.34 avg60=0.18 avg300=0.13 total=992369941\nfull avg10=0.03 avg60=0.02 avg300=0.05 total=676788100\n"
+  },
+  "sourceStable": true
+}

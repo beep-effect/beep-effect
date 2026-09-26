@@ -1,0 +1,127 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/service-firecrawl-runner-final-node.json"
+  ],
+  "phase": "runner-final-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "c5f20f5f3e997f459a69c7d22ce11907db3e12202004a141158f6edf4befacff"
+    },
+    {
+      "file": "packages/drivers/firecrawl/package.json",
+      "sha256": "05e11933b3d1cf1204a1b76a63be4cb39732f536aeb815cea37392efc182db68"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.config.ts",
+      "sha256": "cb65a19a962258a6deb40215827e3850bade0e49055277486d1ce9e93877f7cb"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+      "sha256": "94a65e581f745dd62199871c560baa36a5a494f5ea2ec5be82147f9bd7045a65"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+      "sha256": "0e4b60edf451afe0b2d8f4a4469ab05ce7d7c7523b54e6c8e4cb8e23de35002c"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+      "sha256": "67b17bb692e4b350376be377de8372e646aa446698ea4fbf79a27a17efca06d0"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/index.ts",
+      "sha256": "86aa5714450b448c9f98dda1e71fe08c7c8b6c972c655d96cd3dea9bad24db00"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+      "sha256": "9749c6bcdd917fe5385578d84b4f16fce9f4fcead914567a5b94503c1c1db81c"
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.equivalence.test.ts",
+      "sha256": "d910281ec01688a6c7d725d7da6af0ae6e7ac2e2e6b8439951a41f5d08aef92f"
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "sha256": "82f34acea1c45ffb1ab09d65994d59eb57e5de6dacb278720b241b495d5562c2"
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts",
+      "sha256": "4d7ff0bc69bf91e9480bebc03663bea6e4664497506b967fb2c264428e83950c"
+    }
+  ],
+  "loadBefore": [18.26904296875, 12.66064453125, 17.00634765625],
+  "pressureBefore": {
+    "cpu": "some avg10=4.60 avg60=2.04 avg300=1.02 total=2532130509\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=3.32 avg60=0.92 avg300=0.28 total=213898454\nfull avg10=2.80 avg60=0.79 avg300=0.25 total=185821130\n",
+    "io": "some avg10=0.60 avg60=0.18 avg300=0.13 total=992312335\nfull avg10=0.09 avg60=0.02 avg300=0.05 total=676747397\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Firecrawl and Runpod live gates disabled with blank key variables; no live-provider proof",
+  "exit": 0,
+  "wholeCommandSeconds": 4.68128954799613,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "c5f20f5f3e997f459a69c7d22ce11907db3e12202004a141158f6edf4befacff"
+    },
+    {
+      "file": "packages/drivers/firecrawl/package.json",
+      "sha256": "05e11933b3d1cf1204a1b76a63be4cb39732f536aeb815cea37392efc182db68"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.config.ts",
+      "sha256": "cb65a19a962258a6deb40215827e3850bade0e49055277486d1ce9e93877f7cb"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+      "sha256": "94a65e581f745dd62199871c560baa36a5a494f5ea2ec5be82147f9bd7045a65"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+      "sha256": "0e4b60edf451afe0b2d8f4a4469ab05ce7d7c7523b54e6c8e4cb8e23de35002c"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+      "sha256": "67b17bb692e4b350376be377de8372e646aa446698ea4fbf79a27a17efca06d0"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/index.ts",
+      "sha256": "86aa5714450b448c9f98dda1e71fe08c7c8b6c972c655d96cd3dea9bad24db00"
+    },
+    {
+      "file": "packages/drivers/firecrawl/src/internal/Firecrawl.responses.ts",
+      "sha256": "9749c6bcdd917fe5385578d84b4f16fce9f4fcead914567a5b94503c1c1db81c"
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.equivalence.test.ts",
+      "sha256": "d910281ec01688a6c7d725d7da6af0ae6e7ac2e2e6b8439951a41f5d08aef92f"
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "sha256": "82f34acea1c45ffb1ab09d65994d59eb57e5de6dacb278720b241b495d5562c2"
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts",
+      "sha256": "4d7ff0bc69bf91e9480bebc03663bea6e4664497506b967fb2c264428e83950c"
+    }
+  ],
+  "loadAfter": [22.81201171875, 13.69580078125, 17.31787109375],
+  "pressureAfter": {
+    "cpu": "some avg10=3.27 avg60=1.94 avg300=1.01 total=2532281492\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=2.22 avg60=0.86 avg300=0.28 total=213903154\nfull avg10=1.87 avg60=0.74 avg300=0.24 total=185825750\n",
+    "io": "some avg10=0.40 avg60=0.17 avg300=0.12 total=992332761\nfull avg10=0.06 avg60=0.02 avg300=0.05 total=676757363\n"
+  },
+  "sourceStable": true
+}
