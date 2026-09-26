@@ -1,0 +1,151 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/transport-ai-sync-final-node.json"
+  ],
+  "phase": "final-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "2d8319352c295f9b38018f9e97edc55577079bd0b666e29a04b233a84be0faa5"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/package.json",
+      "sha256": "eee71e189ad714e98a6cddf21b44efdcd75b0488ccfced6b1db9b74792999fa7"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/drift.ts",
+      "sha256": "c16000a8ed9a7ba14408b6bdc9f86d6f83d5b4b2a3de3b684eaaadad941cdd49"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/generator.ts",
+      "sha256": "8774cf1dfce4061ab7cf07aaf3592d63004bf037f4670ca0f039b4e91fdf5f05"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/index.ts",
+      "sha256": "83376c3107da87febc5f490790a8f677e324f4498b2945b186153ac101e2eb1d"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/models.ts",
+      "sha256": "57a3190256e2697f011fd333e44a6a0f4f9f444e323aac008d1001084f5b9c28"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/schemas.ts",
+      "sha256": "9538600b489881e38368a8ab5ee5bae7341297b08b877709d131d6bfc0a3d608"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/source-map.ts",
+      "sha256": "d064e965e05cb3216755ac4c8fc935ca5e4b62be38d7a4a084c25310341cb510"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/transforms.ts",
+      "sha256": "d65e12d5a7f4c62abee720636ef60cd8f32fcfae572980c5576976ef618b1921"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/validation.ts",
+      "sha256": "314ff22d4cb9aba58633a1b2f8fc95a470718f099184f98c5b936711cc65fb74"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/_generated/schemas.gen.ts",
+      "sha256": "66f9a7956158cf02029f0035653e3d65bad3bb89bb25881897052350748c81c2"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/_generated/source-metadata.gen.ts",
+      "sha256": "8bb1ae693ae394740288e060f476cb3d12cc7b5416c3018de1dc506c099369d1"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
+      "sha256": "fc5a6e227352d88e2d02ffa23e257c4ebb4ef714b9c2d5b2619046dbbfdd7f31"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "sha256": "8ce4796ff2f1659d2e38a1f2c08f7cae2fa2bd96c669851c89af5986c6f5af27"
+    }
+  ],
+  "loadBefore": [50.5888671875, 25.98486328125, 22.193359375],
+  "pressureBefore": {
+    "cpu": "some avg10=9.48 avg60=7.16 avg300=3.32 total=2585883644\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.04 avg60=0.10 avg300=0.07 total=218805435\nfull avg10=0.01 avg60=0.04 avg300=0.04 total=189950947\n",
+    "io": "some avg10=1.50 avg60=0.98 avg300=0.61 total=1007265983\nfull avg10=0.29 avg60=0.24 avg300=0.22 total=685024125\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
+  "exit": 0,
+  "wholeCommandSeconds": 7.960821480010054,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "2d8319352c295f9b38018f9e97edc55577079bd0b666e29a04b233a84be0faa5"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/package.json",
+      "sha256": "eee71e189ad714e98a6cddf21b44efdcd75b0488ccfced6b1db9b74792999fa7"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/drift.ts",
+      "sha256": "c16000a8ed9a7ba14408b6bdc9f86d6f83d5b4b2a3de3b684eaaadad941cdd49"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/generator.ts",
+      "sha256": "8774cf1dfce4061ab7cf07aaf3592d63004bf037f4670ca0f039b4e91fdf5f05"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/index.ts",
+      "sha256": "83376c3107da87febc5f490790a8f677e324f4498b2945b186153ac101e2eb1d"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/models.ts",
+      "sha256": "57a3190256e2697f011fd333e44a6a0f4f9f444e323aac008d1001084f5b9c28"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/schemas.ts",
+      "sha256": "9538600b489881e38368a8ab5ee5bae7341297b08b877709d131d6bfc0a3d608"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/source-map.ts",
+      "sha256": "d064e965e05cb3216755ac4c8fc935ca5e4b62be38d7a4a084c25310341cb510"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/transforms.ts",
+      "sha256": "d65e12d5a7f4c62abee720636ef60cd8f32fcfae572980c5576976ef618b1921"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/validation.ts",
+      "sha256": "314ff22d4cb9aba58633a1b2f8fc95a470718f099184f98c5b936711cc65fb74"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/_generated/schemas.gen.ts",
+      "sha256": "66f9a7956158cf02029f0035653e3d65bad3bb89bb25881897052350748c81c2"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/src/_generated/source-metadata.gen.ts",
+      "sha256": "8bb1ae693ae394740288e060f476cb3d12cc7b5416c3018de1dc506c099369d1"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
+      "sha256": "fc5a6e227352d88e2d02ffa23e257c4ebb4ef714b9c2d5b2619046dbbfdd7f31"
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "sha256": "8ce4796ff2f1659d2e38a1f2c08f7cae2fa2bd96c669851c89af5986c6f5af27"
+    }
+  ],
+  "loadAfter": [52.6240234375, 26.8154296875, 22.482421875],
+  "pressureAfter": {
+    "cpu": "some avg10=10.30 avg60=7.66 avg300=3.53 total=2586791819\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.38 avg60=0.18 avg300=0.09 total=218906386\nfull avg10=0.37 avg60=0.12 avg300=0.06 total=190042746\n",
+    "io": "some avg10=1.74 avg60=1.11 avg300=0.65 total=1007445048\nfull avg10=0.28 avg60=0.24 avg300=0.22 total=685097117\n"
+  },
+  "sourceStable": true
+}

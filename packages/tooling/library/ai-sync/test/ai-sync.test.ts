@@ -33,11 +33,13 @@ import {
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeServices } from "@effect/platform-node";
-import { assert, expect, layer } from "@effect/vitest";
-import { Effect, Exit, FileSystem, Path, Ref } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
+import { assert, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import { HttpClient, HttpClientResponse } from "effect/http";
@@ -101,56 +103,12 @@ const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const expectSchemaRoundTrip = Effect.fn("expectSchemaRoundTrip")(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  arbitrary = Arbitrary.schema(schema)
+  value: Schema["Type"]
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([arbitrary]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result._tag).toBe("Passed");
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
-
-const expectEncodedRoundTrip = Effect.fn("expectEncodedRoundTrip")(function* <Schema extends S.Codec<unknown>>(
-  schema: Schema
-) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result._tag).toBe("Passed");
-});
-
-const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
-  );
 
 const writeText = Effect.fn("AiSyncTest.writeText")(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -159,7 +117,7 @@ const writeText = Effect.fn("AiSyncTest.writeText")(function* (filePath: string,
   yield* fs.writeFileString(filePath, content);
 });
 
-layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
   it.effect(
     "validates the generated artifact set offline",
     Effect.fn(function* () {
@@ -303,24 +261,106 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
     })
   );
 
-  it.effect(
-    "round-trips crispened schemas with schema-derived arbitraries",
-    Effect.fn(function* () {
-      yield* expectSchemaRoundTrip(AiSyncSourceId);
-      yield* expectSchemaRoundTrip(AiSyncSourceUrl);
-      yield* expectSchemaRoundTrip(AiSyncVersionPin);
-      yield* expectSchemaRoundTrip(AiSyncContentHash);
-      yield* expectSchemaRoundTrip(AiSyncSourceMetadata);
-      yield* expectSchemaRoundTrip(AiSyncSchemaCell);
-      yield* expectSchemaRoundTrip(AiSyncDriftFinding);
-      yield* expectSchemaRoundTrip(AiSyncDriftReport);
-      yield* expectSchemaRoundTrip(AiSyncValidationResult);
-      yield* expectEncodedRoundTrip(AiSyncError);
-      yield* expectSchemaRoundTrip(AgentCommandMetadata);
-      yield* expectSchemaRoundTrip(AgentPluginManifestMetadata);
-      yield* expectSchemaRoundTrip(UnknownNativeSchemaCell);
-      yield* expectSchemaRoundTrip(NormalizedAgentInstructionDocument, NormalizedAgentInstructionDocumentArbitrary);
-    })
+  it.effect.prop(
+    "round-trips AiSyncSourceId through its encoded shape",
+    [AiSyncSourceId],
+    ([value]) => expectSchemaRoundTrip(AiSyncSourceId, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncSourceUrl through its encoded shape",
+    [AiSyncSourceUrl],
+    ([value]) => expectSchemaRoundTrip(AiSyncSourceUrl, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncVersionPin through its encoded shape",
+    [AiSyncVersionPin],
+    ([value]) => expectSchemaRoundTrip(AiSyncVersionPin, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncContentHash through its encoded shape",
+    [AiSyncContentHash],
+    ([value]) => expectSchemaRoundTrip(AiSyncContentHash, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncSourceMetadata through its encoded shape",
+    [AiSyncSourceMetadata],
+    ([value]) => expectSchemaRoundTrip(AiSyncSourceMetadata, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncSchemaCell through its encoded shape",
+    [AiSyncSchemaCell],
+    ([value]) => expectSchemaRoundTrip(AiSyncSchemaCell, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncDriftFinding through its encoded shape",
+    [AiSyncDriftFinding],
+    ([value]) => expectSchemaRoundTrip(AiSyncDriftFinding, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncDriftReport through its encoded shape",
+    [AiSyncDriftReport],
+    ([value]) => expectSchemaRoundTrip(AiSyncDriftReport, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncValidationResult through its encoded shape",
+    [AiSyncValidationResult],
+    ([value]) => expectSchemaRoundTrip(AiSyncValidationResult, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AiSyncError through its encoded shape",
+    [AiSyncError],
+    Effect.fn(function* ([value]) {
+      const encoded = yield* encodeAiSyncError(value);
+      const decoded = yield* S.decodeEffect(AiSyncError)(encoded);
+      expect(yield* encodeAiSyncError(decoded)).toEqual(encoded);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AgentCommandMetadata through its encoded shape",
+    [AgentCommandMetadata],
+    ([value]) => expectSchemaRoundTrip(AgentCommandMetadata, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AgentPluginManifestMetadata through its encoded shape",
+    [AgentPluginManifestMetadata],
+    ([value]) => expectSchemaRoundTrip(AgentPluginManifestMetadata, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips UnknownNativeSchemaCell through its encoded shape",
+    [UnknownNativeSchemaCell],
+    ([value]) => expectSchemaRoundTrip(UnknownNativeSchemaCell, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips NormalizedAgentInstructionDocument through its encoded shape",
+    [NormalizedAgentInstructionDocumentArbitrary],
+    ([value]) => expectSchemaRoundTrip(NormalizedAgentInstructionDocument, value),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect(
@@ -334,249 +374,6 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
       expect(generatedSchemas).not.toContain("approval_policy: S.Union(");
       expect(generatedSchemas).not.toContain("sandbox_mode: S.Union(");
       expect(generatedSchemas).not.toContain("type: S.Union(");
-    })
-  );
-
-  it.effect(
-    "validates a Codex TOML config and rejects typed invalid fields",
-    Effect.fn(function* () {
-      yield* withTempDirectory(
-        Effect.fn(function* (tmpDir) {
-          const path = yield* Path.Path;
-          yield* writeText(
-            path.join(tmpDir, ".codex/config.toml"),
-            'model = "gpt-5"\n\n[skills]\ninclude_instructions = true\n\n[[skills.config]]\nname = "effect-first-development"\nenabled = true\n'
-          );
-
-          const valid = yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" });
-          expect(valid.schemaId).toBe("codex-config");
-
-          yield* writeText(
-            path.join(tmpDir, ".codex/config.toml"),
-            'model = "gpt-5"\n\n[skills]\ninclude_instructions = "definitely"\n'
-          );
-          const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
-          expect(Exit.isFailure(invalid)).toBe(true);
-          expect(String(invalid)).toContain('["skills"]["include_instructions"]');
-        })
-      );
-    })
-  );
-
-  it.effect(
-    "separates native config compatibility from checked-in repository safety policy",
-    Effect.fn(function* () {
-      yield* withTempDirectory(
-        Effect.fn(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const codexPath = path.join(tmpDir, ".codex/config.toml");
-          const claudePath = path.join(tmpDir, ".claude/settings.json");
-
-          yield* writeText(codexPath, "");
-          assert.strictEqual(
-            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
-            "codex-config"
-          );
-          yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
-
-          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
-          const pinnedCodex = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
-          );
-          assert.include(pinnedCodex.message, "approval_policy must be omitted");
-          assert.include(pinnedCodex.message, "sandbox_mode must be omitted");
-
-          yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
-          const safePinnedCodex = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
-          );
-          assert.include(safePinnedCodex.message, "approval_policy must be omitted");
-          assert.include(safePinnedCodex.message, "sandbox_mode must be omitted");
-
-          yield* writeText(codexPath, 'sandbox_mode = "workspace-write"\n');
-          const partialPinCodex = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
-          );
-          assert.include(partialPinCodex.message, "sandbox_mode must be omitted");
-          assert.notInclude(partialPinCodex.message, "approval_policy");
-
-          yield* writeText(
-            codexPath,
-            '[sandbox_workspace_write]\nnetwork_access = true\nwritable_roots = ["/tmp/outside"]\n'
-          );
-          assert.strictEqual(
-            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
-            "codex-config"
-          );
-          const unsafeWorkspaceWrite = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
-          );
-          assert.include(
-            unsafeWorkspaceWrite.message,
-            "sandbox_workspace_write.network_access must be false or omitted"
-          );
-          assert.include(
-            unsafeWorkspaceWrite.message,
-            "sandbox_workspace_write.writable_roots must be empty or omitted"
-          );
-
-          yield* writeText(codexPath, "[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n");
-          yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
-
-          yield* writeText(
-            claudePath,
-            yield* encodeJson({
-              permissions: { allow: ["Bash(gh pr view:*)"], deny: requiredClaudeRepoDenyPermissions },
-            })
-          );
-          const implicitClaudeMode = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-          );
-          assert.include(implicitClaudeMode.message, 'permissions.defaultMode must be explicitly set to "default"');
-
-          const missingForcePushDeny = A.filter(
-            requiredClaudeRepoDenyPermissions,
-            (permission) => !Equal.equals(permission, "Bash(git push --force:*)")
-          );
-          yield* writeText(
-            claudePath,
-            yield* encodeJson({
-              permissions: { ...repoSafeClaudePermissions, deny: missingForcePushDeny },
-            })
-          );
-          assert.strictEqual(
-            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
-            "claude-settings"
-          );
-          const missingCriticalDeny = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-          );
-          assert.include(missingCriticalDeny.message, "missing required deny rule: Bash(git push --force:*)");
-
-          const unexpectedDeny = "Bash(git branch -D:*)";
-          yield* writeText(
-            claudePath,
-            yield* encodeJson({
-              permissions: {
-                ...repoSafeClaudePermissions,
-                deny: A.append(requiredClaudeRepoDenyPermissions, unexpectedDeny),
-              },
-            })
-          );
-          const driftedDenyDomain = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-          );
-          assert.include(
-            driftedDenyDomain.message,
-            `unexpected deny rule outside exact repository policy: ${unexpectedDeny}`
-          );
-
-          yield* writeText(
-            claudePath,
-            yield* encodeJson({
-              permissions: {
-                ...repoSafeClaudePermissions,
-                allow: ["Bash(git push:*)"],
-              },
-            })
-          );
-          const directPushGrant = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-          );
-          assert.include(directPushGrant.message, "unapproved auto-approved permission: Bash(git push:*)");
-
-          yield* Effect.forEach(
-            ["Write(**/.github/workflows/**)", "WebFetch(domain:example.com)", "mcp__github__create_pull_request"],
-            Effect.fn(function* (permission) {
-              yield* writeText(
-                claudePath,
-                yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, allow: [permission] } })
-              );
-              const unsafeClaude = yield* Effect.flip(
-                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-              );
-              assert.include(unsafeClaude.message, `unapproved auto-approved permission: ${permission}`);
-            }),
-            { discard: true }
-          );
-
-          yield* Effect.forEach(
-            [
-              "Bash(gh:*)",
-              "Bash(gh *)",
-              "Bash(gh*)",
-              "Bash(*gh*)",
-              "Bash(*)",
-              "Bash",
-              "Bash(codex exec:*)",
-              "Bash(codex:*)",
-              "Bash(/usr/bin/gh:*)",
-              "Bash(env gh:*)",
-              "Bash(GH_PAGER=cat gh:*)",
-              "Bash(command codex exec:*)",
-              "Bash(bash:*)",
-              "Bash(timeout:*)",
-              "Bash(git stash drop:*)",
-            ],
-            Effect.fn(function* (permission) {
-              yield* writeText(
-                claudePath,
-                yield* encodeJson({
-                  permissions: { ...repoSafeClaudePermissions, allow: [permission] },
-                  enabledMcpjsonServers: ["phoenix"],
-                })
-              );
-              assert.strictEqual(
-                (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
-                "claude-settings"
-              );
-
-              const unsafeClaude = yield* Effect.flip(
-                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-              );
-              assert.include(unsafeClaude.message, permission);
-            }),
-            { discard: true }
-          );
-
-          yield* Effect.forEach(
-            ["acceptEdits", "plan", "auto", "dontAsk", "bypassPermissions"],
-            Effect.fn(function* (defaultMode) {
-              yield* writeText(
-                claudePath,
-                yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, defaultMode } })
-              );
-              assert.strictEqual(
-                (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
-                "claude-settings"
-              );
-
-              const unsafeClaudeMode = yield* Effect.flip(
-                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
-              );
-              assert.include(unsafeClaudeMode.message, `permissions.defaultMode must be "default"`);
-            }),
-            { discard: true }
-          );
-
-          yield* writeText(codexPath, "[features]\napps = false\n");
-          yield* writeText(
-            claudePath,
-            yield* encodeJson({
-              permissions: {
-                ...repoSafeClaudePermissions,
-                allow: ["Bash(gh pr view:*)", "Bash(gh pr checks:*)", "Bash(gh run view:*)"],
-              },
-            })
-          );
-
-          const safeResults = yield* validateDogfoodConfigs(tmpDir);
-          assert.deepEqual(
-            A.map(safeResults, (result) => result.relativePath),
-            [".codex/config.toml", ".claude/settings.json"]
-          );
-        })
-      );
     })
   );
 
@@ -648,38 +445,6 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
   );
 
   it.effect(
-    "reads each mandatory config exactly once during combined validation",
-    Effect.fn(function* () {
-      yield* withTempDirectory(
-        Effect.fn(function* (tmpDir) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const codexPath = path.join(tmpDir, ".codex/config.toml");
-          const claudePath = path.join(tmpDir, ".claude/settings.json");
-          yield* writeText(codexPath, "[features]\napps = false\n");
-          yield* writeText(claudePath, yield* encodeJson({ permissions: repoSafeClaudePermissions }));
-
-          const readPaths = yield* Ref.make(A.empty<string>());
-          const countingFs: FileSystem.FileSystem = {
-            ...fs,
-            readFileString: (filePath, encoding) =>
-              Ref.update(readPaths, A.append(filePath)).pipe(Effect.andThen(fs.readFileString(filePath, encoding))),
-          };
-          const results = yield* validateDogfoodConfigs(tmpDir).pipe(
-            Effect.provideService(FileSystem.FileSystem, countingFs)
-          );
-
-          assert.deepEqual(yield* Ref.get(readPaths), [codexPath, claudePath]);
-          assert.deepEqual(
-            A.map(results, (result) => result.relativePath),
-            [".codex/config.toml", ".claude/settings.json"]
-          );
-        })
-      );
-    })
-  );
-
-  it.effect(
     "reports synthetic source drift against an injected upstream response",
     Effect.fn(function* () {
       const source = AiSyncSourceMetadata.make({
@@ -699,7 +464,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
       });
       expect(findings).toHaveLength(1);
       expect(findings[0]?.sourceId).toBe("synthetic");
-      expect(findings[0] !== undefined && O.isSome(findings[0].expectedHash)).toBe(true);
+      assertTrue(findings[0] !== undefined && O.isSome(findings[0].expectedHash));
     })
   );
 
@@ -765,3 +530,270 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
     })
   );
 });
+
+it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds" })(
+  "@beep/ai-sync synthetic config validation",
+  (it) => {
+    it.effect(
+      "validates a Codex TOML config and rejects typed invalid fields",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const path = yield* Path.Path;
+        yield* writeText(
+          path.join(tmpDir, ".codex/config.toml"),
+          'model = "gpt-5"\n\n[skills]\ninclude_instructions = true\n\n[[skills.config]]\nname = "effect-first-development"\nenabled = true\n'
+        );
+
+        const valid = yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" });
+        expect(valid.schemaId).toBe("codex-config");
+
+        yield* writeText(
+          path.join(tmpDir, ".codex/config.toml"),
+          'model = "gpt-5"\n\n[skills]\ninclude_instructions = "definitely"\n'
+        );
+        const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
+        assertTrue(Exit.isFailure(invalid));
+        expect(String(invalid)).toContain('["skills"]["include_instructions"]');
+      })
+    );
+
+    it.effect(
+      "separates native config compatibility from checked-in repository safety policy",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const path = yield* Path.Path;
+        const codexPath = path.join(tmpDir, ".codex/config.toml");
+        const claudePath = path.join(tmpDir, ".claude/settings.json");
+
+        yield* writeText(codexPath, "");
+        assert.strictEqual(
+          (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
+          "codex-config"
+        );
+        yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
+
+        yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+        const pinnedCodex = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+        );
+        assert.include(pinnedCodex.message, "approval_policy must be omitted");
+        assert.include(pinnedCodex.message, "sandbox_mode must be omitted");
+
+        yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
+        const safePinnedCodex = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+        );
+        assert.include(safePinnedCodex.message, "approval_policy must be omitted");
+        assert.include(safePinnedCodex.message, "sandbox_mode must be omitted");
+
+        yield* writeText(codexPath, 'sandbox_mode = "workspace-write"\n');
+        const partialPinCodex = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+        );
+        assert.include(partialPinCodex.message, "sandbox_mode must be omitted");
+        assert.notInclude(partialPinCodex.message, "approval_policy");
+
+        yield* writeText(
+          codexPath,
+          '[sandbox_workspace_write]\nnetwork_access = true\nwritable_roots = ["/tmp/outside"]\n'
+        );
+        assert.strictEqual(
+          (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
+          "codex-config"
+        );
+        const unsafeWorkspaceWrite = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+        );
+        assert.include(unsafeWorkspaceWrite.message, "sandbox_workspace_write.network_access must be false or omitted");
+        assert.include(unsafeWorkspaceWrite.message, "sandbox_workspace_write.writable_roots must be empty or omitted");
+
+        yield* writeText(codexPath, "[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n");
+        yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
+
+        yield* writeText(
+          claudePath,
+          yield* encodeJson({
+            permissions: { allow: ["Bash(gh pr view:*)"], deny: requiredClaudeRepoDenyPermissions },
+          })
+        );
+        const implicitClaudeMode = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+        );
+        assert.include(implicitClaudeMode.message, 'permissions.defaultMode must be explicitly set to "default"');
+
+        const missingForcePushDeny = A.filter(
+          requiredClaudeRepoDenyPermissions,
+          (permission) => !Equal.equals(permission, "Bash(git push --force:*)")
+        );
+        yield* writeText(
+          claudePath,
+          yield* encodeJson({
+            permissions: { ...repoSafeClaudePermissions, deny: missingForcePushDeny },
+          })
+        );
+        assert.strictEqual(
+          (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+          "claude-settings"
+        );
+        const missingCriticalDeny = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+        );
+        assert.include(missingCriticalDeny.message, "missing required deny rule: Bash(git push --force:*)");
+
+        const unexpectedDeny = "Bash(git branch -D:*)";
+        yield* writeText(
+          claudePath,
+          yield* encodeJson({
+            permissions: {
+              ...repoSafeClaudePermissions,
+              deny: A.append(requiredClaudeRepoDenyPermissions, unexpectedDeny),
+            },
+          })
+        );
+        const driftedDenyDomain = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+        );
+        assert.include(
+          driftedDenyDomain.message,
+          `unexpected deny rule outside exact repository policy: ${unexpectedDeny}`
+        );
+
+        yield* writeText(
+          claudePath,
+          yield* encodeJson({
+            permissions: {
+              ...repoSafeClaudePermissions,
+              allow: ["Bash(git push:*)"],
+            },
+          })
+        );
+        const directPushGrant = yield* Effect.flip(
+          validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+        );
+        assert.include(directPushGrant.message, "unapproved auto-approved permission: Bash(git push:*)");
+
+        yield* Effect.forEach(
+          ["Write(**/.github/workflows/**)", "WebFetch(domain:example.com)", "mcp__github__create_pull_request"],
+          Effect.fn(function* (permission) {
+            yield* writeText(
+              claudePath,
+              yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, allow: [permission] } })
+            );
+            const unsafeClaude = yield* Effect.flip(
+              validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+            );
+            assert.include(unsafeClaude.message, `unapproved auto-approved permission: ${permission}`);
+          }),
+          { discard: true }
+        );
+
+        yield* Effect.forEach(
+          [
+            "Bash(gh:*)",
+            "Bash(gh *)",
+            "Bash(gh*)",
+            "Bash(*gh*)",
+            "Bash(*)",
+            "Bash",
+            "Bash(codex exec:*)",
+            "Bash(codex:*)",
+            "Bash(/usr/bin/gh:*)",
+            "Bash(env gh:*)",
+            "Bash(GH_PAGER=cat gh:*)",
+            "Bash(command codex exec:*)",
+            "Bash(bash:*)",
+            "Bash(timeout:*)",
+            "Bash(git stash drop:*)",
+          ],
+          Effect.fn(function* (permission) {
+            yield* writeText(
+              claudePath,
+              yield* encodeJson({
+                permissions: { ...repoSafeClaudePermissions, allow: [permission] },
+                enabledMcpjsonServers: ["phoenix"],
+              })
+            );
+            assert.strictEqual(
+              (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+              "claude-settings"
+            );
+
+            const unsafeClaude = yield* Effect.flip(
+              validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+            );
+            assert.include(unsafeClaude.message, permission);
+          }),
+          { discard: true }
+        );
+
+        yield* Effect.forEach(
+          ["acceptEdits", "plan", "auto", "dontAsk", "bypassPermissions"],
+          Effect.fn(function* (defaultMode) {
+            yield* writeText(
+              claudePath,
+              yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, defaultMode } })
+            );
+            assert.strictEqual(
+              (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+              "claude-settings"
+            );
+
+            const unsafeClaudeMode = yield* Effect.flip(
+              validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+            );
+            assert.include(unsafeClaudeMode.message, `permissions.defaultMode must be "default"`);
+          }),
+          { discard: true }
+        );
+
+        yield* writeText(codexPath, "[features]\napps = false\n");
+        yield* writeText(
+          claudePath,
+          yield* encodeJson({
+            permissions: {
+              ...repoSafeClaudePermissions,
+              allow: ["Bash(gh pr view:*)", "Bash(gh pr checks:*)", "Bash(gh run view:*)"],
+            },
+          })
+        );
+
+        const safeResults = yield* validateDogfoodConfigs(tmpDir);
+        assert.deepEqual(
+          A.map(safeResults, (result) => result.relativePath),
+          [".codex/config.toml", ".claude/settings.json"]
+        );
+      })
+    );
+
+    it.effect(
+      "reads each mandatory config exactly once during combined validation",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const path = yield* Path.Path;
+        const codexPath = path.join(tmpDir, ".codex/config.toml");
+        const claudePath = path.join(tmpDir, ".claude/settings.json");
+        yield* writeText(codexPath, "[features]\napps = false\n");
+        yield* writeText(claudePath, yield* encodeJson({ permissions: repoSafeClaudePermissions }));
+
+        const readPaths = yield* Ref.make(A.empty<string>());
+        const countingFs: FileSystem.FileSystem = {
+          ...fs,
+          readFileString: (filePath, encoding) =>
+            Ref.update(readPaths, A.append(filePath)).pipe(Effect.andThen(fs.readFileString(filePath, encoding))),
+        };
+        const results = yield* validateDogfoodConfigs(tmpDir).pipe(
+          Effect.provideService(FileSystem.FileSystem, countingFs)
+        );
+
+        assert.deepEqual(yield* Ref.get(readPaths), [codexPath, claudePath]);
+        assert.deepEqual(
+          A.map(results, (result) => result.relativePath),
+          [".codex/config.toml", ".claude/settings.json"]
+        );
+      })
+    );
+  }
+);

@@ -1,0 +1,159 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 9,
+  "numPassedTests": 9,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790413250335,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["EgressDenied"],
+          "fullName": "EgressDenied constructs reason-free with only its tag",
+          "status": "passed",
+          "title": "constructs reason-free with only its tag",
+          "duration": 5.046480999999858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EgressDenied"],
+          "fullName": "EgressDenied round-trips through its schema",
+          "status": "passed",
+          "title": "round-trips through its schema",
+          "duration": 4.664122000000134,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790413254099,
+      "endTime": 1790413254104.664,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "@beep/api-transport tagged-error declared equivalence"
+          ],
+          "fullName": "@beep/api-transport tagged-error declared equivalence compares field-free egress denials by their declared tag",
+          "status": "passed",
+          "title": "compares field-free egress denials by their declared tag",
+          "duration": 1.6743880000003628,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790413254100,
+      "endTime": 1790413254101.6743,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/api-transport"],
+          "fullName": "@beep/api-transport keeps auth constructors and matching on schema-backed transport options",
+          "status": "passed",
+          "title": "keeps auth constructors and matching on schema-backed transport options",
+          "duration": 12.05140799999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/api-transport"],
+          "fullName": "@beep/api-transport preserves every legacy transport option input accepted by Effect Duration",
+          "status": "passed",
+          "title": "preserves every legacy transport option input accepted by Effect Duration",
+          "duration": 11.7083990000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/api-transport"],
+          "fullName": "@beep/api-transport keeps RateLimitSnapshot encoded wire shape unchanged",
+          "status": "passed",
+          "title": "keeps RateLimitSnapshot encoded wire shape unchanged",
+          "duration": 11.687456999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/api-transport"],
+          "fullName": "@beep/api-transport round-trips schema-derived RateLimitSnapshot values through the encoded shape",
+          "status": "passed",
+          "title": "round-trips schema-derived RateLimitSnapshot values through the encoded shape",
+          "duration": 11.679345000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/api-transport"],
+          "fullName": "@beep/api-transport round-trips parseable schema-derived snapshots through rate-limit headers",
+          "status": "passed",
+          "title": "round-trips parseable schema-derived snapshots through rate-limit headers",
+          "duration": 11.670802000000094,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/api-transport"],
+          "fullName": "@beep/api-transport parses rate-limit aliases and ignores non-numeric headers",
+          "status": "passed",
+          "title": "parses rate-limit aliases and ignores non-numeric headers",
+          "duration": 0.29066800000009607,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790413254141,
+      "endTime": 1790413254153.2908,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/api-transport/test/Transport.test.ts"
+    }
+  ]
+}
