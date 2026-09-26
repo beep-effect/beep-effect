@@ -83,10 +83,11 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -194,7 +195,10 @@ describe("@beep/html generated attribute provenance", () => {
         popovertarget: O.some("menu"),
       } as unknown as Div;
       expect(inspectConformance(forged)).toContainEqual(expect.objectContaining({ rule: "misplacedAttribute" }));
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(forged))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(forged)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
     })
   );
 });
@@ -204,7 +208,10 @@ describe("@beep/html numeric and id conformance", () => {
     Effect.gen(function* () {
       for (const root of [Base.make({}), MapElement.make({ children: [] }), Track.make({})]) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       for (const root of [
@@ -223,12 +230,18 @@ describe("@beep/html numeric and id conformance", () => {
       expect(issuesAtPath(subtitlesWithoutLanguage, ["children.0", "attributes.srclang"])).toContainEqual(
         expect.objectContaining({ rule: "attributeRelationship" })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(subtitlesWithoutLanguage))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(subtitlesWithoutLanguage)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
       const omittedKindWithoutLanguage = Track.make({ src: O.some("/captions.vtt") });
       expect(issuesAtPath(omittedKindWithoutLanguage, ["attributes.srclang"])).toContainEqual(
         expect.objectContaining({ rule: "attributeRelationship" })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(omittedKindWithoutLanguage))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(omittedKindWithoutLanguage)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
       expect(
         inspectConformance(
           Video.make({
@@ -247,7 +260,10 @@ describe("@beep/html numeric and id conformance", () => {
         expect.objectContaining({ path: ["children.0", "attributes.name"] }),
         expect.objectContaining({ path: ["children.1", "attributes.name"] }),
       ]);
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(duplicateMaps))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(duplicateMaps)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
 
       const mismatchedMapIdentity = MapElement.make({
         children: [],
@@ -257,7 +273,10 @@ describe("@beep/html numeric and id conformance", () => {
       expect(inspectConformance(mismatchedMapIdentity)).toContainEqual(
         expect.objectContaining({ path: ["attributes.id"], rule: "attributeRelationship" })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(mismatchedMapIdentity))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(mismatchedMapIdentity)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
 
       expect(() => MapElement.make({ children: [], name: O.some("") })).toThrow();
       expect(() => MapElement.make({ children: [], name: O.some("two maps") })).toThrow();
@@ -293,7 +312,10 @@ describe("@beep/html numeric and id conformance", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       expect(() => Progress.make({ children: [], max: O.some(0) })).toThrow();
@@ -622,7 +644,10 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       const validDetails = Details.make({
@@ -708,7 +733,10 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       const valid = [
@@ -811,7 +839,10 @@ describe("@beep/html generated special-child grammars", () => {
         expect(inspectConformance(root)).toContainEqual(
           expect.objectContaining({ path, rule: "attributeRelationship" })
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       for (const root of [
@@ -896,7 +927,10 @@ describe("@beep/html generated special-child grammars", () => {
         expect(inspectConformance(root)).toContainEqual(
           expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       const valid = [
@@ -927,7 +961,10 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(inspectConformance(root).length).toBeGreaterThan(0);
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
     })
   );
@@ -999,7 +1036,10 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
       const uppercaseCharset = decodeMetaResult({ _tag: "meta", charset: "UTF-8" });
       assertSuccess(
@@ -1093,7 +1133,10 @@ describe("@beep/html generated special-child grammars", () => {
 
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
     })
   );
@@ -1124,7 +1167,10 @@ describe("@beep/html generated special-child grammars", () => {
         expect.objectContaining({ path: ["children.0", "children.1", "children.0"] }),
         expect.objectContaining({ path: ["children.0", "children.1", "children.1"] }),
       ]);
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(twoVisible))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(twoVisible)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
 
       const hiddenAware = documentWith(
         Main.make({ children: [] }),
@@ -1159,7 +1205,10 @@ describe("@beep/html generated special-child grammars", () => {
 
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
-        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+        assertExitFailure(
+          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Cause.fail("HtmlConformanceError")
+        );
       }
 
       expect(inspectConformance(Form.make({ children: [Main.make({ children: [] })] }))).toStrictEqual([]);
@@ -1175,7 +1224,10 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(invalidStandalone)).toContainEqual(
         expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(invalidStandalone))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(invalidStandalone)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
 
       const validDescriptionGroup = Dl.make({
         children: [
@@ -1274,7 +1326,10 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(valid)).toStrictEqual([]);
       expect(inspectConformance(validWithHiddenInput)).toStrictEqual([]);
       expect(hasRule(invalid, "forbiddenDescendant")).toBe(true);
-      assertTrue(Exit.isFailure(yield* Effect.exit(conform(invalid))));
+      assertExitFailure(
+        Exit.mapError(yield* Effect.exit(conform(invalid)), ({ _tag }) => _tag),
+        Cause.fail("HtmlConformanceError")
+      );
     })
   );
 

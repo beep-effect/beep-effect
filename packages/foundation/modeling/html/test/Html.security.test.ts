@@ -267,7 +267,7 @@ describe("@beep/html safe policy", () => {
 
   it.effect("treats HTML ASCII whitespace as rel token separators for protected blank targets", () =>
     Effect.gen(function* () {
-      const policyExit = (root: HtmlFragment) => Effect.exit(conform(root).pipe(Effect.flatMap(enforceSafeHtml)));
+      const applyPolicy = (root: HtmlFragment) => conform(root).pipe(Effect.flatMap(enforceSafeHtml));
 
       for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
         const decoded = yield* decodeAnchor({
@@ -277,7 +277,7 @@ describe("@beep/html safe policy", () => {
           rel: `noopener${separator}noreferrer`,
           target: "_blank",
         });
-        assertTrue(Exit.isSuccess(yield* policyExit(fragment(decoded))));
+        yield* applyPolicy(fragment(decoded));
       }
       for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
         const decoded = yield* decodeAnchor({
@@ -287,7 +287,7 @@ describe("@beep/html safe policy", () => {
           rel: `noopener${separator}noreferrer`,
           target: "_blank",
         });
-        assertTrue(Exit.isFailure(yield* policyExit(fragment(decoded))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(applyPolicy(fragment(decoded)))));
       }
     })
   );

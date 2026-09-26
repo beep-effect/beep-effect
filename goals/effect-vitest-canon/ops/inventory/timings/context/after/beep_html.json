@@ -4,9 +4,9 @@
     "vitest",
     "run",
     "--reporter=json",
-    "--outputFile=~/.cache/beep/effect-vitest-canon/p1/html-after-outcomes.json"
+    "--outputFile=~/.cache/beep/effect-vitest-canon/p1/html-after-tags.json"
   ],
-  "phase": "after-outcomes",
+  "phase": "after-tags",
   "sourceBefore": {
     "bun.lock": "21eaee20b8fd36048f7567fea53ff245a6ca9ff3314e9be23cfcd6a070f6d3d7",
     "packages/foundation/modeling/html/package.json": "c5e82a0bd4c6fad76ac814ab0443a075e4e061d379d1dec3b29df32253617410",
@@ -51,20 +51,20 @@
     "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts": "f1efe404871f187d26f2bbb5eb0aec9ff3eb9130c615b5efb143e212c232aeaf",
     "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts": "a219c5a4f411529fd8a5ec9da5881f3446d2f6e217e119b36ca7a14f8031a2e4",
     "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts": "64e8b8c40e12918348a04e7c142497bfea62aa50ce6ff2bee108331763a70fd4",
-    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "4b78abc996d2187a2ef98aca2043b1e820f8c191552b7125cbe396c40d422d37",
+    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "54bc7643ff1d9a4f4375e403e101ecc645434412b9c21495e2402d98b80a99ac",
     "packages/foundation/modeling/html/test/Html.form-control.test.ts": "cda26270b9c062cb9d6552859ef2dbad47e2aff2e89763885afe9d5b43a80524",
     "packages/foundation/modeling/html/test/Html.microsyntax.test.ts": "9dd50c4c7966d12dbc0bce21ac84b12783547c45ac6ebbe9cad7b8efe0a0acbc",
-    "packages/foundation/modeling/html/test/Html.script.test.ts": "4a59bf98ad94383da4e5bbfa3f7a72ab0235bc23a1c25686241b84b1f81739fc",
-    "packages/foundation/modeling/html/test/Html.security.test.ts": "0557e66edc4cb6ceddb7e9d8c976e1b696c4c9a4437e2013b933682e3dfe018e",
-    "packages/foundation/modeling/html/test/Html.source-size.test.ts": "b7a202b58c179caa153500065c095e98c89e7b027d1bb8e8f61948836bdc588f",
+    "packages/foundation/modeling/html/test/Html.script.test.ts": "a94234902df18f5095ad005c53b3d5ea9cb77341a6d0b4d7cf0930118b085270",
+    "packages/foundation/modeling/html/test/Html.security.test.ts": "a884f4271b08b0e86362fab3350e0f84dc2a62787c24f06598368140106bb425",
+    "packages/foundation/modeling/html/test/Html.source-size.test.ts": "6949eb978501d6f42cff249bfdcbadb577df98f745110542b9ebf01f78397729",
     "packages/foundation/modeling/html/test/Html.srcset.test.ts": "e01fc6152146504b87cd1f45e7079b911b756f3fa6a678cf4069bb40e95ffce7",
     "packages/foundation/modeling/html/test/Html.test.ts": "7aa0f13b17d51db88609faaf9730fa1d23ab8b42f48386b5e4568384b0b3d8f0"
   },
-  "loadBefore": [32.83984375, 17.6806640625, 15.4658203125],
+  "loadBefore": [23.96240234375, 25.5849609375, 20.43408203125],
   "pressureBefore": {
-    "cpu": "some avg10=12.17 avg60=6.43 avg300=2.06 total=1565520959\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.11 avg60=0.13 avg300=0.08 total=138875270\nfull avg10=0.11 avg60=0.11 avg300=0.06 total=127515363\n",
-    "io": "some avg10=0.03 avg60=0.27 avg300=0.37 total=765890052\nfull avg10=0.00 avg60=0.16 avg300=0.26 total=551804436\n"
+    "cpu": "some avg10=0.62 avg60=1.57 avg300=3.77 total=1589899685\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.02 avg300=0.12 total=141052924\nfull avg10=0.00 avg60=0.02 avg300=0.09 total=129531981\n",
+    "io": "some avg10=0.03 avg60=0.24 avg300=0.30 total=767921995\nfull avg10=0.03 avg60=0.14 avg300=0.15 total=552886184\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -76,7 +76,7 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 10.605367233991274,
+  "wholeCommandSeconds": 7.90146368999558,
   "sourceAfter": {
     "bun.lock": "21eaee20b8fd36048f7567fea53ff245a6ca9ff3314e9be23cfcd6a070f6d3d7",
     "packages/foundation/modeling/html/package.json": "c5e82a0bd4c6fad76ac814ab0443a075e4e061d379d1dec3b29df32253617410",
@@ -121,20 +121,20 @@
     "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts": "f1efe404871f187d26f2bbb5eb0aec9ff3eb9130c615b5efb143e212c232aeaf",
     "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts": "a219c5a4f411529fd8a5ec9da5881f3446d2f6e217e119b36ca7a14f8031a2e4",
     "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts": "64e8b8c40e12918348a04e7c142497bfea62aa50ce6ff2bee108331763a70fd4",
-    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "4b78abc996d2187a2ef98aca2043b1e820f8c191552b7125cbe396c40d422d37",
+    "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts": "54bc7643ff1d9a4f4375e403e101ecc645434412b9c21495e2402d98b80a99ac",
     "packages/foundation/modeling/html/test/Html.form-control.test.ts": "cda26270b9c062cb9d6552859ef2dbad47e2aff2e89763885afe9d5b43a80524",
     "packages/foundation/modeling/html/test/Html.microsyntax.test.ts": "9dd50c4c7966d12dbc0bce21ac84b12783547c45ac6ebbe9cad7b8efe0a0acbc",
-    "packages/foundation/modeling/html/test/Html.script.test.ts": "4a59bf98ad94383da4e5bbfa3f7a72ab0235bc23a1c25686241b84b1f81739fc",
-    "packages/foundation/modeling/html/test/Html.security.test.ts": "0557e66edc4cb6ceddb7e9d8c976e1b696c4c9a4437e2013b933682e3dfe018e",
-    "packages/foundation/modeling/html/test/Html.source-size.test.ts": "b7a202b58c179caa153500065c095e98c89e7b027d1bb8e8f61948836bdc588f",
+    "packages/foundation/modeling/html/test/Html.script.test.ts": "a94234902df18f5095ad005c53b3d5ea9cb77341a6d0b4d7cf0930118b085270",
+    "packages/foundation/modeling/html/test/Html.security.test.ts": "a884f4271b08b0e86362fab3350e0f84dc2a62787c24f06598368140106bb425",
+    "packages/foundation/modeling/html/test/Html.source-size.test.ts": "6949eb978501d6f42cff249bfdcbadb577df98f745110542b9ebf01f78397729",
     "packages/foundation/modeling/html/test/Html.srcset.test.ts": "e01fc6152146504b87cd1f45e7079b911b756f3fa6a678cf4069bb40e95ffce7",
     "packages/foundation/modeling/html/test/Html.test.ts": "7aa0f13b17d51db88609faaf9730fa1d23ab8b42f48386b5e4568384b0b3d8f0"
   },
-  "loadAfter": [36.27294921875, 18.884765625, 15.8798828125],
+  "loadAfter": [24.880859375, 25.7431640625, 20.54150390625],
   "pressureAfter": {
-    "cpu": "some avg10=10.83 avg60=7.14 avg300=2.39 total=1566707007\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.28 avg60=0.17 avg300=0.09 total=138934170\nfull avg10=0.28 avg60=0.15 avg300=0.07 total=127572735\n",
-    "io": "some avg10=0.00 avg60=0.21 avg300=0.35 total=765895414\nfull avg10=0.00 avg60=0.13 avg300=0.25 total=551806262\n"
+    "cpu": "some avg10=0.52 avg60=1.43 avg300=3.68 total=1590004360\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.12 total=141053003\nfull avg10=0.00 avg60=0.01 avg300=0.09 total=129532061\n",
+    "io": "some avg10=0.01 avg60=0.21 avg300=0.29 total=767937915\nfull avg10=0.01 avg60=0.12 avg300=0.14 total=552897637\n"
   },
   "sourceStable": true
 }

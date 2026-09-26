@@ -15,20 +15,20 @@ const sourceSizeResultEquivalence = S.toEquivalence(S.Result(SourceSizeAnalysis,
 type IssueCode = SourceSizeIssue["code"];
 
 const expectValid = (value: string, usesAuto = false): void => {
-  const result = inspectSourceSizeList(value);
-  expect(Result.isSuccess(result), value).toBe(true);
-  if (Result.isSuccess(result)) {
-    expect(result.success.usesAuto, value).toBe(usesAuto);
-    expect(result.success.entryCount, value).toBeGreaterThan(0);
-  }
+  assertSuccess(
+    Result.map(inspectSourceSizeList(value), (analysis) => ({
+      usesAuto: analysis.usesAuto,
+      hasEntries: analysis.entryCount > 0,
+    })),
+    { usesAuto, hasEntries: true }
+  );
 };
 
-const expectInvalid = (value: string, code?: IssueCode): void => {
-  const result = inspectSourceSizeList(value);
-  expect(Result.isFailure(result), value).toBe(true);
-  if (Result.isFailure(result) && code !== undefined) {
-    expect(result.failure[0]?.code, value).toBe(code);
-  }
+const expectInvalid = (value: string, code: IssueCode): void => {
+  assertFailure(
+    Result.mapError(inspectSourceSizeList(value), (issues) => issues[0]?.code),
+    code
+  );
 };
 
 describe("@beep/html source-size author conformance", () => {

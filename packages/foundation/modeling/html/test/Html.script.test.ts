@@ -11,7 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -249,7 +249,7 @@ describe("HTML script semantic states", () => {
     expect(validState.state).toBe("dataBlock");
     expect(invalidMimeType).toBe("application/json");
     expect(invalidState.state).toBe("unsupported");
-    assertTrue(Result.isSuccess(decodeHtmlMimeTypeResult("application/json")));
+    assertSuccess(decodeHtmlMimeTypeResult("application/json"), HtmlMimeType.make("application/json"));
     assertTrue(Result.isFailure(decodeHtmlMimeTypeResult("beep")));
     assertTrue(Result.isFailure(decodeScriptDataBlockMimeTypeResult("text/javascript")));
     assertTrue(Result.isFailure(decodeScriptStateResult({ state: "dataBlock", mimeType: "text/javascript" })));

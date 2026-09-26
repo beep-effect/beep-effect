@@ -226,3 +226,36 @@ The reviewed cache census changes exactly ten HTML task dependency lists for
 its development-only test-runner dependency. Commands, configuration, cache
 eligibility and unrelated baseline nodes are identical. Fallow regeneration adds
 only HTML's runtime/type boundary allowance for that declared test dependency.
+
+## Typed conformance-failure checkpoint
+
+Eighteen conformance rejection tests now assertExitFailure over Exit.mapError's
+projection of the documented HtmlConformanceError tag, with Cause.fail of that
+literal tag as the independent expectation. This deliberately strengthens the
+old any-failure contract: a defect, interruption or unrelated error no longer
+satisfies the rejection test. Existing inspector assertions remain intact. The
+installed Exit.mapError contract explicitly preserves defect/interruption
+causes, and conform documents its typed HtmlConformanceError failure. No full
+issue arrays, messages or expected values are sampled from production output.
+
+The source-size helpers now project their existing usesAuto/positive-entry-count
+and first-issue-code expectations into canonical Result assertions. Every
+expectInvalid call already supplied its code, so its parameter is now required.
+The policy acceptance loop yields the effect directly; only its rejection loop
+captures an Exit. MIME acceptance now also asserts the exact branded
+application/json value. The initial unbranded expected literal failed test
+typecheck; constructing the fixed expectation with HtmlMimeType.make corrected
+that type error without a cast.
+
+Full package verification passed: audit 18.8s and docgen 16.0s. The detector scan
+reports 70 remaining EV006 candidates, down from 90. The human lenses validate
+against current bytes and spans: valid=true, complete=true, missing=0. The
+checkout inbox has no unacknowledged rows. Remaining detector rows and their
+historical reconciliation remain open; this checkpoint does not claim final
+empty-baseline acceptance.
+
+Fresh timing on this source checkpoint: Node 196 passed in 7.901s; Bun 196
+passed in 3.362s, both zero failed/pending with stable input hashes. The current
+after timing/context artifacts supersede the previous checkpoint measurements;
+those earlier values remain historical observations above. Runtime, load and
+pressure are retained, and no isolated performance effect is claimed.
