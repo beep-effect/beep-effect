@@ -17,7 +17,7 @@ import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -411,6 +411,13 @@ describe("makePffexportFileProcessingEngine", () => {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
         const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
+        // The engine resolves the env interpreter from the host PATH; pin it to the standard roots so a
+        // workstation shell with a non-standard bash first on PATH (e.g. a nix-store bash) cannot leak in.
+        // The test opts out of `concurrent` so no concurrent sibling observes the pinned PATH.
+        yield* Effect.acquireRelease(
+          Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
+          () => Effect.sync(() => vi.unstubAllEnvs())
+        );
         yield* fs.writeFileString(
           stubPath,
           stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -S -a pffexport -u BEEP_UNUSED bash")
@@ -444,7 +451,8 @@ exec "$mapped_command" "\${mapped[@]}"`
       },
       Effect.scoped,
       provideTestLayer
-    )
+    ),
+    { concurrent: false }
   );
 
   it.effect(
