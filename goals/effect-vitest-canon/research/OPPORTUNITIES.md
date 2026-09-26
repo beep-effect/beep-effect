@@ -2328,3 +2328,10 @@ disabled. Start a fresh bounded CLI lane with explicit worktree and report
 write roots; do not turn this into permission prompts or treat the stopped
 resume as implementation progress. A resume launcher should verify and restore
 all required writable roots before dispatch.
+
+### Markdown detector command spelling
+
+During the Markdown final ratchet check, `beep lint effect-vitest --check` was
+rejected with `Unrecognized flag: --check`. The default command is already the
+check mode; rerunning without that flag passed. An explicit check-mode example
+in the command help would prevent borrowing flags from adjacent lint commands.

@@ -82,3 +82,37 @@ and md-properties-bun-context.json. These are intermediate stage observations,
 not a claim of performance improvement or final runner-instrumentation proof.
 Runner adoption, final lens validation, timing publication and HTML-first PR
 publication remain outstanding.
+
+## Runner and inventory checkpoint
+
+All five suites now use the public instrumented @beep/test-runner it export;
+describe/expect and outcome utils retain their original imports. A bounded
+implementation lane verified that only import lines changed in the test files.
+The development dependency adds one lockfile entry and two filtered generated
+TypeScript references. Test bodies, resources and property options are unchanged.
+The existing flake review found no change requiring retries, timeout increases
+or clock manipulation; the existing diagnostic assertions remain intact.
+
+A temporary trace assertion in the actual ledger test passed with BEEP_TEST_TRACE=1
+and failed specifically on the trace assertion with BEEP_TEST_TRACE=0, CI=false.
+The original file was restored byte-for-byte in finally. This is an integration
+control receipt, not a committed regression test. Full package verification then
+passed: audit 26.1s and docgen 9.9s.
+
+The frozen 43 detector rows and 44 current-base Markdown rows share identities;
+the reconciled ledger preserves their union of 65 historical IDs with fix SHAs.
+These are historical observations, not 65 distinct defects. Only the 44 Markdown
+baseline entries were removed; all 7,992 unrelated raw finding objects were
+copied unchanged. The property-floor human finding is fixed; real artifact reads
+retain the two reasoned resource exceptions. No-findings ranges now span current
+files. Strict five-lens validation passed: valid, complete, zero missing coverage
+(private inventory-m3xybmq_ receipt). The syntax ratchet passes after reconciliation.
+
+Final instrumented Node and Bun runs each pass 73 tests with no failed/pending
+cases. Whole-command observations are 6.109s and 3.083s respectively. Public
+after timing/context receipts retain source hashes, runtime versions, workload
+load, pressure and limits, with local paths sanitized. Different load and
+configuration prevent attributing a performance change to this migration.
+
+Dependency-related cache/boundary metadata checks, PR gates and HTML-first
+publication remain outstanding. This checkpoint does not close the goal.
