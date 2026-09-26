@@ -15,11 +15,11 @@
 
 import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   BootstrapInput,

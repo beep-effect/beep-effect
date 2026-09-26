@@ -36,8 +36,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/too
 import { O, Str } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
+import { AsyncResult } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { AsyncResult } from "effect/unstable/reactivity";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 

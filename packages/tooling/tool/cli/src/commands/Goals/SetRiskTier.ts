@@ -19,7 +19,7 @@
 
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, DateTime, Effect } from "effect";
-import { Argument, Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { GoalStatusInputError } from "./Goals.errors.ts";

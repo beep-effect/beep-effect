@@ -40,8 +40,8 @@ import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Chunk, Effect, Exit, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
 const decodeBracketStringToEntityPatternElement = Schema.decodeEffect(BracketStringToEntityPatternElement);
@@ -188,7 +188,10 @@ describe("Core Pattern", () => {
 
             return true;
           },
-          fcRuns(50)
+          // Every option schema rejects a sole empty choice and the literal option
+          // also rejects reserved tags, so the five-way tuple discards most roots;
+          // the default budget (10 per run) exhausts on some seeds.
+          { ...fcRuns(50), maxDiscards: 20_000 }
         )
       )._tag
     ).toBe("Passed"));

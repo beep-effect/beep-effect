@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-25T18:33:06.379Z
+Generated: 2026-09-25T23:09:36.464Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 2905 |
-| publicExports | 20505 |
+| publicExports | 20526 |
 | openModules | 377 |
 | openExports | 3097 |
 | missingExportExamples | 5 |
@@ -171,7 +171,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
 | 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2380 | 47 | 290 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2401 | 47 | 290 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 3 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -636,7 +636,7 @@ Module findings:
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/ArrayBuffer.ts:98` `ArrayBuf` (const) - 2 example import violation(s)
+- `src/ArrayBuffer.ts:99` `ArrayBuf` (const) - 2 example import violation(s)
 - `src/AtURI.ts:240` `AtUri` (const) - 1 example import violation(s)
 - `src/AtURI.ts:269` `AtUri` (type) - 1 example import violation(s)
 - `src/AtURI.ts:292` `AtUri` (namespace) - 1 example import violation(s)
@@ -773,10 +773,10 @@ Export findings:
 - `src/Semver.ts:648` `SemverFromString` (const) - 1 example import violation(s)
 - `src/Sfixed32.ts:68` `Sfixed32` (const) - 1 example import violation(s)
 - `src/Sfixed64.ts:58` `Sfixed64` (const) - 1 example import violation(s)
-- `src/Sha256.ts:113` `Sha256HexFromBytes` (const) - 1 example import violation(s)
-- `src/Sha256.ts:146` `Sha256HexFromBytes` (type) - 1 example import violation(s)
-- `src/Sha256.ts:169` `Sha256HexFromHexBytes` (const) - 1 example import violation(s)
-- `src/Sha256.ts:196` `Sha256HexFromHexBytes` (type) - 1 example import violation(s)
+- `src/Sha256.ts:114` `Sha256HexFromBytes` (const) - 1 example import violation(s)
+- `src/Sha256.ts:147` `Sha256HexFromBytes` (type) - 1 example import violation(s)
+- `src/Sha256.ts:170` `Sha256HexFromHexBytes` (const) - 1 example import violation(s)
+- `src/Sha256.ts:197` `Sha256HexFromHexBytes` (type) - 1 example import violation(s)
 - `src/Sint32.ts:68` `Sint32` (const) - 1 example import violation(s)
 - `src/Sint64.ts:58` `Sint64` (const) - 1 example import violation(s)
 - `src/SnakeStr.ts:29` `SnakeCaseStr` (const) - 1 example import violation(s)
@@ -2942,10 +2942,10 @@ Export findings:
 - `src/agent-effectiveness.ts:4511` `agentEffectivenessPromptBundleToJson` (const) - 1 example import violation(s)
 - `src/agent-effectiveness.ts:4555` `agentEffectivenessExperimentBundleToJson` (const) - 1 example import violation(s)
 - `src/agent-effectiveness.ts:4604` `agentEffectivenessPhoenixSyncResultToJson` (const) - 1 example import violation(s)
-- `src/archive.ts:298` `AiMetricsRawArchiveKey` (const) - 1 example import violation(s)
-- `src/archive.ts:320` `AiMetricsRawArchiveKey` (type) - 1 example import violation(s)
-- `src/archive.ts:447` `writeEncryptedRawArchiveObject` (const) - 1 example import violation(s)
-- `src/archive.ts:564` `decryptEncryptedRawArchiveEnvelope` (const) - 1 example import violation(s)
+- `src/archive.ts:299` `AiMetricsRawArchiveKey` (const) - 1 example import violation(s)
+- `src/archive.ts:321` `AiMetricsRawArchiveKey` (type) - 1 example import violation(s)
+- `src/archive.ts:448` `writeEncryptedRawArchiveObject` (const) - 1 example import violation(s)
+- `src/archive.ts:565` `decryptEncryptedRawArchiveEnvelope` (const) - 1 example import violation(s)
 - `src/compose.ts:44` `renderAiMetricsLocalPhoenixCompose` (const) - 1 example import violation(s)
 - `src/config-snapshot.ts:946` `makeAiMetricsConfigSnapshot` (const) - 1 example import violation(s)
 - `src/config-snapshot.ts:1118` `writeAiMetricsConfigSnapshotArtifacts` (const) - 1 example import violation(s)
@@ -2984,12 +2984,12 @@ Export findings:
 - `src/otlp.ts:1034` `runAiMetricsOtlpProjectionBatchExport` (const) - 1 example import violation(s)
 - `src/otlp.ts:1098` `runAiMetricsOtlpExport` (const) - 1 example import violation(s)
 - `src/otlp.ts:1146` `otlpExportResultToJson` (const) - 1 example import violation(s)
-- `src/privacy.ts:446` `hashPublicTextSha256` (const) - 1 example import violation(s)
-- `src/privacy.ts:486` `hashPrivateIdentifier` (const) - 1 example import violation(s)
-- `src/privacy.ts:610` `makeAiMetricsSourceAttribution` (const) - 1 example import violation(s)
-- `src/privacy.ts:791` `makeSanitizedTranscript` (const) - 1 example import violation(s)
-- `src/privacy.ts:873` `makeAiMetricsPrivacyCheckResult` (const) - 1 example import violation(s)
-- `src/privacy.ts:933` `privacyCheckToJson` (const) - 1 example import violation(s)
+- `src/privacy.ts:447` `hashPublicTextSha256` (const) - 1 example import violation(s)
+- `src/privacy.ts:487` `hashPrivateIdentifier` (const) - 1 example import violation(s)
+- `src/privacy.ts:611` `makeAiMetricsSourceAttribution` (const) - 1 example import violation(s)
+- `src/privacy.ts:792` `makeSanitizedTranscript` (const) - 1 example import violation(s)
+- `src/privacy.ts:874` `makeAiMetricsPrivacyCheckResult` (const) - 1 example import violation(s)
+- `src/privacy.ts:934` `privacyCheckToJson` (const) - 1 example import violation(s)
 - `src/retention.ts:680` `AiMetricsRetentionRestoreDrillInput` (class) - 1 example import violation(s)
 - `src/retention.ts:1018` `listAiMetricsRetentionInventory` (const) - 1 example import violation(s)
 - `src/retention.ts:1187` `enforceAiMetricsRetentionPolicy` (const) - 1 example import violation(s)
@@ -3866,9 +3866,9 @@ Export findings:
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:113` `printQualityProfileDetection` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.schemas.ts:445` `decodePackageJsonDocument` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.schemas.ts:844` `decodeGithubChecksFallowFeatureMatrix` (const) - 1 example import violation(s)
-- `src/commands/Refs/Refs.service.ts:107` `ReferenceWorkspace` (class) - 1 example import violation(s)
+- `src/commands/Quality/Quality.schemas.ts:451` `decodePackageJsonDocument` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.schemas.ts:850` `decodeGithubChecksFallowFeatureMatrix` (const) - 1 example import violation(s)
+- `src/commands/Refs/Refs.service.ts:112` `ReferenceWorkspace` (class) - 1 example import violation(s)
 - `src/commands/Research/Research.command.ts:403` `runResearchInstallTimers` (const) - 1 example import violation(s)
 - `src/commands/Research/Research.schemas.ts:243` `ResearchHistorySiftOptions` (class) - 1 example import violation(s)
 - `src/commands/Research/Research.schemas.ts:276` `ResearchHistorySiftSummary` (class) - 1 example import violation(s)
@@ -3896,8 +3896,8 @@ Export findings:
 - `src/commands/Runners/Runners.schemas.ts:334` `BakeCheckReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.service.ts:161` `BakeLocalInputs` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.service.ts:211` `RunnersService` (class) - 1 example import violation(s)
-- `src/commands/Skills/Skills.command.ts:974` `runSkillsUpdate` (const) - 1 example import violation(s)
-- `src/commands/Skills/Skills.command.ts:1084` `skillsCommand` (const) - 1 example import violation(s)
+- `src/commands/Skills/Skills.command.ts:975` `runSkillsUpdate` (const) - 1 example import violation(s)
+- `src/commands/Skills/Skills.command.ts:1085` `skillsCommand` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.schemas.ts:556` `SkillSnapshot` (class) - 1 example import violation(s)
 - `src/commands/Skills/Skills.schemas.ts:1174` `decodeSkillUpstream` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.schemas.ts:1207` `encodeSkillUpstream` (const) - 1 example import violation(s)
@@ -3964,9 +3964,9 @@ Export findings:
 - `src/drift.ts:165` `checkSourceDriftWithFetcher` (const) - 1 example import violation(s)
 - `src/drift.ts:216` `checkStrictDrift` (const) - 1 example import violation(s)
 - `src/drift.ts:249` `assertNoStrictDrift` (const) - 1 example import violation(s)
-- `src/generator.ts:371` `hashSourceText` (const) - 1 example import violation(s)
-- `src/generator.ts:419` `fetchSourceText` (const) - 1 example import violation(s)
-- `src/generator.ts:509` `generateAiSyncArtifacts` (const) - 1 example import violation(s)
+- `src/generator.ts:372` `hashSourceText` (const) - 1 example import violation(s)
+- `src/generator.ts:420` `fetchSourceText` (const) - 1 example import violation(s)
+- `src/generator.ts:510` `generateAiSyncArtifacts` (const) - 1 example import violation(s)
 - `src/index.ts:46` `export * from "./drift.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:137` `export * from "./validation.ts";` (re-export) - 1 example import violation(s)
 - `src/schemas.ts:89` `NormalizedAgentInstructionDocument` (const) - 1 example import violation(s)
@@ -4107,7 +4107,7 @@ Export findings:
 - `codemode/interpreter/Interpreter.promises.ts:855` `constructPromise` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.runtime.ts:482` `Interpreter` (class) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.scope.ts:67` `ScopeStack` (class) - 1 example import violation(s)
-- `codemode/openapi/OpenAPI.runtime.ts:682` `invoke` (const) - 1 example import violation(s)
+- `codemode/openapi/OpenAPI.runtime.ts:683` `invoke` (const) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.specification.ts:531` `componentDefinitions` (const) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.specification.ts:926` `operationInput` (const) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.specification.ts:1119` `operationOutput` (const) - 1 example import violation(s)
@@ -4148,7 +4148,7 @@ Export findings:
 - `jsonc/Jsonc.ts:344` `JsoncStringifyError` (class) - 1 example import violation(s)
 - `jsonc/Jsonc.ts:514` `Jsonc` (class) - 1 example import violation(s)
 - `jsonc/JsoncEdit.ts:130` `JsoncFormattingOptionsLike` (const) - 1 example import violation(s)
-- `jsonc/JsoncFingerprint.ts:398` `JsoncFingerprint` (class) - 1 example import violation(s)
+- `jsonc/JsoncFingerprint.ts:399` `JsoncFingerprint` (class) - 1 example import violation(s)
 - `jsonc/JsoncModifier.ts:70` `JsoncModificationError` (class) - 1 example import violation(s)
 - `jsonc/JsoncModifier.ts:173` `JsoncModifier` (class) - 1 example import violation(s)
 - `jsonc/JsoncNode.ts:43` `JsoncSegment` (const) - 1 example import violation(s)

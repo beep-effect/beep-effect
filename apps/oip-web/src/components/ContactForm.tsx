@@ -11,9 +11,9 @@ import { $OipWebId } from "@beep/identity";
 import { EmailString } from "@beep/schema";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as P from "effect/Predicate";
+import { Atom } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
-import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { OipContactHttpApiClient } from "../contact/ContactSubmission.http.ts";
 import { ContactSubmissionStatus, contactSubmissionPayloadFromFormData } from "../contact/ContactSubmission.model.ts";
 

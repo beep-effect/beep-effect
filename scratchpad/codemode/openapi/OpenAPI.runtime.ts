@@ -10,9 +10,10 @@ import { dual } from "effect/Function";
 import { MappedLiteralKit, NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, R, Str, Struct, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
-import { Chunk, Effect, Encoding, flow, HashMap, HashSet, Redacted, Result, Stream } from "effect";
+import { Chunk, Effect, flow, HashMap, HashSet, Redacted, Result, Stream } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
-import { Headers, HttpClient, HttpClientError, HttpClientRequest, type HttpClientResponse } from "effect/unstable/http";
+import { Headers, HttpClient, HttpClientError, HttpClientRequest, type HttpClientResponse } from "effect/http";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { isRecord, own } from "./OpenAPI.specification.ts";
 import {
@@ -479,7 +480,7 @@ const applyCredential = (applied: AppliedAuth, binding: CredentialBinding): Resu
         applied,
         "header",
         "authorization",
-        `Basic ${Encoding.encodeBase64(`${Redacted.value(username)}:${Redacted.value(password)}`)}`
+        `Basic ${Base64.encode(`${Redacted.value(username)}:${Redacted.value(password)}`)}`
       ),
     header: ({ name, value }) => insertCredential(applied, "header", Str.toLowerCase(name), Redacted.value(value)),
     apiKey: ({ value }) =>
@@ -639,7 +640,7 @@ const errorBodySummary = (value: unknown): string => {
  * ```ts
  * import { Effect, HashMap } from "effect"
  * import * as O from "effect/Option"
- * import { HttpClient, HttpClientResponse } from "effect/unstable/http"
+ * import { HttpClient, HttpClientResponse } from "effect/http"
  * import { ApiPath, Operation, Plan } from "../../../codemode/openapi/OpenAPI.types.ts"
  * import { invoke } from "../../../codemode/openapi/OpenAPI.runtime.ts"
  * import * as S from "effect/Schema"

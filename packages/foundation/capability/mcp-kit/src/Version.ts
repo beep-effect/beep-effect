@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import * as McpProtocol from "effect/unstable/ai/McpProtocol";
+import * as McpProtocol from "effect/ai/McpProtocol";
 import type * as Arr from "effect/Array";
 
 /**
@@ -56,7 +56,7 @@ export const MCP_PROTOCOL_VERSION = McpProtocol.v2026_07_28.protocolVersion;
  *
  * ```ts
  * import { statelessMcpProtocols } from "@beep/mcp-kit/Version"
- * import * as McpServer from "effect/unstable/ai/McpServer"
+ * import * as McpServer from "effect/ai/McpServer"
  *
  * const layer = McpServer.layerStdio({ name: "example", version: "0.0.0", protocols: statelessMcpProtocols })
  * console.log(statelessMcpProtocols.length)

@@ -3,7 +3,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as AcpSchema from "../_generated/schema.gen.ts";
 import * as AcpError from "../Acp.errors.ts";
-import type { RpcClientError } from "effect/unstable/rpc";
+import type { RpcClientError } from "effect/rpc";
 import type {
   AcpExtensionRegistrars,
   AcpUnknownExtNotificationHandler,

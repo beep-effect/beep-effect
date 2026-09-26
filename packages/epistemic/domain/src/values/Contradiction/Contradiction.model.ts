@@ -16,6 +16,7 @@ import { P, R } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime, flow, identity, Order, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -23,7 +24,6 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 import { LogicalEdgeKey } from "../LogicalEdgeIdentity/index.ts";
@@ -1522,7 +1522,7 @@ export const contradictionCandidateDigest = (
  *
  * ```ts
  * import { ContradictionBeliefPairArbitrary } from "@beep/epistemic-domain/values/Contradiction"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(ContradictionBeliefPairArbitrary, { count: 1 })
  * ```
@@ -1542,7 +1542,7 @@ export const ContradictionBeliefPairArbitrary = Arbitrary.schema(ContradictionBe
  *
  * ```ts
  * import { CanonicalContradictionBeliefPairArbitrary } from "@beep/epistemic-domain/values/Contradiction"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(CanonicalContradictionBeliefPairArbitrary, { count: 1 })
  * ```
@@ -1565,7 +1565,7 @@ export const CanonicalContradictionBeliefPairArbitrary = ContradictionBeliefPair
  *
  * ```ts
  * import { ContradictionMatchBasisArbitrary } from "@beep/epistemic-domain/values/Contradiction"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(ContradictionMatchBasisArbitrary, { count: 1 })
  * ```
@@ -1608,7 +1608,7 @@ export const ContradictionMatchBasisArbitrary = Arbitrary.all({
  *
  * ```ts
  * import { ContradictionResolutionProposalArbitrary } from "@beep/epistemic-domain/values/Contradiction"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(ContradictionResolutionProposalArbitrary, { count: 1 })
  * ```
@@ -1632,7 +1632,7 @@ export const ContradictionResolutionProposalArbitrary = Arbitrary.schema(Contrad
  *
  * ```ts
  * import { ContradictionAssessmentArbitrary } from "@beep/epistemic-domain/values/Contradiction"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(ContradictionAssessmentArbitrary, { count: 1 })
  * ```
@@ -1656,7 +1656,7 @@ export const ContradictionAssessmentArbitrary = Arbitrary.all({
  *
  * ```ts
  * import { ContradictionCandidateContentArbitrary } from "@beep/epistemic-domain/values/Contradiction"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(ContradictionCandidateContentArbitrary, { count: 1 })
  * ```

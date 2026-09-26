@@ -25,7 +25,7 @@ import {
   RunScopeTelemetry,
 } from "./RunScope.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const SYSTEMD_DESTINATION = "org.freedesktop.systemd1";
 const SYSTEMD_MANAGER_PATH = "/org/freedesktop/systemd1";

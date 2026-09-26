@@ -32,6 +32,6 @@ void layer
 
 ## Runtime
 
-The package uses native binaries through `effect/unstable/process`, not WASM.
+The package uses native binaries through `effect/process`, not WASM.
 The default executable names are `ffmpeg` and `ffprobe`; callers may override
 them with `FFmpeg.makeLayer(new FFmpegConfigInput(...))`.

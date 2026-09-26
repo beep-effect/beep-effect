@@ -10,9 +10,9 @@
 import { TSConfigCompilerOptions } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Effect, flow, Layer, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import * as Configuration from "./Configuration.ts";
 import * as Core from "./Core.ts";
 import * as Domain from "./Domain.ts";
@@ -138,7 +138,7 @@ const options = {
  * **Example** (Run docgen command help)
  *
  * ```ts
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { docgenCommand } from "@beep/repo-docgen/CLI"
  * const runDocgen = Command.runWith(docgenCommand, { version: "v0.0.0" })
  * const helpProgram = runDocgen(["--help"])

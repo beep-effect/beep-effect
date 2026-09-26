@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { Toolkit } from "effect/unstable/ai";
+import { Toolkit } from "effect/ai";
 import {
   CorpusGetDocumentTool,
   CorpusSearchTextTool,

@@ -60,8 +60,8 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Layer, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOntologyGraphProjectionOptionsResult = S.decodeResult(OntologyGraphProjectionOptions);
 const decodePrefixMap = S.decodeUnknownEffect(PrefixMap);

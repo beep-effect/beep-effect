@@ -66,13 +66,13 @@ import {
   Sink,
   Stream,
 } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Command } from "effect/cli";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type {
   DocgenQualityPackageReport,
   DocgenQualityReview,

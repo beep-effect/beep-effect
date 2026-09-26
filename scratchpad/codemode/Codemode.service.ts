@@ -9,7 +9,7 @@ import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import type * as Toolkit from "effect/unstable/ai/Toolkit";
+import type * as Toolkit from "effect/ai/Toolkit";
 import { encodeResultModel, type Result } from "./Codemode.result.ts";
 import type { Services, ToolDescription } from "./Codemode.tool-runtime.ts";
 import * as ToolRuntime from "./Codemode.tool-runtime.ts";
@@ -117,7 +117,7 @@ export class InvalidExecutionLimits extends S.TaggedError<InvalidExecutionLimits
  */
 // biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
 export type ExecuteOptions<
-  ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty,
+  ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/ai/Toolkit").empty,
 > = {
   readonly code: string;
   readonly toolkit?: ToolkitType;
@@ -134,7 +134,7 @@ export type ExecuteOptions<
  * @since 0.0.0
  */
 // biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
-export type Options<ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty> =
+export type Options<ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/ai/Toolkit").empty> =
   Omit<ExecuteOptions<ToolkitType>, "code">;
 
 /**
@@ -203,7 +203,7 @@ export const resolveExecutionLimits = (limits?: unknown): Effect.Effect<Executio
  * @since 0.0.0
  */
 // biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
-export const execute = <ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty>(
+export const execute = <ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/ai/Toolkit").empty>(
   options: ExecuteOptions<ToolkitType>
 ): Effect.Effect<Result, InvalidExecutionLimits, Services<ToolkitType>> =>
   Effect.flatMap(resolveExecutionLimits(options.limits), (limits) =>
@@ -244,7 +244,7 @@ export const execute = <ToolkitType extends Toolkit.Toolkit<any> = typeof import
  * @since 0.0.0
  */
 // biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
-export const make = <ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/unstable/ai/Toolkit").empty>(
+export const make = <ToolkitType extends Toolkit.Toolkit<any> = typeof import("effect/ai/Toolkit").empty>(
   options: Options<ToolkitType>
 ): Effect.Effect<Runtime<Services<ToolkitType>>, InvalidExecutionLimits | ToolRuntime.ToolRuntimeError> =>
   Effect.gen(function* () {

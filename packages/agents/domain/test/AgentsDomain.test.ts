@@ -24,12 +24,12 @@ import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/tes
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { PlatformError } from "effect";
 
 const decodeAgentMode = S.decodeEffect(AgentMode);

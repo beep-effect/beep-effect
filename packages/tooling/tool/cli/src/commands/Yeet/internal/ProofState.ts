@@ -8,8 +8,9 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, Crypto, DateTime, Effect, Encoding, FileSystem, flow, Path, pipe } from "effect";
+import { Console, Crypto, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -36,7 +37,7 @@ import {
 import { currentCommitSha, runGitOutput } from "./GitExec.ts";
 import { renderJson, writeTextFile } from "./IssueArtifacts.ts";
 import { YeetProofTier } from "./Planner.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
@@ -304,7 +305,7 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
       concatBytes([textEncoder.encode(status), fingerprintSeparator, unstagedDiff, fingerprintSeparator, stagedDiff])
     )
     .pipe(YeetCommandError.mapError("Failed to hash Yeet worktree fingerprint."));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 /**
@@ -347,7 +348,7 @@ const hashText = Effect.fn("Yeet.hashText")(function* (
   const digest = yield* crypto
     .digest("SHA-256", textEncoder.encode(value))
     .pipe(YeetCommandError.mapError("Failed to hash Yeet proof command."));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 // The directory invariants live in the shared coordination validator; the

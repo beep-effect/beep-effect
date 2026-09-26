@@ -6,7 +6,7 @@
  */
 
 import type { Config } from "effect";
-import type { AiError } from "effect/unstable/ai";
+import type { AiError } from "effect/ai";
 
 /**
  * Typed failures callers may observe while acquiring or using OpenAI Layers.
@@ -22,7 +22,7 @@ import type { AiError } from "effect/unstable/ai";
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { OpenAiError } from "@beep/openai"
- * import { AiError } from "effect/unstable/ai"
+ * import { AiError } from "effect/ai"
  *
  * const error: OpenAiError = AiError.make({
  *   method: "createEmbedding",

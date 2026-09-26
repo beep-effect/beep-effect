@@ -22,12 +22,13 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import { Crypto, DateTime, Duration, Effect, Encoding, pipe } from "effect";
+import { Crypto, DateTime, Duration, Effect, pipe } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Activity } from "effect/unstable/workflow";
+import { Activity } from "effect/workflow";
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
 import { ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
@@ -167,7 +168,7 @@ const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
 const computeContentHash = Effect.fn("StreamingExtractionActivity.computeContentHash")(function* (content: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(content));
-  return yield* ContentHash.decodeEffect(Encoding.encodeHex(digest));
+  return yield* ContentHash.decodeEffect(Hex.encode(digest));
 });
 
 /** Extracts the ontology name component from a storage URI path. */

@@ -26,7 +26,7 @@ import { historySiftImpl } from "./HistorySift.ts";
 import { notionPullImpl } from "./NotionPullRun.ts";
 import { VAULT_DIRS } from "./Vault.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { ResearchDailyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 

@@ -5,10 +5,10 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, Exit, FileSystem, Layer, Sink, Stream } from "effect";
+import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
 
 const FixedMemoryStatsLayer = Layer.succeed(

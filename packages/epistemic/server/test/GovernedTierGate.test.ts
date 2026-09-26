@@ -26,8 +26,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Duration, Effect, Fiber, pipe, Ref } from "effect";
+import { Tool } from "effect/ai";
 import * as Str from "effect/String";
-import { Tool } from "effect/unstable/ai";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { TierGateShape } from "@beep/mcp-kit";
 

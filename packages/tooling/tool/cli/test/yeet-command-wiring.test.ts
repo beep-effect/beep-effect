@@ -11,9 +11,9 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
-import { Command } from "effect/unstable/cli";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/process";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 

@@ -3,7 +3,7 @@
  *
  * A typed `failureMode: "return"` tool failure for `soft`-gated (or
  * key-optional `none`-gated) sources whose credential is absent at call
- * time. `effect/unstable/ai`'s `Toolkit` folds `"return"`-mode failures into
+ * time. `effect/ai`'s `Toolkit` folds `"return"`-mode failures into
  * the handler's result stream as declared failures; rc.117
  * `McpServer.registerToolkit` projects every declared failure as
  * `CallToolResult({ isError: true })`. The kit's `sanitizedToolkit` instead
@@ -22,9 +22,9 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
+import { CallToolResult } from "effect/ai/McpSchema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CallToolResult } from "effect/unstable/ai/McpSchema";
 import { SourceAuthRegistration } from "./SourceAuth.ts";
 
 const $I = $McpKitId.create("ApiKeyRequired");

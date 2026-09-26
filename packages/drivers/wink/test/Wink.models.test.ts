@@ -2,9 +2,9 @@ import { WinkStringArray as WinkStringArrayFromRoot } from "@beep/wink";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWinkStringArrayResult = S.decodeResult(WinkStringArray);
 const decodeUnknownWinkStringArrayResult = S.decodeUnknownResult(WinkStringArray);

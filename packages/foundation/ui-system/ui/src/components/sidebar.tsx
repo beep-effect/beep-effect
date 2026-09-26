@@ -11,7 +11,7 @@ import { make as makeScopedAtom, useAtom, useAtomMount, useAtomValue } from "@ef
 import { ListIcon } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import * as React from "react";
 import { mediaQueryAtom } from "../internal/react-atoms.ts";
 import { cn } from "../lib/index.ts";

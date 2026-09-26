@@ -1,0 +1,18 @@
+diff --git a/dist/internal/equal.js b/dist/internal/equal.js
+index f7f57f1875769fbd46de5de9ea8ac3acb461a917..0e97dfadd2f42d0003a2d86e76d253e6bd656b08 100644
+--- a/dist/internal/equal.js
++++ b/dist/internal/equal.js
+@@ -4,6 +4,13 @@ export const getAllObjectKeys = obj => {
+   if (obj.constructor === Object) return keys;
+   if (obj instanceof Error) {
+     keys.delete("stack");
++    // JavaScriptCore (Bun, Safari) materializes the construction site as own
++    // properties; they are location metadata, not structure, like `stack`.
++    keys.delete("line");
++    keys.delete("column");
++    keys.delete("sourceURL");
++    keys.delete("originalLine");
++    keys.delete("originalColumn");
+   }
+   const proto = Object.getPrototypeOf(obj);
+   let current = proto;

@@ -103,11 +103,11 @@ Setup:
 
 **1. Promote the `MembershipRevoked` event contract to shared.**
 
-The promotion PR creates `packages/shared/use-cases/src/iam/events/MembershipRevoked.ts`. The event contract is defined there using the v4 EventLog `Event.make` constructor (see `effect/unstable/eventlog/Event`), with a payload schema annotated per the repo's schema-annotation rules. The package and identity composer are generated as part of that promotion, because they do not exist today:
+The promotion PR creates `packages/shared/use-cases/src/iam/events/MembershipRevoked.ts`. The event contract is defined there using the v4 EventLog `Event.make` constructor (see `effect/eventlog/Event`), with a payload schema annotated per the repo's schema-annotation rules. The package and identity composer are generated as part of that promotion, because they do not exist today:
 
 ````ts
 import { $SharedUseCasesId } from "@beep/identity"
-import * as Event from "effect/unstable/eventlog/Event"
+import * as Event from "effect/eventlog/Event"
 import * as S from "effect/Schema"
 
 const $I = $SharedUseCasesId.create("iam.events.MembershipRevoked")
@@ -156,9 +156,9 @@ Add a promotion record to the newly created `packages/shared/use-cases/README.md
 
 **2. `iam/server` emits using the shared contract.**
 
-The `RevokeMembership` command handler in `iam/server` writes `MembershipRevoked` to the event log using the promoted contract imported from the future `@beep/shared-use-cases/public` subpath. The event group it registers under (via `EventGroup` + `EventLog.group` from `effect/unstable/eventlog`) lives in `iam/server` because iam owns the write side. The contract is shared; the *writing* of it is not.
+The `RevokeMembership` command handler in `iam/server` writes `MembershipRevoked` to the event log using the promoted contract imported from the future `@beep/shared-use-cases/public` subpath. The event group it registers under (via `EventGroup` + `EventLog.group` from `effect/eventlog`) lives in `iam/server` because iam owns the write side. The contract is shared; the *writing* of it is not.
 
-(Exact handler/group wiring is left to the slice's server package — `EventGroup` accumulates event handlers and `EventLog.group` binds them; refer to `effect/unstable/eventlog/EventLog` for current shapes. Code shape elided here to avoid drift against in-flight v4 EventLog APIs.)
+(Exact handler/group wiring is left to the slice's server package — `EventGroup` accumulates event handlers and `EventLog.group` binds them; refer to `effect/eventlog/EventLog` for current shapes. Code shape elided here to avoid drift against in-flight v4 EventLog APIs.)
 
 **3. `billing/server` subscribes via a thin handler.**
 

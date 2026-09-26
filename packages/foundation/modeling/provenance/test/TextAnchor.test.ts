@@ -2,9 +2,9 @@ import { isInternallyConsistent, isUtf16Boundary, isWellOrdered, TextAnchor } fr
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTextAnchor = S.decodeEffect(TextAnchor);
 const decodeTextAnchorResult = S.decodeResult(TextAnchor);

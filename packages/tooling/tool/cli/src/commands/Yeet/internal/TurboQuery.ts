@@ -24,7 +24,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/TurboQuery");

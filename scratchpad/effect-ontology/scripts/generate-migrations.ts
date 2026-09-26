@@ -11,7 +11,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const ExtensionPrelude = `-- Drizzle Kit emits extension-dependent vector columns but cannot declare their
 -- prerequisite extensions. This generator-owned prelude must precede every CREATE TABLE.

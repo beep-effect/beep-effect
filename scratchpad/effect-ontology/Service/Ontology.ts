@@ -32,22 +32,8 @@ import {
 } from "@beep/rdf/Vocab/Skos";
 import { FilePath } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
-import {
-  Chunk,
-  Clock,
-  Context,
-  Crypto,
-  Duration,
-  Effect,
-  Encoding,
-  HashMap,
-  HashSet,
-  Inspectable,
-  Layer,
-  MutableHashMap,
-  MutableHashSet,
-  Ref,
-} from "effect";
+import { Chunk, Clock, Context, Crypto, Duration, Effect, HashMap, HashSet, Inspectable, Layer, MutableHashMap, MutableHashSet, Ref } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -918,7 +904,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const namespace = yield* decodeIdentity(Namespace, "namespace");
         const name = yield* decodeIdentity(OntologyName, "name");
         const hash = ContentHash.make(
-          Encoding.encodeHex(
+          Hex.encode(
             yield* crypto.digest("SHA-256", new TextEncoder().encode(ontologyIri)).pipe(
               Effect.mapError((cause) =>
                 OntologyError.make({

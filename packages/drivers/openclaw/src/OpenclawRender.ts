@@ -21,7 +21,7 @@ import { O } from "@beep/utils";
 import { Effect, flow, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -414,7 +414,7 @@ export const renderOpenclawConfig = Effect.fn($I`renderOpenclawConfig`)(function
   const digest = yield* crypto.digest("SHA-256", utf8.encode(canonicalJson));
   return RenderedOpenclawConfig.make({
     canonicalJson,
-    contentHash: OpenclawSha256Hex.make(Encoding.encodeHex(digest)),
+    contentHash: OpenclawSha256Hex.make(Hex.encode(digest)),
     targetVersion: intent.openclawVersion,
   });
 });

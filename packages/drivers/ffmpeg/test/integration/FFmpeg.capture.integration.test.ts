@@ -15,8 +15,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 // Live lane: exercises the real ffmpeg/ffprobe binaries on PATH. Skips
 // cleanly (logInfo, no assertions) on machines without ffmpeg.

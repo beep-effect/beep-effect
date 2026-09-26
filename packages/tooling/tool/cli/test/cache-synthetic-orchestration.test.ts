@@ -10,11 +10,11 @@ import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));

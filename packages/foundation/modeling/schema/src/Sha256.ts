@@ -6,7 +6,8 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Crypto, Effect, Encoding, SchemaGetter, SchemaIssue } from "effect";
+import { Crypto, Effect, SchemaGetter, SchemaIssue } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
@@ -15,7 +16,7 @@ const $I = $SchemaId.create("Sha256");
 const sha256HexLowercaseRegExp = /^[0-9a-f]+$/;
 
 const Sha256HexChecks = S.makeFilterGroup([
-  S.isLengthBetween(64, 64, {
+  S.isBetweenLength(64, 64, {
     title: "isSha256HexLength",
     description: "a SHA-256 hex digest with exactly 64 characters",
     message: "SHA-256 digest must be exactly 64 characters long",
@@ -40,7 +41,7 @@ const computeSha256Hex = Effect.fn("computeSha256Hex")(function* (
     )
   );
 
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 /**

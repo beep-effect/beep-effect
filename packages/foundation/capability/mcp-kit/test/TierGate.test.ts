@@ -10,11 +10,11 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Fiber, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Tool } from "effect/ai";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Tool } from "effect/unstable/ai";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeTierGateAuditRecord = S.decodeUnknownEffect(TierGateAuditRecord);
 

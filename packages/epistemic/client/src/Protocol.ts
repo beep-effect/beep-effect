@@ -8,11 +8,11 @@
 import { $EpistemicClientId } from "@beep/identity/packages";
 import { O, pipe, Str } from "@beep/utils";
 import { Layer, Result } from "effect";
+import { FetchHttpClient } from "effect/http";
 import * as P from "effect/Predicate";
+import { Atom } from "effect/reactivity";
+import { RpcClient, RpcSerialization } from "effect/rpc";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import { Atom } from "effect/unstable/reactivity";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 
 const $I = $EpistemicClientId.create("Protocol");
 const LOOPBACK_EPISTEMIC_RPC_URL = "http://127.0.0.1:3939/rpc";
@@ -110,7 +110,7 @@ export const HttpEpistemicProtocolLive: Layer.Layer<RpcClient.Protocol> = RpcCli
  *   epistemicProtocolLayerAtom,
  *   HttpEpistemicProtocolLive,
  * } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/unstable/reactivity"
+ * import { AtomRegistry } from "effect/reactivity"
  *
  * const registry = AtomRegistry.make()
  * registry.set(epistemicProtocolLayerAtom, HttpEpistemicProtocolLive)

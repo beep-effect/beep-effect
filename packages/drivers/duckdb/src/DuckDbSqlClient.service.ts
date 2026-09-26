@@ -30,13 +30,13 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as Reactivity from "effect/unstable/reactivity/Reactivity";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
-import { ConnectionError, SqlError, UnknownError } from "effect/unstable/sql/SqlError";
-import * as Statement from "effect/unstable/sql/Statement";
+import * as Reactivity from "effect/reactivity/Reactivity";
+import * as SqlClient from "effect/sql/SqlClient";
+import { ConnectionError, SqlError, UnknownError } from "effect/sql/SqlError";
+import * as Statement from "effect/sql/Statement";
 import { ignoreNativeClose, releaseNativeConnection } from "./DuckDbNative.ts";
 import type { DuckDBConnection, DuckDBValue, Json } from "@duckdb/node-api";
-import type * as SqlConnection from "effect/unstable/sql/SqlConnection";
+import type * as SqlConnection from "effect/sql/SqlConnection";
 import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.models.ts";
 
 const $I = $DuckdbId.create("DuckDbSqlClient.service");

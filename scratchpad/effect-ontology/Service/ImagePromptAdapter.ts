@@ -12,15 +12,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Encoding, Layer } from "effect";
+import { Context, Effect, Layer } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
-import { Prompt } from "effect/unstable/ai";
-import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import { Prompt } from "effect/ai";
+import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { ImageBlobStore } from "./ImageBlobStore.ts";
@@ -35,7 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImagePromptAdapter");
 /**
  * Convert Uint8Array to base64 string
  */
-const toBase64 = (bytes: Uint8Array): string => Encoding.encodeBase64(bytes);
+const toBase64 = (bytes: Uint8Array): string => Base64.encode(bytes);
 
 /**
  * Get file extension from media type

@@ -6,10 +6,10 @@
  */
 import { Effect } from "effect";
 import { dual } from "effect/Function";
+import * as Headers from "effect/http/Headers";
+import * as HttpTraceContext from "effect/http/HttpTraceContext";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Headers from "effect/unstable/http/Headers";
-import * as HttpTraceContext from "effect/unstable/http/HttpTraceContext";
 import type * as Tracer from "effect/Tracer";
 
 const isTraceContextDataFirst = (args: IArguments): boolean => args.length >= 2 || Effect.isEffect(args[0]);

@@ -7,7 +7,7 @@
 
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Effect, Layer } from "effect";
-import { HttpApiBuilder } from "effect/unstable/httpapi";
+import { HttpApiBuilder } from "effect/http-api";
 import { Api, Health } from "../Api.ts";
 
 const handlers = HttpApiBuilder.group(Api, "ciops", (group) =>

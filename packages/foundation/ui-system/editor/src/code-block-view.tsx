@@ -8,7 +8,7 @@
 
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Duration, Effect, Layer } from "effect";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import type { JSX } from "react";
 
 const COPIED_FOR = Duration.millis(1_500);

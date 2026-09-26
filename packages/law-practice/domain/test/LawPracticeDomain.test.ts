@@ -60,12 +60,12 @@ import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
 const decodeCitation = S.decodeEffect(Citation);

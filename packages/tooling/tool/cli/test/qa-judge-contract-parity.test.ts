@@ -59,10 +59,10 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { EvidencePredicateType, GateDeclaration } from "@beep/skill-contract";
 
 const decodeGateRegistry = S.decodeEffect(GateRegistry);

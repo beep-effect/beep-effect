@@ -44,11 +44,11 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import { DateTime, Duration, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { YeetPrCommentWindow } from "@beep/repo-cli/test/Yeet";
 
 const at = "2026-09-16T00:00:00.000Z";

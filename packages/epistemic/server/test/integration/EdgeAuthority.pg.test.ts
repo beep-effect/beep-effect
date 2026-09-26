@@ -34,7 +34,7 @@ import { describe, expect, layer } from "@effect/vitest";
 import { Config, Deferred, Effect, Layer, pipe, Redacted, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EdgeAuthorityError, EdgeAuthorityRepositoryShape } from "@beep/epistemic-use-cases/EdgeAuthority";
 

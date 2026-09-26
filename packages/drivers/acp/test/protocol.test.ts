@@ -10,20 +10,20 @@ import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
+import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import * as RpcSerialization from "effect/unstable/rpc/RpcSerialization";
 import {
   encodeJsonl,
   jsonRpcNotification,

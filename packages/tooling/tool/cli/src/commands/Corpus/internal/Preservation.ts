@@ -9,8 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { DateTime, Effect, Encoding, FileSystem, Layer, MutableHashMap, MutableRef, Path, pipe, Stream } from "effect";
+import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableRef, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printLines } from "../../../internal/cli/Printer.ts";
@@ -53,7 +54,7 @@ import {
   T7PreservationOptions,
 } from "./Preservation.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { PreservationCommandError } from "../Corpus.errors.ts";
 import type { ArchiveWriterShape, PreservationManifestStoreShape } from "./Preservation.contracts.ts";
 import type { ArchiveWriterLiveOptions, CorpusLedgerRecord } from "./Preservation.schemas.ts";
@@ -185,7 +186,7 @@ const digestResult = Effect.fn("Preservation.digestResult")(function* (
   hasher: Sha256State,
   bytes: number
 ): Effect.fn.Return<StreamingHashResult, PreservationArchiveIoError> {
-  const sha256Hex = yield* decodeSha256(Encoding.encodeHex(hasher.digest())).pipe(
+  const sha256Hex = yield* decodeSha256(Hex.encode(hasher.digest())).pipe(
     Effect.mapError(ioError("hash-finalize", "stream"))
   );
   return StreamingHashResult.make({ bytes: NonNegativeInt.make(bytes), sha256: sha256Hex });
@@ -393,10 +394,7 @@ const hashExistingPrefix = Effect.fn("Preservation.hashExistingPrefix")(function
   ).pipe(Effect.mapError(ioError("destination-prefix-read", partialAbs)));
   return {
     hasher: sourceHasher,
-    matches: Str.Equivalence(
-      Encoding.encodeHex(sourceHasher.clone().digest()),
-      Encoding.encodeHex(partialHasher.digest())
-    ),
+    matches: Str.Equivalence(Hex.encode(sourceHasher.clone().digest()), Hex.encode(partialHasher.digest())),
   };
 });
 

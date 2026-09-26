@@ -35,8 +35,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { expectReportedExit } from "./support/CommandTest.ts";
 import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
 

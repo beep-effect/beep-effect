@@ -12,7 +12,7 @@ import * as O from "effect/Option";
 import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CaptureSource } from "../process/StepExec.ts";
 import type { RepoPlanStep } from "./RepoRun.models.ts";
 

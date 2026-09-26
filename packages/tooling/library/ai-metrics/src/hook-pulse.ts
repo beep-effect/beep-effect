@@ -9,11 +9,11 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, SchemaIssue, SchemaTransformation } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { hashPrivateIdentifier } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
@@ -976,7 +976,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
  * **Example** (Sample canonical hook pulses)
  * ```ts
  * import { HookPulseV1Arbitrary } from "@beep/repo-ai-metrics"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * console.log(Arbitrary.sampleEffect(HookPulseV1Arbitrary, { count: 3 }))
  * ```
  *

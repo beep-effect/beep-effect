@@ -12,8 +12,8 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
-import { ChildProcess } from "effect/unstable/process";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const claudeBreakerPath = `${repoRoot}.claude/hooks/circuit-breaker.sh`;

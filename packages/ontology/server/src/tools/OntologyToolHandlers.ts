@@ -29,12 +29,12 @@ import {
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import { NonNegativeInt } from "@beep/schema";
 import { Effect, Layer } from "effect";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import * as O from "effect/Option";
-import { HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { SessionServerLayer } from "../aggregates/Session/Session.layer.ts";
 import type { PublishProvenanceRequest } from "@beep/ontology-use-cases/tools";
-import type * as Tool from "effect/unstable/ai/Tool";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+import type * as Tool from "effect/ai/Tool";
+import type * as HttpClientError from "effect/http/HttpClientError";
 
 /**
  *  Thin service-delegating handler layer for the ontology toolkit.

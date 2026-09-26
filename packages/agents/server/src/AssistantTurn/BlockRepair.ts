@@ -15,9 +15,9 @@ import { isNonNegative } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect, JsonPatch, Metric } from "effect";
 import * as A from "effect/Array";
+import { AnthropicStructuredOutput, Tool, Toolkit } from "effect/ai";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { AnthropicStructuredOutput, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import type { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
 
@@ -194,7 +194,7 @@ class RepairInvalidBlocksResult extends S.Class<RepairInvalidBlocksResult>($I`Re
  * import type { BlockRepairCall } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
- * import { Response } from "effect/unstable/ai"
+ * import { Response } from "effect/ai"
  *
  * const issue = IssueReport.make({
  *   index: 0,
@@ -241,7 +241,7 @@ export type BlockRepairCall = (
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import type { RepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { Effect } from "effect"
- * import { Response } from "effect/unstable/ai"
+ * import { Response } from "effect/ai"
  *
  * const repair: RepairInvalidBlocks = makeRepairInvalidBlocks(() =>
  *   Effect.succeed(AnthropicToolJsonResponse.make({
@@ -670,7 +670,7 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import { Effect } from "effect"
- * import { Response } from "effect/unstable/ai"
+ * import { Response } from "effect/ai"
  *
  * const repair = makeRepairInvalidBlocks(() =>
  *   Effect.succeed(AnthropicToolJsonResponse.make({

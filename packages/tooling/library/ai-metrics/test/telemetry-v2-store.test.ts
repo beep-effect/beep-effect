@@ -15,9 +15,9 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { TelemetryV2StoreShape } from "@beep/repo-ai-metrics";
 
 const decodeFlightRecordWriteEvent = S.decodeEffect(FlightRecordWriteEvent);

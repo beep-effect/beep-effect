@@ -26,14 +26,14 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertExitSuccess, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
 import {
   expectReportedExit,
   permutedDirectoryReadsFileSystem,

@@ -9,13 +9,13 @@ import { $RunpodId } from "@beep/identity";
 import { Fn, SchemaUtils, URLStr } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, Effect, flow, Layer, pipe, SchemaIssue } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { RUNPOD_DOCS_INDEX_URL, RunpodConfigUrl, RunpodDocsConfigInput } from "./Runpod.config.ts";
 import { RunpodDocsError } from "./Runpod.errors.ts";
-import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 
 const $I = $RunpodId.create("RunpodDocs.service");
 const defaultDocsSection = "Docs";

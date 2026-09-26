@@ -3,11 +3,11 @@ import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSyncConflict = S.decodeUnknownEffect(SyncConflict.SyncConflict);
 const decodeUnknownSyncConflictKind = S.decodeUnknownEffect(SyncConflict.SyncConflictKind);

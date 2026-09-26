@@ -3,11 +3,12 @@ import { PosInt, Sha256Hex } from "@beep/schema";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Data, Effect, Encoding, FileSystem, Layer, Match, Path, Ref, Tuple } from "effect";
+import { Data, Effect, FileSystem, Layer, Match, Path, Ref, Tuple } from "effect";
+import * as Hex from "effect/encoding/Hex";
+import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as TestConsole from "effect/testing/TestConsole";
-import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
-import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 type TestResponder = (
   request: HttpClientRequest.HttpClientRequest,
@@ -21,7 +22,7 @@ const provideScopedLayer =
 
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 
-const sha256Hex = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(Encoding.encodeHex(sha256(bytes)));
+const sha256Hex = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(Hex.encode(sha256(bytes)));
 
 const withTempModelRoot = <A, E, R>(use: (modelRoot: string, targetPath: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(

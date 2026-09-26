@@ -9,7 +9,7 @@ import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -98,7 +98,7 @@ export class LaneProofSession extends S.Class<LaneProofSession>($I`LaneProofSess
 
 const hashText = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(
+  return Hex.encode(
     yield* crypto
       .digest("SHA-256", new TextEncoder().encode(value))
       .pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to hash lane-proof identity." })))

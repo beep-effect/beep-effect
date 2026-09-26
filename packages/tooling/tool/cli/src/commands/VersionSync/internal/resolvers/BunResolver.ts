@@ -14,10 +14,10 @@ import { A, Str } from "@beep/utils";
 import { Effect, FileSystem, identity, Order, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
   NetworkUnavailableError,
   VersionCategoryReport,

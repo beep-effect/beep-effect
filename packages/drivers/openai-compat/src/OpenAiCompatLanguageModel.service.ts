@@ -14,16 +14,16 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Layer, Match, pipe, Stream, Tuple } from "effect";
+import * as AiError from "effect/ai/AiError";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as AiModel from "effect/ai/Model";
+import { toCodecOpenAI } from "effect/ai/OpenAiStructuredOutput";
+import * as Response from "effect/ai/Response";
+import * as Tool from "effect/ai/Tool";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as AiError from "effect/unstable/ai/AiError";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as AiModel from "effect/unstable/ai/Model";
-import { toCodecOpenAI } from "effect/unstable/ai/OpenAiStructuredOutput";
-import * as Response from "effect/unstable/ai/Response";
-import * as Tool from "effect/unstable/ai/Tool";
 import {
   OpenAiCompatAssistantChatMessage,
   OpenAiCompatChatCompletionChunk,
@@ -39,7 +39,7 @@ import {
   OpenAiCompatUserChatMessage,
 } from "./OpenAiCompat.models.ts";
 import { OpenAiCompatClient } from "./OpenAiCompatClient.service.ts";
-import type * as Prompt from "effect/unstable/ai/Prompt";
+import type * as Prompt from "effect/ai/Prompt";
 import type {
   OpenAiCompatChatCompletionResponse,
   OpenAiCompatChatMessage,

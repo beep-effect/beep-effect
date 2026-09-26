@@ -66,7 +66,7 @@ export const LABS_TURBO_SELECT_FILTER = "--filter=./apps/labs/**";
  * @category schemas
  * @since 0.0.0
  */
-export const LabsWorkspaceDir = S.String.check(S.isStartsWith(`${LABS_WORKSPACE_ROOT}/`)).pipe(
+export const LabsWorkspaceDir = S.String.check(S.isStartingWith(`${LABS_WORKSPACE_ROOT}/`)).pipe(
   S.brand("LabsWorkspaceDir"),
   $I.annoteSchema("LabsWorkspaceDir", {
     description: "Repo-relative workspace directory below the apps/labs root.",

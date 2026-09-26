@@ -26,7 +26,7 @@ import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { Atom, AtomRegistry } from "effect/reactivity";
 import type { DockNode, DockWorkspace } from "@beep/dock";
 
 const snapshot = Effect.runSync(chromeLinuxArial16);

@@ -1,6 +1,7 @@
 import { Agent as AcpAgent, Schema as AcpSchema } from "@beep/acp";
 import { fcRuns } from "@beep/test-utils";
 import { assert, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -10,7 +11,6 @@ import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { encodeJsonl, jsonRpcNotification, jsonRpcRequest, jsonRpcResponse, makeInMemoryStdio } from "./helpers.ts";
 
 const RequestPermissionRequest = jsonRpcRequest("session/request_permission", AcpSchema.RequestPermissionRequest);

@@ -4,10 +4,10 @@ import { it } from "@beep/test-runner";
 import * as Pg from "@effect/sql-pg/PgClient";
 import { describe, expect } from "@effect/vitest";
 import { Context, Effect, Exit, Layer, Result, Scope } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const PgliteErrorArbitrary = Arbitrary.schema(PgliteError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 // Generate the declared fields from the production schema, then constrain the
@@ -22,6 +22,9 @@ const PgliteErrorWithCauseArbitrary = Arbitrary.schema(PgliteError).pipe(
 );
 const encodePgliteError = S.encodeUnknownResult(PgliteError);
 const decodePgliteError = S.decodeUnknownResult(PgliteError);
+const encodePgliteErrorEffect = S.encodeEffect(PgliteError);
+const decodePgliteErrorEffect = S.decodeEffect(PgliteError);
+const decodeErrorInstance = S.decodeUnknownEffect(S.ErrorInstance());
 
 describe("PgliteError", () => {
   it("normalizes an unknown failure into the tagged driver error", () => {
@@ -50,12 +53,12 @@ describe("PgliteError", () => {
     [PgliteErrorWithCauseArbitrary],
     ([error]) =>
       Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(PgliteError)(error);
-        const decoded = yield* S.decodeEffect(PgliteError)(encoded);
-        expect(yield* S.encodeEffect(PgliteError)(decoded)).toEqual(encoded);
+        const encoded = yield* encodePgliteErrorEffect(error);
+        const decoded = yield* decodePgliteErrorEffect(encoded);
+        expect(yield* encodePgliteErrorEffect(decoded)).toEqual(encoded);
         expect(decoded.operation).toBe(error.operation);
         expect(decoded.message).toEqual(error.message);
-        const cause = yield* S.decodeUnknownEffect(S.ErrorInstance())(yield* Effect.fromOption(decoded.cause));
+        const cause = yield* decodeErrorInstance(yield* Effect.fromOption(decoded.cause));
         expect(cause.name).toBe("PgliteNativeError");
         expect(cause.message).toBe(error.operation);
         expect(cause.stack).toBe("PGlite native stack");
@@ -68,21 +71,21 @@ describe("PgliteError", () => {
 describe("PgliteClient layer lifecycle", () => {
   it.effect(
     "closes the managed PGlite instance when the layer scope closes",
-    () =>
-      Effect.scopedWith((scope) =>
-        Effect.gen(function* () {
-          yield* Effect.log("PGlite phase: acquire in-process database");
-          const context = yield* Layer.buildWithScope(makeLayer(), scope);
-          const client = Context.get(context, PgliteClient);
+    Effect.fnUntraced(function* () {
+      // `Scope.close` takes a `Scope.Closeable`; `Effect.scopedWith` only hands
+      // out the read-only `Scope`, so the test owns its scope explicitly.
+      const scope = yield* Scope.make();
+      yield* Effect.log("PGlite phase: acquire in-process database");
+      const context = yield* Layer.buildWithScope(makeLayer(), scope);
+      const client = Context.get(context, PgliteClient);
 
-          yield* Effect.log("PGlite phase: explicitly close database scope");
-          yield* Scope.close(scope, Exit.void);
+      yield* Effect.log("PGlite phase: explicitly close database scope");
+      yield* Scope.close(scope, Exit.void);
 
-          yield* Effect.log("PGlite phase: verify query failure after close");
-          const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
-          expect(queryAfterClose._tag).toBe("Failure");
-        })
-      ),
+      yield* Effect.log("PGlite phase: verify query failure after close");
+      const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
+      expect(queryAfterClose._tag).toBe("Failure");
+    }),
     { timeout: 90_000 }
   );
 });

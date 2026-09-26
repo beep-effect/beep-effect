@@ -9,8 +9,8 @@
 
 import { ClientObservabilityLive } from "@beep/agents-client";
 import * as Layer from "effect/Layer";
-import { KeyValueStore } from "effect/unstable/persistence";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { KeyValueStore } from "effect/persistence";
+import { Atom, AtomRegistry } from "effect/reactivity";
 
 const professionalAtomRuntimeFactory = Atom.context({
   memoMap: Layer.makeMemoMapUnsafe(),

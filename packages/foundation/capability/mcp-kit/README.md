@@ -3,7 +3,7 @@
 Reusable MCP host-construction kit: credential-keyed toolkit composition, the
 `api_key_required` envelope, tier-gate dispatch, progressive field-tier
 projection, span hygiene, and the in-repo MCP `2026-07-28` client — built
-natively on `effect/unstable/ai` (`Tool`, `Toolkit`, `McpServer`, `McpSchema`)
+natively on `effect/ai` (`Tool`, `Toolkit`, `McpServer`, `McpSchema`)
 at `effect@4.0.0-rc.117`. The kit pins one protocol revision, the stateless
 `2026-07-28` adapter (`statelessMcpProtocols`); hosts move to it one at a time
 (`goals/mcp-stateless-kit-and-drivers`).
@@ -100,8 +100,8 @@ bun add @beep/mcp-kit
 import { Effect, Layer } from "effect"
 import * as O from "effect/Option"
 import * as S from "effect/Schema"
-import { Tool, Toolkit } from "effect/unstable/ai"
-import * as McpServer from "effect/unstable/ai/McpServer"
+import { Tool, Toolkit } from "effect/ai"
+import * as McpServer from "effect/ai/McpServer"
 import { composeGatedLayers, gatedLayer, sanitizedToolkit, SourceAuthRegistration, statelessMcpProtocols } from "@beep/mcp-kit"
 
 const registration = SourceAuthRegistration.make({
@@ -135,7 +135,7 @@ control and keep it open while you hold the connection: the layer owns the respo
 import { connect, layerProtocolHttp, McpHttpProtocolOptions } from "@beep/mcp-kit/client"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
+import * as FetchHttpClient from "effect/http/FetchHttpClient"
 
 const program = Effect.scoped(
   Effect.gen(function* () {

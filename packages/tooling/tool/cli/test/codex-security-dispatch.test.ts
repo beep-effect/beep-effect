@@ -25,15 +25,15 @@ import {
   Stream,
 } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const runCommand = Command.runWith(securityCommand, { version: "test", renderErrors: false });

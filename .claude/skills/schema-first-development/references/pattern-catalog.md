@@ -164,7 +164,7 @@ Before custom checks:
 
 1. Look for an existing schema in `@beep/schema`.
 2. Look for built-in constructors such as `S.NonEmptyString`,
-   `S.NonEmptyArray`, `S.isPattern`, and `S.isIncludes`.
+   `S.NonEmptyArray`, `S.isPattern`, and `S.isIncluding`.
 3. For exported/domain/boundary schemas, ask whether broad primitives such as
    `S.String`, `S.Number`, or `S.Array` really accept the full primitive space.
 4. Only then use `S.makeFilter(...)` or `S.makeFilterGroup(...)`.

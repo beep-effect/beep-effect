@@ -17,17 +17,17 @@ import { formatToMillis } from "drizzle-orm/migrator.utils";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { Effect, Layer, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
-import * as Statement from "effect/unstable/sql/Statement";
+import * as SqlClient from "effect/sql/SqlClient";
+import * as Statement from "effect/sql/Statement";
 
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
 });
 
 const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();

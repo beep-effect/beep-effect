@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import { HttpRouter } from "effect/http";
 import * as S from "effect/Schema";
-import { HttpRouter } from "effect/unstable/http";
 import { ApiLive } from "@/runtime/Layer";
 
 const decodeOpenApiDocument = S.decodeUnknownEffect(

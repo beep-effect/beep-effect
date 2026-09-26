@@ -2,7 +2,7 @@
  * Shared, hand-authored HTTP transport transformer for gov/legal data drivers.
  *
  * Bundles the transport concerns — auth, rate-limit, retry, and an observable
- * rate-limit snapshot — onto native `effect/unstable/http` primitives
+ * rate-limit snapshot — onto native `effect/http` primitives
  * (`HttpClient.mapRequest`, `HttpClient.withRateLimiter`, `HttpClient.retryTransient`
  * with a jittered exponential `Schedule`). Incubated inside `@beep/govinfo` and
  * promoted here once a second driver (`@beep/ecfr`) consumed it — see this
@@ -22,14 +22,14 @@ import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, Number as N, Redacted, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as P from "effect/Predicate";
+import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import type * as Duration from "effect/Duration";
-import type * as Headers from "effect/unstable/http/Headers";
+import type * as Headers from "effect/http/Headers";
 
 const isFinite = S.is(S.Finite);
 
@@ -323,7 +323,7 @@ export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTran
  *
  * ```ts import.meta.vitest name="Read rate-limit from transport"
  * import { Effect } from "effect"
- * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
+ * import * as RateLimiter from "effect/persistence/RateLimiter"
  * import { ApiAuth, type ApiTransport, makeApiTransport } from "@beep/api-transport"
  *
  * const readSnapshot = (transport: ApiTransport) => transport.rateLimit
@@ -364,7 +364,7 @@ export interface ApiTransport {
  *
  * ```ts import.meta.vitest name="Build transport transformClient"
  * import { Effect } from "effect"
- * import * as RateLimiter from "effect/unstable/persistence/RateLimiter"
+ * import * as RateLimiter from "effect/persistence/RateLimiter"
  * import { ApiAuth, makeApiTransport } from "@beep/api-transport"
  *
  * const program = Effect.gen(function* () {

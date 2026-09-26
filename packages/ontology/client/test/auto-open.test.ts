@@ -19,7 +19,7 @@ import { makeDataset } from "@beep/rdf/Rdf";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
 import type { OpenOntologyDocumentInput } from "@beep/ontology-client/aggregates/Session";
 
 const materialsPath = OntologyFilePath.make("tmp/ontology-workbench/materials.ttl");

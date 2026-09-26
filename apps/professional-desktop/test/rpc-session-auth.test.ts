@@ -1,5 +1,5 @@
+import { Headers, HttpClientRequest } from "effect/http";
 import * as Redacted from "effect/Redacted";
-import { Headers, HttpClientRequest } from "effect/unstable/http";
 import { describe, expect, it } from "vitest";
 import {
   isAuthorizedRpcSessionHeaders,

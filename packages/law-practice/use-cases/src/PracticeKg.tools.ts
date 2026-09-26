@@ -18,8 +18,8 @@ import {
   FourHintAnnotations,
 } from "@beep/mcp-kit";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool } from "effect/unstable/ai";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
 const defaultBudgetBytes = PosInt.make(8000);

@@ -14,10 +14,10 @@ import { expect, layer } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess } from "effect/unstable/process";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encodeGoalManifest = S.encodeUnknownEffect(GoalManifest);

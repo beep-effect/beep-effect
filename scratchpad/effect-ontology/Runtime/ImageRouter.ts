@@ -13,7 +13,7 @@
 import { Duration, Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { ImageBlobStore } from "../Service/ImageBlobStore.ts";
 import { ImageStore } from "../Service/ImageStore.ts";
 import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
@@ -52,7 +52,7 @@ const buildETag = (hash: string): string => `"${hash}"`;
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { ImageRouter } from "@effect-ontology/Runtime/ImageRouter"
  *
  * const served = Layer.provide(ImageRouter, HttpRouter.layer)

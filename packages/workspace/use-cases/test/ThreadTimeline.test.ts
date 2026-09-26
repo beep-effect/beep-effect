@@ -5,10 +5,10 @@ import { Thread } from "@beep/workspace-use-cases/public";
 import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeThreadThreadTimeline = S.decodeEffect(Thread.ThreadTimeline);
 const decodeThreadTimelineTurn = S.decodeEffect(Thread.TimelineTurn);

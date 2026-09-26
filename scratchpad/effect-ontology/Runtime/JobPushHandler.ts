@@ -14,7 +14,7 @@ import { $ScratchpadId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { DateTime, Effect, Inspectable, Match } from "effect";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
@@ -192,7 +192,7 @@ const processBackgroundJob = Effect.fn("processBackgroundJob")(function* (job: B
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { JobPushRouter } from "@effect-ontology/Runtime/JobPushHandler"
  *
  * const served = Layer.provide(JobPushRouter, HttpRouter.layer)

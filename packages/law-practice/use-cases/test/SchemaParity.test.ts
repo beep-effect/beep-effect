@@ -22,10 +22,10 @@ import { EntityInput } from "@beep/law-practice-use-cases/test";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEntityInput = S.decodeEffect(EntityInput);
 const decodeUnknownIrToLawShapeResult = S.decodeUnknownResult(IrToLawShape);

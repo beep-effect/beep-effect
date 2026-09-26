@@ -3,7 +3,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import {
   BatchCanonicalPath,

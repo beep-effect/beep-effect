@@ -23,11 +23,11 @@ import {
   Path,
   pipe,
 } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
   CodegenDriftError,
   CodegenFetchError,
@@ -39,9 +39,9 @@ import { DriftReport, GeneratedModule, SpecPinPolicy, SpecSource } from "./Codeg
 import { makeFormatter } from "./internal/format.ts";
 import { postProcess as postProcessSource } from "./internal/postProcess.ts";
 import { composeTransforms } from "./internal/transforms.ts";
+import type { OpenAPISpec } from "effect/http-api/OpenApi";
 import type * as JsonSchema from "effect/JsonSchema";
-import type { OpenAPISpec } from "effect/unstable/httpapi/OpenApi";
-import type * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CodegenFormatError } from "./CodegenKit.errors.ts";
 import type { GenerateConfig } from "./CodegenKit.models.ts";
 

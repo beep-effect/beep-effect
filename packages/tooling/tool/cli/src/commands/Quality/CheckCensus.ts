@@ -11,9 +11,9 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Console, DateTime, Duration, Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { parse as parseJsonc } from "jsonc-parser";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -21,7 +21,7 @@ import { runCaptured } from "../../internal/process/index.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensus");
 

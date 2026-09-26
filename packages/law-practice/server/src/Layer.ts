@@ -27,8 +27,8 @@ import { makeOfficeActionReview, OfficeActionReview } from "@beep/law-practice-u
 import { TikaFileProcessingEngine } from "@beep/tika";
 import { Effect, Layer } from "effect";
 import type { Config } from "effect";
+import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as Crypto from "effect/Crypto";
-import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));
 const FileProcessingLayer = makeFileProcessingServiceLayer([TikaFileProcessingEngine]);

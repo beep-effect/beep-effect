@@ -18,8 +18,8 @@ import { LiteralKit, SchemaUtils, Unknown } from "@beep/schema";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Console, Effect, Layer, Match } from "effect";
 import * as S from "effect/Schema";
-import { Workflow, WorkflowEngine } from "effect/unstable/workflow";
-import { WorkflowInstance } from "effect/unstable/workflow/WorkflowEngine";
+import { Workflow, WorkflowEngine } from "effect/workflow";
+import { WorkflowInstance } from "effect/workflow/WorkflowEngine";
 import {
   ExtractionActivityInput,
   IngestionActivityInput,

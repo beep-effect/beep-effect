@@ -54,8 +54,8 @@ import {
   ResidueReapReport,
 } from "./ResidueReap.schemas.ts";
 import type * as Crypto from "effect/Crypto";
+import type { ChildProcessSpawner } from "effect/process";
 import type * as Scope from "effect/Scope";
-import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { BoundRemovalOutcome, DirectoryIdentity } from "./DirectoryHandle.ts";
 import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
 

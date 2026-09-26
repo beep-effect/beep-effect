@@ -2,7 +2,7 @@ import { Sha256Hex } from "@beep/schema";
 import { Effect, Order } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -57,7 +57,7 @@ export type BoxCanonicalDigestError = PlatformError.PlatformError | SchemaIssue.
 export const digestText = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Crypto.Crypto;
   const bytes = yield* crypto.digest("SHA-256", utf8.encode(value));
-  return Sha256Hex.make(Encoding.encodeHex(bytes));
+  return Sha256Hex.make(Hex.encode(bytes));
 });
 
 /**

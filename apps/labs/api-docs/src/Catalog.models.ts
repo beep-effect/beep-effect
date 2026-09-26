@@ -11,7 +11,7 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Data, Tuple } from "effect";
 import * as S from "effect/Schema";
 import type { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
-import type { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
+import type { HttpApi, HttpApiGroup } from "effect/http-api";
 
 const $I = $ApiDocsId.create("Catalog.models");
 
@@ -191,7 +191,7 @@ export const CatalogSource = Data.taggedEnum<CatalogSource>();
  *
  * ```ts
  * import { makeContractSource } from "@beep/api-docs/src/Catalog.models"
- * import { HttpApi } from "effect/unstable/httpapi"
+ * import { HttpApi } from "effect/http-api"
  *
  * const source = makeContractSource(HttpApi.make("example-api"))
  *

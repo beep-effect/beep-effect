@@ -30,7 +30,7 @@ import { SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Clock, Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
-import { Socket } from "effect/unstable/socket";
+import { Socket } from "effect/socket";
 import { readOptionalRedactedConfigString } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -51,8 +51,8 @@ import {
 } from "./Qa.session.ts";
 import type { CollectorRunning, RoundLayout, RoundNumber } from "@beep/qa-capture";
 import type * as Crypto from "effect/Crypto";
+import type { ChildProcessSpawner } from "effect/process";
 import type * as Scope from "effect/Scope";
-import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { QaRecordOptions } from "./Qa.schemas.ts";
 import type { CaptureTarget, QaEventLog } from "./Qa.session.ts";

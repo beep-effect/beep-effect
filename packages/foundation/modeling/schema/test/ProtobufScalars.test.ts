@@ -14,9 +14,9 @@ import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownBytes = S.decodeUnknownEffect(Bytes);
 const decodeUnknownDouble = S.decodeUnknownEffect(Double);

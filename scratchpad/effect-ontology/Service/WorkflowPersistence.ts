@@ -11,7 +11,7 @@
  */
 
 import { Effect, Layer } from "effect";
-import { KeyValueStore, Persistence } from "effect/unstable/persistence";
+import { KeyValueStore, Persistence } from "effect/persistence";
 import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storage.ts";
 
 // -----------------------------------------------------------------------------
@@ -147,4 +147,4 @@ export const WorkflowPersistenceMemory = Persistence.layerMemory;
 // Re-exports for convenience
 // -----------------------------------------------------------------------------
 
-export { Persistence } from "effect/unstable/persistence";
+export { Persistence } from "effect/persistence";
