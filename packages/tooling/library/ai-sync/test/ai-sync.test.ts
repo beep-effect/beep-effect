@@ -33,10 +33,11 @@ import {
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeServices } from "@effect/platform-node";
-import { assert, expect, layer } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
@@ -116,7 +117,7 @@ const writeText = Effect.fn("AiSyncTest.writeText")(function* (filePath: string,
   yield* fs.writeFileString(filePath, content);
 });
 
-layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
   it.effect(
     "validates the generated artifact set offline",
     Effect.fn(function* () {
@@ -530,7 +531,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) => {
   );
 });
 
-layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds" })(
+it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds" })(
   "@beep/ai-sync synthetic config validation",
   (it) => {
     it.effect(
