@@ -2299,6 +2299,25 @@ compared the real parent projections and preserved the eight codegen-only
 dependency changes. Use fail-fast sequencing and validate both JSON and conflict
 markers before staging. Existing commit hooks did not reject these markers.
 
+## Graph3D browser runner imports Node AsyncLocalStorage
+
+The original Chromium renderer suite passes five tests. Switching its tester to
+@beep/test-runner fails before collection with `NodeAsyncHooks.AsyncLocalStorage
+is not a constructor` in VitestInstrumentation. Keep real browser proof explicit;
+Node/Bun conformance does not establish browser compatibility. Resource and click
+changes are being proven with the upstream live tester while browser-compatible
+instrumentation remains an open prerequisite. A browser import/conformance case
+in runner promotion would have caught this platform boundary earlier.
+
+### Reviewed exception identities after a test-title correction
+
+While checking the Graph3D wave, `bun run beep lint effect-vitest` reported three
+new EV004 findings in CosmosProjection.test.ts. The inherited source only changed
+a test title after its scoped exceptions were reviewed; all three occurrence
+identities changed. Preserve the scope decisions and refresh their identities in
+the owning lane. A focused post-title ratchet check would have caught this before
+stack propagation. Evidence: graph3d partial-proof receipt dated 2026-09-25.
+
 ### 2026-09-25 — review reply blocked after evidence remediation
 
 Tailscale PR #1265 has both provenance corrections pushed in a7fe3d14a4,
@@ -2318,3 +2337,11 @@ The test-only repair targets the adapter public `PgClient.makeClient` entry poin
 while retaining the real test-utils layer/retry implementation. A mock-hit assertion
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
+
+### 2026-09-25 — GitHub quota interrupts heavy-admission observation
+
+After the graph-3d browser prerequisite passed Chromium and package proof,
+`gh pr checks 1274` returned `GraphQL: API rate limit already exceeded`.
+No heavy-admission label was applied without observing the remaining Property
+Laws result. A shared quota-aware read cache would reduce duplicate PR polling
+across active workstreams; local implementation and proof can continue meanwhile.
