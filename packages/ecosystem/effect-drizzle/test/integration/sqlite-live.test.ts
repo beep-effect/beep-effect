@@ -30,7 +30,7 @@ import {
 } from "effect/Effect";
 import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
-import { effect as effectLayer, provide, provideMerge, unwrap } from "effect/Layer";
+import { effect as effectLayer, provide, provideMerge, unwrap, withSpan as withLayerSpan } from "effect/Layer";
 import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
@@ -226,7 +226,7 @@ const SqliteRepositoryLayer = unwrap(
       filename: databasePath,
       transformQueryNames: snakeCase,
       transformResultNames: camelCase,
-    })
+    }).pipe(withLayerSpan("EffectDrizzle.sqlite.adapter-open"))
   )
 );
 

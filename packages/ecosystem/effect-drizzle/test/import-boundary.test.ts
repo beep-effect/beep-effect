@@ -119,7 +119,10 @@ const dialectEntrypoints = { core: "model.ts", pg: "index.ts", sqlite: "index.ts
 
 const forbiddenDialectEdges = (directory: "core" | "pg" | "sqlite", forbiddenFragments: ReadonlyArray<string>) =>
   gen(function* () {
-    const edges = yield* sourceEdges(new URL(`../src/${directory}/`, import.meta.url), dialectEntrypoints[directory]);
+    const edges = yield* sourceEdges(
+      new URL(`../src/${directory}/`, import.meta.url),
+      dialectEntrypoints[directory]
+    ).pipe(withSpan("EffectDrizzle.boundary.scan", { attributes: { tree: directory } }));
     return dialectEdges(edges, forbiddenFragments);
   });
 
@@ -154,7 +157,9 @@ describe("ecosystem import boundaries", () => {
   it.effect(
     "keeps every source module free of @beep/* edges",
     fnUntraced(function* () {
-      const edges = yield* sourceEdges(new URL("../src/", import.meta.url), "index.ts");
+      const edges = yield* sourceEdges(new URL("../src/", import.meta.url), "index.ts").pipe(
+        withSpan("EffectDrizzle.boundary.scan", { attributes: { tree: "src" } })
+      );
       expect(workspaceEdges(edges)).toEqual([]);
     })
   );
@@ -163,7 +168,9 @@ describe("ecosystem import boundaries", () => {
     "keeps runtime manifest edges free of @beep/* and forbids bundled fields",
     fnUntraced(function* () {
       const manifest = yield* decodeRecord(
-        yield* tryPromise(() => Bun.file(new URL("../package.json", import.meta.url)).json())
+        yield* tryPromise(() => Bun.file(new URL("../package.json", import.meta.url)).json()).pipe(
+          withSpan("EffectDrizzle.boundary.manifest")
+        )
       );
       const runtimeSections = ["dependencies", "peerDependencies", "optionalDependencies"];
       const runtimeKeys: Array<string> = [];

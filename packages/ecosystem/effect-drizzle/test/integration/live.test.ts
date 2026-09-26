@@ -1,4 +1,3 @@
-import { withSpan } from "effect/Effect";
 /** Live PostgreSQL execution proofs for @beep/effect-drizzle round four. */
 
 import { VersionConflictError } from "@beep/effect-drizzle";
@@ -14,7 +13,7 @@ import { filter, findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
 import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso } from "effect/DateTime";
-import { die, exit, flip, fn, fnUntraced, forEach, gen, map, option, tryPromise } from "effect/Effect";
+import { die, exit, flip, fn, fnUntraced, forEach, gen, map, option, tryPromise, withSpan } from "effect/Effect";
 import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { identity } from "effect/Function";
 import { effect as effectLayer, merge, provideMerge, unwrap } from "effect/Layer";

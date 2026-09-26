@@ -11,6 +11,7 @@ import {
   never,
   orDie,
   scoped,
+  sync,
   tryPromise,
   withSpan,
 } from "effect/Effect";
@@ -72,12 +73,12 @@ const acquireProbe = fnUntraced(function* (command: Array<string>) {
         process,
         output: Tuple.make(process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()),
       });
-    }),
+    }).pipe(withSpan("EffectDrizzle.bundle.spawn")),
     ({ process, output }) =>
       tryPromise(() => {
         if (process.exitCode === null) process.kill("SIGKILL");
         return Promise.allSettled(output);
-      }).pipe(orDie)
+      }).pipe(withSpan("EffectDrizzle.bundle.cleanup"), orDie)
   );
 });
 
@@ -103,10 +104,12 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
       const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
         withSpan("EffectDrizzle.bundle.drain")
       );
-      expect(exitCode).not.toBe(0);
-      const lines = stdout.split("\n");
-      expect(lines[0]).toBe(formatBundleSizeLine(artifact.rawBytes, baselineRawBytes));
-      expect(`${stdout}${stderr}`).toContain("Bundle raw byte size exceeds the committed baseline");
+      yield* sync(() => {
+        expect(exitCode).not.toBe(0);
+        const lines = stdout.split("\n");
+        expect(lines[0]).toBe(formatBundleSizeLine(artifact.rawBytes, baselineRawBytes));
+        expect(`${stdout}${stderr}`).toContain("Bundle raw byte size exceeds the committed baseline");
+      }).pipe(withSpan("EffectDrizzle.bundle.exit"));
     })
   );
   it.effect(
