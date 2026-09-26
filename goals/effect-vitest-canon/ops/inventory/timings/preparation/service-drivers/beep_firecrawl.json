@@ -1,0 +1,214 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 14,
+  "numPassedTests": 14,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790411459656,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Firecrawl declared-field equivalence"],
+          "fullName": "Firecrawl declared-field equivalence treats field-equal FirecrawlError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal FirecrawlError instances as equivalent and field-different ones as distinct",
+          "duration": 2.0882959999999002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790411463948,
+      "endTime": 1790411463950.0884,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/firecrawl/test/Firecrawl.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl decodes schema defaults into Option values",
+          "status": "passed",
+          "title": "decodes schema defaults into Option values",
+          "duration": 33.34001099999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl keeps config wire shape while normalizing through the schema",
+          "status": "passed",
+          "title": "keeps config wire shape while normalizing through the schema",
+          "duration": 33.093682000000626,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl keeps error wire shape while tightening numeric diagnostics",
+          "status": "passed",
+          "title": "keeps error wire shape while tightening numeric diagnostics",
+          "duration": 33.06856299999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl round-trips crispened schema invariants through derived arbitraries",
+          "status": "passed",
+          "title": "round-trips crispened schema invariants through derived arbitraries",
+          "duration": 47.18925399999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl rejects malformed SDK shapes while preserving future response fields",
+          "status": "passed",
+          "title": "rejects malformed SDK shapes while preserving future response fields",
+          "duration": 33.050224999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl wraps SDK scrape output in a decoded success class",
+          "status": "passed",
+          "title": "wraps SDK scrape output in a decoded success class",
+          "duration": 7.223903000000064,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl wraps usage endpoints in decoded success classes",
+          "status": "passed",
+          "title": "wraps usage endpoints in decoded success classes",
+          "duration": 7.184271000000081,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl decodes every fake SDK endpoint through its public service method",
+          "status": "passed",
+          "title": "decodes every fake SDK endpoint through its public service method",
+          "duration": 11.67841000000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl translates SDK throws into sanitized FirecrawlError values",
+          "status": "passed",
+          "title": "translates SDK throws into sanitized FirecrawlError values",
+          "duration": 7.296674000000166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl maps malformed SDK responses to response-decoding errors",
+          "status": "passed",
+          "title": "maps malformed SDK responses to response-decoding errors",
+          "duration": 4.100744000000304,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl streams watcher events and closes the SDK watcher after done",
+          "status": "passed",
+          "title": "streams watcher events and closes the SDK watcher after done",
+          "duration": 8.681536000000051,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/firecrawl"],
+          "fullName": "@beep/firecrawl fails watcher streams when terminal event payloads cannot decode",
+          "status": "passed",
+          "title": "fails watcher streams when terminal event payloads cannot decode",
+          "duration": 8.007539000000179,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790411464019,
+      "endTime": 1790411464069.6816,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "@beep/firecrawl live integration (FIRECRAWL_API_KEY)"
+          ],
+          "fullName": "@beep/firecrawl live integration (FIRECRAWL_API_KEY) skips live API calls when FIRECRAWL_API_KEY is absent",
+          "status": "passed",
+          "title": "skips live API calls when FIRECRAWL_API_KEY is absent",
+          "duration": 1.1556599999994432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790411463948,
+      "endTime": 1790411463949.1558,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts"
+    }
+  ]
+}
