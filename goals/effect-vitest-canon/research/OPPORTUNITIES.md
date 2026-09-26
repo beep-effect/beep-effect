@@ -2341,3 +2341,17 @@ The cache hypothesis is unproven, and the original build failure is not a
 rate-limit-only deployment failure. A cache-free preview retry after quota
 reset, with installed-package provenance, would separate stale cache from a
 snapshot packaging/bundler regression without weakening merge gates.
+
+## Shared OIP preview failure reproduced on Graph3D
+
+After PR #1275 merged main at a8649df330, its OIP preview failed with the same
+Effect snapshot import error already observed on #1277: `isBetweenLength is not
+exported from ../Schema.js`, through `effect/dist/http/Multipart.js`. Evidence:
+`vercel inspect` build log for deployment EKAyZWoQTqxhHYoJ4JGV52fVt7UE, saved
+privately as pr1275-oip-current.log. Graph3D package audit/docgen and version-sync
+passed locally. This proves the hosted failure is shared across both branches;
+it does not yet identify stale build cache versus another bundler/install issue.
+The separate Todox failure is explicitly rate limited. Do not classify OIP as
+the rate-limit exception. A clean preview build with inspected package exports
+would distinguish these causes; the prior no-cache deployment request remains
+quota-blocked, so it was not retried here.
