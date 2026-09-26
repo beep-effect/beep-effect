@@ -240,3 +240,22 @@ new Effect Drizzle findings, but exited 1 for the two previously attributed
 refs-refresh-plan findings outside this package. This is a red root check,
 not a green package-wide or repository-wide closeout claim. The prerequisite
 was tracked in PR #1272; base integration and exact-head proof remain required.
+
+## Post-merge proof and timing artifacts
+
+Merged current main without conflicts. Full package verification passed on that
+base: audit 25.2s and docgen 5.0s. Cache policy passed after field-by-field review
+of nine dependency-only task updates for the development-only runner and fc-runs
+additions. Commands, configurations and cache eligibility remain unchanged.
+
+Full Bun runs passed 113 tests before and 119 after, with no skips or failures.
+The matching Node command exited 1 before and after because the native SQLite
+suite cannot collect under Node. Node passed 101 tests before (one pending) and
+106 after (two pending Bun-only process tests). No assertion failures occurred;
+collection failure still makes these Node runs red. Whole-command observations
+were 5.55s before and 10.64s after, with changed test coverage, different host
+load and changed base inputs. No causal performance or speedup claim is made.
+Both Node runs recorded stable source hashes across their execution, runtime
+versions, resource limits, load and pressure observations. Sanitized raw reports
+and Node contexts are stored under the package timing paths; the Bun reports
+are separate runtime evidence, not a substitute for the Node result.
