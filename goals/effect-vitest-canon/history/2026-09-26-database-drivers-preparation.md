@@ -28,3 +28,21 @@ failure-safe controlled promises, harness ownership for pure fixtures, and
 an interruption-safe Drizzle transaction fixture. Property predicates,
 expected values, run floors, cancellation results and client identities must
 remain explicit. No production repair is authorized by this preparation.
+
+## Scope checkpoints
+
+Postgres commit `e36df8c4fb` replaces its two pure provider wrappers with
+single-case harness layers. Every assertion, all three client service-alias
+identities and the native missing-migration fixture remain unchanged. Full
+package audit/docgen passed (12.5 / 2.9 seconds) with in-process PGlite gates.
+
+Drizzle commit `251dd312f2` moves five pure client fixtures under isolated
+harness layers. The native integration fixture delegates transaction ownership
+to SqlClient.withTransaction with the existing error-normalization boundary.
+An independently provisioned interruption probe verifies rollback of an armed
+insert and a successful subsequent commit. Original result arrays, property
+predicates and timeout budgets remain intact. Full package audit/docgen passed
+(10.8 / 3.5 seconds) with in-process PGlite gates. No production code changed.
+
+Main's merged HTML checkpoint was then merged into this branch without
+conflicts. DuckDB scope work and the subsequent per-package D12 phases remain.
