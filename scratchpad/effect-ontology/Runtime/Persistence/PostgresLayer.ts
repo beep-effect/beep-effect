@@ -22,7 +22,7 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { PgClient } from "@effect/sql-pg";
 import { Config, Effect, Layer} from "effect";
 import * as S from "effect/Schema";
-import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unstable/cluster";
+import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/cluster";
 import { databaseReady } from "./DatabaseReady.ts";
 import {flow} from "effect/Function";
 

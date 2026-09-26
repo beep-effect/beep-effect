@@ -67,8 +67,8 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { eq } from "drizzle-orm";
 import { Effect, flow, Layer, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
 import * as Eq from "effect/Equal";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -107,7 +107,7 @@ const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
+  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
 });
 
 const verifiedAnchorFor = Effect.fnUntraced(function* (

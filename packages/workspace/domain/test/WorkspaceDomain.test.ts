@@ -21,11 +21,11 @@ import {
   WorkspaceVaultRootPath,
 } from "@beep/workspace-domain";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
 

@@ -10,11 +10,11 @@ import { findRepoRoot, readPackageJsonFile } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 

@@ -23,14 +23,14 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Layer, Match, pipe, Ref, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 
 const $TestI = $EcfrId.create("Ecfr.service.test");
 

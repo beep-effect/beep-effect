@@ -2,7 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { getTableConfig, PgDialect } from "drizzle-orm/pg-core";
 import { toPgTable } from "@beep/effect-drizzle/pg";
 import * as A from "effect/Array";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";

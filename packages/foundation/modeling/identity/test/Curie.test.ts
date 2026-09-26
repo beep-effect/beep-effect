@@ -13,10 +13,10 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownCurieFromIriOption = S.decodeUnknownOption(CurieFromIri);
 const encodeCurieFromIriOption = S.encodeOption(CurieFromIri);

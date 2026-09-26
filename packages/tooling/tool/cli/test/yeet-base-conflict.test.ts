@@ -60,13 +60,13 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Duration, Effect, FileSystem, HashSet, Layer, Match, Ref, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const at = "2026-09-25T00:00:00.000Z";
 const url = "https://github.com/beep/repo/pull/7";

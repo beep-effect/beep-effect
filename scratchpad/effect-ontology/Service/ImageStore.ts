@@ -16,7 +16,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
 import * as S from "effect/Schema";
-import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import type { ImageAsset, ImageOwnerType, ImageRef } from "../Domain/Model/Image.ts";
 import { ImageManifest } from "../Domain/Model/Image.ts";
 import { PathLayout, StoragePathSegment } from "../Domain/PathLayout.ts";

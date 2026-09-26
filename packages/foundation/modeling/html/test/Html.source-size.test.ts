@@ -2,9 +2,9 @@ import { inspectSourceSizeList, SourceSizeAnalysis, SourceSizeIssue } from "@bee
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isSourceSizeAnalysis = S.is(SourceSizeAnalysis);
 const isSourceSizeIssue = S.is(SourceSizeIssue);

@@ -397,10 +397,7 @@ const bindingMemberMatches = (
   } else if (binding.imported === "*") {
     matches =
       joinedMembers === member ||
-      (A.contains(
-        ["effect", "effect/testing", "effect/unstable/arbitrary", "@effect/vitest", "vitest"],
-        binding.module
-      ) &&
+      (A.contains(["effect", "effect/testing", "@effect/vitest", "vitest"], binding.module) &&
         joinedMembers === `${namespaceExport}.${member}`);
   } else if (binding.imported === namespaceExport) {
     matches = matchesBareMember(joinedMembers, members, member, binding.imported);
@@ -960,13 +957,7 @@ const helperReachability = (
         "acquireRelease",
         "acquireUseRelease",
       ]) ||
-      isProvenanceCall(
-        parent,
-        imports,
-        ["effect/unstable/arbitrary", "effect/unstable/arbitrary/Arbitrary"],
-        "Arbitrary",
-        ["checkEffect"]
-      ) ||
+      isProvenanceCall(parent, imports, ["effect", "effect/Arbitrary"], "Arbitrary", ["checkEffect"]) ||
       isProvenanceCall(parent, imports, ["effect/testing", "effect/testing/FastCheck", "fast-check"], "FastCheck", [
         "property",
         "asyncProperty",

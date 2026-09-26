@@ -6,10 +6,10 @@ import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/Architect
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodeUseCaseServerWorkItemWorkItemRepositoryErrorResult = S.encodeResult(
   UseCaseServer.WorkItem.WorkItemRepositoryError

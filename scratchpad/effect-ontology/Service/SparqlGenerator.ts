@@ -26,7 +26,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel } from "effect/ai";
 import { ErrorMessage, OptionalErrorCause, OptionalNonNegativeInt } from "../Domain/Error/Base.ts";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
 import { extractLocalNameFromIri as extractLocalName } from "../Utils/Iri.ts";

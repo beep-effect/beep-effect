@@ -2,7 +2,7 @@
  * Environment-driven observability for the desktop chat sidecar.
  *
  * Logs, traces, and metrics are exported via effect's native OTLP exporter
- * (`effect/unstable/observability` — no OpenTelemetry SDK dependency). Wiring is
+ * (`effect/observability` — no OpenTelemetry SDK dependency). Wiring is
  * standard-OTel-env driven and resolved through `effect/Config`:
  *
  *   OTEL_EXPORTER_OTLP_ENDPOINT  e.g. http://localhost:4318 — when unset, the
@@ -26,10 +26,10 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import { FetchHttpClient } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as References from "effect/References";
 import * as Result from "effect/Result";
-import { FetchHttpClient } from "effect/unstable/http";
 
 /**
  * OTLP observability layer for the sidecar. Gated on

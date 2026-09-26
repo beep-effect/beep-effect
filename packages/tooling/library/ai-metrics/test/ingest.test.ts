@@ -98,13 +98,14 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
-import { Effect, Encoding, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
+import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
@@ -493,7 +494,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(7)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(7)));
 
           yield* writeText(
             path.join(codexRoot, "codex.jsonl"),
@@ -691,7 +692,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const claudeRoot = path.join(homeDir, ".claude/projects/repo");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(9)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(9)));
 
           yield* writeText(
             path.join(codexRoot, "codex-a.jsonl"),
@@ -1043,7 +1044,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const dataRoot = path.join(tmpDir, "metrics");
           const reportDir = path.join(dataRoot, "reports");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(17)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(17)));
 
           yield* writeText(
             path.join(homeDir, ".codex/sessions/codex.jsonl"),
@@ -1579,7 +1580,7 @@ volumes:
             dataRoot: O.some("/srv/data/ai-metrics"),
             hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
             homeDir: "/tmp/home",
-            rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(1))),
+            rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(1))),
             rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
             repoRoot: "/tmp/repo",
             target: AiMetricsDeployTarget.Enum.dankserver,
@@ -2964,7 +2965,7 @@ volumes:
                 hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
-                rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(11))),
+                rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(11))),
                 repoRoot,
                 target: AiMetricsDeployTarget.Enum.local,
               })
@@ -3268,7 +3269,7 @@ volumes:
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(5)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(5)));
 
           yield* writeText(
             path.join(codexRoot, "codex.jsonl"),
@@ -3358,7 +3359,7 @@ volumes:
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(6)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(6)));
           const restoreRoot = path.join(tmpDir, "restore");
 
           yield* writeText(
@@ -3512,7 +3513,7 @@ volumes:
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(7)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(7)));
           const restoreRoot = path.join(tmpDir, "restore");
 
           yield* writeText(
@@ -3601,7 +3602,7 @@ volumes:
           const dataRoot = path.join(tmpDir, "metrics");
           const codexRoot = path.join(homeDir, ".codex/sessions");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          const rawArchiveKey = Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(8)));
+          const rawArchiveKey = Redacted.make(Base64.encode(new Uint8Array(32).fill(8)));
           const beforeEpochMillis = 4_102_444_800_000;
 
           yield* writeText(

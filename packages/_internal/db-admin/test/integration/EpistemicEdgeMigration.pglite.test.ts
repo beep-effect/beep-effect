@@ -23,7 +23,7 @@ import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));

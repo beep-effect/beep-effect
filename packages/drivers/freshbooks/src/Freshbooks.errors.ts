@@ -9,9 +9,9 @@ import { $FreshbooksId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import { FreshbooksUrl } from "./Freshbooks.config.ts";
 
 const $I = $FreshbooksId.create("Freshbooks.errors");

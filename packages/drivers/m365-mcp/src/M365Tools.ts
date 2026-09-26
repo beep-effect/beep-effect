@@ -38,8 +38,8 @@ import {
 } from "@beep/m365";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { SchemaUtils } from "@beep/schema";
+import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
 
 const $I = $M365McpId.create("M365Tools");
 

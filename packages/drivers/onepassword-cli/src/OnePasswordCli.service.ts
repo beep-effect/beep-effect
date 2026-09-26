@@ -10,8 +10,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import { Context, Effect, Layer, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { OnePasswordCliError } from "./OnePasswordCli.errors.ts";
 import {
   OnePasswordCliAccount,

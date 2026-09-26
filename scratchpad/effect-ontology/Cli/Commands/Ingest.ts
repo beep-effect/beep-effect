@@ -19,10 +19,10 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Argument from "effect/unstable/cli/Argument";
-import * as Command from "effect/unstable/cli/Command";
-import * as Flag from "effect/unstable/cli/Flag";
-import type * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
+import type * as KeyValueStore from "effect/persistence/KeyValueStore";
 import {
   BatchId,
   ContentHash,
@@ -199,7 +199,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
  *
  * ```ts
  * import { ingestCommand } from "@effect-ontology/Cli/Commands/Ingest"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["./articles", "--ontology", "ontologies/people.ttl", "--output", "manifest.json"]
  * const program = Command.runWith(ingestCommand, { version: "0.0.0" })([...argv])

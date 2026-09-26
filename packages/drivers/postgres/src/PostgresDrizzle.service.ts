@@ -11,10 +11,11 @@ import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { formatToMillis } from "drizzle-orm/migrator.utils";
 import * as PgEffectSessionMigrator from "drizzle-orm/pg-core/effect";
-import { Context, Crypto, Effect, Encoding, flow, Layer, Order, pipe } from "effect";
+import { Context, Crypto, Effect, flow, Layer, Order, pipe } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Statement from "effect/unstable/sql/Statement";
+import * as Statement from "effect/sql/Statement";
 import { PostgresError } from "./Postgres.errors.ts";
 import type * as Pg from "@effect/sql-pg/PgClient";
 import type { MigrationConfig, MigrationMeta } from "drizzle-orm/migrator";
@@ -562,7 +563,7 @@ const migrationMetaFromBundleEntry = Effect.fn("Postgres.migrationMetaFromBundle
   return {
     bps: true,
     folderMillis: formatToMillis(Str.slice(0, 14)(entry.name)),
-    hash: Encoding.encodeHex(digest),
+    hash: Hex.encode(digest),
     name: entry.name,
     sql: pipe(entry.sql, Str.split("--> statement-breakpoint"), A.flatMap(splitLegacyMigrationStatement)),
   };

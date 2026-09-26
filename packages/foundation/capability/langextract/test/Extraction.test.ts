@@ -13,9 +13,9 @@ import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeExtractionCandidate = S.decodeEffect(ExtractionCandidate);
 const decodeGroundedExtraction = S.decodeEffect(GroundedExtraction);

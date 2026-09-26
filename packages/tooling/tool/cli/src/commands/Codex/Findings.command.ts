@@ -14,7 +14,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { dryRunFlag, forceFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printJsonOrLines, printLines } from "../../internal/cli/Printer.ts";
 import { writePortfolioIndex } from "../Goals/PortfolioIndex.ts";

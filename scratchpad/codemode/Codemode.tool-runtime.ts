@@ -19,9 +19,9 @@ import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type * as AiError from "effect/unstable/ai/AiError";
-import * as Tool from "effect/unstable/ai/Tool";
-import * as Toolkit from "effect/unstable/ai/Toolkit";
+import type * as AiError from "effect/ai/AiError";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import { ToolError } from "./Codemode.tool-error.ts";
 import { identifierSegment, inputProperties, inputTypeScript, outputTypeScript } from "./Codemode.tool-schema.ts";
 import {

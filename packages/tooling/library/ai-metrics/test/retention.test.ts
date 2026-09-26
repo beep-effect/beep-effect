@@ -13,9 +13,9 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeRetentionInventoryResult = S.decodeUnknownResult(AiMetricsRetentionInventory);
 const encodeRetentionInventoryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionInventory));

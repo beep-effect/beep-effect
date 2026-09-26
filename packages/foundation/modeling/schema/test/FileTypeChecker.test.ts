@@ -18,6 +18,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Match, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as Num from "effect/Number";
@@ -27,7 +28,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileType as FileTypeValue } from "@beep/schema/FileTypeChecker";
 
 const decodeByteResult = S.decodeResult(Byte);

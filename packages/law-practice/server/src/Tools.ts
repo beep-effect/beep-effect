@@ -15,13 +15,13 @@ import {
   statelessMcpProtocols,
 } from "@beep/mcp-kit";
 import { Layer } from "effect";
+import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
-import * as McpServer from "effect/unstable/ai/McpServer";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
 import type { Path } from "effect";
 import type { Stdio } from "effect/Stdio";
-import type { SqlClient } from "effect/unstable/sql/SqlClient";
+import type { SqlClient } from "effect/sql/SqlClient";
 import type { PracticeKgBundle } from "./PracticeKg.host.ts";
 
 /**

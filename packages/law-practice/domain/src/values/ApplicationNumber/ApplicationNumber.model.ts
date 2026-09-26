@@ -50,7 +50,7 @@ const applicationNumberPattern = /^(?:1[0-9]|91)[0-9]{4}[A-Z0-9]{2}[0-9]{7}$/u;
  * @since 0.0.0
  */
 export const ApplicationNumber = S.String.check(
-  S.isLengthBetween(15, 15, {
+  S.isBetweenLength(15, 15, {
     identifier: $I`ApplicationNumberLengthCheck`,
     title: "Application Number Length",
     description: "A WIPO ST.13 machine-readable application number containing exactly 15 characters.",

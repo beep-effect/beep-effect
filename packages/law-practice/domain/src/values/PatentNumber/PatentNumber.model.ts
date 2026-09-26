@@ -42,7 +42,7 @@ export const PatentNumber = S.String.check(
     description: "A WIPO ST.6 publication number containing only ASCII digits.",
     message: "Patent publication number must contain digits only.",
   }),
-  S.isLengthBetween(1, 13, {
+  S.isBetweenLength(1, 13, {
     identifier: $I`PatentNumberLengthCheck`,
     title: "Patent Number Length",
     description: "A WIPO ST.6 publication number containing between 1 and 13 digits.",

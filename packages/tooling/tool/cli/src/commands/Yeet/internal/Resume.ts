@@ -16,9 +16,9 @@ import { Config, Console, Context, DateTime, Effect, FileSystem, Path, pipe, Res
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { distinctPrSessions, PrProvenanceLabel, PrRepository, PrSessionRecord } from "./Provenance.ts";

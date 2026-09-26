@@ -10,7 +10,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -29,7 +29,7 @@ import { jsdocMigrateExtractCodec } from "./JSDocMigrateData.ts";
 import { jsdocMigrateBlockStats } from "./JSDocMigrateRewrite.ts";
 import { hasGeneratedFileHeader, isPackageSourceFile, jsdocGitErrorAdapter } from "./JSDocRatchet.ts";
 import { tagsFromComment } from "./QualityArtifactSupport.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateExtract");
 
@@ -101,7 +101,7 @@ export const jsdocMigrateSourceHash = Effect.fn("JSDocMigrateExtract.sourceHash"
   const bytes = yield* crypto
     .digest("SHA-256", new TextEncoder().encode(blockText))
     .pipe(QualityScriptCommandError.mapError("Failed to hash JSDoc source."));
-  return `sha256:${Encoding.encodeHex(bytes)}`;
+  return `sha256:${Hex.encode(bytes)}`;
 });
 
 const containerName = (node: Node): string | undefined =>

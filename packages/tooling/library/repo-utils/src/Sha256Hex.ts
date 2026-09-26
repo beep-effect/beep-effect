@@ -7,7 +7,7 @@
 
 import { Effect } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import type * as PlatformError from "effect/PlatformError";
 
 /**
@@ -29,5 +29,5 @@ export const sha256Hex = Effect.fn("RepoUtils.sha256Hex")(function* (
   text: string
 ): Effect.fn.Return<string, PlatformError.PlatformError, Crypto.Crypto> {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
 });

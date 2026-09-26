@@ -16,7 +16,7 @@ import type * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
-import type * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import type * as Arbitrary from "effect/Arbitrary";
 import * as internal from "./internal/internal.ts";
 import * as utils from "./utils.ts";
 

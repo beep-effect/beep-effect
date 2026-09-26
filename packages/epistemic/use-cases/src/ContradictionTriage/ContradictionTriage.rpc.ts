@@ -1,4 +1,4 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 /**
  * Client-safe contradiction-triage RPC and read-model contracts.
  *
@@ -18,9 +18,9 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import { identity, Number as N } from "effect";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import * as Rpc from "effect/unstable/rpc/Rpc";
-import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 import {
   ContradictionCandidatePageLimit,
   ContradictionDispositionFilter,
@@ -587,7 +587,7 @@ export const ContradictionRpcs = RpcGroup.make(
  *
  * ```ts
  * import { EvidenceSourceHighlightArbitrary } from "@beep/epistemic-use-cases/public"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(EvidenceSourceHighlightArbitrary, { count: 1 })
  * ```
@@ -618,7 +618,7 @@ export const EvidenceSourceHighlightArbitrary = Arbitrary.schema(
  *
  * ```ts
  * import { EvidenceSourcePageArbitrary } from "@beep/epistemic-use-cases/public"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  *
  * const sample = Arbitrary.sampleEffect(EvidenceSourcePageArbitrary, { count: 1 })
  * ```

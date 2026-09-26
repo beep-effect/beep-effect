@@ -4,7 +4,7 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { Console, Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
 import {
   decodeAdmissionJournal,
@@ -40,7 +40,7 @@ const utf8 = new TextEncoder();
 
 const sha256 = Effect.fn("S7Evidence.sha256")(function* (content: string) {
   const crypto = yield* Crypto.Crypto;
-  return Encoding.encodeHex(yield* crypto.digest("SHA-256", utf8.encode(content)));
+  return Hex.encode(yield* crypto.digest("SHA-256", utf8.encode(content)));
 });
 
 const generate = Effect.gen(function* () {

@@ -7,9 +7,9 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as ChildProcess from "effect/unstable/process/ChildProcess";
 
 const ProcessDiagnosticTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 

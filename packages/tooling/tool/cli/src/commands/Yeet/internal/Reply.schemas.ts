@@ -59,7 +59,7 @@ const REVIEW_THREAD_ID_PREFIX = "PRRT_";
  * @category models
  * @since 0.0.0
  */
-export const ReplyThreadId = S.NonEmptyString.check(S.isStartsWith(REVIEW_THREAD_ID_PREFIX)).pipe(
+export const ReplyThreadId = S.NonEmptyString.check(S.isStartingWith(REVIEW_THREAD_ID_PREFIX)).pipe(
   $I.annoteSchema("ReplyThreadId", {
     title: "Reply Thread Id",
     description: "GitHub GraphQL pull request review thread id.",

@@ -120,8 +120,8 @@ import {
 } from "./internal/Validation.ts";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type * as HttpClient from "effect/http/HttpClient";
+import type { ChildProcessSpawner } from "effect/process";
 import type {
   ArchivePoorCandidatesOptions,
   ArchivePoorCandidatesSkippedReason,

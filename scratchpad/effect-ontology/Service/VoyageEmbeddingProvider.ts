@@ -25,7 +25,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
+import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import { Milliseconds } from "../Domain/Error/Base.ts";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import {

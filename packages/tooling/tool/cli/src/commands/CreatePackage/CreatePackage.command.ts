@@ -23,11 +23,11 @@ import { today } from "@beep/schema/LocalDate";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import {
@@ -1096,7 +1096,7 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  *
  * ```ts
  * import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(createPackageCommand, { version: "0.0.0" })

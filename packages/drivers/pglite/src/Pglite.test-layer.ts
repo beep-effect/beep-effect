@@ -16,7 +16,7 @@
 import { makeLayer } from "./PgliteClient.service.ts";
 import type * as Pg from "@effect/sql-pg/PgClient";
 import type { Layer } from "effect";
-import type * as SqlClient from "effect/unstable/sql/SqlClient";
+import type * as SqlClient from "effect/sql/SqlClient";
 import type { PgliteError } from "./Pglite.errors.ts";
 import type { PgliteClientValue } from "./PgliteClient.service.ts";
 

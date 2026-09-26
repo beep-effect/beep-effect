@@ -76,8 +76,8 @@ import type {
 import type { MimeType } from "@beep/schema/MimeType";
 import type { PosixPath } from "@beep/schema/PosixPath";
 import type * as Crypto from "effect/Crypto";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type * as HttpClient from "effect/http/HttpClient";
+import type { ChildProcessSpawner } from "effect/process";
 import type { ProcessFilesOptions } from "../Files.schemas.ts";
 
 const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);

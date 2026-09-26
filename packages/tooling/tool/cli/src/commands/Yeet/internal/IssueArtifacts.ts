@@ -18,7 +18,7 @@ import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./H
 import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.ts";

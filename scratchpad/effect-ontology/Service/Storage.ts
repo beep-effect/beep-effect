@@ -37,9 +37,9 @@ import { SystemError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { KeyValueStore } from "effect/unstable/persistence";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
-import * as SqlError from "effect/unstable/sql/SqlError";
+import { KeyValueStore } from "effect/persistence";
+import * as SqlClient from "effect/sql/SqlClient";
+import * as SqlError from "effect/sql/SqlError";
 import { sha256SyncFull as sha256SyncFullEffect } from "../Utils/Hash.ts";
 import { ConfigService } from "./Config.ts";
 

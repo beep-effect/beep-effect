@@ -2,7 +2,7 @@ import { Effect, Sink, Stdio } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as AcpError from "../Acp.errors.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const encoder = new TextEncoder();
 

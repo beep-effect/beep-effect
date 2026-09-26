@@ -8,9 +8,9 @@
 import { escapeHtml } from "@beep/utils/Html";
 import { Effect, FileSystem, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import { HttpRouter, HttpServerResponse } from "effect/http";
+import { HttpApiScalar, OpenApi } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
-import { HttpApiScalar, OpenApi } from "effect/unstable/httpapi";
 import { ApiAudience } from "./Catalog.models.ts";
 import { Catalog, resolveCatalogSpecPath } from "./Catalog.ts";
 import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Catalog.models.ts";
@@ -18,7 +18,7 @@ import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Cat
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
 const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.43.5.js";
-const ScalarScriptModuleUrl = new URL("./internal/httpApiScalar.js", import.meta.resolve("effect/unstable/httpapi"));
+const ScalarScriptModuleUrl = new URL("./internal/httpApiScalar.js", import.meta.resolve("effect/http-api"));
 const ScalarScriptModule = S.Struct({ javascript: S.String });
 const decodeScalarScriptModule = S.decodeUnknownEffect(ScalarScriptModule);
 const SPEC_DOCS_SECURITY_HEADERS = {

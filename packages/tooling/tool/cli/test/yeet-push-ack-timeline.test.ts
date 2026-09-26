@@ -24,10 +24,9 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
+import { Arbitrary, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Arbitrary } from "effect/unstable/arbitrary";
 
 const head = "abc1234def5678";
 const pr = 754;

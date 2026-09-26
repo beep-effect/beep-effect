@@ -42,9 +42,9 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { KeyValueStore } from "effect/persistence";
+import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import * as Stream from "effect/Stream";
-import { KeyValueStore } from "effect/unstable/persistence";
-import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { DockPersistenceOperation } from "@beep/dock/Dock.errors";
 import type { DockAtomOperation } from "@beep/dock/Dock.protocol";
@@ -491,7 +491,7 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
  * ```ts
  * import { desktopDockGraphAtom } from "@/workspace/dock.atoms"
  * import { useAtomValue } from "@effect/atom-react"
- * import { AsyncResult } from "effect/unstable/reactivity"
+ * import { AsyncResult } from "effect/reactivity"
  *
  * const useDockPanelCount = (): number => {
  *   const result = useAtomValue(desktopDockGraphAtom)

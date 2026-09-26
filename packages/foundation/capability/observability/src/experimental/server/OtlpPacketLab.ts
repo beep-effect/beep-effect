@@ -8,11 +8,11 @@ import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Context, Effect, Layer, Match, MutableRef, pipe } from "effect";
+import * as OtlpSerialization from "effect/observability/OtlpSerialization";
 import * as S from "effect/Schema";
-import * as OtlpSerialization from "effect/unstable/observability/OtlpSerialization";
 import { decodeNonNegativeInt } from "../../internal/decode.ts";
+import type * as HttpBody from "effect/http/HttpBody";
 import type * as O from "effect/Option";
-import type * as HttpBody from "effect/unstable/http/HttpBody";
 
 const $I = $ObservabilityId.create("experimental/server/OtlpPacketLab");
 const textDecoder = new TextDecoder();

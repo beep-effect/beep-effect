@@ -9,9 +9,9 @@ import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/Architect
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkItemSummaryViewModel = S.decodeEffect(WorkItemSummaryViewModel);
 const decodeWorkItemVisibleAction = S.decodeEffect(WorkItemVisibleAction);

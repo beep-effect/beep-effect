@@ -7,9 +7,9 @@
 import { composeGatedLayers, gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit";
 import { assert, describe, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
+import { Tool, Toolkit } from "effect/ai";
+import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
-import * as McpServer from "effect/unstable/ai/McpServer";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const HardTool = Tool.make("hard_source_tool", {

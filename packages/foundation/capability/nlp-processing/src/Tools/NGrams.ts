@@ -7,8 +7,8 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool } from "effect/unstable/ai";
 import { AiNGram, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/NGrams");

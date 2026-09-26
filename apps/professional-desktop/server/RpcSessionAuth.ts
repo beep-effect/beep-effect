@@ -11,10 +11,10 @@ import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
-import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type * as Layer from "effect/Layer";
 
 const rpcAuthDecisions = Metric.counter("desktop_rpc_auth_decisions_total", { incremental: true });

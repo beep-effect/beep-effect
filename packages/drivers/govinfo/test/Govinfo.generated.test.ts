@@ -3,9 +3,9 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import { FetchHttpClient } from "effect/http";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { FetchHttpClient } from "effect/unstable/http";
 
 const EXPECTED_OPERATION_IDENTIFIERS = [
   "search",

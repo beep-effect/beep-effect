@@ -35,10 +35,10 @@ import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import { Command } from "effect/cli";
+import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
 import { create as createTar } from "tar";
 import type { SyncDataTarget } from "@beep/repo-cli/test/SyncDataToTs";
 

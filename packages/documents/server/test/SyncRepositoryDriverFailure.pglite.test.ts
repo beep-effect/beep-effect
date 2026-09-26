@@ -41,7 +41,7 @@ import { describe, expect, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const remoteId = RemoteItemId.make("9001");

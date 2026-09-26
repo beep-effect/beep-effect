@@ -8,11 +8,11 @@
 import { Duration, Effect, flow, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { HttpClient, HttpClientRequest } from "effect/unstable/http";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
   DEFAULT_TAILSCALE_SERVE_PORT,
   TAILSCALE_PROBE_TIMEOUT,
@@ -27,7 +27,7 @@ import {
   TailscaleStatusParseError,
 } from "./Tailscale.errors.ts";
 import { TailnetIpv4Address, TailscaleStatus, TailscaleStatusJson } from "./Tailscale.models.ts";
-import type { HttpClientResponse } from "effect/unstable/http";
+import type { HttpClientResponse } from "effect/http";
 import type { TailscaleCommandError } from "./Tailscale.errors.ts";
 import type { TailnetIpv4Address as TailnetIpv4AddressType } from "./Tailscale.models.ts";
 

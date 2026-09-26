@@ -8,8 +8,8 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { BM25Norm, PositiveNumber } from "@beep/nlp/Core/Vectorization";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool } from "effect/unstable/ai";
 import { AiCorpusSummary, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/CreateCorpus");

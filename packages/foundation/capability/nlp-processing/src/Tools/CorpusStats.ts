@@ -7,8 +7,8 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { PosInt } from "@beep/schema";
+import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
-import { Tool } from "effect/unstable/ai";
 import { AiCorpusStats, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/CorpusStats");

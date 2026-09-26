@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import { CalendarMutationResult, eventTitle, formatDeletedCalendarEvents } from "../../beep/CalendarMutation.ts";
 
 describe("CalendarMutation", () => {

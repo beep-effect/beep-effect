@@ -4,11 +4,11 @@ import * as O from "@beep/utils/Option";
 import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
+import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as RpcSerialization from "effect/unstable/rpc/RpcSerialization";
 import { readJsonText } from "../AcpJson.codec.ts";
-import type * as RpcMessage from "effect/unstable/rpc/RpcMessage";
+import type * as RpcMessage from "effect/rpc/RpcMessage";
 import type { JsonTextSyntaxError } from "../AcpJson.codec.ts";
 
 // Inbound JSON-RPC frame decoding. This mirrors the private envelope mapping inside effect's

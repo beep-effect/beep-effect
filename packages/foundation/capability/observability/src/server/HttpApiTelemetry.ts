@@ -11,14 +11,14 @@ import { A } from "@beep/utils";
 import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, SchemaAST } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import { HttpApiMiddleware, HttpApiSchema } from "effect/http-api";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { HttpApiMiddleware, HttpApiSchema } from "effect/unstable/httpapi";
 import { observeHttpRequest, statusClass } from "../Metric.ts";
 import type { NonNegativeInt } from "@beep/schema";
-import type * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
-import type { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+import type * as HttpServerResponse from "effect/http/HttpServerResponse";
+import type { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 
 const $I = $ObservabilityId.create("server/HttpApiTelemetry");
 const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
@@ -282,7 +282,7 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
  * ```ts import.meta.vitest name="Descriptor from HttpApi metadata"
  * import * as S from "effect/Schema"
  * import { makeHttpApiTelemetryDescriptor } from "@beep/observability/server"
- * import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
+ * import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api"
  *
  * const group = HttpApiGroup.make("todos")
  * const endpoint = HttpApiEndpoint.post("createTodo", "/todos", {
@@ -318,7 +318,7 @@ export const makeHttpApiTelemetryDescriptor: {
  * ```typescript
  * import * as S from "effect/Schema"
  * import { httpApiFailureStatus } from "@beep/observability/server"
- * import { HttpApiEndpoint, HttpApiSchema } from "effect/unstable/httpapi"
+ * import { HttpApiEndpoint, HttpApiSchema } from "effect/http-api"
  *
  * const endpoint = HttpApiEndpoint.get("health", "/health", {
  *   error: S.Struct({ message: S.String }).pipe(HttpApiSchema.status(503))
@@ -366,8 +366,8 @@ export const httpApiFailureStatus: {
  *   makeHttpApiTelemetryDescriptor,
  *   observeHttpApiEffect
  * } from "@beep/observability/server"
- * import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse"
- * import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi"
+ * import * as HttpServerResponse from "effect/http/HttpServerResponse"
+ * import { HttpApiEndpoint, HttpApiGroup } from "effect/http-api"
  *
  * const endpoint = HttpApiEndpoint.get("health", "/health", { success: S.String })
  * const descriptor = makeHttpApiTelemetryDescriptor("TodoApi", HttpApiGroup.make("system"), endpoint)
@@ -466,8 +466,8 @@ const observeHttpApiEffectImpl = <E, R>(
  *   makeHttpApiMetrics,
  *   observeHttpApiEffect
  * } from "@beep/observability/server"
- * import { HttpApiEndpoint } from "effect/unstable/httpapi"
- * import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse"
+ * import { HttpApiEndpoint } from "effect/http-api"
+ * import * as HttpServerResponse from "effect/http/HttpServerResponse"
  *
  * const endpoint = HttpApiEndpoint.get("listTodos", "/todos", { success: S.String })
  * const successStatus = S.decodeUnknownSync(NonNegativeInt)(200)

@@ -6,7 +6,7 @@
  */
 
 import type { EffectDrizzleQueryError, MigratorInitError } from "drizzle-orm/effect-core/errors";
-import type { SqlError } from "effect/unstable/sql/SqlError";
+import type { SqlError } from "effect/sql/SqlError";
 
 /**
  * Error union emitted by native Drizzle Effect Postgres migrations.

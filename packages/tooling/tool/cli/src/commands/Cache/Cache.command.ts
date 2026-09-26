@@ -9,12 +9,12 @@ import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-conf
 import { NonNegativeInt } from "@beep/schema";
 import { A, Str, thunk0 } from "@beep/utils";
 import { Clock, Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";

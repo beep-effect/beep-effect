@@ -800,10 +800,10 @@ export class EffectVitestReplacement extends S.Class<EffectVitestReplacement>($I
 
 const EffectVitestFindingLensRule = S.Union([
   S.Struct({ lens: LiteralKit(EffectVitestLens.pickOptions(["detector", "resource"])), ruleId: EffectVitestRuleId }),
-  S.Struct({ lens: S.Literal("resource"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-RES-")) }),
-  S.Struct({ lens: S.Literal("flake"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-FLAKE-")) }),
-  S.Struct({ lens: S.Literal("property"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-PROP-")) }),
-  S.Struct({ lens: S.Literal("observability"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-OBS-")) }),
+  S.Struct({ lens: S.Literal("resource"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-RES-")) }),
+  S.Struct({ lens: S.Literal("flake"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-FLAKE-")) }),
+  S.Struct({ lens: S.Literal("property"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-PROP-")) }),
+  S.Struct({ lens: S.Literal("observability"), ruleId: EffectVitestLensRuleId.check(S.isStartingWith("L-OBS-")) }),
 ]).pipe(
   $I.annoteSchema("EffectVitestFindingLensRule", {
     description: "A detector rule or a judgment rule belonging to the row's exact lens.",

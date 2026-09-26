@@ -25,10 +25,10 @@ import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-
 import { invoke } from "@tauri-apps/api/core";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
+import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import { VaultDirectoryPickError, VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.ts";

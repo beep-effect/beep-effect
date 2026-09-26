@@ -2,10 +2,10 @@
 
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { ConfigProvider, Effect, Layer } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand, CanaryOptions, CanaryStage } from "@/canary/Command";
 import { LabConfig, RuntimeLayer } from "@/runtime/Layer";

@@ -30,8 +30,9 @@ import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Encoding, Exit, HashSet, Layer } from "effect";
+import { Crypto, Effect, Exit, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
@@ -142,7 +143,7 @@ const goalManifestText = (id: string): string =>
 const independentDigestEffect = Effect.fn("KnowledgeRefsTest.independentDigest")(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(text));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 const independentDigest = (text: string): Effect.Effect<string> =>

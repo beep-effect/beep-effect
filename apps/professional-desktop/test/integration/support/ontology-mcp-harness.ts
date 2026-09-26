@@ -5,30 +5,23 @@ import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { OpenInspectRequest, OpenInspectResponse } from "@beep/ontology-use-cases/tools";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
+import * as McpSchema from "effect/ai/McpSchema";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
+import { Headers, HttpClient, HttpClientRequest, HttpClientResponse, HttpRouter, HttpServer } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import { RpcClient, RpcSerialization } from "effect/rpc";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as McpSchema from "effect/unstable/ai/McpSchema";
-import {
-  Headers,
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-  HttpRouter,
-  HttpServer,
-} from "effect/unstable/http";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { makeOntologyMcpTransportLayer } from "../../../server/OntologyMcpTransport.ts";
 import { rpcSessionAuthorizationHeader } from "../../../server/RpcSessionAuth.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";

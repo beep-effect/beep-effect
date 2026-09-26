@@ -13,8 +13,8 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertNone } from "@effect/vitest/utils";
 import { Cause, Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { vi } from "vitest";
 
 const graphologyState = vi.hoisted(

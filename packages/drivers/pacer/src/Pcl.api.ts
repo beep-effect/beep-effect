@@ -1,5 +1,5 @@
 /**
- * Declarative `effect/unstable/httpapi` contract for the PACER Case Locator
+ * Declarative `effect/http-api` contract for the PACER Case Locator
  * (PCL) synchronous search endpoints.
  *
  * PCL uses real HTTP status codes for errors (401/406/429/500), which maps
@@ -13,8 +13,8 @@
  * @since 0.0.0
  */
 
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 import * as S from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi";
 import { CaseReportList, CourtCaseSearchDto, PartyReportList, PartySearchDto, ReportInfoType } from "./Pcl.models.ts";
 
 /**

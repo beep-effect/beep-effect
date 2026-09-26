@@ -12,8 +12,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Crypto, Effect, Encoding, FileSystem, Path } from "effect";
+import { Crypto, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
@@ -44,7 +45,7 @@ const digestBytes = Effect.fn("Yeet.ProofDigest.digestBytes")(function* (
   const digest = yield* crypto
     .digest("SHA-256", bytes)
     .pipe(YeetCommandError.mapError(`Failed to hash ${label} for the proof epoch.`));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 const digestComponents = Effect.fn("Yeet.ProofDigest.digestComponents")(function* (

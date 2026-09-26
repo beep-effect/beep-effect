@@ -41,8 +41,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
-import type * as Socket from "effect/unstable/socket/Socket";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
+import type * as Socket from "effect/socket/Socket";
 import { OntologyName } from "../Domain/Identity.ts";
 import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
 import type { EventEntry } from "../Service/EventBus.ts";
@@ -599,7 +599,7 @@ export const EventBroadcastHubLive = Layer.unwrap(
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { EventBroadcastRouter } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const served = Layer.provide(EventBroadcastRouter, HttpRouter.layer)

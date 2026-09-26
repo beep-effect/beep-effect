@@ -23,7 +23,7 @@ import { A, O, P, pipe, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { assert, describe, expect } from "@effect/vitest";
 import { Deferred, Effect, Fiber, PubSub, Queue, Redacted, Ref } from "effect";
-import { Socket } from "effect/unstable/socket";
+import { Socket } from "effect/socket";
 import type { ObsIdentify, ObsIncomingMessage, ObsRequestEnvelope } from "@beep/obs";
 import type { UnknownRecord } from "@beep/schema";
 import type * as Cause from "effect/Cause";

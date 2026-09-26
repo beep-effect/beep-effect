@@ -4,15 +4,15 @@ import { ImageCommandError } from "@beep/repo-cli/commands/Image";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
+import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

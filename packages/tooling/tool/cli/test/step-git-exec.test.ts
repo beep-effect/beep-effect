@@ -30,7 +30,7 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);

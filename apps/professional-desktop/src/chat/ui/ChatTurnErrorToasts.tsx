@@ -13,7 +13,7 @@ import { toast } from "@beep/ui/components/sonner";
 import * as O from "@beep/utils/Option";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import * as Effect from "effect/Effect";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { ChatActionError } from "@beep/agents-use-cases/public";
 import type { JSX } from "react";

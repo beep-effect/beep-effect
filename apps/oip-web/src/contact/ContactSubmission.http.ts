@@ -7,10 +7,10 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { FetchHttpClient } from "effect/http";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
+import { AtomHttpApi } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
-import { AtomHttpApi } from "effect/unstable/reactivity";
 import { ContactResponseMessage, ContactSubmissionFormPayload } from "./ContactSubmission.model.ts";
 
 const $I = $OipWebId.create("contact/ContactSubmission.http");

@@ -45,7 +45,7 @@ Create a kit once — usually where several models share audit columns or table 
 ```ts
 import { getTableName, sql } from "drizzle-orm"
 import { Int, Literals, NullOr, String, Struct, isMaxLength } from "effect/Schema"
-import { Model as EffectModel } from "effect/unstable/schema"
+import { Model as EffectModel } from "effect/schema"
 import { make } from "@beep/effect-drizzle"
 
 const db = make("pg", (pg) => ({
@@ -131,7 +131,7 @@ enums become table-local `CHECK` constraints:
 
 ```ts
 import { Int, Literals, OptionFromNullOr, String } from "effect/Schema"
-import { Model as EffectModel } from "effect/unstable/schema"
+import { Model as EffectModel } from "effect/schema"
 import { make } from "@beep/effect-drizzle"
 
 const sqliteDb = make("sqlite", (sqlite) => ({
@@ -1830,7 +1830,7 @@ Use with truly fixed-width codes; use `varchar` for bounded variable text.
 
 **Details**
 
-Omitted length derives an `isLengthBetween(n, n)` check. An explicit length
+Omitted length derives an `isBetweenLength(n, n)` check. An explicit length
 verifies or injects that exact check.
 
 **Gotchas**
@@ -1841,10 +1841,10 @@ valid encoded values stable across a database round trip.
 **Example** (Derive a char length)
 
 ```ts
-import { String, isLengthBetween } from "effect/Schema"
+import { String, isBetweenLength } from "effect/Schema"
 import { char } from "@beep/effect-drizzle/pg"
 
-String.check(isLengthBetween(2, 2)).pipe(char()).meta.column?.kind // => "char"
+String.check(isBetweenLength(2, 2)).pipe(char()).meta.column?.kind // => "char"
 ```
 
 **Signature**
@@ -9032,7 +9032,7 @@ import { PgliteTestLayer } from
   "@beep/pglite"
 import { gen, provide, runPromise } from "effect/Effect"
 import { Int, String } from "effect/Schema"
-import { SqlClient } from "effect/unstable/sql/SqlClient"
+import { SqlClient } from "effect/sql/SqlClient"
 import { Model, makeRepository } from
   "@beep/effect-drizzle"
 import { default as defaultValue, identity, integer, primaryKey, version } from

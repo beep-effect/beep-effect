@@ -12,8 +12,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Logger, Ref, References, Result } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import { ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
-import { ChildProcessSpawner } from "effect/unstable/process";
 import type { AiProviderCliProvider, AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 
 const encodeAiProviderCliAuthSnapshotResult = S.encodeResult(AiProviderCliAuthSnapshot);

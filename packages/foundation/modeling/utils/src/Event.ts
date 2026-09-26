@@ -23,7 +23,7 @@ import type { TString } from "@beep/types";
  * @category codecs
  * @since 0.0.0
  */
-export * from "effect/unstable/encoding/Sse";
+export * from "effect/encoding/Sse";
 
 import * as S from "effect/Schema";
 

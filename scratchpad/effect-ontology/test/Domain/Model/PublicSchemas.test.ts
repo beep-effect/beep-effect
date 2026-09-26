@@ -3,7 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Model from "../../../Domain/Model/index.ts";
 
 const publicModelSchemas = A.filter(R.toEntries(Model), ([, value]) => S.isSchema(value));

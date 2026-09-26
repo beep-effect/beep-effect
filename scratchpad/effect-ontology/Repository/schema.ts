@@ -65,7 +65,7 @@ const executionTimingFields = {
 };
 
 const EmbeddingVectorValues = S.Array(S.Finite).check(
-  S.isLengthBetween(768, 768, {
+  S.isBetweenLength(768, 768, {
     identifier: $I`EmbeddingVector768LengthCheck`,
     title: "Embedding Vector 768",
     description: "Exactly 768 finite numeric embedding coordinates.",

@@ -36,11 +36,11 @@ import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
-import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http";
-import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
+import { RpcSerialization, RpcServer } from "effect/rpc";
 import { RuntimeLive } from "@/runtime/Layer";
 import { SidecarReadyMarker } from "@/runtime/Migrations";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
@@ -48,8 +48,8 @@ import { DesktopRpcs } from "./DesktopRpcs.ts";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
+import type { ServeError } from "effect/http/HttpServerError";
 import type * as Redacted from "effect/Redacted";
-import type { ServeError } from "effect/unstable/http/HttpServerError";
 import type { DesktopStartupError } from "@/runtime/Layer";
 
 // Loopback rpc port; defaults to 3939 (the desktop chat surface's sidecar

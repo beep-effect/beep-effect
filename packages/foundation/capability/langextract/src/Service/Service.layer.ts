@@ -16,10 +16,10 @@ import { toAnnotatedDocument } from "@beep/langextract/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as A from "@beep/utils/Array";
 import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import { ensureRemoteExtractionAllowed } from "./Service.policy.ts";
 import { buildPrompt } from "./Service.prompt.ts";
 import { LangExtractGenerationTimeout, LangExtractRemotePolicy, LangExtractService } from "./Service.service.ts";
@@ -123,7 +123,7 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
  * import { LangExtractRequest } from "@beep/langextract/Extraction"
  * import { DocumentId } from "@beep/nlp/Core"
  * import { Effect, Layer, Stream } from "effect"
- * import { LanguageModel, Response } from "effect/unstable/ai"
+ * import { LanguageModel, Response } from "effect/ai"
  *
  * const usage = Response.Usage.make({
  *   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 10, uncached: 10 },

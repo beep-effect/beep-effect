@@ -34,12 +34,25 @@ import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitSuccess, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ContentSecurityPolicyOption } from "@beep/schema/Csp";
+
+// Hoisted guards: the repo forbids compiling a schema guard inside a test body.
+const isCrossOriginEmbedderPolicyError = S.is(HeaderErrors.CrossOriginEmbedderPolicyError);
+const isCrossOriginOpenerPolicyError = S.is(HeaderErrors.CrossOriginOpenerPolicyError);
+const isCrossOriginResourcePolicyError = S.is(HeaderErrors.CrossOriginResourcePolicyError);
+const isExpectCtError = S.is(HeaderErrors.ExpectCtError);
+const isForceHttpsRedirectError = S.is(HeaderErrors.ForceHttpsRedirectError);
+const isFrameGuardError = S.is(HeaderErrors.FrameGuardError);
+const isNoOpenError = S.is(HeaderErrors.NoOpenError);
+const isNoSniffError = S.is(HeaderErrors.NoSniffError);
+const isPermissionsPolicyError = S.is(HeaderErrors.PermissionsPolicyError);
+const isPermittedCrossDomainPoliciesError = S.is(HeaderErrors.PermittedCrossDomainPoliciesError);
+const isReferrerPolicyError = S.is(HeaderErrors.ReferrerPolicyError);
 
 const decodeContentSecurityPolicyHeader = S.decodeEffect(ContentSecurityPolicyHeader);
 const decodeExpectCTHeader = S.decodeEffect(ExpectCTHeader);
@@ -55,14 +68,6 @@ const decodeCrossOriginEmbedderPolicyHeaderEffect = S.decodeEffect(CrossOriginEm
 const decodeCrossOriginOpenerPolicyHeaderEffect = S.decodeEffect(CrossOriginOpenerPolicyHeader);
 const decodeCrossOriginResourcePolicyHeaderEffect = S.decodeEffect(CrossOriginResourcePolicyHeader);
 const encodeCrossOriginEmbedderPolicyHeaderEffect = S.encodeEffect(CrossOriginEmbedderPolicyHeader);
-const isExpectCtError = S.is(HeaderErrors.ExpectCtError);
-const isForceHttpsRedirectError = S.is(HeaderErrors.ForceHttpsRedirectError);
-const isFrameGuardError = S.is(HeaderErrors.FrameGuardError);
-const isNoOpenError = S.is(HeaderErrors.NoOpenError);
-const isNoSniffError = S.is(HeaderErrors.NoSniffError);
-const isPermissionsPolicyError = S.is(HeaderErrors.PermissionsPolicyError);
-const isPermittedCrossDomainPoliciesError = S.is(HeaderErrors.PermittedCrossDomainPoliciesError);
-const isReferrerPolicyError = S.is(HeaderErrors.ReferrerPolicyError);
 
 type HeaderLike = {
   readonly name: string;
@@ -108,7 +113,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     createValueValid: () => CrossOriginEmbedderPolicyHeader.createValue("require-corp").pipe(Effect.orDie),
     createValid: () => CrossOriginEmbedderPolicyHeader.create("require-corp").pipe(Effect.orDie),
     createInvalid: () => CrossOriginEmbedderPolicyHeader.createValue("invalid" as never),
-    isError: S.is(HeaderErrors.CrossOriginEmbedderPolicyError),
+    isError: isCrossOriginEmbedderPolicyError,
   },
   {
     label: "COOP",
@@ -121,7 +126,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     createValueValid: () => CrossOriginOpenerPolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginOpenerPolicyHeader.create("same-origin").pipe(Effect.orDie),
     createInvalid: () => CrossOriginOpenerPolicyHeader.createValue("invalid" as never),
-    isError: S.is(HeaderErrors.CrossOriginOpenerPolicyError),
+    isError: isCrossOriginOpenerPolicyError,
   },
   {
     label: "CORP",
@@ -134,7 +139,7 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     createValueValid: () => CrossOriginResourcePolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginResourcePolicyHeader.create("same-origin").pipe(Effect.orDie),
     createInvalid: () => CrossOriginResourcePolicyHeader.createValue("invalid" as never),
-    isError: S.is(HeaderErrors.CrossOriginResourcePolicyError),
+    isError: isCrossOriginResourcePolicyError,
   },
 ];
 

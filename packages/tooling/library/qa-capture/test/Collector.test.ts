@@ -17,8 +17,8 @@ import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect, layer } from "@effect/vitest";
 import { Effect, Fiber, FileSystem, Layer, Path, pipe } from "effect";
+import { FetchHttpClient, HttpBody, HttpClient } from "effect/http";
 import * as S from "effect/Schema";
-import { FetchHttpClient, HttpBody, HttpClient } from "effect/unstable/http";
 
 const witnessStub = "(()=>{/* witness stub */})();";
 const appOrigin = "http://storybook.beep.localhost:1355";

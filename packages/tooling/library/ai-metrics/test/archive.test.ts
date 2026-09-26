@@ -6,12 +6,13 @@ import {
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Encoding, FileSystem, Redacted, Result } from "effect";
+import { Effect, FileSystem, Redacted, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const ArchiveEnvelopeFromJsonString = S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope);
 const decodeArchiveEnvelope = S.decodeUnknownResult(ArchiveEnvelopeFromJsonString);
@@ -34,16 +35,14 @@ describe("AI metrics encrypted raw archive envelope", () => {
   it("accepts ciphertext larger than the regex backtracking limit", () => {
     const bytes = new Uint8Array(12 * 1024 * 1024);
     const fixture = Result.getOrThrow(decodeUnknownJson(currentEncoderFixture));
-    const encoded = Result.getOrThrow(
-      encodeUnknownJson({ ...fixture, ciphertextBase64: Encoding.encodeBase64(bytes) })
-    );
+    const encoded = Result.getOrThrow(encodeUnknownJson({ ...fixture, ciphertextBase64: Base64.encode(bytes) }));
     const decoded = Result.getOrThrow(decodeArchiveEnvelope(encoded));
-    const recovered = Result.getOrThrow(Encoding.decodeBase64(decoded.ciphertextBase64));
+    const recovered = Result.getOrThrow(Base64.decode(decoded.ciphertextBase64));
     expect(Buffer.compare(Buffer.from(recovered), Buffer.from(bytes))).toBe(0);
   });
 
   it("still rejects corrupted large ciphertext", () => {
-    const ciphertext = Encoding.encodeBase64(new Uint8Array(12 * 1024 * 1024));
+    const ciphertext = Base64.encode(new Uint8Array(12 * 1024 * 1024));
     const middle = ciphertext.length / 2;
     const fixture = Result.getOrThrow(decodeUnknownJson(currentEncoderFixture));
     const encoded = Result.getOrThrow(
