@@ -110,3 +110,25 @@ DuckDB laws passed at 400 runs with seed 20260708, and full package audit/docgen
 passed (8.0 / 2.7 seconds). No valid-input counterexample or production repair
 was found. The typed JSON-string decoder corrected an introduced compiler
 diagnostic without altering the domains.
+
+
+## Explicit native cancellation proof
+
+The final DuckDB flake edit replaces five timeoutOption/ignore coordinators
+with explicit native-start, interruption-request, blocked-second-call, release
+and joined-outcome events. Original bounded native probes and exact row results
+remain, and each first fiber must finish interrupted. Serialization now uses
+controlled overlap, checks both query results and retains maxActiveExecutions=1.
+Release finalizers are installed before the first fiber starts, including the
+shorter interrupted-acquisition subject. All original expect expressions and
+the complete property cohort are preserved; no timeout budget increased.
+
+The exact final file passed full package audit/docgen (7.7 / 2.9 seconds).
+Two fresh Node and two fresh Bun runs each passed all seven selected cases:
+five permit cases, serialization and interrupted acquisition. Earlier samples
+preceding the cleanup-boundary review remain historical only. No production
+counterexample or production edit was needed.
+
+The remaining database-wave work is observability through the shared runner,
+final before/after timing receipts, inventory reconciliation, generated dependency
+metadata and PR gates. Per-phase success does not replace those acceptance gates.
