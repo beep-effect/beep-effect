@@ -4,8 +4,8 @@ import { resolveImportSpecifierImportKind } from "@beep/repo-configs/internal/es
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem } from "effect";
-import * as O from "effect/Option";
 
 const docsEslintConfigPath = fileURLToPath(new URL("../src/eslint/DocsESLintConfig.ts", import.meta.url));
 const requireCategoryTagRulePath = fileURLToPath(new URL("../src/eslint/RequireCategoryTagRule.ts", import.meta.url));
@@ -96,10 +96,10 @@ layer(NodeServices.layer, { timeout: "10 seconds" })("effect-first regressions",
     );
 
     it("resolves import kinds in data-first and data-last forms", () => {
-      expect(O.getOrUndefined(resolveImportSpecifierImportKind({ importKind: "type" }))).toBe("type");
-      expect(O.getOrUndefined(resolveImportSpecifierImportKind({}, "value"))).toBe("value");
-      expect(O.getOrUndefined(resolveImportSpecifierImportKind("type")({ importKind: "value" }))).toBe("value");
-      expect(O.isNone(resolveImportSpecifierImportKind(undefined)({}))).toBe(true);
+      assertSome(resolveImportSpecifierImportKind({ importKind: "type" }), "type");
+      assertSome(resolveImportSpecifierImportKind({}, "value"), "value");
+      assertSome(resolveImportSpecifierImportKind("type")({ importKind: "value" }), "value");
+      assertNone(resolveImportSpecifierImportKind(undefined)({}));
     });
   });
 });

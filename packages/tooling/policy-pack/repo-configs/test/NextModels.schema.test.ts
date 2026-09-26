@@ -14,10 +14,10 @@ import {
 } from "@beep/repo-configs/next";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownImageConfigComplete = S.decodeUnknownEffect(ImageConfigComplete);
@@ -37,7 +37,7 @@ const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value)).toBe(true);
+  assertTrue(Equal.equals(decoded, value));
 };
 
 describe("Next shared schemas", () => {
@@ -49,13 +49,13 @@ describe("Next shared schemas", () => {
   });
 
   it("rejects malformed size suffixes and size limit strings", () => {
-    expect(O.isNone(FileSizeSuffix.decodeUnknownOption("xb"))).toBe(true);
-    expect(O.isNone(FileSizeSuffix.decodeUnknownOption("mbps"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeUnknownOption(-1))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeUnknownOption("-2KB"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeUnknownOption("1"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeUnknownOption("1xb"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeUnknownOption("mb"))).toBe(true);
+    assertNone(FileSizeSuffix.decodeUnknownOption("xb"));
+    assertNone(FileSizeSuffix.decodeUnknownOption("mbps"));
+    assertNone(SizeLimit.decodeUnknownOption(-1));
+    assertNone(SizeLimit.decodeUnknownOption("-2KB"));
+    assertNone(SizeLimit.decodeUnknownOption("1"));
+    assertNone(SizeLimit.decodeUnknownOption("1xb"));
+    assertNone(SizeLimit.decodeUnknownOption("mb"));
   });
 
   it("round-trips schema-derived primitive values", () => {
@@ -214,13 +214,13 @@ describe("Next route schemas", () => {
 
   it.effect("rejects invalid route discriminators and redirect mode mixing", () =>
     Effect.gen(function* () {
-      expect(
+      assertTrue(
         Exit.isFailure(yield* Effect.exit(decodeUnknownRouteHas({ type: "host", key: "host", value: "example.com" })))
-      ).toBe(true);
-      expect(
+      );
+      assertTrue(
         Exit.isFailure(yield* Effect.exit(decodeRewrite({ source: "/old", destination: "/new", basePath: true })))
-      ).toBe(true);
-      expect(
+      );
+      assertTrue(
         Exit.isFailure(
           yield* Effect.exit(
             decodeUnknownRedirect({
@@ -231,7 +231,7 @@ describe("Next route schemas", () => {
             })
           )
         )
-      ).toBe(true);
+      );
     })
   );
 });
@@ -269,7 +269,7 @@ describe("Next image schemas", () => {
 
   it.effect("rejects out-of-domain image quality values", () =>
     Effect.gen(function* () {
-      expect(
+      assertTrue(
         Exit.isFailure(
           yield* Effect.exit(
             decodeUnknownImageConfigComplete({
@@ -296,7 +296,7 @@ describe("Next image schemas", () => {
             })
           )
         )
-      ).toBe(true);
+      );
     })
   );
 });
@@ -324,8 +324,8 @@ describe("Next compiler schemas", () => {
 
   it.effect("rejects non-object Sass options and non-string implementations", () =>
     Effect.gen(function* () {
-      expect(Exit.isFailure(yield* Effect.exit(decodeSassOptions(["sass"])))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeSassOptions({ implementation: false })))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSassOptions(["sass"]))));
+      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSassOptions({ implementation: false }))));
     })
   );
 });

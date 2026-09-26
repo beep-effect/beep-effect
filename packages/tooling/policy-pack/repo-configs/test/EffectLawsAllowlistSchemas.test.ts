@@ -5,6 +5,7 @@ import {
 } from "@beep/repo-configs/internal/eslint/EffectLawsAllowlistSchemas";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
@@ -17,7 +18,7 @@ const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value)).toBe(true);
+  assertTrue(Equal.equals(decoded, value));
 };
 
 describe("Effect laws allowlist schemas", () => {

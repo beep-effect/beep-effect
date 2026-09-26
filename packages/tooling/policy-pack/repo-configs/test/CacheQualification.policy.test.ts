@@ -28,6 +28,7 @@ import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -123,10 +124,10 @@ describe("cache qualification policy", () => {
     "accepts package names containing s and rejects whitespace independently",
     Effect.fnUntraced(function* () {
       for (const computation of ["@beep/schema#check", "@beep/types#lint"]) {
-        expect(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isSuccess)).toBe(true);
+        assertTrue(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isSuccess));
       }
       for (const computation of ["pkg #lint", "pkg#li nt", "pkg\t#lint"]) {
-        expect(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure)).toBe(true);
+        assertTrue(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure));
       }
     })
   );
@@ -140,7 +141,7 @@ describe("cache qualification policy", () => {
           (value) => {
             const encoded = Result.getOrThrow(encodeResultCacheQualificationKey(value));
             const decoded = Result.getOrThrow(decodeResultCacheQualificationKey(encoded));
-            expect(equivalent(value, decoded)).toBe(true);
+            assertTrue(equivalent(value, decoded));
             return true;
           },
           fcRuns(40)
@@ -311,7 +312,7 @@ describe("cache qualification policy", () => {
         "@/package.json",
         "https://example.com/@scope/package.json",
       ]) {
-        expect(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure)).toBe(true);
+        assertTrue(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure));
       }
     })
   );
@@ -320,11 +321,11 @@ describe("cache qualification policy", () => {
     "rejects invalid identities, unbound evidence and unsafe receipt paths at decode",
     Effect.fnUntraced(function* () {
       for (const computation of ["lint", "workspace#", "workspace#lint#extra", "workspace #lint"]) {
-        expect(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure)).toBe(true);
+        assertTrue(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure));
       }
-      expect(yield* decodeCacheQualificationObservation({ passed: true }).pipe(Effect.isFailure)).toBe(true);
+      assertTrue(yield* decodeCacheQualificationObservation({ passed: true }).pipe(Effect.isFailure));
       for (const path of ["/private/log", "../receipt.json", "safe/../../escape", "windows\\\\receipt"]) {
-        expect(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure)).toBe(true);
+        assertTrue(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure));
       }
     })
   );

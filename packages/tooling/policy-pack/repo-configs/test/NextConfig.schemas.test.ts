@@ -1,10 +1,10 @@
 import { AllowedDevOrigin } from "@beep/repo-configs/next/models/AllowedDevOrigin.schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeAllowedDevOriginResult = S.decodeResult(AllowedDevOrigin);
@@ -14,7 +14,7 @@ const expectRoundTrip = (value: AllowedDevOrigin) => {
   const encoded = Result.getOrThrow(encodeAllowedDevOriginResult(value));
   const decoded = Result.getOrThrow(decodeAllowedDevOriginResult(encoded));
 
-  expect(Equal.equals(decoded, value)).toBe(true);
+  assertTrue(Equal.equals(decoded, value));
 };
 
 describe("AllowedDevOrigin", () => {
@@ -25,12 +25,12 @@ describe("AllowedDevOrigin", () => {
   });
 
   it("rejects URL-like values and invalid wildcard domains", () => {
-    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption(""))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("https://local-origin.dev"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("local-origin.dev:3000"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("local-origin.dev/path"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("*.*.local-origin.dev"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("*."))).toBe(true);
+    assertNone(AllowedDevOrigin.decodeUnknownOption(""));
+    assertNone(AllowedDevOrigin.decodeUnknownOption("https://local-origin.dev"));
+    assertNone(AllowedDevOrigin.decodeUnknownOption("local-origin.dev:3000"));
+    assertNone(AllowedDevOrigin.decodeUnknownOption("local-origin.dev/path"));
+    assertNone(AllowedDevOrigin.decodeUnknownOption("*.*.local-origin.dev"));
+    assertNone(AllowedDevOrigin.decodeUnknownOption("*."));
   });
 
   it("round-trips schema-derived allowed origins", () => {
