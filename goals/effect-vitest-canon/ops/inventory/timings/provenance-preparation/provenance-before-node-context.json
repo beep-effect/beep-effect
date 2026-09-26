@@ -1,0 +1,111 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/provenance-before-node.json"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/package.json",
+      "sha256": "53093e00f97263f2a62d2c207fa1fd21f9163e6ac80f156f01fb9e8bfabaa0c7"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/SourceTextIdentity.ts",
+      "sha256": "144d4ae61dd77dc9aaaf1b93fa7259f1102bece374a1486fce87db98f45ccff7"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+      "sha256": "5205c15bd2eb4b1bff3c0599ba8b502eacc7ca7ec1d413647c3565a17a94542c"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "sha256": "e96a7eb75d15d00caf7aeeaca12fbb7eaf5e8b38e55a35e7b3664b2f38951af0"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/index.ts",
+      "sha256": "8a4c106e67bebaeab80f64a0faec3cb06f128700c451cff739cbe0e0c7cfc0ff"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TaggedError.equivalence.test.ts",
+      "sha256": "af47ac561ad2c0ec87bc9bb5e7568dc162e5754b3c57958174646d223f5a9973"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "sha256": "f5ea6a80d5cd4313ea3b71643166acfaae15977d41acf772907f0fcd6d92b438"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "sha256": "d1c2aeb1113be61c0818556199b8e6a994800c1aed5de35d3aa91bfc4e60be98"
+    }
+  ],
+  "loadBefore": [8.0498046875, 16.7216796875, 27.46435546875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.77 avg60=0.51 avg300=1.90 total=1860169408\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.15 avg60=0.26 avg300=0.15 total=162661550\nfull avg10=0.15 avg60=0.26 avg300=0.11 total=146987031\n",
+    "io": "some avg10=1.04 avg60=0.79 avg300=0.49 total=866085530\nfull avg10=0.54 avg60=0.51 avg300=0.22 total=614493301\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 4.07980815701012,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/package.json",
+      "sha256": "53093e00f97263f2a62d2c207fa1fd21f9163e6ac80f156f01fb9e8bfabaa0c7"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/SourceTextIdentity.ts",
+      "sha256": "144d4ae61dd77dc9aaaf1b93fa7259f1102bece374a1486fce87db98f45ccff7"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+      "sha256": "5205c15bd2eb4b1bff3c0599ba8b502eacc7ca7ec1d413647c3565a17a94542c"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "sha256": "e96a7eb75d15d00caf7aeeaca12fbb7eaf5e8b38e55a35e7b3664b2f38951af0"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/src/index.ts",
+      "sha256": "8a4c106e67bebaeab80f64a0faec3cb06f128700c451cff739cbe0e0c7cfc0ff"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TaggedError.equivalence.test.ts",
+      "sha256": "af47ac561ad2c0ec87bc9bb5e7568dc162e5754b3c57958174646d223f5a9973"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "sha256": "f5ea6a80d5cd4313ea3b71643166acfaae15977d41acf772907f0fcd6d92b438"
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "sha256": "d1c2aeb1113be61c0818556199b8e6a994800c1aed5de35d3aa91bfc4e60be98"
+    }
+  ],
+  "loadAfter": [8.04541015625, 16.57666015625, 27.359375],
+  "pressureAfter": {
+    "cpu": "some avg10=0.52 avg60=0.47 avg300=1.87 total=1860176845\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.10 avg60=0.24 avg300=0.15 total=162661941\nfull avg10=0.10 avg60=0.24 avg300=0.11 total=146987379\n",
+    "io": "some avg10=0.69 avg60=0.73 avg300=0.48 total=866088764\nfull avg10=0.36 avg60=0.48 avg300=0.21 total=614495554\n"
+  },
+  "sourceStable": true,
+  "commandRedaction": "Private output directory replaced with <private-output>; other arguments preserved."
+}

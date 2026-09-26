@@ -1,6 +1,8 @@
 import { isInternallyConsistent, isUtf16Boundary, isWellOrdered, TextAnchor } from "@beep/provenance/TextAnchor";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -57,52 +59,60 @@ describe("@beep/provenance TextAnchor", () => {
     expect(isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })).toBe(true);
     expect(isInternallyConsistent({ startChar: 0, endChar: 1, quote: "fabricated" })).toBe(false);
     expect(isInternallyConsistent({ startChar: 4, endChar: 0, quote: "fact" })).toBe(false);
-    expect(Result.isFailure(decodeTextAnchorResult({ startChar: 0, endChar: 1, quote: "fabricated" }))).toBe(true);
-    expect(Result.isFailure(decodeTextAnchorResult({ startChar: 4, endChar: 0, quote: "fact" }))).toBe(true);
+    assertFailure(
+      decodeTextAnchorResult({ startChar: 0, endChar: 1, quote: "fabricated" }).pipe(
+        Result.mapError((error) => ({ _tag: error._tag, message: error.message }))
+      ),
+      {
+        _tag: "SchemaError",
+        message: "Expected endChar - startChar to equal the non-empty quote's UTF-16 code-unit length.",
+      }
+    );
+    assertFailure(
+      decodeTextAnchorResult({ startChar: 4, endChar: 0, quote: "fact" }).pipe(
+        Result.mapError((error) => ({ _tag: error._tag, message: error.message }))
+      ),
+      {
+        _tag: "SchemaError",
+        message: "Expected endChar - startChar to equal the non-empty quote's UTF-16 code-unit length.",
+      }
+    );
   });
 
-  it("round-trips schema-derived anchors through the encoded wire shape", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([TextAnchorArbitrary]),
-          ([anchor]) => {
-            const encoded = Result.getOrThrow(encodeUnknownTextAnchorResult(anchor));
-            const decoded = Result.getOrThrow(decodeTextAnchorResult(encoded));
+  it.prop(
+    "round-trips schema-derived anchors through the encoded wire shape",
+    [TextAnchorArbitrary],
+    ([anchor]) => {
+      const encoded = Result.getOrThrow(encodeUnknownTextAnchorResult(anchor));
+      const decoded = Result.getOrThrow(decodeTextAnchorResult(encoded));
 
-            expect(encoded).toEqual({
-              startChar: anchor.startChar,
-              endChar: anchor.endChar,
-              quote: anchor.quote,
-            });
-            expect(TextAnchor.isInternallyConsistent(anchor)).toBe(true);
-            expect(TextAnchorEquivalence(decoded, anchor)).toBe(true);
+      expect(encoded).toEqual({
+        startChar: anchor.startChar,
+        endChar: anchor.endChar,
+        quote: anchor.quote,
+      });
+      expect(TextAnchor.isInternallyConsistent(anchor)).toBe(true);
+      expect(TextAnchorEquivalence(decoded, anchor)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("colocated well-ordered predicate agrees with ordered offset pairs", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
-          ]),
-          ([startChar, length]) => {
-            const endChar = startChar + length;
+  it.prop(
+    "colocated well-ordered predicate agrees with ordered offset pairs",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
+    ],
+    ([startChar, length]) => {
+      const endChar = startChar + length;
 
-            expect(TextAnchor.isWellOrdered({ startChar, endChar })).toBe(true);
-            expect(isWellOrdered({ startChar: endChar + 1, endChar: startChar })).toBe(false);
+      expect(TextAnchor.isWellOrdered({ startChar, endChar })).toBe(true);
+      expect(isWellOrdered({ startChar: endChar + 1, endChar: startChar })).toBe(false);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

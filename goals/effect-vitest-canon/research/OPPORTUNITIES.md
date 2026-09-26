@@ -2345,3 +2345,13 @@ After the graph-3d browser prerequisite passed Chromium and package proof,
 No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
+
+
+### Provenance scope migration: pure service overrides
+
+The scope-phase package check rejected two test-local Effect.provide(Layer)
+applications with TS377032 (strictEffectProvide), although the focused tests
+passed. Both fixtures construct pure Crypto values, so Effect.provideService
+preserves their per-case behavior without a nested Layer boundary. The corrected
+full package verification passed. Classifying pure service overrides before
+replacing scoped helpers would have prevented this failed check.
