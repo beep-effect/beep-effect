@@ -96,120 +96,150 @@ const fakeRowReader = (rows: DuckDbRows): Awaited<ReturnType<DuckDBConnection["r
 
 const fakeRunResult = {} as Awaited<ReturnType<DuckDBConnection["run"]>>;
 
-const encodeSchema = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): Schema["Encoded"] =>
-  Effect.runSync(S.encodeEffect(schema)(value));
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+const encodeSchema = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]) =>
+  S.encodeEffect(schema)(value);
 
 const DuckDbErrorFromUnknownOptionsArbitrary = Arbitrary.schema(DuckDbErrorFromUnknownOptions).pipe(
   Arbitrary.filter((options) => O.isNone(options.cause))
 );
 const DuckDbErrorArbitrary = Arbitrary.schema(DuckDbError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
 
-const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
+const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  arbitrary = Arbitrary.schema(schema),
-  options?: { readonly runs?: number }
-): void => {
-  const encode = S.encodeEffect(schema);
-  const decode = S.decodeUnknownEffect(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          const encoded = Effect.runSync(encode(value));
-          const decoded = Effect.runSync(decode(encoded));
-          return equivalent(decoded, value);
-        },
-        fcRuns(options?.runs ?? 20)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+  value: Schema["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  return S.toEquivalence(schema)(decoded, value);
+});
 
 describe("@beep/duckdb", { concurrent: false }, () => {
-  it("preserves encoded schema wire shapes", () => {
-    expect(
-      JSON.stringify(encodeSchema(DuckDbConnectionOptions, DuckDbConnectionOptions.make({ databasePath: ":memory:" })))
-    ).toBe(JSON.stringify({ databasePath: ":memory:" }));
-    expect(
-      JSON.stringify(
-        encodeSchema(
-          DuckDbConnectionOptions,
-          DuckDbConnectionOptions.make({
-            databaseOptions: { access_mode: "READ_ONLY" },
-            databasePath: "metrics.duckdb",
-          })
+  it.effect("preserves encoded schema wire shapes", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* encodeJson(
+          yield* encodeSchema(DuckDbConnectionOptions, DuckDbConnectionOptions.make({ databasePath: ":memory:" }))
         )
-      )
-    ).toBe(JSON.stringify({ databaseOptions: { access_mode: "READ_ONLY" }, databasePath: "metrics.duckdb" }));
-    expect(
-      JSON.stringify(
-        encodeSchema(
-          DuckDbParquetExport,
-          DuckDbParquetExport.make({ filePath: "exports/events.parquet", tableName: "events" })
+      ).toBe(yield* encodeJson({ databasePath: ":memory:" }));
+      expect(
+        yield* encodeJson(
+          yield* encodeSchema(
+            DuckDbConnectionOptions,
+            DuckDbConnectionOptions.make({
+              databaseOptions: { access_mode: "READ_ONLY" },
+              databasePath: "metrics.duckdb",
+            })
+          )
         )
-      )
-    ).toBe(JSON.stringify({ filePath: "exports/events.parquet", tableName: "events" }));
-    expect(
-      JSON.stringify(
-        encodeSchema(DuckDbRow, DuckDbRow.decodeUnknownSync({ empty: null, id: "run-1", ok: true, value: 42 }))
-      )
-    ).toBe(JSON.stringify({ empty: null, id: "run-1", ok: true, value: 42 }));
-    expect(JSON.stringify(encodeSchema(DuckDbRows, DuckDbRows.decodeUnknownSync([{ id: "run-1", value: 42 }])))).toBe(
-      JSON.stringify([{ id: "run-1", value: 42 }])
-    );
-    expect(
-      JSON.stringify(
-        encodeSchema(
-          DuckDbErrorFromUnknownOptions,
-          DuckDbErrorFromUnknownOptions.make({
-            databasePath: O.some("metrics.duckdb"),
-            message: "Custom DuckDB failure.",
-            statement: O.some("SELECT broken"),
-          })
+      ).toBe(yield* encodeJson({ databaseOptions: { access_mode: "READ_ONLY" }, databasePath: "metrics.duckdb" }));
+      expect(
+        yield* encodeJson(
+          yield* encodeSchema(
+            DuckDbParquetExport,
+            DuckDbParquetExport.make({ filePath: "exports/events.parquet", tableName: "events" })
+          )
         )
-      )
-    ).toBe(
-      JSON.stringify({
-        databasePath: "metrics.duckdb",
-        message: "Custom DuckDB failure.",
-        statement: "SELECT broken",
-      })
-    );
-    expect(
-      JSON.stringify(
-        encodeSchema(
-          DuckDbError,
-          DuckDbError.make({
-            databasePath: O.some("metrics.duckdb"),
-            message: "Custom DuckDB failure.",
-            operation: "query",
-            statement: O.some("SELECT broken"),
-          })
+      ).toBe(yield* encodeJson({ filePath: "exports/events.parquet", tableName: "events" }));
+      expect(
+        yield* encodeJson(
+          yield* encodeSchema(DuckDbRow, DuckDbRow.decodeUnknownSync({ empty: null, id: "run-1", ok: true, value: 42 }))
         )
-      )
-    ).toBe(
-      JSON.stringify({
-        _tag: "DuckDbError",
-        databasePath: "metrics.duckdb",
-        message: "Custom DuckDB failure.",
-        operation: "query",
-        statement: "SELECT broken",
-      })
-    );
-  });
+      ).toBe(yield* encodeJson({ empty: null, id: "run-1", ok: true, value: 42 }));
+      expect(
+        yield* encodeJson(yield* encodeSchema(DuckDbRows, DuckDbRows.decodeUnknownSync([{ id: "run-1", value: 42 }])))
+      ).toBe(yield* encodeJson([{ id: "run-1", value: 42 }]));
+      expect(
+        yield* encodeJson(
+          yield* encodeSchema(
+            DuckDbErrorFromUnknownOptions,
+            DuckDbErrorFromUnknownOptions.make({
+              databasePath: O.some("metrics.duckdb"),
+              message: "Custom DuckDB failure.",
+              statement: O.some("SELECT broken"),
+            })
+          )
+        )
+      ).toBe(
+        yield* encodeJson({
+          databasePath: "metrics.duckdb",
+          message: "Custom DuckDB failure.",
+          statement: "SELECT broken",
+        })
+      );
+      expect(
+        yield* encodeJson(
+          yield* encodeSchema(
+            DuckDbError,
+            DuckDbError.make({
+              databasePath: O.some("metrics.duckdb"),
+              message: "Custom DuckDB failure.",
+              operation: "query",
+              statement: O.some("SELECT broken"),
+            })
+          )
+        )
+      ).toBe(
+        yield* encodeJson({
+          _tag: "DuckDbError",
+          databasePath: "metrics.duckdb",
+          message: "Custom DuckDB failure.",
+          operation: "query",
+          statement: "SELECT broken",
+        })
+      );
+    })
+  );
 
-  it("round-trips schema-derived DuckDB models", () => {
-    assertSchemaArbitraryRoundTrips(DuckDbConnectionOptions);
-    assertSchemaArbitraryRoundTrips(DuckDbParquetExport);
-    assertSchemaArbitraryRoundTrips(DuckDbOperation);
-    assertSchemaArbitraryRoundTrips(DuckDbRow);
-    assertSchemaArbitraryRoundTrips(DuckDbRows);
-    assertSchemaArbitraryRoundTrips(DuckDbErrorFromUnknownOptions, DuckDbErrorFromUnknownOptionsArbitrary);
-    assertSchemaArbitraryRoundTrips(DuckDbError, DuckDbErrorArbitrary);
-  });
+  it.effect.prop(
+    "round-trips DuckDbConnectionOptions through encoded form",
+    [DuckDbConnectionOptions],
+    ([value]) => assertSchemaRoundTrip(DuckDbConnectionOptions, value),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbParquetExport through encoded form",
+    [DuckDbParquetExport],
+    ([value]) => assertSchemaRoundTrip(DuckDbParquetExport, value),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbOperation through encoded form",
+    [DuckDbOperation],
+    ([value]) => assertSchemaRoundTrip(DuckDbOperation, value),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbRow through encoded form",
+    [DuckDbRow],
+    ([value]) => assertSchemaRoundTrip(DuckDbRow, value),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbRows through encoded form",
+    [DuckDbRows],
+    ([value]) => assertSchemaRoundTrip(DuckDbRows, value),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbErrorFromUnknownOptions through encoded form",
+    [DuckDbErrorFromUnknownOptionsArbitrary],
+    ([value]) => assertSchemaRoundTrip(DuckDbErrorFromUnknownOptions, value),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "round-trips DuckDbError through encoded form",
+    [DuckDbErrorArbitrary],
+    ([value]) => assertSchemaRoundTrip(DuckDbError, value),
+    { arbitrary: fcRuns(20) }
+  );
 
   it("normalizes unknown failures into typed DuckDB errors", () => {
     const cause = new Error("native failed");
