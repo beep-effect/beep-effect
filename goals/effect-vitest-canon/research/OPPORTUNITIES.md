@@ -2454,3 +2454,11 @@ than inheriting a previous wave's newline convention. Preserve file bytes and
 membership, correct only owned counts and spans, and rerun the unchanged
 validator. A shared count function in receipt generation would prevent this
 off-by-one evidence drift.
+
+## 2026-09-26: Repository-config changeset gate
+
+The first repository-config cheap-gate run passed fourteen lanes but rejected
+`quality:changeset-status`: the versioned workspace needed an in-range changeset
+even though this wave changes tests and their development dependency. Add a real
+package patch changeset, then rerun the gate. Check release-policy classification
+before publication instead of inferring exemption from a private package flag.

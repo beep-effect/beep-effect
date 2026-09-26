@@ -1,3 +1,45 @@
+# @beep/repo-configs — current remediation digest
+
+The eleven-file backlog wave is implemented and published in PR #1298. Source
+checkpoint `d598781a65af5c48097bc4132c860b4227930e96` completed scope, assertions,
+properties, flake review and instrumentation in the prescribed order. Hosted
+readiness and Benjamin's merge remain separate gates.
+
+| Ledger disposition | Rows |
+| --- | ---: |
+| Fixed | 65 |
+| Open no-findings | 39 |
+| Justified exceptions | 16 |
+| Total | 120 |
+
+Strict validation passed all eleven existing paths with no missing coverage.
+The root detector baseline has thirteen current exceptions instead of seventy-four
+package entries. Nine failure-predicate checks retain their original assertion
+strength because independent complete expected Causes are not specified; they
+receive no duplicate fixed credit. One deliberate shorter child scope preserves
+compiler cleanup before temporary-directory removal. Three native detector and
+three resource exceptions preserve real compiler and checkout-file subjects.
+
+Native properties now expose each of the original sixteen laws by name. The
+same domains, floors and oracles remain; splitting aggregate registrations raises
+the test count from 77 to 83. All 83 passed on Node and Bun with zero skips.
+All sixteen laws passed at 400 runs and seed 20260708 after instrumentation.
+Full package verification and focused root oxlint passed. Positive and negative
+trace controls proved compiler instrumentation and restored source byte for byte.
+
+Whole-command Node timings were 4.721 seconds before and 4.423 after; Bun was
+2.518 before and 1.717 after. Host load and pressure, runtime versions and stable
+input hashes accompany these single observations; they are not controlled speedup
+estimates. No new flake was demonstrated. The six historical coverage-ratchet
+observations across two jobs remain historical, not current flaky claims.
+
+See [final proof](../../../history/2026-09-26-repo-configs-final-proof.md) and
+[final evidence](../../../research/repo-configs-final-evidence.json). The earlier
+P1 audit below is retained as historical provenance; its gate language, counts,
+runtime cohort and proposed work do not describe the current wave.
+
+---
+
 # @beep/repo-configs — P1 four-lens digest
 
 All rows are open judgments reviewed by Root; P2 remains gated.
