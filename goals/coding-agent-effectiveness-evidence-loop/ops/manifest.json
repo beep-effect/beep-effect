@@ -5,7 +5,7 @@
     "title": "Coding Agent Effectiveness Evidence Loop",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-09-03",
+    "updated": "2026-09-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/coding-agent-effectiveness-evidence-loop",
@@ -55,6 +55,7 @@
       "command": "/goal follow the instructions in goals/coding-agent-effectiveness-evidence-loop/GOAL.md"
     }
   ],
+  "requires": ["tooling/harness-ledger"],
   "phases": [
     {
       "id": "P0",
