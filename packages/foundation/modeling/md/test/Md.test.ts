@@ -477,7 +477,10 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       expect(yield* decodeCodeFenceLanguage("ts")).toBe("ts");
       const invalidLanguage = yield* Effect.exit(decodeCodeFenceLanguage("ts bad"));
       assertExitFailure(
-        Exit.mapError(invalidLanguage, (error) => error._tag),
+        Exit.match(invalidLanguage, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) => Exit.failCause(Cause.map(cause, (error) => error._tag)),
+        }),
         Cause.fail("SchemaError")
       );
       // Pre.language now folds non-conforming legacy info strings to None at decode,
@@ -1236,7 +1239,10 @@ Demo video`);
       const throwingEffect = yield* Effect.exit(renderEffectWith(throwingEffectAdapter, doc));
 
       assertExitFailure(
-        Exit.mapError(throwingEffect, (error) => error._tag),
+        Exit.match(throwingEffect, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) => Exit.failCause(Cause.map(cause, (error) => error._tag)),
+        }),
         Cause.fail("RenderError")
       );
       expectExitCause(throwingEffect, "Render adapter effect-throw failed. sync effect boom");

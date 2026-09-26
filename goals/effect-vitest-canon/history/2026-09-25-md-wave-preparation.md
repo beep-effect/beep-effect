@@ -130,3 +130,24 @@ repository-wide; no broader qualification is claimed).
 Generated Fallow boundaries add only Markdown's runtime/type allowances for
 the declared runner dependency. Both generated-file freshness and doctrine-pinned
 layer-legality checks pass. Broader cheap-gates proof is the next local gate.
+
+## Supplemental review correction: preserve complete Causes
+
+The read-only Codex review found one P2: installed rc.117 Exit.mapError selects
+the first typed failure and can discard additional defects, interruptions or
+typed failures. Thus the earlier assertion-stage claim was too broad for mixed
+Causes. Both Markdown Exit projections now use Exit.match and Cause.map, retaining
+every Cause reason before comparison with the expected single typed failure.
+Original tag expectations and Cause-message assertions remain unchanged.
+
+Focused controls reproduce three false positives in the old projection (typed
+failure combined with defect, interruption or another typed failure). The repaired
+projection rejects those three and unexpected success, and accepts the intended
+single typed failure. These are private temporary controls, not committed tests.
+Full package verification passed: audit 21.1s, docgen 7.8s. Refreshed Node/Bun
+after receipts each pass 73 tests with stable hashes; observations are 4.832s and
+2.749s, without a causal performance claim. The queued old-head full proof was
+cancelled explicitly because its inputs were superseded by this repair.
+
+The review found no other actionable issue in its bounded property/runner scope.
+It supplements, and does not replace, required Grok review or user acceptance.

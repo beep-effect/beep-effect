@@ -2343,3 +2343,12 @@ systemd user manager` before starting a job. The user manager was confirmed live
 rerunning with the documented XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS
 restored the supported detached path. A launcher diagnostic distinguishing
 missing session environment from an unavailable manager would avoid ambiguity.
+
+### Exit error projection discards mixed Cause reasons
+
+Supplemental Markdown review traced installed rc.117 Exit.mapError to first-error
+selection. Controls reproduced acceptance of expected typed failure plus a defect,
+interruption or additional failure. Cause.map preserves those reasons. Grounding
+Cause preservation in implementation and mixed-failure controls, rather than an
+API name or pure-failure example, would have prevented the overbroad assertion
+claim. The same projection pattern is being repaired in the open HTML wave.

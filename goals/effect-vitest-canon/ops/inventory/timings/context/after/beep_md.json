@@ -27,14 +27,14 @@
     "packages/foundation/modeling/md/test/ConformanceLedger.test.ts": "8fa1a701039bc3d6723fd45a3876719cf1e94fc2d76fa7b7b990bb0ba81fbc5c",
     "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts": "34646f6f00265c567384e4345c67afa0a6186151230253af2813de3f591edfa4",
     "packages/foundation/modeling/md/test/Md.conformance.test.ts": "3c39e846a73774dc338f7471765664703f5e7ad275646d00adf8b3b28f37cd0a",
-    "packages/foundation/modeling/md/test/Md.test.ts": "46c2b278d41471d645c5798e6cb3eaa9da54c632ee16046b7d8cf9822423b696",
+    "packages/foundation/modeling/md/test/Md.test.ts": "97eb357d74beaa8755437271b28339608c8cc0f0356d0e1e835bdf18c25da5d9",
     "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts": "536cb39211e9ff6d5dcbdf1d04ef631d8b21f0eb563120941e7b5c2b1a0a4e49"
   },
-  "loadBefore": [27.77490234375, 19.84912109375, 16.408203125],
+  "loadBefore": [15.46875, 24.1845703125, 24.33935546875],
   "pressureBefore": {
-    "cpu": "some avg10=0.94 avg60=1.21 avg300=0.77 total=1618224508\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.02 avg60=0.20 avg300=0.12 total=144383519\nfull avg10=0.01 avg60=0.18 avg300=0.12 total=132736176\n",
-    "io": "some avg10=0.00 avg60=0.27 avg300=2.43 total=829974018\nfull avg10=0.00 avg60=0.18 avg300=1.70 total=597987312\n"
+    "cpu": "some avg10=0.23 avg60=0.72 avg300=3.24 total=1671237526\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.12 total=148566602\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=135991702\n",
+    "io": "some avg10=0.03 avg60=0.47 avg300=0.88 total=840276107\nfull avg10=0.00 avg60=0.22 avg300=0.38 total=603201745\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -46,7 +46,7 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 6.1086293499975,
+  "wholeCommandSeconds": 4.832114650998847,
   "sourceAfter": {
     "bun.lock": "de9ac22b9203a14a1e10ed1c1dd46e4bd70474733d0e6c23da9523dd6b030b8c",
     "packages/foundation/modeling/md/package.json": "a507d823ee881cd1fadd49e37e56fbd517ae2ae166fabfcd55f0023106832854",
@@ -67,14 +67,14 @@
     "packages/foundation/modeling/md/test/ConformanceLedger.test.ts": "8fa1a701039bc3d6723fd45a3876719cf1e94fc2d76fa7b7b990bb0ba81fbc5c",
     "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts": "34646f6f00265c567384e4345c67afa0a6186151230253af2813de3f591edfa4",
     "packages/foundation/modeling/md/test/Md.conformance.test.ts": "3c39e846a73774dc338f7471765664703f5e7ad275646d00adf8b3b28f37cd0a",
-    "packages/foundation/modeling/md/test/Md.test.ts": "46c2b278d41471d645c5798e6cb3eaa9da54c632ee16046b7d8cf9822423b696",
+    "packages/foundation/modeling/md/test/Md.test.ts": "97eb357d74beaa8755437271b28339608c8cc0f0356d0e1e835bdf18c25da5d9",
     "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts": "536cb39211e9ff6d5dcbdf1d04ef631d8b21f0eb563120941e7b5c2b1a0a4e49"
   },
-  "loadAfter": [26.83154296875, 19.78515625, 16.40576171875],
+  "loadAfter": [15.11083984375, 23.96533203125, 24.267578125],
   "pressureAfter": {
-    "cpu": "some avg10=0.99 avg60=1.19 avg300=0.78 total=1618301450\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.01 avg60=0.18 avg300=0.12 total=144383901\nfull avg10=0.00 avg60=0.16 avg300=0.11 total=132736409\n",
-    "io": "some avg10=0.00 avg60=0.24 avg300=2.38 total=829977095\nfull avg10=0.00 avg60=0.16 avg300=1.66 total=597989441\n"
+    "cpu": "some avg10=0.12 avg60=0.65 avg300=3.18 total=1671268531\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.12 total=148566605\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=135991705\n",
+    "io": "some avg10=0.02 avg60=0.42 avg300=0.86 total=840285163\nfull avg10=0.00 avg60=0.20 avg300=0.37 total=603210161\n"
   },
   "sourceStable": true
 }
