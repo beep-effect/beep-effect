@@ -1,0 +1,75 @@
+# SkillOpt pilot rerun (goals/harness-evidence-ledger P2, decisions D11 + D14).
+# Cloned from beeplaw.template.yaml. Changes vs template: cosine edit budget
+# 4 -> 1 over 3 epochs, 4 rollout workers, 2 analyst workers, Opus optimizer,
+# Claude Code (opus) rollout target (D14 amended 2026-09-25: Codex quota exhausted until Oct 2)
+# (`claude -p --model opus`), codex_exec target, P5 batch/minibatch 2 over the
+# same 8 train / 4 val split, gate on the full 4-item selection set.
+# Launch recipe: docs/runbooks/skillopt-rerun.md.
+model:
+  backend: codex_exec
+  optimizer_backend: claude_chat
+  target_backend: claude_code_exec
+  optimizer: opus
+  target: opus
+  reasoning_effort: ""
+  claude_code_exec_path: claude
+  claude_code_exec_effort: medium
+  codex_exec_path: codex
+  codex_exec_sandbox: workspace-write
+  codex_exec_profile: ""
+  codex_exec_full_auto: false
+  codex_exec_reasoning_effort: low
+  codex_exec_use_sdk: auto
+  codex_exec_network_access: false
+  codex_exec_web_search: false
+  codex_exec_approval_policy: never
+  codex_trace_to_optimizer: false
+
+train:
+  num_epochs: 3
+  train_size: 8
+  batch_size: 2
+  accumulation: 1
+  seed: 7
+
+gradient:
+  minibatch_size: 2
+  merge_batch_size: 1
+  analyst_workers: 2
+  failure_only: false
+  max_analyst_rounds: 1
+
+optimizer:
+  learning_rate: 4
+  min_learning_rate: 1
+  lr_scheduler: cosine
+  lr_control_mode: fixed
+  skill_update_mode: patch
+  use_slow_update: false
+  slow_update_samples: 1
+  use_meta_skill: false
+  use_skill_aware_reflection: false
+
+evaluation:
+  use_gate: true
+  gate_metric: soft
+  gate_mixed_weight: 0.5
+  sel_env_num: 4
+  test_env_num: 0
+  eval_test: false
+
+env:
+  name: beeplaw
+  skill_init: .claude/skills/schema-first-development/SKILL.md
+  out_root: goals/harness-evidence-ledger/history/p2-rerun/out
+  split_mode: split_dir
+  split_dir: goals/skillopt-training-pilot/corpus/splits
+  repo_root: .
+  stub_scorer: false
+  max_turns: 1
+  exec_timeout: 1500
+  score_timeout: 600
+  task_timeout: 1800
+  workers: 4
+  limit: 0
+  max_completion_tokens: 4096

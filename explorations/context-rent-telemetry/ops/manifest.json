@@ -6,15 +6,15 @@
     "status": "parked",
     "stage": "capture",
     "openQuestions": [
-      "Resume when knowledge-surface-automation Workstream C ships pruning-proposal machinery; decide the A/B guidance-degraded-session question at unpark."
+      "Resume when goals/harness-evidence-ledger ships `bun run beep harness-ledger prune-proposals`; decide the A/B guidance-degraded-session question at unpark."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/harness-evidence-ledger"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-31",
-    "updated": "2026-08-13"
+    "updated": "2026-09-25"
   }
 }

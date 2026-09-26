@@ -2,11 +2,13 @@
 
 import { Model, ModelInvariantError, VersionConflictError } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
-import { describe, expect, it } from "@effect/vitest";
+import { fcRuns } from "@beep/fc-runs";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { findFirst, head, sort } from "effect/Array";
-import { catchTag, exit, fail as failEffect, fnUntraced, runSync, succeed } from "effect/Effect";
+import { catchTag, exit, fail as failEffect, fnUntraced, succeed } from "effect/Effect";
 import { equals } from "effect/Equal";
 import { isFailure } from "effect/Exit";
 import { flatMap, fromUndefinedOr, getOrThrowWith, getOrUndefined, none } from "effect/Option";
@@ -16,6 +18,7 @@ import {
   Array as ArraySchema,
   Boolean as BooleanSchema,
   decodeEffect,
+  encodeEffect,
   FiniteFromString,
   is,
   isBetweenLength,
@@ -171,6 +174,25 @@ describe("PostgreSQL name invariants", () => {
 });
 
 describe("PostgreSQL Wave E value and structure invariants", () => {
+  it.effect.prop(
+    "round-trips schema-derived PostgreSQL array insert variants",
+    [ArrayRecord.insert],
+    ([value]) =>
+      fnUntraced(function* () {
+        const encoded = yield* encodeEffect(ArrayRecord.insert)(value);
+        const decoded = yield* decodeEffect(ArrayRecord.insert)(encoded);
+        expect(decoded).toEqual(value);
+        expect(yield* encodeEffect(ArrayRecord.insert)(decoded)).toEqual(encoded);
+        expect(is(ArrayRecord.insert)(decoded)).toBe(true);
+        // The database supplies pg.default; the insert codec preserves omission.
+        const omitted = yield* makeEffect(ArrayRecord.insert)({ labels: value.labels });
+        expect(omitted.matrix).toBeUndefined();
+        expect((yield* encodeEffect(ArrayRecord.insert)(omitted)).matrix).toBeUndefined();
+        expect(omitted.labels).toEqual(value.labels);
+      })(),
+    { arbitrary: fcRuns(100) }
+  );
+
   it("injects closed scalar domains and multidimensional rectangularity", () => {
     expect(is(pgBoundedInteger.schema)(2_147_483_648)).toBe(false);
     expect(is(pgBoundedSmallint.schema)(32_768)).toBe(false);
@@ -302,13 +324,14 @@ describe("toPgTable", () => {
 });
 
 describe("variant truth table", () => {
-  it("keeps identity row locators in update and omits generated expressions", () => {
-    expect(Object.keys(User.insert.fields)).not.toContain("id");
-    expect(Object.keys(User.update.fields)).toContain("id");
-    expect(Object.keys(User.insert.fields)).not.toContain("searchName");
-    expect(Object.keys(User.update.fields)).not.toContain("searchName");
-    const insert = runSync(
-      makeEffect(User.insert)({
+  it.effect(
+    "keeps identity row locators in update and omits generated expressions",
+    fnUntraced(function* () {
+      expect(Object.keys(User.insert.fields)).not.toContain("id");
+      expect(Object.keys(User.update.fields)).toContain("id");
+      expect(Object.keys(User.insert.fields)).not.toContain("searchName");
+      expect(Object.keys(User.update.fields)).not.toContain("searchName");
+      const insert = yield* makeEffect(User.insert)({
         orgId: OrganizationId.make(1),
         email: "a@example.com",
         name: "A",
@@ -317,21 +340,19 @@ describe("variant truth table", () => {
         settings: { theme: "dark" },
         active: true,
         rowVersion: 1,
-      })
-    );
-    const update = runSync(
-      makeEffect(User.update)({
+      });
+      const update = yield* makeEffect(User.update)({
         id: UserId.make(1),
         rowVersion: 1,
-      })
-    );
-    const { rowVersion: _rowVersion, ...withoutVersion } = update;
-    expect(is(User.insert)(insert)).toBe(true);
-    expect(is(User.update)(update)).toBe(true);
-    expect(is(User.update)(withoutVersion)).toBe(false);
-    expect(is(User.update)({})).toBe(false);
-    expect(Object.keys(User.jsonCreate.fields)).not.toContain("searchName");
-  });
+      });
+      const { rowVersion: _rowVersion, ...withoutVersion } = update;
+      expect(is(User.insert)(insert)).toBe(true);
+      expect(is(User.update)(update)).toBe(true);
+      expect(is(User.update)(withoutVersion)).toBe(false);
+      expect(is(User.update)({})).toBe(false);
+      expect(Object.keys(User.jsonCreate.fields)).not.toContain("searchName");
+    })
+  );
 
   it("keeps identity-by-default present in update and optional in insert", () => {
     expect(Object.keys(Organization.insert.fields)).toContain("id");
@@ -373,19 +394,20 @@ describe("kit write strategies", () => {
     expect(AuditedRecord.sql.columns.updatedAt.column.kind).toBe("timestamp");
   });
 
-  it("constructs insert payloads through Overrideable constructor defaults", () => {
-    const constructed = runSync(
-      makeEffect(AuditedRecord.insert)({
+  it.effect(
+    "constructs insert payloads through Overrideable constructor defaults",
+    fnUntraced(function* () {
+      const constructed = yield* makeEffect(AuditedRecord.insert)({
         name: "Round Three",
         status: "draft",
         source: "api",
         search: "round three",
-      })
-    );
-    expect(constructed.createdAt).toBeDefined();
-    expect(constructed.updatedAt).toBeDefined();
-    expect(hasProperty(constructed, "rowVersion")).toBe(false);
-  });
+      });
+      expect(constructed.createdAt).toBeDefined();
+      expect(constructed.updatedAt).toBeDefined();
+      expect(hasProperty(constructed, "rowVersion")).toBe(false);
+    })
+  );
 
   it("rejects kit default collisions at compile time and runtime", () => {
     expect(_kitDefaultCollision).toThrow("kit default column");
@@ -692,29 +714,29 @@ describe("schema corroboration and invariants", () => {
 });
 
 describe("tagged errors", () => {
-  it("supports structural equality, make construction, and catchTag", () => {
-    const left = ModelInvariantError.make({
-      message: "invalid field",
-      fieldName: "value",
-    });
-    const right = ModelInvariantError.make({
-      message: "invalid field",
-      fieldName: "value",
-    });
-    expect(equals(left, right)).toBe(true);
+  it.effect(
+    "supports structural equality, make construction, and catchTag",
+    fnUntraced(function* () {
+      const left = ModelInvariantError.make({
+        message: "invalid field",
+        fieldName: "value",
+      });
+      const right = ModelInvariantError.make({
+        message: "invalid field",
+        fieldName: "value",
+      });
+      expect(equals(left, right)).toBe(true);
 
-    const recovered = failEffect(
-      VersionConflictError.make({
-        table: "user",
-        id: 1,
-        expectedVersion: 2,
-      })
-    ).pipe(
-      catchTag("VersionConflictError", () => succeed("recovered")),
-      runSync
-    );
-    expect(recovered).toBe("recovered");
-  });
+      const recovered = yield* failEffect(
+        VersionConflictError.make({
+          table: "user",
+          id: 1,
+          expectedVersion: 2,
+        })
+      ).pipe(catchTag("VersionConflictError", () => succeed("recovered")));
+      expect(recovered).toBe("recovered");
+    })
+  );
 });
 
 describe("varchar authoring modes", () => {
