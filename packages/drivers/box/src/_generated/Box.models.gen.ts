@@ -147,12 +147,15 @@ export const BoxMethodName = LiteralKit([
   "chunkedUploads.createFileUploadSessionPlanByUrl",
   "chunkedUploads.deleteFileUploadSessionById",
   "chunkedUploads.deleteFileUploadSessionByUrl",
+  "chunkedUploads.getCachedUploadPart",
   "chunkedUploads.getFileUploadSessionById",
   "chunkedUploads.getFileUploadSessionByUrl",
   "chunkedUploads.getFileUploadSessionParts",
   "chunkedUploads.getFileUploadSessionPartsByUrl",
   "chunkedUploads.reducer",
+  "chunkedUploads.reducerForFileVersion",
   "chunkedUploads.uploadBigFile",
+  "chunkedUploads.uploadBigFileVersion",
   "chunkedUploads.uploadFilePart",
   "chunkedUploads.uploadFilePartByUrl",
   "downloads.downloadFile",
@@ -13863,6 +13866,32 @@ export class ChunkedUploadsDeleteFileUploadSessionByUrlPayload extends S.Class<C
 ) {}
 
 /**
+ * Payload for Box SDK method chunkedUploads.getCachedUploadPart.
+ *
+ * **Example** (Inspect the ChunkedUploadsGetCachedUploadPartPayload schema)
+ *
+ * ```ts
+ * import { ChunkedUploadsGetCachedUploadPartPayload } from "@beep/box"
+ *
+ * console.log(ChunkedUploadsGetCachedUploadPartPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ChunkedUploadsGetCachedUploadPartPayload extends S.Class<ChunkedUploadsGetCachedUploadPartPayload>($I`ChunkedUploadsGetCachedUploadPartPayload`)(
+  {
+    planUrl: S.String,
+    offset: S.Finite,
+    size: S.Finite,
+    sha512: S.String,
+  },
+  $I.annote("ChunkedUploadsGetCachedUploadPartPayload", {
+    description: "Payload for Box SDK method chunkedUploads.getCachedUploadPart."
+  })
+) {}
+
+/**
  * Payload for Box SDK method chunkedUploads.getFileUploadSessionById.
  *
  * **Example** (Inspect the ChunkedUploadsGetFileUploadSessionByIdPayload schema)
@@ -15673,6 +15702,40 @@ export const ChunkedUploadsDeleteFileUploadSessionByUrlSuccess = S.Undefined.pip
  * @since 0.0.0
  */
 export type ChunkedUploadsDeleteFileUploadSessionByUrlSuccess = typeof ChunkedUploadsDeleteFileUploadSessionByUrlSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method chunkedUploads.getCachedUploadPart.
+ *
+ * **Example** (Inspect the ChunkedUploadsGetCachedUploadPartSuccess schema)
+ *
+ * ```ts
+ * import { ChunkedUploadsGetCachedUploadPartSuccess } from "@beep/box"
+ *
+ * console.log(ChunkedUploadsGetCachedUploadPartSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChunkedUploadsGetCachedUploadPartSuccess = S.suspend(() => UploadPart).pipe(S.UndefinedOr, $I.annoteSchema("ChunkedUploadsGetCachedUploadPartSuccess", {
+    description: "Decoded success value for Box SDK method chunkedUploads.getCachedUploadPart."
+  }));
+
+/**
+ * Type for {@link ChunkedUploadsGetCachedUploadPartSuccess}.
+ *
+ * **Example** (Reference the ChunkedUploadsGetCachedUploadPartSuccess type)
+ *
+ * ```ts
+ * import type { ChunkedUploadsGetCachedUploadPartSuccess } from "@beep/box"
+ *
+ * type Value = ChunkedUploadsGetCachedUploadPartSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ChunkedUploadsGetCachedUploadPartSuccess = typeof ChunkedUploadsGetCachedUploadPartSuccess.Type;
 
 /**
  * Decoded success value for Box SDK method chunkedUploads.getFileUploadSessionById.
