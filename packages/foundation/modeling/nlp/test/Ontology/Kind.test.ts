@@ -1,6 +1,7 @@
 import * as Kind from "@beep/nlp/Ontology/Kind";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -65,17 +66,18 @@ describe("Containment poset", () => {
     expect(Kind.KindContainment.containment).toEqual(Kind.KindContainment.make({}));
   });
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived containment records",
     [KindContainmentArbitrary],
-    ([containment]) => {
-      const encoded = Effect.runSync(encodeKindKindContainment(containment));
-      const decoded = Effect.runSync(decodeKindKindContainment(encoded));
+    ([containment]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeKindKindContainment(containment);
+        const decoded = yield* decodeKindKindContainment(encoded);
 
-      expect(decoded).toEqual(Kind.KindContainment.make({ ...containment }));
+        expect(decoded).toEqual(Kind.KindContainment.make({ ...containment }));
 
-      return true;
-    },
+        return true;
+      }),
     { arbitrary: fcRuns(100) }
   );
 });

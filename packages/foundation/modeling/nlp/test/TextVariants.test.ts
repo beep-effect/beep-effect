@@ -2,7 +2,8 @@ import * as IdentifierText from "@beep/nlp/IdentifierText";
 import * as PathText from "@beep/nlp/PathText";
 import * as QueryText from "@beep/nlp/QueryText";
 import * as VariantText from "@beep/nlp/VariantText";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 

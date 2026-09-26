@@ -1,7 +1,8 @@
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertEquals, assertExitFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -117,21 +118,18 @@ describe("AnnotatedDocument round-trip", () => {
     })
   );
 
-  it.prop(
+  it.effect.prop(
     "schema-derived documents encode and decode through the production contract",
     [AnnotatedDocumentArbitrary],
-    ([document]) => {
-      const decoded = Effect.runSync(
-        Effect.gen(function* () {
-          const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
-          return yield* decodeContractAnnotatedDocument(encoded);
-        })
-      );
+    ([document]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
+        const decoded = yield* decodeContractAnnotatedDocument(encoded);
 
-      expect(decoded).toEqual(document);
+        expect(decoded).toEqual(document);
 
-      return true;
-    },
+        return true;
+      }),
     { arbitrary: fcRuns(25) }
   );
 });

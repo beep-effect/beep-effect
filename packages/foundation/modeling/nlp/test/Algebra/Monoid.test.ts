@@ -1,6 +1,7 @@
 import * as Monoid from "@beep/nlp/Algebra/Monoid";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 

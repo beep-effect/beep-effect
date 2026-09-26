@@ -1,21 +1,20 @@
 {
   "command": [
     "bunx",
-    "--bun",
     "vitest",
     "run",
     "--reporter=json",
-    "--outputFile=<private-output>/nlp-before-bun.json"
+    "--outputFile=<private-output>"
   ],
-  "phase": "before-bun",
+  "phase": "final-specifier-node",
   "sourceBefore": [
     {
       "file": "bun.lock",
-      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+      "sha256": "629c1462b6e6760406cc1d2e9e92af1ed2b293c1a80e8768df9d934135bcd60a"
     },
     {
       "file": "packages/foundation/modeling/nlp/package.json",
-      "sha256": "31f25b905240ed1ae96b97d0f75f96edf15b1e7754470e21ad284c9ccb187606"
+      "sha256": "8ee6dc5b33c174cbb371cfdeda39b24026052bfacc025297112c7cbad487f875"
     },
     {
       "file": "packages/foundation/modeling/nlp/src/IdentifierText.ts",
@@ -135,50 +134,50 @@
     },
     {
       "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
-      "sha256": "1d922383aaffe466da7188675b00d7d8d29991783ac31169a0a9972bf5524d15"
+      "sha256": "9f9546c2464fce744f9524abd199aaf2af05d06b059b803b9029734cea301f12"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
-      "sha256": "ed81a2021958863d5e30465250982c825b3794052db7d606e1befd77b0d32de7"
+      "sha256": "26659df409b913550898a4a3f83cde4685b3bd600fa9d253726ab3104ebb6edc"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
-      "sha256": "d24546f1cdd72222ae8af142556a567050be4085dc4c3aa35e25be78e52ef7cb"
+      "sha256": "9f0717ae62f3e8c24d0524c59e0bed1e5f60999f0b75c45b139008240efbfd63"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
-      "sha256": "408b1d94c3aad9c7aea98b373f26705b15c9087a222fac24e877a73c52916a8c"
+      "sha256": "a9e726868e334454d5fa2b010482234683517891868e45518aafd0eadaf62788"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
-      "sha256": "96b748a41087d32d23c67f9ae63d6e3c7e78f4fcf416afea4536cf477eee6714"
+      "sha256": "0edb391bc580704899c26731b3b6bdeb39f471292a4f312547aa5bc09c2db51f"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
-      "sha256": "0cbc39036009b042973a47ce24079ebb92a15ab9106a9c4be53a3b126c3c4f80"
+      "sha256": "ef29f17df474e20d7246bac5b99a279db3d6e6e0a4f1ee028a882f6cf498c9c3"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
-      "sha256": "e1ebf32014be6f79a9d46cd97c813aea8892899b7c6af1aaa4cbf8f2e5f5769a"
+      "sha256": "4a91161b3cdb8d242223dc37f46a83046eb36180ed3f70791f17f074c44aae73"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
-      "sha256": "2baad22502fae8709aaf2b9a7d338a190ce47fc2545526aae21c45a60efc0e0e"
+      "sha256": "5fa9dce0a5ff18822f6030e019a9dd47b3211b5247b90c1295a09abcc6cb57fd"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
-      "sha256": "0a5f5b0ea4596c53967c38a0d6f88fcc2d9c647e247f3a493a83c833e0aabbed"
+      "sha256": "77e703c9d149e6c7cb4ec4e5f274517704954cdb2d3657e15b65d134a4170cb3"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
-      "sha256": "922007c5277a1a6adc4ff9b5c36c459194915d81e31317de875774bf1ca3ea4b"
+      "sha256": "4579d0edf7bbf8f9c4c3d94095bbc743c71ee6f687c2eaf9dada19a5d49b2775"
     }
   ],
-  "loadBefore": [11.55517578125, 19.4453125, 20.77685546875],
+  "loadBefore": [7.7763671875, 8.92236328125, 9.748046875],
   "pressureBefore": {
-    "cpu": "some avg10=6.94 avg60=1.52 avg300=2.37 total=1737206557\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.03 total=152797321\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=139699330\n",
-    "io": "some avg10=0.00 avg60=0.08 avg300=0.25 total=849641099\nfull avg10=0.00 avg60=0.07 avg300=0.06 total=608446603\n"
+    "cpu": "some avg10=0.07 avg60=0.15 avg300=0.27 total=1905319443\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=166755962\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=150759985\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.07 total=879890242\nfull avg10=0.00 avg60=0.01 avg300=0.03 total=624468719\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -190,15 +189,15 @@
     "RLIMIT_CPU": [-1, -1]
   },
   "exit": 0,
-  "wholeCommandSeconds": 3.077367795005557,
+  "wholeCommandSeconds": 4.186463113001082,
   "sourceAfter": [
     {
       "file": "bun.lock",
-      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+      "sha256": "629c1462b6e6760406cc1d2e9e92af1ed2b293c1a80e8768df9d934135bcd60a"
     },
     {
       "file": "packages/foundation/modeling/nlp/package.json",
-      "sha256": "31f25b905240ed1ae96b97d0f75f96edf15b1e7754470e21ad284c9ccb187606"
+      "sha256": "8ee6dc5b33c174cbb371cfdeda39b24026052bfacc025297112c7cbad487f875"
     },
     {
       "file": "packages/foundation/modeling/nlp/src/IdentifierText.ts",
@@ -318,51 +317,50 @@
     },
     {
       "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
-      "sha256": "1d922383aaffe466da7188675b00d7d8d29991783ac31169a0a9972bf5524d15"
+      "sha256": "9f9546c2464fce744f9524abd199aaf2af05d06b059b803b9029734cea301f12"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
-      "sha256": "ed81a2021958863d5e30465250982c825b3794052db7d606e1befd77b0d32de7"
+      "sha256": "26659df409b913550898a4a3f83cde4685b3bd600fa9d253726ab3104ebb6edc"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
-      "sha256": "d24546f1cdd72222ae8af142556a567050be4085dc4c3aa35e25be78e52ef7cb"
+      "sha256": "9f0717ae62f3e8c24d0524c59e0bed1e5f60999f0b75c45b139008240efbfd63"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
-      "sha256": "408b1d94c3aad9c7aea98b373f26705b15c9087a222fac24e877a73c52916a8c"
+      "sha256": "a9e726868e334454d5fa2b010482234683517891868e45518aafd0eadaf62788"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
-      "sha256": "96b748a41087d32d23c67f9ae63d6e3c7e78f4fcf416afea4536cf477eee6714"
+      "sha256": "0edb391bc580704899c26731b3b6bdeb39f471292a4f312547aa5bc09c2db51f"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
-      "sha256": "0cbc39036009b042973a47ce24079ebb92a15ab9106a9c4be53a3b126c3c4f80"
+      "sha256": "ef29f17df474e20d7246bac5b99a279db3d6e6e0a4f1ee028a882f6cf498c9c3"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
-      "sha256": "e1ebf32014be6f79a9d46cd97c813aea8892899b7c6af1aaa4cbf8f2e5f5769a"
+      "sha256": "4a91161b3cdb8d242223dc37f46a83046eb36180ed3f70791f17f074c44aae73"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
-      "sha256": "2baad22502fae8709aaf2b9a7d338a190ce47fc2545526aae21c45a60efc0e0e"
+      "sha256": "5fa9dce0a5ff18822f6030e019a9dd47b3211b5247b90c1295a09abcc6cb57fd"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
-      "sha256": "0a5f5b0ea4596c53967c38a0d6f88fcc2d9c647e247f3a493a83c833e0aabbed"
+      "sha256": "77e703c9d149e6c7cb4ec4e5f274517704954cdb2d3657e15b65d134a4170cb3"
     },
     {
       "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
-      "sha256": "922007c5277a1a6adc4ff9b5c36c459194915d81e31317de875774bf1ca3ea4b"
+      "sha256": "4579d0edf7bbf8f9c4c3d94095bbc743c71ee6f687c2eaf9dada19a5d49b2775"
     }
   ],
-  "loadAfter": [19.7587890625, 21.01513671875, 21.27783203125],
+  "loadAfter": [8.67529296875, 9.08984375, 9.7978515625],
   "pressureAfter": {
-    "cpu": "some avg10=7.21 avg60=1.96 avg300=2.46 total=1737419397\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.03 total=152800015\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=139701548\n",
-    "io": "some avg10=0.00 avg60=0.07 avg300=0.24 total=849644383\nfull avg10=0.00 avg60=0.07 avg300=0.06 total=608447951\n"
+    "cpu": "some avg10=0.04 avg60=0.14 avg300=0.27 total=1905345170\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=166755981\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=150760004\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.07 total=879890854\nfull avg10=0.00 avg60=0.01 avg300=0.03 total=624469182\n"
   },
-  "sourceStable": true,
-  "commandRedaction": "Only the private output directory is replaced with <private-output>; output basename and remaining arguments are preserved."
+  "sourceStable": true
 }

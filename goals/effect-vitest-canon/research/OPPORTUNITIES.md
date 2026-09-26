@@ -2362,3 +2362,20 @@ Graph.edges/Graph.values/Array.fromIterable expression with
 missedPipeableOpportunity. The equivalent graph.pipe(...) sequence passed.
 Use pipe for multi-stage walker extraction when constructing future graph
 assertions; this avoids a package-audit round trip without changing coverage.
+
+## 2026-09-26: Property migration compiler feedback
+
+NLP package audits caught a nested schema/arbitrary call with
+missedPipeableOpportunity and a lifted nested generator with
+nestedEffectGenYield. Use the equivalent pipe form for schema generation and
+flatten adjacent sequential generators while preserving evaluation order.
+Both repairs passed full package verification; no lint suppression was added.
+
+## 2026-09-26: Commit signing socket unavailable
+
+After NLP property verification and all commit hooks passed, git commit failed
+with "1Password: Could not connect to socket" and "failed to write commit object".
+The prescribed op-doctor passed its service-account, path, and mode checks;
+one retry failed at the same signing step. Verified edits remain staged with
+a private patch backup. Agent secret-backend health does not prove signing
+socket health. Signing availability should be checked before long save cycles.

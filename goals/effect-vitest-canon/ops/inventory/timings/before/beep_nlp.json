@@ -1,0 +1,2041 @@
+{
+  "numTotalTestSuites": 71,
+  "numPassedTestSuites": 71,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 168,
+  "numPassedTests": 168,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790394014758,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Core models"],
+          "fullName": "Core models keeps constructor-defaulted optional fields absent in encoded core wire shapes",
+          "status": "passed",
+          "title": "keeps constructor-defaulted optional fields absent in encoded core wire shapes",
+          "duration": 161.69573600000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core models"],
+          "fullName": "Core models round-trips schema-derived core model values",
+          "status": "passed",
+          "title": "round-trips schema-derived core model values",
+          "duration": 161.47885199999973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core models"],
+          "fullName": "Core models returns tokens whose character spans overlap the requested range",
+          "status": "passed",
+          "title": "returns tokens whose character spans overlap the requested range",
+          "duration": 161.46188600000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core models"],
+          "fullName": "Core models uses document token indices for sentence range lookups",
+          "status": "passed",
+          "title": "uses document token indices for sentence range lookups",
+          "duration": 161.45122000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core models"],
+          "fullName": "Core models rebuilds filtered documents with consistent sentence and index lookups",
+          "status": "passed",
+          "title": "rebuilds filtered documents with consistent sentence and index lookups",
+          "duration": 161.44251600000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018803,
+      "endTime": 1790394018965.4788,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/CoreModels.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern creates element builders with optional values",
+          "status": "passed",
+          "title": "creates element builders with optional values",
+          "duration": 5.418562999999722,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern supports pattern construction and inspection helpers",
+          "status": "passed",
+          "title": "supports pattern construction and inspection helpers",
+          "duration": 5.165723999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern keeps absent pattern marks absent in the encoded wire shape",
+          "status": "passed",
+          "title": "keeps absent pattern marks absent in the encoded wire shape",
+          "duration": 5.146623999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern supports structural transforms",
+          "status": "passed",
+          "title": "supports structural transforms",
+          "duration": 5.137690999999904,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern supports patch-based literal generalization",
+          "status": "passed",
+          "title": "supports patch-based literal generalization",
+          "duration": 5.127275000000282,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern encodes and decodes element schemas",
+          "status": "passed",
+          "title": "encodes and decodes element schemas",
+          "duration": 27.17643500000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern round-trips schema-derived pattern values",
+          "status": "passed",
+          "title": "round-trips schema-derived pattern values",
+          "duration": 27.124655000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern parses mixed pattern strings in order",
+          "status": "passed",
+          "title": "parses mixed pattern strings in order",
+          "duration": 27.108009999999922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern rejects all-empty pattern options at the schema boundary",
+          "status": "passed",
+          "title": "rejects all-empty pattern options at the schema boundary",
+          "duration": 27.108389999999872,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern rejects reserved literal choices that would collide with typed bracket syntax",
+          "status": "passed",
+          "title": "rejects reserved literal choices that would collide with typed bracket syntax",
+          "duration": 27.087367000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Core Pattern"],
+          "fullName": "Core Pattern supports Pattern schema helpers",
+          "status": "passed",
+          "title": "supports Pattern schema helpers",
+          "duration": 0.2592789999998786,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018816,
+      "endTime": 1790394018848.2593,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/PatternCore.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers normalizes question and phrase text deterministically",
+          "status": "passed",
+          "title": "normalizes question and phrase text deterministically",
+          "duration": 2.9072459999999865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers returns none for missing or empty backtick captures",
+          "status": "passed",
+          "title": "returns none for missing or empty backtick captures",
+          "duration": 2.669210000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers generates identifier variants for spaced and camelCase phrases",
+          "status": "passed",
+          "title": "generates identifier variants for spaced and camelCase phrases",
+          "duration": 2.653335000000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers tokenizes mixed identifier styles and drops punctuation-only inputs",
+          "status": "passed",
+          "title": "tokenizes mixed identifier styles and drops punctuation-only inputs",
+          "duration": 2.6443610000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers generates path and module variants with basename and extensionless forms",
+          "status": "passed",
+          "title": "generates path and module variants with basename and extensionless forms",
+          "duration": 2.6371299999999565,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers normalizes windows-style path phrases and preserves bounded single-fragment modules",
+          "status": "passed",
+          "title": "normalizes windows-style path phrases and preserves bounded single-fragment modules",
+          "duration": 0.24155200000001287,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/nlp deterministic helpers"],
+          "fullName": "@beep/nlp deterministic helpers deduplicates variants while preserving the first occurrence",
+          "status": "passed",
+          "title": "deduplicates variants while preserving the first occurrence",
+          "duration": 0.21013400000003912,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394015243,
+      "endTime": 1790394015246.2415,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/TextVariants.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["StringConcat Monoid Laws"],
+          "fullName": "StringConcat Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 7.251895999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringConcat Monoid Laws"],
+          "fullName": "StringConcat Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 7.067502000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringConcat Monoid Laws"],
+          "fullName": "StringConcat Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 7.053380000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringJoin(' ') Monoid Laws"],
+          "fullName": "StringJoin(' ') Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 7.042402999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringJoin(' ') Monoid Laws"],
+          "fullName": "StringJoin(' ') Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 7.02861200000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringJoin(' ') Monoid Laws"],
+          "fullName": "StringJoin(' ') Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.4470170000000167,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringJoin(', ') Monoid Laws"],
+          "fullName": "StringJoin(', ') Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.407295999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringJoin(', ') Monoid Laws"],
+          "fullName": "StringJoin(', ') Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 3.3894789999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["StringJoin(', ') Monoid Laws"],
+          "fullName": "StringJoin(', ') Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.383248999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberSum Monoid Laws"],
+          "fullName": "NumberSum Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.3719219999999837,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberSum Monoid Laws"],
+          "fullName": "NumberSum Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.5647689999999557,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberSum Monoid Laws"],
+          "fullName": "NumberSum Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 1.534832999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberProduct Monoid Laws"],
+          "fullName": "NumberProduct Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 1.528363000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberProduct Monoid Laws"],
+          "fullName": "NumberProduct Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.5239369999999894,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberProduct Monoid Laws"],
+          "fullName": "NumberProduct Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 1.520420999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberMax Monoid Laws"],
+          "fullName": "NumberMax Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 1.2562650000000417,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberMax Monoid Laws"],
+          "fullName": "NumberMax Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.2412709999999834,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberMax Monoid Laws"],
+          "fullName": "NumberMax Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 1.237054999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberMin Monoid Laws"],
+          "fullName": "NumberMin Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 1.2325380000000337,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberMin Monoid Laws"],
+          "fullName": "NumberMin Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.22900199999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NumberMin Monoid Laws"],
+          "fullName": "NumberMin Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.2952740000000063,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ArrayConcat<number> Monoid Laws"],
+          "fullName": "ArrayConcat<number> Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.2833949999999845,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ArrayConcat<number> Monoid Laws"],
+          "fullName": "ArrayConcat<number> Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 3.278658000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ArrayConcat<number> Monoid Laws"],
+          "fullName": "ArrayConcat<number> Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.2740210000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BooleanAll Monoid Laws"],
+          "fullName": "BooleanAll Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.2704350000000204,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BooleanAll Monoid Laws"],
+          "fullName": "BooleanAll Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.0759869999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BooleanAll Monoid Laws"],
+          "fullName": "BooleanAll Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 1.0578479999999786,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BooleanAny Monoid Laws"],
+          "fullName": "BooleanAny Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 1.0515890000000354,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BooleanAny Monoid Laws"],
+          "fullName": "BooleanAny Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.0470920000000206,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["BooleanAny Monoid Laws"],
+          "fullName": "BooleanAny Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 1.0434470000000147,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Product Monoid Laws",
+            "Product(NumberSum, StringConcat) Monoid Laws"
+          ],
+          "fullName": "Product Monoid Laws Product(NumberSum, StringConcat) Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.3718920000000026,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Product Monoid Laws",
+            "Product(NumberSum, StringConcat) Monoid Laws"
+          ],
+          "fullName": "Product Monoid Laws Product(NumberSum, StringConcat) Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 3.359593000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Product Monoid Laws",
+            "Product(NumberSum, StringConcat) Monoid Laws"
+          ],
+          "fullName": "Product Monoid Laws Product(NumberSum, StringConcat) Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.355686999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Endo<number> Monoid Laws",
+            "Endo<number> Monoid Laws"
+          ],
+          "fullName": "Endo<number> Monoid Laws Endo<number> Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.3479749999999626,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Endo<number> Monoid Laws",
+            "Endo<number> Monoid Laws"
+          ],
+          "fullName": "Endo<number> Monoid Laws Endo<number> Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 3.9821110000000317,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Endo<number> Monoid Laws",
+            "Endo<number> Monoid Laws"
+          ],
+          "fullName": "Endo<number> Monoid Laws Endo<number> Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.9654760000000238,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dual Monoid"],
+          "fullName": "Dual Monoid reverses combination order",
+          "status": "passed",
+          "title": "reverses combination order",
+          "duration": 3.3457609999999818,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dual Monoid", "Dual(StringConcat) Monoid Laws"],
+          "fullName": "Dual Monoid Dual(StringConcat) Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 3.960388000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dual Monoid", "Dual(StringConcat) Monoid Laws"],
+          "fullName": "Dual Monoid Dual(StringConcat) Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 3.9540080000000444,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dual Monoid", "Dual(StringConcat) Monoid Laws"],
+          "fullName": "Dual Monoid Dual(StringConcat) Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 3.9506130000000326,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["VectorAdd Monoid"],
+          "fullName": "VectorAdd Monoid has the zero vector as identity",
+          "status": "passed",
+          "title": "has the zero vector as identity",
+          "duration": 0.5948060000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["VectorAdd Monoid"],
+          "fullName": "VectorAdd Monoid adds vectors element-wise",
+          "status": "passed",
+          "title": "adds vectors element-wise",
+          "duration": 0.5736929999999916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["VectorAdd Monoid", "VectorAdd(3) Monoid Laws"],
+          "fullName": "VectorAdd Monoid VectorAdd(3) Monoid Laws satisfies left identity: empty ⊕ x = x",
+          "status": "passed",
+          "title": "satisfies left identity: empty ⊕ x = x",
+          "duration": 1.7761849999999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["VectorAdd Monoid", "VectorAdd(3) Monoid Laws"],
+          "fullName": "VectorAdd Monoid VectorAdd(3) Monoid Laws satisfies right identity: x ⊕ empty = x",
+          "status": "passed",
+          "title": "satisfies right identity: x ⊕ empty = x",
+          "duration": 1.7730000000000246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["VectorAdd Monoid", "VectorAdd(3) Monoid Laws"],
+          "fullName": "VectorAdd Monoid VectorAdd(3) Monoid Laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "status": "passed",
+          "title": "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+          "duration": 1.7693649999999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monoid.fold and combineAll"],
+          "fullName": "Monoid.fold and combineAll folds an empty array to the identity",
+          "status": "passed",
+          "title": "folds an empty array to the identity",
+          "duration": 0.5694969999999557,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monoid.fold and combineAll"],
+          "fullName": "Monoid.fold and combineAll folds multiple elements correctly",
+          "status": "passed",
+          "title": "folds multiple elements correctly",
+          "duration": 0.5661210000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monoid.fold and combineAll"],
+          "fullName": "Monoid.fold and combineAll joins strings via fold",
+          "status": "passed",
+          "title": "joins strings via fold",
+          "duration": 0.5629169999999704,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monoid.fold and combineAll"],
+          "fullName": "Monoid.fold and combineAll combineAll combines all elements",
+          "status": "passed",
+          "title": "combineAll combines all elements",
+          "duration": 1.7929509999999595,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monoid.fold and combineAll"],
+          "fullName": "Monoid.fold and combineAll combineAll handles the empty array",
+          "status": "passed",
+          "title": "combineAll handles the empty array",
+          "duration": 1.7752530000000206,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394015216,
+      "endTime": 1790394015243.793,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Token Monoids", "TokenConcat Monoid Laws"],
+          "fullName": "Token Monoids TokenConcat Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 24.83031200000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Token Monoids", "TokenConcat Monoid Laws"],
+          "fullName": "Token Monoids TokenConcat Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 24.816220000000158,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Token Monoids", "TokenConcat Monoid Laws"],
+          "fullName": "Token Monoids TokenConcat Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 24.80571400000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Token Monoids",
+            "TokenBagOfWords",
+            "TokenBagOfWords Monoid Laws"
+          ],
+          "fullName": "Token Monoids TokenBagOfWords TokenBagOfWords Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 4.421006999999918,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Token Monoids",
+            "TokenBagOfWords",
+            "TokenBagOfWords Monoid Laws"
+          ],
+          "fullName": "Token Monoids TokenBagOfWords TokenBagOfWords Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 10.563915999999608,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Token Monoids",
+            "TokenBagOfWords",
+            "TokenBagOfWords Monoid Laws"
+          ],
+          "fullName": "Token Monoids TokenBagOfWords TokenBagOfWords Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 10.535691999999926,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Token Monoids",
+            "TokenSetUnion",
+            "TokenSetUnion Monoid Laws"
+          ],
+          "fullName": "Token Monoids TokenSetUnion TokenSetUnion Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 10.5207190000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Token Monoids",
+            "TokenSetUnion",
+            "TokenSetUnion Monoid Laws"
+          ],
+          "fullName": "Token Monoids TokenSetUnion TokenSetUnion Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 10.51392900000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Token Monoids",
+            "TokenSetUnion",
+            "TokenSetUnion Monoid Laws"
+          ],
+          "fullName": "Token Monoids TokenSetUnion TokenSetUnion Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 7.550486000000092,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Sentence Monoids",
+            "SentenceConcat (near-monoid: identity only)"
+          ],
+          "fullName": "Sentence Monoids SentenceConcat (near-monoid: identity only) satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 6.885021000000052,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Sentence Monoids",
+            "SentenceConcat (near-monoid: identity only)"
+          ],
+          "fullName": "Sentence Monoids SentenceConcat (near-monoid: identity only) satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 6.83124799999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Sentence Monoids", "SentenceArray Monoid Laws"],
+          "fullName": "Sentence Monoids SentenceArray Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 6.803916000000299,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Sentence Monoids", "SentenceArray Monoid Laws"],
+          "fullName": "Sentence Monoids SentenceArray Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 6.784244999999828,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Sentence Monoids", "SentenceArray Monoid Laws"],
+          "fullName": "Sentence Monoids SentenceArray Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 6.765907999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Document Monoids", "DocumentText Monoid Laws"],
+          "fullName": "Document Monoids DocumentText Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 4.433285999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Document Monoids", "DocumentText Monoid Laws"],
+          "fullName": "Document Monoids DocumentText Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 4.398612999999841,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Document Monoids", "DocumentText Monoid Laws"],
+          "fullName": "Document Monoids DocumentText Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 4.388688000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Document Monoids",
+            "DocumentStats",
+            "DocumentStats Monoid Laws"
+          ],
+          "fullName": "Document Monoids DocumentStats DocumentStats Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 7.77775500000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Document Monoids",
+            "DocumentStats",
+            "DocumentStats Monoid Laws"
+          ],
+          "fullName": "Document Monoids DocumentStats DocumentStats Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 7.750323000000208,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Document Monoids",
+            "DocumentStats",
+            "DocumentStats Monoid Laws"
+          ],
+          "fullName": "Document Monoids DocumentStats DocumentStats Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 7.752856999999949,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Document Monoids", "DocumentStats"],
+          "fullName": "Document Monoids DocumentStats round-trips schema-derived document statistics values",
+          "status": "passed",
+          "title": "round-trips schema-derived document statistics values",
+          "duration": 4.383309000000281,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Linguistic Monoids"],
+          "fullName": "Linguistic Monoids round-trips schema-derived dependency edges",
+          "status": "passed",
+          "title": "round-trips schema-derived dependency edges",
+          "duration": 25.15478200000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Linguistic Monoids",
+            "AnnotationMap",
+            "AnnotationMap Monoid Laws"
+          ],
+          "fullName": "Linguistic Monoids AnnotationMap AnnotationMap Monoid Laws satisfies left identity",
+          "status": "passed",
+          "title": "satisfies left identity",
+          "duration": 7.748481000000083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Linguistic Monoids",
+            "AnnotationMap",
+            "AnnotationMap Monoid Laws"
+          ],
+          "fullName": "Linguistic Monoids AnnotationMap AnnotationMap Monoid Laws satisfies right identity",
+          "status": "passed",
+          "title": "satisfies right identity",
+          "duration": 6.95502899999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Linguistic Monoids",
+            "AnnotationMap",
+            "AnnotationMap Monoid Laws"
+          ],
+          "fullName": "Linguistic Monoids AnnotationMap AnnotationMap Monoid Laws satisfies associativity",
+          "status": "passed",
+          "title": "satisfies associativity",
+          "duration": 6.175918999999794,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TextAnalysis"],
+          "fullName": "TextAnalysis round-trips schema-derived text analysis values",
+          "status": "passed",
+          "title": "round-trips schema-derived text analysis values",
+          "duration": 24.9028229999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Utility Functions"],
+          "fullName": "Utility Functions bagOfWordsToTF normalizes frequencies",
+          "status": "passed",
+          "title": "bagOfWordsToTF normalizes frequencies",
+          "duration": 6.140084000000115,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Utility Functions"],
+          "fullName": "Utility Functions computeTFIDF calculates TF-IDF scores",
+          "status": "passed",
+          "title": "computeTFIDF calculates TF-IDF scores",
+          "duration": 5.939956000000166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018749,
+      "endTime": 1790394018810.176,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["GraphOps functor laws"],
+          "fullName": "GraphOps functor laws mapNodes preserves identity (map(id) = id)",
+          "status": "passed",
+          "title": "mapNodes preserves identity (map(id) = id)",
+          "duration": 2.730964999999742,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps functor laws"],
+          "fullName": "GraphOps functor laws mapNodes respects composition (map(f∘g) = map(f)∘map(g))",
+          "status": "passed",
+          "title": "mapNodes respects composition (map(f∘g) = map(f)∘map(g))",
+          "duration": 2.433176000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps functor laws"],
+          "fullName": "GraphOps functor laws mapNodes can change the node type",
+          "status": "passed",
+          "title": "mapNodes can change the node type",
+          "duration": 2.4119839999998476,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps functor laws"],
+          "fullName": "GraphOps functor laws mapEdges transforms edge data and keeps structure",
+          "status": "passed",
+          "title": "mapEdges transforms edge data and keeps structure",
+          "duration": 2.4004360000003544,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps functor laws"],
+          "fullName": "GraphOps functor laws bimap transforms nodes and edges together",
+          "status": "passed",
+          "title": "bimap transforms nodes and edges together",
+          "duration": 2.3850029999998696,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps filtering & folds"],
+          "fullName": "GraphOps filtering & folds filterNodes drops nodes and their edges",
+          "status": "passed",
+          "title": "filterNodes drops nodes and their edges",
+          "duration": 1.648518999999851,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps filtering & folds"],
+          "fullName": "GraphOps filtering & folds filterEdges drops edges and keeps all nodes",
+          "status": "passed",
+          "title": "filterEdges drops edges and keeps all nodes",
+          "duration": 1.615708000000268,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps filtering & folds"],
+          "fullName": "GraphOps filtering & folds foldNodes aggregates over all nodes",
+          "status": "passed",
+          "title": "foldNodes aggregates over all nodes",
+          "duration": 1.6012550000000374,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps filtering & folds"],
+          "fullName": "GraphOps filtering & folds collectTraversal yields nodes in dfs order from roots",
+          "status": "passed",
+          "title": "collectTraversal yields nodes in dfs order from roots",
+          "duration": 1.5936039999996865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps indexed search"],
+          "fullName": "GraphOps indexed search buildIndex then queryIndex round-trips by key",
+          "status": "passed",
+          "title": "buildIndex then queryIndex round-trips by key",
+          "duration": 1.5731319999999869,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps indexed search"],
+          "fullName": "GraphOps indexed search queryIndexUnion returns nodes matching any key, deduplicated",
+          "status": "passed",
+          "title": "queryIndexUnion returns nodes matching any key, deduplicated",
+          "duration": 4.836407000000236,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps indexed search"],
+          "fullName": "GraphOps indexed search queryIndexIntersection returns nodes matching all keys",
+          "status": "passed",
+          "title": "queryIndexIntersection returns nodes matching all keys",
+          "duration": 4.806912000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps effectful operations"],
+          "fullName": "GraphOps effectful operations traverseNodesCollect runs an effect per node",
+          "status": "passed",
+          "title": "traverseNodesCollect runs an effect per node",
+          "duration": 4.801212999999734,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps effectful operations"],
+          "fullName": "GraphOps effectful operations mapNodesEffect rebuilds the graph with transformed nodes",
+          "status": "passed",
+          "title": "mapNodesEffect rebuilds the graph with transformed nodes",
+          "duration": 4.796414999999797,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps streaming & merge"],
+          "fullName": "GraphOps streaming & merge streamNodes emits every node",
+          "status": "passed",
+          "title": "streamNodes emits every node",
+          "duration": 4.791337999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps streaming & merge"],
+          "fullName": "GraphOps streaming & merge batchNodes groups nodes into fixed-size batches",
+          "status": "passed",
+          "title": "batchNodes groups nodes into fixed-size batches",
+          "duration": 0.9095899999997528,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps streaming & merge"],
+          "fullName": "GraphOps streaming & merge merge combines nodes and edges from both graphs",
+          "status": "passed",
+          "title": "merge combines nodes and edges from both graphs",
+          "duration": 0.8830490000000282,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["GraphOps streaming & merge"],
+          "fullName": "GraphOps streaming & merge empty / isEmpty / singleton",
+          "status": "passed",
+          "title": "empty / isEmpty / singleton",
+          "duration": 0.8741359999999077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018744,
+      "endTime": 1790394018753.9097,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TextNode"],
+          "fullName": "TextNode decodes a valid node and round-trips",
+          "status": "passed",
+          "title": "decodes a valid node and round-trips",
+          "duration": 31.360495999999785,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TextNode"],
+          "fullName": "TextNode rejects an unknown node type",
+          "status": "passed",
+          "title": "rejects an unknown node type",
+          "duration": 31.11670099999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Schema-derived graph payloads"],
+          "fullName": "Schema-derived graph payloads round-trips generated graph schemas",
+          "status": "passed",
+          "title": "round-trips generated graph schemas",
+          "duration": 31.062808000000132,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TextEdge"],
+          "fullName": "TextEdge accepts every declared relation",
+          "status": "passed",
+          "title": "accepts every declared relation",
+          "duration": 31.093855000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TextEdge"],
+          "fullName": "TextEdge rejects an unknown relation",
+          "status": "passed",
+          "title": "rejects an unknown relation",
+          "duration": 31.08110600000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Annotation nodes round-trip"],
+          "fullName": "Annotation nodes round-trip EntityNode preserves span and type",
+          "status": "passed",
+          "title": "EntityNode preserves span and type",
+          "duration": 1.6022769999999582,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Annotation nodes round-trip"],
+          "fullName": "Annotation nodes round-trip POSNode and LemmaNode decode",
+          "status": "passed",
+          "title": "POSNode and LemmaNode decode",
+          "duration": 1.54892400000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Annotation nodes round-trip"],
+          "fullName": "Annotation nodes round-trip DependencyNode and RelationNode decode",
+          "status": "passed",
+          "title": "DependencyNode and RelationNode decode",
+          "duration": 1.5312679999997272,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NLPAnalysis"],
+          "fullName": "NLPAnalysis decodes a summary",
+          "status": "passed",
+          "title": "decodes a summary",
+          "duration": 1.5228240000001279,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018803,
+      "endTime": 1790394018835.6023,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Graph/Schema.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AnnotatedDocument round-trip"],
+          "fullName": "AnnotatedDocument round-trip encode then decode preserves the document",
+          "status": "passed",
+          "title": "encode then decode preserves the document",
+          "duration": 22.477419000000282,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["AnnotatedDocument round-trip"],
+          "fullName": "AnnotatedDocument round-trip mentions resolve to their entity and chunk with the span cut from the chunk text",
+          "status": "passed",
+          "title": "mentions resolve to their entity and chunk with the span cut from the chunk text",
+          "duration": 22.457026999999925,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["AnnotatedDocument round-trip"],
+          "fullName": "AnnotatedDocument round-trip every chunk, mention, entity, and relation carries provenance",
+          "status": "passed",
+          "title": "every chunk, mention, entity, and relation carries provenance",
+          "duration": 22.446922000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["AnnotatedDocument round-trip"],
+          "fullName": "AnnotatedDocument round-trip schema-derived documents encode and decode through the production contract",
+          "status": "passed",
+          "title": "schema-derived documents encode and decode through the production contract",
+          "duration": 22.418538999999782,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Span"],
+          "fullName": "Span round-trips integer spans with start <= end",
+          "status": "passed",
+          "title": "round-trips integer spans with start <= end",
+          "duration": 3.072030000000268,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Span"],
+          "fullName": "Span rejects negative offsets",
+          "status": "passed",
+          "title": "rejects negative offsets",
+          "duration": 3.020980999999665,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Span"],
+          "fullName": "Span rejects spans whose end precedes start",
+          "status": "passed",
+          "title": "rejects spans whose end precedes start",
+          "duration": 2.0396200000000135,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Provenance confidence"],
+          "fullName": "Provenance confidence decodes confidence values in the unit interval",
+          "status": "passed",
+          "title": "decodes confidence values in the unit interval",
+          "duration": 2.0476520000001983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Provenance confidence"],
+          "fullName": "Provenance confidence rejects confidence values outside the unit interval",
+          "status": "passed",
+          "title": "rejects confidence values outside the unit interval",
+          "duration": 2.0308060000002115,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["makeProvenance"],
+          "fullName": "makeProvenance uses an explicit timestamp and omits absent confidence",
+          "status": "passed",
+          "title": "uses an explicit timestamp and omits absent confidence",
+          "duration": 0.310128000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["makeProvenance"],
+          "fullName": "makeProvenance carries confidence when provided",
+          "status": "passed",
+          "title": "carries confidence when provided",
+          "duration": 0.1590649999998277,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["makeProvenance"],
+          "fullName": "makeProvenance supports data-last construction",
+          "status": "passed",
+          "title": "supports data-last construction",
+          "duration": 0.14682600000014645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "encodes Contract.Span through its generation link",
+          "status": "passed",
+          "title": "encodes Contract.Span through its generation link",
+          "duration": 22.75247300000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018802,
+      "endTime": 1790394018828.31,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Functor laws"],
+          "fullName": "Functor laws identity: map(id) = id",
+          "status": "passed",
+          "title": "identity: map(id) = id",
+          "duration": 4.754680999999948,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Functor laws"],
+          "fullName": "Functor laws composition: map(g ∘ f) = map(g) ∘ map(f)",
+          "status": "passed",
+          "title": "composition: map(g ∘ f) = map(g) ∘ map(f)",
+          "duration": 4.478296,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Functor laws"],
+          "fullName": "Functor laws dual helper supports data-first and pipe-friendly data-last map",
+          "status": "passed",
+          "title": "dual helper supports data-first and pipe-friendly data-last map",
+          "duration": 4.461379000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monad laws"],
+          "fullName": "Monad laws left identity: pure(a).flatMap(f) = f(a)",
+          "status": "passed",
+          "title": "left identity: pure(a).flatMap(f) = f(a)",
+          "duration": 4.451934999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monad laws"],
+          "fullName": "Monad laws right identity: m.flatMap(pure) = m",
+          "status": "passed",
+          "title": "right identity: m.flatMap(pure) = m",
+          "duration": 4.441988999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Monad laws"],
+          "fullName": "Monad laws associativity: (m.flatMap(f)).flatMap(g) = m.flatMap(x => f(x).flatMap(g))",
+          "status": "passed",
+          "title": "associativity: (m.flatMap(f)).flatMap(g) = m.flatMap(x => f(x).flatMap(g))",
+          "duration": 2.0195299999999747,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Applicative"],
+          "fullName": "Applicative product runs both operations on the same input",
+          "status": "passed",
+          "title": "product runs both operations on the same input",
+          "duration": 1.9733179999999493,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Applicative"],
+          "fullName": "Applicative dual helper supports data-first and pipe-friendly data-last product",
+          "status": "passed",
+          "title": "dual helper supports data-first and pipe-friendly data-last product",
+          "duration": 1.957743999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Applicative"],
+          "fullName": "Applicative zipWith combines both results with a function",
+          "status": "passed",
+          "title": "zipWith combines both results with a function",
+          "duration": 1.948699999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Applicative"],
+          "fullName": "Applicative dual helper supports data-first and pipe-friendly data-last zipWith",
+          "status": "passed",
+          "title": "dual helper supports data-first and pipe-friendly data-last zipWith",
+          "duration": 1.935721000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["compose + traverse + aggregate"],
+          "fullName": "compose + traverse + aggregate compose threads output into the next operation's input",
+          "status": "passed",
+          "title": "compose threads output into the next operation's input",
+          "duration": 0.6449630000000184,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["compose + traverse + aggregate"],
+          "fullName": "compose + traverse + aggregate compose supports pipe-friendly data-last usage",
+          "status": "passed",
+          "title": "compose supports pipe-friendly data-last usage",
+          "duration": 0.6150769999999852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["compose + traverse + aggregate"],
+          "fullName": "compose + traverse + aggregate traverse maps an operation over an array of inputs",
+          "status": "passed",
+          "title": "traverse maps an operation over an array of inputs",
+          "duration": 0.6083859999999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["compose + traverse + aggregate"],
+          "fullName": "compose + traverse + aggregate aggregate folds values with a monoid",
+          "status": "passed",
+          "title": "aggregate folds values with a monoid",
+          "duration": 0.5989020000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394015237,
+      "endTime": 1790394015244.645,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Operations/Composable.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TextKind schema"],
+          "fullName": "TextKind schema accepts every declared kind",
+          "status": "passed",
+          "title": "accepts every declared kind",
+          "duration": 4.413074999999935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Containment poset"],
+          "fullName": "Containment poset canContain agrees with getValidChildren",
+          "status": "passed",
+          "title": "canContain agrees with getValidChildren",
+          "duration": 4.165574000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Containment poset"],
+          "fullName": "Containment poset is irreflexive (no kind contains itself)",
+          "status": "passed",
+          "title": "is irreflexive (no kind contains itself)",
+          "duration": 4.14559300000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Containment poset"],
+          "fullName": "Containment poset leaf kinds contain nothing",
+          "status": "passed",
+          "title": "leaf kinds contain nothing",
+          "duration": 4.1353369999997085,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Containment poset"],
+          "fullName": "Containment poset Document contains Sentence; Token contains Character",
+          "status": "passed",
+          "title": "Document contains Sentence; Token contains Character",
+          "duration": 4.126432999999906,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Containment poset"],
+          "fullName": "Containment poset derives the runtime containment record from schema defaults",
+          "status": "passed",
+          "title": "derives the runtime containment record from schema defaults",
+          "duration": 17.221696000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Containment poset"],
+          "fullName": "Containment poset round-trips schema-derived containment records",
+          "status": "passed",
+          "title": "round-trips schema-derived containment records",
+          "duration": 11.469589999999698,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Smart constructors & utilities"],
+          "fullName": "Smart constructors & utilities constructors tag content with the right kind",
+          "status": "passed",
+          "title": "constructors tag content with the right kind",
+          "duration": 17.187745000000177,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Smart constructors & utilities"],
+          "fullName": "Smart constructors & utilities kindOf and content are inverse projections",
+          "status": "passed",
+          "title": "kindOf and content are inverse projections",
+          "duration": 17.173361999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Smart constructors & utilities"],
+          "fullName": "Smart constructors & utilities mapContent preserves kind",
+          "status": "passed",
+          "title": "mapContent preserves kind",
+          "duration": 17.1613940000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Smart constructors & utilities"],
+          "fullName": "Smart constructors & utilities withMetadata merges metadata",
+          "status": "passed",
+          "title": "withMetadata merges metadata",
+          "duration": 17.13633499999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Smart constructors & utilities"],
+          "fullName": "Smart constructors & utilities isKind narrows by kind",
+          "status": "passed",
+          "title": "isKind narrows by kind",
+          "duration": 11.513196999999764,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Smart constructors & utilities"],
+          "fullName": "Smart constructors & utilities recast re-tags the kind",
+          "status": "passed",
+          "title": "recast re-tags the kind",
+          "duration": 0.4635330000000977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790394018746,
+      "endTime": 1790394018779.5132,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts"
+    }
+  ]
+}

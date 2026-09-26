@@ -14,7 +14,8 @@ import * as A from "effect/Array";
  */
 
 import * as NLP from "@beep/nlp/Algebra/NLPMonoid";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -140,17 +141,18 @@ describe("Document Monoids", () => {
     const statsEquals = S.toEquivalence(NLP.DocumentStatistics);
     testMonoidLaws("DocumentStats", NLP.DocumentStats, statsArbitrary, statsEquals);
 
-    it.prop(
+    it.effect.prop(
       "round-trips schema-derived document statistics values",
       [Arbitrary.schema(NLP.DocumentStatistics)],
-      ([stats]) => {
-        const encoded = Effect.runSync(encodeNLPDocumentStatistics(stats));
-        const decoded = Effect.runSync(decodeNLPDocumentStatistics(encoded));
+      ([stats]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeNLPDocumentStatistics(stats);
+          const decoded = yield* decodeNLPDocumentStatistics(encoded);
 
-        expect(statsEquals(decoded, stats)).toBe(true);
+          expect(statsEquals(decoded, stats)).toBe(true);
 
-        return true;
-      },
+          return true;
+        }),
       { arbitrary: fcRuns(100) }
     );
   });
@@ -159,17 +161,18 @@ describe("Document Monoids", () => {
 // Linguistic monoids
 describe("Linguistic Monoids", () => {
   const edgeEquals = S.toEquivalence(NLP.DependencyEdge);
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived dependency edges",
     [Arbitrary.schema(NLP.DependencyEdge)],
-    ([edge]) => {
-      const encoded = Effect.runSync(encodeNLPDependencyEdge(edge));
-      const decoded = Effect.runSync(decodeNLPDependencyEdge(encoded));
+    ([edge]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeNLPDependencyEdge(edge);
+        const decoded = yield* decodeNLPDependencyEdge(encoded);
 
-      expect(edgeEquals(decoded, edge)).toBe(true);
+        expect(edgeEquals(decoded, edge)).toBe(true);
 
-      return true;
-    },
+        return true;
+      }),
     { arbitrary: fcRuns(100) }
   );
 
@@ -188,17 +191,18 @@ describe("Linguistic Monoids", () => {
 
 describe("TextAnalysis", () => {
   const analysisEquals = S.toEquivalence(NLP.TextAnalysis);
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived text analysis values",
     [Arbitrary.schema(NLP.TextAnalysis)],
-    ([analysis]) => {
-      const encoded = Effect.runSync(encodeNLPTextAnalysis(analysis));
-      const decoded = Effect.runSync(decodeNLPTextAnalysis(encoded));
+    ([analysis]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeNLPTextAnalysis(analysis);
+        const decoded = yield* decodeNLPTextAnalysis(encoded);
 
-      expect(analysisEquals(decoded, analysis)).toBe(true);
+        expect(analysisEquals(decoded, analysis)).toBe(true);
 
-      return true;
-    },
+        return true;
+      }),
     { arbitrary: fcRuns(100) }
   );
 });

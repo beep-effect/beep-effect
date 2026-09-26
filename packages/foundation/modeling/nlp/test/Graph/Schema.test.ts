@@ -1,6 +1,7 @@
 import * as GraphSchema from "@beep/nlp/Graph/Schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -60,7 +61,7 @@ describe("TextNode", () => {
 });
 
 describe("Schema-derived graph payloads", () => {
-  it.prop(
+  it.effect.prop(
     "round-trips generated graph schemas",
     [
       TextNodeArbitrary,
@@ -72,27 +73,28 @@ describe("Schema-derived graph payloads", () => {
       RelationNodeArbitrary,
       NLPAnalysisArbitrary,
     ],
-    ([textNode, textEdge, entityNode, posNode, lemmaNode, dependencyNode, relationNode, analysis]) => {
-      const encodedTextNode = Effect.runSync(encodeGraphSchemaTextNode(textNode));
-      const encodedTextEdge = Effect.runSync(encodeGraphSchemaTextEdge(textEdge));
-      const encodedEntityNode = Effect.runSync(encodeGraphSchemaEntityNode(entityNode));
-      const encodedPOSNode = Effect.runSync(encodeGraphSchemaPOSNode(posNode));
-      const encodedLemmaNode = Effect.runSync(encodeGraphSchemaLemmaNode(lemmaNode));
-      const encodedDependencyNode = Effect.runSync(encodeGraphSchemaDependencyNode(dependencyNode));
-      const encodedRelationNode = Effect.runSync(encodeGraphSchemaRelationNode(relationNode));
-      const encodedAnalysis = Effect.runSync(encodeGraphSchemaNLPAnalysis(analysis));
+    ([textNode, textEdge, entityNode, posNode, lemmaNode, dependencyNode, relationNode, analysis]) =>
+      Effect.gen(function* () {
+        const encodedTextNode = yield* encodeGraphSchemaTextNode(textNode);
+        const encodedTextEdge = yield* encodeGraphSchemaTextEdge(textEdge);
+        const encodedEntityNode = yield* encodeGraphSchemaEntityNode(entityNode);
+        const encodedPOSNode = yield* encodeGraphSchemaPOSNode(posNode);
+        const encodedLemmaNode = yield* encodeGraphSchemaLemmaNode(lemmaNode);
+        const encodedDependencyNode = yield* encodeGraphSchemaDependencyNode(dependencyNode);
+        const encodedRelationNode = yield* encodeGraphSchemaRelationNode(relationNode);
+        const encodedAnalysis = yield* encodeGraphSchemaNLPAnalysis(analysis);
 
-      expect(Effect.runSync(decodeGraphSchemaTextNode(encodedTextNode))).toEqual(textNode);
-      expect(Effect.runSync(decodeGraphSchemaTextEdge(encodedTextEdge))).toEqual(textEdge);
-      expect(Effect.runSync(decodeGraphSchemaEntityNode(encodedEntityNode))).toEqual(entityNode);
-      expect(Effect.runSync(decodeGraphSchemaPOSNode(encodedPOSNode))).toEqual(posNode);
-      expect(Effect.runSync(decodeGraphSchemaLemmaNode(encodedLemmaNode))).toEqual(lemmaNode);
-      expect(Effect.runSync(decodeGraphSchemaDependencyNode(encodedDependencyNode))).toEqual(dependencyNode);
-      expect(Effect.runSync(decodeGraphSchemaRelationNode(encodedRelationNode))).toEqual(relationNode);
-      expect(Effect.runSync(decodeGraphSchemaNLPAnalysis(encodedAnalysis))).toEqual(analysis);
+        expect(yield* decodeGraphSchemaTextNode(encodedTextNode)).toEqual(textNode);
+        expect(yield* decodeGraphSchemaTextEdge(encodedTextEdge)).toEqual(textEdge);
+        expect(yield* decodeGraphSchemaEntityNode(encodedEntityNode)).toEqual(entityNode);
+        expect(yield* decodeGraphSchemaPOSNode(encodedPOSNode)).toEqual(posNode);
+        expect(yield* decodeGraphSchemaLemmaNode(encodedLemmaNode)).toEqual(lemmaNode);
+        expect(yield* decodeGraphSchemaDependencyNode(encodedDependencyNode)).toEqual(dependencyNode);
+        expect(yield* decodeGraphSchemaRelationNode(encodedRelationNode)).toEqual(relationNode);
+        expect(yield* decodeGraphSchemaNLPAnalysis(encodedAnalysis)).toEqual(analysis);
 
-      return true;
-    },
+        return true;
+      }),
     { arbitrary: fcRuns(50) }
   );
 });
