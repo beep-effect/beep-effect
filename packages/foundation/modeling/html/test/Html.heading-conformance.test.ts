@@ -1,6 +1,7 @@
 import { computeHeadingOutline, inspectBestPractices, inspectConformance } from "@beep/html/Html.conformance";
 import { Div, Fragment, H1, H2, H3, H4, H5, H6, Section } from "@beep/html/Html.model";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 
