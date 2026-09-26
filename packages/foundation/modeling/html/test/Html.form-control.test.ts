@@ -14,9 +14,11 @@ import {
   HtmlTag,
 } from "@beep/html/Html.meta";
 import { Button, Input, Select } from "@beep/html/Html.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertNone } from "@effect/vitest/utils";
+import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -53,7 +55,7 @@ describe("HTML form-control semantic states", () => {
 
   it("normalizes every input type while preserving the missing wire state", () => {
     const missing = Input.make({});
-    expect(O.isNone(missing.type)).toBe(true);
+    assertNone(missing.type);
     expect(resolveInputState(missing)).toStrictEqual(InputState.cases.text.make({}));
 
     const states = R.keys(HTML_INPUT_ATTRIBUTE_APPLICABILITY);
@@ -137,40 +139,39 @@ describe("HTML form-control semantic states", () => {
     expect(validButton.state).toBe("submit");
     expect(invalidInput.state).toBe("unsupported");
     expect(invalidButton.basis).toBe("auto-command");
-    expect(Result.isFailure(decodeUnknownInputStateResult({ state: "unsupported" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" }))).toBe(true);
+    assertFailure(
+      Result.mapError(decodeUnknownInputStateResult({ state: "unsupported" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" }), ({ _tag }) => _tag),
+      "SchemaError"
+    );
   });
 
-  it("round-trips schema-derived input and button semantic states", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([InputStateArbitrary]),
-          ([state]) => {
-            const encoded = Result.getOrThrow(encodeInputStateResult(state));
-            const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
-            expect(Eq.equals(decoded, state)).toBe(true);
+  it.prop(
+    "round-trips schema-derived input semantic states",
+    [InputStateArbitrary],
+    ([state]) => {
+      const encoded = Result.getOrThrow(encodeInputStateResult(state));
+      const decoded = Result.getOrThrow(decodeInputStateResult(encoded));
+      expect(Eq.equals(decoded, state)).toBe(true);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ButtonStateArbitrary]),
-          ([state]) => {
-            const encoded = Result.getOrThrow(encodeButtonStateResult(state));
-            const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
-            expect(Eq.equals(decoded, state)).toBe(true);
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips schema-derived button semantic states",
+    [ButtonStateArbitrary],
+    ([state]) => {
+      const encoded = Result.getOrThrow(encodeButtonStateResult(state));
+      const decoded = Result.getOrThrow(decodeButtonStateResult(encoded));
+      expect(Eq.equals(decoded, state)).toBe(true);
+
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

@@ -9,7 +9,8 @@ import {
   SVG_ELEMENT_NAME_ADJUSTMENTS,
   XML_FOREIGN_ATTRIBUTE_NAMES,
 } from "@beep/html/Html.meta";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
