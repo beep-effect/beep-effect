@@ -22,9 +22,10 @@ import {
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Context, Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as AiError from "effect/ai/AiError";

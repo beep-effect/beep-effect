@@ -5,6 +5,7 @@ import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { parseYaml } from "@beep/schema/Yaml";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
 import {
@@ -22,8 +23,9 @@ import {
   VeniceAiChat,
   VeniceAiLanguageModel,
 } from "@beep/venice-ai";
-import { describe, expect, it, layer } from "@effect/vitest";
-import { Context, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Context, Deferred, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -34,6 +36,7 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 
 const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
 
@@ -141,13 +144,16 @@ const VeniceAIServerSentEventArbitrary = Arbitrary.schema(VeniceAIServerSentEven
 const encodeVeniceAIError = S.encodeEffect(VeniceAIError);
 const VeniceAIErrorArbitrary = Arbitrary.schema(VeniceAIError);
 
-const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
-  const encoded = Effect.runSync(S.encodeEffect(schema)(value));
-  const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
+const expectRoundTrip = Effect.fnUntraced(function* <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  value: Codec["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
 
-  expect(Effect.runSync(S.encodeEffect(schema)(decoded))).toEqual(encoded);
+  expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
   expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
+});
 
 const sortStrings = A.sort(Order.String);
 const swaggerFile = new URL("../swagger.yaml", import.meta.url);
@@ -405,40 +411,39 @@ describe("@beep/venice-ai", () => {
     expect(VeniceAiLanguageModel.model()("venice-uncensored-1-2")).toBeDefined();
   });
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived OpenAPI fixture and prompt body data",
     [OpenApiOperationArbitrary, PromptBodyArbitrary],
-    ([operation, promptBody]) => {
-      const encodedOperation = Effect.runSync(encodeOpenApiOperation(operation));
-      const decodedOperation = Effect.runSync(decodeOpenApiOperation(encodedOperation));
-      expect(Effect.runSync(encodeOpenApiOperation(decodedOperation))).toEqual(encodedOperation);
+    Effect.fnUntraced(function* ([operation, promptBody]) {
+      const encodedOperation = yield* encodeOpenApiOperation(operation);
+      const decodedOperation = yield* decodeOpenApiOperation(encodedOperation);
+      expect(yield* encodeOpenApiOperation(decodedOperation)).toEqual(encodedOperation);
 
-      const encodedPromptBody = Effect.runSync(encodePromptBody(promptBody));
-      const decodedPromptBody = Effect.runSync(decodePromptBody(encodedPromptBody));
-      expect(Effect.runSync(encodePromptBody(decodedPromptBody))).toEqual(encodedPromptBody);
-    },
+      const encodedPromptBody = yield* encodePromptBody(promptBody);
+      const decodedPromptBody = yield* decodePromptBody(encodedPromptBody);
+      expect(yield* encodePromptBody(decodedPromptBody)).toEqual(encodedPromptBody);
+    }),
     { arbitrary: fcRuns(25) }
   );
 
-  it("keeps crispened production schema encoded shapes stable", () => {
-    expect(Effect.runSync(encodeVeniceAIConfigInput(VeniceAIConfigInput.make({})))).toEqual({
-      baseUrl: VENICE_API_URL,
-      headers: {},
-    });
-    expect(
-      Effect.runSync(
-        decodeVeniceAIConfigInput({
+  it.effect(
+    "keeps crispened production schema encoded shapes stable",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeVeniceAIConfigInput(VeniceAIConfigInput.make({}))).toEqual({
+        baseUrl: VENICE_API_URL,
+        headers: {},
+      });
+      expect(
+        yield* decodeVeniceAIConfigInput({
           baseUrl: `${VENICE_API_URL}///`,
         }).pipe(Effect.flatMap(encodeVeniceAIConfigInput))
-      )
-    ).toEqual({
-      baseUrl: VENICE_API_URL,
-      headers: {},
-    });
-    expect(Effect.runSync(encodeVeniceAIRequestOptions(VeniceAIRequestOptions.make({})))).toEqual({});
-    expect(
-      Effect.runSync(
-        encodeVeniceAIRequestOptions(
+      ).toEqual({
+        baseUrl: VENICE_API_URL,
+        headers: {},
+      });
+      expect(yield* encodeVeniceAIRequestOptions(VeniceAIRequestOptions.make({}))).toEqual({});
+      expect(
+        yield* encodeVeniceAIRequestOptions(
           VeniceAIRequestOptions.make({
             body: O.some({ model: "venice-uncensored-1-2" }),
             headers: O.some({ "x-test": "ok" }),
@@ -446,16 +451,14 @@ describe("@beep/venice-ai", () => {
             query: O.some({ limit: 1 }),
           })
         )
-      )
-    ).toEqual({
-      body: { model: "venice-uncensored-1-2" },
-      headers: { "x-test": "ok" },
-      path: { id: "api-key-id" },
-      query: { limit: 1 },
-    });
-    expect(
-      Effect.runSync(
-        encodeVeniceAIResponse(
+      ).toEqual({
+        body: { model: "venice-uncensored-1-2" },
+        headers: { "x-test": "ok" },
+        path: { id: "api-key-id" },
+        query: { limit: 1 },
+      });
+      expect(
+        yield* encodeVeniceAIResponse(
           VeniceAIJsonResponse.make({
             body: { ok: true },
             contentType: O.some("application/json"),
@@ -463,17 +466,15 @@ describe("@beep/venice-ai", () => {
             status: HttpStatus.make(200),
           })
         )
-      )
-    ).toEqual({
-      _tag: "Json",
-      body: { ok: true },
-      contentType: "application/json",
-      headers: {},
-      status: 200,
-    });
-    expect(
-      Effect.runSync(
-        encodeVeniceAIResponse(
+      ).toEqual({
+        _tag: "Json",
+        body: { ok: true },
+        contentType: "application/json",
+        headers: {},
+        status: 200,
+      });
+      expect(
+        yield* encodeVeniceAIResponse(
           VeniceAITextResponse.make({
             contentType: O.none(),
             headers: {},
@@ -481,49 +482,45 @@ describe("@beep/venice-ai", () => {
             text: "ok",
           })
         )
-      )
-    ).toEqual({
-      _tag: "Text",
-      headers: {},
-      status: 200,
-      text: "ok",
-    });
-    expect(
-      Effect.runSync(
-        encodeVeniceAIServerSentEvent(
+      ).toEqual({
+        _tag: "Text",
+        headers: {},
+        status: 200,
+        text: "ok",
+      });
+      expect(
+        yield* encodeVeniceAIServerSentEvent(
           VeniceAIServerSentEvent.make({ data: O.some({ delta: "hello" }), done: false, index: NonNegativeInt.make(0) })
         )
-      )
-    ).toEqual({
-      data: { delta: "hello" },
-      done: false,
-      index: 0,
-    });
-    expect(
-      Effect.runSync(
-        encodeVeniceAIServerSentEvent(VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(1) }))
-      )
-    ).toEqual({
-      done: true,
-      index: 1,
-    });
-    expect(
-      Effect.runSync(
-        encodeVeniceAIError(
+      ).toEqual({
+        data: { delta: "hello" },
+        done: false,
+        index: 0,
+      });
+      expect(
+        yield* encodeVeniceAIServerSentEvent(
+          VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(1) })
+        )
+      ).toEqual({
+        done: true,
+        index: 1,
+      });
+      expect(
+        yield* encodeVeniceAIError(
           VeniceAIError.make({
             reason: "response status",
             status: O.some(HttpStatus.make(500)),
           })
         )
-      )
-    ).toEqual({
-      _tag: "VeniceAIError",
-      reason: "response status",
-      status: 500,
-    });
-  });
+      ).toEqual({
+        _tag: "VeniceAIError",
+        reason: "response status",
+        status: 500,
+      });
+    })
+  );
 
-  it.prop(
+  it.effect.prop(
     "round-trips crispened production schemas with schema-derived arbitraries",
     [
       VeniceAIConfigInputArbitrary,
@@ -533,18 +530,18 @@ describe("@beep/venice-ai", () => {
       VeniceAIServerSentEventArbitrary,
       VeniceAIErrorArbitrary,
     ],
-    ([config, request, descriptor, response, event, error]) => {
-      expectRoundTrip(VeniceAIConfigInput, config);
-      expectRoundTrip(VeniceAIRequestOptions, request);
-      expectRoundTrip(VeniceAIOperationDescriptor, descriptor);
-      expectRoundTrip(VeniceAIResponse, response);
-      expectRoundTrip(VeniceAIServerSentEvent, event);
-      expectRoundTrip(VeniceAIError, error);
-    },
+    Effect.fnUntraced(function* ([config, request, descriptor, response, event, error]) {
+      yield* expectRoundTrip(VeniceAIConfigInput, config);
+      yield* expectRoundTrip(VeniceAIRequestOptions, request);
+      yield* expectRoundTrip(VeniceAIOperationDescriptor, descriptor);
+      yield* expectRoundTrip(VeniceAIResponse, response);
+      yield* expectRoundTrip(VeniceAIServerSentEvent, event);
+      yield* expectRoundTrip(VeniceAIError, error);
+    }),
     { arbitrary: fcRuns(15) }
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "keeps the operation registry and service surface aligned with swagger.yaml",
       Effect.fnUntraced(function* () {
@@ -569,7 +566,7 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "keeps descriptor metadata aligned with swagger.yaml",
       Effect.fnUntraced(function* () {
@@ -593,7 +590,7 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "sends every operation with the expected method, path, auth, query, and body mode",
       Effect.fnUntraced(function* () {
@@ -648,7 +645,7 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "honors request options for headers, accept, path encoding, JSON bodies, and missing path params",
       Effect.fnUntraced(function* () {
@@ -676,14 +673,14 @@ describe("@beep/venice-ai", () => {
         yield* testHttp.reset;
         const missingPathError = yield* venice.getCharacterBySlug().pipe(Effect.flip);
         expect(missingPathError.reason).toBe("request encoding");
-        expect(O.getOrUndefined(missingPathError.operation)).toBe("getCharacterBySlug");
+        assertSome(missingPathError.operation, "getCharacterBySlug");
 
         yield* testHttp.reset;
         const invalidQueryRequest = { query: O.some({ bad: null }) } as unknown as VeniceAIRequestOptions;
         const invalidQueryError = yield* venice.listModels(invalidQueryRequest).pipe(Effect.flip);
         const capturesAfterInvalidQuery = yield* testHttp.captures;
         expect(invalidQueryError.reason).toBe("request encoding");
-        expect(O.getOrUndefined(invalidQueryError.operation)).toBe("listModels");
+        assertSome(invalidQueryError.operation, "listModels");
         expect(capturesAfterInvalidQuery).toHaveLength(0);
 
         yield* testHttp.reset;
@@ -692,7 +689,7 @@ describe("@beep/venice-ai", () => {
           .pipe(Effect.flip);
         const capturesAfterUnsupportedJsonBody = yield* testHttp.captures;
         expect(unsupportedJsonBodyError.reason).toBe("request encoding");
-        expect(O.getOrUndefined(unsupportedJsonBodyError.operation)).toBe("listModels");
+        assertSome(unsupportedJsonBodyError.operation, "listModels");
         expect(capturesAfterUnsupportedJsonBody).toHaveLength(0);
 
         yield* testHttp.reset;
@@ -701,7 +698,7 @@ describe("@beep/venice-ai", () => {
           .pipe(Effect.flip);
         const capturesAfterUnsupportedMultipartBody = yield* testHttp.captures;
         expect(unsupportedMultipartBodyError.reason).toBe("request encoding");
-        expect(O.getOrUndefined(unsupportedMultipartBodyError.operation)).toBe("listModels");
+        assertSome(unsupportedMultipartBodyError.operation, "listModels");
         expect(capturesAfterUnsupportedMultipartBody).toHaveLength(0);
 
         yield* testHttp.reset;
@@ -729,17 +726,15 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(
-    makeVeniceAIUnitLayer(
-      // Normalization is a decode-side concern: the Type-side constructor now
-      // rejects non-normalized URLs, so the raw trailing-slash form decodes.
-      Effect.runSync(
-        decodeVeniceAIConfigInput({
-          apiKey: "test-key",
-          baseUrl: "https://example.test/api/v1///",
-        })
-      )
-    )
+  it.layer(
+    Layer.unwrap(
+      // Decode the raw trailing-slash form during fixture acquisition.
+      decodeVeniceAIConfigInput({
+        apiKey: "test-key",
+        baseUrl: "https://example.test/api/v1///",
+      }).pipe(Effect.map(makeVeniceAIUnitLayer))
+    ),
+    { timeout: "5 seconds" }
   )((it) =>
     it.effect(
       "normalizes custom base URLs",
@@ -760,7 +755,7 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "decodes JSON, text, and binary success responses",
       Effect.fnUntraced(function* () {
@@ -786,25 +781,25 @@ describe("@beep/venice-ai", () => {
         expect(text._tag).toBe("Text");
         expect(binary._tag).toBe("Binary");
         expect(json.status).toBe(200);
-        expect(O.getOrUndefined(json.contentType)).toContain("application/json");
+        assertSome(json.contentType.pipe(O.map(Str.includes("application/json"))), true);
         if (json._tag === "Json") {
           expect(json.body).toEqual({ ok: true });
         }
         if (text._tag === "Text") {
           expect(text.text).toBe("a,b\n1,2");
-          expect(O.getOrUndefined(text.contentType)).toContain("text/csv");
+          assertSome(text.contentType.pipe(O.map(Str.includes("text/csv"))), true);
         }
         if (binary._tag !== "Binary") {
           return;
         }
         expect(binary.status).toBe(200);
-        expect(O.getOrUndefined(binary.contentType)).toContain("image/png");
+        assertSome(binary.contentType.pipe(O.map(Str.includes("image/png"))), true);
         expect(binary.bytes).toEqual(new Uint8Array([1, 2, 3]));
       })
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps response status, malformed JSON, multipart, transport, and SSE failures",
       Effect.fnUntraced(function* () {
@@ -898,32 +893,32 @@ describe("@beep/venice-ai", () => {
 
         expect(statusError).toBeInstanceOf(VeniceAIError);
         expect(statusError.reason).toBe("response status");
-        expect(O.getOrUndefined(statusError.status)).toBe(402);
-        expect(O.getOrUndefined(statusError.operation)).toBe("topUpX402Balance");
-        expect(O.getOrUndefined(statusError.method)).toBe("POST");
-        expect(O.getOrUndefined(statusError.path)).toBe("/x402/top-up");
+        assertSome(statusError.status, 402);
+        assertSome(statusError.operation, "topUpX402Balance");
+        assertSome(statusError.method, "POST");
+        assertSome(statusError.path, "/x402/top-up");
         expect(malformedError.reason).toBe("response decoding");
-        expect(O.getOrUndefined(malformedError.cause)).toBe("HttpClientError:DecodeError");
+        assertSome(malformedError.cause, "HttpClientError:DecodeError");
         expect(multipartError.reason).toBe("multipart encoding");
         expect(transportError.reason).toBe("transport");
-        expect(O.getOrUndefined(transportError.cause)).toBe("HttpClientError:TransportError");
+        assertSome(transportError.cause, "HttpClientError:TransportError");
         expect(hostileProxyError.reason).toBe("transport");
-        expect(O.isNone(hostileProxyError.cause)).toBe(true);
+        assertNone(hostileProxyError.cause);
         expect(throwingNameError.reason).toBe("transport");
-        expect(O.isNone(throwingNameError.cause)).toBe(true);
+        assertNone(throwingNameError.cause);
         expect(sseError.reason).toBe("sse decoding");
-        expect(O.isSome(sseError.cause)).toBe(true);
+        assertSome(sseError.cause.pipe(O.map(thunkTrue)), true);
         expect(nonSseError.reason).toBe("sse decoding");
-        expect(O.getOrUndefined(nonSseError.status)).toBe(200);
+        assertSome(nonSseError.status, 200);
         expect(spoofedContentTypeError.reason).toBe("sse decoding");
-        expect(O.getOrUndefined(spoofedContentTypeError.status)).toBe(200);
+        assertSome(spoofedContentTypeError.status, 200);
         expect(jsonError.reason).toBe("response decoding");
-        expect(O.getOrUndefined(jsonError.cause)).toBe("HttpClientError:DecodeError");
+        assertSome(jsonError.cause, "HttpClientError:DecodeError");
       })
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps language-model transport failures to retryable network errors",
       Effect.fnUntraced(function* () {
@@ -954,7 +949,7 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "parses SSE streams for chat completions and responses",
       Effect.fnUntraced(function* () {
@@ -983,12 +978,12 @@ describe("@beep/venice-ai", () => {
 
         expect(chatEventArray).toHaveLength(2);
         expect(responseEventArray).toHaveLength(2);
-        expect(O.getOrUndefined(firstChatEvent.data)).toEqual({ delta: "hello" });
+        assertSome(firstChatEvent.data, { delta: "hello" });
         expect(firstChatEvent.done).toBe(false);
         expect(firstChatEvent.index).toBe(0);
         expect(secondChatEvent.done).toBe(true);
         expect(secondChatEvent.index).toBe(1);
-        expect(O.getOrUndefined(firstResponseEvent.data)).toEqual({ delta: "hello" });
+        assertSome(firstResponseEvent.data, { delta: "hello" });
         expect(firstCapture.headers.accept).toBe("text/event-stream");
         expect(firstCapture.bodyText).toContain('"stream":true');
         expect(secondCapture.headers.accept).toBe("text/event-stream");
@@ -997,10 +992,11 @@ describe("@beep/venice-ai", () => {
     )
   );
 
-  layer(makeVeniceAIUnitLayer())((it) =>
+  it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "emits SSE events before the response body closes",
       Effect.fnUntraced(function* () {
+        const cancelled = yield* Deferred.make<void>();
         const testHttp = yield* VeniceAITestHttp;
         yield* testHttp.reset;
         yield* testHttp.respondWith(() =>
@@ -1009,6 +1005,9 @@ describe("@beep/venice-ai", () => {
               new ReadableStream<Uint8Array>({
                 start(controller) {
                   controller.enqueue(new TextEncoder().encode('data: {"delta":"first"}\n\n'));
+                },
+                cancel() {
+                  Deferred.doneUnsafe(cancelled, Effect.void);
                 },
               }),
               {
@@ -1021,18 +1020,19 @@ describe("@beep/venice-ai", () => {
         const venice = yield* VeniceAI;
         const first = yield* venice
           .streamChatCompletion(requestFor(descriptorAt(0)))
-          .pipe(Stream.take(1), Stream.runCollect, Effect.timeoutOption("1 second"));
+          .pipe(Stream.take(1), Stream.runCollect, Effect.timeoutOption("1 second"), TestClock.withLive);
 
-        expect(O.isSome(first)).toBe(true);
+        assertTrue(yield* Deferred.isDone(cancelled));
+        assertSome(first.pipe(O.map(thunkTrue)), true);
         if (O.isNone(first)) {
           return;
         }
-        expect(O.getOrUndefined(A.fromIterable(first.value)[0]?.data ?? O.none())).toEqual({ delta: "first" });
+        assertSome(A.fromIterable(first.value)[0]?.data ?? O.none(), { delta: "first" });
       })
     )
   );
 
-  layer(makeVeniceAIChatUnitLayer())((it) =>
+  it.layer(makeVeniceAIChatUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "delegates the compatibility chat service through VeniceAI",
       Effect.fnUntraced(function* () {
