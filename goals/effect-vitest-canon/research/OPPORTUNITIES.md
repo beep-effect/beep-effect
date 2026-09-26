@@ -2355,3 +2355,14 @@ suites use the accepted test-runner package. The charter now names that public
 package while retaining the historical rc.112/rc.113 evidence and semantics.
 Updating consumer instructions in the runner extraction PR would have prevented
 new remediation lanes from repeating the obsolete import.
+
+## 2026-09-26: Scoped test typecheck did not prove package audit diagnostics
+
+OpenAI compatibility scope migration passed its configured nineteen tests and
+package-test-typecheck, but mandatory package-verify failed in beep:check:tests
+with five TS377083 nestedEffectGenYield diagnostics. Removing layer provision
+left redundant nested generators on error-capture paths. These diagnostics are
+introduced by the test refactor, not inherited source failures. The repair
+inlines the redundant generator boundary while retaining Effect.flip on the
+failing operation and the same error assertions. Running the package's actual
+audit check path before handoff would have caught this distinction earlier.
