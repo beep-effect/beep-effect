@@ -13,6 +13,7 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 
 // 8x8 single-color images generated once via `ffmpeg -f lavfi -i color=c=red`
 // and embedded so the live lane needs only the exiftool binary itself.
@@ -23,13 +24,15 @@ const TINY_GIF_BASE64 =
 
 const liveLayer = Layer.mergeAll(NodeServices.layer, Exiftool.makeLayer().pipe(Layer.provide(NodeServices.layer)));
 
-const skipNotice = Effect.logInfo("Skipping the live exiftool lane because the exiftool binary is unavailable.");
-
 const exiftoolAvailable = Effect.gen(function* () {
   const exiftool = yield* Exiftool;
   return yield* exiftool.version.pipe(
     Effect.map(() => true),
-    Effect.orElseSucceed(() => false)
+    Effect.catchIf(
+      (error) =>
+        O.exists(error.cause, (cause) => PlatformError.isPlatformError(cause) && cause.reason._tag === "NotFound"),
+      () => Effect.succeed(false)
+    )
   );
 });
 
@@ -81,11 +84,10 @@ const roundTrip = Effect.fn("ExiftoolLive.roundTrip")(function* (fileName: strin
 });
 
 it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep/exiftool live", (it) => {
-  it.effect(
-    "round-trips XMP-beepQA provenance through a real PNG",
-    Effect.fnUntraced(function* () {
+  it.effect("round-trips XMP-beepQA provenance through a real PNG", (ctx) =>
+    Effect.gen(function* () {
       if (!(yield* exiftoolAvailable)) {
-        return yield* skipNotice;
+        return ctx.skip("The exiftool executable was not found.");
       }
 
       const read = yield* roundTrip("frame.png", TINY_PNG_BASE64, "sess-live-png");
@@ -94,11 +96,10 @@ it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep
     })
   );
 
-  it.effect(
-    "round-trips XMP-beepQA provenance through a real GIF",
-    Effect.fnUntraced(function* () {
+  it.effect("round-trips XMP-beepQA provenance through a real GIF", (ctx) =>
+    Effect.gen(function* () {
       if (!(yield* exiftoolAvailable)) {
-        return yield* skipNotice;
+        return ctx.skip("The exiftool executable was not found.");
       }
 
       const read = yield* roundTrip("frame.gif", TINY_GIF_BASE64, "sess-live-gif");
@@ -106,11 +107,10 @@ it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep
     })
   );
 
-  it.effect(
-    "refuses video containers with a pointer at FFmpeg.writeContainerMetadata",
-    Effect.fnUntraced(function* () {
+  it.effect("refuses video containers with a pointer at FFmpeg.writeContainerMetadata", (ctx) =>
+    Effect.gen(function* () {
       if (!(yield* exiftoolAvailable)) {
-        return yield* skipNotice;
+        return ctx.skip("The exiftool executable was not found.");
       }
 
       const fs = yield* FileSystem.FileSystem;
