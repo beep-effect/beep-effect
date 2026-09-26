@@ -20,11 +20,14 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type { PostgresClientValue, PostgresDrizzleDatabase } from "@beep/postgres";
@@ -545,18 +548,23 @@ describe("Postgres interop", () => {
 });
 
 describe("Postgres Drizzle migrations", () => {
-  it.effect(
-    "normalizes synchronous native migrator setup failures",
-    Effect.fnUntraced(function* () {
-      const error = yield* migrate({} as PostgresDrizzleDatabase, {
-        migrationsFolder: "/tmp/beep-effect2-postgres-missing-migrations-folder/child",
-      }).pipe(Effect.flip);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect(
+      "normalizes synchronous native migrator setup failures",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const error = yield* migrate({} as PostgresDrizzleDatabase, {
+          migrationsFolder: path.join(directory, "missing-child"),
+        }).pipe(Effect.flip);
 
-      expect(error).toBeInstanceOf(PostgresError);
-      expect(error.operation).toBe("migrate");
-      expect(O.getOrThrow(error.message)).toContain("ENOENT");
-    })
-  );
+        expect(error).toBeInstanceOf(PostgresError);
+        expect(error.operation).toBe("migrate");
+        expect(O.getOrThrow(error.message)).toContain("ENOENT");
+      })
+    );
+  });
 
   it.layer(NodeCrypto.layer)((it) => {
     it.effect(
