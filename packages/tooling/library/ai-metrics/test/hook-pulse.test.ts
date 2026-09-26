@@ -13,6 +13,7 @@ import {
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
+  hashPublicTextSha256,
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
@@ -60,6 +61,53 @@ const autoApprovedPostToolUse = rawInput("2026-08-01T08:39:56.000Z", {
 });
 
 const autoApprovedSequence = [autoApprovedPreToolUse, autoApprovedPostToolUse];
+
+// Context-surface fixtures (goals/harness-evidence-ledger, D8). The raw skill
+// name and paths below must never appear in a row; only the unsalted digest of
+// `${kind}:${name}` may.
+const surfaceSkillName = "surface-canary-skill";
+
+const postToolUseSkill = rawInput("2026-08-01T08:50:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "Skill",
+  tool_input: { skill: `/${surfaceSkillName}`, args: "content the ledger must never keep" },
+});
+
+const preToolUseSkill = rawInput("2026-08-01T08:49:59.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PreToolUse,
+  tool_name: "Skill",
+  tool_input: { skill: surfaceSkillName },
+});
+
+const postToolUseMcp = rawInput("2026-08-01T08:50:01.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "mcp__notion__search",
+  tool_input: { query: "content the ledger must never keep" },
+});
+
+const postToolUseSourceRead = rawInput("2026-08-01T08:50:02.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "Read",
+  tool_input: { file_path: "packages/foo/src/x.ts" },
+});
+
+// Absolute path, cwd in a subdirectory, root stamped by the writer: the path is
+// classified relative to the repo root, not to cwd.
+const postToolUseHookEdit = {
+  ...rawInput("2026-08-01T08:50:03.000Z", {
+    hook_event_name: HookPulseEvent.Enum.PostToolUse,
+    tool_name: "Edit",
+    cwd: `${baseRawEventFixture.cwd}/packages/tooling`,
+    tool_input: { file_path: `${baseRawEventFixture.cwd}/.claude/hooks/law-pulse.sh` },
+  }),
+  repoRoot: baseRawEventFixture.cwd,
+};
+
+const postToolUseClaudeMdWrite = rawInput("2026-08-01T08:50:04.000Z", {
+  hook_event_name: HookPulseEvent.Enum.PostToolUse,
+  tool_name: "Write",
+  tool_input: { file_path: "./CLAUDE.md" },
+});
 
 const approvedToolPreToolUse = rawInput("2026-08-01T08:40:11.000Z", {
   session_id: "ccd-session-tool-approved",
@@ -270,6 +318,7 @@ const decodeHookPulseFromLegacy = HookPulseV1FromLegacyRecord.decodeUnknownEffec
 const decodeHookPulse = HookPulseV1.decodeEffect;
 const encodeHookPulse = HookPulseV1.encodeEffect;
 const encodeHookPulseToRaw = HookPulseV1FromRawEvent.encodeUnknownEffect;
+const encodeHookPulseToLegacy = S.encodeUnknownEffect(HookPulseV1FromLegacyRecord);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
@@ -832,7 +881,9 @@ describe("HookPulseV1", () => {
       expect(rawEvent).not.toHaveProperty("permission_suggestions");
       expect(rawEvent).not.toHaveProperty("message");
       expect(rawEvent).not.toHaveProperty("prompt");
-      expect(rawEvent).not.toHaveProperty("tool_input");
+      // `tool_input` survives only as its surface-locating projection; the
+      // command inside it does not.
+      expect(O.getOrThrow(rawEvent.tool_input)).not.toHaveProperty("command");
       expect(rawEvent).not.toHaveProperty("tool_response");
       expect(rawEvent).not.toHaveProperty("last_assistant_message");
       expect(canonical.waitReason).toBe("tool-permission");
@@ -1082,4 +1133,199 @@ describe("HookPulseV1", () => {
     expect(decoded).toBeInstanceOf(HookPulseV1);
     expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);
   });
+  it.effect(
+    "derives the unsalted context-surface digest on PostToolUse",
+    Effect.fn("HookPulseTest.derivesContextSurface")(function* () {
+      const decoded = yield* withSaltEnv(
+        {},
+        Effect.all(
+          {
+            skill: decodeHookPulseFromRaw(postToolUseSkill),
+            mcp: decodeHookPulseFromRaw(postToolUseMcp),
+            sourceRead: decodeHookPulseFromRaw(postToolUseSourceRead),
+            hookEdit: decodeHookPulseFromRaw(postToolUseHookEdit),
+            claudeMd: decodeHookPulseFromRaw(postToolUseClaudeMdWrite),
+            preToolUse: decodeHookPulseFromRaw(preToolUseSkill),
+          },
+          { concurrency: 1 }
+        )
+      );
+      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded.skill));
+
+      // The leading slash of a slash-command invocation is not part of the name.
+      expect(decoded.skill.surface).toEqual(O.some(yield* hashPublicTextSha256(`skill:${surfaceSkillName}`)));
+      expect(decoded.mcp.surface).toEqual(O.some(yield* hashPublicTextSha256("mcp-server:notion")));
+      expect(decoded.sourceRead.surface).toEqual(O.none());
+      expect(decoded.hookEdit.surface).toEqual(O.some(yield* hashPublicTextSha256("hook:law-pulse.sh")));
+      // CLAUDE.md is a symlink to AGENTS.md: one surface, one digest.
+      expect(decoded.claudeMd.surface).toEqual(O.some(yield* hashPublicTextSha256("agents-md:AGENTS.md")));
+      // PostToolUse owns the field, so the same skill call's PreToolUse carries none.
+      expect(decoded.preToolUse.surface).toEqual(O.none());
+      expect(serialized).not.toContain(surfaceSkillName);
+    })
+  );
+
+  it.effect(
+    "rejects surface on a non-PostToolUse event",
+    Effect.fn("HookPulseTest.rejectsMisownedSurface")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPreToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(
+        decodeHookPulse({
+          ...encoded,
+          surface: yield* hashPublicTextSha256(`skill:${surfaceSkillName}`),
+        })
+      );
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("surface");
+      expect(failure.message).toContain("PostToolUse");
+      expect(failure.message).toContain("PreToolUse");
+    })
+  );
+
+  it.effect(
+    "round-trips a surface digest through the raw-event codec as a writer stamp",
+    Effect.fn("HookPulseTest.roundTripsSurface")(function* () {
+      const decoded = yield* withSaltEnv({}, decodeHookPulseFromRaw(postToolUseSkill));
+      const raw = yield* encodeHookPulseToRaw(decoded);
+      const roundTripped = yield* decodeHookPulseFromRaw(raw);
+
+      expect(raw.surface).toBe(O.getOrThrow(decoded.surface));
+      expect(raw.event.tool_input).toBeUndefined();
+      expect(hookPulseEquivalent(roundTripped, decoded)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "classifies every repo-relative file surface and drops non-string tool_input keys",
+    Effect.fn("HookPulseTest.classifiesFileSurfaces")(function* () {
+      const postToolUse = <const ToolInput extends object>(toolName: string, toolInput: ToolInput) =>
+        rawInput("2026-08-01T08:51:00.000Z", {
+          hook_event_name: HookPulseEvent.Enum.PostToolUse,
+          tool_name: toolName,
+          tool_input: toolInput,
+        });
+      const decoded = yield* withSaltEnv(
+        {},
+        Effect.all(
+          {
+            // `..` pops a segment lexically before classification.
+            skillFile: decodeHookPulseFromRaw(
+              postToolUse("Read", { file_path: "packages/../.claude/skills/surface-canary/SKILL.md" })
+            ),
+            agent: decodeHookPulseFromRaw(postToolUse("Edit", { file_path: ".claude/agents/reviewer.md" })),
+            // A non-string `file_path` falls back to none, so `path` locates the surface.
+            settings: decodeHookPulseFromRaw(
+              postToolUse("MultiEdit", { file_path: 42, path: ".claude/settings.local.json" })
+            ),
+            notSettings: decodeHookPulseFromRaw(postToolUse("Write", { file_path: ".claude/keybindings.json" })),
+            pattern: decodeHookPulseFromRaw(
+              postToolUse("NotebookEdit", { file_path: null, notebook_path: ".patterns/jsdoc-documentation.md" })
+            ),
+            // Every locating key is malformed, so there is no path to classify.
+            malformedPaths: decodeHookPulseFromRaw(
+              postToolUse("Read", { file_path: false, notebook_path: 7, path: ["AGENTS.md"] })
+            ),
+            malformedSkill: decodeHookPulseFromRaw(postToolUse("Skill", { skill: { name: surfaceSkillName } })),
+            outsideRepo: decodeHookPulseFromRaw(postToolUse("Read", { file_path: "/elsewhere/AGENTS.md" })),
+          },
+          { concurrency: 1 }
+        )
+      );
+
+      expect(decoded.skillFile.surface).toEqual(O.some(yield* hashPublicTextSha256("skill:surface-canary")));
+      expect(decoded.agent.surface).toEqual(O.some(yield* hashPublicTextSha256("agent-definition:reviewer.md")));
+      expect(decoded.settings.surface).toEqual(O.some(yield* hashPublicTextSha256("settings:settings.local.json")));
+      expect(decoded.notSettings.surface).toEqual(O.none());
+      expect(decoded.pattern.surface).toEqual(O.some(yield* hashPublicTextSha256("pattern:jsdoc-documentation.md")));
+      expect(decoded.malformedPaths.surface).toEqual(O.none());
+      expect(decoded.malformedSkill.surface).toEqual(O.none());
+      expect(decoded.outsideRepo.surface).toEqual(O.none());
+    })
+  );
+
+  it.effect(
+    "migrates a legacy row without a transcript path and refuses to re-encode it as a raw event",
+    Effect.fn("HookPulseTest.legacyRowWithoutTranscriptPath")(function* () {
+      const decoded = yield* withSaltEnv(
+        {},
+        decodeHookPulseFromLegacy({
+          schemaVersion: "hook-pulse/v1",
+          ts: "2026-08-01T09:05:00.000Z",
+          sessionId: "legacy-session-without-transcript",
+          agentKind: "claude-code",
+          hookEvent: "Stop",
+          cwd: "/workspace/legacy-checkout",
+          notifierRev: "spike-0",
+          instrumentClass: "spike",
+          evidenceTier: "observed",
+          waitReason: "none",
+        })
+      );
+      const failure = yield* Effect.flip(encodeHookPulseToRaw(decoded));
+      // The legacy codec's encode side is the identity: the canonical row is its own legacy form.
+      const legacyEncoded = yield* encodeHookPulseToLegacy(decoded);
+
+      expect(decoded.transcriptPath).toEqual(O.none());
+      expect(legacyEncoded.sessionId).toBe(decoded.sessionId);
+      expect(legacyEncoded.transcriptPath).toBeUndefined();
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("Expected transcriptPath");
+    })
+  );
+
+  it.effect(
+    "refuses to encode an unchecked canonical pulse whose wait reason disagrees with its raw event",
+    Effect.fn("HookPulseTest.rejectsMismatchedWaitReason")(function* () {
+      // `disableChecks` is the only way to build such a row; encode re-runs the
+      // canonical invariant before the raw-event transformation sees the value.
+      const decoded = yield* withSaltEnv({}, decodeHookPulseFromRaw(stop));
+      const failure = yield* Effect.flip(
+        encodeHookPulseToRaw(
+          HookPulseV1.make(
+            { ...decoded, waitReason: HookPulseWaitReason.Enum["tool-permission"] },
+            { disableChecks: true }
+          )
+        )
+      );
+
+      expect(decoded.waitReason).not.toBe(HookPulseWaitReason.Enum["tool-permission"]);
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain(
+        "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType"
+      );
+    })
+  );
+
+  it.effect(
+    "folds an unreadable salt source into each codec's hashing issue",
+    Effect.fn("HookPulseTest.foldsUnreadableSaltSource")(function* () {
+      const unreadable = ConfigProvider.make(() =>
+        Effect.fail(new ConfigProvider.SourceError({ message: "salt source unreadable" }))
+      );
+      const withUnreadableSalt = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+        Effect.provideService(effect, ConfigProvider.ConfigProvider, unreadable);
+      const raw = yield* Effect.flip(withUnreadableSalt(decodeHookPulseFromRaw(stop)));
+      const legacy = yield* Effect.flip(
+        withUnreadableSalt(
+          decodeHookPulseFromLegacy({
+            schemaVersion: "hook-pulse/v1",
+            ts: "2026-08-01T09:06:00.000Z",
+            sessionId: "legacy-session-unreadable-salt",
+            agentKind: "claude-code",
+            hookEvent: "Stop",
+            cwd: "/workspace/legacy-checkout",
+            notifierRev: "spike-0",
+            instrumentClass: "spike",
+            evidenceTier: "observed",
+            waitReason: "none",
+          })
+        )
+      );
+
+      expect(raw.message).toContain("Failed to hash private hook-pulse identifiers");
+      expect(legacy.message).toContain("Failed to migrate private identifiers from a legacy hook-pulse/v1 row");
+    })
+  );
 });

@@ -24,7 +24,10 @@ const selectedESLintConfig = (() => {
 // those sessions have checked out. The Impeccable mirrors are vendored agent
 // tooling whose upstream UMD bundle is not authored workspace source.
 // `infra/lambda/**/build/**` is gitignored esbuild bundle output (vendored shim
-// code) that eslint would otherwise scan.
+// code) that eslint would otherwise scan. The `.runtime-*` directories under the
+// vitest-instrumentation fixtures are gitignored disposable subprocess fixtures
+// (see `.gitignore`); a killed test run can leave one behind, and it must not
+// turn the lint gate red.
 export default [
   globalIgnores([
     "**/src-tauri/target/**",
@@ -38,6 +41,7 @@ export default [
     ".grok/**",
     ".github/skills/impeccable/**",
     "infra/lambda/**/build/**",
+    "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**",
   ]),
   ...selectedESLintConfig,
 ];

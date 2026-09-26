@@ -1,7 +1,8 @@
 import { ModelInvariantError, VersionConflictError } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import * as sqlite from "@beep/effect-drizzle/sqlite";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { _needsExplicitColumn, _pgEmptyColumnName, _pgParameterizedDefault, _pgVarcharTooWide } from "./fixtures.ts";

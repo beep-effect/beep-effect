@@ -2394,6 +2394,21 @@ existed; the worktree lacked them. The SDK's existing build script restored the
 ignored declarations and infra docgen passed 101 examples. Install/preflight
 should check for this generated SDK output before starting a repository proof;
 a missing build artifact must not be mistaken for a request to weaken TS rules.
+
+### 2026-09-25 — Main merge introduces Fallow health debt into a docs checkpoint
+
+- Activity: republish modeling inventory PR #1273 after merging main, preserving
+  its docs-only diff.
+- Evidence: `bun run beep yeet publish --start-pr-early --monitor --pr` pushed
+  successfully, then cheap gates failed only `fallow:health`. The report lists
+  five complexity findings in `MonitorLoop.ts` and `yeet-check-fidelity.test.ts`,
+  both byte-identical to origin/main and landed by PR #1270. The Effect/Vitest
+  ratchet passed. This is inherited tooling debt, not a modeling inventory defect.
+- Prevention: require the Fallow health baseline check on the final merged result
+  of tooling PRs, and retain file-level provenance in the failure envelope; its
+  current `not-applicable` attribution requires manual comparison with main.
+- Disposition: keep proof red; repair tooling in its separate D13 lane rather
+  than modifying the modeling checkpoint or waiving the gate.
 ### 2026-09-25 — GitHub quota interrupts heavy-admission observation
 
 After the graph-3d browser prerequisite passed Chromium and package proof,
@@ -2411,3 +2426,13 @@ by this migration. Hoist the unchanged codecs and explicitly redact only the
 private output directory in published command receipts. Package verification
 does not cover these root policy gates; include focused oxlint and knowledge
 reference checks before the next full proof.
+
+
+### Drizzle full-proof follow-up: compiled codecs and private output references
+
+PR #1277 full proof reached Lint Policy and rejected eight inline schema compiler
+applications in the SQLite properties and two private timing-output references.
+Hoist the unchanged insert/update codecs and guards to module scope, and redact
+the timing command output destination as `<private-output>`. Package proof alone
+did not cover these root policies; running the focused root policies before
+publication would have caught both failures earlier.
