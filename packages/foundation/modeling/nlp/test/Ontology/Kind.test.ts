@@ -1,4 +1,5 @@
 import * as Kind from "@beep/nlp/Ontology/Kind";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -34,21 +35,18 @@ describe("TextKind schema", () => {
 });
 
 describe("Containment poset", () => {
-  it("canContain agrees with getValidChildren", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([kindArbitrary, kindArbitrary]), ([parent, child]) => {
-          const valid = Kind.getValidChildren(parent);
-          return Kind.canContain(parent, child) === valid.includes(child);
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "canContain agrees with getValidChildren",
+    [kindArbitrary, kindArbitrary],
+    ([parent, child]) => {
+      const valid = Kind.getValidChildren(parent);
+      return Kind.canContain(parent, child) === valid.includes(child);
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("is irreflexive (no kind contains itself)", () => {
-    expect(
-      Effect.runSync(Arbitrary.checkEffect(Arbitrary.all([kindArbitrary]), ([k]) => !Kind.canContain(k, k)))._tag
-    ).toBe("Passed");
+  it.prop("is irreflexive (no kind contains itself)", [kindArbitrary], ([k]) => !Kind.canContain(k, k), {
+    arbitrary: fcRuns(100),
   });
 
   it("leaf kinds contain nothing", () => {
@@ -67,20 +65,19 @@ describe("Containment poset", () => {
     expect(Kind.KindContainment.containment).toEqual(Kind.KindContainment.make({}));
   });
 
-  it("round-trips schema-derived containment records", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([KindContainmentArbitrary]), ([containment]) => {
-          const encoded = Effect.runSync(encodeKindKindContainment(containment));
-          const decoded = Effect.runSync(decodeKindKindContainment(encoded));
+  it.prop(
+    "round-trips schema-derived containment records",
+    [KindContainmentArbitrary],
+    ([containment]) => {
+      const encoded = Effect.runSync(encodeKindKindContainment(containment));
+      const decoded = Effect.runSync(decodeKindKindContainment(encoded));
 
-          expect(decoded).toEqual(Kind.KindContainment.make({ ...containment }));
+      expect(decoded).toEqual(Kind.KindContainment.make({ ...containment }));
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("Smart constructors & utilities", () => {
@@ -91,27 +88,25 @@ describe("Smart constructors & utilities", () => {
     expect(Kind.Entity("e", { type: "ORG" }).metadata).toEqual({ type: "ORG" });
   });
 
-  it("kindOf and content are inverse projections", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(S.String)]), ([s]) => {
-          const doc = Kind.Document(s);
-          return Kind.kindOf(doc) === "Document" && Kind.content(doc) === s;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "kindOf and content are inverse projections",
+    [Arbitrary.schema(S.String)],
+    ([s]) => {
+      const doc = Kind.Document(s);
+      return Kind.kindOf(doc) === "Document" && Kind.content(doc) === s;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("mapContent preserves kind", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(S.String)]), ([s]) => {
-          const mapped = Kind.mapContent(Kind.Token(s), (x) => `${x}!`);
-          return mapped.kind === "Token" && mapped.content === `${s}!`;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "mapContent preserves kind",
+    [Arbitrary.schema(S.String)],
+    ([s]) => {
+      const mapped = Kind.mapContent(Kind.Token(s), (x) => `${x}!`);
+      return mapped.kind === "Token" && mapped.content === `${s}!`;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("withMetadata merges metadata", () => {
     const e = Kind.withMetadata(Kind.Entity("Acme", { a: 1 }), { b: 2 });

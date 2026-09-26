@@ -60,45 +60,41 @@ describe("TextNode", () => {
 });
 
 describe("Schema-derived graph payloads", () => {
-  it("round-trips generated graph schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            TextNodeArbitrary,
-            TextEdgeArbitrary,
-            EntityNodeArbitrary,
-            POSNodeArbitrary,
-            LemmaNodeArbitrary,
-            DependencyNodeArbitrary,
-            RelationNodeArbitrary,
-            NLPAnalysisArbitrary,
-          ]),
-          ([textNode, textEdge, entityNode, posNode, lemmaNode, dependencyNode, relationNode, analysis]) => {
-            const encodedTextNode = Effect.runSync(encodeGraphSchemaTextNode(textNode));
-            const encodedTextEdge = Effect.runSync(encodeGraphSchemaTextEdge(textEdge));
-            const encodedEntityNode = Effect.runSync(encodeGraphSchemaEntityNode(entityNode));
-            const encodedPOSNode = Effect.runSync(encodeGraphSchemaPOSNode(posNode));
-            const encodedLemmaNode = Effect.runSync(encodeGraphSchemaLemmaNode(lemmaNode));
-            const encodedDependencyNode = Effect.runSync(encodeGraphSchemaDependencyNode(dependencyNode));
-            const encodedRelationNode = Effect.runSync(encodeGraphSchemaRelationNode(relationNode));
-            const encodedAnalysis = Effect.runSync(encodeGraphSchemaNLPAnalysis(analysis));
+  it.prop(
+    "round-trips generated graph schemas",
+    [
+      TextNodeArbitrary,
+      TextEdgeArbitrary,
+      EntityNodeArbitrary,
+      POSNodeArbitrary,
+      LemmaNodeArbitrary,
+      DependencyNodeArbitrary,
+      RelationNodeArbitrary,
+      NLPAnalysisArbitrary,
+    ],
+    ([textNode, textEdge, entityNode, posNode, lemmaNode, dependencyNode, relationNode, analysis]) => {
+      const encodedTextNode = Effect.runSync(encodeGraphSchemaTextNode(textNode));
+      const encodedTextEdge = Effect.runSync(encodeGraphSchemaTextEdge(textEdge));
+      const encodedEntityNode = Effect.runSync(encodeGraphSchemaEntityNode(entityNode));
+      const encodedPOSNode = Effect.runSync(encodeGraphSchemaPOSNode(posNode));
+      const encodedLemmaNode = Effect.runSync(encodeGraphSchemaLemmaNode(lemmaNode));
+      const encodedDependencyNode = Effect.runSync(encodeGraphSchemaDependencyNode(dependencyNode));
+      const encodedRelationNode = Effect.runSync(encodeGraphSchemaRelationNode(relationNode));
+      const encodedAnalysis = Effect.runSync(encodeGraphSchemaNLPAnalysis(analysis));
 
-            expect(Effect.runSync(decodeGraphSchemaTextNode(encodedTextNode))).toEqual(textNode);
-            expect(Effect.runSync(decodeGraphSchemaTextEdge(encodedTextEdge))).toEqual(textEdge);
-            expect(Effect.runSync(decodeGraphSchemaEntityNode(encodedEntityNode))).toEqual(entityNode);
-            expect(Effect.runSync(decodeGraphSchemaPOSNode(encodedPOSNode))).toEqual(posNode);
-            expect(Effect.runSync(decodeGraphSchemaLemmaNode(encodedLemmaNode))).toEqual(lemmaNode);
-            expect(Effect.runSync(decodeGraphSchemaDependencyNode(encodedDependencyNode))).toEqual(dependencyNode);
-            expect(Effect.runSync(decodeGraphSchemaRelationNode(encodedRelationNode))).toEqual(relationNode);
-            expect(Effect.runSync(decodeGraphSchemaNLPAnalysis(encodedAnalysis))).toEqual(analysis);
+      expect(Effect.runSync(decodeGraphSchemaTextNode(encodedTextNode))).toEqual(textNode);
+      expect(Effect.runSync(decodeGraphSchemaTextEdge(encodedTextEdge))).toEqual(textEdge);
+      expect(Effect.runSync(decodeGraphSchemaEntityNode(encodedEntityNode))).toEqual(entityNode);
+      expect(Effect.runSync(decodeGraphSchemaPOSNode(encodedPOSNode))).toEqual(posNode);
+      expect(Effect.runSync(decodeGraphSchemaLemmaNode(encodedLemmaNode))).toEqual(lemmaNode);
+      expect(Effect.runSync(decodeGraphSchemaDependencyNode(encodedDependencyNode))).toEqual(dependencyNode);
+      expect(Effect.runSync(decodeGraphSchemaRelationNode(encodedRelationNode))).toEqual(relationNode);
+      expect(Effect.runSync(decodeGraphSchemaNLPAnalysis(encodedAnalysis))).toEqual(analysis);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("TextEdge", () => {

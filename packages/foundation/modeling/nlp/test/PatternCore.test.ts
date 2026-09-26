@@ -160,44 +160,42 @@ describe("Core Pattern", () => {
       })
     ));
 
-  it("round-trips schema-derived pattern values", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            POSPatternOptionArbitrary,
-            EntityPatternOptionArbitrary,
-            LiteralPatternOptionArbitrary,
-            PatternElementArbitrary,
-            PatternArbitrary,
-          ]),
-          ([posOption, entityOption, literalOption, patternElement, pattern]) => {
-            const decodedPOSOption = Effect.runSync(decodePOSPatternOption(posOption));
-            const decodedEntityOption = Effect.runSync(decodeEntityPatternOption(entityOption));
-            const decodedLiteralOption = Effect.runSync(decodeLiteralPatternOption(literalOption));
-            const encodedElement = Effect.runSync(encodePatternElement(patternElement));
-            const decodedElement = Effect.runSync(decodePatternElement(encodedElement));
-            const decodedPattern = Pattern.decode(Pattern.encode(pattern));
+  it.prop(
+    "round-trips schema-derived pattern values",
+    [
+      POSPatternOptionArbitrary,
+      EntityPatternOptionArbitrary,
+      LiteralPatternOptionArbitrary,
+      PatternElementArbitrary,
+      PatternArbitrary,
+    ],
+    ([posOption, entityOption, literalOption, patternElement, pattern]) => {
+      const decodedPOSOption = Effect.runSync(decodePOSPatternOption(posOption));
+      const decodedEntityOption = Effect.runSync(decodeEntityPatternOption(entityOption));
+      const decodedLiteralOption = Effect.runSync(decodeLiteralPatternOption(literalOption));
+      const encodedElement = Effect.runSync(encodePatternElement(patternElement));
+      const decodedElement = Effect.runSync(decodePatternElement(encodedElement));
+      const decodedPattern = Pattern.decode(Pattern.encode(pattern));
 
-            expect(decodedPOSOption).toEqual(posOption);
-            expect(decodedEntityOption).toEqual(entityOption);
-            expect(decodedLiteralOption).toEqual(literalOption);
-            expect(decodedElement).toEqual(patternElement);
-            expect(decodedPattern).toEqual(pattern);
-            expect(Pattern.is(decodedPattern)).toBe(true);
-            expect(Pattern.POS.toBracketString(decodedPOSOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
-            expect(Pattern.Entity.toBracketString(decodedEntityOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
-            expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+      expect(decodedPOSOption).toEqual(posOption);
+      expect(decodedEntityOption).toEqual(entityOption);
+      expect(decodedLiteralOption).toEqual(literalOption);
+      expect(decodedElement).toEqual(patternElement);
+      expect(decodedPattern).toEqual(pattern);
+      expect(Pattern.is(decodedPattern)).toBe(true);
+      expect(Pattern.POS.toBracketString(decodedPOSOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+      expect(Pattern.Entity.toBracketString(decodedEntityOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+      expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
 
-            return true;
-          },
-          // Every option schema rejects a sole empty choice and the literal option
-          // also rejects reserved tags, so the five-way tuple discards most roots;
-          // the default budget (10 per run) exhausts on some seeds.
-          { ...fcRuns(50), maxDiscards: 20_000 }
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    {
+      arbitrary: // Every option schema rejects a sole empty choice and the literal option
+        // also rejects reserved tags, so the five-way tuple discards most roots;
+        // the default budget (10 per run) exhausts on some seeds.
+        { ...fcRuns(50), maxDiscards: 20_000 },
+    }
+  );
 
   it("parses mixed pattern strings in order", () => {
     const elements = PatternFromString(["[ADJ|NOUN]", "[DATE]", "[|the]"]);

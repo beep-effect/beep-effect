@@ -117,49 +117,40 @@ describe("AnnotatedDocument round-trip", () => {
     })
   );
 
-  it("schema-derived documents encode and decode through the production contract", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([AnnotatedDocumentArbitrary]),
-          ([document]) => {
-            const decoded = Effect.runSync(
-              Effect.gen(function* () {
-                const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
-                return yield* decodeContractAnnotatedDocument(encoded);
-              })
-            );
+  it.prop(
+    "schema-derived documents encode and decode through the production contract",
+    [AnnotatedDocumentArbitrary],
+    ([document]) => {
+      const decoded = Effect.runSync(
+        Effect.gen(function* () {
+          const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
+          return yield* decodeContractAnnotatedDocument(encoded);
+        })
+      );
 
-            expect(decoded).toEqual(document);
+      expect(decoded).toEqual(document);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 describe("Span", () => {
-  it("round-trips integer spans with start <= end", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
-          ]),
-          ([a, b]) => {
-            const start = Math.min(a, b);
-            const end = Math.max(a, b);
-            const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
-            return span.start <= span.end && span.start === start && span.end === end;
-          }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips integer spans with start <= end",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+    ],
+    ([a, b]) => {
+      const start = Math.min(a, b);
+      const end = Math.max(a, b);
+      const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
+      return span.start <= span.end && span.start === start && span.end === end;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "rejects negative offsets",
