@@ -114,7 +114,6 @@ describe("Uspto service", () => {
       it.effect(
         "resolves application metadata from a file wrapper envelope",
         Effect.fnUntraced(function* () {
-          const seenUrls: Array<string> = [];
           const uspto = yield* Uspto;
           const metadata = yield* uspto.getApplication("16138242");
 
@@ -122,7 +121,6 @@ describe("Uspto service", () => {
           assertSome(metadata.inventionTitle, NonEmptyTrimmedStr.make("Adjustable widget assembly"));
           assertSome(metadata.patentNumber, NonEmptyTrimmedStr.make("10772255"));
           assertSome(metadata.firstApplicantName, NonEmptyTrimmedStr.make("Precision Widgets LLC"));
-          expect(seenUrls).toHaveLength(0);
           expect(requestedUrls).toStrictEqual(["https://api.uspto.gov/api/v1/patent/applications/16138242"]);
         })
       );
