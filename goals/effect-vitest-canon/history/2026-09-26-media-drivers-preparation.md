@@ -67,3 +67,51 @@ the raw reports. These single samples do not establish a speedup.
 
 Cache dependency accounting, Fallow projection and final ledger reconciliation
 remain before this wave can be published.
+
+## ExifTool property, flake and runner completion
+
+Property commit `bd8b169294` exposes fourteen named native laws with the
+existing fcRuns(25), encode/decode equality and opaque-cause filter. Full
+audit/docgen passed (7.8 / 2.9 seconds); all fourteen laws passed with a
+400-run floor and seed 20260708. The two stale EV001 findings were removed
+upstream by `b1aa7e320c` before this wave and receive that attribution.
+
+Flake commit `00fe7b69a6` distinguishes typed missing-executable errors from
+genuine process failures. Runtime probes prove three native passes, three
+explicit skips when the binary is absent, and three failures when it resolves
+to an executable returning exit 1. Fixture bytes and all native oracles are
+unchanged. Full audit/docgen passed (10.3 / 3.0 seconds).
+
+Runner commit `90272ce408` covers all four ExifTool files and generated
+dependency projections. Full audit/docgen passed (16.8 / 6.9 seconds), and
+CI tracing passed all 30 tests. The missing/failing executable probes were
+repeated through this runner with the same exact skipped/failed outcomes.
+The increase from 17 to 30 registrations is the aggregate-to-fourteen law
+split, with no added domain or in-scope file.
+
+After both runner dependencies were present, the final timing runs passed
+with stable source/lock hashes and no skipped tests: ExifTool Node 8.221
+seconds / Bun 4.205 seconds; Face Detection Node 11.834 seconds / Bun 3.895
+seconds. Each report includes workstation load and pressure context. These
+samples vary with concurrent workstation work and do not establish a speedup.
+They supersede the earlier Face-only dependency-state samples above.
+
+Cache accounting changes only eighteen runner dependency edges and the
+review reference. Cache audit reports zero blocking findings and 1251
+unassessed cached computations; no qualification is promoted.
+
+## Reconciliation checkpoint
+
+Strict validation passes all 61 rows across the same seven files with zero
+missing lens coverage: 30 fixed (including two upstream fixes), five retained
+native historical exceptions and 26 no-additional-finding attestations. The
+current detector baseline retains only the two native-platform occurrences;
+all unrelated baseline rows are unchanged. The three historical live-test
+exceptions preserve the reason for native execution after their registrations
+moved under the live harness.
+
+The normal ratchet passes with zero introduced/resolved rows after baseline
+reconciliation; its 24.657-second scan does not prove the under-ten-second
+performance target. Fallow boundary freshness, generated TypeScript references,
+workspace dependency checks and cache audit pass. Full hosted and merged-preview
+readiness remain publication gates, not claims made by these package proofs.

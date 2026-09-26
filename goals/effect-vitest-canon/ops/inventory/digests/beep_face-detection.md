@@ -36,7 +36,7 @@ Slowest reported files:
 
 Hosted history: 0 mapped observation rows across 0 jobs; categories {}.
 
-## P2 order and uncertainty
+## Historical P1 order and uncertainty
 
 Scope/isolation and native boundaries first; assertion-family corrections next, preserving payload/cause, operand, polarity and every count. Then native property registration retaining current fcRuns floors (20/25/50 where present), seeds, generators and invalid-boundary cases; flake work only with supported causes; safe observability last. Do not transfer old exceptions or replace a native subject to make a test green. All proposal statuses remain open; P2 remains gated.
 
@@ -45,3 +45,24 @@ Campaign timing facts remain 139 attempts, 132 full-file-representation baseline
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## Current media-driver wave
+
+All fifteen original rows are accounted for: two fixed scope findings, one
+reviewed native exception, and twelve no-additional-finding attestations.
+Scope commit `2520171e0e` removes the fake-service provider wrapper while
+preserving both public withDetector call forms, and bounds native installer
+layer acquisition. The ONNX fixture retains real ZIP, symlink, rename and
+cleanup assertions; it does not claim model or inference coverage.
+
+Runner commit `ba75dec0b8` instruments all three files. Full audit/docgen
+passes; CI tracing passes all fourteen tests. The existing thirteen-domain
+property suite also passes the 400-run floor with seed 20260708 and its
+original fcRuns(20). No new arbitrary restriction or oracle change occurs.
+
+Current final timings with both media runner dependencies present: Node
+11.834 seconds and Bun 3.895 seconds, fourteen passed and zero skipped.
+Source/lock hashes remain stable within each run. Load/pressure context is
+retained beside the raw reports; these single samples do not prove a speedup.
+Earlier frozen-cohort timing facts above remain historical, not current
+runtime claims.

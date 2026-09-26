@@ -5,13 +5,13 @@
     "vitest",
     "run",
     "--reporter=json",
-    "--outputFile=<private-output>/media-drivers-face-detection-after-runner-bun.json"
+    "--outputFile=<private-output>/media-drivers-face-detection-final-bun.json"
   ],
-  "phase": "after-runner-bun",
+  "phase": "final-bun",
   "sourceBefore": [
     {
       "file": "bun.lock",
-      "sha256": "4fad28e9f6647ee35576d36a87c8baa0874c1ab8cb5f81d26e495e31258e186f"
+      "sha256": "2251b7f85a5272eedec2fe5d72c64b9bbdcc52935e90a514effdaa0117e1ba0e"
     },
     {
       "file": "packages/drivers/face-detection/package.json",
@@ -46,11 +46,11 @@
       "sha256": "f7d8ebba8b0c6704c2a951362ef96fc0adc5eb7f52f5f3851427083e450e1ede"
     }
   ],
-  "loadBefore": [4.8505859375, 15.36474609375, 19.92578125],
+  "loadBefore": [78.2998046875, 51.7548828125, 32.87939453125],
   "pressureBefore": {
-    "cpu": "some avg10=0.00 avg60=0.10 avg300=1.75 total=2677833932\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.08 total=229131411\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=199480353\n",
-    "io": "some avg10=0.03 avg60=0.07 avg300=0.06 total=1020306864\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=692549207\n"
+    "cpu": "some avg10=15.47 avg60=15.42 avg300=9.75 total=2724906697\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.20 total=231282962\nfull avg10=0.00 avg60=0.04 avg300=0.17 total=201380014\n",
+    "io": "some avg10=0.12 avg60=0.05 avg300=0.30 total=1024574114\nfull avg10=0.00 avg60=0.00 avg300=0.18 total=695275479\n"
   },
   "runtime": {
     "node": "v24.20.0",
@@ -63,11 +63,11 @@
   },
   "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
   "exit": 0,
-  "wholeCommandSeconds": 1.4067058920045383,
+  "wholeCommandSeconds": 3.895340729999589,
   "sourceAfter": [
     {
       "file": "bun.lock",
-      "sha256": "4fad28e9f6647ee35576d36a87c8baa0874c1ab8cb5f81d26e495e31258e186f"
+      "sha256": "2251b7f85a5272eedec2fe5d72c64b9bbdcc52935e90a514effdaa0117e1ba0e"
     },
     {
       "file": "packages/drivers/face-detection/package.json",
@@ -102,11 +102,11 @@
       "sha256": "f7d8ebba8b0c6704c2a951362ef96fc0adc5eb7f52f5f3851427083e450e1ede"
     }
   ],
-  "loadAfter": [4.8505859375, 15.36474609375, 19.92578125],
+  "loadAfter": [78.43603515625, 52.22412109375, 33.1328125],
   "pressureAfter": {
-    "cpu": "some avg10=0.00 avg60=0.10 avg300=1.75 total=2677838877\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.08 total=229131414\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=199480356\n",
-    "io": "some avg10=0.03 avg60=0.07 avg300=0.06 total=1020309582\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=692550966\n"
+    "cpu": "some avg10=12.65 avg60=14.88 avg300=9.71 total=2725265595\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.20 total=231282964\nfull avg10=0.00 avg60=0.04 avg300=0.17 total=201380015\n",
+    "io": "some avg10=0.08 avg60=0.05 avg300=0.30 total=1024576033\nfull avg10=0.00 avg60=0.00 avg300=0.18 total=695276128\n"
   },
   "sourceStable": true
 }
