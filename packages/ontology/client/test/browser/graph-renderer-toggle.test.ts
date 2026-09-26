@@ -25,7 +25,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/unstable/reactivity";
+import { AtomRegistry } from "effect/reactivity";
 
 const node = (id: number, label: string) =>
   OntologyGraphNode.make({

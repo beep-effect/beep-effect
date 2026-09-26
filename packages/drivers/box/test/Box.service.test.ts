@@ -17,11 +17,11 @@ import {
   Result,
   Stream,
 } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBBoxCcgConfig = S.decodeEffect(B.BoxCcgConfig);
 const decodeBEventEventTypeField = S.decodeEffect(B.EventEventTypeField);

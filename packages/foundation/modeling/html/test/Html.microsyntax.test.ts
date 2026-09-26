@@ -21,9 +21,9 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGlobalAttributesStructResult = S.decodeResult(GlobalAttributesStruct);
 const decodeOlResult = S.decodeResult(Ol);

@@ -35,7 +35,7 @@ import {
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type { Crypto } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
@@ -739,10 +739,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
 ): Effect.fn.Return<
   ProvenanceStampOutcome,
   never,
-  | Crypto.Crypto
-  | FileSystem.FileSystem
-  | Path.Path
-  | import("effect/unstable/process").ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | import("effect/process").ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.gen(function* () {
     const registry = registryOverride ?? (yield* makePrSessionRegistryLive());

@@ -109,7 +109,7 @@ const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 const TopicKind = LiteralKit(["plain", "scoped"])
 
 const ContainsScopeSeparator = S.String.check(
-  S.isIncludes(":", {
+  S.isIncluding(":", {
     identifier: $I`ContainsScopeSeparatorCheck`,
     title: "Contains Scope Separator",
     description: "A string that contains `:`.",

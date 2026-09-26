@@ -14,10 +14,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeDocumentIntakeDroppedFileInput = S.decodeEffect(Document.IntakeDroppedFileInput);
 const decodeUnknownUint8ArrayFromBase64Result = S.decodeUnknownResult(S.Uint8ArrayFromBase64);

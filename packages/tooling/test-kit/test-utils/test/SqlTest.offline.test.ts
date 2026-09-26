@@ -14,8 +14,8 @@ import { A } from "@beep/utils";
 import { describe, expect, vi } from "@effect/vitest";
 import { Cause, Clock, ConfigProvider, Duration, Effect, Exit, Fiber, Queue } from "effect";
 import * as O from "effect/Option";
+import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
 
 const nodeRuntimeEffectIt = it.effect.skipIf(process.versions.bun !== undefined);
 

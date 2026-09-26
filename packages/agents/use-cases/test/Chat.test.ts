@@ -3,8 +3,8 @@ import { A, Document, P, RawHtml, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
+import * as RpcSchema from "effect/rpc/RpcSchema";
 import * as S from "effect/Schema";
-import * as RpcSchema from "effect/unstable/rpc/RpcSchema";
 
 const decodeSendMessageRpcPayloadSchemaResult = S.decodeResult(SendMessageRpc.payloadSchema);
 

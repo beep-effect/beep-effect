@@ -123,7 +123,7 @@ export const CodexCaptureAuthState = LiteralKit(["authenticated", "expired"]).pi
 export type CodexCaptureAuthState = typeof CodexCaptureAuthState.Type;
 
 const CodexFindingIdChecks = S.makeFilterGroup([
-  S.isLengthBetween(32, 32, {
+  S.isBetweenLength(32, 32, {
     identifier: $I`CodexFindingIdLengthCheck`,
     title: "Codex Finding Id Length",
     description: "Codex finding identifiers are exactly 32 characters.",
@@ -224,7 +224,7 @@ export const CodexCaptureSource = LiteralKit(["cloud-csv", "security-bundle"]).p
 export type CodexCaptureSource = typeof CodexCaptureSource.Type;
 
 const GitCommitShaChecks = S.makeFilterGroup([
-  S.isLengthBetween(40, 40, {
+  S.isBetweenLength(40, 40, {
     identifier: $I`GitCommitShaLengthCheck`,
     title: "Git Commit Sha Length",
     description: "Full git object names are exactly 40 characters.",

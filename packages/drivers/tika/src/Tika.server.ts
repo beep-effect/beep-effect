@@ -15,11 +15,11 @@ import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Config, Effect, flow, Order, pipe, Stream } from "effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import {
   BEEP_TIKA_BASE_URL_ENV,
   BEEP_TIKA_MAX_OUTPUT_BYTES_ENV,

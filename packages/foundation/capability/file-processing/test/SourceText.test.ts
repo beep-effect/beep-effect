@@ -12,11 +12,11 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSourceTextPageResult = S.decodeUnknownResult(SourceTextPage);
 

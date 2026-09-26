@@ -16,13 +16,13 @@
 
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { Argument, Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {

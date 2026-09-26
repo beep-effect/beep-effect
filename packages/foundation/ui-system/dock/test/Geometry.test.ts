@@ -24,7 +24,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { Atom, AtomRegistry } from "effect/reactivity";
 import { groupOne, groupThree, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
 import type { DockWorkspace, GroupMinimaRecord, SplitId } from "@beep/dock";
 

@@ -9,8 +9,8 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { afterEach, vi } from "vitest";
 
 const decodeCanonicalizeDatasetRequest = S.decodeEffect(CanonicalizeDatasetRequest);

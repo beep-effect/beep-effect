@@ -9,9 +9,9 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it as effectIt, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Command } from "effect/cli";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 
 const runTsconfigSyncCommand = Command.runWith(tsconfigSyncCommand, { version: "0.0.0" });

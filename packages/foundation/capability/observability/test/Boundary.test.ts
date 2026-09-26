@@ -62,8 +62,8 @@ describe("Boundary", () => {
         expect(indexSource).not.toContain("./server");
         expect(indexSource).not.toContain("./web");
         expect(indexSource).not.toContain("./experimental");
-        expect(webLayerSource).not.toContain("effect/unstable/devtools");
-        expect(webLayerSource).not.toContain("effect/unstable/observability");
+        expect(webLayerSource).not.toContain("effect/devtools");
+        expect(webLayerSource).not.toContain("effect/observability");
         expect(webLayerSource).not.toContain("@effect/platform-");
         expect(webLayerSource).not.toContain("node:");
       })

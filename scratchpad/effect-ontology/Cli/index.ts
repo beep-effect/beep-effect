@@ -13,8 +13,8 @@
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import { Command } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
+import { Command } from "effect/cli";
+import { FetchHttpClient } from "effect/http";
 import { DatabaseReadyLive } from "../Runtime/Persistence/PostgresLayer.ts";
 import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
 import { ConfigServiceDefault } from "../Service/Config.ts";

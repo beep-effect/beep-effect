@@ -7,7 +7,7 @@ import { DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { SqlClient } from "effect/unstable/sql";
+import { SqlClient } from "effect/sql";
 import { describe } from "vitest";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { CachedClaimRepository } from "../../Repository/CachedClaim.ts";

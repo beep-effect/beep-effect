@@ -1,8 +1,9 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Encoding, Equal, HashSet, Number as N, Order, Tuple } from "effect";
+import { Equal, HashSet, Number as N, Order, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { canonicalJson } from "@/corpus/Canonical";
@@ -28,7 +29,7 @@ const corpusPaperIdPattern = /^[0-9a-f]{12}$/;
  */
 export const CorpusPaperId = S.String.check(
   S.makeFilterGroup([
-    S.isLengthBetween(12, 12, {
+    S.isBetweenLength(12, 12, {
       identifier: $I`CorpusPaperIdLength`,
       title: "Corpus paper id length",
       description: "A corpus paper id containing exactly twelve characters.",
@@ -193,10 +194,7 @@ const rowCountMatchesSelection = (manifest: CorpusManifestFields): boolean =>
   Equal.equals(A.length(manifest.rows), manifest.selection.take);
 
 const manifestHashMatchesRows = (manifest: CorpusManifestFields): boolean =>
-  Str.Equivalence(
-    manifest.corpusHash,
-    Encoding.encodeHex(sha256(new TextEncoder().encode(canonicalJson(manifest.rows))))
-  );
+  Str.Equivalence(manifest.corpusHash, Hex.encode(sha256(new TextEncoder().encode(canonicalJson(manifest.rows)))));
 
 const CorpusManifestChecks = S.makeFilterGroup([
   S.makeFilter(rowsAreStrictlyAscending, {

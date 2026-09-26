@@ -8,13 +8,13 @@
 import { $DiscordId } from "@beep/identity";
 import { SchemaUtils, URLStr } from "@beep/schema";
 import { Context, Effect, Layer, pipe, Redacted } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { DiscordError } from "./Discord.errors.ts";
 import {
   DiscordChannelProof,
@@ -24,7 +24,7 @@ import {
   DiscordHttpStatus,
   DiscordMessageProof,
 } from "./Discord.models.ts";
-import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 
 const $I = $DiscordId.create("Discord.service");
 
@@ -222,8 +222,8 @@ const makeService = (client: HttpClient.HttpClient, baseUrl: URLStr): DiscordSha
  * } from "@beep/discord"
  * import { Effect, Layer, Redacted } from "effect"
  * import * as O from "effect/Option"
- * import * as HttpClient from "effect/unstable/http/HttpClient"
- * import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse"
+ * import * as HttpClient from "effect/http/HttpClient"
+ * import * as HttpClientResponse from "effect/http/HttpClientResponse"
  *
  * const TestHttpClient = Layer.succeed(
  *   HttpClient.HttpClient,

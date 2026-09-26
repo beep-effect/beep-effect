@@ -22,7 +22,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import type { PlatformError } from "effect";
-import { Crypto, Effect, Encoding, Match, Result, Schema } from "effect";
+import { Crypto, Effect, Match, Result, Schema } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -356,7 +357,7 @@ const digestHex = (text: string): Effect.Effect<string, PlatformError.PlatformEr
   Effect.gen(function* () {
     const crypto = yield* Crypto.Crypto;
     const digest = yield* crypto.digest("SHA-256", encoder.encode(text));
-    return Encoding.encodeHex(digest);
+    return Hex.encode(digest);
   });
 
 // ── Facade ──────────────────────────────────────────────────────────────────

@@ -29,8 +29,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { SweepPlanStep } from "@beep/repo-cli/test/Yeet";
 
 const mergedTip = "aaaa1111bbbb2222";

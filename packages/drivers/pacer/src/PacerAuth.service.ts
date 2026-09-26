@@ -1,5 +1,5 @@
 /**
- * PACER Authentication service over the lower-level `effect/unstable/http`
+ * PACER Authentication service over the lower-level `effect/http`
  * client.
  *
  * The Authentication API returns failures as HTTP 200 with a body-level
@@ -15,12 +15,12 @@
 
 import { $PacerId } from "@beep/identity";
 import { Context, Duration, Effect, Layer, pipe, Redacted, Ref } from "effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { CsoAuthRequest, CsoAuthResponse, CsoLogoutRequest, CsoLogoutResponse } from "./CsoAuth.models.ts";
 import { PacerAuthError } from "./Pacer.errors.ts";
 import { pacerCauseMessage } from "./Pacer.http.ts";

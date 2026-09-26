@@ -38,6 +38,7 @@ import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -54,7 +55,6 @@ import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeM365McpServerConfigResult = S.decodeResult(M365McpServerConfig);
 const decodeM365ToolErrorResult = S.decodeResult(M365ToolError);

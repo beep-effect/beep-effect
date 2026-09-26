@@ -25,10 +25,10 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownHtmlDocumentResult = S.decodeUnknownResult(HtmlDocument);
 const decodeUnknownHtmlNodeResult = S.decodeUnknownResult(HtmlNode);

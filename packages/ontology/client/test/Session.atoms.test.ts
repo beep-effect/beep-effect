@@ -39,9 +39,9 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Layer, Result, Schedule } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { AtomRegistry, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { vi } from "vitest";
 import type {
   InferOntologySessionInput,

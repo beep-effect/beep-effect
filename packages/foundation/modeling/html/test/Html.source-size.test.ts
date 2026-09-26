@@ -4,9 +4,9 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertSuccess, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isSourceSizeAnalysis = S.is(SourceSizeAnalysis);
 const isSourceSizeIssue = S.is(SourceSizeIssue);

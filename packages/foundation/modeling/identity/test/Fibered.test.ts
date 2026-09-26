@@ -3,9 +3,9 @@ import { Fibered } from "@beep/identity";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const Base = S.Literals(["text", "count", "flag"]);
 const points = [...Base.literals];

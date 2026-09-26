@@ -8,8 +8,8 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
 import * as Schedule from "effect/Schedule";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { afterEach, describe, expect, vi } from "vitest";
 import {
   cancelManualVaultPathAtoms,

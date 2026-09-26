@@ -22,7 +22,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/reactivity";
 import type * as P from "effect/Predicate";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);

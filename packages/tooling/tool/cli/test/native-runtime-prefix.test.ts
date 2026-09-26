@@ -5,9 +5,9 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { Command } from "effect/cli";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
 
 const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const write = Effect.fn("NativeRuntimePrefixTest.write")(function* (root: string, name: string, source: string) {

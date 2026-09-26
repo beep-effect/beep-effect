@@ -20,6 +20,7 @@ import {
 } from "@beep/semantic-web/services/shacl-validation";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe, Ref, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -28,7 +29,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ShaclNodeShape } from "@beep/semantic-web/services/shacl-validation";
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);

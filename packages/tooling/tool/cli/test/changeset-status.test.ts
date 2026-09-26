@@ -15,8 +15,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { ChildProcessSpawner } from "effect/process";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcessSpawner } from "effect/unstable/process";
 
 const REPO_ROOT = "/repo";
 const fixtureWorkspaceDirs: ReadonlyArray<string> = ["packages/demo", "apps/labs/cognee"];

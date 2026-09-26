@@ -16,8 +16,8 @@
 
 import { A, O } from "@beep/utils";
 import { Console, Effect, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Command } from "effect/cli";
 import { dual } from "effect/Function";
-import { Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlagWith } from "../../internal/cli/Flags.ts";
 import { printCommandJson } from "../../internal/cli/Json.ts";

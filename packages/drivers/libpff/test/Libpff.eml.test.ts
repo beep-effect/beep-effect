@@ -7,7 +7,8 @@ import {
 } from "@beep/libpff";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Encoding, Result } from "effect";
+import { Result } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 
 const octets = (value: string): number => new TextEncoder().encode(value).length;
 
@@ -158,7 +159,7 @@ describe("assembleEml", () => {
   // Strips the RFC 2045 76-column wrapping and decodes the payload back to
   // the body string the part was assembled from.
   const decodeBase64Payload = (payload: string): string =>
-    Result.getOrElse(Encoding.decodeBase64String(payload.split("\r\n").join("")), () => "");
+    Result.getOrElse(Base64.decodeString(payload.split("\r\n").join("")), () => "");
 
   const singlePartPayload = (eml: string): string => eml.slice(eml.indexOf("\r\n\r\n") + 4);
 

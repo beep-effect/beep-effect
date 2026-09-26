@@ -17,7 +17,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Prompt from "effect/unstable/ai/Prompt";
+import * as Prompt from "effect/ai/Prompt";
 import { Entity } from "../Domain/Model/Entity.ts";
 import { ImageForPrompt } from "../Domain/Model/Image.ts";
 import { ClassDefinition, PropertyDefinition, partitionPropertiesByRangeType } from "../Domain/Model/Ontology.ts";

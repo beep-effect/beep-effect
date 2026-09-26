@@ -13,9 +13,9 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import { McpServerClient } from "effect/ai/McpSchema";
+import * as McpServer from "effect/ai/McpServer";
 import * as Tracer from "effect/Tracer";
-import { McpServerClient } from "effect/unstable/ai/McpSchema";
-import * as McpServer from "effect/unstable/ai/McpServer";
 
 interface RecordedAttribute {
   readonly key: string;

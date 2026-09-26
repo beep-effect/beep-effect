@@ -14,15 +14,15 @@ import { DuckDBInstance } from "@duckdb/node-api";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
+import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as Reactivity from "effect/unstable/reactivity/Reactivity";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
 const provideScopedLayer =

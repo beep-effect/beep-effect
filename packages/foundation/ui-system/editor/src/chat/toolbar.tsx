@@ -44,7 +44,7 @@ import { TextItalicIcon } from "@phosphor-icons/react/TextItalic";
 import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
 import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
 import { Match } from "effect";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import {
   $createParagraphNode,
   $getSelection,
@@ -212,7 +212,7 @@ const computeSelectionState = (): SelectionState => {
  * ```ts
  * import { toolbarSelectionAtom } from "@beep/editor/chat/toolbar"
  * import { createHeadlessEditor } from "@lexical/headless"
- * import { AtomRegistry } from "effect/unstable/reactivity"
+ * import { AtomRegistry } from "effect/reactivity"
  *
  * const editor = createHeadlessEditor({ namespace: "example" })
  * const registry = AtomRegistry.make()

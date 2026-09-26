@@ -510,7 +510,7 @@ export class ReorderFoldersRequest extends Model<ReorderFoldersRequest>("Reorder
     folderIds: S.Array(S.String)
       .check(S.makeFilterGroup(
         [
-          S.isLengthBetween(1, 100), S.isUnique()
+          S.isBetweenLength(1, 100), S.isUnique()
         ]
       ))
       .pipe(pg.array(S.String.pipe(pg.text())), pg.columnName("folder_ids")),

@@ -14,8 +14,8 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Sink, Stream } from "effect";
+import { HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
-import { HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
 
 const provPath = OntologyFilePath.make("ontology.prov.ttl");
 const sidecar = "@prefix prov: <http://www.w3.org/ns/prov#> .\nex:x a prov:Entity .\n";

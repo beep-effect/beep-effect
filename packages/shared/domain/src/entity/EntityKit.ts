@@ -27,14 +27,14 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { Model as M } from "effect/unstable/schema";
+import { Model as M } from "effect/schema";
 import * as Shared from "../identity/Shared/index.ts";
 import { Principal } from "./Principal.ts";
 import * as PublicEntityId from "./PublicEntityId.ts";
 import { SourceKind } from "./SourceKind.ts";
 import type { FieldsInput, ModelClass, PatchedField } from "@beep/effect-drizzle";
 import type { Annotations } from "effect/Schema";
-import type { VariantSchema } from "effect/unstable/schema";
+import type { VariantSchema } from "effect/schema";
 import type * as EntityId from "./EntityId.ts";
 
 /**

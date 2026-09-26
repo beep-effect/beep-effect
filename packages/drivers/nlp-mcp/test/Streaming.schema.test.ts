@@ -37,12 +37,12 @@ import {
 } from "@beep/nlp-mcp/StreamingTools";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encode = <Sch extends S.Top & S.ConstraintEncoder<unknown>>(schema: Sch, value: Sch["Type"]): Sch["Encoded"] =>
   Result.getOrThrow(S.encodeUnknownResult(schema)(value));

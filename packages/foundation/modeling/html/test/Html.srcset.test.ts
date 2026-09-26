@@ -4,11 +4,11 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { isValidURLString, parseURL } from "whatwg-url";
 
 const acceptUrl = Str.isNonEmpty;

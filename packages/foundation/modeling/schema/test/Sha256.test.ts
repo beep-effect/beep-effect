@@ -6,11 +6,11 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeSha256Hex = S.decodeEffect(Sha256Hex);
 const decodeUnknownSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);

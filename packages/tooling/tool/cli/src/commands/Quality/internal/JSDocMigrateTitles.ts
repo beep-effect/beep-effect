@@ -9,10 +9,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Config, Console, Effect, MutableHashMap, Order, pipe, Redacted, Semaphore } from "effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import {
   defaultJSDocMigrateExtractPath,

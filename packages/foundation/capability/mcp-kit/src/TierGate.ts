@@ -25,10 +25,10 @@ import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Cause, Context, Data, DateTime, Effect, Exit } from "effect";
 import * as A from "effect/Array";
+import * as McpSchema from "effect/ai/McpSchema";
+import * as AiTool from "effect/ai/Tool";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as McpSchema from "effect/unstable/ai/McpSchema";
-import * as AiTool from "effect/unstable/ai/Tool";
 import type * as O from "effect/Option";
 import type * as P from "effect/Predicate";
 import type { AnnotatedTool } from "./ToolAnnotations.ts";
@@ -258,7 +258,7 @@ export type TierGateVerdict = typeof TierGateVerdict.Type;
  *
  * ```ts
  * import type { ToolCallRequest } from "@beep/mcp-kit"
- * import { Tool } from "effect/unstable/ai"
+ * import { Tool } from "effect/ai"
  * import * as O from "effect/Option"
  *
  * const request: ToolCallRequest = {
@@ -404,7 +404,7 @@ export class TierGatePolicy extends S.Class<TierGatePolicy>($I`TierGatePolicy`)(
 // tools without throwing (references never raise "service not found",
 // unlike plain `Context.Service` keys). `Context.getOrElse` is used anyway
 // so the fail-closed default is explicit in this module's own source, not
-// only inherited silently from `effect/unstable/ai/Tool`'s definition.
+// only inherited silently from `effect/ai/Tool`'s definition.
 const isDestructive = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
 
@@ -444,7 +444,7 @@ const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean)
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
- * import { Tool } from "effect/unstable/ai"
+ * import { Tool } from "effect/ai"
  * import { fromApprovedToolsPolicy } from "@beep/mcp-kit"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
@@ -575,7 +575,7 @@ const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
- * import { Tool } from "effect/unstable/ai"
+ * import { Tool } from "effect/ai"
  * import { dispatchWithTierGate, fromApprovedToolsPolicy, TierGate } from "@beep/mcp-kit"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
@@ -620,7 +620,7 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
  * **Example** (Annotate list visibility only)
  *
  * ```ts
- * import { Tool } from "effect/unstable/ai"
+ * import { Tool } from "effect/ai"
  * import { withEnabledWhenApprovedTool } from "@beep/mcp-kit"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)

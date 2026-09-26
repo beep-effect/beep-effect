@@ -2,10 +2,10 @@ import { AnthropicToolJsonResponse, collectToolParamsJson, collectToolParamsJson
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Response } from "effect/ai";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Response } from "effect/unstable/ai";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const JsonAnthropicToolJsonResponse = S.fromJsonString(AnthropicToolJsonResponse);
 const decodeJsonAnthropicToolJsonResponse = S.decodeEffect(JsonAnthropicToolJsonResponse);

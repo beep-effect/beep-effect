@@ -18,8 +18,8 @@ import {
   String,
   Uint8Array as Uint8ArraySchema,
 } from "effect/Schema";
-import { Model as EffectModel } from "effect/unstable/schema";
-import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
+import { Model as EffectModel } from "effect/schema";
+import { makeRepository as makeSqlRepository } from "effect/sql/SqlModel";
 import type { Top } from "effect/Schema";
 
 function attachStatics<Self extends object, Statics extends object>(self: Self, statics: Statics): Self & Statics;

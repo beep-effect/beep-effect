@@ -6,8 +6,8 @@
  */
 
 import { Document } from "@beep/documents-domain/aggregates/Document";
-import * as Rpc from "effect/unstable/rpc/Rpc";
-import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import { DocumentIntakeActionError } from "./Document.errors.ts";
 import { IntakeDroppedFilePayload } from "./DocumentIntake.ts";
 

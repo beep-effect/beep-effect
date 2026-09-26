@@ -16,7 +16,7 @@ import { Context, Effect, FileSystem, Layer, MutableHashMap, Order, Path, pipe }
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";

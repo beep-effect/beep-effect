@@ -12,7 +12,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
 import {
   DockAtomFeedFailure,
   DockAtomFeedSuccess,
@@ -20,7 +20,7 @@ import {
   DockMutationCompleted,
   DockSnapshotSaved,
 } from "../Dock.protocol.ts";
-import type { Atom } from "effect/unstable/reactivity";
+import type { Atom } from "effect/reactivity";
 import type { DockAtomFeedEntry, DockAtomOperationOutcome, DockAtomSessionError } from "../Dock.protocol.ts";
 
 export { DockAtomSessionError } from "../Dock.protocol.ts";

@@ -23,7 +23,7 @@ import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { R } from "@beep/utils";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const decodeRoundNumber = S.decodeEffect(RoundNumber);
 

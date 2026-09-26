@@ -10,7 +10,7 @@ repo-owned structured-extraction substrate. It owns target schemas, prompt and
 response contracts, model-output parsing, deterministic source alignment, typed
 errors, service orchestration, and adapters into `@beep/nlp/Handoff`.
 
-It consumes an injected `effect/unstable/ai/LanguageModel` service. Concrete
+It consumes an injected `effect/ai/LanguageModel` service. Concrete
 providers, provider SDKs, provider environment/config loading, live provider
 smoke tests, CLI workflows, rendering, and visualization belong outside this
 package.

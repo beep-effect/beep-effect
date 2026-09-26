@@ -75,7 +75,7 @@ import { dispatchYeetCheckFailure } from "./Remediation.ts";
 import { YeetWatchCheck, YeetWatchThread, yeetWatchThreadOutstanding } from "./WatchStream.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { YeetMonitorComment } from "./MonitorComments.ts";

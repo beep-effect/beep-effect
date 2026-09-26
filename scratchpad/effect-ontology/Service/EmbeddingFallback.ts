@@ -17,7 +17,7 @@ import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FetchHttpClient, HttpClient } from "effect/unstable/http";
+import { FetchHttpClient, HttpClient } from "effect/http";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { CircuitOpenError } from "../Runtime/CircuitBreaker.ts";

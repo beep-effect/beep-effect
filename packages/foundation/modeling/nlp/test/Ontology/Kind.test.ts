@@ -1,8 +1,8 @@
 import * as Kind from "@beep/nlp/Ontology/Kind";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeKindKindContainment = S.decodeEffect(Kind.KindContainment);
 const encodeKindKindContainment = S.encodeEffect(Kind.KindContainment);

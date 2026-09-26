@@ -24,6 +24,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
@@ -31,7 +32,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   goldenDeploymentIntent,
   goldenIntentCanonicalJson,

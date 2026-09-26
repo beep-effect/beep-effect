@@ -9,10 +9,10 @@ import {
 } from "@beep/repo-ai-metrics";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SessionLeaseTransition } from "@beep/repo-ai-metrics";
 
 const decodeSessionLeaseExpiryCandidateResult = S.decodeResult(SessionLeaseExpiryCandidate);

@@ -29,8 +29,8 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import { RpcTest } from "effect/rpc";
 import * as Stream from "effect/Stream";
-import { RpcTest } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
 import { RuntimeTest } from "@/runtime/Layer";
 

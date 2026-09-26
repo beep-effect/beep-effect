@@ -19,10 +19,10 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 

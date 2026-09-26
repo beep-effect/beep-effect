@@ -35,7 +35,7 @@ import { ActiveEmbeddingIdentity, Embedder } from "@/services/Embedder";
 import { ProviderCache } from "@/services/ProviderCache";
 import { RdfProjection } from "@/services/RdfProjection";
 import { VectorProjection } from "@/services/VectorProjection";
-import type * as EmbeddingModel from "effect/unstable/ai/EmbeddingModel";
+import type * as EmbeddingModel from "effect/ai/EmbeddingModel";
 import type { ChunkId, DocumentId } from "@/schema/Ids";
 import type { EmbeddingVector } from "@/schema/Projection";
 

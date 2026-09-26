@@ -7,10 +7,10 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, Exit, FileSystem, Layer, Path, pipe } from "effect";
+import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 

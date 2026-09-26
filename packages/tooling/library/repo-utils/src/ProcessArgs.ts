@@ -2,7 +2,7 @@
  * CLI option-injection guard for child-process argument vectors.
  *
  * When a CLI forwards user- or data-derived values as arguments to a spawned
- * child process (for example through `effect/unstable/process`'
+ * child process (for example through `effect/process`'
  * `ChildProcess.make(command, args)` or `Command.make`), an argument whose text
  * begins with `-` can be silently reinterpreted by the spawned program as an
  * option/flag rather than as the intended literal positional value. This is the

@@ -53,7 +53,7 @@ import {
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Settle");

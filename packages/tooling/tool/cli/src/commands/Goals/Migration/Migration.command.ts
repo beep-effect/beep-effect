@@ -7,8 +7,8 @@
 
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import * as S from "effect/Schema";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GoalStatusInputError } from "../Goals.errors.ts";

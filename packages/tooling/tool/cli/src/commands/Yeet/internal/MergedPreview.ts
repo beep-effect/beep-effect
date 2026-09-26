@@ -48,7 +48,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergedPreview");
 

@@ -1,10 +1,10 @@
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { CosmosSpikeProbeContract, CosmosSpikeSize, CosmosSpikeStatus } from "@/spikes/CosmosSpike";
 import { SyntheticProjectionCount, SyntheticProjectionNodeCount } from "@/spikes/CosmosSpike.rpc";
 import { Graph3DSpikeStatus } from "@/spikes/Graph3DSpike";

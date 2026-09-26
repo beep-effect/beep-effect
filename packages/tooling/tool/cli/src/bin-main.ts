@@ -250,7 +250,7 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
   const [{ ciCommand }, { FsUtilsLive }, { Command }] = await Promise.all([
     import("./commands/Ci/index.ts"),
     import("@beep/repo-utils"),
-    import("effect/unstable/cli"),
+    import("effect/cli"),
   ]);
   const ciRootCommand = Command.make("beep-cli").pipe(
     Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
@@ -272,7 +272,7 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
 if (!handledByQualityFastPath && !handledByCiFastPath) {
   const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }, { MemoryStatsLive }] = await Promise.all([
     import("@beep/repo-utils"),
-    import("effect/unstable/cli"),
+    import("effect/cli"),
     import("./commands/Root.ts"),
     import("./internal/repo-run/QualityScheduler.ts"),
   ]);

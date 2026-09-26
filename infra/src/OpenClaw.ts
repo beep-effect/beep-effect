@@ -48,7 +48,7 @@ import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
 import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -625,7 +625,7 @@ const utf8 = new TextEncoder();
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", utf8.encode(text));
-  return Encoding.encodeHex(digest);
+  return Hex.encode(digest);
 });
 
 /**
@@ -1163,7 +1163,7 @@ export const makeOpenClawBundleHash: (
     }
   );
   const digest = yield* crypto.digest("SHA-256", bytes);
-  return OpenclawSha256Hex.make(Encoding.encodeHex(digest));
+  return OpenclawSha256Hex.make(Hex.encode(digest));
 });
 
 /**

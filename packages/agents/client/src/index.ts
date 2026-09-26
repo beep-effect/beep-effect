@@ -15,7 +15,7 @@
  * import { threadsAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/unstable/reactivity"
+ * import { Atom } from "effect/reactivity"
  *
  * const workspaceId = S.decodeUnknownSync(Workspace.WorkspaceId)(1)
  *

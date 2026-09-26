@@ -17,8 +17,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Command from "effect/unstable/cli/Command";
-import * as Flag from "effect/unstable/cli/Flag";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../../Service/Reasoner.ts";
@@ -92,7 +92,7 @@ class InferenceCliError extends S.TaggedError<InferenceCliError>($I`InferenceCli
  *
  * ```ts
  * import { inferenceCommand } from "@effect-ontology/Cli/Commands/Inference"
- * import * as Command from "effect/unstable/cli/Command"
+ * import * as Command from "effect/cli/Command"
  *
  * const argv = ["--input", "graph.ttl", "--output", "enriched.ttl", "--delta-only"]
  * const program = Command.runWith(inferenceCommand, { version: "0.0.0" })([...argv])

@@ -19,10 +19,10 @@ import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcessSpawner } from "effect/unstable/process";
 import { spawnProcessResult } from "./internal/spawn.ts";
 import {
   hermeticOpenclawEnv,

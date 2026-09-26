@@ -27,10 +27,10 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, Equal, Exit, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeLocalDate = S.decodeEffect(LocalDate);
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);

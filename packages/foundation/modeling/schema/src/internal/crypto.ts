@@ -6,9 +6,10 @@
 
 import { keccak_256 } from "@noble/hashes/sha3.js";
 import { base58 } from "@scure/base";
-import { Encoding, pipe, Result } from "effect";
+import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -67,7 +68,7 @@ export const isCanonicalEvmAddress = (input: string): boolean => {
     return true;
   }
 
-  const checksum = Encoding.encodeHex(keccak_256(new TextEncoder().encode(lowercaseAddressBody)));
+  const checksum = Hex.encode(keccak_256(new TextEncoder().encode(lowercaseAddressBody)));
 
   for (let index = 0; index < addressBody.length; index += 1) {
     const character = addressBody[index]!;

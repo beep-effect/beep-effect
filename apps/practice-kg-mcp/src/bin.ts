@@ -8,8 +8,8 @@
  */
 
 import { Config, Effect, Layer } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
-import { Command, Flag } from "effect/unstable/cli";
 import { runEntrypoint } from "./entrypoint.ts";
 import { PracticeKgHostError } from "./runtime/Host.ts";
 import { loadPracticeKgBundleContext, makePracticeKgHostLayer } from "./runtime/index.ts";

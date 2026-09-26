@@ -18,7 +18,7 @@
 
 import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
-import type * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import type * as Arbitrary from "effect/Arbitrary";
 
 /**
  * The historical default run count, used when a site passes no inline value.

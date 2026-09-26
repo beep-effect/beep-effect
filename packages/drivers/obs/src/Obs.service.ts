@@ -14,7 +14,7 @@
 import { $ObsId } from "@beep/identity/packages";
 import { A, O, P, R } from "@beep/utils";
 import { Clock, Context, Duration, Effect, Layer, PubSub, Result, Schedule } from "effect";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ObsError } from "./Obs.errors.ts";
 import {
   EnsureQaSceneRequest,
@@ -38,7 +38,7 @@ import { ObsProtocol } from "./ObsProtocol.service.ts";
 import type { UnknownRecord } from "@beep/schema";
 import type { Stream } from "effect";
 import type * as Scope from "effect/Scope";
-import type { Socket } from "effect/unstable/socket";
+import type { Socket } from "effect/socket";
 import type { ObsConfig, ObsConfigInputOptions, StartRecordingRequest } from "./Obs.models.ts";
 import type { ObsEvent, ObsOutputState, ObsRequestType } from "./ObsProtocol.models.ts";
 import type { ObsProtocolShape } from "./ObsProtocol.service.ts";
@@ -392,7 +392,7 @@ export class Obs extends Context.Service<Obs, ObsShape>()($I`Obs`) {
    * **Details**
    *
    * Provide `Socket.layerWebSocketConstructorGlobal` from
-   * `effect/unstable/socket` (Bun global WebSocket) plus a platform
+   * `effect/socket` (Bun global WebSocket) plus a platform
    * `ChildProcessSpawner` layer.
    *
    * **Example** (Verify makeLayer result)

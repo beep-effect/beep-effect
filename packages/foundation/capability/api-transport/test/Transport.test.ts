@@ -3,10 +3,10 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Redacted } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Headers from "effect/http/Headers";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as Headers from "effect/unstable/http/Headers";
 
 const decodeApiTransportOptions = S.decodeEffect(ApiTransportOptions);
 const decodeUnknownApiTransportOptions = S.decodeUnknownEffect(ApiTransportOptions);

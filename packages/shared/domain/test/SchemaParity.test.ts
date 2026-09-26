@@ -14,10 +14,10 @@ import * as Rule from "@beep/shared-domain/values/Rule/Rule.model";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
 const decodeUnknownEntityIdOptions = S.decodeUnknownEffect(EntityId.Options);

@@ -17,7 +17,7 @@ import {
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { Atom, AtomRegistry } from "effect/reactivity";
 import { groupOne, groupTwo, panelOne } from "./Fixtures.ts";
 import type { DockAtomFeedEntry, DockEvent } from "@beep/dock";
 

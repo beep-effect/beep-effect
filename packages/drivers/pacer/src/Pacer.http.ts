@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 /**
  * Render a transport or decoding cause into a stable, non-secret diagnostic.

@@ -10,7 +10,7 @@
 "use client";
 
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { contact } from "@/content/copy";
 import type { SubmitEvent } from "react";
 

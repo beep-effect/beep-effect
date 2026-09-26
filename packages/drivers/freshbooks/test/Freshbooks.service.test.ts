@@ -15,10 +15,10 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 type CapturedRequest = {
   readonly authorization: string | undefined;

@@ -20,8 +20,8 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Option as O, Path } from "effect";
 import * as A from "effect/Array";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as S from "effect/Schema";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { FixtureCatalogSources, readFixtureLayers } from "./helpers/models-fixtures.ts";
 
 const decodeUpstream = S.decodeEffect(UpstreamCatalog);

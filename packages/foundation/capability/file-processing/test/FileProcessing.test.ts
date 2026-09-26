@@ -29,8 +29,8 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);

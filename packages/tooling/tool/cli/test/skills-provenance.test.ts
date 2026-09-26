@@ -31,8 +31,9 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, Encoding, Exit, FileSystem, Layer, Path } from "effect";
+import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -52,7 +53,7 @@ const readFixtureText = Effect.fn("SkillsProvenanceTest.readFixtureText")(functi
 
 const readFixtureBinary = Effect.fn("SkillsProvenanceTest.readFixtureBinary")(function* (relativePath: string) {
   const encoded = Str.trim(yield* readFixtureText(relativePath));
-  return yield* Effect.fromResult(Encoding.decodeHex(encoded));
+  return yield* Effect.fromResult(Hex.decode(encoded));
 });
 
 const writeFixtureFile = Effect.fn("SkillsProvenanceTest.writeFixtureFile")(function* (

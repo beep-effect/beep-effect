@@ -6,11 +6,11 @@
  */
 import { Duration, Layer, Metric } from "effect";
 import { dual } from "effect/Function";
-import * as Otlp from "effect/unstable/observability/Otlp";
+import * as Otlp from "effect/observability/Otlp";
 import { layerMinimumLogLevel } from "../Logging.ts";
 import { ServerObservabilityConfig, toOtlpResource } from "./Config.ts";
 import { layerFilteredDevTools } from "./DevTools.ts";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
+import type * as HttpClient from "effect/http/HttpClient";
 import type { DevToolsSpanFilter } from "./DevTools.ts";
 
 /**

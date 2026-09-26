@@ -21,7 +21,7 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 /**

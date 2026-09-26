@@ -10,9 +10,9 @@ import { Defect, LiteralKit } from "@beep/schema";
 import { O, thunkUndefined } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import { HubSpotUrl } from "./HubSpot.config.ts";
 
 const $I = $HubspotId.create("HubSpot.errors");

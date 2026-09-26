@@ -17,14 +17,14 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { OpenAiClient } from "@effect/ai-openai";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, ConfigProvider, Effect, Layer, pipe, Redacted } from "effect";
+import * as EmbeddingModel from "effect/ai/EmbeddingModel";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as AiModel from "effect/ai/Model";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
-import * as EmbeddingModel from "effect/unstable/ai/EmbeddingModel";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as AiModel from "effect/unstable/ai/Model";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
-import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+import type * as HttpClientError from "effect/http/HttpClientError";
+import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 type TestRespond = (
   request: HttpClientRequest.HttpClientRequest

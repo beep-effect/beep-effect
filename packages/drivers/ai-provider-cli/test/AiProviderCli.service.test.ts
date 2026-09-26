@@ -10,10 +10,10 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
 const decodeAiProviderCliAuthProbeResult = S.decodeResult(AiProviderCliAuthProbe);
