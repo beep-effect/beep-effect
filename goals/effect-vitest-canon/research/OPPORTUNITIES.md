@@ -2390,3 +2390,12 @@ script restored the declarations; infra docgen then passed all 101 examples.
 No production source or compiler policy changed. Bootstrapping the generated
 SDK before admitting a full proof would have prevented this failed run. The
 full proof still requires a new successful run after main integration.
+
+
+### Markdown full proof: guard compilation and timing metadata
+
+The full Markdown proof rejected two inline NonEmptyArray safety-violation
+guards and three private timing output paths in root Lint Policy. Hoist the
+unchanged guard once and redact those destinations as `<private-output>`.
+Focused root-policy checks before publication would catch these conditions
+that package verification alone did not reject.

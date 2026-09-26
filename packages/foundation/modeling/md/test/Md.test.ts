@@ -108,6 +108,7 @@ const encodeDocumentResult = S.encodeResult(Document);
 const encodeInlineResult = S.encodeResult(Inline);
 const encodeSafeDocumentResult = S.encodeResult(SafeDocument);
 const encodeUnknownDocumentResult = S.encodeUnknownResult(Document);
+const isDocumentSafetyViolations = S.is(S.NonEmptyArray(DocumentSafetyViolation));
 const isDuplicateFootnoteDefinitionSafetyViolation = S.is(DuplicateFootnoteDefinitionSafetyViolation);
 const isHtmlProjectionSafetyViolation = S.is(HtmlProjectionSafetyViolation);
 
@@ -334,7 +335,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       Md.p(Md.a("javascript:alert(1)", "unsafe")),
     ]);
 
-    assertFailure(Result.mapError(refineSafeDocument(unsafe), S.is(S.NonEmptyArray(DocumentSafetyViolation))), true);
+    assertFailure(Result.mapError(refineSafeDocument(unsafe), isDocumentSafetyViolations), true);
   });
 
   it("rejects values that cannot complete the total SafeDocument to SafeHtml projection", () => {
@@ -345,10 +346,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     ];
 
     for (const document of incompatible) {
-      assertFailure(
-        Result.mapError(refineSafeDocument(document), S.is(S.NonEmptyArray(DocumentSafetyViolation))),
-        true
-      );
+      assertFailure(Result.mapError(refineSafeDocument(document), isDocumentSafetyViolations), true);
     }
   });
 
