@@ -1,0 +1,225 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 16,
+  "numPassedTests": 16,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790413232431,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AI Sync declared-field equivalence"],
+          "fullName": "AI Sync declared-field equivalence treats field-equal AiSyncError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal AiSyncError instances as equivalent and field-different ones as distinct",
+          "duration": 1.2238440000000992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790413238416,
+      "endTime": 1790413238417.2239,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync validates the generated artifact set offline",
+          "status": "passed",
+          "title": "validates the generated artifact set offline",
+          "duration": 117.03639800000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync reports strict upstream drift through the typed failure channel",
+          "status": "passed",
+          "title": "reports strict upstream drift through the typed failure channel",
+          "duration": 104.36779100000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps crispened schema encoded wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps crispened schema encoded wire shapes byte-identical",
+          "duration": 88.00377300000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips crispened schemas with schema-derived arbitraries",
+          "status": "passed",
+          "title": "round-trips crispened schemas with schema-derived arbitraries",
+          "duration": 94.58288399999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync renders generated literal domains through LiteralKit",
+          "status": "passed",
+          "title": "renders generated literal domains through LiteralKit",
+          "duration": 88.03085499999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync validates a Codex TOML config and rejects typed invalid fields",
+          "status": "passed",
+          "title": "validates a Codex TOML config and rejects typed invalid fields",
+          "duration": 43.571554000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync separates native config compatibility from checked-in repository safety policy",
+          "status": "passed",
+          "title": "separates native config compatibility from checked-in repository safety policy",
+          "duration": 59.79319299999952,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps check and audit cache keys coupled to repository safety configs",
+          "status": "passed",
+          "title": "keeps check and audit cache keys coupled to repository safety configs",
+          "duration": 18.69881400000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps checked-in Claude grants inside the exact 64-value allow domain",
+          "status": "passed",
+          "title": "keeps checked-in Claude grants inside the exact 64-value allow domain",
+          "duration": 21.852939999999762,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync reads each mandatory config exactly once during combined validation",
+          "status": "passed",
+          "title": "reads each mandatory config exactly once during combined validation",
+          "duration": 18.289071999999578,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync reports synthetic source drift against an injected upstream response",
+          "status": "passed",
+          "title": "reports synthetic source drift against an injected upstream response",
+          "duration": 3.741700999999921,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips Codex-compatible MCP fields through Claude-style MCP JSON",
+          "status": "passed",
+          "title": "round-trips Codex-compatible MCP fields through Claude-style MCP JSON",
+          "duration": 0.9213180000006105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync round-trips the modeled Junie and Claude MCP JSON shape",
+          "status": "passed",
+          "title": "round-trips the modeled Junie and Claude MCP JSON shape",
+          "duration": 0.2571859999998196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync normalizes lossy instruction and shared skill transform candidates",
+          "status": "passed",
+          "title": "normalizes lossy instruction and shared skill transform candidates",
+          "duration": 0.3791639999999461,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/ai-sync"],
+          "fullName": "@beep/ai-sync keeps unsupported and unknown V1 cells explicit",
+          "status": "passed",
+          "title": "keeps unsupported and unknown V1 cells explicit",
+          "duration": 0.19211600000016915,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790413238668,
+      "endTime": 1790413238816.7932,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/ai-sync/test/ai-sync.test.ts"
+    }
+  ]
+}
