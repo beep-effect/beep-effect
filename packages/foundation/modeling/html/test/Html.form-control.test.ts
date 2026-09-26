@@ -17,6 +17,7 @@ import { Button, Input, Select } from "@beep/html/Html.model";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -54,7 +55,7 @@ describe("HTML form-control semantic states", () => {
 
   it("normalizes every input type while preserving the missing wire state", () => {
     const missing = Input.make({});
-    expect(O.isNone(missing.type)).toBe(true);
+    assertNone(missing.type);
     expect(resolveInputState(missing)).toStrictEqual(InputState.cases.text.make({}));
 
     const states = R.keys(HTML_INPUT_ATTRIBUTE_APPLICABILITY);
@@ -138,8 +139,8 @@ describe("HTML form-control semantic states", () => {
     expect(validButton.state).toBe("submit");
     expect(invalidInput.state).toBe("unsupported");
     expect(invalidButton.basis).toBe("auto-command");
-    expect(Result.isFailure(decodeUnknownInputStateResult({ state: "unsupported" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" }))).toBe(true);
+    assertTrue(Result.isFailure(decodeUnknownInputStateResult({ state: "unsupported" })));
+    assertTrue(Result.isFailure(decodeUnknownButtonStateResult({ state: "submit", basis: "auto-command" })));
   });
 
   it.prop(

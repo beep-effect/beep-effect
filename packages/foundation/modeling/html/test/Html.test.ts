@@ -23,6 +23,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -87,10 +88,10 @@ describe("HtmlNode AST — structure & nodes", () => {
       { encoded: { _tag: "#doctype", name: "html" }, type: Doctype.html() },
     ];
 
-    expect(Result.isSuccess(decodeUnknownHtmlDocumentResult(canonical))).toBe(true);
+    assertTrue(Result.isSuccess(decodeUnknownHtmlDocumentResult(canonical)));
     expect(HtmlDocument.make({ children: [comment, documentElement] })).toBeDefined();
     for (const { encoded, type } of excludedChildren) {
-      expect(Result.isFailure(decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] }))).toBe(true);
+      assertTrue(Result.isFailure(decodeUnknownHtmlDocumentResult({ _tag: "#document", children: [encoded] })));
       expect(() =>
         HtmlDocument.make({
           // @ts-expect-error -- exercise constructor validation for excluded document child kinds.
@@ -99,7 +100,7 @@ describe("HtmlNode AST — structure & nodes", () => {
       ).toThrow();
     }
 
-    expect(Result.isSuccess(decodeUnknownLosslessDocumentResult(diagnostic))).toBe(true);
+    assertTrue(Result.isSuccess(decodeUnknownLosslessDocumentResult(diagnostic)));
     expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
   });
 
@@ -131,7 +132,7 @@ describe("HtmlNode AST — structure & nodes", () => {
     Effect.gen(function* () {
       expect((yield* decode({ _tag: "span", children: [] }))._tag).toBe("span");
       const unknownTag = yield* Effect.exit(decode({ _tag: "not-a-real-element", children: [] }));
-      expect(Exit.isFailure(unknownTag)).toBe(true);
+      assertTrue(Exit.isFailure(unknownTag));
     })
   );
 
@@ -189,7 +190,7 @@ describe("HtmlNode AST — attributes", () => {
         expect(() => Input.make({ type: O.some(type) })).not.toThrow();
       }
       const invalidType = yield* Effect.exit(decode({ _tag: "input", type: "not-a-type" }));
-      expect(Exit.isFailure(invalidType)).toBe(true);
+      assertTrue(Exit.isFailure(invalidType));
     })
   );
 
@@ -311,7 +312,7 @@ describe("ELEMENT_META", () => {
   });
 
   it("rejects tags outside the generated HtmlNode inventory", () => {
-    expect(Result.isFailure(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] }))).toBe(true);
+    assertTrue(Result.isFailure(decodeUnknownHtmlNodeResult({ _tag: "not-an-html-element", children: [] })));
   });
 
   it("tags conformance, void, and raw-text correctly", () => {

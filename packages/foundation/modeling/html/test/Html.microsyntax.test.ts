@@ -19,6 +19,7 @@ import { A as Anchor, Area, Audio, Button, HtmlNode, Li, Link, Meta, Ol } from "
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -119,7 +120,7 @@ describe("@beep/html attribute microsyntaxes", () => {
           value: "-2",
         })
       );
-      expect(Exit.isFailure(encodedStringValue)).toBe(true);
+      assertTrue(Exit.isFailure(encodedStringValue));
     })
   );
 
@@ -174,7 +175,7 @@ describe("@beep/html attribute microsyntaxes", () => {
         const value = `noopener${separator}noreferrer`;
         expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
         const invalidRel = yield* Effect.exit(decodeRel(value));
-        expect(Exit.isFailure(invalidRel)).toBe(true);
+        assertTrue(Exit.isFailure(invalidRel));
         expect(() => Rel.make(value)).toThrow();
       }
     })
@@ -208,11 +209,11 @@ describe("@beep/html attribute microsyntaxes", () => {
       expect(Result.getOrThrow(encodeHtmlNodeResult(decoded))).toStrictEqual(expected);
     }
 
-    expect(Area.make({ shape: O.some("circle") }).shape).toStrictEqual(O.some("circle"));
-    expect(Audio.make({ children: [], preload: O.some("metadata") }).preload).toStrictEqual(O.some("metadata"));
-    expect(Button.make({ children: [], type: O.some("submit") }).type).toStrictEqual(O.some("submit"));
-    expect(Link.make({ as: O.some("image") }).as).toStrictEqual(O.some("image"));
-    expect(Meta.make({ "http-equiv": O.some("content-type") })["http-equiv"]).toStrictEqual(O.some("content-type"));
+    assertSome(Area.make({ shape: O.some("circle") }).shape, "circle");
+    assertSome(Audio.make({ children: [], preload: O.some("metadata") }).preload, "metadata");
+    assertSome(Button.make({ children: [], type: O.some("submit") }).type, "submit");
+    assertSome(Link.make({ as: O.some("image") }).as, "image");
+    assertSome(Meta.make({ "http-equiv": O.some("content-type") })["http-equiv"], "content-type");
   });
 
   it.effect("keeps the case-distinguishing ol type keyword contract", () =>
@@ -222,7 +223,7 @@ describe("@beep/html attribute microsyntaxes", () => {
         expect(Result.getOrThrow(encodeOlResult(decoded)).type).toBe(value);
       }
       const invalidOlType = yield* Effect.exit(decodeUnknownOl({ _tag: "ol", children: [], type: "ALPHA" }));
-      expect(Exit.isFailure(invalidOlType)).toBe(true);
+      assertTrue(Exit.isFailure(invalidOlType));
     })
   );
 
@@ -249,9 +250,9 @@ describe("@beep/html attribute microsyntaxes", () => {
 
   it("rejects non-ASCII and padded enumerated keywords", () => {
     for (const invalid of [" image", "image ", "ımage"]) {
-      expect(Result.isFailure(decodeEnumeratedResult(invalid))).toBe(true);
+      assertTrue(Result.isFailure(decodeEnumeratedResult(invalid)));
     }
-    expect(Result.isFailure(decodeAsciiKResult("\u212A"))).toBe(true);
+    assertTrue(Result.isFailure(decodeAsciiKResult("\u212A")));
   });
 
   it("canonicalizes the exact enumerated global-attribute inventory", () => {

@@ -3,6 +3,7 @@ import { Input } from "@beep/html/Html.model";
 import { VERSION } from "@beep/html/Version";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -80,7 +81,8 @@ describe("@beep/html per-module entry points", () => {
       expect(Html.Conformant.issues(root)).toStrictEqual([]);
       const conformant = yield* Html.Conformant.decode(root);
       expect(Html.Safe.issues(conformant)[0]?.rule).toBe("deniedElement");
-      expect(Exit.isFailure(yield* Effect.exit(Html.Safe.decode(conformant)))).toBe(true);
+      const safeExit = yield* Effect.exit(Html.Safe.decode(conformant));
+      safeExit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

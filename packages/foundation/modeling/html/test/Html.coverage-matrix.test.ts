@@ -48,6 +48,7 @@ import {
 import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -246,7 +247,7 @@ describe("@beep/html conformance branch matrix", () => {
         ...P.make({ children: [] }),
         children: [malformedText],
       } as unknown as P;
-      expect(Exit.isFailure(yield* Effect.exit(conform(malformedParagraph)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(malformedParagraph))));
 
       const malformedForeign = {
         _tag: "#foreign",
@@ -263,7 +264,7 @@ describe("@beep/html conformance branch matrix", () => {
         children: [],
       } as unknown as Parameters<typeof inspectConformance>[0];
       expect(inspectConformance(unknownNode)).toStrictEqual([]);
-      expect(Exit.isFailure(yield* Effect.exit(conform(unknownNode)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(unknownNode))));
     })
   );
 });
@@ -334,7 +335,7 @@ describe("@beep/html serialization branch matrix", () => {
       expect(
         yield* pipe(Style.make({ content: "body > p { color: red; }" }), serialize, Effect.map(untrustedHtmlValue))
       ).toBe("<style>body > p { color: red; }</style>");
-      expect(Exit.isFailure(yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" }))))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" })))));
     })
   );
 
@@ -355,9 +356,9 @@ describe("@beep/html serialization branch matrix", () => {
         Doctype.make({ name: O.some("html"), publicId: O.some("legacy") }),
         Doctype.make({ name: O.some("html"), systemId: O.some("legacy") }),
       ]) {
-        expect(
+        assertTrue(
           Exit.isFailure(yield* Effect.exit(serialize(Document.make({ doctype: O.some(doctype), children: [] }))))
-        ).toBe(true);
+        );
       }
     })
   );
@@ -370,14 +371,14 @@ describe("@beep/html serialization branch matrix", () => {
       expect(yield* pipe(math, serialize, Effect.map(untrustedHtmlValue))).toBe("<mathml:math></mathml:math>");
 
       const mismatched = ForeignElement.make({ namespace: "svg", name: "mathml:path", children: [] });
-      expect(Exit.isFailure(yield* Effect.exit(serialize(mismatched)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(mismatched))));
       const badAttribute = ForeignElement.make({
         namespace: "svg",
         name: "svg",
         attributes: O.some({ viewbox: "0 0 1 1" }),
         children: [],
       });
-      expect(Exit.isFailure(yield* Effect.exit(serialize(badAttribute)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(badAttribute))));
     })
   );
 
@@ -386,7 +387,7 @@ describe("@beep/html serialization branch matrix", () => {
       const root = Div.make({ children: [text("safe")] });
       const conformant = yield* conform(root);
       expect(yield* pipe(conformant, serializeConformant, Effect.map(untrustedHtmlValue))).toBe("<div>safe</div>");
-      expect(Exit.isSuccess(yield* Effect.exit(enforceSafeHtml(conformant)))).toBe(true);
+      assertTrue(Exit.isSuccess(yield* Effect.exit(enforceSafeHtml(conformant))));
     })
   );
 
@@ -395,8 +396,8 @@ describe("@beep/html serialization branch matrix", () => {
       expect(() => conformantRoot({} as ConformantHtml)).toThrow();
       expect(() => safeHtmlAstConformant({} as SafeHtmlAst)).toThrow();
       expect(() => safeHtmlValue({} as SafeHtml)).toThrow();
-      expect(Exit.isFailure(yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0])))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(serializeSafe({} as SafeHtmlAst)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0]))));
+      assertTrue(Exit.isFailure(yield* Effect.exit(serializeSafe({} as SafeHtmlAst))));
     })
   );
 });

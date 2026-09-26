@@ -122,3 +122,36 @@ unnecessarily unknown decoder were corrected without suppressing diagnostics.
 Final full package verification passed: audit 18.1s and docgen 14.8s
 (html-runtime-package-004.log). Specialized assertions, detector/ledger
 reconciliation, final timing and publication remain queued.
+
+## Assertion helpers and human-ledger reconciliation
+
+Replaced eight None checks with assertNone and four pre-existing exact success
+expectations with assertSuccess. Five Option payload equality checks now use
+assertSome. Branch-only and compound Boolean assertions use the public
+assertTrue helper with the full original predicate; the determinism branch
+comparison uses strictEqual. No expected error payload or Cause was invented.
+Input expressions, predicate polarity and existing message arguments in those
+Boolean migrations were preserved. Private per-row evidence is retained in
+html-assertion-migration-receipt.json.
+
+The detector deliberately continues to report branch-only helper assertions as
+review candidates: the intermediate scan reported 114 EV006 rows after the
+helper substitutions. These are not automatically closed or removed from the
+baseline. It would be incorrect to describe helper spelling changes as completed
+structural-payload review. Detector reconciliation remains a separate next step.
+
+The final full package proof passed: audit 33.7s and docgen 26.8s
+(html-assertions-package-004.log). Initial proof caught an import placed above
+the jsdom/DOM directives and a missed pipeable expression; both were corrected.
+The jsdom environment and DOM reference remain at the top of that file.
+
+All nine substantive human-lens findings now have dispositions: six fixed with
+commit references and three reasoned native-boundary exceptions. The 63
+no-findings rows remain intact. Existing row IDs are retained; source spans and
+finding evidence were refreshed against the migrated files because several
+original endLine values exceeded their shorter files. A historical-byte census
+cannot validate a current checkout, so validation uses actual current byte and
+line counts. The strict four-lens validator reports valid=true, complete=true,
+missing=0 for 72 rows covering the same 18 existing files (private result
+inventory-wrcfusd0/result.json). This is package lens coverage, not accepted P1
+inventory, an empty detector baseline, or goal completion.

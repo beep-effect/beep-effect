@@ -83,6 +83,7 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -193,7 +194,7 @@ describe("@beep/html generated attribute provenance", () => {
         popovertarget: O.some("menu"),
       } as unknown as Div;
       expect(inspectConformance(forged)).toContainEqual(expect.objectContaining({ rule: "misplacedAttribute" }));
-      expect(Exit.isFailure(yield* Effect.exit(conform(forged)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(forged))));
     })
   );
 });
@@ -203,7 +204,7 @@ describe("@beep/html numeric and id conformance", () => {
     Effect.gen(function* () {
       for (const root of [Base.make({}), MapElement.make({ children: [] }), Track.make({})]) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       for (const root of [
@@ -213,7 +214,7 @@ describe("@beep/html numeric and id conformance", () => {
         Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
       ]) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
 
       const subtitlesWithoutLanguage = Video.make({
@@ -222,12 +223,12 @@ describe("@beep/html numeric and id conformance", () => {
       expect(issuesAtPath(subtitlesWithoutLanguage, ["children.0", "attributes.srclang"])).toContainEqual(
         expect.objectContaining({ rule: "attributeRelationship" })
       );
-      expect(Exit.isFailure(yield* Effect.exit(conform(subtitlesWithoutLanguage)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(subtitlesWithoutLanguage))));
       const omittedKindWithoutLanguage = Track.make({ src: O.some("/captions.vtt") });
       expect(issuesAtPath(omittedKindWithoutLanguage, ["attributes.srclang"])).toContainEqual(
         expect.objectContaining({ rule: "attributeRelationship" })
       );
-      expect(Exit.isFailure(yield* Effect.exit(conform(omittedKindWithoutLanguage)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(omittedKindWithoutLanguage))));
       expect(
         inspectConformance(
           Video.make({
@@ -246,7 +247,7 @@ describe("@beep/html numeric and id conformance", () => {
         expect.objectContaining({ path: ["children.0", "attributes.name"] }),
         expect.objectContaining({ path: ["children.1", "attributes.name"] }),
       ]);
-      expect(Exit.isFailure(yield* Effect.exit(conform(duplicateMaps)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(duplicateMaps))));
 
       const mismatchedMapIdentity = MapElement.make({
         children: [],
@@ -256,7 +257,7 @@ describe("@beep/html numeric and id conformance", () => {
       expect(inspectConformance(mismatchedMapIdentity)).toContainEqual(
         expect.objectContaining({ path: ["attributes.id"], rule: "attributeRelationship" })
       );
-      expect(Exit.isFailure(yield* Effect.exit(conform(mismatchedMapIdentity)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(mismatchedMapIdentity))));
 
       expect(() => MapElement.make({ children: [], name: O.some("") })).toThrow();
       expect(() => MapElement.make({ children: [], name: O.some("two maps") })).toThrow();
@@ -292,7 +293,7 @@ describe("@beep/html numeric and id conformance", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       expect(() => Progress.make({ children: [], max: O.some(0) })).toThrow();
@@ -593,7 +594,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of valid) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
     })
   );
@@ -621,7 +622,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       const validDetails = Details.make({
@@ -634,7 +635,7 @@ describe("@beep/html generated special-child grammars", () => {
         ],
       });
       expect(inspectConformance(validDetails)).toStrictEqual([]);
-      expect(Exit.isSuccess(yield* Effect.exit(conform(validDetails)))).toBe(true);
+      assertTrue(Exit.isSuccess(yield* Effect.exit(conform(validDetails))));
 
       for (const root of [
         Fieldset.make({ children: [] }),
@@ -642,7 +643,7 @@ describe("@beep/html generated special-child grammars", () => {
         Optgroup.make({ children: [] }),
       ]) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
     })
   );
@@ -707,7 +708,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       const valid = [
@@ -810,7 +811,7 @@ describe("@beep/html generated special-child grammars", () => {
         expect(inspectConformance(root)).toContainEqual(
           expect.objectContaining({ path, rule: "attributeRelationship" })
         );
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       for (const root of [
@@ -824,7 +825,7 @@ describe("@beep/html generated special-child grammars", () => {
         }),
       ]) {
         expect(hasRule(root, "attributeRelationship")).toBe(false);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
     })
   );
@@ -880,7 +881,7 @@ describe("@beep/html generated special-child grammars", () => {
           ],
         });
         expect(inspectConformance(root)).toStrictEqual([]);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
       const allBodyOk = P.make({
         children: [
@@ -888,14 +889,14 @@ describe("@beep/html generated special-child grammars", () => {
         ],
       });
       expect(inspectConformance(allBodyOk)).toStrictEqual([]);
-      expect(Exit.isSuccess(yield* Effect.exit(conform(allBodyOk)))).toBe(true);
+      assertTrue(Exit.isSuccess(yield* Effect.exit(conform(allBodyOk))));
 
       for (const rel of ["", "canonical", "canonical stylesheet", "expect"]) {
         const root = P.make({ children: [Link.make({ href: O.some("/resource"), rel: O.some(rel) })] });
         expect(inspectConformance(root)).toContainEqual(
           expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
         );
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       const valid = [
@@ -911,7 +912,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of valid) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
 
       const invalid = [
@@ -926,7 +927,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(inspectConformance(root).length).toBeGreaterThan(0);
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
     })
   );
@@ -957,7 +958,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of valid) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        expect(Exit.isSuccess(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
       }
 
       const invalid = [
@@ -998,11 +999,11 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of invalid) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
       const uppercaseCharset = decodeMetaResult({ _tag: "meta", charset: "UTF-8" });
-      expect(Result.isSuccess(uppercaseCharset) && O.contains(uppercaseCharset.success.charset, "utf-8")).toBe(true);
-      expect(Result.isFailure(decodeMetaResult({ _tag: "meta", charset: "iso-8859-1" }))).toBe(true);
+      assertTrue(Result.isSuccess(uppercaseCharset) && O.contains(uppercaseCharset.success.charset, "utf-8"));
+      assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", charset: "iso-8859-1" })));
       expect(() => Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("PreLoad") })).toThrow();
       expect(
         inspectConformance(
@@ -1015,7 +1016,7 @@ describe("@beep/html generated special-child grammars", () => {
   it.effect("rejects invalid preload destination tokens at decode time", () =>
     Effect.gen(function* () {
       const invalid = yield* Effect.exit(decodeLink({ _tag: "link", as: "video", href: "/resource", rel: "preload" }));
-      expect(Exit.isFailure(invalid)).toBe(true);
+      assertTrue(Exit.isFailure(invalid));
     })
   );
 
@@ -1089,7 +1090,7 @@ describe("@beep/html generated special-child grammars", () => {
 
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
     })
   );
@@ -1120,7 +1121,7 @@ describe("@beep/html generated special-child grammars", () => {
         expect.objectContaining({ path: ["children.0", "children.1", "children.0"] }),
         expect.objectContaining({ path: ["children.0", "children.1", "children.1"] }),
       ]);
-      expect(Exit.isFailure(yield* Effect.exit(conform(twoVisible)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(twoVisible))));
 
       const hiddenAware = documentWith(
         Main.make({ children: [] }),
@@ -1155,7 +1156,7 @@ describe("@beep/html generated special-child grammars", () => {
 
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
-        expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
 
       expect(inspectConformance(Form.make({ children: [Main.make({ children: [] })] }))).toStrictEqual([]);
@@ -1171,7 +1172,7 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(invalidStandalone)).toContainEqual(
         expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
       );
-      expect(Exit.isFailure(yield* Effect.exit(conform(invalidStandalone)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(invalidStandalone))));
 
       const validDescriptionGroup = Dl.make({
         children: [
@@ -1270,7 +1271,7 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(valid)).toStrictEqual([]);
       expect(inspectConformance(validWithHiddenInput)).toStrictEqual([]);
       expect(hasRule(invalid, "forbiddenDescendant")).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(conform(invalid)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(invalid))));
     })
   );
 
@@ -1312,13 +1313,13 @@ describe("@beep/html exact attribute domains", () => {
     expect(() => makeSpaceSeparatedTokenList([""])).toThrow();
     expect(() => makeSpaceSeparatedTokenList(["foo", "FOO"])).toThrow();
 
-    expect(Result.isSuccess(decodeAsciiKResult("K"))).toBe(true);
-    expect(Result.isFailure(decodeAsciiKResult("K"))).toBe(true);
+    assertTrue(Result.isSuccess(decodeAsciiKResult("K")));
+    assertTrue(Result.isFailure(decodeAsciiKResult("K")));
   });
 
   it("keeps link relations open while enforcing shortcut-icon and token-list laws", () => {
     for (const relation of ["shortcut icon", "SHORTCUT ICON", "apple-touch-icon", "mask-icon", "x-beep"]) {
-      expect(Result.isSuccess(decodeLinkRelationListResult(relation))).toBe(true);
+      assertTrue(Result.isSuccess(decodeLinkRelationListResult(relation)));
     }
     for (const relation of [
       "shortcut\ticon",
@@ -1327,27 +1328,27 @@ describe("@beep/html exact attribute domains", () => {
       "shortcut icon preload",
       "x-beep x-beep",
     ]) {
-      expect(Result.isFailure(decodeLinkRelationListResult(relation))).toBe(true);
+      assertTrue(Result.isFailure(decodeLinkRelationListResult(relation)));
     }
 
     const idReferences = decodeHtmlIdReferenceListResult("First\tsecond");
-    expect(Result.isSuccess(idReferences) && idReferences.success === "First second").toBe(true);
-    expect(Result.isSuccess(decodeHtmlIdReferenceListResult("First first"))).toBe(true);
-    expect(Result.isFailure(decodeHtmlIdReferenceListResult("First First"))).toBe(true);
+    assertSuccess(idReferences, "First second");
+    assertTrue(Result.isSuccess(decodeHtmlIdReferenceListResult("First first")));
+    assertTrue(Result.isFailure(decodeHtmlIdReferenceListResult("First First")));
   });
 
   it.effect("keeps extension relations structural and conformant but narrows SafeHtml", () =>
     Effect.gen(function* () {
       const relations = decodeHtmlRelationListResult("X-BEEP me");
-      expect(Result.isSuccess(relations) && relations.success === "me x-beep").toBe(true);
+      assertSuccess(relations, "me x-beep");
       const linkRelations = decodeLinkRelationListResult("noreferrer NOOPENER");
-      expect(Result.isSuccess(linkRelations) && linkRelations.success === "noopener noreferrer").toBe(true);
+      assertSuccess(linkRelations, "noopener noreferrer");
       for (const [schema, encoded] of [
         [Anchor, { _tag: "a", children: [], href: "/profile", rel: "me" }],
         [Area, { _tag: "area", href: "/profile", rel: "me" }],
         [Form, { _tag: "form", children: [], rel: "me" }],
       ] as const) {
-        expect(Result.isSuccess(S.decodeResult(schema)(encoded))).toBe(true);
+        assertTrue(Result.isSuccess(S.decodeResult(schema)(encoded)));
       }
 
       for (const relation of ["me", "opener", "x-beep"]) {
@@ -1383,7 +1384,7 @@ describe("@beep/html exact attribute domains", () => {
 
   it("decodes presence booleans, blocking tokens, and exact enumerations", () => {
     for (const value of ["", true]) {
-      expect(
+      assertTrue(
         Result.isSuccess(
           decodeUnknownTemplateResult({
             _tag: "template",
@@ -1391,9 +1392,9 @@ describe("@beep/html exact attribute domains", () => {
             shadowrootcustomelementregistry: value,
           })
         )
-      ).toBe(true);
+      );
     }
-    expect(
+    assertTrue(
       Result.isFailure(
         decodeUnknownTemplateResult({
           _tag: "template",
@@ -1401,16 +1402,16 @@ describe("@beep/html exact attribute domains", () => {
           shadowrootcustomelementregistry: false,
         })
       )
-    ).toBe(true);
+    );
 
     for (const [schema, encoded] of [
       [Link, { _tag: "link", blocking: "RENDER", href: "/style.css", rel: "stylesheet" }],
       [Script, { _tag: "script", blocking: "RENDER", content: "" }],
       [Style, { _tag: "style", blocking: "RENDER", content: "" }],
     ] as const) {
-      expect(Result.isSuccess(S.decodeResult(schema)(encoded))).toBe(true);
-      expect(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "render render" }))).toBe(true);
-      expect(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "paint" }))).toBe(true);
+      assertTrue(Result.isSuccess(S.decodeResult(schema)(encoded)));
+      assertTrue(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "render render" })));
+      assertTrue(Result.isFailure(S.decodeResult(schema)({ ...encoded, blocking: "paint" })));
     }
 
     const link = decodeLinkResult({
@@ -1420,16 +1421,16 @@ describe("@beep/html exact attribute domains", () => {
       referrerpolicy: "STRICT-ORIGIN",
       rel: "stylesheet",
     });
-    expect(
+    assertTrue(
       Result.isSuccess(link) &&
         O.contains(link.success.crossorigin, "anonymous") &&
         O.contains(link.success.referrerpolicy, "strict-origin")
-    ).toBe(true);
-    expect(
+    );
+    assertTrue(
       Result.isFailure(
         decodeLinkResult({ _tag: "link", href: "/style.css", referrerpolicy: "private", rel: "stylesheet" })
       )
-    ).toBe(true);
+    );
   });
 
   it("normalizes current metadata and form-control microsyntaxes", () => {
@@ -1439,37 +1440,31 @@ describe("@beep/html exact attribute domains", () => {
       children: [],
       writingsuggestions: "",
     });
-    expect(
+    assertTrue(
       Result.isSuccess(globals) &&
         O.contains(globals.success.autocorrect, "on") &&
         O.contains(globals.success.writingsuggestions, "true")
-    ).toBe(true);
-
-    expect(Result.isSuccess(decodeFormResult({ _tag: "form", "accept-charset": "UTF-8", children: [] }))).toBe(true);
-    expect(Result.isFailure(decodeFormResult({ _tag: "form", "accept-charset": "iso-8859-1", children: [] }))).toBe(
-      true
     );
-    expect(Result.isSuccess(decodeMetaResult({ _tag: "meta", name: "X-Beep" }))).toBe(true);
-    expect(Result.isFailure(decodeMetaResult({ _tag: "meta", name: "x beep" }))).toBe(true);
-    expect(Result.isSuccess(decodeMetaResult({ _tag: "meta", "http-equiv": "REFRESH" }))).toBe(true);
-    expect(Result.isFailure(decodeMetaResult({ _tag: "meta", "http-equiv": "expires" }))).toBe(true);
+
+    assertTrue(Result.isSuccess(decodeFormResult({ _tag: "form", "accept-charset": "UTF-8", children: [] })));
+    assertTrue(Result.isFailure(decodeFormResult({ _tag: "form", "accept-charset": "iso-8859-1", children: [] })));
+    assertTrue(Result.isSuccess(decodeMetaResult({ _tag: "meta", name: "X-Beep" })));
+    assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", name: "x beep" })));
+    assertTrue(Result.isSuccess(decodeMetaResult({ _tag: "meta", "http-equiv": "REFRESH" })));
+    assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", "http-equiv": "expires" })));
 
     for (const command of ["toggle-popover", "TOGGLE-POPOVER", "--", "--Beep\nCommand"]) {
-      expect(
-        Result.isSuccess(decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" }))
-      ).toBe(true);
+      assertTrue(Result.isSuccess(decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" })));
     }
     for (const command of ["", "rotate", "-beep"]) {
-      expect(
-        Result.isFailure(decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" }))
-      ).toBe(true);
+      assertTrue(Result.isFailure(decodeButtonResult({ _tag: "button", children: [], command, commandfor: "target" })));
     }
 
     for (const step of ["any", "ANY", 0.25]) {
-      expect(Result.isSuccess(decodeInputResult({ _tag: "input", step }))).toBe(true);
+      assertTrue(Result.isSuccess(decodeInputResult({ _tag: "input", step })));
     }
     for (const step of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, "sometimes"]) {
-      expect(Result.isFailure(decodeInputResult({ _tag: "input", step }))).toBe(true);
+      assertTrue(Result.isFailure(decodeInputResult({ _tag: "input", step })));
     }
   });
 });
@@ -1688,9 +1683,9 @@ describe("@beep/html exact attribute conformance", () => {
     for (const meta of R.values(ELEMENT_META)) {
       expect(isHtmlElementMeta(meta)).toBe(true);
       const encoded = encodeHtmlElementMetaResult(meta);
-      expect(Result.isSuccess(encoded)).toBe(true);
+      assertTrue(Result.isSuccess(encoded));
       if (Result.isFailure(encoded)) continue;
-      expect(Result.isSuccess(decodeHtmlElementMetaResult(encoded.success))).toBe(true);
+      assertTrue(Result.isSuccess(decodeHtmlElementMetaResult(encoded.success)));
     }
   });
 });
@@ -1746,7 +1741,7 @@ describe("@beep/html foreign browser fixed points", () => {
       expect(hasRule(svgRoot("customÉ"), "foreignIntegration")).toBe(false);
       expect(hasRule(svgRoot("customElement"), "foreignIntegration")).toBe(true);
       expect(hasRule(svgRoot("path", { customAttr: "value" }), "foreignIntegration")).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(serialize(svgRoot("lineargradient"))))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(svgRoot("lineargradient")))));
 
       const mismatchedPrefix = ForeignElement.make({
         namespace: "mathml",
@@ -1754,7 +1749,7 @@ describe("@beep/html foreign browser fixed points", () => {
         children: [ForeignElement.make({ namespace: "mathml", name: "svg:path", children: [] })],
       });
       expect(hasRule(mismatchedPrefix, "foreignIntegration")).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(serialize(mismatchedPrefix)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(mismatchedPrefix))));
     })
   );
 });

@@ -7,6 +7,7 @@ import { Div, ForeignElement, P } from "@beep/html/Html.model";
 import { Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
 
@@ -139,8 +140,8 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
-      expect(Exit.isFailure(yield* Effect.exit(conform(root)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(serialize(root)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(root))));
     })
   );
 
@@ -173,7 +174,7 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        expect(Exit.isFailure(yield* Effect.exit(serialize(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(root))));
         expect(container.firstElementChild?.firstElementChild?.childElementCount).toBe(0);
       }
     })
@@ -227,7 +228,7 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        expect(Exit.isFailure(yield* Effect.exit(serialize(root)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(root))));
         expect(container.firstElementChild?.firstElementChild?.childElementCount).toBe(0);
       }
     })
@@ -276,7 +277,7 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        expect(Exit.isFailure(yield* Effect.exit(serialize(invalid)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(invalid))));
         expect(invalidContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
           XHTML_NAMESPACE
         );
@@ -412,7 +413,7 @@ describe("@beep/html browser conformance", () => {
             rule: "foreignIntegration",
           })
         );
-        expect(Exit.isFailure(yield* Effect.exit(serialize(invalidForeign)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(serialize(invalidForeign))));
         expect(invalidContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
           XHTML_NAMESPACE
         );
@@ -487,7 +488,7 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
-      expect(Exit.isFailure(yield* Effect.exit(serialize(encodedMathChild)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(encodedMathChild))));
       expect(encodedMathChildContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
         XHTML_NAMESPACE
       );
@@ -552,7 +553,7 @@ describe("@beep/html browser conformance", () => {
           rule: "foreignIntegration",
         })
       );
-      expect(Exit.isFailure(yield* Effect.exit(serialize(wrongSvgNamespace)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(wrongSvgNamespace))));
       expect(wrongSvgContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
         SVG_NAMESPACE
       );
@@ -594,7 +595,7 @@ describe("@beep/html browser conformance", () => {
           }),
         ],
       });
-      expect(Exit.isFailure(yield* Effect.exit(serialize(drifting)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(drifting))));
     })
   );
 

@@ -2,6 +2,7 @@ import { inspectSourceSizeList, SourceSizeAnalysis, SourceSizeIssue } from "@bee
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertSuccess, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -33,15 +34,13 @@ const expectInvalid = (value: string, code?: IssueCode): void => {
 describe("@beep/html source-size author conformance", () => {
   it("returns schema-owned analyses and diagnostics", () => {
     const valid = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw");
-    expect(Result.isSuccess(valid)).toBe(true);
-    if (Result.isSuccess(valid)) {
-      expect(isSourceSizeAnalysis(valid.success)).toBe(true);
-      expect(valid.success.entryCount).toBe(2);
-      expect(valid.success.usesAuto).toBe(false);
-    }
+    assertSuccess(valid, SourceSizeAnalysis.make({ entryCount: 2, usesAuto: false }));
+    expect(isSourceSizeAnalysis(valid.success)).toBe(true);
+    expect(valid.success.entryCount).toBe(2);
+    expect(valid.success.usesAuto).toBe(false);
 
     const invalid = inspectSourceSizeList("10%");
-    expect(Result.isFailure(invalid)).toBe(true);
+    assertTrue(Result.isFailure(invalid));
     if (Result.isFailure(invalid)) {
       expect(isSourceSizeIssue(invalid.failure[0])).toBe(true);
       expect(invalid.failure[0]?.code).toBe("invalidSourceSize");
@@ -345,7 +344,7 @@ describe("@beep/html source-size author conformance", () => {
     ([input]) => {
       const first = inspectSourceSizeList(input);
       const second = inspectSourceSizeList(input);
-      expect(Result.isSuccess(first)).toBe(Result.isSuccess(second));
+      strictEqual(Result.isSuccess(first), Result.isSuccess(second));
       expect(sourceSizeResultEquivalence(first, second)).toBe(true);
       if (Result.isFailure(first) && Result.isFailure(second)) {
         expect(first.failure[0]?.code).toBe(second.failure[0]?.code);

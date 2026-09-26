@@ -50,6 +50,7 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -182,7 +183,7 @@ describe("@beep/html safe policy", () => {
   it.effect("applies element-aware URL policies", () =>
     Effect.gen(function* () {
       for (const href of ["/docs", "#section", "https://example.com", "mailto:user@example.com", "tel:+15551212"]) {
-        expect(
+        assertTrue(
           Exit.isSuccess(
             yield* conform(
               fragment(
@@ -193,11 +194,11 @@ describe("@beep/html safe policy", () => {
               )
             ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)
           )
-        ).toBe(true);
+        );
       }
 
       for (const href of ["http://example.com", "javascript:alert(1)", "//example.com", String.raw`\evil`]) {
-        expect(
+        assertTrue(
           Exit.isFailure(
             yield* conform(
               fragment(
@@ -208,7 +209,7 @@ describe("@beep/html safe policy", () => {
               )
             ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)
           )
-        ).toBe(true);
+        );
       }
 
       expect(isSafeUrlAttribute("tel:+15551212")).toBe(true);
@@ -228,7 +229,7 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
-        expect(Exit.isFailure(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(true);
+        assertTrue(Exit.isFailure(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
       }
 
       for (const target of ["report-window", "_parent", "_top", "_unfencedTop", "", " _self"]) {
@@ -239,7 +240,7 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
-        expect(Exit.isFailure(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(true);
+        assertTrue(Exit.isFailure(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
       }
 
       for (const target of ["_self", "_SELF"]) {
@@ -250,7 +251,7 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
-        expect(Exit.isSuccess(yield* conform(safeSelf).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* conform(safeSelf).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
       }
 
       const safe = fragment(
@@ -261,7 +262,7 @@ describe("@beep/html safe policy", () => {
           children: [text("link")],
         })
       );
-      expect(Exit.isSuccess(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(true);
+      assertTrue(Exit.isSuccess(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
       expect(
         safeHtmlValue(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe)))
       ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
@@ -280,7 +281,7 @@ describe("@beep/html safe policy", () => {
           rel: `noopener${separator}noreferrer`,
           target: "_blank",
         });
-        expect(Exit.isSuccess(yield* policyExit(fragment(decoded)))).toBe(true);
+        assertTrue(Exit.isSuccess(yield* policyExit(fragment(decoded))));
       }
       for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
         const decoded = yield* decodeAnchor({
@@ -290,7 +291,7 @@ describe("@beep/html safe policy", () => {
           rel: `noopener${separator}noreferrer`,
           target: "_blank",
         });
-        expect(Exit.isFailure(yield* policyExit(fragment(decoded)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* policyExit(fragment(decoded))));
       }
     })
   );
@@ -324,7 +325,7 @@ describe("@beep/html safe policy", () => {
           children: [text("added")],
         })
       );
-      expect(Exit.isSuccess(yield* conform(insertion).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(true);
+      assertTrue(Exit.isSuccess(yield* conform(insertion).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
 
       const unsafeCitation = fragment(
         Ins.make({
@@ -332,9 +333,7 @@ describe("@beep/html safe policy", () => {
           children: [text("added")],
         })
       );
-      expect(Exit.isFailure(yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(
-        true
-      );
+      assertTrue(Exit.isFailure(yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
     })
   );
 
@@ -346,7 +345,7 @@ describe("@beep/html safe policy", () => {
           children: [Li.make({ value: O.some(-2), children: [text("item")] })],
         })
       );
-      expect(Exit.isSuccess(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit))).toBe(true);
+      assertTrue(Exit.isSuccess(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
 
       const legacyImageName = Img.make({
         alt: O.some("logo"),
@@ -356,7 +355,7 @@ describe("@beep/html safe policy", () => {
       expect(inspectConformance(legacyImageName)).toContainEqual(
         expect.objectContaining({ rule: "obsoleteAttribute" })
       );
-      expect(Exit.isFailure(yield* Effect.exit(conform(legacyImageName)))).toBe(true);
+      assertTrue(Exit.isFailure(yield* Effect.exit(conform(legacyImageName))));
     })
   );
 });
@@ -467,23 +466,19 @@ describe("@beep/html canonical serialization", () => {
           children: [],
         })
       );
-      expect(Exit.isFailure(hostile)).toBe(true);
+      assertTrue(Exit.isFailure(hostile));
     })
   );
 
   it.effect("rejects scalar hazards, ambiguous comments, raw end tags, and plaintext", () =>
     Effect.gen(function* () {
-      expect(Exit.isFailure(yield* Effect.exit(serialize(text("\u0000"))))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(serialize(text("\uD800"))))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] }))))).toBe(
-        true
-      );
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(text("\u0000")))));
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(text("\uD800")))));
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] })))));
       expect(isHtmlCommentData("safe note")).toBe(true);
       expect(isHtmlCommentData("-->")).toBe(false);
       expect(() => Comment.make({ value: "<!--" })).toThrow();
-      expect(Exit.isFailure(yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" }))))).toBe(
-        true
-      );
+      assertTrue(Exit.isFailure(yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" })))));
     })
   );
 });

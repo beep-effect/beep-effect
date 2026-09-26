@@ -2,6 +2,7 @@ import { inspectSrcset } from "@beep/html/Html.srcset";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -51,7 +52,7 @@ describe("@beep/html srcset author conformance", () => {
       return !Str.Equivalence(url, "http:");
     });
 
-    expect(O.isNone(result)).toBe(true);
+    assertNone(result);
     expect(urls).toStrictEqual(["good.png", "http:"]);
   });
 
@@ -61,13 +62,13 @@ describe("@beep/html srcset author conformance", () => {
     );
 
     for (const value of ["bad%.png 1x", "bad%2.png 1x", "bad%GG.png 1x", "http: 1x", "https://exa mple/ 1x"]) {
-      expect(O.isNone(inspectSrcset(value, isValidHtmlUrl)), value).toBe(true);
+      assertNone(inspectSrcset(value, isValidHtmlUrl));
     }
   });
 
   it("rejects empty candidates and invalid comma placement from Nu conformance cases", () => {
     for (const value of ["", " ", ",", ", image.png", ",,image.png", "image.png,", "image.png,,"]) {
-      expect(O.isNone(inspectSrcset(value, acceptUrl)), value).toBe(true);
+      assertNone(inspectSrcset(value, acceptUrl));
     }
   });
 
@@ -92,7 +93,7 @@ describe("@beep/html srcset author conformance", () => {
       "1w 1h",
       "1x /* junk */",
     ]) {
-      expect(O.isNone(inspectSrcset(`image.png ${descriptor}`, acceptUrl)), descriptor).toBe(true);
+      assertNone(inspectSrcset(`image.png ${descriptor}`, acceptUrl));
     }
   });
 
@@ -106,7 +107,7 @@ describe("@beep/html srcset author conformance", () => {
       "a.png 1w, b.png 1x",
       "a.png 1w, b.png",
     ]) {
-      expect(O.isNone(inspectSrcset(value, acceptUrl)), value).toBe(true);
+      assertNone(inspectSrcset(value, acceptUrl));
     }
 
     expect(profileOf("a.png 9007199254740992x, b.png 9007199254740993x")).toBe("density");
@@ -131,7 +132,7 @@ describe("@beep/html srcset author conformance", () => {
     "rejects generated numerically duplicate width spellings",
     [Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(20_000)))],
     ([width]) => {
-      expect(O.isNone(inspectSrcset(`a.png ${width}w, b.png 0${width}w`, acceptUrl))).toBe(true);
+      assertNone(inspectSrcset(`a.png ${width}w, b.png 0${width}w`, acceptUrl));
 
       return true;
     },

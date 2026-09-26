@@ -11,6 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -62,7 +63,7 @@ describe("HTML script semantic states", () => {
 
   it("classifies every author-conforming script type without rewriting its wire", () => {
     const missing = Script.make({ content: "" });
-    expect(O.isNone(missing.type)).toBe(true);
+    assertNone(missing.type);
     expect(Result.getOrThrow(resolveScriptState(missing))).toStrictEqual(ScriptState.cases.classic.make({}));
     expect(Result.getOrThrow(resolveScriptState(Script.make({ content: "", type: O.some("") })))).toStrictEqual(
       ScriptState.cases.classic.make({})
@@ -108,7 +109,7 @@ describe("HTML script semantic states", () => {
         Script.make({ content: "", type: O.some("text/javascript;") }),
       ],
       (script) => {
-        expect(Result.isFailure(resolveScriptState(script))).toBe(true);
+        assertTrue(Result.isFailure(resolveScriptState(script)));
         expect(
           A.some(
             inspectConformance(script),
@@ -248,10 +249,10 @@ describe("HTML script semantic states", () => {
     expect(validState.state).toBe("dataBlock");
     expect(invalidMimeType).toBe("application/json");
     expect(invalidState.state).toBe("unsupported");
-    expect(Result.isSuccess(decodeHtmlMimeTypeResult("application/json"))).toBe(true);
-    expect(Result.isFailure(decodeHtmlMimeTypeResult("beep"))).toBe(true);
-    expect(Result.isFailure(decodeScriptDataBlockMimeTypeResult("text/javascript"))).toBe(true);
-    expect(Result.isFailure(decodeScriptStateResult({ state: "dataBlock", mimeType: "text/javascript" }))).toBe(true);
+    assertTrue(Result.isSuccess(decodeHtmlMimeTypeResult("application/json")));
+    assertTrue(Result.isFailure(decodeHtmlMimeTypeResult("beep")));
+    assertTrue(Result.isFailure(decodeScriptDataBlockMimeTypeResult("text/javascript")));
+    assertTrue(Result.isFailure(decodeScriptStateResult({ state: "dataBlock", mimeType: "text/javascript" })));
   });
 
   it("exhaustively matches every script semantic state", () => {
