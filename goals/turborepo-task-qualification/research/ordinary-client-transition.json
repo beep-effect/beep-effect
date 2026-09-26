@@ -1,0 +1,78 @@
+{
+  "authority": "ordinary-cli-shared-cache-client-transition-review",
+  "sourceRevision": "8f11af6e4980180c35c8ff3c63b13f35b3accc70",
+  "canaryPins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "stableTurboSha256": "6254b55f5128cf2f7b5de1cad411555ba6598905d0ac046e701a970d26d1a964",
+  "cases": [
+    {
+      "case": "stable-fresh",
+      "channel": "stable",
+      "exitCode": 0,
+      "taskHash": "6a84b46803676f04",
+      "cacheStatus": "MISS",
+      "turboVersion": "2.11.3"
+    },
+    {
+      "case": "stable-replay",
+      "channel": "stable",
+      "exitCode": 0,
+      "taskHash": "6a84b46803676f04",
+      "cacheStatus": "HIT",
+      "turboVersion": "2.11.3"
+    },
+    {
+      "case": "canary-fresh",
+      "channel": "canary",
+      "exitCode": 0,
+      "taskHash": "39b09a3eccddd98c",
+      "cacheStatus": "MISS",
+      "turboVersion": "2.11.5-canary.2"
+    },
+    {
+      "case": "canary-replay",
+      "channel": "canary",
+      "exitCode": 0,
+      "taskHash": "39b09a3eccddd98c",
+      "cacheStatus": "HIT",
+      "turboVersion": "2.11.5-canary.2"
+    },
+    {
+      "case": "stable-restored",
+      "channel": "stable",
+      "exitCode": 0,
+      "taskHash": "6a84b46803676f04",
+      "cacheStatus": "HIT",
+      "turboVersion": "2.11.3"
+    }
+  ],
+  "allInputMapsEqual": true,
+  "pairedEnvironmentMetadataEqual": true,
+  "onlyEnvironmentDifference": "BEEP_CACHE_TOOLCHAIN_DIGEST (native summary hashed value)",
+  "successfulArchiveLogsEqual": true,
+  "successfulTaskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "originalReceiptSha256": "dcead14374a85f6f85996f6692b34d936485ea7195e50702a05c5462bd10cd03",
+  "limits": [
+    "One local cache namespace, frozen source, read-only native executable overlays; launcher and package declarations unchanged.",
+    "The observed transition changes both runtime identity and Turbo implementation. It does not isolate which hash contribution causes the miss.",
+    "No signed remote acceptance, full semantic input closure, latest-head runtime renewal or qualification promotion."
+  ],
+  "archiveFiles": 1544,
+  "archiveManifestSha256": "fe9c57a5d3b4a11abdd62a6cef6ec246db5bf7d6cd95ff49bab0894da304b5a3"
+}

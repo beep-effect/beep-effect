@@ -1,0 +1,143 @@
+{
+  "authority": "source-diff-review-and-scoped-local-tests",
+  "base": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "1504e77bcff1c915c600a3e05a20276535fc7876",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "sha256": "96be51862e4fa4c01ca9f54eb2ec33d264591f6fddc759833071aaaca516dd87",
+      "review": [
+        "Help advertises lane-timings --preview; no execution behavior changes in this file delta."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
+      "sha256": "f4544b8a5e64e75f4e0094a6b50e16e4a4e76ada7d25fff7c1f6551b27ec9065",
+      "review": [
+        "Adds five typed shard-validation failure reasons; these discriminate invalid shard sets before execution."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+      "sha256": "c7c32e69e58085d4fde93c76812ed0bca07640275839e188aa84603c288472ac",
+      "review": [
+        "Adds Crypto to the declared service requirements; the direct function body is unchanged by this delta. Existing admission reads event input and may read filesystem/git through injected services."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+      "sha256": "96dbb8b7b71862c89eca3b6d8c5b8781dbf003ca189f0ddf47e313af2fa17687",
+      "review": [
+        "Adds Crypto to declared service requirements. The documentation changes to describe --no-renames -z, but the actual reader still runs git diff --name-only and splits/trim lines. Do not treat documentation as proof of lossless filename handling. Existing reader may fetch origin and consumes current git refs; hosted event and label state remain external inputs."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820",
+      "review": [
+        "Groups partition bins by package and rejects missing shard indexes, mismatched totals, duplicate indexes, mixed sharded/unsharded bins, or multi-package shard bins.",
+        "Proof output carries shard metadata; execution forwards -- --shard=index/total. Dry-run prints the planned command after proving selected task coverage and executes no task body.",
+        "Crypto service requirements change. The added duplicate Crypto type union member has no distinct runtime effect; runtime service implementations retain their own evidence obligations."
+      ]
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "sha256": "465da996f42c801e7556cac0647f0aabba34d6f58168e7d0f177f23fbeb0429e",
+      "review": [
+        "Adds one-based index<=total, total>=2 shard schema. Replaces repo-cli with two test-unit bins, each selecting @beep/repo-cli and a complementary shard.",
+        "Adds @beep/test-runner beside test-utils in lint-b and unit-a; table weights are metadata, not runtime admission scheduling inputs."
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "e505b208835ace90444d3b3b1df18f968d0e36b8ac8dfd69b2e9ebf4c85c2220",
+      "review": [
+        "The test-unit matrix replaces repo-cli with repo-cli-1 and repo-cli-2. This matches the committed partition IDs; executing the local planner does not prove hosted job completion or aggregate status."
+      ]
+    }
+  ],
+  "tests": {
+    "command": "bunx --bun --no-install vitest run test/ci-lane.test.ts test/ci-heavy-admission.test.ts",
+    "cwd": "packages/tooling/tool/cli",
+    "exit": 0,
+    "filesPassed": 2,
+    "testsPassed": 88,
+    "scope": "Schema, planner, partition rejection and shimmed process/admission contracts. No hosted GitHub execution or full test fleet qualification."
+  },
+  "remaining": [
+    "Dynamic selected-task dry-run results do not execute task bodies.",
+    "Full external event/path interpretation, downstream runner semantics and hosted verdicts are not qualified."
+  ],
+  "nativeDryRuns": [
+    {
+      "lane": "test-unit",
+      "partition": "repo-cli-1",
+      "executableTasks": 136,
+      "selectedTasks": 136,
+      "partitionTasks": 1,
+      "plannedCommand": "bunx turbo run @beep/repo-cli#test --cache=local:rw --only --concurrency=2 --filter=!./apps/labs/** --filter=@beep/repo-cli -- --shard=1/2",
+      "exit": 0,
+      "logSha256": "a18bae44f394b58e5fc705085b37ebf940069ebdf50c709ec237d34ea5e30189"
+    },
+    {
+      "lane": "test-unit",
+      "partition": "repo-cli-2",
+      "executableTasks": 136,
+      "selectedTasks": 136,
+      "partitionTasks": 1,
+      "plannedCommand": "bunx turbo run @beep/repo-cli#test --cache=local:rw --only --concurrency=2 --filter=!./apps/labs/** --filter=@beep/repo-cli -- --shard=2/2",
+      "exit": 0,
+      "logSha256": "f164436b6e1d88e672bdf111741e4234a7032b83099dcaaf7340652a0ed4f128"
+    },
+    {
+      "lane": "test-unit",
+      "partition": "unit-a",
+      "executableTasks": 136,
+      "selectedTasks": 136,
+      "partitionTasks": 68,
+      "plannedCommand": "bunx turbo run @beep/professional-desktop#test @beep/lexical-schema#test @beep/repo-utils#test @beep/observability#test @beep/ontology-client#test @beep/documents-server#test @beep/repo-configs#test @beep/agents-client#test @beep/documents-domain#test @beep/epistemic-use-cases#test @beep/agents-server#test @beep/skill-contract#test @beep/lint-rules#test @beep/law-practice-domain#test @beep/shared-domain#test @beep/epistemic-server#test @beep/ontology-server#test @beep/law-practice-use-cases#test @beep/nlp#test @beep/workspace-server#test @beep/mcp-kit#test @beep/md#test @beep/test-runner#test @beep/test-utils#test @beep/tika#test @beep/documents-tables#test @beep/ffmpeg#test @beep/ontology#test @beep/ui#test @beep/architecture-lab-domain#test @beep/govinfo#test @beep/pretext#test @beep/db-admin#test @beep/workspace-use-cases#test @beep/doc-text#test @beep/agents-domain#test @beep/architecture-lab-server#test @beep/ontology-ui#test @beep/pacer#test @beep/ai-provider-cli#test @beep/anthropic#test @beep/chalk#test @beep/epistemic-client#test @beep/gov-legal-mcp#test @beep/m365-mcp#test @beep/provenance#test @beep/runpod#test @beep/workspace-tables#test @beep/architecture-lab-proof#test @beep/codegen-kit#test @beep/discord#test @beep/firecrawl#test @beep/openai-compat#test @beep/sanity#test @beep/tailscale#test @beep/venice-ai#test @beep/architecture-lab-config#test @beep/colors#test @beep/epistemic-config#test @beep/identity#test @beep/onepassword-cli#test @beep/uspto-mcp#test @beep/utils#test @beep/data#test @beep/todox#test @beep/ontology-config#test @beep/storybook#test @beep/freshbooks#test --cache=local:rw --only --concurrency=2 --filter=!./apps/labs/** --filter=@beep/professional-desktop --filter=@beep/lexical-schema --filter=@beep/repo-utils --filter=@beep/observability --filter=@beep/ontology-client --filter=@beep/documents-server --filter=@beep/repo-configs --filter=@beep/agents-client --filter=@beep/documents-domain --filter=@beep/epistemic-use-cases --filter=@beep/agents-server --filter=@beep/skill-contract --filter=@beep/lint-rules --filter=@beep/law-practice-domain --filter=@beep/shared-domain --filter=@beep/epistemic-server --filter=@beep/ontology-server --filter=@beep/law-practice-use-cases --filter=@beep/nlp --filter=@beep/workspace-server --filter=@beep/mcp-kit --filter=@beep/md --filter=@beep/test-runner --filter=@beep/test-utils --filter=@beep/tika --filter=@beep/documents-tables --filter=@beep/ffmpeg --filter=@beep/ontology --filter=@beep/ui --filter=@beep/architecture-lab-domain --filter=@beep/govinfo --filter=@beep/pretext --filter=@beep/db-admin --filter=@beep/workspace-use-cases --filter=@beep/doc-text --filter=@beep/agents-domain --filter=@beep/architecture-lab-server --filter=@beep/ontology-ui --filter=@beep/pacer --filter=@beep/ai-provider-cli --filter=@beep/anthropic --filter=@beep/chalk --filter=@beep/epistemic-client --filter=@beep/gov-legal-mcp --filter=@beep/m365-mcp --filter=@beep/provenance --filter=@beep/runpod --filter=@beep/workspace-tables --filter=@beep/architecture-lab-proof --filter=@beep/codegen-kit --filter=@beep/discord --filter=@beep/firecrawl --filter=@beep/openai-compat --filter=@beep/sanity --filter=@beep/tailscale --filter=@beep/venice-ai --filter=@beep/architecture-lab-config --filter=@beep/colors --filter=@beep/epistemic-config --filter=@beep/identity --filter=@beep/onepassword-cli --filter=@beep/uspto-mcp --filter=@beep/utils --filter=@beep/data --filter=@beep/todox --filter=@beep/ontology-config --filter=@beep/storybook --filter=@beep/freshbooks",
+      "exit": 0,
+      "logSha256": "10db0ce3538192211aa913cebf9db39480a1c09b8cd627e67c4ea2938a19d0a4"
+    },
+    {
+      "lane": "test-unit",
+      "partition": "unit-b",
+      "executableTasks": 136,
+      "selectedTasks": 136,
+      "partitionTasks": 67,
+      "plannedCommand": "bunx turbo run @beep/law-practice-server#test @beep/repo-ai-metrics#test @beep/editor#test @beep/schema#test @beep/html#test @beep/infra#test @beep/repo-docgen#test @beep/dock#test @beep/wink#test @beep/documents-use-cases#test @beep/qa-capture#test @beep/ontology-use-cases#test @beep/epistemic-domain#test @beep/epistemic-ui#test @beep/dock-react#test @beep/nlp-processing#test @beep/agents-use-cases#test @beep/langextract#test @beep/openclaw#test @beep/rdf#test @beep/box-provisioning#test @beep/pandoc-ast#test @beep/nlp-mcp#test @beep/law-practice-tables#test @beep/practice-kg-mcp#test @beep/architecture-lab-use-cases#test @beep/epistemic-tables#test @beep/oip-web#test @beep/pglite#test @beep/acp#test @beep/file-processing#test @beep/libpff#test @beep/semantic-web#test @beep/api-transport#test @beep/brand#test @beep/obs#test @beep/duckdb#test @beep/openai#test @beep/workspace-domain#test @beep/ai-sync#test @beep/architecture-lab-tables#test @beep/ecfr#test @beep/face-detection#test @beep/hubspot#test @beep/postgres#test @beep/rdf-canonize#test @beep/shacl#test @beep/agents-tables#test @beep/architecture-lab-client#test @beep/box#test @beep/cosmos#test @beep/exiftool#test @beep/m365#test @beep/phoenix#test @beep/shared-tables#test @beep/uspto#test @beep/xai#test @beep/drizzle#test @beep/graph-3d#test @beep/n3#test @beep/oxigraph#test @beep/shared-use-cases#test @beep/architecture-lab-ui#test @beep/effect-drizzle#test @beep/ontology-domain#test @beep/fc-runs#test @beep/types#test --cache=local:rw --only --concurrency=2 --filter=!./apps/labs/** --filter=@beep/law-practice-server --filter=@beep/repo-ai-metrics --filter=@beep/editor --filter=@beep/schema --filter=@beep/html --filter=@beep/infra --filter=@beep/repo-docgen --filter=@beep/dock --filter=@beep/wink --filter=@beep/documents-use-cases --filter=@beep/qa-capture --filter=@beep/ontology-use-cases --filter=@beep/epistemic-domain --filter=@beep/epistemic-ui --filter=@beep/dock-react --filter=@beep/nlp-processing --filter=@beep/agents-use-cases --filter=@beep/langextract --filter=@beep/openclaw --filter=@beep/rdf --filter=@beep/box-provisioning --filter=@beep/pandoc-ast --filter=@beep/nlp-mcp --filter=@beep/law-practice-tables --filter=@beep/practice-kg-mcp --filter=@beep/architecture-lab-use-cases --filter=@beep/epistemic-tables --filter=@beep/oip-web --filter=@beep/pglite --filter=@beep/acp --filter=@beep/file-processing --filter=@beep/libpff --filter=@beep/semantic-web --filter=@beep/api-transport --filter=@beep/brand --filter=@beep/obs --filter=@beep/duckdb --filter=@beep/openai --filter=@beep/workspace-domain --filter=@beep/ai-sync --filter=@beep/architecture-lab-tables --filter=@beep/ecfr --filter=@beep/face-detection --filter=@beep/hubspot --filter=@beep/postgres --filter=@beep/rdf-canonize --filter=@beep/shacl --filter=@beep/agents-tables --filter=@beep/architecture-lab-client --filter=@beep/box --filter=@beep/cosmos --filter=@beep/exiftool --filter=@beep/m365 --filter=@beep/phoenix --filter=@beep/shared-tables --filter=@beep/uspto --filter=@beep/xai --filter=@beep/drizzle --filter=@beep/graph-3d --filter=@beep/n3 --filter=@beep/oxigraph --filter=@beep/shared-use-cases --filter=@beep/architecture-lab-ui --filter=@beep/effect-drizzle --filter=@beep/ontology-domain --filter=@beep/fc-runs --filter=@beep/types",
+      "exit": 0,
+      "logSha256": "a8817193311bdfb45512d771ff02ca54fb6ff65a3bab1a5c849f97781214244b"
+    },
+    {
+      "lane": "lint",
+      "partition": "lint-a",
+      "executableTasks": 136,
+      "selectedTasks": 136,
+      "partitionTasks": 68,
+      "plannedCommand": "bunx turbo run @beep/repo-cli#lint @beep/types#lint @beep/colors#lint @beep/obs#lint @beep/pacer#lint @beep/utils#lint @beep/agents-client#lint @beep/agents-server#lint @beep/agents-use-cases#lint @beep/ai-sync#lint @beep/api-transport#lint @beep/architecture-lab-config#lint @beep/architecture-lab-proof#lint @beep/architecture-lab-use-cases#lint @beep/brand#lint @beep/codegen-kit#lint @beep/db-admin#lint @beep/doc-text#lint @beep/dock#lint @beep/documents-server#lint @beep/documents-use-cases#lint @beep/duckdb#lint @beep/editor#lint @beep/epistemic-client#lint @beep/epistemic-domain#lint @beep/epistemic-tables#lint @beep/epistemic-use-cases#lint @beep/face-detection#lint @beep/file-processing#lint @beep/gov-legal-mcp#lint @beep/graph-3d#lint @beep/identity#lint @beep/langextract#lint @beep/law-practice-server#lint @beep/lexical-schema#lint @beep/m365-mcp#lint @beep/mcp-kit#lint @beep/n3#lint @beep/nlp-processing#lint @beep/observability#lint @beep/onepassword-cli#lint @beep/ontology-domain#lint @beep/ontology#lint @beep/openai#lint @beep/oxigraph#lint @beep/pglite#lint @beep/postgres#lint @beep/pretext#lint @beep/qa-capture#lint @beep/repo-ai-metrics#lint @beep/repo-docgen#lint @beep/runpod#lint @beep/semantic-web#lint @beep/shared-tables#lint @beep/skill-contract#lint @beep/tailscale#lint @beep/ui#lint @beep/uspto#lint @beep/wink#lint @beep/workspace-server#lint @beep/workspace-use-cases#lint @beep/architecture-lab-tables#lint @beep/law-practice-tables#lint @beep/ontology-client#lint @beep/shacl#lint @beep/schema#lint @beep/professional-desktop#lint @beep/freshbooks#lint --cache=local:rw --only --concurrency=2 --filter=!./apps/labs/** --filter=@beep/repo-cli --filter=@beep/types --filter=@beep/colors --filter=@beep/obs --filter=@beep/pacer --filter=@beep/utils --filter=@beep/agents-client --filter=@beep/agents-server --filter=@beep/agents-use-cases --filter=@beep/ai-sync --filter=@beep/api-transport --filter=@beep/architecture-lab-config --filter=@beep/architecture-lab-proof --filter=@beep/architecture-lab-use-cases --filter=@beep/brand --filter=@beep/codegen-kit --filter=@beep/db-admin --filter=@beep/doc-text --filter=@beep/dock --filter=@beep/documents-server --filter=@beep/documents-use-cases --filter=@beep/duckdb --filter=@beep/editor --filter=@beep/epistemic-client --filter=@beep/epistemic-domain --filter=@beep/epistemic-tables --filter=@beep/epistemic-use-cases --filter=@beep/face-detection --filter=@beep/file-processing --filter=@beep/gov-legal-mcp --filter=@beep/graph-3d --filter=@beep/identity --filter=@beep/langextract --filter=@beep/law-practice-server --filter=@beep/lexical-schema --filter=@beep/m365-mcp --filter=@beep/mcp-kit --filter=@beep/n3 --filter=@beep/nlp-processing --filter=@beep/observability --filter=@beep/onepassword-cli --filter=@beep/ontology-domain --filter=@beep/ontology --filter=@beep/openai --filter=@beep/oxigraph --filter=@beep/pglite --filter=@beep/postgres --filter=@beep/pretext --filter=@beep/qa-capture --filter=@beep/repo-ai-metrics --filter=@beep/repo-docgen --filter=@beep/runpod --filter=@beep/semantic-web --filter=@beep/shared-tables --filter=@beep/skill-contract --filter=@beep/tailscale --filter=@beep/ui --filter=@beep/uspto --filter=@beep/wink --filter=@beep/workspace-server --filter=@beep/workspace-use-cases --filter=@beep/architecture-lab-tables --filter=@beep/law-practice-tables --filter=@beep/ontology-client --filter=@beep/shacl --filter=@beep/schema --filter=@beep/professional-desktop --filter=@beep/freshbooks",
+      "exit": 0,
+      "logSha256": "296bbb03e926e013e1a295841d90fe51b263f7ea71c6eb367a8a27ab5c74960a"
+    },
+    {
+      "lane": "lint",
+      "partition": "lint-b",
+      "executableTasks": 136,
+      "selectedTasks": 136,
+      "partitionTasks": 68,
+      "plannedCommand": "bunx turbo run @beep/fc-runs#lint @beep/todox#lint @beep/box-provisioning#lint @beep/html#lint @beep/ontology-server#lint @beep/test-runner#lint @beep/test-utils#lint @beep/acp#lint @beep/agents-domain#lint @beep/agents-tables#lint @beep/ai-provider-cli#lint @beep/anthropic#lint @beep/architecture-lab-client#lint @beep/architecture-lab-domain#lint @beep/architecture-lab-server#lint @beep/box#lint @beep/chalk#lint @beep/cosmos#lint @beep/discord#lint @beep/dock-react#lint @beep/documents-domain#lint @beep/documents-tables#lint @beep/drizzle#lint @beep/ecfr#lint @beep/effect-drizzle#lint @beep/epistemic-config#lint @beep/epistemic-server#lint @beep/epistemic-ui#lint @beep/exiftool#lint @beep/ffmpeg#lint @beep/firecrawl#lint @beep/govinfo#lint @beep/hubspot#lint @beep/infra#lint @beep/law-practice-domain#lint @beep/law-practice-use-cases#lint @beep/lint-rules#lint @beep/m365#lint @beep/md#lint @beep/nlp-mcp#lint @beep/nlp#lint @beep/oip-web#lint @beep/ontology-config#lint @beep/ontology-use-cases#lint @beep/openai-compat#lint @beep/openclaw#lint @beep/pandoc-ast#lint @beep/phoenix#lint @beep/practice-kg-mcp#lint @beep/provenance#lint @beep/rdf#lint @beep/repo-configs#lint @beep/repo-utils#lint @beep/sanity#lint @beep/shared-domain#lint @beep/shared-use-cases#lint @beep/storybook#lint @beep/tika#lint @beep/uspto-mcp#lint @beep/venice-ai#lint @beep/workspace-domain#lint @beep/workspace-tables#lint @beep/xai#lint @beep/architecture-lab-ui#lint @beep/libpff#lint @beep/rdf-canonize#lint @beep/ontology-ui#lint @beep/data#lint --cache=local:rw --only --concurrency=2 --filter=!./apps/labs/** --filter=@beep/fc-runs --filter=@beep/todox --filter=@beep/box-provisioning --filter=@beep/html --filter=@beep/ontology-server --filter=@beep/test-runner --filter=@beep/test-utils --filter=@beep/acp --filter=@beep/agents-domain --filter=@beep/agents-tables --filter=@beep/ai-provider-cli --filter=@beep/anthropic --filter=@beep/architecture-lab-client --filter=@beep/architecture-lab-domain --filter=@beep/architecture-lab-server --filter=@beep/box --filter=@beep/chalk --filter=@beep/cosmos --filter=@beep/discord --filter=@beep/dock-react --filter=@beep/documents-domain --filter=@beep/documents-tables --filter=@beep/drizzle --filter=@beep/ecfr --filter=@beep/effect-drizzle --filter=@beep/epistemic-config --filter=@beep/epistemic-server --filter=@beep/epistemic-ui --filter=@beep/exiftool --filter=@beep/ffmpeg --filter=@beep/firecrawl --filter=@beep/govinfo --filter=@beep/hubspot --filter=@beep/infra --filter=@beep/law-practice-domain --filter=@beep/law-practice-use-cases --filter=@beep/lint-rules --filter=@beep/m365 --filter=@beep/md --filter=@beep/nlp-mcp --filter=@beep/nlp --filter=@beep/oip-web --filter=@beep/ontology-config --filter=@beep/ontology-use-cases --filter=@beep/openai-compat --filter=@beep/openclaw --filter=@beep/pandoc-ast --filter=@beep/phoenix --filter=@beep/practice-kg-mcp --filter=@beep/provenance --filter=@beep/rdf --filter=@beep/repo-configs --filter=@beep/repo-utils --filter=@beep/sanity --filter=@beep/shared-domain --filter=@beep/shared-use-cases --filter=@beep/storybook --filter=@beep/tika --filter=@beep/uspto-mcp --filter=@beep/venice-ai --filter=@beep/workspace-domain --filter=@beep/workspace-tables --filter=@beep/xai --filter=@beep/architecture-lab-ui --filter=@beep/libpff --filter=@beep/rdf-canonize --filter=@beep/ontology-ui --filter=@beep/data",
+      "exit": 0,
+      "logSha256": "c4b768c86e0d22df1979d4d8756c837e4dcd91414408873a0f0b29dd058da9e0"
+    }
+  ],
+  "retention": {
+    "archiveManifestSha256": "a6f9cebcf49be3de3ebb078a2e6ccd88232c76d91d6e1cb7c07cdfcf249e8cd8",
+    "files": 21
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 26,
+    "unresolved": 13
+  }
+}

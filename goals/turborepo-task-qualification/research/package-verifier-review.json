@@ -1,0 +1,85 @@
+{
+  "authority": "package-verification-entrypoint-delta-review",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "71e2f4e30924bdd98fef8bc458d1d83ab640b73b",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "sha256": "4d73b21a75e5a5ab9c412ddf5f18fedc5876b8f2b45baf595e6f718fdb8f5bf9"
+    }
+  ],
+  "findings": [
+    "The changed delta exports the existing deepest-workspace mapping, consolidates sorted/deduplicated package mapping for auto-detection and shadow tripwires, exposes workspace discovery, and propagates Crypto requirements.",
+    "Quick mode invokes beep:lint and beep:check. Full mode invokes upstream Turbo build closure before beep:audit, then docgen. Audit-plan steps stop after the first nonzero exit. Full mode is not equivalent to quick mode.",
+    "Absent scripts return skipped=true, ok=true, no exit code and zero duration. They are neither execution evidence nor qualification; inbox recording filters them out.",
+    "Verification reads root/workspace manifests, Git changes and HEAD, launches commands, measures wall-clock duration and captures output. CLI closeout writes package shard outcomes; successful full audit clears prior quick lint/check poison. Those are orchestration and filesystem effects.",
+    "Root configuration paths map to no workspace. This mapping does not establish root input coverage; nested workspace mapping and sibling-prefix rejection are tested separately."
+  ],
+  "controls": {
+    "synthetic": true,
+    "results": [
+      {
+        "name": "deepest-workspace",
+        "paths": [
+          "packages/parent/child/src/a.ts"
+        ],
+        "packages": [
+          "child"
+        ]
+      },
+      {
+        "name": "dedup-and-sort",
+        "paths": [
+          "packages/parent/a.ts",
+          "packages/parent/child/b.ts",
+          "packages/parent/a.ts"
+        ],
+        "packages": [
+          "child",
+          "parent"
+        ]
+      },
+      {
+        "name": "root-policy",
+        "paths": [
+          "biome.json",
+          ".github/workflows/check.yml",
+          "standards/policy.jsonc",
+          "scripts/check.ts"
+        ],
+        "packages": []
+      },
+      {
+        "name": "sibling-prefix",
+        "paths": [
+          "packages/parent-other/a.ts"
+        ],
+        "packages": []
+      }
+    ]
+  },
+  "tests": {
+    "suite": "package-verify.test.ts",
+    "passed": 19,
+    "exit": 0,
+    "limits": "Upstream refresh/cache-hit ordering tests use controlled shell stand-ins; they are not real Turbo cache or remote replay evidence."
+  },
+  "existingNativeEvidence": {
+    "reference": "research/quality-helper-review.json",
+    "scope": "Prior actual @beep/repo-cli --quick lint/check pass only; not a full audit."
+  },
+  "remaining": [
+    "All 13 broader census obligations remain open.",
+    "Complete root/dependency input closure, actual full audit runtime capture, signed remote evidence and tuple qualification are not established."
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 37,
+    "unresolved": 13
+  },
+  "retention": {
+    "fileCount": 7,
+    "archiveManifestSha256": "54ef0b618cd566a3d1a9b8c9e3116a990b998278c3c768c15f32e9fcea975fd8"
+  }
+}

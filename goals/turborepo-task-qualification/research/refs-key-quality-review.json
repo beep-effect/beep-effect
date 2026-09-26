@@ -1,0 +1,65 @@
+{
+  "authority": "refs-quality-repair",
+  "baseRevision": "36ff688eebb1b37ab7ea7644bc462efd27c44fbc",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts",
+      "sha256": "5b3b7e657aa41f02dbf7e4d9c17c86079a06f92deec23c4407e34479e84dfa6d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.errors.ts",
+      "sha256": "24b7eb6a36aa8043bad676e5561494bb9c79ba420186d22b96716f20a4daf053"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
+      "sha256": "afd0073c4d9e2b31132e04e438519dd4a1d9a1970139c08fadbaf0e18a0fc078"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
+      "sha256": "c69fc57efa4f62c906e14c85b255bd69edffb37215fc2b5cde87f8be0cd29e9d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/index.ts",
+      "sha256": "80e1aaa830dbc5522dc38e69fe662d2a19f08f33e8dff72ac6539fe48e258457"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sha256": "a16760f3f92f8c70c8078e01d418014b2024a44784ca5fbacfeefff7e27b448c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-test-utils.ts",
+      "sha256": "c9386db04a5c44a5ec6b9f05fc60ffac35e32f6754e4cdc0096b3f84743fd28e"
+    }
+  ],
+  "introducedRepair": "Use the deterministic service key @beep/repo-cli/test/refs-test-utils/ReferenceFixture.",
+  "inheritedRepair": "JSDoc formatting for Refs sources and Worktree command; describe referenceWorkspaceLayer owner and return value. No implementation behavior changed.",
+  "validation": {
+    "testTypecheck": "passed canonical quality test-tsgo over 267 files",
+    "refsTestsPassed": 16,
+    "logs": [
+      {
+        "path": "refs-key-test-tsgo.log",
+        "sha256": "824b3e750af5b083c7b6f26aa12a45f137b1ef7f1d3dfdf4cf3cbb126ac2e32d"
+      },
+      {
+        "path": "refs-key-suite.log",
+        "sha256": "49dd99fcf8f82c8de741ed92fe4ad4c60b1b497781a7a82fe50f2c7b0cf37414"
+      }
+    ]
+  },
+  "limits": [
+    "Old full proof failed lint-policy; this focused evidence does not claim full green.",
+    "Package verification and docgen are in progress.",
+    "No cache qualification or runtime evidence renewal."
+  ],
+  "acceptedAttachment": {
+    "sources": 1011,
+    "artifacts": 6,
+    "reviews": 47,
+    "unresolved": 14
+  },
+  "subsequentValidation": {
+    "targetedEslint": "passed",
+    "docgenLocal": "refused bounded mode because bun.lock changed; full docgen required"
+  }
+}

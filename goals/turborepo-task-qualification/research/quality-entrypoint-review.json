@@ -1,0 +1,99 @@
+{
+  "authority": "quality-command-and-task-runner-delta-review",
+  "baselineRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "head": "a8daaaab46cbe9708553c8057ed3c057d4e60707",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "b1499d53176a32d65cb16f3cd16192789649105d3920094f2028fe2dd3fe2795"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "sha256": "d373db7522028fb0a12567af96ad1187336e4661bdaf1e4db26f75617f6a129d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "1c5e855fa5c7f7e73e5e57f3935e2d323fcf7198f064c56bd5cbfe3b4f59b6bf"
+    }
+  ],
+  "findings": [
+    "Tasks carries inputDigest and inputPackages together through observation and final reporting. Turbo digest reads supply package names; declared digests, failed lanes and unavailable digest sources retain empty package scope.",
+    "QualityTaskLaneRun defaults missing inputPackages to an empty array. The array schema itself does not enforce sortedness or uniqueness. Root tasks contribute no package names; scope metadata does not establish complete semantic inputs.",
+    "Proof-session preparation errors are mapped to QualityTaskConfigurationError. Shared CI detection replaces the local predicate and Crypto requirements propagate through task execution.",
+    "Diagnostic scans add scratchpad and nonrecursive repository-root TypeScript files. The explicit exemption tuple adds vitest.shared.ts for nodeBuiltinImport; recursive roots remain separately scanned.",
+    "Residue command wiring adds fleet discovery, Turbo-run age, shared-cache age/size and qualification-view retention flags. Defaults include fleet=false, one-day run summaries, fourteen-day shared-cache age, 21474836480 bytes and two retained views. Help reports the v2 contract.",
+    "Human residue output groups by checkout or home, caps rows at 25 per class/section, orders eligible before skipped, and reports skip counts. JSON retains the full candidate list. Qualification-view bytes are described as apparent-only.",
+    "Residue apply and fleet discovery are filesystem/orchestration effects, not pure reusable quality computations. No workstation cleanup was executed for this review."
+  ],
+  "tests": {
+    "recoveredRun": {
+      "suites": [
+        "residue-reap.test.ts",
+        "quality-tsgo-directives.test.ts"
+      ],
+      "passed": 76,
+      "evidence": "Retained Vitest completion summary reports two passing files."
+    },
+    "freshRun": {
+      "suite": "turbo-lane-digest.test.ts",
+      "passed": 9,
+      "exit": 0
+    },
+    "retainedRun": {
+      "reference": "research/quality-helper-review.json",
+      "passed": 312,
+      "scope": "Three-suite run includes quality-tasks.test.ts; not 312 task-runner tests. Relevant Quality sources and quality-tasks.test.ts are unchanged from its source revision."
+    },
+    "commandHelp": "residue-reap --help completed; no cleanup action"
+  },
+  "remaining": [
+    "All 13 broader census obligations remain open.",
+    "This is a three-file historical delta review, not exhaustive janitor implementation, dynamic command execution or transitive input closure.",
+    "Passing fixtures and metadata do not establish signed remote replay, complete log capture or any qualified tuple."
+  ],
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 38,
+    "unresolved": 13
+  },
+  "retention": {
+    "fileCount": 10,
+    "archiveManifestSha256": "e6d356f514b4e63c78bbc1b4f6b02b6be5d7f4a9a49ef243974c9663548273ca"
+  },
+  "postReviewIntegration": {
+    "head": "ee8a5d0a6979cfa773af842d3871d34b16865361",
+    "mergedMain": "9de64fb84890f1d83bb8f988b8c2c02bb4eff831",
+    "addedBindings": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts",
+        "sha256": "9617c1c6165b5af18bb67ef804eff7c2b49f87ea15ca527dbc42a56fcb6ba63f"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.errors.ts",
+        "sha256": "b2da682047ba9ad5ef336ab4dfa65481bc1134431b29485c8cdec10e4a998e2e"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
+        "sha256": "246821048944d875d466223d7f7ddd8ed34d990191455efa9896cafb219bf9a6"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
+        "sha256": "20519bfc67bee29980aa59cc4e4a00dbee826d35ad3eddfab6f8f1f7b1fa4a1a"
+      }
+    ],
+    "workspaces": 144,
+    "nodes": 3473,
+    "limitation": "Four Refs entrypoint sources newly bound after main integration were absent from the prior source attachment. Their semantic inputs, effects and transitive closure require review; source hashes alone do not establish qualification.",
+    "acceptedAttachment": {
+      "sources": 972,
+      "artifacts": 6,
+      "reviews": 38,
+      "unresolved": 14
+    },
+    "retention": {
+      "fileCount": 7,
+      "archiveManifestSha256": "e9bdbd5227e56cc6fdbcb6bfb9fe40ce7ab0773f25dbbe3e968cb196293fb741"
+    }
+  }
+}

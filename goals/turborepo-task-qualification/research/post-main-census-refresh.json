@@ -1,0 +1,348 @@
+{
+  "authority": "source-diff-review-and-native-plan-observation",
+  "head": "278b083df691208bef47e41faf17e05a648dd1b0",
+  "sources": [
+    {
+      "path": "bun.lock",
+      "sha256": "e59a1a3e0913d04f56a1166adc5ad5fa8bdb0d004da3f016d32f3e7e6ce207aa",
+      "review": "Workspace lock records mirror the test-runner/fc-runs additions; this delta changes no external package versions. Materialized dependency identity still needs its own evidence."
+    },
+    {
+      "path": "packages/drivers/cosmos/package.json",
+      "sha256": "7c27eedfb3d507ec40c3dccef77b6a84348b6b22aeac084cae36dae1ba351a43",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/cosmos/tsconfig.check.json",
+      "sha256": "9f85ebfe79fb879e8458b4db16c7862793a3b8df8acd6937a0f52bd4bdbc03b2",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/cosmos/tsconfig.json",
+      "sha256": "c884155034acca62cd350eb700328c71db484bb05278e23cb6d8e31d21c1f3d1",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/obs/package.json",
+      "sha256": "984b1872a39e93d42a699dded806a29e88ad01dc27d9457a0bc81d1242e476af",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/obs/tsconfig.check.json",
+      "sha256": "91168ed42b227c288cd2dbb27b13470c1b7c8c0cf658f6a2b4a9d01612bb7580",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/obs/tsconfig.json",
+      "sha256": "dd83355852df293679a933baabcc4e83e0b101b3ebd587e8f82e31a717ef2d05",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/pglite/package.json",
+      "sha256": "f8e1578c174cc44c399f0fab8eb2da1f2c6bb6117f0010f206111ce84c9a8cd7",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/pglite/tsconfig.check.json",
+      "sha256": "9f85ebfe79fb879e8458b4db16c7862793a3b8df8acd6937a0f52bd4bdbc03b2",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/pglite/tsconfig.json",
+      "sha256": "c0804c8c0a887efb2f460906e6b875a05d813c9a138090f0545b2fbf580ea31e",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/tailscale/package.json",
+      "sha256": "25cf3e95ad6b5a8fa91c59a47275f4e3c0444524172f8331cba1473bc0a0333d",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/tailscale/tsconfig.check.json",
+      "sha256": "4d26d008322cf6f19e11598774fd47288e61ef226870086d87995b6cebf70e5f",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/drivers/tailscale/tsconfig.json",
+      "sha256": "4ead86d311d4f2aba70cbd2c3b1a7d2c1f8bb8fdc42438ad6d1f89f960727d45",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/capability/colors/package.json",
+      "sha256": "c7d8f24e36782adb7ef0419b60f839f418889589bd556794f70ce5dd2d327956",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/capability/colors/tsconfig.check.json",
+      "sha256": "d716ca84afc04e6c3b1afe715e94d289424eb324a72823d49c3778b9cc4b8c27",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/capability/colors/tsconfig.json",
+      "sha256": "a23781646882696756fd41da1df0ca95a77c4f24454d058b3a21d5360d830976",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/modeling/schema/package.json",
+      "sha256": "217bc9a25cb3d7a3d636dd8432c93127cc17db4fc90082d811c966518dfc9a99",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/modeling/schema/tsconfig.check.json",
+      "sha256": "8c86d779d9eddc0e0e3091c30aef94a120f6139f01aa393af16ec3ff0171a0f3",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/modeling/schema/tsconfig.json",
+      "sha256": "a56b38b109ec36c9915bd067133560b34ca40912115e4f1aa3a8b7796b69164f",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/primitive/data/package.json",
+      "sha256": "e8a294daa19c62b3c1adf189d527ea1e67be486351c18fe574e449df3ed763fa",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/primitive/data/tsconfig.check.json",
+      "sha256": "a6415b6114c9897ffb075463a43a2151a649531dfca1f2a66e735df3efa25ebd",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/foundation/primitive/data/tsconfig.json",
+      "sha256": "d04093b7890a1a07b3d6d4b8050d418d4b6307d9f05086c81ce5597e8177ddef",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/package.json",
+      "sha256": "73335efc93dd94b541af8da0eb3eef27c36f791e990953e251729e1e6e8a09ee",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/tsconfig.check.json",
+      "sha256": "94de7ca3f06f52b52934de6e054498a3a16bd23334b09b804863e9e4709ab4c2",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit/tsconfig.json",
+      "sha256": "667822ad6e96b6c75cccd8d4bf27892848f7a63e909e0dd15b94b6a059c0d509",
+      "review": "Adds workspace test-runner/fc-runs dependency declarations and matching TypeScript project references. Scripts and compiler options are unchanged in this delta; runtime test-runner behavior remains separate."
+    },
+    {
+      "path": "packages/tooling/tool/cli/package.json",
+      "sha256": "62f7dfcbaacf1b30977a1b5a05a32aa759b401946b44b61d9dc461b0b411c9ca",
+      "review": "Adds the Refs command export/path mapping. The generated Vitest projection now matches the TypeScript mapping; alias-parity gate passed. This does not review the Refs implementation."
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "99d989f4baf69a2e3c05a95c2da4cc82d5bccdab0e96634c1775fcfc28293ef7",
+      "review": "Adds the Refs command export/path mapping. The generated Vitest projection now matches the TypeScript mapping; alias-parity gate passed. This does not review the Refs implementation."
+    },
+    {
+      "path": "vitest.aliases.generated.json",
+      "sha256": "1287d2379cd9f1e4d920110a86d38b58db9ef72d0d9b9c2971395b1537457e84",
+      "review": "Adds the Refs command export/path mapping. The generated Vitest projection now matches the TypeScript mapping; alias-parity gate passed. This does not review the Refs implementation."
+    }
+  ],
+  "projectionReproduction": {
+    "runs": [
+      {
+        "name": "entrypoint-plans",
+        "exit": 0,
+        "jsonEqual": true
+      },
+      {
+        "name": "entrypoint-plans-hosted",
+        "exit": 0,
+        "jsonEqual": true
+      },
+      {
+        "name": "yeet-plans",
+        "exit": 0,
+        "jsonEqual": true
+      },
+      {
+        "name": "yeet-plans-hosted",
+        "exit": 0,
+        "jsonEqual": true
+      },
+      {
+        "name": "workflow-sources",
+        "exit": 0,
+        "jsonEqual": true
+      }
+    ],
+    "environment": "Only PATH, HOME and explicit CI/GITHUB_ACTIONS booleans supplied. No remote credentials supplied.",
+    "authority": "Source planner projection only."
+  },
+  "nodeComparison": {
+    "nodeIdsEqual": true,
+    "rootScriptsEqual": true,
+    "changedNodeCount": 2283,
+    "changedFields": {
+      "inputsDigest": 2283,
+      "dependencies": 136,
+      "inputCount": 54
+    }
+  },
+  "pilotGeneratedInputs": {
+    "scope": "Native plans only; no lint body executed. Read-only root, isolated network, same explicit environment for all three runs. Generated directories were masked with ephemeral mounts; host files retained.",
+    "counts": {
+      "masked": 767,
+      "unmasked": 890,
+      "masked-repeat": 767
+    },
+    "hashes": {
+      "masked": "d4469a604aa10dff",
+      "unmasked": "3b01a9802f756167",
+      "masked-repeat": "d4469a604aa10dff"
+    },
+    "sharedInputsEqual": true,
+    "extraInputs": [
+      "../utils/.turbo/turbo-build.log",
+      "../utils/.turbo/turbo-doctest.log",
+      "../utils/.turbo/turbo-lint$colon$laws.log",
+      "../utils/dist/Array.d.ts",
+      "../utils/dist/Array.d.ts.map",
+      "../utils/dist/Array.js",
+      "../utils/dist/Array.js.map",
+      "../utils/dist/Bool.d.ts",
+      "../utils/dist/Bool.d.ts.map",
+      "../utils/dist/Bool.js",
+      "../utils/dist/Bool.js.map",
+      "../utils/dist/Data.d.ts",
+      "../utils/dist/Data.d.ts.map",
+      "../utils/dist/Data.js",
+      "../utils/dist/Data.js.map",
+      "../utils/dist/DateTime.d.ts",
+      "../utils/dist/DateTime.d.ts.map",
+      "../utils/dist/DateTime.js",
+      "../utils/dist/DateTime.js.map",
+      "../utils/dist/DrainableWorker.d.ts",
+      "../utils/dist/DrainableWorker.d.ts.map",
+      "../utils/dist/DrainableWorker.js",
+      "../utils/dist/DrainableWorker.js.map",
+      "../utils/dist/Equal.d.ts",
+      "../utils/dist/Equal.d.ts.map",
+      "../utils/dist/Equal.js",
+      "../utils/dist/Equal.js.map",
+      "../utils/dist/Errors.d.ts",
+      "../utils/dist/Errors.d.ts.map",
+      "../utils/dist/Errors.js",
+      "../utils/dist/Errors.js.map",
+      "../utils/dist/Event.d.ts",
+      "../utils/dist/Event.d.ts.map",
+      "../utils/dist/Event.js",
+      "../utils/dist/Event.js.map",
+      "../utils/dist/FileSystem.d.ts",
+      "../utils/dist/FileSystem.d.ts.map",
+      "../utils/dist/FileSystem.js",
+      "../utils/dist/FileSystem.js.map",
+      "../utils/dist/Function.d.ts",
+      "../utils/dist/Function.d.ts.map",
+      "../utils/dist/Function.js",
+      "../utils/dist/Function.js.map",
+      "../utils/dist/Glob.d.ts",
+      "../utils/dist/Glob.d.ts.map",
+      "../utils/dist/Glob.js",
+      "../utils/dist/Glob.js.map",
+      "../utils/dist/GlobalValue.d.ts",
+      "../utils/dist/GlobalValue.d.ts.map",
+      "../utils/dist/GlobalValue.js",
+      "../utils/dist/GlobalValue.js.map",
+      "../utils/dist/HostProcess.d.ts",
+      "../utils/dist/HostProcess.d.ts.map",
+      "../utils/dist/HostProcess.js",
+      "../utils/dist/HostProcess.js.map",
+      "../utils/dist/Html.d.ts",
+      "../utils/dist/Html.d.ts.map",
+      "../utils/dist/Html.js",
+      "../utils/dist/Html.js.map",
+      "../utils/dist/NodeUrl.d.ts",
+      "../utils/dist/NodeUrl.d.ts.map",
+      "../utils/dist/NodeUrl.js",
+      "../utils/dist/NodeUrl.js.map",
+      "../utils/dist/Number.d.ts",
+      "../utils/dist/Number.d.ts.map",
+      "../utils/dist/Number.js",
+      "../utils/dist/Number.js.map",
+      "../utils/dist/Option.d.ts",
+      "../utils/dist/Option.d.ts.map",
+      "../utils/dist/Option.js",
+      "../utils/dist/Option.js.map",
+      "../utils/dist/Path.d.ts",
+      "../utils/dist/Path.d.ts.map",
+      "../utils/dist/Path.js",
+      "../utils/dist/Path.js.map",
+      "../utils/dist/Predicate.d.ts",
+      "../utils/dist/Predicate.d.ts.map",
+      "../utils/dist/Predicate.js",
+      "../utils/dist/Predicate.js.map",
+      "../utils/dist/Random.d.ts",
+      "../utils/dist/Random.d.ts.map",
+      "../utils/dist/Random.js",
+      "../utils/dist/Random.js.map",
+      "../utils/dist/Record.d.ts",
+      "../utils/dist/Record.d.ts.map",
+      "../utils/dist/Record.js",
+      "../utils/dist/Record.js.map",
+      "../utils/dist/Schema.d.ts",
+      "../utils/dist/Schema.d.ts.map",
+      "../utils/dist/Schema.js",
+      "../utils/dist/Schema.js.map",
+      "../utils/dist/Str.d.ts",
+      "../utils/dist/Str.d.ts.map",
+      "../utils/dist/Str.js",
+      "../utils/dist/Str.js.map",
+      "../utils/dist/Stream.d.ts",
+      "../utils/dist/Stream.d.ts.map",
+      "../utils/dist/Stream.js",
+      "../utils/dist/Stream.js.map",
+      "../utils/dist/Struct.d.ts",
+      "../utils/dist/Struct.d.ts.map",
+      "../utils/dist/Struct.js",
+      "../utils/dist/Struct.js.map",
+      "../utils/dist/Text.d.ts",
+      "../utils/dist/Text.d.ts.map",
+      "../utils/dist/Text.js",
+      "../utils/dist/Text.js.map",
+      "../utils/dist/Utils.d.ts",
+      "../utils/dist/Utils.d.ts.map",
+      "../utils/dist/Utils.js",
+      "../utils/dist/Utils.js.map",
+      "../utils/dist/index.d.ts",
+      "../utils/dist/index.d.ts.map",
+      "../utils/dist/index.js",
+      "../utils/dist/index.js.map",
+      "../utils/dist/internal/StructPath.d.ts",
+      "../utils/dist/internal/StructPath.d.ts.map",
+      "../utils/dist/internal/StructPath.js",
+      "../utils/dist/internal/StructPath.js.map",
+      "../utils/dist/thunk.d.ts",
+      "../utils/dist/thunk.d.ts.map",
+      "../utils/dist/thunk.js",
+      "../utils/dist/thunk.js.map"
+    ],
+    "stdoutSha256": {
+      "masked": "0b1eee5ae44d95bccdf16ce14d523a65e8662eb002d8111654716a471b3246d0",
+      "unmasked": "1ed7ee6c9d681f6b643ebbb0de16dab71ac3215a42f840e82239be55ebe2213a",
+      "masked-repeat": "246ad20de268cddb9706bdd2e0a1e677532c4a19f5d08737f6d3fbfb00525083"
+    },
+    "conclusion": "Generated utils build outputs and Turbo logs are native hash inputs in this configuration. Masking only those directories removes 123 entries and changes the task hash; repeated masked plans agree. Semantic irrelevance and execution equivalence remain unproved."
+  },
+  "remaining": [
+    "The working-tree census includes generated artifacts, so its input digest is a snapshot of that observed filesystem, not a clean-checkout invariant.",
+    "Unchanged commands and source-planner JSON do not establish transitive semantic closure or runtime equivalence.",
+    "No real tuple qualifies; signed sibling evidence remains required."
+  ],
+  "retention": {
+    "files": 1024,
+    "archiveManifestSha256": "82d0e8da844a73b7dd992af313346f7e01e708f085da64ee5276674368a64b9e"
+  },
+  "acceptedAttachment": {
+    "sources": 968,
+    "artifacts": 6,
+    "reviews": 27,
+    "unresolved": 13,
+    "censusSha256": "d602afe29bc92ce4de3fe39f823d3e4b0011fc814aea1a552e9659a38f91a671"
+  }
+}

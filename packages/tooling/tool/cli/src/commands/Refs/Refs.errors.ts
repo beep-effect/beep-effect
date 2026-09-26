@@ -1,5 +1,6 @@
 /**
  * Typed reference-workspace boundary failures.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -16,6 +17,7 @@ const $I = $RepoCliId.create("commands/Refs/Refs.errors");
  * import { ReferenceWorkspaceError } from "@beep/repo-cli/commands/Refs"
  * ReferenceWorkspaceError.make({ path: "/refs", message: "Reference root is missing." }).path // => "/refs"
  * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -34,6 +36,7 @@ export class ReferenceWorkspaceError extends S.TaggedError<ReferenceWorkspaceErr
    * import { ReferenceWorkspaceError } from "@beep/repo-cli/commands/Refs"
    * ReferenceWorkspaceError.is(ReferenceWorkspaceError.make({ path: "/refs", message: "Missing root." })) // => true
    * ```
+   *
    * @category guards
    * @since 0.0.0
    */

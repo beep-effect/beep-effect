@@ -22,6 +22,27 @@ is needed.
 | P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
 | P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
 
+## Local evidence checkpoint: 2026-09-25
+
+The [v23 matrix receipt](./research/local-matrix-v23.md) and
+[acceptance audit](./research/acceptance-audit-current.md) record the current
+local evidence boundary. Stable 2.11.3 and canary 2.11.5-canary.2 each pass
+67 observations, 40 checks and ten shadows at frozen source `ed2742ff4f`.
+Current scalar I/O observation and archived-source input review passed; the
+receipt records 439 repository read paths and 802 verified native inputs. Ring
+I/O interpretation remains incomplete. Five synthetic capture controls pass
+per client; repeated mixed-stream runs show two output orderings at unchanged
+task hashes and deny exact-log determinism for that fixture. Signed
+remote comparisons, semantic closure and final acceptance remain incomplete;
+P2 is still in progress and P3 has no accepted sibling receipts.
+
+Checkpoint PRs #1233 (`b757063430`) and #1250 (`0b072273c4`) include the
+main merge and reviewed unexpected-dependency fixture repair. Both have merged.
+PR #1250 has passing full local proof and a separate merge-ready monitor;
+PR #1233's saved publish job failed during PR-context monitoring. Earlier
+checkpoints below retain their own revisions and must not be read as
+current-head proof.
+
 ## Acceptance audit after host recovery: 2026-09-15
 
 Current implementation revision: `028262e8c0`. The reviewed census binds the
@@ -1552,3 +1573,594 @@ edges with caching disabled. This supplies fresh-execution prerequisites, not
 qualification. Full audit and docgen verification passed for both touched packages; see
 `research/dependency-lint-exclusion-verification.json`. Signed evidence and the
 remaining goal acceptance criteria remain open.
+
+### Local evidence and merged checkpoints: 2026-09-25
+
+PRs #1233 and #1250 have merged. The latter has a passing full local verdict
+and a separate `merge-ready: yes` monitor receipt. The former's saved publish
+job failed during PR-context monitoring; its merge does not rewrite that
+historical job as passing. See the current acceptance audit for exact heads.
+
+The frozen v23 source remains unchanged. Both client matrices, scalar I/O,
+archived-source input membership and five synthetic capture controls per
+client have retained reviews. The mixed-stream repetition reviewer omitted
+Bun's command line from its expected multiset. We preserved that attempt
+and ran the corrected expectation through the same pinned admission wrapper.
+Ten fresh runs per client produced two output orderings at unchanged task
+hashes. Independent stream/summary review and pre/post toolchain/dependency
+verification passed. This synthetic mixed-stream fixture is ineligible for
+exact-log determinism; retain that negative result without normalizing it away.
+No signed evidence or complete semantic closure is established by these
+local observations. No tuple is qualified.
+
+### Census attachment and ordinary CLI replay — 2026-09-25
+
+The current source census at `821280968d` accepted 968 bindings, six artifact
+documents and 23 reviews while retaining 13 unresolved obligations. Planner
+reproduction exposed an environment-dependent local cache posture; controlled
+synthetic inputs reproduce the prior document without external requests.
+
+At pinned runtime source `8f11af6e49`, the ordinary CLI completed local miss/hit
+pairs before and after a runtime declaration change. Native summaries and task
+execution markers agree; all four runs exited zero. See the v23 receipt for
+scope, hashes and retained evidence. This closes the synthetic local replay
+observation gap, not real-computation qualification or signed replay. Continue
+semantic closure, full entrypoint coverage and accepted sibling integration.
+
+### Wrapped ring metadata follow-up — 2026-09-25
+
+The actual frozen lint wrapper chain completed under a diagnostic Node shim.
+All five observed ring calls matched 12 epoll-control submissions and successful
+completions. Captured streams match the previous full trace. Retain the scoped
+result and failed debugger recipe in the v23 receipt; this does not decode the
+historical trace or close semantic/signed requirements. No tuple is qualified.
+
+### Nested-command behavioral controls — 2026-09-25
+
+Five Storybook-dispatch controls and five migration-generator controls passed
+against disposable inputs at `32e271e543`. These establish branching, chunking,
+failure propagation and generated-source invalidation for the recorded scope.
+They do not execute browser tests or database migrations. The acceptance audit
+links the bounded receipt and states the remaining semantic obligations.
+
+### Lambda ZIP assembly controls — 2026-09-25
+
+Five isolated controls exercised the actual ZIP assembler with synthetic bundle
+bytes at `53aa105ecb`; see [the receipt](./research/lambda-zip-controls-current.json).
+Equal bytes and permissions produced identical archives. Changing permissions
+from 0644 to 0600 preserved payloads and normalized timestamps but changed ZIP
+external attributes and its digest. File mode is therefore a semantic input to
+this assembler. The undersize case failed after writing its archive; the missing
+writer case failed before archive creation. These are packaging controls only:
+no real bundle, handler, deployment or signed replay was executed. No tuple is
+qualified, and the complete nested-command obligation remains open.
+
+### Configuration-delta reconciliation — 2026-09-25
+
+The historical 133-source drift population now has a direct delta review for
+32 compiler configurations and 16 package manifests at `7468d15b17`. The
+compiler deltas select libraries, extend project references or change diagnostic
+configuration. Manifest scripts are unchanged; dependencies, patches, export
+routes and metadata changed. See [the receipt](./research/census-config-delta-review.json).
+
+The operational attachment accepted both review documents: 968 source bindings,
+six artifacts, 25 reviews and 13 unresolved obligations. The other 85 files
+remain outside this batch; separate evidence for them still requires assessment.
+Nineteen original drift members changed again after the historical checkpoint.
+Retain exact revision/hash boundaries. This source review establishes neither
+transitive semantic closure nor runtime or signed qualification.
+
+### CI partition delta and native selection — 2026-09-25
+
+Seven CI/workflow source deltas were reviewed at `1504e77bcf`; see
+[the receipt](./research/ci-entrypoint-delta-review.json). The two existing
+contract suites passed all 88 tests, including invalid shard sets and shimmed
+admission/execution. Six actual CLI dry-runs proved the committed partitions
+against 136 selected executable tasks per lane. Repo-cli forwards complementary
+`--shard=1/2` and `--shard=2/2` arguments; no task body ran in these dry-runs.
+
+The source review distinguishes the heavy-admission comment from its current
+implementation: Git output remains newline-split despite the comment describing
+NUL-delimited output. Lossless filename handling is not proved. The operational
+census accepted the review, retaining 968 sources, six artifacts, 26 reviews
+and all 13 unresolved obligations. Hosted execution and downstream runtime
+semantics remain separate evidence requirements; no tuple is qualified.
+
+### Main integration alias repair — 2026-09-25
+
+The running merged-preview proof exposed inherited generated Vitest alias drift
+for the new Refs command. Main merged cleanly, and regenerating the alias data
+added exactly that missing entry. The tsgo-rules/alias-parity gate passed; see
+`research/main-alias-integration-repair.json`. Final merged-head proof remains
+required. Frozen experiments retain their original source and runtime identity.
+
+### Census refresh and generated-input attribution — 2026-09-25
+
+The post-main census at `278b083df6` retains 144 workspaces and 3,473 nodes.
+All five planner snapshots reproduce the prior JSON. Twenty-eight source
+bindings changed: test-runner/fc-runs workspace dependencies and references,
+the workspace lock records, and Refs exports/aliases. The refreshed attachment
+accepted 968 bindings, six artifacts and 27 reviews, retaining 13 obligations.
+See [the receipt](./research/post-main-census-refresh.json).
+
+Identity lint's input count increased from 767 to 890 because the working tree
+contains 120 utils build outputs and three utils Turbo logs. Read-only,
+network-isolated plans that mask only those generated directories return to
+767 inputs. Two masked plans agree; the unmasked hash differs and all shared
+input digests match. No host files were removed and no lint body executed.
+This establishes generated-file sensitivity, not semantic irrelevance or a
+justification for exclusions. Frozen pilot evidence retains its recorded
+filesystem/source identity; no tuple is qualified by this refresh.
+
+### Generated-input execution controls and proof-reuse review — 2026-09-25
+
+Six fresh identity-lint executions at `338901fa4d` compare visible and masked
+utils generated directories for valid and malformed source. The valid cases
+exit zero with matching raw streams; malformed cases exit one with matching
+raw streams. Read-only namespace overlays preserve host files. Tool binaries,
+root configuration, lockfile, launcher and identity files match their pre/post
+hashes. See [the controls](./research/generated-input-lint-controls.json).
+This is bounded wrapper execution, not Turbo dependency execution, replay,
+syscall completeness or justification for changing input exclusions.
+
+The saved five-file proof-reuse delta review was revalidated after main:
+source bytes are unchanged, nine Turbo-digest tests and seven docgen-manifest
+tests passed. The earlier filtered run passed 23 tests and skipped 239.
+[The review](./research/proof-reuse-delta-review.json) distinguishes SHA256
+serialization from Crypto service/error propagation, temporary index/staging
+writes, and metadata-only package scope. It is accepted as review 28, with all
+13 broader obligations retained. No tuple is qualified by these results.
+
+### Worktree-test runtime repair — 2026-09-25
+
+The older merged-preview coverage proof exposed an inherited test that used
+Node's executable to launch the Bun-only CLI. Resolving Bun before the fixture
+PATH override preserves the mocked nested install. All 36 worktree tests pass
+both normally and with coverage enabled; package lint/type-check pass. See
+[the attributed receipt](./research/worktree-runtime-repair.json). These scoped
+checks do not replace the final full proof or qualify any cache tuple.
+
+### Process capture boundary review — 2026-09-25
+
+Two shared Git/command executor deltas are reviewed in
+[the receipt](./research/process-boundary-delta-review.json). Six native
+synthetic subprocess controls distinguish merged/trimmed human output from
+untrimmed stdout-only machine text. Both replace malformed UTF-8 and enforce
+the output bound. The raw API documentation now states those limits. The
+existing step/Git suite passed 22 tests; package lint/type-check passed.
+
+The operational attachment accepted review 29 with 968 sources, six artifacts
+and all 13 broader obligations retained. This establishes neither arbitrary
+filename/byte fidelity nor transitive semantic closure or signed replay.
+
+### Runtime-emission triage and type-only delta review — 2026-09-25
+
+The historical 133-source drift population contains 81 TypeScript files. The
+same pinned TypeScript emitter produces identical JavaScript for 25 baseline/
+head pairs and different JavaScript for 56; no transpilation errors occurred.
+All 25 identical-output source deltas were manually reviewed: a tuple assertion,
+Crypto service requirements, an error-channel correction, and the already
+recorded admission-comment mismatch. See
+[the bounded review](./research/type-only-delta-review.json).
+
+Both revisions of all 81 sources and the compiler implementation are retained.
+Review 30 is accepted with all 13 broader obligations unchanged. This batch
+includes previously reviewed files; it is not 25 newly closed obligations.
+Emitter equality cannot establish type-level or downstream runtime equivalence,
+remove source inputs, or replace the remaining runtime-change reviews.
+
+### Proof identity and shadow-row compatibility — 2026-09-25
+
+Four runtime-changing source deltas now have a bounded review: shared artifact
+ids, Yeet artifact paths, proof digests and proof fact schemas. Five synthetic
+artifact identities and three command digests match independent SHA-256
+calculations. Sanitized-prefix collisions remain distinguished by the digest.
+The current shadow schema rejects an old-format row and a negative duration;
+an isolated real ledger reader counts both malformed and retains one valid
+current row. Thirteen existing tests passed across three suites. See
+[the receipt](./research/proof-identity-delta-review.json).
+
+Review 31 is accepted with all 13 broader obligations retained. Machine/user/
+runtime-root inputs remain explicit for coordinator paths; version-pin files
+are not measurements of installed binaries. Full ledger enforcement, transitive
+input closure and signed remote evidence are not established by these controls.
+
+### Ledger policy and shadow report boundary — 2026-09-25
+
+Review 32 covers ledger lookup/batching and selected shadow-record/report paths.
+All 37 ledger/shadow tests passed. Four synthetic controls establish that the
+default report can say enforcement-ready with 200 undeclared-input misses on
+10 branches, including with malformed history; merged-preview-only rows and
+199 attempts do not meet that bar. The report flag therefore cannot substitute
+for this packet's qualified tuple evidence. See
+[the bounded receipt](./research/proof-ledger-shadow-review.json).
+
+The attachment retains 968 source bindings, six artifacts and all 13 unresolved
+obligations. No cache setting, tuple lifecycle or Yeet proof ownership changed.
+Full semantic closure, downstream enforcement review and signed sibling receipts
+remain required. The latest published-head proof ended at the existing
+Effect/Vitest and schema-policy failures; it is not a green full proof.
+
+### Shadow reporting versus verified-state authority — 2026-09-25
+
+Review 33 follows the report to its CLI consumer and the separate publish reuse
+guard. A disposable Git fixture confirms that a ready shadow report alone is
+rejected by the verified-state guard; a synthetic exact full state is accepted,
+while tracked-content drift and a non-full state are rejected. The fixture
+state is synthetic and grants no real proof credit. See
+[the authority receipt](./research/proof-authority-review.json).
+
+Shadow recording is observational in the inspected Handler path. The existing
+verified-state guard compares Git state and selectors but does not independently
+compare actual toolchain binaries, ambient environment or the current proof
+command. These bounded checks do not satisfy complete tuple qualification.
+All 13 broader census obligations remain unresolved; no proof ownership changed.
+
+### Environment and admission identity deltas — 2026-09-25
+
+Review 34 covers two more historical runtime-changing source deltas: EnvConfig
+and StepExec. Synthetic controls prove fresh synchronous environment reads
+across set/change/delete, exact CI recognition, provider/process separation and
+optional cache-directory classification. All 115 tests in shared-internals,
+turbo-cache and step-capture-lifecycle passed, including the admission identity
+failure contract. See [the receipt](./research/environment-process-review.json).
+
+These paths retain mutable environment, ConfigProvider, filesystem, random
+identity and subprocess dependencies. No secret resolution was performed, and
+no remote-read or namespace trust was inferred. All 13 broader census
+obligations remain open; the review count is not a completion denominator.
+
+### Hosted closeout source deltas — 2026-09-25
+
+Review 35 covers five changed closeout files: report/schema compatibility,
+GraphQL collection, gate classification and shared score parsing. All 203
+Yeet/thread-state/body-signal tests passed. Reviewed assertions cover a latest
+reviewer follow-up beyond the first page, separate acknowledgements/advisories,
+and the hosted-checks gate remaining unknown. See
+[the receipt](./research/hosted-closeout-review.json).
+
+GitHub observations are mutable and collected across separate requests; write
+intents remain explicit remote effects. Local parser or fixture success cannot
+replace fresh hosted proof. All 13 broader census obligations remain open.
+
+### Quality helper deltas and Effect examples — 2026-09-25
+
+Review 36 covers coverage-row formatting, JSDoc annotation detection and
+migration extraction/apply deltas. Two stale examples of Effectful hashing and
+extraction now provide Crypto and execute the returned programs. Controls
+return one record and match an independent SHA256 digest. All 312 focused
+tests, package lint/check and bounded docgen passed. See
+[the receipt](./research/quality-helper-review.json).
+
+The normal census refresh retains 144 workspaces, 3473 nodes and 1970 executable
+nodes; only the repaired source binding changed. All 13 broader obligations
+remain attached. Extraction/application retain Git, filesystem, formatter and
+timestamp dependencies and writes; they are not read-only lint computations.
+
+### Package verification entrypoint — 2026-09-25
+
+Review 37 covers package selection/discovery and the shared changed-path
+mapping. Nineteen package-verifier tests and four synthetic mapping controls
+passed. Quick lint/check differs from full upstream-build/audit/docgen; missing
+scripts are skipped, not executed. Controlled shell stand-ins prove ordering
+and failure handling, not Turbo replay. See
+[the receipt](./research/package-verifier-review.json).
+
+Root policy paths map to no package, so mapping does not close root semantic
+inputs. Native quick evidence remains scoped to its actual run. All 13 broad
+census obligations remain open; no tuple lifecycle or proof ownership changed.
+
+### Quality command and task-runner deltas — 2026-09-25
+
+Review 38 covers Quality command wiring, lane package-scope reporting and its
+legacy schema default. Recovered residue/diagnostic fixtures report 76 passing
+tests; nine fresh digest tests passed. Earlier task-runner evidence remains
+bound to unchanged sources. See
+[the receipt](./research/quality-entrypoint-review.json).
+
+Empty package scope does not prove complete input coverage. Diagnostic roots
+and residue flags expand the relevant filesystem inputs and effects; this
+review did not execute workstation cleanup. All 13 broad census obligations
+remain open. The preceding publication proof failed schema-first and
+Effect/Vitest gates. The Refs remediation was merged from main cleanly. A normal census refresh
+retains 144 workspaces and 3473 nodes. Four Refs sources were missing from
+the attachment and are now bound explicitly: 972 sources, six artifacts,
+38 reviews and 14 unresolved obligations. Their semantics remain unreviewed;
+the prior proof failure is not yet cleared.
+
+
+### Reference workspace entrypoint — 2026-09-25
+
+Review 39 classifies Refs planning, refresh, linking and timer effects.
+Sixteen isolated fixture/codec tests passed. The manifest and public barrel
+are newly bound, bringing the attachment to 974 sources and 39 reviews.
+See [the receipt](./research/refs-entrypoint-review.json).
+
+Refresh can return a receipt containing failed members, and captures are
+trimmed and bounded. Command success or a valid receipt cannot establish
+successful refresh or exact log equality. Git/network, deep-provider inputs,
+clock, filesystem writes and service-manager effects remain explicit.
+No production reference refresh, deep build or timer mutation was executed.
+All 14 broader census obligations remain; this bounded review does not close
+transitive input discovery or qualify any tuple.
+
+
+### Canonical Refs assertions and properties — 2026-09-25
+
+Two property tests now use it.effect.prop with unchanged schema generators,
+equivalence and sample configuration. Option assertions use canonical helpers;
+the coverage fixture now checks its emitted 9/10 symbols and one failed file.
+All 13 focused tests and Biome passed. The fresh Effect/Vitest gate decreased
+from 23 to 18 introduced findings without changing its baseline. See
+[the repair receipt](./research/refs-canonical-test-repair.json).
+Full package verification remains pending; the remaining layer/resource
+findings still prevent green proof.
+
+
+### Scoped test resources and typed platform layer — 2026-09-25
+
+Setup-script tests now allocate fresh scoped temporary directories per test
+under the platform layer. AI-sync removes its unsafe layer assertion, and
+both suites declare bounded hook timeouts. Seven setup tests, fifteen AI-sync
+tests, its test typecheck and its full audit/docgen verification pass.
+The remaining Effect/Vitest findings decrease from 18 to 16, all per-test
+layer provisions. See [the receipt](./research/scoped-resource-test-repair.json).
+The repo-cli verification remains pending. AI-sync is added to the touched
+workspace verification list; no baseline was expanded.
+
+
+### Isolated fixture providers — 2026-09-25
+
+Ten separate one-test fixture layers replace sixteen per-operation providers.
+Each registration owns its mutable fixture, config and temporary root.
+All 47 focused tests, Biome, package lint/check and the Effect/Vitest ratchet
+pass; the latter reports zero introduced findings. See
+[the receipt](./research/refs-provider-test-repair.json).
+Canonical package test-typechecking and full package verification remain
+pending; scoped success does not close exact-head repository/hosted proof.
+
+
+### Dependency repair and registry discovery gap — 2026-09-25
+
+Removing the unsafe AI-sync test assertion exposed an unused development
+dependency. Its manifest/lock entry and generated TypeScript references are
+removed, and an in-branch patch changeset records the package change.
+Nine executable dependency arrays lose only types-task edges; five are
+cache-enabled. The reviewed baseline is refreshed through Cache's guarded
+writer. Scope, profile, epoch, commands, cache settings and ledger are unchanged.
+The cache-policy gate has zero blockers. See
+[the policy review](./research/ai-sync-dependency-policy-review.json).
+
+A direct root-registry audit finds 36 imported command barrels, only five
+of which are in the current attachment. The other 31 require discovery work;
+this static result is not an assertion that all their runtime behaviors are
+in scope or unreviewed. See
+[the diagnostic](./research/registered-command-binding-audit.json).
+Historical runtime evidence is not renewed by dependency/source hash refresh.
+
+### Generated boundary repair and transitive discovery — 2026-09-25
+
+The AI-sync dependency removal also requires regenerating Fallow boundary
+permissions. The canonical generator removes exactly two obsolete types-package
+entries; its check passes. See [the receipt](./research/generated-boundary-review.json).
+
+Conservative relative-import traversal from the root command registry discovers
+604 source files and 2519 edges, including type and lazy imports. Of those files,
+448 are absent from the existing source attachment. External package edges are
+not traversed, and this is not an execution or semantic-closure proof. See
+[the discovery inventory](./research/cli-relative-import-discovery.json).
+The attachment adds only the generated boundary file and its bounded review;
+all 14 unresolved obligations remain. No runtime evidence is renewed.
+
+### Tsconfig command and discovery boundary — 2026-09-25
+
+The tsconfig command review distinguishes default writes from check/dry-run.
+A package filter does not bound root planning or workspace discovery. Its
+external helpers depend on workspace population, canonical paths, manifest
+read outcomes and the selected Bun/Node glob backend; repeated reads are not
+a filesystem snapshot. See [the entrypoint review](./research/tsconfig-entrypoint-review.json)
+and [the discovery review](./research/tsconfig-discovery-review.json).
+
+All 15 command tests, 28 discovery/index tests and 14 package-local Glob tests
+pass. The attachment validator accepts 990 sources, six artifacts and 42 reviews,
+with all 14 unresolved obligations retained. Full planner/schema/formatter
+closure and runtime perturbation evidence remain incomplete. No cache tuple
+is promoted and historical runtime observations are not renewed.
+
+### Retained static evidence and nested Lambda boundary — 2026-09-25
+
+The Lambda boundary review resolves the leading directory change against its
+standalone manifest: typecheck, bundle and ZIP scripts exist there. It records
+install/build/archive effects and their remaining runtime obligations, without
+executing the chain or changing infra cache policy. See
+[the nested review](./research/nested-lambda-boundary-review.json).
+
+Eight application configuration/helper hashes and seven recorded command
+definitions still match historical static reviews. Reuse preserves their
+original revisions and narrow scope; plugin execution and framework effects
+remain unproven. See [the reuse receipt](./research/application-static-review-reuse.json).
+
+All 117 recorded Babel command definitions remain unchanged. Twenty-three
+changed manifests have no script delta, but dependency/export changes do not
+establish output equivalence. Four installed tool files match historical
+hashes; these identities are retained only inside the review because the
+attachment path schema rejects scoped npm paths. See
+[the compiled-output review](./research/compiled-output-delta-review.json).
+
+The attachment validator accepts 1002 sources, six planner artifacts and 45
+reviews. All 14 unresolved obligations remain. These reviews do not renew any
+runtime result, discharge signed sibling evidence, or promote a cache tuple.
+
+### Scoped tool evidence binding — 2026-09-25
+
+The portable evidence path schema now accepts `@` at the start of a segment.
+The existing bounded no-follow reader still rejects symlinked scopes and digest
+mismatches. All 37 focused policy/attachment tests pass, including scoped npm
+paths and unsafe-path negatives. See
+[the repair receipt](./research/scoped-evidence-path-review.json).
+
+The actual attachment now verifies the four installed Babel/plugin files that
+were previously retained only inside a review. It accepts 1009 sources, six
+artifacts and 46 reviews; all 14 broader obligations remain. The historical
+receipt retains its original limitation. This repair proves source identity,
+not tool execution, transitive input closure or signed-remote qualification.
+Full package and PR proof remain pending.
+
+### Refs lint-policy remediation — 2026-09-25
+
+The earlier full proof failed lint-policy. The introduced Refs fixture service
+key now matches its deterministic declaration identity; the canonical test-tsgo
+lane passes across 267 files and all 16 Refs tests pass. Inherited Refs/Worktree
+JSDoc warnings were repaired without implementation changes; targeted ESLint
+passes. See [the receipt](./research/refs-key-quality-review.json).
+
+The attachment accepts 1011 sources, six artifacts and 47 reviews, retaining
+all 14 broader obligations. Bounded docgen refuses this branch because its
+lockfile delta requires full proof. Package and full proof remain pending;
+these repairs do not renew runtime evidence or promote a qualification tuple.
+
+### Ordinary real-pilot local replay — 2026-09-25
+
+The ordinary Cache CLI ran the real identity lint task at frozen source
+`8f11af6e49` in a read-only, network-isolated namespace with disposable package
+overlays. Only identity caching was enabled in the overlay. One fresh miss and
+two local hits share the same task hash; the three dependency lint tasks run
+fresh each time. Host cache configurations and executable hashes are unchanged.
+See [the independent retained-byte review](./research/ordinary-real-local-replay.json).
+
+The review confirms equal native input maps and hashed environment metadata.
+The local cache archive contains only the 53-byte task log, matching both replay
+payloads exactly. Complete CLI streams include dependency timing and summaries
+and are not asserted equal. This closes the bounded ordinary-CLI real local
+replay gap at the recorded source; it does not renew the current head, complete
+the full matrix, establish signed remote evidence or promote any tuple.
+
+The new scoped-tool attachment test now uses `it.layer` with a bounded layer
+timeout. The Effect/Vitest ratchet passes without a baseline change; see
+[the test-lifecycle repair](./research/scoped-layer-repair.json).
+
+### Ordinary real source invalidation and handoff refresh — 2026-09-25
+
+At frozen source `8f11af6e49`, a valid identity source edit causes a local miss
+and then a local hit. An unimported malformed source file fails the real lint
+task twice with the same new hash, both misses, and no archive for that hash.
+Restoring the original inputs recovers the original local hit. Independent
+summary review verifies the sole input-map changes and compares successful
+archive logs. An earlier malformed imported barrel stops during CLI loading
+before Turbo; it is retained separately and earns no task-failure credit. See
+[the invalidation receipt](./research/ordinary-real-invalidation.json).
+
+The regenerated source census at `3df15e7a3e` retains 144 workspaces, 3473 nodes
+and 1970 executable computations. Commands, dependencies, configurations and
+census source bindings are unchanged; 90 input summaries differ in the live
+checkout. The refreshed attachment accepts 1011 sources, six artifacts and 49
+reviews with all 14 broader obligations preserved. The shared qualification
+contract now distinguishes this current snapshot from historical runtime pins.
+Neither refresh promotes a tuple or supplies signed remote acceptance.
+
+### Ordinary real-pilot canary controls — 2026-09-25
+
+The retained canary native executable (`2.11.5-canary.2`) passed seven ordinary
+Cache CLI controls at frozen source `8f11af6e49`: fresh miss, replay hit, source
+mutation miss, changed replay hit, two malformed-source failures without reuse,
+and a restored-input hit. Every native summary reports the canary version.
+The independent review checks stream digests, input-map changes, paired hashed
+environment metadata, absent failed-task archive and equal successful task logs.
+See [the retained receipt](./research/ordinary-real-canary.json).
+
+The native executable was overlaid in a network-isolated namespace; launcher
+and package declarations were unchanged. The canary used its own local cache
+namespace, and host task configurations remained unchanged. This bounded
+experiment does not establish signed-remote acceptance, current-head runtime
+evidence, complete semantic input coverage or a qualified tuple.
+
+### Shared local cache across client transitions — 2026-09-25
+
+Five ordinary CLI executions share one disposable local cache namespace at
+frozen source `8f11af6e49`. Stable execution misses then hits; replacing the
+native executable with the retained canary misses then hits; restoring stable
+recovers its original hit. All source input maps are equal. Native summaries
+confirm the selected versions and a changed runtime digest; paired metadata
+is equal within each client. Both successful cache archives contain the same
+task log. See [the independent review](./research/ordinary-client-transition.json).
+
+This control demonstrates invalidation across the observed executable change,
+without relying on separate cache namespaces. It does not isolate the runtime
+digest contribution from Turbo's own hashing implementation. Signed remote
+acceptance, complete semantic coverage and qualification remain outstanding.
+
+### Main D1 integration — 2026-09-25
+
+Main commit `b2a654bc43` is merged. The cache baseline conflict preserves this
+branch's nine reviewed AI-sync dependency removals and incorporates main's
+repo-cli test/test:property inputs for the two D1 JSON fixtures.
+[The conflict review](./research/main-d1-baseline-integration.json) links both
+prior reviews. Source census attachments still describe their recorded
+revision and require refresh; the merge does not renew runtime evidence.
+
+Post-merge cache policy audit passes with zero findings and 1251 honestly
+unassessed computations. Packet, exploration, reflection and diff checks pass.
+Full local and hosted proof remain pending.
+
+### Post-D1 source attachment refresh — 2026-09-25
+
+The census at `8caad510d2` retains 144 workspaces, 3473 nodes and 1970
+executables. Two repo-cli test configurations declare the D1 JSON inputs;
+53 other nodes have changed input summaries. Six changed source hashes and
+three newly bound test/fixture files are reviewed. All eight gate-order
+handoff tests pass. The attachment accepts 1014 sources, six historical
+planner artifacts and 50 reviews, preserving all 14 broader obligations.
+See [the review](./research/d1-entrypoint-review.json). Current planner parity,
+complete semantic coverage and signed remote evidence remain unproven.
+
+### D1 planner reproduction and proof attribution — 2026-09-25
+
+Explicit local and hosted environments reproduce the finite planner scenarios.
+The CI/Quality projections are equal to their prior versions. Ten Yeet scenarios
+per environment move only `quality:cache-policy` earlier; lane inventories and
+all other projected values remain equal. The attachment accepts 1014 sources,
+six artifacts and 51 reviews, retaining 14 obligations. See
+[the planner comparison](./research/d1-planner-review.json). These pure calls
+do not execute lanes or prove exhaustive interpreter behavior.
+
+The earlier full proof ended at lint-policy with 14 inline-schema errors and
+one actionable host-path finding. All four affected files match main;
+PR #1272 remains open for the inline-schema repairs and the host-path finding
+belongs to the Effect/Vitest inventory.
+[The attribution](./research/proof-7877-attribution.json) preserves this as
+a failed proof, with current-head verification still required.
+
+### Refs entrypoint semantic review at `1149f36bd2`
+
+[Refs entrypoint semantics](research/refs-entrypoint-semantics.json) binds the
+five direct Refs source hashes and classifies plan, refresh, timer operations,
+link repair, and isolated unit rendering. The review identifies external
+filesystem, Git, clock, process/environment and systemd inputs and effects.
+No maintenance command was executed. This is a bounded source review only;
+transitive helpers, runtime captures, and signed comparisons remain open.
+The canonical attachment accepted this receipt as review 52: 1,014 sources and
+six artifacts, with all 14 unresolved obligations retained. The direct schema
+review does not prove safe capture, immutable remote identity or runtime purity.
+
+### Refs helper inputs and capture correction
+
+[Refs transitive semantics](research/refs-transitive-semantics.json) reviews the
+shared systemd helpers and root discovery, plus selected process-capture bodies.
+It identifies filesystem metadata, current-directory, interpreter, installed-unit
+and admission-metadata inputs. It corrects the prior receipt: the capture bound
+is 8,388,608 string characters plus a truncation notice, not an 8 MiB byte limit.
+Merged stdout/stderr ordering and child registration remain relevant effects.
+The canonical attachment accepted this supplemental receipt as review 53 and
+bound four previously absent helper sources: 1,018 sources, six artifacts and
+14 unresolved obligations. Transitive closure and runtime qualification remain
+incomplete.
+
+### Census refresh after PR #1270
+
+[Main source refresh](research/main-1270-source-refresh.json) pins census
+`e10cd090a8`: 144 workspaces, 3,473 nodes and 1,970 executable tasks. No nodes
+were added or removed; commands, dependencies, effective task configurations,
+root scripts and global configuration are unchanged. Input summaries changed
+for 55 nodes. Eighteen Yeet source bindings were refreshed and Converge.ts
+was newly attached. This source-only refresh explicitly leaves semantic review
+and planner reproduction open; it does not renew historical runtime evidence.

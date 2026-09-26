@@ -1,0 +1,266 @@
+{
+  "authority": "root-command-direct-import-binding-audit",
+  "root": "packages/tooling/tool/cli/src/commands/Root.ts",
+  "registeredImports": 36,
+  "bound": 5,
+  "unbound": 31,
+  "rows": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/index.ts",
+      "symbols": [
+        "agentEffectivenessCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/index.ts",
+      "symbols": [
+        "aiMetricsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Architecture/index.ts",
+      "symbols": [
+        "architectureCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "symbols": [
+        "cacheCommand"
+      ],
+      "bound": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+      "symbols": [
+        "ciCommand"
+      ],
+      "bound": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Codegen/index.ts",
+      "symbols": [
+        "codegenCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Codex/index.ts",
+      "symbols": [
+        "codexCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Corpus/index.ts",
+      "symbols": [
+        "corpusCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/CreatePackage/index.ts",
+      "symbols": [
+        "createPackageCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/DeletePackage/index.ts",
+      "symbols": [
+        "deletePackageCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Docgen/index.ts",
+      "symbols": [
+        "docgenCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Docs/index.ts",
+      "symbols": [
+        "docsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Explore/index.ts",
+      "symbols": [
+        "exploreCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Fallow/index.ts",
+      "symbols": [
+        "fallowCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Files/index.ts",
+      "symbols": [
+        "filesCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+      "symbols": [
+        "goalsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
+      "symbols": [
+        "graftCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Image/index.ts",
+      "symbols": [
+        "imageCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Knowledge/index.ts",
+      "symbols": [
+        "knowledgeCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Labs/index.ts",
+      "symbols": [
+        "labsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Laws/index.ts",
+      "symbols": [
+        "lawsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+      "symbols": [
+        "lintCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Models/index.ts",
+      "symbols": [
+        "modelsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Purge/index.ts",
+      "symbols": [
+        "purgeCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Qa/index.ts",
+      "symbols": [
+        "qaCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/index.ts",
+      "symbols": [
+        "qualityCommand"
+      ],
+      "bound": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/index.ts",
+      "symbols": [
+        "refsCommand"
+      ],
+      "bound": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Research/index.ts",
+      "symbols": [
+        "researchCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Runners/index.ts",
+      "symbols": [
+        "runnersCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Skills/index.ts",
+      "symbols": [
+        "skillsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/SyncDataToTs/index.ts",
+      "symbols": [
+        "syncDataToTsCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TopoSort/index.ts",
+      "symbols": [
+        "topoSortCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/TsconfigSync/index.ts",
+      "symbols": [
+        "tsconfigSyncCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/VersionSync/index.ts",
+      "symbols": [
+        "versionSyncCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Worktree/index.ts",
+      "symbols": [
+        "worktreeCommand"
+      ],
+      "bound": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/index.ts",
+      "symbols": [
+        "yeetCommand"
+      ],
+      "bound": true
+    }
+  ],
+  "limits": [
+    "Direct static relative imports only. Does not prove execution of command bodies, transitive imports, semantic inputs or complete runtime command discovery.",
+    "Diagnostic comparison only; no source attachment or lifecycle promotion is performed."
+  ],
+  "sourceSha256": "39043026d6fbf2d4a88e9a6537464daf139d8fb947a9ac235bdc4420ee1e8695"
+}
