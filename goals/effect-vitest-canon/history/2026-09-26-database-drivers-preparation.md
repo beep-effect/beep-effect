@@ -132,3 +132,51 @@ counterexample or production edit was needed.
 The remaining database-wave work is observability through the shared runner,
 final before/after timing receipts, inventory reconciliation, generated dependency
 metadata and PR gates. Per-phase success does not replace those acceptance gates.
+
+## Instrumented final checkpoint
+
+Commit `4d1e87568ae850a8b769e0fb29834efd5fcc89d4` registers all eight suites
+through @beep/test-runner and adds its three package dependencies. Generated
+TypeScript references and Fallow edges match those dependencies. Eight pure
+harness layers now state the ordinary shared 10-second hook budget explicitly;
+this does not increase a cancellation deadline. Integration hook and body
+budgets remain unchanged. Drizzle routing counters reset on every invocation,
+retaining the independent 1/1 counts and original SQL/result arrays.
+
+Full package audit/docgen passed for DuckDB and for the final Drizzle/Postgres
+sources (Drizzle 8.9 / 2.6 seconds; Postgres 11.6 / 3.0 seconds). The final
+instrumented properties passed with BEEP_FC_NUM_RUNS=400 and BEEP_FC_SEED=20260708:
+nine DuckDB, three Drizzle and four Postgres laws. Integration membership is
+excluded by the property environment where configured; ordinary whole-package
+and trace runs explicitly unset both property variables.
+
+Final ordinary Node / Bun wall times and passing counts:
+
+| Package | Node seconds | Bun seconds | Passed in each | Skipped |
+| --- | ---: | ---: | ---: | ---: |
+| DuckDB | 4.923 | 2.167 | 37 | 0 |
+| Drizzle | 4.572 | 2.869 | 29 | 0 |
+| Postgres | 6.074 | 4.622 | 46 | 0 |
+
+Raw reports and context receipts are in ops/inventory/timings/after/database-drivers
+and timings/context/after/database-drivers. Every command exited zero with stable
+source/manifest/lock hashes. Context includes runtime versions, resource limits,
+load averages and CPU/memory/I/O pressure. These are single observations with
+changed registrations and a newer lock state than the baseline; they establish
+no normalized performance gain.
+
+Ordinary trace-enabled whole suites also passed 37 / 29 / 46 tests. Their
+lifecycle output is captured by the installed TestConsole rather than emitted
+to stdout. Temporary assertions in an existing DuckDB Effect case and each
+native PGlite integration suite observed the start message through
+TestConsole.logLines. All three passed with BEEP_TEST_TRACE=1; all three failed
+the same diagnostic assertion with BEEP_TEST_TRACE=0 and CI=false. Every source
+was restored byte for byte. The private database-trace-receipt.json records
+source hashes and positive/negative exit codes. These controls establish
+captured lifecycle starts, not live stdout or complete failure-output coverage.
+
+The cache baseline changes only 28 owned task dependency lists introduced by
+the runner edge. Its reviewed basis is database-drivers-cache-review.md. The
+post-update cache audit exits zero with no blocking findings; eleven inherited
+configuration-source drift advisories remain unpromoted. Local package proofs
+and inventory validation do not substitute for full Yeet or hosted PR gates.

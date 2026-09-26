@@ -2461,3 +2461,12 @@ which the same infra docgen command passed. No tracked source or compiler rule
 changed. An install preflight checking generated file dependencies for their
 declared build artifacts would prevent this expensive late-proof failure.
 The full proof was resubmitted; focused docgen alone is not full proof credit.
+
+## Reproof after an already published clean head
+
+Four SDK-repaired lanes retried `yeet publish --start-pr-early` after their heads
+had already reached GitHub. Each stopped before proof with "requires reviewed
+staged changes or a clean local commit ahead". The correct recovery is a
+standalone detached verify plus an until-ready monitor at the existing head.
+A publish recovery hint distinguishing an already-pushed head from missing work
+would avoid these discarded proof submissions. No empty commit is needed.

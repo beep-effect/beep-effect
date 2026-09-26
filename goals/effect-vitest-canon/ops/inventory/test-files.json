@@ -1487,36 +1487,36 @@
     "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
     "package": "@beep/drizzle",
     "kind": "test",
-    "bytes": 1169,
-    "lines": 32
+    "bytes": 1205,
+    "lines": 33
   },
   {
     "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
     "package": "@beep/drizzle",
     "kind": "test",
-    "bytes": 17668,
-    "lines": 491
+    "bytes": 18348,
+    "lines": 523
   },
   {
     "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
     "package": "@beep/drizzle",
     "kind": "test",
-    "bytes": 4294,
-    "lines": 112
+    "bytes": 5743,
+    "lines": 140
   },
   {
     "file": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts",
     "package": "@beep/duckdb",
     "kind": "test",
-    "bytes": 934,
-    "lines": 29
+    "bytes": 970,
+    "lines": 30
   },
   {
     "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
     "package": "@beep/duckdb",
     "kind": "test",
-    "bytes": 47281,
-    "lines": 1254
+    "bytes": 54052,
+    "lines": 1384
   },
   {
     "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
@@ -2040,22 +2040,22 @@
     "file": "packages/drivers/postgres/test/Postgres.equivalence.test.ts",
     "package": "@beep/postgres",
     "kind": "test",
-    "bytes": 1056,
-    "lines": 25
+    "bytes": 1092,
+    "lines": 26
   },
   {
     "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
     "package": "@beep/postgres",
     "kind": "test",
-    "bytes": 20578,
-    "lines": 607
+    "bytes": 20609,
+    "lines": 615
   },
   {
     "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
     "package": "@beep/postgres",
     "kind": "test",
-    "bytes": 16519,
-    "lines": 436
+    "bytes": 16872,
+    "lines": 446
   },
   {
     "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
