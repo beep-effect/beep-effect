@@ -1,0 +1,82 @@
+[
+  {
+    "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
+    "bytes": 5315,
+    "lines": 150,
+    "sha256": "408b1d94c3aad9c7aea98b373f26705b15c9087a222fac24e877a73c52916a8c",
+    "frozenSha256": "447e03a342635c7dd59c2a513ed89576669b969229ad3750eb3afb246b9d1ecf",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
+    "bytes": 8811,
+    "lines": 241,
+    "sha256": "96b748a41087d32d23c67f9ae63d6e3c7e78f4fcf416afea4536cf477eee6714",
+    "frozenSha256": "df01f7583e0d54bfbcfea6adf3568ad7781850bc19e737862c6b98c2798b6c37",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+    "bytes": 8904,
+    "lines": 254,
+    "sha256": "1d922383aaffe466da7188675b00d7d8d29991783ac31169a0a9972bf5524d15",
+    "frozenSha256": "f8cef7bb1d66a1b93ea72d1e83c2523b4e4acf220c30c7b7c25439119641ba3b",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
+    "bytes": 7043,
+    "lines": 193,
+    "sha256": "0cbc39036009b042973a47ce24079ebb92a15ab9106a9c4be53a3b126c3c4f80",
+    "frozenSha256": "0cbc39036009b042973a47ce24079ebb92a15ab9106a9c4be53a3b126c3c4f80",
+    "matchesFrozen": true
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+    "bytes": 8388,
+    "lines": 210,
+    "sha256": "e1ebf32014be6f79a9d46cd97c813aea8892899b7c6af1aaa4cbf8f2e5f5769a",
+    "frozenSha256": "198d2665c4f94b90933098d5a6004765e9cfb5f623710ac41b0acf071ec192c4",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
+    "bytes": 8985,
+    "lines": 246,
+    "sha256": "2baad22502fae8709aaf2b9a7d338a190ce47fc2545526aae21c45a60efc0e0e",
+    "frozenSha256": "9745377fbd0eb421459f99737f2b1191a13b2dc84b0c24a9a84a476ad1826fae",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
+    "bytes": 4246,
+    "lines": 129,
+    "sha256": "0a5f5b0ea4596c53967c38a0d6f88fcc2d9c647e247f3a493a83c833e0aabbed",
+    "frozenSha256": "ee659fe27ef03352de8ac0ad93e094efdd3c19f279c2a0d764857c30b50c1670",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
+    "bytes": 6357,
+    "lines": 167,
+    "sha256": "922007c5277a1a6adc4ff9b5c36c459194915d81e31317de875774bf1ca3ea4b",
+    "frozenSha256": "922007c5277a1a6adc4ff9b5c36c459194915d81e31317de875774bf1ca3ea4b",
+    "matchesFrozen": true
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+    "bytes": 10218,
+    "lines": 240,
+    "sha256": "ed81a2021958863d5e30465250982c825b3794052db7d606e1befd77b0d32de7",
+    "frozenSha256": "df83c6d49c950da2897cf4d7d9053a83cec0a70537884e4fe2ca24fe6ceb0c37",
+    "matchesFrozen": false
+  },
+  {
+    "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
+    "bytes": 3027,
+    "lines": 67,
+    "sha256": "d24546f1cdd72222ae8af142556a567050be4085dc4c3aa35e25be78e52ef7cb",
+    "frozenSha256": "d24546f1cdd72222ae8af142556a567050be4085dc4c3aa35e25be78e52ef7cb",
+    "matchesFrozen": true
+  }
+]

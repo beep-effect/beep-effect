@@ -9,10 +9,15 @@
 
 import * as Monoid from "@beep/nlp/Algebra/Monoid";
 import * as Composable from "@beep/nlp/Operations/Composable";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const len = Composable.makeOperation("len", S.String, S.Finite, (s) => Effect.succeed(s.length));
 const inc = Composable.makeOperation("inc", S.Finite, S.Finite, (n) => Effect.succeed(n + 1));
@@ -164,4 +169,86 @@ describe("compose + traverse + aggregate", () => {
     const total = Composable.aggregate(Monoid.NumberSum, (s: string) => s.length)(["a", "bb", "ccc"]);
     expect(total).toBe(6);
   });
+});
+
+describe("Generated operation laws", () => {
+  it.effect.prop(
+    "functor identity for generated strings and the empty string",
+    [Arbitrary.schema(S.String)],
+    ([value]) =>
+      Effect.gen(function* () {
+        for (const input of ["", value]) {
+          expect(yield* len.map((n) => n, S.Finite).run(input)).toBe(yield* len.run(input));
+        }
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect.prop(
+    "functor composition for generated strings and the empty string",
+    [Arbitrary.schema(S.String)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const f = (n: number) => n + 1;
+        const g = (n: number) => n * 3;
+        for (const input of ["", value]) {
+          const composed = yield* len.map((n) => g(f(n)), S.Finite).run(input);
+          const sequential = yield* len.map(f, S.Finite).map(g, S.Finite).run(input);
+          expect(composed).toBe(sequential);
+        }
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect.prop(
+    "left identity for generated strings and the empty string",
+    [Arbitrary.schema(S.String)],
+    ([value]) =>
+      Effect.gen(function* () {
+        for (const input of ["", value]) {
+          expect(yield* Composable.identity(S.String).flatMap(len).run(input)).toBe(yield* len.run(input));
+          expect(yield* len.flatMap(inc).run(input)).toBe(yield* inc.run(Str.length(input)));
+        }
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect.prop(
+    "right identity for generated strings and the empty string",
+    [Arbitrary.schema(S.String)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const idOp = Composable.identity(S.Finite);
+        for (const input of ["", value]) {
+          expect(yield* len.flatMap(idOp).run(input)).toBe(yield* len.run(input));
+        }
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect.prop(
+    "associativity for generated strings and the empty string",
+    [Arbitrary.schema(S.String)],
+    ([value]) =>
+      Effect.gen(function* () {
+        for (const input of ["", value]) {
+          const left = yield* len.flatMap(inc).flatMap(dbl).run(input);
+          const right = yield* len.flatMap(inc.flatMap(dbl)).run(input);
+          expect(left).toBe(right);
+        }
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect.prop(
+    "traverse preserves generated input order and handles an empty collection",
+    [S.String.pipe(S.Array, Arbitrary.schema)],
+    ([values]) =>
+      Effect.gen(function* () {
+        for (const inputs of [[], [""], values]) {
+          expect(yield* Composable.traverse(len)(inputs)).toEqual(A.map(inputs, Str.length));
+        }
+      }),
+    { arbitrary: fcRuns(100) }
+  );
 });

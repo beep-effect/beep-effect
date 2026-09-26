@@ -2360,6 +2360,40 @@ No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
 
+### 2026-09-26 — File-hash receipt mistaken for an API token
+
+The NLP baseline commit hook reported generic-api-key findings for the SHA-256
+of `Core/Token.ts` in both before/after source maps. The value is a locally
+computed source hash, not a credential. Public receipts now represent each hash
+as an explicit `{ file, sha256 }` entry, preserving every path/hash pair while
+avoiding the misleading token-named JSON key. No scanner rule or gate was
+disabled. A typed manifest-entry format would avoid this ambiguity at capture.
+
+## 2026-09-26: Graph walker composition diagnostic
+
+While adding NLP graph payload laws, package verification rejected the nested
+Graph.edges/Graph.values/Array.fromIterable expression with
+missedPipeableOpportunity. The equivalent graph.pipe(...) sequence passed.
+Use pipe for multi-stage walker extraction when constructing future graph
+assertions; this avoids a package-audit round trip without changing coverage.
+
+## 2026-09-26: Property migration compiler feedback
+
+NLP package audits caught a nested schema/arbitrary call with
+missedPipeableOpportunity and a lifted nested generator with
+nestedEffectGenYield. Use the equivalent pipe form for schema generation and
+flatten adjacent sequential generators while preserving evaluation order.
+Both repairs passed full package verification; no lint suppression was added.
+
+## 2026-09-26: Commit signing socket unavailable
+
+After NLP property verification and all commit hooks passed, git commit failed
+with "1Password: Could not connect to socket" and "failed to write commit object".
+The prescribed op-doctor passed its service-account, path, and mode checks;
+one retry failed at the same signing step. Verified edits remain staged with
+a private patch backup. Agent secret-backend health does not prove signing
+socket health. Signing availability should be checked before long save cycles.
+
 
 ### Drizzle full-proof follow-up: compiled codecs and private output references
 

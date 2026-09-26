@@ -1,6 +1,7 @@
 import * as Monoid from "@beep/nlp/Algebra/Monoid";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -11,33 +12,30 @@ const testMonoidLaws = <A>(
   equals: (a: A, b: A) => boolean = (a, b) => a === b
 ) => {
   describe(`${name} Monoid Laws`, () => {
-    it("satisfies left identity: empty ⊕ x = x", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(Arbitrary.all([arbitrary]), ([x]) => equals(monoid.combine(monoid.empty, x), x))
-        )._tag
-      ).toBe("Passed");
-    });
+    it.prop(
+      "satisfies left identity: empty ⊕ x = x",
+      [arbitrary],
+      ([x]) => equals(monoid.combine(monoid.empty, x), x),
+      { arbitrary: fcRuns(100) }
+    );
 
-    it("satisfies right identity: x ⊕ empty = x", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(Arbitrary.all([arbitrary]), ([x]) => equals(monoid.combine(x, monoid.empty), x))
-        )._tag
-      ).toBe("Passed");
-    });
+    it.prop(
+      "satisfies right identity: x ⊕ empty = x",
+      [arbitrary],
+      ([x]) => equals(monoid.combine(x, monoid.empty), x),
+      { arbitrary: fcRuns(100) }
+    );
 
-    it("satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(Arbitrary.all([arbitrary, arbitrary, arbitrary]), ([x, y, z]) => {
-            const left = monoid.combine(monoid.combine(x, y), z);
-            const right = monoid.combine(x, monoid.combine(y, z));
-            return equals(left, right);
-          })
-        )._tag
-      ).toBe("Passed");
-    });
+    it.prop(
+      "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+      [arbitrary, arbitrary, arbitrary],
+      ([x, y, z]) => {
+        const left = monoid.combine(monoid.combine(x, y), z);
+        const right = monoid.combine(x, monoid.combine(y, z));
+        return equals(left, right);
+      },
+      { arbitrary: fcRuns(100) }
+    );
   });
 };
 

@@ -2051,6 +2051,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:*",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
