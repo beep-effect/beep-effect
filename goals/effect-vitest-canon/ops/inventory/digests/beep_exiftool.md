@@ -1,32 +1,37 @@
-# @beep/exiftool: four-lens source inventory
+# @beep/exiftool: reconciled source inventory
 
-| Lens | Rows |
-|---|---:|
-| resource | 4 |
-| flake | 4 |
-| property | 4 |
-| observability | 4 |
+All 46 historical rows retain their original IDs: 28 fixed, four justified native exceptions, and 14 open no-finding coverage rows. Two of the fixed rows were already repaired upstream; they receive no current-wave credit. Four test files remain; the 17-to-30 registration increase splits the original aggregate into fourteen named property laws without adding domains.
 
-4 files; 2 review items and 14 coverage rows. Severity counts: info 14, minor 1, major 1.
+| Inventory file | Rows | Current disposition |
+| --- | ---: | --- |
+| detector | 30 | 26 fixed; four native exceptions |
+| resource | 4 | one fixed; three open coverage rows |
+| property | 4 | four open coverage rows |
+| flake | 4 | one fixed; three open coverage rows |
+| observability | 4 | four open coverage rows |
 
+## Commit attribution
 
-## Top files by human row count
+- Upstream `b1aa7e320cde926e7e80a98073ba8b0d517d7c8c` (#1200): two historical EV001 runSync rows, already absent before this lane.
+- Scope `31dd06cbf9`: EV002 providers, EV003 wrappers, EV004 whole-body scopes, synthetic service EV010, and L-RES-04. Six isolated service harness blocks share MemoryFileSystem and Path with the fake spawner, reset captures per invocation, and use scoped directories. The live harness retains native NodeServices with excludeTestServices:true.
+- Assertions `9528437796`: seven historical EV006 rows. Exact predicates, invalid strings and polarity remain; Some branch checks do not invent expected payloads. Full encoded provenance equality remains.
+- Property `bd8b169294`: two EV007 rows become fourteen named native laws. Every original domain, fcRuns(25), Equal.equals predicate, error-options cause filter, and decodeUnknownEffect path remains. Seeded 400-run proof passes all fourteen.
+- Flake `00fe7b69a6`: L-FLAKE-06 now recovers only typed PlatformError NotFound causes. Missing binary records actual skipped status; every other version failure propagates.
 
-- `packages/drivers/exiftool/test/Exiftool.equivalence.test.ts`: 4 rows; full read 1–19 (test).
-- `packages/drivers/exiftool/test/Exiftool.models.test.ts`: 4 rows; full read 1–281 (test).
-- `packages/drivers/exiftool/test/Exiftool.service.test.ts`: 4 rows; full read 1–339 (test).
-- `packages/drivers/exiftool/test/integration/Exiftool.live.test.ts`: 4 rows; full read 1–178 (test).
+## Native exceptions and observability
 
-## Layer topology and native boundaries
+Three historical EV009 rows remain justified native exceptions at the current live harness anchor, although their former it.live syntax is gone. Live EV010 remains justified because real ExifTool consumes native PNG/GIF/config paths. The final detector has only this live EV010 occurrence. Synthetic service fixtures have no remaining native exception.
 
-The six service cases each build a layer that stages one scoped Exiftool config file (Exiftool.service.ts:386-399). Five cases own temp directories. Fake process writes use the same FileSystem interface as the subject, so MemoryFileSystem can serve this synthetic cohort after preserving staging/rename/rollback assertions. The three live cases build separate native layers and run version checks; real PNG/GIF interoperability and process exits require native paths and the actual binary. Scoped config reuse may reduce setup, but no isolated build-cost measurement supports a numerical speedup. Do not share mutable command captures.
+All four test files now import the accepted @beep/test-runner entry point. Parent owns the runner commit and final trace proof. Follow-up probes against that runner prove three skipped/zero passed for absent binary and three failed/zero skipped for a failing executable. Native execution separately passed all three PNG/GIF/container-refusal cases. No additional observability or generator gap is established.
 
-## Findings
+## Current source coverage
 
-- `L-RES-04` minor, `packages/drivers/exiftool/test/Exiftool.service.test.ts:56–110`: Fake spawner writes staged bytes through FileSystem; native NodeServices is not needed to exercise these synthetic write/rollback paths. During D14 migration use fresh MemoryFileSystem fixtures for the fake-spawner service cohort, retaining command order, failed-exit code, staged/original bytes and empty-staging checks. Keep the real PNG/GIF integration native; do not share commands arrays.
-- `L-FLAKE-06` major, `packages/drivers/exiftool/test/integration/Exiftool.live.test.ts:28–35`: exiftoolAvailable maps every typed version error to false, so nonzero version exits also become successful skip notices. Distinguish verified binary absence from other version failures without catch-all success. Preserve all three registrations, native calls and assertions; report unavailable execution explicitly. Do not retry, increase timeouts or turn a nonzero process result into passing native evidence.
+- `packages/drivers/exiftool/test/Exiftool.equivalence.test.ts`: full read 1–20.
+- `packages/drivers/exiftool/test/Exiftool.models.test.ts`: full read 1–342.
+- `packages/drivers/exiftool/test/Exiftool.service.test.ts`: full read 1–294.
+- `packages/drivers/exiftool/test/integration/Exiftool.live.test.ts`: full read 1–132.
 
-## Retained timing and history
+## Frozen timing and history (unchanged evidence)
 
 17 registrations, statuses {'passed': 17}, exit 0; whole command 7.473398s; reporter span 6532.051ms. Node v22.22.3, Bun 1.4.2, Vitest 4.1.11. Head `662823dd960367046ba7d73dd8fd25d15782865a`; reporter SHA256 `7dad002a5fa040eca4229a0552dbe3c38a958a15f240e89e7257370a849e6921`. Exact command shape: `bunx vitest run --reporter=json --outputFile=<private absolute raw report>`, package cwd. Root accepted that configured Node cohort, not a new proof from this audit.
 
@@ -39,14 +44,9 @@ Slowest reported files:
 
 Hosted history: 0 mapped observation rows across 0 jobs; categories {}.
 
-All three live-named cases are reported passed, but each can return a skip notice before assertions. Names/durations alone do not prove the binary path executed; no raw log claim resolves that ambiguity here.
+At the frozen baseline, all three live-named cases could return a skip notice before assertions. That historical timing alone does not prove native execution. Current flake evidence below resolves the current behavior without rewriting that baseline.
 
-## P2 order and uncertainty
 
-Scope/isolation and native boundaries first; assertion-family corrections next, preserving payload/cause, operand, polarity and every count. Then native property registration retaining current fcRuns floors (20/25/50 where present), seeds, generators and invalid-boundary cases; flake work only with supported causes; safe observability last. Do not transfer old exceptions or replace a native subject to make a test green. All proposal statuses remain open; P2 remains gated.
-
-Campaign timing facts remain 139 attempts, 132 full-file-representation baselines, four configured subsets and three failures. Graph-3d browser file was absent, not skipped. The failed effect-drizzle Bun.sqlite collection remains a failed Node cohort; no substituted driver or fabricated timing. Hosted 527 failed runs include 21 unavailable logs and one unresolved cause; observations are not unique flakes. Zero mapped history is not proof of no failures. A passing configured run proves neither race freedom nor coverage/full package verification. rc113 adapter with Vitest4.1.11 remains outside its declared Vitest5 peer range; compatibility is receipt-bound. No package tests, services or benchmarks were run here.
-
-Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
+Historical baseline receipts remain distinct from current source and package proof. No new timings are substituted into the frozen baseline. Current Effect reference is `330b7475e2135bb9bc6aad1df5d513d32299ebc1`; old adapter-version observations describe only their original receipt. Final packet validation and lifecycle gates remain parent-owned.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).

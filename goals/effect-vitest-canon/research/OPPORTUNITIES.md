@@ -2369,3 +2369,17 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+### 2026-09-26 — Media ledger evidence length and detector runtime
+
+The seven-file media wave's first strict ledger validation rejected several
+`evidence` fields longer than the schema's 200-character limit. The findings
+and source dispositions were retained; concise evidence belongs in that field,
+with fuller explanations in `reason` and `replacement.sketch`. Checking the
+field length during report-to-row conversion would prevent this repair pass.
+
+The normal Effect/Vitest ratchet passed with `introduced=0 resolved=0`, but
+reported `scanMs=24656.5` across 1181 files. This does not satisfy the goal's
+under-ten-second detector target. Concurrent workstation load is recorded in
+this wave's timing receipts; no performance improvement or target waiver is
+claimed from a passing ratchet.
