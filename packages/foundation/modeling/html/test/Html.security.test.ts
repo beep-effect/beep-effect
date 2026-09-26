@@ -196,7 +196,7 @@ describe("@beep/html safe policy", () => {
 
       for (const href of ["http://example.com", "javascript:alert(1)", "//example.com", String.raw`\evil`]) {
         assertExitFailure(
-          Exit.mapError(
+          Exit.match(
             yield* conform(
               fragment(
                 Anchor.make({
@@ -205,7 +205,17 @@ describe("@beep/html safe policy", () => {
                 })
               )
             ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit),
-            ({ _tag }) => _tag
+            {
+              onSuccess: Exit.succeed,
+              onFailure: (cause) =>
+                Exit.failCause(
+                  Cause.fromReasons(
+                    A.map(cause.reasons, (reason) =>
+                      Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                    )
+                  )
+                ),
+            }
           ),
           Cause.fail("HtmlPolicyError")
         );
@@ -229,7 +239,17 @@ describe("@beep/html safe policy", () => {
           })
         );
         assertExitFailure(
-          Exit.mapError(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), ({ _tag }) => _tag),
+          Exit.match(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlPolicyError")
         );
       }
@@ -243,7 +263,17 @@ describe("@beep/html safe policy", () => {
           })
         );
         assertExitFailure(
-          Exit.mapError(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), ({ _tag }) => _tag),
+          Exit.match(yield* conform(unsafe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlPolicyError")
         );
       }
@@ -297,7 +327,17 @@ describe("@beep/html safe policy", () => {
           target: "_blank",
         });
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(applyPolicy(fragment(decoded))), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(applyPolicy(fragment(decoded))), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlPolicyError")
         );
       }
@@ -342,10 +382,17 @@ describe("@beep/html safe policy", () => {
         })
       );
       assertExitFailure(
-        Exit.mapError(
-          yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit),
-          ({ _tag }) => _tag
-        ),
+        Exit.match(yield* conform(unsafeCitation).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlPolicyError")
       );
     })
@@ -370,7 +417,17 @@ describe("@beep/html safe policy", () => {
         expect.objectContaining({ rule: "obsoleteAttribute" })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(legacyImageName)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(legacyImageName)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
     })
@@ -484,7 +541,17 @@ describe("@beep/html canonical serialization", () => {
         })
       );
       assertExitFailure(
-        Exit.mapError(hostile, ({ _tag }) => _tag),
+        Exit.match(hostile, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("SchemaError")
       );
     })
@@ -493,28 +560,62 @@ describe("@beep/html canonical serialization", () => {
   it.effect("rejects scalar hazards, ambiguous comments, raw end tags, and plaintext", () =>
     Effect.gen(function* () {
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(text("\u0000"))), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(text("\u0000"))), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(text("\uD800"))), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(text("\uD800"))), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
       assertExitFailure(
-        Exit.mapError(
-          yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] }))),
-          ({ _tag }) => _tag
-        ),
+        Exit.match(yield* Effect.exit(serialize(Div.make({ id: O.some("\u0000"), children: [] }))), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
       expect(isHtmlCommentData("safe note")).toBe(true);
       expect(isHtmlCommentData("-->")).toBe(false);
       expect(() => Comment.make({ value: "<!--" })).toThrow();
       assertExitFailure(
-        Exit.mapError(
-          yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" }))),
-          ({ _tag }) => _tag
-        ),
+        Exit.match(yield* Effect.exit(serialize(Script.make({ content: "</script><img src=x>" }))), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
     })

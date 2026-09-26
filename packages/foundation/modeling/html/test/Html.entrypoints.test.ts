@@ -4,6 +4,7 @@ import { VERSION } from "@beep/html/Version";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -84,7 +85,17 @@ describe("@beep/html per-module entry points", () => {
       expect(Html.Safe.issues(conformant)[0]?.rule).toBe("deniedElement");
       const safeExit = yield* Effect.exit(Html.Safe.decode(conformant));
       assertExitFailure(
-        Exit.mapError(safeExit, ({ _tag }) => _tag),
+        Exit.match(safeExit, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlPolicyError")
       );
     })

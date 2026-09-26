@@ -9,6 +9,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 
@@ -142,11 +143,31 @@ describe("@beep/html browser conformance", () => {
         })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(root)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(root)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(root)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
     })
@@ -182,7 +203,17 @@ describe("@beep/html browser conformance", () => {
           })
         );
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(serialize(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(serialize(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlSerializeError")
         );
         expect(container.firstElementChild?.firstElementChild?.childElementCount).toBe(0);
@@ -239,7 +270,17 @@ describe("@beep/html browser conformance", () => {
           })
         );
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(serialize(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(serialize(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlSerializeError")
         );
         expect(container.firstElementChild?.firstElementChild?.childElementCount).toBe(0);
@@ -291,7 +332,17 @@ describe("@beep/html browser conformance", () => {
           })
         );
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(serialize(invalid)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(serialize(invalid)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlSerializeError")
         );
         expect(invalidContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
@@ -430,7 +481,17 @@ describe("@beep/html browser conformance", () => {
           })
         );
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(serialize(invalidForeign)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(serialize(invalidForeign)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlSerializeError")
         );
         expect(invalidContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
@@ -508,7 +569,17 @@ describe("@beep/html browser conformance", () => {
         })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(encodedMathChild)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(encodedMathChild)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
       expect(encodedMathChildContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
@@ -576,7 +647,17 @@ describe("@beep/html browser conformance", () => {
         })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(wrongSvgNamespace)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(wrongSvgNamespace)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
       expect(wrongSvgContainer.firstElementChild?.firstElementChild?.firstElementChild?.namespaceURI).toBe(
@@ -621,7 +702,17 @@ describe("@beep/html browser conformance", () => {
         ],
       });
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(drifting)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(drifting)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
     })

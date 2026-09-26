@@ -22,6 +22,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertSome } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -122,7 +123,17 @@ describe("@beep/html attribute microsyntaxes", () => {
         })
       );
       assertExitFailure(
-        Exit.mapError(encodedStringValue, ({ _tag }) => _tag),
+        Exit.match(encodedStringValue, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("SchemaError")
       );
     })
@@ -180,7 +191,17 @@ describe("@beep/html attribute microsyntaxes", () => {
         expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
         const invalidRel = yield* Effect.exit(decodeRel(value));
         assertExitFailure(
-          Exit.mapError(invalidRel, ({ _tag }) => _tag),
+          Exit.match(invalidRel, {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("SchemaError")
         );
         expect(() => Rel.make(value)).toThrow();
@@ -231,7 +252,17 @@ describe("@beep/html attribute microsyntaxes", () => {
       }
       const invalidOlType = yield* Effect.exit(decodeUnknownOl({ _tag: "ol", children: [], type: "ALPHA" }));
       assertExitFailure(
-        Exit.mapError(invalidOlType, ({ _tag }) => _tag),
+        Exit.match(invalidOlType, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("SchemaError")
       );
     })

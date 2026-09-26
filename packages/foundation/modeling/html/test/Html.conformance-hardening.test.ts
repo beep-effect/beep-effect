@@ -196,7 +196,17 @@ describe("@beep/html generated attribute provenance", () => {
       } as unknown as Div;
       expect(inspectConformance(forged)).toContainEqual(expect.objectContaining({ rule: "misplacedAttribute" }));
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(forged)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(forged)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
     })
@@ -209,7 +219,17 @@ describe("@beep/html numeric and id conformance", () => {
       for (const root of [Base.make({}), MapElement.make({ children: [] }), Track.make({})]) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -231,7 +251,17 @@ describe("@beep/html numeric and id conformance", () => {
         expect.objectContaining({ rule: "attributeRelationship" })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(subtitlesWithoutLanguage)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(subtitlesWithoutLanguage)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
       const omittedKindWithoutLanguage = Track.make({ src: O.some("/captions.vtt") });
@@ -239,7 +269,17 @@ describe("@beep/html numeric and id conformance", () => {
         expect.objectContaining({ rule: "attributeRelationship" })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(omittedKindWithoutLanguage)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(omittedKindWithoutLanguage)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
       expect(
@@ -261,7 +301,17 @@ describe("@beep/html numeric and id conformance", () => {
         expect.objectContaining({ path: ["children.1", "attributes.name"] }),
       ]);
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(duplicateMaps)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(duplicateMaps)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
 
@@ -274,7 +324,17 @@ describe("@beep/html numeric and id conformance", () => {
         expect.objectContaining({ path: ["attributes.id"], rule: "attributeRelationship" })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(mismatchedMapIdentity)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(mismatchedMapIdentity)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
 
@@ -313,7 +373,17 @@ describe("@beep/html numeric and id conformance", () => {
       for (const root of invalid) {
         expect(hasRule(root, "attributeRelationship")).toBe(true);
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -645,7 +715,17 @@ describe("@beep/html generated special-child grammars", () => {
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -734,7 +814,17 @@ describe("@beep/html generated special-child grammars", () => {
       for (const root of invalid) {
         expect(hasRule(root, "elementOrder")).toBe(true);
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -840,7 +930,17 @@ describe("@beep/html generated special-child grammars", () => {
           expect.objectContaining({ path, rule: "attributeRelationship" })
         );
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -928,7 +1028,17 @@ describe("@beep/html generated special-child grammars", () => {
           expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
         );
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -962,7 +1072,17 @@ describe("@beep/html generated special-child grammars", () => {
       for (const root of invalid) {
         expect(inspectConformance(root).length).toBeGreaterThan(0);
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -1037,7 +1157,17 @@ describe("@beep/html generated special-child grammars", () => {
       for (const root of invalid) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -1063,7 +1193,17 @@ describe("@beep/html generated special-child grammars", () => {
     Effect.gen(function* () {
       const invalid = yield* Effect.exit(decodeLink({ _tag: "link", as: "video", href: "/resource", rel: "preload" }));
       assertExitFailure(
-        Exit.mapError(invalid, ({ _tag }) => _tag),
+        Exit.match(invalid, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("SchemaError")
       );
     })
@@ -1140,7 +1280,17 @@ describe("@beep/html generated special-child grammars", () => {
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -1174,7 +1324,17 @@ describe("@beep/html generated special-child grammars", () => {
         expect.objectContaining({ path: ["children.0", "children.1", "children.1"] }),
       ]);
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(twoVisible)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(twoVisible)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
 
@@ -1212,7 +1372,17 @@ describe("@beep/html generated special-child grammars", () => {
       for (const [root, path] of cases) {
         expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ path, rule: "forbiddenDescendant" }));
         assertExitFailure(
-          Exit.mapError(yield* Effect.exit(conform(root)), ({ _tag }) => _tag),
+          Exit.match(yield* Effect.exit(conform(root)), {
+            onSuccess: Exit.succeed,
+            onFailure: (cause) =>
+              Exit.failCause(
+                Cause.fromReasons(
+                  A.map(cause.reasons, (reason) =>
+                    Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                  )
+                )
+              ),
+          }),
           Cause.fail("HtmlConformanceError")
         );
       }
@@ -1231,7 +1401,17 @@ describe("@beep/html generated special-child grammars", () => {
         expect.objectContaining({ path: ["children.0"], rule: "contentModel" })
       );
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(invalidStandalone)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(invalidStandalone)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
 
@@ -1333,7 +1513,17 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(validWithHiddenInput)).toStrictEqual([]);
       expect(hasRule(invalid, "forbiddenDescendant")).toBe(true);
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(conform(invalid)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(conform(invalid)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlConformanceError")
       );
     })
@@ -1891,7 +2081,17 @@ describe("@beep/html foreign browser fixed points", () => {
       expect(hasRule(svgRoot("customElement"), "foreignIntegration")).toBe(true);
       expect(hasRule(svgRoot("path", { customAttr: "value" }), "foreignIntegration")).toBe(true);
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(svgRoot("lineargradient"))), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(svgRoot("lineargradient"))), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
 
@@ -1902,7 +2102,17 @@ describe("@beep/html foreign browser fixed points", () => {
       });
       expect(hasRule(mismatchedPrefix, "foreignIntegration")).toBe(true);
       assertExitFailure(
-        Exit.mapError(yield* Effect.exit(serialize(mismatchedPrefix)), ({ _tag }) => _tag),
+        Exit.match(yield* Effect.exit(serialize(mismatchedPrefix)), {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("HtmlSerializeError")
       );
     })

@@ -26,6 +26,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -146,7 +147,17 @@ describe("HtmlNode AST — structure & nodes", () => {
       expect((yield* decode({ _tag: "span", children: [] }))._tag).toBe("span");
       const unknownTag = yield* Effect.exit(decode({ _tag: "not-a-real-element", children: [] }));
       assertExitFailure(
-        Exit.mapError(unknownTag, ({ _tag }) => _tag),
+        Exit.match(unknownTag, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("SchemaError")
       );
     })
@@ -207,7 +218,17 @@ describe("HtmlNode AST — attributes", () => {
       }
       const invalidType = yield* Effect.exit(decode({ _tag: "input", type: "not-a-type" }));
       assertExitFailure(
-        Exit.mapError(invalidType, ({ _tag }) => _tag),
+        Exit.match(invalidType, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
         Cause.fail("SchemaError")
       );
     })

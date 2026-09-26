@@ -285,3 +285,36 @@ this is not a claim of 273 distinct original defects. All 181 HTML baseline rows
 were removed after the fresh zero scan. Every unrelated baseline entry is kept
 byte-for-byte. Human-lens validation remains valid=true, complete=true, missing=0.
 Publication and hosted proof remain outstanding.
+
+## Mixed-Cause review repair
+
+Supplemental Markdown review found a shared assertion gap: installed rc.117
+Exit.mapError selects the first typed failure and can drop additional Cause
+reasons. The earlier claim that these projections reject defects and interruptions
+was too broad for mixed Causes. All 55 HTML projections are being corrected to
+retain every reason and original tag expectation. The first complete-Cause attempt
+exposed diagnostic stack annotations in strict equality; the final projection
+rebuilds every typed Fail reason from its tag, omitting only diagnostic annotations
+on those typed reasons, while retaining Die and Interrupt reasons unchanged.
+
+Private controls accept both annotated and unannotated intended typed failures,
+reject mixed typed-plus-defect, typed-plus-interruption and additional typed
+failures, and reject unexpected success. They also reproduce the three old
+false positives. The temporary controls are not committed regression tests.
+Package proof and refreshed final receipts follow this repair.
+
+## Infrastructure docgen attribution
+
+The earlier full proof stopped in infra docgen with TS1205, TS1294 and TS4114
+inside the generated @pulumi/gharunners SDK. The same package docgen passed on
+main and failed in this worktree despite identical SDK source/configuration.
+Main had compiled bin declarations; this worktree did not. Running the SDK's
+existing build script restored those ignored outputs, after which infra docgen
+passed all 101 examples. No production source, compiler policy or expected output
+was changed. This repairs local installation state, not a source-code defect.
+
+The final annotation-safe projection passed full HTML package verification:
+audit 18.8s and docgen 15.7s. Post-format AST verification confirms exactly 55
+complete ordered reason-array mappings, unchanged original Exit expressions and
+expected tags, and unchanged surrounding test structure. Main advanced with
+Graph3D PR #1275 while this proof ran; integrate that base before publication.

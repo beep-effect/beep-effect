@@ -2366,3 +2366,12 @@ retired wrapper ranges extended beyond their shorter canonical property files;
 re-anchor those rows to the replacement property blocks while keeping original
 ids and evidence. A stable occurrence key with explicit source-revision/span
 provenance would prevent this reconciliation ambiguity.
+
+### Generated SDK missing compiled declarations during docgen
+
+HTML full proof failed infra docgen on TS1205/TS1294/TS4114 in generated
+@pulumi/gharunners. Identical sources passed on main because its bin declarations
+existed; the worktree lacked them. The SDK's existing build script restored the
+ignored declarations and infra docgen passed 101 examples. Install/preflight
+should check for this generated SDK output before starting a repository proof;
+a missing build artifact must not be mistaken for a request to weaken TS rules.
