@@ -89,3 +89,13 @@ final timings and eight-file inventory reconciliation remain outstanding.
 
 These are per-phase proofs, not final wave or goal acceptance. Native SQL tests
 still explicitly select in-process PGlite with an empty external URL.
+
+
+DuckDB property-registration commit `6d4fb717df` preserves all seven domains,
+both original None-cause filters, schema equivalence and fcRuns(20). All seven
+named laws passed the seeded 400-run proof. The fixed wire-format case now
+runs through Effect codecs; its seven independent expected payloads retain
+the original JSON string bytes/order. Package audit/docgen passed (8.0 / 2.9
+seconds). Some-cause coverage is a separate next change, followed by the
+cancellation/clock phase. This registration checkpoint makes no claim that
+the generated-domain gap or five permit-clock findings are already repaired.

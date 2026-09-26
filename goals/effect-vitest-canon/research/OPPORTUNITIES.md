@@ -2436,3 +2436,16 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+
+## Database test migration compiler feedback
+
+While moving the existing DuckDB wire-format fixture into an Effect test,
+`package-verify @beep/duckdb` rejected the unchanged JSON.stringify oracle
+with TS377026. The installed Schema declaration also lacked the
+UnknownFromJsonString convenience export present in the reference source.
+The compatible public expression is S.fromJsonString(S.Unknown); using its
+Effect encoder retains the independently specified expected wire payloads.
+A pinned example checked against the installed declaration surface would
+have prevented both edit/proof iterations. This is migration-tooling friction,
+not evidence of a production codec defect.
