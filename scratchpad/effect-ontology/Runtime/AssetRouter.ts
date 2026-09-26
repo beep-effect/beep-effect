@@ -14,7 +14,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, Inspectable } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerResponse } from "effect/http";
 import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
@@ -35,7 +35,7 @@ import { StorageService } from "../Service/Storage.ts";
  *
  * ```ts
  * import { Layer } from "effect"
- * import { HttpRouter } from "effect/unstable/http"
+ * import { HttpRouter } from "effect/http"
  * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
  *
  * const served = Layer.provide(AssetRouter, HttpRouter.layer)

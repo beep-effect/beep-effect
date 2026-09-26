@@ -10,9 +10,9 @@ import { Fn } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Number as N, Path, pipe, Stream } from "effect";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { ExiftoolError, ProcessExitCode } from "./Exiftool.errors.ts";
 import {
   ExifMetadata,

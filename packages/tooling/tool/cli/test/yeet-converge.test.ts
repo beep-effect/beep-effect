@@ -45,9 +45,9 @@ import { assertSome } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, HashSet, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const at = "2026-09-25T00:00:00.000Z";
 const url = "https://github.com/beep/repo/pull/7";

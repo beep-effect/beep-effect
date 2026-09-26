@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";

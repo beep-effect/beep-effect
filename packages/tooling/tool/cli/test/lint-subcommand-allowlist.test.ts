@@ -8,10 +8,10 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
 import { Node, SyntaxKind } from "ts-morph";
 import type { CallExpression, Project, SourceFile } from "ts-morph";
 

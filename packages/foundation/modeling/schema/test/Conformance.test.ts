@@ -18,10 +18,10 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeAnnotationResult = S.decodeResult(Annotation);
 const decodeEnforcementResult = S.decodeResult(Enforcement);

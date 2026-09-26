@@ -21,7 +21,7 @@ import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
 

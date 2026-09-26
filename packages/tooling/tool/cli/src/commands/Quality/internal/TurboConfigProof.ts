@@ -20,7 +20,7 @@ import type * as Crypto from "effect/Crypto";
 
 export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
 
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
 

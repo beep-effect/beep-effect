@@ -14,7 +14,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, URLStr } from "@beep/schema";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
-import { OtlpTracer } from "effect/unstable/observability";
+import { OtlpTracer } from "effect/observability";
 
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Tracing");
 

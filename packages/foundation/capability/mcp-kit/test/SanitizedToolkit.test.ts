@@ -12,14 +12,14 @@ import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
 import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Cause, Effect, Exit, Layer } from "effect";
+import { Tool, Toolkit } from "effect/ai";
+import { McpServerClient } from "effect/ai/McpSchema";
+import * as McpServer from "effect/ai/McpServer";
+import { HttpServerRequest } from "effect/http";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
-import { Tool, Toolkit } from "effect/unstable/ai";
-import { McpServerClient } from "effect/unstable/ai/McpSchema";
-import * as McpServer from "effect/unstable/ai/McpServer";
-import { HttpServerRequest } from "effect/unstable/http";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 import { makeStubMcpClient, StubMcpClientLayer } from "./fixtures/McpClient.ts";
 

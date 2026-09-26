@@ -8,9 +8,9 @@ import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@bee
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, FileSystem, Layer, Option as O, Path, Result } from "effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import {
   liveHtml,
   liveMarkdown,

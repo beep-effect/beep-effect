@@ -8,8 +8,8 @@ import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig, TikaContentText }
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Logger, Path, References, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
 const decodePosixPath = S.decodeEffect(PosixPath);

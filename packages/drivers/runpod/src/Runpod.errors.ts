@@ -10,9 +10,9 @@ import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import { RunpodHttpMethod, RunpodOperationDescriptor, RunpodOperationId } from "./_generated/Runpod.operations.gen.ts";
 
 const $I = $RunpodId.create("Runpod.errors");

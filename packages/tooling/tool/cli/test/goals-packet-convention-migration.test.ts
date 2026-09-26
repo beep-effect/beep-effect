@@ -34,10 +34,10 @@ import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
 import {
   expectReportedExit,
   readProjectFile,

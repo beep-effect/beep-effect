@@ -1,10 +1,10 @@
 import { AllowedDevOrigin } from "@beep/repo-configs/next/models/AllowedDevOrigin.schema";
 import { fcRuns } from "@beep/test-utils";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 
 const decodeAllowedDevOriginResult = S.decodeResult(AllowedDevOrigin);

@@ -7,10 +7,10 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
   ActivePhase,
@@ -504,7 +504,7 @@ const FlightRecordMechanicalArbitrary = Arbitrary.schema(S.Struct(FlightRecordMe
  * **Example** (Sample flight-record composition inputs)
  * ```ts
  * import { FlightRecordCompositionInputArbitrary } from "@beep/repo-ai-metrics"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * console.log(Arbitrary.sampleEffect(FlightRecordCompositionInputArbitrary, { count: 3 }))
  * ```
  *

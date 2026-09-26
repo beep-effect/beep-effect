@@ -28,8 +28,8 @@ import type {
   M365ListMessagesRequest,
   M365ListSitesRequest,
 } from "@beep/m365";
+import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
-import type * as Tool from "effect/unstable/ai/Tool";
 
 type M365ToolErrorValue = M365ToolError;
 

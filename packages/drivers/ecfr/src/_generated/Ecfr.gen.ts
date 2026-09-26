@@ -15,7 +15,7 @@ import {
   HttpApiGroup,
   HttpApiSchema,
   OpenApi,
-} from "effect/unstable/httpapi";
+} from "effect/http-api";
 
 const $I = $EcfrId.create("_generated/Ecfr.gen");
 // non-recursive definitions

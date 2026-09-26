@@ -14,11 +14,11 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Order, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePackageJson2 = S.decodeEffect(PackageJson);
 const decodeNpmPackageJsonFieldsPeerDependenciesMeta = S.decodeEffect(NpmPackageJson.fields.peerDependenciesMeta);

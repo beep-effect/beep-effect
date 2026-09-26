@@ -12,9 +12,9 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
+import * as AiTool from "effect/ai/Tool";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as AiTool from "effect/unstable/ai/Tool";
 
 const $I = $McpKitId.create("ToolAnnotations");
 
@@ -90,7 +90,7 @@ export class FourHintAnnotations extends S.Class<FourHintAnnotations>($I`FourHin
  *
  * ```ts
  * import type { AnnotatedTool } from "@beep/mcp-kit"
- * import type * as AiTool from "effect/unstable/ai/Tool"
+ * import type * as AiTool from "effect/ai/Tool"
  *
  * type Annotated = AnnotatedTool<AiTool.Any>
  * ```
@@ -106,7 +106,7 @@ export type AnnotatedTool<T extends AiTool.Any> = T extends unknown ? T : never;
  * **Example** (Annotate tool with four hints)
  *
  * ```ts
- * import { Tool } from "effect/unstable/ai"
+ * import { Tool } from "effect/ai"
  * import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit"
  *
  * const searchTool = annotateFourHints(Tool.make("search_patents"), readOnlyToolHints)

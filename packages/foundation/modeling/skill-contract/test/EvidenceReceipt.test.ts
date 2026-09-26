@@ -3,8 +3,8 @@ import { EvidenceDigest, EvidencePredicateType, EvidenceReceipt, EvidenceSubject
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const emptySha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const predicateType = EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1");

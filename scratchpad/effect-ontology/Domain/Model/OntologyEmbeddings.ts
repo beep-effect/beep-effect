@@ -1,4 +1,4 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 /**
  * Versioned ontology-embedding artifacts.
  *
@@ -268,7 +268,7 @@ export type OntologyEmbeddingsJson = typeof OntologyEmbeddingsJson.Type;
  * **Example** (Sample consistent values)
  * ```ts
  * import { OntologyEmbeddingsArbitrary } from "@effect-ontology/Model/OntologyEmbeddings"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * const samples = Arbitrary.sampleEffect(OntologyEmbeddingsArbitrary)
  * ```
  *

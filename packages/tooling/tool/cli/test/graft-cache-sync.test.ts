@@ -13,12 +13,12 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command } from "effect/unstable/cli";
 
 const artifacts = [
   ".cache/summaries.json",

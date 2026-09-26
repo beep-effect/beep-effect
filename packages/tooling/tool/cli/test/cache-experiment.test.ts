@@ -3,10 +3,10 @@ import { equivalentCacheFixtureRuns, inspectCacheFixtureCapture } from "@beep/re
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const different = Sha256Hex.make(Str.repeat(64)("b"));

@@ -5,7 +5,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Api from "../../../Domain/Schema/Api.ts";
 import * as Auth from "../../../Domain/Schema/Auth.ts";
 import * as Batch from "../../../Domain/Schema/Batch.ts";

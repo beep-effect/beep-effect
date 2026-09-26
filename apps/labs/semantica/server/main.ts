@@ -2,7 +2,7 @@
 
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import { Effect, Layer } from "effect";
-import { Command } from "effect/unstable/cli";
+import { Command } from "effect/cli";
 import { CanaryCommand } from "@/canary/Command";
 import { RuntimeLayer } from "@/runtime/Layer";
 

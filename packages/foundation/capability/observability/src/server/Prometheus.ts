@@ -6,10 +6,10 @@
  */
 import { A, Str } from "@beep/utils";
 import { Effect, flow, Layer } from "effect";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as PrometheusMetrics from "effect/observability/PrometheusMetrics";
 import * as P from "effect/Predicate";
-import * as HttpRouter from "effect/unstable/http/HttpRouter";
-import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
-import * as PrometheusMetrics from "effect/unstable/observability/PrometheusMetrics";
 
 /**
  * Strip duplicate terminal histogram buckets from Prometheus exposition text.

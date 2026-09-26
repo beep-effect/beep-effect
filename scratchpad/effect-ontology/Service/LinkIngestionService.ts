@@ -16,18 +16,8 @@ import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import * as A from "@beep/utils/Array";
 import { and, eq, inArray, lt } from "drizzle-orm";
-import {
-    Cache,
-    Clock,
-    Context,
-    Crypto,
-    DateTime,
-    Duration,
-    Effect,
-    Encoding,
-    Inspectable,
-    Layer
-} from "effect";
+import { Cache, Clock, Context, Crypto, DateTime, Duration, Effect, Inspectable, Layer } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -294,7 +284,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           })
         )
       );
-      return Encoding.encodeHex(digest);
+      return Hex.encode(digest);
     });
 
     // Raw DB lookup for content hash within an ontology (used by cache).

@@ -29,7 +29,7 @@ import {
 import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CorpusArchiveMoveError, CorpusCommandError, PreservationCommandError } from "./Corpus.errors.ts";
 import type {
   CapacityPreflight,

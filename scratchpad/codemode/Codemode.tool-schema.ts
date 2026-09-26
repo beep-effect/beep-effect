@@ -13,7 +13,7 @@ import { flow, HashSet, JsonPointer, Result } from "effect";
 import { dual } from "effect/Function";
 import type { JsonSchema } from "effect/JsonSchema";
 import * as S from "effect/Schema";
-import * as Tool from "effect/unstable/ai/Tool";
+import * as Tool from "effect/ai/Tool";
 const decodeUnknownJSONSchemaDocumentResult = S.decodeUnknownResult(JSONSchema.Document);
 const encodeUnknownJSONSchemaNodeCodecResult = S.encodeUnknownResult(JSONSchema.NodeCodec);
 

@@ -24,11 +24,11 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
 import type { PhoenixError, PhoenixShape } from "@beep/phoenix";
 

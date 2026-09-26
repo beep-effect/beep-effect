@@ -13,12 +13,12 @@ import {
 } from "@beep/law-practice-domain";
 import { assertSchemaArbitraryDecodesToSelf, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isActFrameElementRef = S.is(ActFrameElementRef);
 const isLegalVerdictFamily = S.is(LegalVerdictFamily);

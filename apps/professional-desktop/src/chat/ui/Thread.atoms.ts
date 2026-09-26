@@ -21,7 +21,7 @@ import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/reactivity";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { EditTarget, StreamingTurn } from "@beep/agents-client/Chat.atoms";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

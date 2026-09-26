@@ -4,9 +4,9 @@ import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeWorkItemId = S.decodeUnknownEffect(WorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);

@@ -3,10 +3,10 @@ import { CoreVocab, mergeVocab, SemanticFoundationVocab, VocabRegistry } from "@
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { Curie, Expand, Predicate } from "@beep/identity";
 
 const decodeVocabRegistryOption = S.decodeOption(VocabRegistry);

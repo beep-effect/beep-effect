@@ -25,7 +25,7 @@ import { buildTurboReport, resolveTurboSchema, TurboSchemaState } from "../resol
 import { CategorySelectionService } from "./CategorySelectionService.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
-import type { HttpClient } from "effect/unstable/http";
+import type { HttpClient } from "effect/http";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/ResolverService");

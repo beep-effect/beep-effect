@@ -29,13 +29,13 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
 import { QuoteNode as RuntimeQuoteNode } from "@lexical/rich-text";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
 

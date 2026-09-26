@@ -534,7 +534,7 @@ const formatViolationMessage = (violation: NativeRuntimeViolation): string => {
     ),
     Match.when(
       "nativeFetch",
-      () => "Avoid native fetch in hotspot runtime code. Use effect/unstable/http HttpClient and runtime client layers."
+      () => "Avoid native fetch in hotspot runtime code. Use effect/http HttpClient and runtime client layers."
     ),
     Match.when("nativeSort", () => "Avoid native .sort in hotspot runtime code. Use A.sort with an explicit Order."),
     Match.when(

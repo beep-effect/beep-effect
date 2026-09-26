@@ -24,9 +24,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, FileSystem, Layer, Path, Ref, Schedule, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const PR_NUMBER = 558;
 const EARLIER_COMMENT_AT = "2026-08-16T12:00:00.000Z";

@@ -9,7 +9,8 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Defect, LiteralKit, NonEmptyTrimmedStr, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
+import { Effect, flow, Order, pipe, SchemaTransformation } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -455,7 +456,7 @@ export const hashPublicTextSha256: (value: string) => Effect.Effect<Sha256Hex, A
       }),
   });
 
-  return yield* decodeSha256Hex(Encoding.encodeHex(new Uint8Array(buffer))).pipe(
+  return yield* decodeSha256Hex(Hex.encode(new Uint8Array(buffer))).pipe(
     Effect.mapError((cause) =>
       AiMetricsPrivacyError.make({
         cause,

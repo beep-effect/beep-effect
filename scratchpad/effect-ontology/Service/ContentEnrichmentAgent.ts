@@ -24,7 +24,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LanguageModel } from "effect/unstable/ai";
+import { LanguageModel } from "effect/ai";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";

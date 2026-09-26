@@ -3,7 +3,7 @@ import { it } from "@beep/test-runner";
 import { O, P, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { Config, Effect, Layer } from "effect";
-import { Socket } from "effect/unstable/socket";
+import { Socket } from "effect/socket";
 
 const OBS_WEBSOCKET_URL = "ws://127.0.0.1:4455";
 

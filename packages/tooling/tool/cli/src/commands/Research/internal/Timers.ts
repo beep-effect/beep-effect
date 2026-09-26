@@ -26,7 +26,7 @@ import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchRecordedTimer } from "../Research.schemas.ts";
 import { RESEARCH_ENV_FILE_RELATIVE } from "./ResearchEnv.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { ResearchTimerOptions } from "../Research.schemas.ts";
 
 /**

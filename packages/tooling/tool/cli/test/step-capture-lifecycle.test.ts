@@ -21,10 +21,10 @@ import { Cause, Deferred, Duration, Effect, Exit, Fiber, FileSystem, Layer, Ref,
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
+import { ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
-import { ChildProcessSpawner } from "effect/unstable/process";
-import type { ChildProcess } from "effect/unstable/process";
+import type { ChildProcess } from "effect/process";
 
 const isCaptureCommandTimedOutError = S.is(CaptureCommandTimedOutError);
 

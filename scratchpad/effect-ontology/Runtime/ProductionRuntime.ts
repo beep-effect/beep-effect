@@ -22,7 +22,7 @@ import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
 import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai";
 import { Effect, Layer, Match } from "effect";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/http";
 import type { AppConfig } from "../Service/Config.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts";

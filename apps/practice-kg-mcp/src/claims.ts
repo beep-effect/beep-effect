@@ -11,7 +11,7 @@ import { AnthropicLanguageModelLive } from "@beep/anthropic";
 import { LawPracticeServerLive, PracticeKgClaimsOptions, runPracticeKgClaimsBatch } from "@beep/law-practice-server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Effect, Layer, Path } from "effect";
-import { Command, Flag } from "effect/unstable/cli";
+import { Command, Flag } from "effect/cli";
 import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgPgliteLayer } from "./runtime/index.ts";
 

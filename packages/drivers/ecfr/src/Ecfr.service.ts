@@ -17,16 +17,16 @@ import { $EcfrId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Config, Context, Effect, Layer, Match, Stream } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpApiClient from "effect/http-api/HttpApiClient";
+import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpApiClient from "effect/unstable/httpapi/HttpApiClient";
-import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import * as G from "./_generated/Ecfr.gen.ts";
 import { ECFR_API_URL, ECFR_RATE_LIMIT, ECFR_RATE_LIMIT_WINDOW, EcfrConfigInput } from "./Ecfr.config.ts";
 import { EcfrError, EcfrErrorOptions } from "./Ecfr.errors.ts";
 import type { RateLimitSnapshot } from "@beep/api-transport";
-import type * as HttpClient from "effect/unstable/http/HttpClient";
-import type * as HttpClientError from "effect/unstable/http/HttpClientError";
+import type * as HttpClient from "effect/http/HttpClient";
+import type * as HttpClientError from "effect/http/HttpClientError";
 
 const $I = $EcfrId.create("Ecfr.service");
 const SearchOrderBase = LiteralKit([

@@ -21,7 +21,7 @@ import {
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 import type { TestContext } from "@effect/vitest";
 
 // Vitest's public metadata extension point, scoped to this copied fixture module.

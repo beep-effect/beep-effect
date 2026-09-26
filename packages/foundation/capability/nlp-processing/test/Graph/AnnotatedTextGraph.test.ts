@@ -3,12 +3,12 @@ import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend";
 import * as ATG from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,

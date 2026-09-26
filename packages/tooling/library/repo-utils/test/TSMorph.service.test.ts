@@ -19,9 +19,9 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { REPO_ROOT, TestLayer, WORKSPACE_ROOT } from "./TSMorph.test-support.ts";
 
 const decodeUnknownSymbolId = S.decodeUnknownEffect(SymbolId);

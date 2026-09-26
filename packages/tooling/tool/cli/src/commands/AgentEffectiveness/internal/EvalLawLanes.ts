@@ -21,7 +21,7 @@ import { AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.t
 import { sortViolations } from "./EvalScoring.ts";
 import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import type { LawEvaluation } from "./EvalScoring.ts";
 

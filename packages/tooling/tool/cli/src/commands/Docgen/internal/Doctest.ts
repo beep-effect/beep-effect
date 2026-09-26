@@ -31,7 +31,7 @@ import {
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
 import type { DoctestFenceAnalyzerShape, DoctestFenceRewriterShape } from "../Doctest.service.ts";
@@ -118,9 +118,7 @@ const impurity = (code: string, language: "ts" | "typescript" | "tsx"): O.Option
         firstSpecifier(
           specifiers,
           (specifier) =>
-            specifier === "effect/unstable/http" ||
-            Str.startsWith("effect/unstable/http/")(specifier) ||
-            specifier === "effect/unstable/socket"
+            specifier === "effect/http" || Str.startsWith("effect/http/")(specifier) || specifier === "effect/socket"
         ),
         firstMatch(code, /\bfetch\s*\(|\bHttpClient\b/)
       ),
@@ -130,8 +128,7 @@ const impurity = (code: string, language: "ts" | "typescript" | "tsx"): O.Option
       specifierOrSource(
         firstSpecifier(
           specifiers,
-          (specifier) =>
-            specifier === "effect/unstable/process" || Str.startsWith("effect/unstable/process/")(specifier)
+          (specifier) => specifier === "effect/process" || Str.startsWith("effect/process/")(specifier)
         ),
         firstMatch(code, /\bChildProcess\b|\bCommand\.make\b|\bnode:child_process\b/)
       ),
@@ -151,7 +148,7 @@ const impurity = (code: string, language: "ts" | "typescript" | "tsx"): O.Option
       specifierOrSource(
         firstSpecifier(
           specifiers,
-          (specifier) => Str.startsWith("effect/unstable/sql")(specifier) || Str.startsWith("@effect/sql")(specifier)
+          (specifier) => Str.startsWith("effect/sql")(specifier) || Str.startsWith("@effect/sql")(specifier)
         ),
         firstMatch(code, /\b(?:Sql|Database|Pg|Sqlite|Drizzle)\b|(?:postgres|mysql|sqlite|drizzle|pg)(?:\/|$)/i)
       ),

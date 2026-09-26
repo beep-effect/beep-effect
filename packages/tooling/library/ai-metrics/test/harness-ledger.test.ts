@@ -28,6 +28,7 @@ import { Sha256Hex } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -35,7 +36,6 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const hashA = "a".repeat(64);
 const hashB = "b".repeat(64);

@@ -10,11 +10,11 @@ import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { Command } from "effect/cli";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { Command } from "effect/unstable/cli";
 import { expectReportedExit } from "./support/CommandTest.ts";
 
 const decodeUnknownJudgeRubricDrift = S.decodeUnknownEffect(JudgeRubricDrift);

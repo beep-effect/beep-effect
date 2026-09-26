@@ -24,8 +24,8 @@ import { A, O } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Duration, Effect, Layer, pipe, Ref } from "effect";
-import { Tool } from "effect/unstable/ai";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import { Tool } from "effect/ai";
+import * as SqlClient from "effect/sql/SqlClient";
 import type { TierGateShape } from "@beep/mcp-kit";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));

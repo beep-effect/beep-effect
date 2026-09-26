@@ -18,7 +18,7 @@ import {
   decodeEffect,
   FiniteFromString,
   is,
-  isLengthBetween,
+  isBetweenLength,
   isMaxLength,
   isSchema,
   NullOr,
@@ -28,7 +28,7 @@ import {
   suspend,
 } from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
-import { Model as EffectModel } from "effect/unstable/schema";
+import { Model as EffectModel } from "effect/schema";
 import {
   _arrayDepthFkMismatch,
   _badArrayCarrier,
@@ -462,12 +462,12 @@ describe("mechanical column kinds", () => {
   });
 
   it("requires exact char lengths in derive, verify, inject, and model-mirror modes", () => {
-    expect(_charWithoutMaxLength).toThrow("isLengthBetween");
-    expect(_charWithMaximumOnly).toThrow("isLengthBetween");
+    expect(_charWithoutMaxLength).toThrow("isBetweenLength");
+    expect(_charWithMaximumOnly).toThrow("isBetweenLength");
     expect(_charWithWrongExactLength).toThrow("exact schema length");
     expect(_mixedExactCharWidths).toThrow("all reachable exact schema lengths to agree");
     expect(_mixedExactCharWidthsModelMirror).toThrow("all reachable exact schema lengths to agree");
-    expect(StringSchema.check(isLengthBetween(3, 3)).pipe(pg.char()).meta.column).toEqual({
+    expect(StringSchema.check(isBetweenLength(3, 3)).pipe(pg.char()).meta.column).toEqual({
       _tag: "char",
       dialect: "pg",
       kind: "char",

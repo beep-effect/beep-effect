@@ -8,11 +8,11 @@
 import { NonNegativeInt } from "@beep/schema";
 import { Console, Effect, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
 import {
   KnowledgeHostPathDebtError,
   KnowledgeIntroducedFindingsError,

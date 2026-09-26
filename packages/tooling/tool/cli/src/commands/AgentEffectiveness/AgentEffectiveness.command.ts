@@ -33,11 +33,11 @@ import {
 } from "@beep/repo-ai-metrics";
 import { A } from "@beep/utils";
 import { Config, Console, DateTime, Effect, flow, Layer, Path, pipe } from "effect";
+import { Command, Flag } from "effect/cli";
 import { dual } from "effect/Function";
+import { FetchHttpClient } from "effect/http";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
-import { FetchHttpClient } from "effect/unstable/http";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -55,7 +55,7 @@ import type {
   AgentEffectivenessPromptBundle,
 } from "@beep/repo-ai-metrics";
 import type { Scope } from "effect";
-import type { HttpClient } from "effect/unstable/http";
+import type { HttpClient } from "effect/http";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.command");
 
@@ -691,7 +691,7 @@ const evalsCommand = Command.make("evals", {}, () =>
  * ```ts
  * import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness/index"
  * import { Effect } from "effect"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  *
  * const run = Command.run(agentEffectivenessCommand, { version: "0.0.0" })
  *

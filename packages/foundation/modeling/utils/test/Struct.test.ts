@@ -1,8 +1,9 @@
 import { it } from "@beep/test-runner";
 import { Str, Struct } from "@beep/utils";
-import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assert, describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
+import * as P from "effect/Predicate";
 
 describe("@beep/utils Struct.dotGet", () => {
   it("supports data-first and data-last calls", () => {
@@ -143,6 +144,48 @@ describe("@beep/utils Struct.mapPathLazy", () => {
     source.profile.name = "after";
 
     expect(getUpper()).toBe("AFTER");
+  });
+});
+
+describe("Struct raw-path runtime compatibility", () => {
+  // These inputs exercise the runtime fallback outside the typed options API.
+  it("maps a raw string path", () => {
+    const source = { profile: { name: "beep" } };
+    const renderName = (value: unknown) => `${value}!`;
+
+    expect(Reflect.apply(Struct.mapPath, undefined, [source, renderName, "profile.name"])).toBe("beep!");
+  });
+
+  it("maps a raw tuple path", () => {
+    const source = { profile: { name: "boop" } };
+    const shout = (value: string) => Str.toUpperCase(value);
+
+    expect(Reflect.apply(Struct.mapPath, undefined, [source, shout, ["profile", "name"]])).toBe("BOOP");
+  });
+
+  it("forwards an absent raw-path value to the mapper", () => {
+    const source = { profile: {} };
+    const fallback = (value: unknown) => (value === undefined ? "anonymous" : "unexpected value");
+
+    expect(Reflect.apply(Struct.mapPath, undefined, [source, fallback, "profile.name"])).toBe("anonymous");
+  });
+
+  it("maps a raw numeric path lazily", () => {
+    const source = { count: 1 };
+    const increment = (value: number) => value + 1;
+    const thunk: unknown = Reflect.apply(Struct.mapPathLazy, undefined, [source, increment, "count"]);
+
+    assert(P.isFunction(thunk));
+    expect(thunk()).toBe(2);
+  });
+
+  it("defers a raw-path lookup until invocation", () => {
+    const source = { profile: { name: "before" } };
+    const thunk: unknown = Reflect.apply(Struct.mapPathLazy, undefined, [source, Str.toUpperCase, "profile.name"]);
+
+    assert(P.isFunction(thunk));
+    source.profile.name = "after";
+    expect(thunk()).toBe("AFTER");
   });
 });
 

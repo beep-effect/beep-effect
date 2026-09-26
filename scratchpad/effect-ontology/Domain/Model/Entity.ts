@@ -1,4 +1,4 @@
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 /**
  * Extracted knowledge-graph entities, relation values, and provenance spans.
  *
@@ -770,7 +770,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
  * **Example** (Sample consistent values)
  * ```ts
  * import { EvidenceSpanArbitrary } from "@effect-ontology/Model/Entity"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * const samples = Arbitrary.sampleEffect(EvidenceSpanArbitrary)
  * ```
  *

@@ -10,9 +10,9 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import { FetchHttpClient } from "effect/http";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient } from "effect/unstable/http";
 
 // Nothing in this suite reaches Notion: every run reads the local links-file
 // backfill seam, which is the same code path minus the HTTP request.

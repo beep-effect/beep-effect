@@ -25,8 +25,8 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
+import { AtomRegistry, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
 const session = createSession(
   CreateSessionInput.make({

@@ -41,15 +41,16 @@ import { fcRuns } from "@beep/test-utils";
 import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Data, Effect, Encoding, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Crypto from "effect/Crypto";
+import { Command } from "effect/cli";
+import * as Hex from "effect/encoding/Hex";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { Command } from "effect/unstable/cli";
-import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import sharp from "sharp";
 
 const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIndexesFromCsv);
@@ -828,7 +829,7 @@ const sha256FileRef = Effect.fn("FilesTest.sha256FileRef")(function* (filePath: 
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Crypto.Crypto;
   const bytes = yield* fs.readFile(filePath);
-  return `sha256:${Encoding.encodeHex(yield* crypto.digest("SHA-256", bytes))}`;
+  return `sha256:${Hex.encode(yield* crypto.digest("SHA-256", bytes))}`;
 });
 
 describe("files command", { concurrent: false }, () => {

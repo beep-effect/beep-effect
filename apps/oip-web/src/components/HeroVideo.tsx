@@ -10,9 +10,9 @@ import { $OipWebId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as P from "effect/Predicate";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Atom } from "effect/unstable/reactivity";
 import Image from "next/image";
 
 const $I = $OipWebId.create("components/HeroVideo");

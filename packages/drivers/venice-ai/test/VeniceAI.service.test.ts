@@ -24,16 +24,16 @@ import {
 } from "@beep/venice-ai";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
 

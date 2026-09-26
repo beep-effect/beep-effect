@@ -10,11 +10,11 @@ import { assertAllowedRemoteUrl, NonNegativeInt, SchemaUtils, URLStr } from "@be
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, Layer, Match, Redacted } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
-import * as HttpClient from "effect/unstable/http/HttpClient";
-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { USPTO_API_URL, UsptoConfigInput } from "./Uspto.config.ts";
 import { UsptoError } from "./Uspto.errors.ts";
 import {
@@ -23,7 +23,7 @@ import {
   UsptoContinuity,
   UsptoDocumentReference,
 } from "./Uspto.models.ts";
-import type { HttpClientResponse } from "effect/unstable/http/HttpClientResponse";
+import type { HttpClientResponse } from "effect/http/HttpClientResponse";
 
 const $I = $UsptoId.create("Uspto.service");
 

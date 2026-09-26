@@ -8,7 +8,7 @@
 
 import { useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/unstable/reactivity";
+import { Atom } from "effect/reactivity";
 import { cn } from "../lib/index.ts";
 import type * as React from "react";
 

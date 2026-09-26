@@ -12,9 +12,9 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe, SchemaGetter } from "effect";
+import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
@@ -783,7 +783,7 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
  *
  * ```ts
  * import { lintSchemaCatalogCommand } from "@beep/repo-cli/commands/Lint"
- * import { Command } from "effect/unstable/cli"
+ * import { Command } from "effect/cli"
  * import { Effect } from "effect"
  *
  * const run = Command.run(lintSchemaCatalogCommand, { version: "0.0.0" })

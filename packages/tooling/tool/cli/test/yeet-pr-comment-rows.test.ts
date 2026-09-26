@@ -30,9 +30,9 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { YeetPrCommentRow } from "@beep/repo-cli/test/Yeet";
 
 // pr-event-awareness W4 (D13/D21/D32/D33): the `--until-ready` merge loop turns

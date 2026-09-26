@@ -8,9 +8,9 @@ import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const isSha256Hex = S.is(Sha256Hex);
 const SecretTokenArbitrary = Arbitrary.schema(S.String.check(S.isPattern(/^[A-Za-z0-9]{8,64}$/)));

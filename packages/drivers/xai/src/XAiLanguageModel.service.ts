@@ -16,11 +16,11 @@ import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import { Effect, Layer, pipe, Stream } from "effect";
+import * as AiError from "effect/ai/AiError";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as AiModel from "effect/ai/Model";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as AiError from "effect/unstable/ai/AiError";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import * as AiModel from "effect/unstable/ai/Model";
 import { XAiRequestOptions, XAiResponse } from "./XAi.models.ts";
 import { XAi } from "./XAi.service.ts";
 import type {

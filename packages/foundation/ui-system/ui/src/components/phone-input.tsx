@@ -29,8 +29,8 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import {
   AsYouType,
   getCountries,

@@ -9,9 +9,9 @@ import { $SanityId } from "@beep/identity";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, thunkFalse, thunkUndefined } from "@beep/utils";
 import { pipe, Result } from "effect";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 const $I = $SanityId.create("Sanity.errors");
 

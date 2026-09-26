@@ -15,11 +15,12 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, Encoding, Equal, HashMap, HashSet, Layer, Option, Order, Result } from "effect";
+import { Effect, Equal, HashMap, HashSet, Layer, Option, Order, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, expect, it } from "vitest";
 import { canonicalJson } from "@/corpus/Canonical";
 import { CorpusPaperId } from "@/corpus/Manifest";
@@ -178,7 +179,7 @@ const rejects = <Schema extends S.Codec<unknown>>(schema: Schema, value: unknown
 
 const sha = (digit: string): Sha256Hex => Sha256Hex.make(Str.repeat(64)(digit));
 const canonicalDigest = (value: unknown): Sha256Hex =>
-  Sha256Hex.make(Encoding.encodeHex(sha256(new TextEncoder().encode(canonicalJson(value)))));
+  Sha256Hex.make(Hex.encode(sha256(new TextEncoder().encode(canonicalJson(value)))));
 
 const documentId = DocumentId.make(Str.repeat(64)("1"));
 const secondDocumentId = DocumentId.make(Str.repeat(64)("2"));

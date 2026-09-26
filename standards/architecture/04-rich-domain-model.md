@@ -129,7 +129,7 @@ in the requirements (`R`) channel of any Effect returned from a domain function:
 - `FileSystem` (from `effect`)
 - `Path` (from `effect`)
 - `Terminal` (from `effect`)
-- `ChildProcessSpawner` (from `effect/unstable/process`)
+- `ChildProcessSpawner` (from `effect/process`)
 - `Config` and `ConfigProvider`
 - Anything exported from a `packages/drivers/*` package
 - Anything exported from a slice's `server`, `tables`, `client`, or `ui` packages

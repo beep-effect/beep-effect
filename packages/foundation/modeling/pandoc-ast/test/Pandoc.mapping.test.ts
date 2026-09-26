@@ -14,13 +14,13 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const encodePandocCompatibilityReport = S.encodeEffect(PandocCompatibilityReport);
 const encodePandocMappingIssue = S.encodeEffect(PandocMappingIssue);

@@ -8,14 +8,14 @@
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Effect, Stream } from "effect";
-import { Argument, Command } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
+import { Argument, Command } from "effect/cli";
+import { ChildProcess } from "effect/process";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { CodexCommandError } from "./Codex.errors.ts";
 import { findingsCommand } from "./Findings.command.ts";
 import { securityCommand } from "./Security.command.ts";
 import type { FileSystem } from "effect";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 
 const textEncoder = new TextEncoder();
 

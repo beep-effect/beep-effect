@@ -5,7 +5,8 @@ import {
   AiMetricsForwarderTimerInput,
 } from "@beep/repo-ai-metrics/forwarder";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Encoding, Redacted } from "effect";
+import { Effect, Redacted } from "effect";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -17,7 +18,7 @@ describe("@beep/repo-ai-metrics forwarder schema invariants", () => {
     Effect.gen(function* () {
       const input = AiMetricsForwarderInput.make({
         homeDir: "/home/dev",
-        rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(13))),
+        rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(13))),
         repoRoot: "/repo",
       });
       const encodedInput = yield* encodeForwarderInput(input);

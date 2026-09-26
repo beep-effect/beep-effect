@@ -7,9 +7,9 @@
 
 import { $PandocAstId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import {
   isPandocKnownConstructorName,
   PandocCitationMode,
@@ -3333,7 +3333,7 @@ const EmptyPandocTablePayload = PandocTablePayload.make([
  *
  * ```ts
  * import { PandocTablePayloadArbitrary } from "@beep/pandoc-ast/Pandoc.model"
- * import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
+ * import * as Arbitrary from "effect/Arbitrary"
  * const sample = Arbitrary.sampleEffect(PandocTablePayloadArbitrary, { count: 1 })
  * console.log(sample)
  * ```

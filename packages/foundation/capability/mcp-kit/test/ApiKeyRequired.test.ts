@@ -8,11 +8,11 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import { Tool, Toolkit } from "effect/ai";
+import * as McpServer from "effect/ai/McpServer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
-import * as McpServer from "effect/unstable/ai/McpServer";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const softRegistration = SourceAuthRegistration.make({

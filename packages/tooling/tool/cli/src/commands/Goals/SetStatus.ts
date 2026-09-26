@@ -23,8 +23,8 @@
 
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, Path } from "effect";
+import { Argument, Command, Flag } from "effect/cli";
 import * as R from "effect/Record";
-import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";

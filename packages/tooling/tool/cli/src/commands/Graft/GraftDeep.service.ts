@@ -43,7 +43,7 @@ import {
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { ChildProcessSpawner } from "effect/process";
 import type { CapturedStep } from "../../internal/process/StepExec.ts";
 import type { GraftCacheSourceError, GraftCacheTargetError } from "./Graft.errors.ts";
 import type {

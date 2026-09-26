@@ -37,7 +37,7 @@ live runner and does not default any command to either PACER environment.
 
 ```ts
 import { Effect } from "effect"
-import { FetchHttpClient } from "effect/unstable/http"
+import { FetchHttpClient } from "effect/http"
 import { PacerConfigLoadOptions, PclClient, loadPacerConfig, makePacerLayer } from "@beep/pacer"
 
 const program = Effect.gen(function*() {

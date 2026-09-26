@@ -6,12 +6,12 @@
  */
 import { Config, Console, Effect } from "effect";
 import * as A from "effect/Array";
+import { Command, Flag } from "effect/cli";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag } from "effect/unstable/cli";
 import { printCommandJson } from "../../internal/cli/Json.ts";
 import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { GraftCacheIoError, GraftCacheTargetError, GraftDeepPreflightError } from "./Graft.errors.ts";

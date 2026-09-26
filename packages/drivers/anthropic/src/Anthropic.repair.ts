@@ -9,16 +9,16 @@ import { $AnthropicId } from "@beep/identity";
 import { PosInt } from "@beep/schema";
 import { Duration, Effect, ExecutionPlan, pipe, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
+import { AiError, LanguageModel, Response } from "effect/ai";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AiError, LanguageModel, Response } from "effect/unstable/ai";
 import { AnthropicLanguageModelOptions } from "./Anthropic.config.ts";
 import { RepairError } from "./Anthropic.errors.ts";
 import { makeAnthropicLanguageModelLayer } from "./Anthropic.service.ts";
 import type { Config } from "effect";
-import type { Tool, Toolkit } from "effect/unstable/ai";
-import type { GenerateTextOptions } from "effect/unstable/ai/LanguageModel";
+import type { Tool, Toolkit } from "effect/ai";
+import type { GenerateTextOptions } from "effect/ai/LanguageModel";
 
 const $I = $AnthropicId.create("Anthropic.repair");
 
@@ -167,7 +167,7 @@ export const makeAnthropicRepairPlan = (
  * import { strictEqual } from "node:assert"
  * import { collectToolParamsJson } from "@beep/anthropic"
  * import { Effect, Stream } from "effect"
- * import { Response } from "effect/unstable/ai"
+ * import { Response } from "effect/ai"
  *
  * const json = Effect.runSync(
  *   collectToolParamsJson(
@@ -202,7 +202,7 @@ export const collectToolParamsJson = <Tools extends Record<string, Tool.Any>, E,
  *
  * ```ts
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
- * import { Response } from "effect/unstable/ai"
+ * import { Response } from "effect/ai"
  *
  * const result = AnthropicToolJsonResponse.make({
  *   paramsJson: '{"repairs":[]}',
@@ -252,7 +252,7 @@ const isToolParamsDeltaPart = <
  * ```ts
  * import { collectToolParamsJsonWithUsage } from "@beep/anthropic"
  * import { Effect, Stream } from "effect"
- * import { Response } from "effect/unstable/ai"
+ * import { Response } from "effect/ai"
  *
  * const parts: Stream.Stream<Response.StreamPart<{}>> = Stream.fromIterable([])
  *
@@ -306,7 +306,7 @@ export const collectToolParamsJsonWithUsage = Effect.fn("collectToolParamsJsonWi
  * import { generateAnthropicToolJson } from "@beep/anthropic"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
- * import { Tool, Toolkit } from "effect/unstable/ai"
+ * import { Tool, Toolkit } from "effect/ai"
  *
  * const RepairTool = Tool.make("repair", {
  *   description: "Return a corrected JSON object.",

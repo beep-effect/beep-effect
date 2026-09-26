@@ -19,7 +19,7 @@ import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
 import type * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import { ContentHash } from "../Domain/Identity.ts";
 import { ImageAsset } from "../Domain/Model/Image.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";

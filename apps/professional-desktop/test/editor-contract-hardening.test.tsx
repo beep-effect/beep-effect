@@ -24,13 +24,13 @@ import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@ef
 import { describe, expect, it } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import { AsyncResult, AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
 import { afterEach, beforeEach, vi } from "vitest";
 import {
@@ -39,7 +39,7 @@ import {
   prepareComposerDocumentSafetyGate,
 } from "@/chat/ui/Composer.atoms";
 import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
-import type { Atom } from "effect/unstable/reactivity";
+import type { Atom } from "effect/reactivity";
 
 const decodeYouTubeWatchRequestResult = S.decodeResult(YouTubeWatchRequest);
 const decodeComposerFeatures = S.decodeEffect(ComposerFeatures);

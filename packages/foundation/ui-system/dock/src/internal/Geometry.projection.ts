@@ -13,8 +13,8 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
 import { DockNode as DockNodeModel, DockWorkspace as DockWorkspaceModel, SplitLayout, TabsNode } from "../Dock.tree.ts";
 import {
   DockBox,
@@ -444,7 +444,7 @@ export const rows = (node: DockNode): ReadonlyArray<DockRow> =>
  *
  * ```ts
  * import { DockBox, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockGeometryAtoms } from "@beep/dock"
- * import { Atom, AtomRegistry } from "effect/unstable/reactivity"
+ * import { Atom, AtomRegistry } from "effect/reactivity"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })

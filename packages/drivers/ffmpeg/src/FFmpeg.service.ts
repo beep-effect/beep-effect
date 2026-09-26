@@ -12,9 +12,9 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, FileSystem, HashSet, Layer, Number as N, Order, Path, pipe, Ref, Stream } from "effect";
 import * as P from "effect/Predicate";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
   ClipCodec,
   ExtractClipRequest,

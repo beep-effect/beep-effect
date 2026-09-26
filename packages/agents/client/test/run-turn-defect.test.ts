@@ -14,7 +14,7 @@ import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Layer, Stream } from "effect";
 import * as O from "effect/Option";
-import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import { AtomRegistry, Reactivity } from "effect/reactivity";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
 const content = decodeSafeDocumentUnsafe(
