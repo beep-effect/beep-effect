@@ -2400,3 +2400,12 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: Cache merge must preserve dependency multiplicity
+
+Merging the provider wave with main used a set to combine task dependency lists.
+That removed six duplicate utils transit edges, causing cache audit configuration
+drift despite unchanged task configuration. The current census and main both
+retain those edges. Restored their exact multiplicity; future merge checks must
+compare dependency multisets and serialized lists, not just membership. The
+provider proof queued on the incorrect metadata was cancelled before correction.
