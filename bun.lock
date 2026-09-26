@@ -995,6 +995,7 @@
         "sharp": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/platform-node-shared": "catalog:",

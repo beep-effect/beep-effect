@@ -1,5 +1,6 @@
 import { FaceDetectionError } from "@beep/face-detection";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
