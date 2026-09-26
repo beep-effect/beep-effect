@@ -20,21 +20,31 @@ const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(PackageJson));
 describe("@beep/html per-module entry points", () => {
   it.effect("resolves the explicit subpaths through the package export map", () =>
     Effect.gen(function* () {
-      const child = Bun.spawn(
-        [
-          process.execPath,
-          "-e",
-          'const { Html } = await import("@beep/html/Html"); const { VERSION } = await import("@beep/html/Version"); if (typeof Html.Conformant.decode !== "function" || typeof VERSION !== "string") process.exit(1)',
-        ],
-        {
-          cwd: packageRoot,
-          stderr: "pipe",
-          stdout: "ignore",
-        }
+      const { child, stderr: readStderr } = yield* Effect.acquireRelease(
+        Effect.sync(() => {
+          const child = Bun.spawn(
+            [
+              process.execPath,
+              "-e",
+              'const { Html } = await import("@beep/html/Html"); const { VERSION } = await import("@beep/html/Version"); if (typeof Html.Conformant.decode !== "function" || typeof VERSION !== "string") process.exit(1)',
+            ],
+            {
+              cwd: packageRoot,
+              stderr: "pipe",
+              stdout: "ignore",
+            }
+          );
+          return { child, stderr: new Response(child.stderr).text() };
+        }),
+        ({ child, stderr }) =>
+          Effect.promise(() => {
+            if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+            return Promise.allSettled([child.exited, stderr]);
+          })
       );
       const [exitCode, stderr] = yield* Effect.all([
         Effect.promise(() => child.exited),
-        Effect.promise(() => new Response(child.stderr).text()),
+        Effect.promise(() => readStderr),
       ]);
 
       expect({ exitCode, stderr }).toStrictEqual({ exitCode: 0, stderr: "" });
