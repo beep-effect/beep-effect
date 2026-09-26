@@ -176,3 +176,24 @@ the committed bundle test from temporary SQLite controls. PRs #1273 and #1274
 were confirmed MERGED and their lanes retired through Yeet. Hosted readiness
 for #1277 remains separate; its OIP preview build failure and exhausted retry
 quota are recorded in the opportunity ledger.
+
+## Reviewed success outcomes
+
+Fifteen success-only Effect checks now yield their original operation directly.
+The Effect tester requires success and preserves typed failures/defects as test
+failures; no synthetic payload, error or Cause is introduced. The private
+html-success-yields-receipt.json records each before/after operation.
+
+Three compound Result checks had independent expected fields already present:
+UTF-8 charset, anonymous/strict-origin link metadata, and on/true global
+attributes. They now assertSuccess over projections of exactly those fields,
+retaining all existing values and both fields of each compound check. This is a
+structural assertion of the supplied expectations, not an invented whole-object
+oracle or a reduced single-field check.
+
+Full package verification passed: audit 20.5s, docgen 17.1s
+(html-outcome-package-001.log). A fresh syntax scan reports 95 EV006 candidates,
+down from 113. Remaining branch-only candidates are still open and are not
+waived by this checkpoint. The existing human-lens spans were refreshed and the
+strict validator again reports valid=true, complete=true, missing=0 for all
+72 rows and 18 files.

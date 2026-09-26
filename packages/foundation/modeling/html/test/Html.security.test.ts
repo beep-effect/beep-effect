@@ -183,18 +183,14 @@ describe("@beep/html safe policy", () => {
   it.effect("applies element-aware URL policies", () =>
     Effect.gen(function* () {
       for (const href of ["/docs", "#section", "https://example.com", "mailto:user@example.com", "tel:+15551212"]) {
-        assertTrue(
-          Exit.isSuccess(
-            yield* conform(
-              fragment(
-                Anchor.make({
-                  href: O.some(href),
-                  children: [text("link")],
-                })
-              )
-            ).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)
+        yield* conform(
+          fragment(
+            Anchor.make({
+              href: O.some(href),
+              children: [text("link")],
+            })
           )
-        );
+        ).pipe(Effect.flatMap(enforceSafeHtml));
       }
 
       for (const href of ["http://example.com", "javascript:alert(1)", "//example.com", String.raw`\evil`]) {
@@ -251,7 +247,7 @@ describe("@beep/html safe policy", () => {
             children: [text("link")],
           })
         );
-        assertTrue(Exit.isSuccess(yield* conform(safeSelf).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+        yield* conform(safeSelf).pipe(Effect.flatMap(enforceSafeHtml));
       }
 
       const safe = fragment(
@@ -262,7 +258,7 @@ describe("@beep/html safe policy", () => {
           children: [text("link")],
         })
       );
-      assertTrue(Exit.isSuccess(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+      yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml));
       expect(
         safeHtmlValue(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe)))
       ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
@@ -325,7 +321,7 @@ describe("@beep/html safe policy", () => {
           children: [text("added")],
         })
       );
-      assertTrue(Exit.isSuccess(yield* conform(insertion).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+      yield* conform(insertion).pipe(Effect.flatMap(enforceSafeHtml));
 
       const unsafeCitation = fragment(
         Ins.make({
@@ -345,7 +341,7 @@ describe("@beep/html safe policy", () => {
           children: [Li.make({ value: O.some(-2), children: [text("item")] })],
         })
       );
-      assertTrue(Exit.isSuccess(yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.exit)));
+      yield* conform(safe).pipe(Effect.flatMap(enforceSafeHtml));
 
       const legacyImageName = Img.make({
         alt: O.some("logo"),

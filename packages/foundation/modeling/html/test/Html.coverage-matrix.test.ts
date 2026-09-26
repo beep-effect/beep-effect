@@ -387,7 +387,7 @@ describe("@beep/html serialization branch matrix", () => {
       const root = Div.make({ children: [text("safe")] });
       const conformant = yield* conform(root);
       expect(yield* pipe(conformant, serializeConformant, Effect.map(untrustedHtmlValue))).toBe("<div>safe</div>");
-      assertTrue(Exit.isSuccess(yield* Effect.exit(enforceSafeHtml(conformant))));
+      yield* enforceSafeHtml(conformant);
     })
   );
 

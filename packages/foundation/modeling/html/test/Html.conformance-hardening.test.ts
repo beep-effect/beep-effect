@@ -214,7 +214,7 @@ describe("@beep/html numeric and id conformance", () => {
         Track.make({ src: O.some("/captions.vtt"), srclang: O.some("en") }),
       ]) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
 
       const subtitlesWithoutLanguage = Video.make({
@@ -594,7 +594,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of valid) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
     })
   );
@@ -635,7 +635,7 @@ describe("@beep/html generated special-child grammars", () => {
         ],
       });
       expect(inspectConformance(validDetails)).toStrictEqual([]);
-      assertTrue(Exit.isSuccess(yield* Effect.exit(conform(validDetails))));
+      yield* conform(validDetails);
 
       for (const root of [
         Fieldset.make({ children: [] }),
@@ -643,7 +643,7 @@ describe("@beep/html generated special-child grammars", () => {
         Optgroup.make({ children: [] }),
       ]) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
     })
   );
@@ -825,7 +825,7 @@ describe("@beep/html generated special-child grammars", () => {
         }),
       ]) {
         expect(hasRule(root, "attributeRelationship")).toBe(false);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
     })
   );
@@ -881,7 +881,7 @@ describe("@beep/html generated special-child grammars", () => {
           ],
         });
         expect(inspectConformance(root)).toStrictEqual([]);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
       const allBodyOk = P.make({
         children: [
@@ -889,7 +889,7 @@ describe("@beep/html generated special-child grammars", () => {
         ],
       });
       expect(inspectConformance(allBodyOk)).toStrictEqual([]);
-      assertTrue(Exit.isSuccess(yield* Effect.exit(conform(allBodyOk))));
+      yield* conform(allBodyOk);
 
       for (const rel of ["", "canonical", "canonical stylesheet", "expect"]) {
         const root = P.make({ children: [Link.make({ href: O.some("/resource"), rel: O.some(rel) })] });
@@ -912,7 +912,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of valid) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
 
       const invalid = [
@@ -958,7 +958,7 @@ describe("@beep/html generated special-child grammars", () => {
       ];
       for (const root of valid) {
         expect(inspectConformance(root)).toStrictEqual([]);
-        assertTrue(Exit.isSuccess(yield* Effect.exit(conform(root))));
+        yield* conform(root);
       }
 
       const invalid = [
@@ -1002,7 +1002,10 @@ describe("@beep/html generated special-child grammars", () => {
         assertTrue(Exit.isFailure(yield* Effect.exit(conform(root))));
       }
       const uppercaseCharset = decodeMetaResult({ _tag: "meta", charset: "UTF-8" });
-      assertTrue(Result.isSuccess(uppercaseCharset) && O.contains(uppercaseCharset.success.charset, "utf-8"));
+      assertSuccess(
+        Result.map(uppercaseCharset, ({ charset }) => charset),
+        O.some("utf-8")
+      );
       assertTrue(Result.isFailure(decodeMetaResult({ _tag: "meta", charset: "iso-8859-1" })));
       expect(() => Link.make({ as: O.some("image"), href: O.some("/resource"), rel: O.some("PreLoad") })).toThrow();
       expect(
@@ -1421,10 +1424,12 @@ describe("@beep/html exact attribute domains", () => {
       referrerpolicy: "STRICT-ORIGIN",
       rel: "stylesheet",
     });
-    assertTrue(
-      Result.isSuccess(link) &&
-        O.contains(link.success.crossorigin, "anonymous") &&
-        O.contains(link.success.referrerpolicy, "strict-origin")
+    assertSuccess(
+      Result.map(link, ({ crossorigin, referrerpolicy }) => ({ crossorigin, referrerpolicy })),
+      {
+        crossorigin: O.some("anonymous"),
+        referrerpolicy: O.some("strict-origin"),
+      }
     );
     assertTrue(
       Result.isFailure(
@@ -1440,10 +1445,12 @@ describe("@beep/html exact attribute domains", () => {
       children: [],
       writingsuggestions: "",
     });
-    assertTrue(
-      Result.isSuccess(globals) &&
-        O.contains(globals.success.autocorrect, "on") &&
-        O.contains(globals.success.writingsuggestions, "true")
+    assertSuccess(
+      Result.map(globals, ({ autocorrect, writingsuggestions }) => ({ autocorrect, writingsuggestions })),
+      {
+        autocorrect: O.some("on"),
+        writingsuggestions: O.some("true"),
+      }
     );
 
     assertTrue(Result.isSuccess(decodeFormResult({ _tag: "form", "accept-charset": "UTF-8", children: [] })));
