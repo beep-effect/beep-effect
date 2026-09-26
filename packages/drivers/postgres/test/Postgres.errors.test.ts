@@ -93,36 +93,17 @@ const makeCauseWithHostileReason = (): Cause.Cause<unknown> => {
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
 
-const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
-  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
-
-const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
-  const encoded = encode(schema, value);
-  const decoded = decode(schema, encoded);
-  const reencoded = encode(schema, decoded);
+const expectRoundTrip = Effect.fn("expectRoundTrip")(function* <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  value: Codec["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  const reencoded = yield* S.encodeEffect(schema)(decoded);
 
   expect(reencoded).toEqual(encoded);
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
-
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  arbitrary = Arbitrary.schema(schema)
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+});
 
 describe("PostgresError", () => {
   it("extracts SQLSTATE diagnostics from pg-like failures", () => {
@@ -205,35 +186,56 @@ describe("PostgresError", () => {
     });
   });
 
-  it("round-trips schema-derived SQLSTATE and Postgres error values", () => {
-    const postgresErrorArbitrary = Arbitrary.schema(PostgresError).pipe(
-      Arbitrary.map((error) =>
-        PostgresError.make({
-          operation: error.operation,
-          cause: O.none(),
-          message: error.message,
-          sqlState: error.sqlState,
-          sqlStateName: error.sqlStateName,
-          severity: error.severity,
-          detail: error.detail,
-          hint: error.hint,
-          where: error.where,
-          schemaName: error.schemaName,
-          tableName: error.tableName,
-          columnName: error.columnName,
-          constraintName: error.constraintName,
-          query: error.query,
-          params: O.none(),
-          sourceLocation: error.sourceLocation,
-        })
-      )
-    );
+  const postgresErrorArbitrary = Arbitrary.schema(PostgresError).pipe(
+    Arbitrary.map((error) =>
+      PostgresError.make({
+        operation: error.operation,
+        cause: O.none(),
+        message: error.message,
+        sqlState: error.sqlState,
+        sqlStateName: error.sqlStateName,
+        severity: error.severity,
+        detail: error.detail,
+        hint: error.hint,
+        where: error.where,
+        schemaName: error.schemaName,
+        tableName: error.tableName,
+        columnName: error.columnName,
+        constraintName: error.constraintName,
+        query: error.query,
+        params: O.none(),
+        sourceLocation: error.sourceLocation,
+      })
+    )
+  );
 
-    assertSchemaRoundTrip(PgErrorCode);
-    assertSchemaRoundTrip(PgErrorName);
-    assertSchemaRoundTrip(PostgresErrorContext);
-    assertSchemaRoundTrip(PostgresError, postgresErrorArbitrary);
-  });
+  it.effect.prop(
+    "round-trips schema-derived SQLSTATE codes",
+    [PgErrorCode],
+    ([value]) => expectRoundTrip(PgErrorCode, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived SQLSTATE names",
+    [PgErrorName],
+    ([value]) => expectRoundTrip(PgErrorName, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived Postgres diagnostic context",
+    [PostgresErrorContext],
+    ([value]) => expectRoundTrip(PostgresErrorContext, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived normalized Postgres errors",
+    [postgresErrorArbitrary],
+    ([value]) => expectRoundTrip(PostgresError, value),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps fallback Drizzle message params opaque when they contain commas", () => {
     const cause = new Error('Failed query: select 1 where payload = $1\nparams: {"label":"a,b"}, opaque');
@@ -578,7 +580,7 @@ describe("Postgres Drizzle migrations", () => {
         };
         const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config);
 
-        expectRoundTrip(MigrationBundleConfig, config);
+        yield* expectRoundTrip(MigrationBundleConfig, config);
         expect(result).toBeUndefined();
       })
     );
