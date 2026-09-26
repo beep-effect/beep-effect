@@ -7,10 +7,11 @@
  */
 import { sanitizeTracerAttributes, withSanitizedToolSpan } from "@beep/mcp-kit";
 import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/SanitizedSpan";
-import { assert, describe, expect, it, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Tracer from "effect/Tracer";
@@ -48,7 +49,7 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 };
 
 describe("withSanitizedToolSpan", () => {
-  layer(FixtureHandlersLive)("with the fixture toolkit mounted", (it) => {
+  it.layer(FixtureHandlersLive, { timeout: "5 seconds" })("with the fixture toolkit mounted", (it) => {
     it.effect(
       "suppresses raw tool parameters from reaching span attributes",
       Effect.fnUntraced(function* () {
@@ -95,7 +96,7 @@ it.effect(
     const span = yield* Effect.makeSpan("delegated", { parent, kind: "client" }).pipe(Effect.withTracer(tracer));
     expect(span.spanId).toMatch(/^[0-9a-f]{16}$/);
     expect(span.traceId).toBe("trace-id");
-    expect(span.parent).toEqual(O.some(parent));
+    assertSome(span.parent, parent);
     expect(span.kind).toBe("client");
     expect(span.links).toEqual([]);
     span.addLinks([{ span: linked, attributes: { relation: "caused-by" } }]);

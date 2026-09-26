@@ -9,8 +9,9 @@ import {
   toColumnarEnvelope,
 } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -77,6 +78,10 @@ describe("field-tier projector", () => {
       assert.strictEqual(projected.tier, "minimal");
       assert.isAtMost(estimateJsonSize(projected.value), budgetBytes);
       assert.notProperty(projected.value, "documentBag");
+      assert.deepStrictEqual(projected.value, {
+        documentId: largeDocumentBagPayload.documentId,
+        title: largeDocumentBagPayload.title,
+      });
     }
   });
 
@@ -84,6 +89,11 @@ describe("field-tier projector", () => {
     const projected = projectFieldTier(largeDocumentBagPayload, "balanced", documentTiers);
 
     assert.deepStrictEqual(Object.keys(projected).sort(), ["abstractText", "documentId", "title"]);
+    assert.deepStrictEqual(projected, {
+      abstractText: largeDocumentBagPayload.abstractText,
+      documentId: largeDocumentBagPayload.documentId,
+      title: largeDocumentBagPayload.title,
+    });
   });
 
   it("never returns an oversized payload inline when even the minimal tier exceeds the budget", () => {
