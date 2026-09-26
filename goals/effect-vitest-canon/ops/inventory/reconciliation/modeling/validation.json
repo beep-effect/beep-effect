@@ -1,0 +1,14 @@
+{
+  "sourcePin": "d9f74d230a949e37f108a9ad52c0bc16a829d98f",
+  "publicationBase": "b2a654bc4347d33862d815368e7ca56a9c86da28",
+  "valid": true,
+  "complete": true,
+  "missing": 0,
+  "sourceFiles": 28,
+  "lensRows": 127,
+  "resultSha256": "7523579d1295f66c3e81fc19a00d6a60ed24070e4a76848d92878e300834051e",
+  "manifestSha256": "9ab8a90fac85e0358f43fc50832c1f02f9a3d30f42b79ed9d4394bbda7323a22",
+  "canonicalApplied": false,
+  "acceptedInventory": false,
+  "runtimeProof": false
+}
