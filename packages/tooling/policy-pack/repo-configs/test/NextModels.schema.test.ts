@@ -13,12 +13,12 @@ import {
   SizeLimit,
 } from "@beep/repo-configs/next";
 import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeUnknownImageConfigComplete = S.decodeUnknownEffect(ImageConfigComplete);
 const decodeUnknownRedirect = S.decodeUnknownEffect(Redirect);
@@ -29,8 +29,6 @@ const decodeHeader = S.decodeUnknownEffect(Header);
 const decodeMiddleware = S.decodeUnknownEffect(Middleware);
 const decodeLoggingConfig = S.decodeUnknownEffect(LoggingConfig);
 const decodeSassOptions = S.decodeUnknownEffect(SassOptions);
-
-const exit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromiseExit(effect);
 
 const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S.ConstraintDecoder<unknown>>(
   schema: Schema,
@@ -43,15 +41,12 @@ const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S
 };
 
 describe("Next shared schemas", () => {
-  it("accepts Next.js file size suffixes and size limits", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(FileSizeSuffix.decodeUnknownSync("kb")).toBe("kb");
-        expect(FileSizeSuffix.decodeUnknownSync("MB")).toBe("MB");
-        expect(SizeLimit.decodeUnknownSync(1024)).toBe(1024);
-        expect(SizeLimit.decodeUnknownSync("1.5gb")).toBe("1.5gb");
-      })
-    ));
+  it("accepts Next.js file size suffixes and size limits", () => {
+    expect(FileSizeSuffix.decodeUnknownSync("kb")).toBe("kb");
+    expect(FileSizeSuffix.decodeUnknownSync("MB")).toBe("MB");
+    expect(SizeLimit.decodeUnknownSync(1024)).toBe(1024);
+    expect(SizeLimit.decodeUnknownSync("1.5gb")).toBe("1.5gb");
+  });
 
   it("rejects malformed size suffixes and size limit strings", () => {
     expect(O.isNone(FileSizeSuffix.decodeUnknownOption("xb"))).toBe(true);
@@ -94,57 +89,56 @@ describe("Next shared schemas", () => {
 describe("Next route schemas", () => {
   const routeHasArbitrary = Arbitrary.schema(RouteHas);
 
-  it("accepts route predicates and public route config shapes", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(RouteHas.decodeUnknownSync({ type: "header", key: "x-beep", value: "1" })).toEqual({
-          type: "header",
-          key: "x-beep",
-          value: "1",
-        });
-        expect(RouteHas.decodeUnknownSync({ type: "host", value: "example.com" })).toEqual({
-          type: "host",
-          value: "example.com",
-        });
-        expect(
-          yield* decodeRewrite({
-            source: "/old",
-            destination: "/new",
-            has: [{ type: "query", key: "draft" }],
-            internal: true,
-            regex: "^/old$",
-          })
-        ).toEqual({
+  it.effect("accepts route predicates and public route config shapes", () =>
+    Effect.gen(function* () {
+      expect(RouteHas.decodeUnknownSync({ type: "header", key: "x-beep", value: "1" })).toEqual({
+        type: "header",
+        key: "x-beep",
+        value: "1",
+      });
+      expect(RouteHas.decodeUnknownSync({ type: "host", value: "example.com" })).toEqual({
+        type: "host",
+        value: "example.com",
+      });
+      expect(
+        yield* decodeRewrite({
           source: "/old",
           destination: "/new",
           has: [{ type: "query", key: "draft" }],
-        });
-        expect(
-          yield* decodeHeader({
-            source: "/secure",
-            headers: [{ key: "x-frame-options", value: "deny" }],
-            internal: true,
-          })
-        ).toEqual({
+          internal: true,
+          regex: "^/old$",
+        })
+      ).toEqual({
+        source: "/old",
+        destination: "/new",
+        has: [{ type: "query", key: "draft" }],
+      });
+      expect(
+        yield* decodeHeader({
           source: "/secure",
           headers: [{ key: "x-frame-options", value: "deny" }],
-        });
-        expect(Redirect.decodeUnknownSync({ source: "/old", destination: "/new", permanent: true })).toEqual({
-          source: "/old",
-          destination: "/new",
-          permanent: true,
-        });
-        expect(Redirect.decodeUnknownSync({ source: "/old", destination: "/new", statusCode: 307 })).toEqual({
-          source: "/old",
-          destination: "/new",
-          statusCode: 307,
-        });
-        expect(yield* decodeMiddleware({ source: "/admin/:path*", locale: false })).toEqual({
-          source: "/admin/:path*",
-          locale: false,
-        });
-      })
-    ));
+          internal: true,
+        })
+      ).toEqual({
+        source: "/secure",
+        headers: [{ key: "x-frame-options", value: "deny" }],
+      });
+      expect(Redirect.decodeUnknownSync({ source: "/old", destination: "/new", permanent: true })).toEqual({
+        source: "/old",
+        destination: "/new",
+        permanent: true,
+      });
+      expect(Redirect.decodeUnknownSync({ source: "/old", destination: "/new", statusCode: 307 })).toEqual({
+        source: "/old",
+        destination: "/new",
+        statusCode: 307,
+      });
+      expect(yield* decodeMiddleware({ source: "/admin/:path*", locale: false })).toEqual({
+        source: "/admin/:path*",
+        locale: false,
+      });
+    })
+  );
 
   it("decodes schema-derived route predicates", () => {
     expect(
@@ -218,41 +212,28 @@ describe("Next route schemas", () => {
     ).toBe("Passed");
   });
 
-  it("rejects invalid route discriminators and redirect mode mixing", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(
-          Exit.isFailure(
-            yield* Effect.promise(() =>
-              Promise.resolve(exit(decodeUnknownRouteHas({ type: "host", key: "host", value: "example.com" })))
-            )
+  it.effect("rejects invalid route discriminators and redirect mode mixing", () =>
+    Effect.gen(function* () {
+      expect(
+        Exit.isFailure(yield* Effect.exit(decodeUnknownRouteHas({ type: "host", key: "host", value: "example.com" })))
+      ).toBe(true);
+      expect(
+        Exit.isFailure(yield* Effect.exit(decodeRewrite({ source: "/old", destination: "/new", basePath: true })))
+      ).toBe(true);
+      expect(
+        Exit.isFailure(
+          yield* Effect.exit(
+            decodeUnknownRedirect({
+              source: "/old",
+              destination: "/new",
+              permanent: true,
+              statusCode: 308,
+            })
           )
-        ).toBe(true);
-        expect(
-          Exit.isFailure(
-            yield* Effect.promise(() =>
-              Promise.resolve(exit(decodeRewrite({ source: "/old", destination: "/new", basePath: true })))
-            )
-          )
-        ).toBe(true);
-        expect(
-          Exit.isFailure(
-            yield* Effect.promise(() =>
-              Promise.resolve(
-                exit(
-                  decodeUnknownRedirect({
-                    source: "/old",
-                    destination: "/new",
-                    permanent: true,
-                    statusCode: 308,
-                  })
-                )
-              )
-            )
-          )
-        ).toBe(true);
-      })
-    ));
+        )
+      ).toBe(true);
+    })
+  );
 });
 
 describe("Next image schemas", () => {
@@ -286,81 +267,65 @@ describe("Next image schemas", () => {
     ).toBe("Passed");
   });
 
-  it("rejects out-of-domain image quality values", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(
-          Exit.isFailure(
-            yield* Effect.promise(() =>
-              Promise.resolve(
-                exit(
-                  decodeUnknownImageConfigComplete({
-                    deviceSizes: [640],
-                    imageSizes: [32],
-                    loader: "default",
-                    path: "/_next/image",
-                    loaderFile: "",
-                    disableStaticImages: false,
-                    minimumCacheTTL: 0,
-                    formats: ["image/webp"],
-                    maximumDiskCacheSize: undefined,
-                    maximumRedirects: 0,
-                    maximumResponseBody: 0,
-                    dangerouslyAllowLocalIP: false,
-                    dangerouslyAllowSVG: false,
-                    contentSecurityPolicy: "",
-                    contentDispositionType: "attachment",
-                    localPatterns: undefined,
-                    remotePatterns: [],
-                    qualities: [101],
-                    unoptimized: false,
-                    customCacheHandler: false,
-                  })
-                )
-              )
-            )
+  it.effect("rejects out-of-domain image quality values", () =>
+    Effect.gen(function* () {
+      expect(
+        Exit.isFailure(
+          yield* Effect.exit(
+            decodeUnknownImageConfigComplete({
+              deviceSizes: [640],
+              imageSizes: [32],
+              loader: "default",
+              path: "/_next/image",
+              loaderFile: "",
+              disableStaticImages: false,
+              minimumCacheTTL: 0,
+              formats: ["image/webp"],
+              maximumDiskCacheSize: undefined,
+              maximumRedirects: 0,
+              maximumResponseBody: 0,
+              dangerouslyAllowLocalIP: false,
+              dangerouslyAllowSVG: false,
+              contentSecurityPolicy: "",
+              contentDispositionType: "attachment",
+              localPatterns: undefined,
+              remotePatterns: [],
+              qualities: [101],
+              unoptimized: false,
+              customCacheHandler: false,
+            })
           )
-        ).toBe(true);
-      })
-    ));
+        )
+      ).toBe(true);
+    })
+  );
 });
 
 describe("Next config primitive schemas", () => {
-  it("accepts logging config with empty incoming request options", () =>
-    Effect.runPromise(
-      Effect.promise(() =>
-        Promise.resolve(
-          expect(Effect.runPromise(decodeLoggingConfig({ incomingRequests: {} }))).resolves.toEqual({
-            incomingRequests: {},
-          })
-        )
-      )
-    ));
+  it.effect("accepts logging config with empty incoming request options", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeLoggingConfig({ incomingRequests: {} })).toEqual({
+        incomingRequests: {},
+      });
+    })
+  );
 });
 
 describe("Next compiler schemas", () => {
-  it("accepts Sass options with implementation and package-specific passthrough keys", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const options = {
-          implementation: "sass",
-          silenceDeprecations: ["legacy-js-api"],
-        };
-        expect(yield* decodeSassOptions(options)).toEqual(options);
-      })
-    ));
+  it.effect("accepts Sass options with implementation and package-specific passthrough keys", () =>
+    Effect.gen(function* () {
+      const options = {
+        implementation: "sass",
+        silenceDeprecations: ["legacy-js-api"],
+      };
+      expect(yield* decodeSassOptions(options)).toEqual(options);
+    })
+  );
 
-  it("rejects non-object Sass options and non-string implementations", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(Exit.isFailure(yield* Effect.promise(() => Promise.resolve(exit(decodeSassOptions(["sass"])))))).toBe(
-          true
-        );
-        expect(
-          Exit.isFailure(
-            yield* Effect.promise(() => Promise.resolve(exit(decodeSassOptions({ implementation: false }))))
-          )
-        ).toBe(true);
-      })
-    ));
+  it.effect("rejects non-object Sass options and non-string implementations", () =>
+    Effect.gen(function* () {
+      expect(Exit.isFailure(yield* Effect.exit(decodeSassOptions(["sass"])))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeSassOptions({ implementation: false })))).toBe(true);
+    })
+  );
 });

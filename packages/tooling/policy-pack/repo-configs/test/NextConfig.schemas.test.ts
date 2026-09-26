@@ -1,11 +1,11 @@
 import { AllowedDevOrigin } from "@beep/repo-configs/next/models/AllowedDevOrigin.schema";
 import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeAllowedDevOriginResult = S.decodeResult(AllowedDevOrigin);
 const encodeAllowedDevOriginResult = S.encodeResult(AllowedDevOrigin);
@@ -18,14 +18,11 @@ const expectRoundTrip = (value: AllowedDevOrigin) => {
 };
 
 describe("AllowedDevOrigin", () => {
-  it("accepts documented exact and wildcard host entries", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(AllowedDevOrigin.decodeUnknownSync("local-origin.dev")).toBe("local-origin.dev");
-        expect(AllowedDevOrigin.decodeUnknownSync("*.local-origin.dev")).toBe("*.local-origin.dev");
-        expect(AllowedDevOrigin.decodeUnknownSync(" oip-web.beep.localhost ")).toBe("oip-web.beep.localhost");
-      })
-    ));
+  it("accepts documented exact and wildcard host entries", () => {
+    expect(AllowedDevOrigin.decodeUnknownSync("local-origin.dev")).toBe("local-origin.dev");
+    expect(AllowedDevOrigin.decodeUnknownSync("*.local-origin.dev")).toBe("*.local-origin.dev");
+    expect(AllowedDevOrigin.decodeUnknownSync(" oip-web.beep.localhost ")).toBe("oip-web.beep.localhost");
+  });
 
   it("rejects URL-like values and invalid wildcard domains", () => {
     expect(O.isNone(AllowedDevOrigin.decodeUnknownOption(""))).toBe(true);

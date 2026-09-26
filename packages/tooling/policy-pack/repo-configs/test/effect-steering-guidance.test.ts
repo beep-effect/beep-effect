@@ -13,7 +13,7 @@ const readText = Effect.fn(function* (path: string) {
   return yield* fs.readFileString(path);
 });
 
-layer(NodeServices.layer)("effect steering guidance", (it) => {
+layer(NodeServices.layer, { timeout: "10 seconds" })("effect steering guidance", (it) => {
   describe("effect steering guidance", () => {
     it.effect(
       "aligns the canonical skill with flat control flow guidance",

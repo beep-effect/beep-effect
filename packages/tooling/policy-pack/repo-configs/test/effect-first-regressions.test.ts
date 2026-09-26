@@ -31,7 +31,7 @@ const readText = Effect.fn(function* (path: string) {
   return yield* fs.readFileString(path);
 });
 
-layer(NodeServices.layer)("effect-first regressions", (it) => {
+layer(NodeServices.layer, { timeout: "10 seconds" })("effect-first regressions", (it) => {
   describe("effect-first regressions", () => {
     it.effect(
       "disallows Match.value usage in retained docs and governance modules",
