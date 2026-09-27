@@ -2497,3 +2497,13 @@ application. The current detector ID remains canonical; the historical occurrenc
 and fix SHA are retained in `repo-utils-inventory-lineage.json`. A reconciliation
 preflight should check ID collisions across historical and current generations
 before assigning fixed credit or replacing current exceptions.
+
+## 2026-09-26: schema inventory line drift after runner imports
+
+The repo-utils cheap gates rejected a stale golden-test exception at line 14
+after the public runner import moved its anchor to line 15. Regeneration found
+the new anchor but demoted the reviewed exception to an advisory because identity
+includes the line. Preserve the existing golden-test rationale and all unrelated
+entries; carry only the generator-confirmed line change. The focused schema-first
+check then passed. A post-import inventory preflight should detect moved anchors
+and retain reviewed dispositions rather than resetting them on line drift.

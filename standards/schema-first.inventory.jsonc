@@ -709,7 +709,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 14,
+      "line": 15,
       "owner": "@beep/repo-utils",
       "reason": "Golden fingerprint test replays captured wire values from its __golden__ fixture; native Arbitrary seeds cannot reproduce the recorded fast-check samples, so schema-derived generation would invalidate the goldens."
     },
