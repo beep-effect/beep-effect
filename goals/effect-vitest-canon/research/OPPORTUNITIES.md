@@ -3447,3 +3447,12 @@ all 272 original assertion expressions and labeled tampering diagnostics. The
 batch now records both the saved count and the live count. A count preflight
 before applying a mechanical transform would have avoided the guard failure;
 this does not require restarting the whole-repository human inventory.
+
+### Line-sensitive schema inventory drift after runner migration
+
+The Epistemic Tables early-push proof failed `lint:schema-first` because the
+existing ExecutionRecordTables exception moved from line 52 to 53. The inventory
+writer treated the new position as a fresh advisory and also reordered unrelated
+entries. The repair preserves every existing status and rationale and updates
+only the owned line; the full schema-first check passes. Run this root gate
+before batch publication, since package verification does not cover this drift.
