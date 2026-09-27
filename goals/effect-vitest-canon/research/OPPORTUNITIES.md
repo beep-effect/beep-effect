@@ -2531,3 +2531,12 @@ from main supplied a meaningful new commit and publication created PR #1303.
 A retry path that recognizes an already-pushed reviewed head with no PR would
 avoid coupling PR-creation recovery to another branch change. Preserve the
 normal proof and provenance gates; this receipt does not authorize bypassing them.
+
+## 2026-09-27 — unused helper dependency after runner migration
+
+Pretext PR #1303 hosted Knip job 108563381090 rejected the manifest because
+`@beep/test-utils` became unused after the test migration. Package audit/docgen
+did not flag this repo-level dependency condition. The repair removes the unused
+dev dependency, regenerates lockfile and TypeScript references, and reviews only
+the removed cache dependency edges. A runner-phase check for dependencies made
+unused by removed helper imports would have prevented the delayed CI feedback.
