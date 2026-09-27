@@ -2417,6 +2417,26 @@ No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
 
+## 2026-09-26: Ready proof-job waves raced a negative-path deadline
+
+Coverage on PRs #1277 and #1279 failed in the proof-job wave-return tests
+with `Timed out waiting for proof job`. The tests reuse a 60 ms live-clock
+deadline both to assert that unrelated or already-returned rows do not wake
+a waiter and to read an already-persisted matching wave. The latter path
+includes real filesystem reads and acknowledgement writes, making coverage
+load part of the result. A separate tooling-only follow-up will distinguish
+the negative timeout oracle from event-driven positive completion, preserving
+the existing runner deadline, row isolation, deduplication, and acknowledgement
+assertions. No retry, global timeout increase, or coverage-baseline reduction
+is authorized by this receipt.
+
+The completed local Drizzle proof also reports coverage deficits in Yeet
+Inbox, InboxView, Remediation, and WatchStream. These are separate from the
+hosted timeout and are being attributed against the completed coverage data.
+Keeping positive event observation separate from a deliberately short negative
+wait would have prevented the timing race; keeping terminal coverage artifacts
+would preserve attribution across simultaneous PRs.
+
 ### 2026-09-26 — File-hash receipt mistaken for an API token
 
 The NLP baseline commit hook reported generic-api-key findings for the SHA-256
@@ -2504,6 +2524,16 @@ staged changes or a clean local commit ahead". The correct recovery is a
 standalone detached verify plus an until-ready monitor at the existing head.
 A publish recovery hint distinguishing an already-pushed head from missing work
 would avoid these discarded proof submissions. No empty commit is needed.
+
+## 2026-09-26: generated boundary parity after test-runner adoption
+
+PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed
+with `standards/fallow.boundaries.generated.jsonc is stale`. The same drift was
+reproduced locally on #1290. The boundary generator added only each touched
+package's test-runner dependency to its value/type import lists. Run both
+tsconfig-sync and fallow:boundaries:write after changing workspace dependencies,
+then check both generated surfaces before early publication. Package audit alone
+does not establish this repository-level parity.
 
 ### Service-driver property preparation: optional redacted generator branch
 
