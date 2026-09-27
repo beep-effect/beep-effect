@@ -182,24 +182,18 @@ describe("@beep/agents-domain", () => {
     })
   );
 
-  it.effect("round-trips schema-derived agent modes", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([AgentModeArbitrary]),
-        ([mode]) =>
-          Effect.gen(function* () {
-            const decoded = yield* decodeAgentMode(mode);
-            const encoded = yield* encodeAgentMode(decoded);
+  it.effect.prop(
+    "round-trips schema-derived agent modes",
+    [AgentModeArbitrary],
+    ([mode]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeAgentMode(mode);
+        const encoded = yield* encodeAgentMode(decoded);
 
-            expect(encoded).toBe(mode);
-            expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
-
-            return true;
-          }),
-        fcRuns(25)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+        expect(encoded).toBe(mode);
+        expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("preserves assistant content exports from the canonical value-object path", () =>
@@ -271,24 +265,24 @@ describe("@beep/agents-domain", () => {
     expect(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success)).toBe(true);
   });
 
-  it("round-trips crispened schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [Agent, Skill, AssistantContent, AssistantBlock, InlineNode];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  it.prop(
+    "round-trips crispened schemas with schema-derived arbitraries",
+    {
+      Agent: Arbitrary.schema(Agent),
+      Skill: Arbitrary.schema(Skill),
+      AssistantContent: Arbitrary.schema(AssistantContent),
+      AssistantBlock: Arbitrary.schema(AssistantBlock),
+      InlineNode: Arbitrary.schema(InlineNode),
+    },
+    (values) => {
+      roundTrip(Agent, values.Agent);
+      roundTrip(Skill, values.Skill);
+      roundTrip(AssistantContent, values.AssistantContent);
+      roundTrip(AssistantBlock, values.AssistantBlock);
+      roundTrip(InlineNode, values.InlineNode);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
   it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
     it.effect(

@@ -214,22 +214,18 @@ describe("@beep/agents-domain ProviderInstance", () => {
     expect(loginGuidance("codex", ProbeFailedSnapshot.make({ probedAt }))).toMatch(/binary path/);
   });
 
-  it("round-trips schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [AuthSnapshot, ProviderKind, ProviderInstance];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  it.prop(
+    "round-trips schema-derived arbitraries",
+    {
+      AuthSnapshot: Arbitrary.schema(AuthSnapshot),
+      ProviderKind: Arbitrary.schema(ProviderKind),
+      ProviderInstance: Arbitrary.schema(ProviderInstance),
+    },
+    (values) => {
+      roundTrip(AuthSnapshot, values.AuthSnapshot);
+      roundTrip(ProviderKind, values.ProviderKind);
+      roundTrip(ProviderInstance, values.ProviderInstance);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });
