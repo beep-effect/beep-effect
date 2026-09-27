@@ -3081,3 +3081,13 @@ signal absence at the harness boundary before validating the error payload.
 This preserved the native subprocess subject and made all 78 cases pass on both
 runtimes. Running both runtimes before publishing caught the mismatch that the
 configured Bun-only package audit did not.
+
+## Consolidation: strict ledger decoding finds inherited malformed rows
+
+The root detector ratchet passed while aggregate strict ledger decoding found
+two inherited rows rejected by the shared schema: OBS evidence exceeded200
+characters, and a CLI flake row used a descriptive noncanonical rule ID.
+Both files matched main before repair. Decode every row with excess properties
+rejected before committing ledger updates; root ratchet success alone does not
+validate all human inventory families. Stable finding IDs and fix evidence are
+preserved by the narrow metadata corrections.
