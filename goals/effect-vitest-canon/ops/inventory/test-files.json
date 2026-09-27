@@ -4714,71 +4714,71 @@
     "file": "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 3727,
-    "lines": 83
+    "bytes": 4797,
+    "lines": 105
   },
   {
     "file": "packages/foundation/ui-system/ui/test/FormWidgets.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 1179,
-    "lines": 24
+    "bytes": 1315,
+    "lines": 27
   },
   {
     "file": "packages/foundation/ui-system/ui/test/ReactInvariant.equivalence.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 766,
-    "lines": 16
+    "bytes": 887,
+    "lines": 19
   },
   {
     "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 1584,
-    "lines": 50
+    "bytes": 3868,
+    "lines": 106
   },
   {
     "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 2645,
-    "lines": 65
+    "bytes": 2750,
+    "lines": 67
   },
   {
     "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 6623,
-    "lines": 146
+    "bytes": 8063,
+    "lines": 168
   },
   {
     "file": "packages/foundation/ui-system/ui/test/theme-components.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 1944,
-    "lines": 60
+    "bytes": 1988,
+    "lines": 61
   },
   {
     "file": "packages/foundation/ui-system/ui/test/theme-provider.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 1005,
-    "lines": 21
+    "bytes": 1049,
+    "lines": 22
   },
   {
     "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 3777,
-    "lines": 105
+    "bytes": 3821,
+    "lines": 106
   },
   {
     "file": "packages/foundation/ui-system/ui/test/url.test.ts",
     "package": "@beep/ui",
     "kind": "test",
-    "bytes": 1872,
-    "lines": 39
+    "bytes": 1916,
+    "lines": 40
   },
   {
     "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
