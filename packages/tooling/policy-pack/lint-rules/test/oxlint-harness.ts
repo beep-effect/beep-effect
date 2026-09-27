@@ -103,10 +103,8 @@ export const OxlintReport = S.Struct({
   ).pipe(S.optionalKey),
 });
 
-const emptyReport: typeof OxlintReport.Type = {};
-
-/** Decode oxlint's stdout, tolerating non-JSON noise by returning an empty report. */
-const parseReport = jsonReportParser(OxlintReport, emptyReport);
+/** Decode stdout and retain malformed-report failures. */
+const parseReport = jsonReportParser(OxlintReport);
 
 class OxlintFixture extends S.Class<OxlintFixture>("OxlintFixture")({
   configPath: S.String,

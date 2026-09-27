@@ -65,10 +65,8 @@ export const BiomeReport = S.Struct({
   ).pipe(S.optionalKey),
 });
 
-const emptyReport: typeof BiomeReport.Type = {};
-
-/** Decode Biome's stdout, tolerating non-JSON noise by returning an empty report. */
-const parseReport = jsonReportParser(BiomeReport, emptyReport);
+/** Decode stdout and retain malformed-report failures. */
+const parseReport = jsonReportParser(BiomeReport);
 
 /**
  * Lint the given `source` with only `ruleName`'s `.grit` plugin loaded and return the
