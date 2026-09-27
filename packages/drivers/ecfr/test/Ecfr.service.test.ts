@@ -19,9 +19,10 @@ import {
 } from "@beep/ecfr";
 import { $EcfrId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Context, Effect, Layer, Match, pipe, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -216,7 +217,7 @@ describe("@beep/ecfr", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  it.layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "decodes a keyless listTitles response offline via mapRequest base-URL prefixing",
       Effect.fnUntraced(function* () {
@@ -236,7 +237,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  it.layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "covers the admin operations with encoded paths and queries",
       Effect.fnUntraced(function* () {
@@ -265,7 +266,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  it.layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "covers the search operations with encoded queries",
       Effect.fnUntraced(function* () {
@@ -307,7 +308,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  it.layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "covers the versioner operations with encoded paths and queries",
       Effect.fnUntraced(function* () {
@@ -350,7 +351,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  it.layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "streams successive search-result pages offline",
       Effect.fnUntraced(function* () {

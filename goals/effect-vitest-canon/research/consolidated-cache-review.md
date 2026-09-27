@@ -301,3 +301,26 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/agents-tables#package-test-typecheck`
 - `@beep/agents-tables#test`
 - `@beep/agents-tables#test:integration`
+
+## Incoming 95738112455580bb379b3b87f3173c63ef488da7
+
+- `@beep/ecfr#audit`
+- `@beep/ecfr#build`
+- `@beep/ecfr#check`
+- `@beep/ecfr#codegen`
+- `@beep/ecfr#coverage`
+- `@beep/ecfr#lint:deprecated-apis`
+- `@beep/ecfr#package-test-typecheck`
+- `@beep/ecfr#test`
+- `@beep/ecfr#test:integration`
+- `@beep/ecfr#test:property`
+- `@beep/govinfo#audit`
+- `@beep/govinfo#build`
+- `@beep/govinfo#check`
+- `@beep/govinfo#codegen`
+- `@beep/govinfo#coverage`
+- `@beep/govinfo#lint:deprecated-apis`
+- `@beep/govinfo#package-test-typecheck`
+- `@beep/govinfo#test`
+- `@beep/govinfo#test:integration`
+- `@beep/govinfo#test:property`

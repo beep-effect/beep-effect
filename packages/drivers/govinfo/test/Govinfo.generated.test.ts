@@ -1,6 +1,7 @@
 import { CodegenKit, GenerateConfig } from "@beep/codegen-kit";
+import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient } from "effect/http";
@@ -62,7 +63,7 @@ const operationIdentifiers = (source: string): ReadonlyArray<string> =>
     A.filter(Str.isNonEmpty)
   );
 
-layer(generatorLayer)("GovInfo generated drift oracle", (it) => {
+it.layer(generatorLayer, { timeout: "10 seconds" })("GovInfo generated drift oracle", (it) => {
   it.effect("is current and retains every operation without unsafe number or never schemas", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

@@ -1,0 +1,158 @@
+{
+  "base": "1f7a14ec4e03a06a7c790f23c5bb31006dc484db",
+  "packages": {
+    "ecfr": [
+      {
+        "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+        "sha256": "7365da04bb40388e0442c0a26ac726b48f9cbb8ac6f5aa10a1951555d448a3ca",
+        "bytes": 857,
+        "lines": 24
+      },
+      {
+        "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+        "sha256": "756c9f560376b919238ee72afe8f98befa55b530630bcbaf91009b3bdf9f8518",
+        "bytes": 14774,
+        "lines": 374
+      }
+    ],
+    "govinfo": [
+      {
+        "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+        "sha256": "f7ca7bcf250cc9734fa853c2e90f31fabb72ce74c62a5ad63520345ecc8a36c7",
+        "bytes": 1968,
+        "lines": 37
+      },
+      {
+        "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+        "sha256": "e7e96e0c32c0ff59eae980d544bdda4c3c9376b3453dc40cc47bc3a55a774d83",
+        "bytes": 2751,
+        "lines": 79
+      },
+      {
+        "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+        "sha256": "80e45bd31bfa2c7d7c0b7990e73079ea3c3ac90e49e06293ccc16a2be8053001",
+        "bytes": 14848,
+        "lines": 412
+      }
+    ]
+  },
+  "observations": {
+    "ecfr": {
+      "node": {
+        "wholeCommandSeconds": 4.923253167013172,
+        "runtime": {
+          "node": "v24.20.0",
+          "bun": "1.4.2"
+        },
+        "loadBefore": [14.7001953125, 12.5107421875, 15.169921875],
+        "loadAfter": [15.365234375, 12.68505859375, 15.21240234375],
+        "pressureBefore": {
+          "cpu": "some avg10=0.29 avg60=0.17 avg300=0.38 total=426237765\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.22 avg60=0.13 avg300=0.12 total=137680206\nfull avg10=0.22 avg60=0.12 avg300=0.11 total=132261650\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745588904\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664255412\n"
+        },
+        "pressureAfter": {
+          "cpu": "some avg10=0.37 avg60=0.19 avg300=0.38 total=426284071\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.33 avg60=0.15 avg300=0.13 total=137706019\nfull avg10=0.33 avg60=0.15 avg300=0.11 total=132287256\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745591147\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664256753\n"
+        },
+        "limits": {
+          "RLIMIT_NOFILE": [1048576, 1048576],
+          "RLIMIT_AS": [-1, -1],
+          "RLIMIT_CPU": [-1, -1]
+        },
+        "sourceStable": true,
+        "passed": 10,
+        "total": 10,
+        "suites": 2
+      },
+      "bun": {
+        "wholeCommandSeconds": 2.5195431600004667,
+        "runtime": {
+          "node": "v24.20.0",
+          "bun": "1.4.2"
+        },
+        "loadBefore": [15.365234375, 12.68505859375, 15.21240234375],
+        "loadAfter": [20.38134765625, 13.76953125, 15.5498046875],
+        "pressureBefore": {
+          "cpu": "some avg10=0.37 avg60=0.19 avg300=0.38 total=426284276\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.33 avg60=0.15 avg300=0.13 total=137706019\nfull avg10=0.33 avg60=0.15 avg300=0.11 total=132287257\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745591173\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664256763\n"
+        },
+        "pressureAfter": {
+          "cpu": "some avg10=0.25 avg60=0.18 avg300=0.37 total=426309317\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.22 avg60=0.14 avg300=0.13 total=137706040\nfull avg10=0.22 avg60=0.14 avg300=0.11 total=132287274\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745591421\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664256936\n"
+        },
+        "limits": {
+          "RLIMIT_NOFILE": [1048576, 1048576],
+          "RLIMIT_AS": [-1, -1],
+          "RLIMIT_CPU": [-1, -1]
+        },
+        "sourceStable": true,
+        "passed": 10,
+        "total": 10,
+        "suites": 2
+      }
+    },
+    "govinfo": {
+      "node": {
+        "wholeCommandSeconds": 5.224680008002906,
+        "runtime": {
+          "node": "v24.20.0",
+          "bun": "1.4.2"
+        },
+        "loadBefore": [20.38134765625, 13.76953125, 15.5498046875],
+        "loadAfter": [21.15185546875, 14.0390625, 15.62744140625],
+        "pressureBefore": {
+          "cpu": "some avg10=0.25 avg60=0.18 avg300=0.37 total=426309351\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.22 avg60=0.14 avg300=0.13 total=137706040\nfull avg10=0.22 avg60=0.14 avg300=0.11 total=132287274\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745591430\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664256937\n"
+        },
+        "pressureAfter": {
+          "cpu": "some avg10=0.35 avg60=0.20 avg300=0.38 total=426366321\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.33 avg60=0.17 avg300=0.13 total=137730373\nfull avg10=0.33 avg60=0.16 avg300=0.12 total=132311276\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745596175\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664260202\n"
+        },
+        "limits": {
+          "RLIMIT_NOFILE": [1048576, 1048576],
+          "RLIMIT_AS": [-1, -1],
+          "RLIMIT_CPU": [-1, -1]
+        },
+        "sourceStable": true,
+        "passed": 8,
+        "total": 8,
+        "suites": 3
+      },
+      "bun": {
+        "wholeCommandSeconds": 3.82262814900605,
+        "runtime": {
+          "node": "v24.20.0",
+          "bun": "1.4.2"
+        },
+        "loadBefore": [21.15185546875, 14.0390625, 15.62744140625],
+        "loadAfter": [21.62060546875, 14.25439453125, 15.68896484375],
+        "pressureBefore": {
+          "cpu": "some avg10=0.35 avg60=0.20 avg300=0.38 total=426366415\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.33 avg60=0.17 avg300=0.13 total=137731809\nfull avg10=0.33 avg60=0.16 avg300=0.12 total=132312711\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745596185\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664260211\n"
+        },
+        "pressureAfter": {
+          "cpu": "some avg10=0.56 avg60=0.25 avg300=0.38 total=426438346\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.76 avg60=0.25 avg300=0.15 total=137841516\nfull avg10=0.76 avg60=0.25 avg300=0.14 total=132421480\n",
+          "io": "some avg10=0.00 avg60=0.02 avg300=0.05 total=745601992\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=664264015\n"
+        },
+        "limits": {
+          "RLIMIT_NOFILE": [1048576, 1048576],
+          "RLIMIT_AS": [-1, -1],
+          "RLIMIT_CPU": [-1, -1]
+        },
+        "sourceStable": true,
+        "passed": 8,
+        "total": 8,
+        "suites": 3
+      }
+    }
+  },
+  "scope": "Five existing admitted files only. Preserve native generation check and offline transport fixture subjects; no global reinventory."
+}

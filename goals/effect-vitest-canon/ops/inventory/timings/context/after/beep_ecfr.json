@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/ecfr",
+  "sourceHead": "7385833a21fe899dd15e49422fd5438ab6ebd651",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.825830469999346,
+  "bunWholeCommandSeconds": 2.317901542002801,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [77.5458984375, 56.09326171875, 34.4990234375],
+  "loadAfter": [72.865234375, 55.833984375, 34.64794921875],
+  "pressureBefore": {
+    "cpu": "some avg10=13.13 avg60=15.31 avg300=11.26 total=487686390\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.62 avg60=0.67 avg300=0.48 total=142483574\nfull avg10=0.43 avg60=0.49 avg300=0.36 total=136373255\n",
+    "io": "some avg10=2.26 avg60=1.90 avg300=1.17 total=752939589\nfull avg10=0.67 avg60=0.53 avg300=0.18 total=666781603\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=9.51 avg60=14.41 avg300=11.15 total=488055370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.46 avg60=0.64 avg300=0.47 total=142510338\nfull avg10=0.35 avg60=0.47 avg300=0.35 total=136397311\n",
+    "io": "some avg10=1.51 avg60=1.79 avg300=1.16 total=753004018\nfull avg10=0.37 avg60=0.48 avg300=0.17 total=666816593\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "719141fd357408178df96ebff4e0170ef435fe778f20abadb14d576ff2fa8623"
+    },
+    {
+      "file": "packages/drivers/ecfr/package.json",
+      "sha256": "17b67446d24ed566209f7429eafb3b54b7d507e22d1a0dfa0b129f7bf403b337"
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.config.ts",
+      "sha256": "bd3c59992b87ef6dac73d4f15febbc36c97209b77817ad2c2ecb0c6a0de613c1"
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
+      "sha256": "21bc0110121c399c41853c645103fc04bb3c61699d76cdb47418836b1fab2b28"
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "sha256": "2b6fb3abdbac29e1fb9ed88ed9229343bd394fbf5bf4109b4d0a769d3bf5f3c9"
+    },
+    {
+      "file": "packages/drivers/ecfr/src/contract.ts",
+      "sha256": "95653668920b2d99ab95186848583bb7d6c812f030b8f89a3ad1a4e27171aa9f"
+    },
+    {
+      "file": "packages/drivers/ecfr/src/index.ts",
+      "sha256": "4a1ba9fc262c4ed934614788c520e8c80fcb912226bddf221da9fefe88e1d2fc"
+    },
+    {
+      "file": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+      "sha256": "b765f2d7515c1d1266bd2c1d8edc169a73983ec1367ae7dd185733858286fdd0"
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "sha256": "d30188a8f2cf9f19f9017b0b5f2e21b9a9ac992706d266f8f47d43742e92bec5"
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "sha256": "7ec76dde20531f6f41cd32aa09570aa95bf1f330f71bd1b3b03600bfbee9375e"
+    }
+  ],
+  "rawReporterSha256": "0a6aaab6d5d449157271569ecdeb4d7ce35c1615882bdd0817bf0c1d52a21cfb",
+  "rawLogSha256": "b18adf047c03269ef19123e38530fe22c2b5566d7d6f62f4f39470dbff631516",
+  "acceptance": "One configured Node and Bun final-source observation each: 10 passed,2 suites. Load and pressure are retained without normalization or best-of selection; no causal speedup claim. These source hashes were verified unchanged after the main merge."
+}
