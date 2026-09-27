@@ -14,10 +14,9 @@ import * as Rule from "@beep/shared-domain/values/Rule/Rule.model";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
@@ -166,20 +165,20 @@ describe("shared-domain schema parity", () => {
 
   it("keeps literal-kit member guards while adding decode statics", () => {
     assertTrue(Organization.LicenseTier.is.enterprise("enterprise"));
-    expect(Organization.LicenseTier.fromUnknown("team")).toEqual(Result.succeed("team"));
+    assertSuccess(Organization.LicenseTier.fromUnknown("team"), "team");
     Organization.LicenseTier.decodeOption("solo").pipe(O.isSome, assertTrue);
     assertTrue(Membership.Role.is.owner("owner"));
-    expect(Membership.Role.fromUnknown("member")).toEqual(Result.succeed("member"));
+    assertSuccess(Membership.Role.fromUnknown("member"), "member");
     assertTrue(Membership.Status.is.active("active"));
-    expect(Membership.Status.fromUnknown("active")).toEqual(Result.succeed("active"));
+    assertSuccess(Membership.Status.fromUnknown("active"), "active");
     assertTrue(SourceKind.SourceKind.is.Agent("Agent"));
-    expect(SourceKind.SourceKind.fromUnknown("System")).toEqual(Result.succeed("System"));
+    assertSuccess(SourceKind.SourceKind.fromUnknown("System"), "System");
     assertTrue(Principal.SystemComponent.is.Runtime("Runtime"));
-    expect(Principal.SystemComponent.fromUnknown("Policy")).toEqual(Result.succeed("Policy"));
+    assertSuccess(Principal.SystemComponent.fromUnknown("Policy"), "Policy");
     assertTrue(ClaimLifecycle.ClaimLifecycle.is.admitted("admitted"));
-    expect(ClaimLifecycle.ClaimLifecycle.fromUnknown("candidate")).toEqual(Result.succeed("candidate"));
+    assertSuccess(ClaimLifecycle.ClaimLifecycle.fromUnknown("candidate"), "candidate");
     assertTrue(Rule.Effect.is.allow("allow"));
-    expect(Rule.Effect.fromUnknown("deny")).toEqual(Result.succeed("deny"));
+    assertSuccess(Rule.Effect.fromUnknown("deny"), "deny");
   });
 
   describe("round-trips schema-derived values through absorbed invariants", () => {
