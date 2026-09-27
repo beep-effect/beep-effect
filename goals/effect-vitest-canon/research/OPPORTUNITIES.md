@@ -3456,3 +3456,13 @@ writer treated the new position as a fresh advisory and also reordered unrelated
 entries. The repair preserves every existing status and rationale and updates
 only the owned line; the full schema-first check passes. Run this root gate
 before batch publication, since package verification does not cover this drift.
+
+### Preserve semantic failure evidence without comparing trace annotations
+
+Dock's capture witness initially compared the whole Exit against a newly built
+failure Cause. The real fixture carries Effect tracing annotations, so deep
+Cause equality rejected the same typed error value. Decode the extracted error
+against its runtime type schema and assert its operation/message instead. This
+retains failure-completion evidence while avoiding incidental stack metadata.
+For timeout controls, pair the JSON reporter with the default reporter: the
+JSON-only failure contained a generic Error stack but omitted the timeout text.
