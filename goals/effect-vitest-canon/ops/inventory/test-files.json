@@ -3587,64 +3587,64 @@
     "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 4409,
-    "lines": 82
+    "bytes": 6634,
+    "lines": 136
   },
   {
     "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 2936,
-    "lines": 83
+    "bytes": 3087,
+    "lines": 87
   },
   {
     "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 6283,
-    "lines": 179
+    "bytes": 8595,
+    "lines": 249
   },
   {
     "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 21906,
-    "lines": 519
+    "bytes": 24221,
+    "lines": 593
   },
   {
     "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 35825,
-    "lines": 878
+    "bytes": 40969,
+    "lines": 1021
   },
   {
     "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 10759,
-    "lines": 288
+    "bytes": 11021,
+    "lines": 296
   },
   {
     "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 683,
-    "lines": 15
+    "bytes": 804,
+    "lines": 18
   },
   {
     "file": "packages/foundation/modeling/rdf/test/URI.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 2816,
-    "lines": 71
+    "bytes": 5124,
+    "lines": 127
   },
   {
     "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
     "package": "@beep/rdf",
     "kind": "test",
-    "bytes": 2122,
-    "lines": 67
+    "bytes": 2158,
+    "lines": 68
   },
   {
     "file": "packages/foundation/modeling/schema/dist/internal/test/Markdown.test-kit.d.ts",
