@@ -2533,3 +2533,12 @@ call diagnostics. Preserve every numeric expected operand, construct matching
 expected values through the existing public model, and use the pipeable predicate
 form. A matcher-semantics review must include schema-class prototypes, not only
 payload fields, before counting a constructor-shaped assertion as migrated.
+
+## Pretext native browser proof friction (2026-09-27)
+
+A scoped Vitest Chromium probe for the runtime profile fence failed during Vite
+dependency optimization: `Cannot destructure property exportsData`. Disabling
+discovery in the private probe exited 1 with zero cases, so it earned no browser
+proof credit. Configured Node/Bun package proof and a controlled Chromium
+user-agent counterexample pass. A qualified browser unit-test harness would avoid
+this setup detour without changing the package's native canvas subject.

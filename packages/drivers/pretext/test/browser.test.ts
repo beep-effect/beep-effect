@@ -1,6 +1,7 @@
 import { detectEngineProfile, PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 
 const runtimeHasCanvas2d = P.isFunction(globalThis.OffscreenCanvas) || !P.isUndefined(globalThis.document);
@@ -9,7 +10,22 @@ describe("detectEngineProfile", () => {
   it.effect(
     "pins the non-browser fence values mirrored from upstream v0.0.8",
     Effect.fnUntraced(function* () {
-      const profile = detectEngineProfile();
+      const profile = yield* Effect.sync(() => {
+        const original = O.fromNullishOr(Object.getOwnPropertyDescriptor(globalThis, "navigator"));
+        Object.defineProperty(globalThis, "navigator", { configurable: true, value: undefined });
+        try {
+          return detectEngineProfile();
+        } finally {
+          O.match(original, {
+            onNone: () => {
+              Reflect.deleteProperty(globalThis, "navigator");
+            },
+            onSome: (descriptor) => {
+              Object.defineProperty(globalThis, "navigator", descriptor);
+            },
+          });
+        }
+      });
 
       expect(profile.lineFitEpsilon).toBe(0.005);
       expect(profile.carryCJKAfterClosingQuote).toBe(false);
@@ -76,6 +92,7 @@ describe("PretextCaptureLive", () => {
 
         expect(snapshot.version).toBe(1);
         expect(snapshot.metrics.lineHeight).toBe(20);
+        expect(snapshot.metrics.engineProfile).toEqual(detectEngineProfile());
       })
     );
   });
