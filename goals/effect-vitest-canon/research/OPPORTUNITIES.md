@@ -3197,3 +3197,14 @@ The package audit caught TS2724 after importing assertTrue from @effect/vitest.
 The installed adapter exports the helper from @effect/vitest/utils. Correcting
 the explicit import restores the full package audit and docgen. Consult the
 installed utility barrel before grouping new assertion imports.
+
+
+### Property proof environment typo (2026-09-27)
+
+The Skill Contract elevated property command used BEEP_FC_RUNS=400, while
+fcRuns reads BEEP_FC_NUM_RUNS. That pass did not establish the claimed floor.
+Rerunning with BEEP_FC_NUM_RUNS=400 and BEEP_FC_SEED=20260708 passes all
+47 tests. A direct helper probe confirms runs 400 and seed 20260708. Recent
+Law Practice (50), Epistemic (64), Agents Server (4) and architecture proof (2)
+selected properties also pass fresh commands with the explicit correct variable.
+Record exact environment maps with proof receipts to prevent ambiguous claims.
