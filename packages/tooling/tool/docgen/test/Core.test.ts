@@ -1,6 +1,7 @@
 import * as Core from "@beep/repo-docgen/Core";
+import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as ChildProcess from "effect/process/ChildProcess";
 

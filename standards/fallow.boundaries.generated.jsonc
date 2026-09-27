@@ -3302,6 +3302,7 @@
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3312,6 +3313,7 @@
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
