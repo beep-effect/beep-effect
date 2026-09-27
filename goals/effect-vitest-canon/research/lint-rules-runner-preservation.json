@@ -1,0 +1,30 @@
+{
+  "phase": "runner",
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "67fbba059ed5e1043cf1bad8d75d46464f7617309fdb63fee6f6b14ea9e77911",
+      "instrumented": true
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "687a4a53480e8e98608f758cacb1765af8b703b6332a4ac5d0999571075d592b",
+      "instrumented": true
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "4971037d9341826b179bd0a9d390761b4cedc51a81f686e073238fbfe2fed712",
+      "instrumented": true
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "72d5f5037a7eed9a3216ddce17f7d00bf9d9bd62c723302fb03b9026ce9fe579",
+      "instrumented": true
+    }
+  ],
+  "testUtilsRetainedForFcRuns": true
+}

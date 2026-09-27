@@ -3070,3 +3070,14 @@ did not flag this repo-level dependency condition. The repair removes the unused
 dev dependency, regenerates lockfile and TypeScript references, and reviews only
 the removed cache dependency edges. A runner-phase check for dependencies made
 unused by removed helper imports would have prevented the delayed CI feedback.
+
+## 2026-09-27: native subprocess signal absence differs across runners
+
+The lint-rules observability Node run failed with `Schema validation failed`
+when the new process-error guard treated absent signals as undefined-only.
+`vitest.setup.ts` forwards Node's `result.signal`, which is null on normal
+termination; Bun declares its corresponding field optional. Normalize nullish
+signal absence at the harness boundary before validating the error payload.
+This preserved the native subprocess subject and made all 78 cases pass on both
+runtimes. Running both runtimes before publishing caught the mismatch that the
+configured Bun-only package audit did not.

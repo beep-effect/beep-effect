@@ -1,0 +1,19 @@
+{
+  "phase": "property",
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "beforeSha256": "d4daddc980b2a957b3cbf5776c5717b8e983c51818b8ef051d86b1262fa68b0c",
+      "change": "Retain original four compiler inputs and aggregate count; additionally assert exact reported callee object identities."
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "beforeSha256": "851617d04b62cdc53e608370620859640c4ba2e00da2831664b0110721a9cb16",
+      "change": "Decode actual JSONC plugin arrays at top level and overrides using the existing shared decoder, then compare resolved registrations to each canonical rule path."
+    }
+  ],
+  "nativePropertiesInherited": 4,
+  "upstreamFixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+  "nativePropertyInputsOraclesFloorsUnchanged": true,
+  "schemaDependency": "Declare shared schema dependency already used by codec.ts and now by the JSONC registration oracle."
+}

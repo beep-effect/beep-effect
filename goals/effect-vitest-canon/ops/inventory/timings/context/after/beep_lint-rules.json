@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/lint-rules",
+  "sourceHead": "8b6a41b5e74843e5b2c932e08001f325fb862392",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 13.437713246996282,
+  "bunWholeCommandSeconds": 7.526865892999922,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [13.81591796875, 13.7412109375, 18.30078125],
+  "loadAfter": [12.90869140625, 13.55078125, 18.18994140625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.61 avg60=0.74 avg300=0.74 total=578622532\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.16 total=152571734\nfull avg10=0.00 avg60=0.00 avg300=0.14 total=145387099\n",
+    "io": "some avg10=1.57 avg60=0.40 avg300=0.09 total=764536766\nfull avg10=1.33 avg60=0.34 avg300=0.07 total=671853803\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.15 avg60=0.58 avg300=0.70 total=578655583\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.15 total=152571955\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=145387317\n",
+    "io": "some avg10=0.38 avg60=0.31 avg300=0.09 total=764539135\nfull avg10=0.32 avg60=0.26 avg300=0.06 total=671855593\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "69aa27a17d16753931cd0554e7c3f368baf066aab73df7b259bcbab25983dc1a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/package.json",
+      "sha256": "8e86e23ddd33897f848a4c54bfb213c630ada12f4ad6024b9a3baed69b165624"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
+      "sha256": "73c7b0917a4fd35e0ef28dc70b042db239809eb27eae8fbac5a8bfbd9b7a0c18"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/index.ts",
+      "sha256": "46d905bb03b10775917c1881d75a3f1a588ffedff5dee21b4a8b41447b48c10b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/namespace-node-imports.ts",
+      "sha256": "b54b71be24220f74e631ecdddb4afe8fac89f9d507e088893d9e7780dea742ed"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-global-process-runtime.ts",
+      "sha256": "be819ba2fdea51a2158b61b7b96a7f437f86398b5f450fe39525c57fc25c00ad"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts",
+      "sha256": "9781619983596f4e3d7d61df72015702c6b866366fcfbdf8b81bbb86bcd33b22"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-js-extension-imports.ts",
+      "sha256": "963664d67ac46838635e7eff38dedd88ad7e6cc87be9ed626545b0bd97b047cb"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts",
+      "sha256": "91415c25135bbc35153971f2fd173665f145c8fdf873b9a74c64b85ab3704a5f"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-opaque-instance-fields.ts",
+      "sha256": "90afaeee03d064e1da12ac8f3ce89ba4e9630937c2c9a98f8f3f2234c704c59b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+      "sha256": "eb167412d560fa74ff741672078d46691ec92add779caa14cf6e993aaf3eb869"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/codec.ts",
+      "sha256": "53776da3ba5fb0cb7cde64b01a7f94967180edc9df4ce4d1287a0eb9bf7b58ae"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+      "sha256": "add675151e210ea5a90222509c0e03b6c4269e9451cdb2229e69a59e2b8e042a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+      "sha256": "7aa87335e387b8665b8b488a533765eacb59f6f32af8a25935280d3e8fdc6f88"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "sha256": "67fbba059ed5e1043cf1bad8d75d46464f7617309fdb63fee6f6b14ea9e77911"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "sha256": "28f1087a0d947a725762757efe0486a3fb367658173c33b4ee4aafecfdef520b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "sha256": "687a4a53480e8e98608f758cacb1765af8b703b6332a4ac5d0999571075d592b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "sha256": "eb1f0758dbffef71f6c420488287f8c3fa7aad15cb7bd8f161936a13ca8fda08"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
+      "sha256": "5a19bd51109ace8fa88c5e6f13bc4d86d777dc857a9a2c2092db747eefdbd2aa"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",
+      "sha256": "60085bed0ca464287ab2f046eb14c5dd2ffffa74f1325db47c7b80e187d418f6"
+    }
+  ],
+  "rawReporterSha256": "3f8399a99b2d298cf7fd52eb054a82251904a6e204caede9b07b683eb74ee996",
+  "rawLogSha256": "2adee963b909c99c561a468b3b042293d96fa5104061f3d5d32575b7cad61d33",
+  "acceptance": "One configured Node and Bun final-source observation each: 80 passed,4 suites. Load and pressure are retained without normalization or best-of selection; no causal speedup claim. These source hashes were verified unchanged against the current committed source."
+}

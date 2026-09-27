@@ -2815,6 +2815,8 @@
       "version": "0.1.0",
       "devDependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
         "@biomejs/biome": "catalog:",

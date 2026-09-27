@@ -1,0 +1,54 @@
+{
+  "rows": 64,
+  "statuses": {
+    "fixed": 30,
+    "exception": 6,
+    "open": 28
+  },
+  "historicalDetectorIdsRetained": 24,
+  "upstreamAttributedDetectorIds": 10,
+  "currentDetectorExceptions": 4,
+  "admittedFiles": 9,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7713,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 683,
+  "sourceHashes": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/codec.ts",
+      "sha256": "53776da3ba5fb0cb7cde64b01a7f94967180edc9df4ce4d1287a0eb9bf7b58ae"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+      "sha256": "add675151e210ea5a90222509c0e03b6c4269e9451cdb2229e69a59e2b8e042a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+      "sha256": "7aa87335e387b8665b8b488a533765eacb59f6f32af8a25935280d3e8fdc6f88"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "sha256": "67fbba059ed5e1043cf1bad8d75d46464f7617309fdb63fee6f6b14ea9e77911"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "sha256": "28f1087a0d947a725762757efe0486a3fb367658173c33b4ee4aafecfdef520b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "sha256": "687a4a53480e8e98608f758cacb1765af8b703b6332a4ac5d0999571075d592b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "sha256": "eb1f0758dbffef71f6c420488287f8c3fa7aad15cb7bd8f161936a13ca8fda08"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
+      "sha256": "5a19bd51109ace8fa88c5e6f13bc4d86d777dc857a9a2c2092db747eefdbd2aa"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",
+      "sha256": "60085bed0ca464287ab2f046eb14c5dd2ffffa74f1325db47c7b80e187d418f6"
+    }
+  ]
+}

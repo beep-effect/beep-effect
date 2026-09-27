@@ -9,7 +9,9 @@
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
 // unary by contract: `options` stays reachable through `S.encodeUnknownSync(...)`;
@@ -17,29 +19,116 @@ import * as S from "effect/Schema";
 export const encodeConfig: (input: unknown) => string = UnknownFromJsonString.encodeUnknownSync;
 
 /**
- * Build a decoder that parses a subprocess's JSON `stdout` into `report`'s decoded type,
- * falling back to `fallback` when the output is not the expected JSON (tolerating non-JSON
- * noise). The fallback erases the decode error, so the returned Effect cannot fail.
+ * Reports malformed subprocess JSON without converting it into an empty lint report.
  *
- * @param report - The report schema to decode the JSON string against.
- * @param fallback - The value to yield when decoding fails.
- * @returns A function from raw stdout to a never-failing decoded-report Effect.
- * @category utilities
- * @since 0.1.0
+ * **Example** (Inspect the failed output)
+ *
+ * ```ts
+ * import { JsonReportError } from "./codec.ts"
+ * const error = JsonReportError.make({ stdout: "invalid", cause: "invalid JSON" })
+ * console.log(error.stdout) // invalid
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-// Named alias, not an inline `(stdout: string) => …`: `missingPipeableSignature`
-// fires on an anonymous function return type even when a correct data-last
-// overload exists. Naming it defers the comparison and satisfies the rule.
-type ReportParser<Report extends S.Top> = (
-  stdout: string
-) => Effect.Effect<Report["Type"], never, Report["DecodingServices"]>;
+export class JsonReportError extends S.TaggedError<JsonReportError>()("JsonReportError", {
+  stdout: S.String,
+  cause: S.Defect({ includeStack: true }),
+}) {}
 
+/**
+ * Decode subprocess stdout with the supplied report schema, retaining failed output
+ * and its decoding cause in the error channel. The stdout context is capped at
+ * 4096 characters; decoding still checks the complete input.
+ *
+ * **Example** (Decode a report)
+ *
+ * ```ts
+ * import { jsonReportParser } from "./codec.ts"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * const report = jsonReportParser(S.Struct({ count: S.Number }))("{\"count\":2}")
+ * const count = Effect.map(report, (value) => value.count)
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
 export const jsonReportParser: {
-  <Report extends S.Top>(fallback: Report["Type"]): (report: Report) => ReportParser<Report>;
-  <Report extends S.Top>(report: Report, fallback: Report["Type"]): ReportParser<Report>;
-} = dual(
-  2,
-  <Report extends S.Top>(report: Report, fallback: Report["Type"]): ReportParser<Report> =>
-    (stdout) =>
-      S.decodeEffect(S.fromJsonString(report))(stdout).pipe(Effect.orElseSucceed(() => fallback))
+  <Report extends S.Top>(
+    report: Report
+  ): (stdout: string) => Effect.Effect<Report["Type"], JsonReportError, Report["DecodingServices"]>;
+  <Report extends S.Top>(
+    stdout: string,
+    report: Report
+  ): Effect.Effect<Report["Type"], JsonReportError, Report["DecodingServices"]>;
+} = dual(2, <Report extends S.Top>(stdout: string, report: Report) =>
+  S.decodeEffect(S.fromJsonString(report))(stdout).pipe(
+    Effect.mapError((cause) => JsonReportError.make({ stdout: Str.takeLeft(stdout, 4096), cause }))
+  )
 );
+
+/**
+ * Retains the diagnostics of an abnormal native linter termination.
+ *
+ * **Example** (Inspect a failed invocation)
+ *
+ * ```ts
+ * import { LinterProcessError } from "./codec.ts"
+ * import * as O from "effect/Option"
+ * const error = LinterProcessError.make({
+ *   exitCode: 2, stdout: "", stderr: "invalid configuration", signal: O.none(),
+ *   timedOut: false, outputTruncated: false
+ * })
+ * console.log(error.stderr) // invalid configuration
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LinterProcessError extends S.TaggedError<LinterProcessError>()("LinterProcessError", {
+  exitCode: S.Int,
+  stdout: S.String,
+  stderr: S.String,
+  signal: S.Option(S.String),
+  timedOut: S.Boolean,
+  outputTruncated: S.Boolean,
+}) {}
+
+const isLintExit = S.is(S.Literals([0, 1]));
+
+/**
+ * Accept normal lint outcomes (zero or one) and preserve abnormal process diagnostics.
+ * Signals, timeouts, and truncated output always fail, even with an accepted exit code.
+ * Error stdout and stderr context each retain at most 4096 characters.
+ *
+ * **Example** (Validate a native result)
+ *
+ * ```ts
+ * import { validateLinterProcess } from "./codec.ts"
+ * const result = Bun.spawnSync(["bunx", "oxlint", "--version"])
+ * const checked = validateLinterProcess(result)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateLinterProcess = (result: Bun.SyncSubprocess<"pipe", "pipe">) => {
+  const signal = O.fromNullishOr(result.signalCode);
+  return isLintExit(result.exitCode) &&
+    O.isNone(signal) &&
+    result.exitedDueToTimeout !== true &&
+    result.exitedDueToMaxBuffer !== true
+    ? Effect.succeed(result)
+    : Effect.fail(
+        LinterProcessError.make({
+          exitCode: result.exitCode,
+          stdout: Str.takeLeft(result.stdout.toString(), 4096),
+          stderr: Str.takeLeft(result.stderr.toString(), 4096),
+          signal,
+          timedOut: result.exitedDueToTimeout === true,
+          outputTruncated: result.exitedDueToMaxBuffer === true,
+        })
+      );
+};

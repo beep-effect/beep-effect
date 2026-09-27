@@ -1,9 +1,13 @@
 import { ImportBinding } from "@beep/lint-rules/oxlint";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { JsonReportError, jsonReportParser } from "./codec.ts";
 import { BiomeReport } from "./harness.ts";
 import { OxlintReport } from "./oxlint-harness.ts";
 
@@ -72,3 +76,32 @@ describe("crispened schema parity", () => {
     { arbitrary: fcRuns(50) }
   );
 });
+
+describe("subprocess report failures", () => {
+  for (const report of [BiomeReport, OxlintReport]) {
+    for (const stdout of ["not JSON", '{"diagnostics":"invalid"}']) {
+      it.effect(`rejects malformed ${report === BiomeReport ? "Biome" : "oxlint"} output: ${stdout}`, () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(jsonReportParser(report)(stdout));
+          error.pipe(S.is(JsonReportError), assertTrue);
+          expect(error.stdout).toBe(stdout);
+          expect(error.cause).toBeDefined();
+        })
+      );
+    }
+    it.effect(`accepts an empty valid ${report === BiomeReport ? "Biome" : "oxlint"} report`, () =>
+      Effect.gen(function* () {
+        expect(yield* jsonReportParser(report)("{}")).toEqual({});
+      })
+    );
+  }
+});
+
+it.effect("bounds malformed report stdout context", () =>
+  Effect.gen(function* () {
+    const error = yield* Effect.flip(jsonReportParser(BiomeReport)(Str.repeat(5000)("x")));
+    expect(error.stdout).toBe(Str.repeat(4096)("x"));
+    error.pipe(S.is(JsonReportError), assertTrue);
+    expect(error.cause).toBeDefined();
+  })
+);
