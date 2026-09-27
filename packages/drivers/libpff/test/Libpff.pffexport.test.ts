@@ -139,6 +139,8 @@ for arg in "$@"; do
   if [ "$prev" = "-t" ]; then target="$arg"; fi
   prev="$arg"
 done
+trap 'printf terminated > "$target.cancelled"; exit 143' TERM
+printf ready > "$target.ready"
 sleep 1
 printf 'late write' > "$target.late"
 `;
@@ -325,12 +327,13 @@ describe("makePffexportFileProcessingEngine", () => {
   it.layer(NodeServices.layer, { excludeTestServices: true })(
     "isolates a file-locator export inside bubblewrap when configured",
     (it) => {
-      it.effect(
-        "isolates a file-locator export inside bubblewrap when configured",
-        Effect.fnUntraced(function* () {
+      it.effect("isolates a file-locator export inside bubblewrap when configured", (context) =>
+        Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const bwrapPath = "/usr/bin/bwrap";
-          if (!(yield* fs.exists(bwrapPath))) return;
+          if (!(yield* fs.exists(bwrapPath))) {
+            return yield* Effect.sync(() => context.skip("bubblewrap binary is absent at /usr/bin/bwrap"));
+          }
           const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
           const engine = yield* makePffexportFileProcessingEngine(
             PffexportEngineConfig.make({
@@ -1020,6 +1023,12 @@ exec "$mapped_command" "\${mapped[@]}"`
           const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
           expect(error.reason).toBe("operation-timed-out");
+          // Positive child observations prove the export started and handled
+          // cancellation; the original late-write absence check remains below.
+          expect(yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.ready`))).toBe("ready");
+          expect(yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.cancelled`))).toBe(
+            "terminated"
+          );
           yield* Effect.sleep("1250 millis");
           expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`))).toBe(false);
         })

@@ -23,15 +23,11 @@ const decodePosixPath = S.decodeEffect(PosixPath);
 const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 
 // Snapshot the opt-in lane key once, treating absent and blank values as "not
-// configured" so the whole suite no-ops instead of exporting a phantom PST.
+// configured" so the live registrations report skips instead of exporting a phantom PST.
 // Operators can point this at any real PST — the documented public sample is
 // Apache Tika's testPST.pst, pinned by commit URL and sha256 in the package
 // README; no PST binary is committed to this public repository.
 const livePstPath = Config.String(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
-const skipNotice = Effect.logInfo(
-  `Skipping the live pffexport lane because ${BEEP_TEST_LIBPFF_PST_ENV} is not configured.`
-);
-
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
 const PffexportMessageRecordArbitrary = Arbitrary.schema(PffexportMessageRecord);
 
@@ -83,12 +79,13 @@ describe("@beep/libpff live pffexport", () => {
   it.layer(NodeServices.layer, { excludeTestServices: true })(
     "reports a runtime pffexport version and exports a real PST",
     (it) => {
-      it.effect(
-        "reports a runtime pffexport version and exports a real PST",
-        Effect.fnUntraced(function* () {
+      it.effect("reports a runtime pffexport version and exports a real PST", (context) =>
+        Effect.gen(function* () {
           const pstPath = yield* livePstPath;
           if (O.isNone(pstPath)) {
-            return yield* skipNotice;
+            return yield* Effect.sync(() =>
+              context.skip("BEEP_TEST_LIBPFF_PST is not configured; real PST integration did not run")
+            );
           }
 
           const fs = yield* FileSystem.FileSystem;
@@ -151,12 +148,13 @@ describe("@beep/libpff live pffexport", () => {
   it.layer(NodeServices.layer, { excludeTestServices: true })(
     "keeps a missing live source inside the operation error contract",
     (it) => {
-      it.effect(
-        "keeps a missing live source inside the operation error contract",
-        Effect.fnUntraced(function* () {
+      it.effect("keeps a missing live source inside the operation error contract", (context) =>
+        Effect.gen(function* () {
           const pstPath = yield* livePstPath;
           if (O.isNone(pstPath)) {
-            return yield* skipNotice;
+            return yield* Effect.sync(() =>
+              context.skip("BEEP_TEST_LIBPFF_PST is not configured; real PST integration did not run")
+            );
           }
 
           const fs = yield* FileSystem.FileSystem;
