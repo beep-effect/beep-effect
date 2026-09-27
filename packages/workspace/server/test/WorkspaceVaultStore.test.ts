@@ -18,34 +18,28 @@ const WorkspaceVaultStoreTestLayer = WorkspaceVaultStoreInMemoryLayer.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const decode = S.decodeUnknownResult(schema);
   const encode = S.encodeResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          expect(equivalent(decoded, value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  expect(equivalent(decoded, value)).toBe(true);
 };
 
 describe("@beep/workspace-server WorkspaceVaultStore", () => {
-  it("round-trips workspace vault error schemas with schema-derived arbitraries", () => {
-    assertSchemaRoundTrip(Workspace.WorkspaceVaultActionError);
-    assertSchemaRoundTrip(Workspace.WorkspaceVaultStoreError);
-  });
+  it.prop(
+    "round-trips workspace vault error schemas with schema-derived arbitraries",
+    {
+      actionError: Arbitrary.schema(Workspace.WorkspaceVaultActionError),
+      storeError: Arbitrary.schema(Workspace.WorkspaceVaultStoreError),
+    },
+    ({ actionError, storeError }) => {
+      assertSchemaRoundTrip(Workspace.WorkspaceVaultActionError, actionError);
+      assertSchemaRoundTrip(Workspace.WorkspaceVaultStoreError, storeError);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
   it.layer(Layer.fresh(WorkspaceVaultStoreTestLayer))((it) => {
     it.effect(

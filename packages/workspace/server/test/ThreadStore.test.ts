@@ -308,7 +308,7 @@ describe("ThreadStore in-memory", () => {
       expect(input.emptyTitle.length).toBeGreaterThan(0);
       expect(input.title.length).toBeGreaterThan(0);
     },
-    { arbitrary: {} }
+    { arbitrary: fcRuns(100) }
   );
 
   it.effect("keeps crispened construction schema encoded shapes stable", () =>
@@ -361,44 +361,22 @@ describe("ThreadStore in-memory", () => {
     })
   );
 
-  it("round-trips crispened construction schemas from derived arbitraries", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(ThreadEntityInput),
-          (value) => schemaRoundTrips(ThreadEntityInput, value),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(TurnEntityInput),
-          (value) => schemaRoundTrips(TurnEntityInput, value),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(MessageEntityInput),
-          (value) => schemaRoundTrips(MessageEntityInput, value),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(InMemoryState),
-          (value) => schemaRoundTrips(InMemoryState, value),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips crispened construction schemas from derived arbitraries",
+    {
+      thread: Arbitrary.schema(ThreadEntityInput),
+      turn: Arbitrary.schema(TurnEntityInput),
+      message: Arbitrary.schema(MessageEntityInput),
+      state: Arbitrary.schema(InMemoryState),
+    },
+    Effect.fnUntraced(function* ({ thread, turn, message, state }) {
+      expect(yield* schemaRoundTrips(ThreadEntityInput, thread)).toBe(true);
+      expect(yield* schemaRoundTrips(TurnEntityInput, turn)).toBe(true);
+      expect(yield* schemaRoundTrips(MessageEntityInput, message)).toBe(true);
+      expect(yield* schemaRoundTrips(InMemoryState, state)).toBe(true);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it.layer(Layer.fresh(CuidTestLayer))((it) => {
     it.effect(
