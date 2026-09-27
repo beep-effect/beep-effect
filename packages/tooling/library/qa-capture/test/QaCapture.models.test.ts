@@ -44,74 +44,117 @@ import { Effect, Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
-const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
-  schema: Schema
+const assertRoundTrip = Effect.fn("QaCaptureTest.assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
+  name: string,
+  schema: Schema,
+  value: Schema["Type"]
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value), name).toBe(true);
 });
 
 describe("@beep/qa-capture models", () => {
-  it.effect("round-trips literal domains", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(ActionEventKind);
-      yield* assertRoundTrip(TransitionPhase);
-      yield* assertRoundTrip(CaptureLane);
-      yield* assertRoundTrip(ClockSyncMethod);
-      yield* assertRoundTrip(ClockConfidence);
-      yield* assertRoundTrip(ExtractionPriority);
-      yield* assertRoundTrip(ExtractionRuleKind);
-      yield* assertRoundTrip(DropReason);
-    })
+  it.effect.prop(
+    "round-trips literal domains",
+    {
+      ActionEventKind: Arbitrary.schema(ActionEventKind),
+      TransitionPhase: Arbitrary.schema(TransitionPhase),
+      CaptureLane: Arbitrary.schema(CaptureLane),
+      ClockSyncMethod: Arbitrary.schema(ClockSyncMethod),
+      ClockConfidence: Arbitrary.schema(ClockConfidence),
+      ExtractionPriority: Arbitrary.schema(ExtractionPriority),
+      ExtractionRuleKind: Arbitrary.schema(ExtractionRuleKind),
+      DropReason: Arbitrary.schema(DropReason),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertRoundTrip("ActionEventKind", ActionEventKind, values.ActionEventKind);
+        yield* assertRoundTrip("TransitionPhase", TransitionPhase, values.TransitionPhase);
+        yield* assertRoundTrip("CaptureLane", CaptureLane, values.CaptureLane);
+        yield* assertRoundTrip("ClockSyncMethod", ClockSyncMethod, values.ClockSyncMethod);
+        yield* assertRoundTrip("ClockConfidence", ClockConfidence, values.ClockConfidence);
+        yield* assertRoundTrip("ExtractionPriority", ExtractionPriority, values.ExtractionPriority);
+        yield* assertRoundTrip("ExtractionRuleKind", ExtractionRuleKind, values.ExtractionRuleKind);
+        yield* assertRoundTrip("DropReason", DropReason, values.DropReason);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
-  it.effect("round-trips every action-event variant and the union", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(DomRect);
-      yield* assertRoundTrip(PointerDownEvent);
-      yield* assertRoundTrip(PointerUpEvent);
-      yield* assertRoundTrip(PointerMoveEvent);
-      yield* assertRoundTrip(PointerEnterEvent);
-      yield* assertRoundTrip(PointerLeaveEvent);
-      yield* assertRoundTrip(FocusInEvent);
-      yield* assertRoundTrip(FocusOutEvent);
-      yield* assertRoundTrip(KeyDownEvent);
-      yield* assertRoundTrip(CssTransitionEvent);
-      yield* assertRoundTrip(CssAnimationEvent);
-      yield* assertRoundTrip(ScrollEvent);
-      yield* assertRoundTrip(MarkerEvent);
-      yield* assertRoundTrip(BeaconEvent);
-      yield* assertRoundTrip(ActionEvent);
-    })
+  it.effect.prop(
+    "round-trips every action-event variant and the union",
+    {
+      DomRect: Arbitrary.schema(DomRect),
+      PointerDownEvent: Arbitrary.schema(PointerDownEvent),
+      PointerUpEvent: Arbitrary.schema(PointerUpEvent),
+      PointerMoveEvent: Arbitrary.schema(PointerMoveEvent),
+      PointerEnterEvent: Arbitrary.schema(PointerEnterEvent),
+      PointerLeaveEvent: Arbitrary.schema(PointerLeaveEvent),
+      FocusInEvent: Arbitrary.schema(FocusInEvent),
+      FocusOutEvent: Arbitrary.schema(FocusOutEvent),
+      KeyDownEvent: Arbitrary.schema(KeyDownEvent),
+      CssTransitionEvent: Arbitrary.schema(CssTransitionEvent),
+      CssAnimationEvent: Arbitrary.schema(CssAnimationEvent),
+      ScrollEvent: Arbitrary.schema(ScrollEvent),
+      MarkerEvent: Arbitrary.schema(MarkerEvent),
+      BeaconEvent: Arbitrary.schema(BeaconEvent),
+      ActionEvent: Arbitrary.schema(ActionEvent),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertRoundTrip("DomRect", DomRect, values.DomRect);
+        yield* assertRoundTrip("PointerDownEvent", PointerDownEvent, values.PointerDownEvent);
+        yield* assertRoundTrip("PointerUpEvent", PointerUpEvent, values.PointerUpEvent);
+        yield* assertRoundTrip("PointerMoveEvent", PointerMoveEvent, values.PointerMoveEvent);
+        yield* assertRoundTrip("PointerEnterEvent", PointerEnterEvent, values.PointerEnterEvent);
+        yield* assertRoundTrip("PointerLeaveEvent", PointerLeaveEvent, values.PointerLeaveEvent);
+        yield* assertRoundTrip("FocusInEvent", FocusInEvent, values.FocusInEvent);
+        yield* assertRoundTrip("FocusOutEvent", FocusOutEvent, values.FocusOutEvent);
+        yield* assertRoundTrip("KeyDownEvent", KeyDownEvent, values.KeyDownEvent);
+        yield* assertRoundTrip("CssTransitionEvent", CssTransitionEvent, values.CssTransitionEvent);
+        yield* assertRoundTrip("CssAnimationEvent", CssAnimationEvent, values.CssAnimationEvent);
+        yield* assertRoundTrip("ScrollEvent", ScrollEvent, values.ScrollEvent);
+        yield* assertRoundTrip("MarkerEvent", MarkerEvent, values.MarkerEvent);
+        yield* assertRoundTrip("BeaconEvent", BeaconEvent, values.BeaconEvent);
+        yield* assertRoundTrip("ActionEvent", ActionEvent, values.ActionEvent);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
-  it.effect("round-trips session, provenance, and plan models", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(Viewport);
-      yield* assertRoundTrip(CaptureSession);
-      yield* assertRoundTrip(ClockSync);
-      yield* assertRoundTrip(CaptureProvenance);
-      yield* assertRoundTrip(CaptureArtifact);
-      yield* assertRoundTrip(SessionManifest);
-      yield* assertRoundTrip(CollectorHandle);
-      yield* assertRoundTrip(ArtifactBudget);
-      yield* assertRoundTrip(ExtractionRule);
-      yield* assertRoundTrip(GifSpec);
-      yield* assertRoundTrip(ExtractionWindow);
-      yield* assertRoundTrip(DroppedWindow);
-      yield* assertRoundTrip(ExtractionPlan);
-    })
+  it.effect.prop(
+    "round-trips session, provenance, and plan models",
+    {
+      Viewport: Arbitrary.schema(Viewport),
+      CaptureSession: Arbitrary.schema(CaptureSession),
+      ClockSync: Arbitrary.schema(ClockSync),
+      CaptureProvenance: Arbitrary.schema(CaptureProvenance),
+      CaptureArtifact: Arbitrary.schema(CaptureArtifact),
+      SessionManifest: Arbitrary.schema(SessionManifest),
+      CollectorHandle: Arbitrary.schema(CollectorHandle),
+      ArtifactBudget: Arbitrary.schema(ArtifactBudget),
+      ExtractionRule: Arbitrary.schema(ExtractionRule),
+      GifSpec: Arbitrary.schema(GifSpec),
+      ExtractionWindow: Arbitrary.schema(ExtractionWindow),
+      DroppedWindow: Arbitrary.schema(DroppedWindow),
+      ExtractionPlan: Arbitrary.schema(ExtractionPlan),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertRoundTrip("Viewport", Viewport, values.Viewport);
+        yield* assertRoundTrip("CaptureSession", CaptureSession, values.CaptureSession);
+        yield* assertRoundTrip("ClockSync", ClockSync, values.ClockSync);
+        yield* assertRoundTrip("CaptureProvenance", CaptureProvenance, values.CaptureProvenance);
+        yield* assertRoundTrip("CaptureArtifact", CaptureArtifact, values.CaptureArtifact);
+        yield* assertRoundTrip("SessionManifest", SessionManifest, values.SessionManifest);
+        yield* assertRoundTrip("CollectorHandle", CollectorHandle, values.CollectorHandle);
+        yield* assertRoundTrip("ArtifactBudget", ArtifactBudget, values.ArtifactBudget);
+        yield* assertRoundTrip("ExtractionRule", ExtractionRule, values.ExtractionRule);
+        yield* assertRoundTrip("GifSpec", GifSpec, values.GifSpec);
+        yield* assertRoundTrip("ExtractionWindow", ExtractionWindow, values.ExtractionWindow);
+        yield* assertRoundTrip("DroppedWindow", DroppedWindow, values.DroppedWindow);
+        yield* assertRoundTrip("ExtractionPlan", ExtractionPlan, values.ExtractionPlan);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("decodes an NDJSON line into the tagged union", () =>

@@ -28,7 +28,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { ActionEvent, ExtractionPlan } from "@beep/qa-capture";
 
@@ -206,88 +205,61 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(windows[0]?.frameTimesEpochMs).toEqual([T0 - 50, T0 + 150, T0 + 400 + 50]);
   });
 
-  it("merge law: no two same-kind windows closer than the merge gap survive", () => {
-    const kinds = ["animation", "click", "drag", "hover", "marker", "transition"] as const;
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary]),
-          ([events]) => {
-            const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
-            A.forEach(kinds, (kind) => {
-              const windows = A.filter(merged.windows, (window) => window.ruleKind === kind);
-              A.forEach(A.zip(windows, A.drop(windows, 1)), ([previous, next]) => {
-                expect(next.startEpochMs - previous.endEpochMs).toBeGreaterThanOrEqual(OVERLAP_MERGE_GAP_MS);
-              });
-            });
+  it.prop(
+    "merge law: no two same-kind windows closer than the merge gap survive",
+    { events: eventsArbitrary },
+    ({ events }) => {
+      const kinds = ["animation", "click", "drag", "hover", "marker", "transition"] as const;
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
+      A.forEach(kinds, (kind) => {
+        const windows = A.filter(merged.windows, (window) => window.ruleKind === kind);
+        A.forEach(A.zip(windows, A.drop(windows, 1)), ([previous, next]) => {
+          expect(next.startEpochMs - previous.endEpochMs).toBeGreaterThanOrEqual(OVERLAP_MERGE_GAP_MS);
+        });
+      });
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("merge law: every absorbed window is recorded in dropped", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary]),
-          ([events]) => {
-            const planned = planWindows(events, defaultExtractionRules);
-            const merged = mergeOverlappingWindows(planned);
-            expect(A.length(planned)).toBe(A.length(merged.windows) + A.length(merged.dropped));
-            A.forEach(merged.dropped, (dropped) => {
-              expect(dropped.reason).toBe("overlap-merged");
-            });
+  it.prop(
+    "merge law: every absorbed window is recorded in dropped",
+    { events: eventsArbitrary },
+    ({ events }) => {
+      const planned = planWindows(events, defaultExtractionRules);
+      const merged = mergeOverlappingWindows(planned);
+      expect(A.length(planned)).toBe(A.length(merged.windows) + A.length(merged.dropped));
+      A.forEach(merged.dropped, (dropped) => {
+        expect(dropped.reason).toBe("overlap-merged");
+      });
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "budget law: the fitted estimate never exceeds the budget",
+    { events: eventsArbitrary, budget: budgetArbitrary },
+    ({ events, budget }) => {
+      const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
+      expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("budget law: the fitted estimate never exceeds the budget", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary, budgetArbitrary]),
-          ([events, budget]) => {
-            const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
-            expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
-
-  it("budget law: dropped windows are always recorded", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary, budgetArbitrary]),
-          ([events, budget]) => {
-            const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
-            const fitted = applyBudget(merged.windows, budget);
-            const droppedWindows = A.filter(
-              fitted.dropped,
-              (dropped) => dropped.reason === "budget-priority-dropped" || dropped.reason === "budget-dropped"
-            );
-            expect(A.length(merged.windows)).toBe(A.length(fitted.windows) + A.length(droppedWindows));
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "budget law: dropped windows are always recorded",
+    { events: eventsArbitrary, budget: budgetArbitrary },
+    ({ events, budget }) => {
+      const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
+      const fitted = applyBudget(merged.windows, budget);
+      const droppedWindows = A.filter(
+        fitted.dropped,
+        (dropped) => dropped.reason === "budget-priority-dropped" || dropped.reason === "budget-dropped"
+      );
+      expect(A.length(merged.windows)).toBe(A.length(fitted.windows) + A.length(droppedWindows));
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("materializes driver requests with clamped video timestamps plus one contact sheet", () => {
     const events = [
