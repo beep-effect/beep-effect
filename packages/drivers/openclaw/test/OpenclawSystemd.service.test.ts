@@ -2,6 +2,7 @@ import { OpenclawCommandExitError, OpenclawOutputParseError } from "@beep/opencl
 import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models";
 import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -153,9 +154,9 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
 
           expect(unitState.activeState).toBe("inactive");
           expect(O.getOrThrow(unitState.knownActiveState)).toBe("inactive");
-          expect(O.isNone(unitState.mainPid)).toBe(true);
-          expect(O.isNone(unitState.fragmentPath)).toBe(true);
-          expect(O.isNone(unitState.controlGroup)).toBe(true);
+          assertNone(unitState.mainPid);
+          assertNone(unitState.fragmentPath);
+          assertNone(unitState.controlGroup);
         })
       );
     }
@@ -194,7 +195,7 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
             expect(error.executable).toBe("systemctl");
             expect(error.subcommand).toBe("start");
             expect(error.exitCode).toBe(1);
-            expect(O.isNone(error.diagnostics)).toBe(true);
+            assertNone(error.diagnostics);
             expect(error.stderrLength).toBe("Failed to start openclaw-spike.service\n".length);
           }
         })

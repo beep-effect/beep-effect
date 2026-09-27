@@ -20,7 +20,8 @@ import {
 } from "@beep/openclaw/OpenclawIntent.models";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -114,18 +115,18 @@ const minimalIntent = OpenclawDeploymentIntent.make({
 describe("@beep/openclaw intent models", () => {
   it("accepts well-formed op:// secret references", () => {
     for (const reference of acceptedReferences) {
-      expect(O.isSome(OpenclawSecretReference.decodeUnknownOption(reference))).toBe(true);
+      pipe(OpenclawSecretReference.decodeUnknownOption(reference), O.isSome, assertTrue);
     }
   });
 
   it("rejects malformed secret references", () => {
     for (const reference of rejectedReferences) {
-      expect(O.isNone(OpenclawSecretReference.decodeUnknownOption(reference))).toBe(true);
+      assertNone(OpenclawSecretReference.decodeUnknownOption(reference));
     }
   });
 
   it("materializes defaults and keeps the minimal intent wire shape byte-identical", () => {
-    expect(O.isNone(minimalIntent.telegram)).toBe(true);
+    assertNone(minimalIntent.telegram);
     expect(Result.getOrThrow(encodeOpenclawDeploymentIntentResult(minimalIntent))).toEqual({
       agent: {
         id: "spike3",
@@ -233,12 +234,12 @@ describe("@beep/openclaw intent models", () => {
       models: [{ id: "model", input: ["text"], name: "model" }],
     };
 
-    expect(Result.isSuccess(decodeUnknownOpenclawModelProviderIntentResult(provider))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownOpenclawModelProviderIntentResult({ ...provider, baseUrl: "http://provider.example/v1" })
-      )
-    ).toBe(true);
+    pipe(decodeUnknownOpenclawModelProviderIntentResult(provider), Result.isSuccess, assertTrue);
+    pipe(
+      decodeUnknownOpenclawModelProviderIntentResult({ ...provider, baseUrl: "http://provider.example/v1" }),
+      Result.isFailure,
+      assertTrue
+    );
     expect(isOpenclawModelProviderIntent(ollamaProvider)).toBe(true);
   });
 

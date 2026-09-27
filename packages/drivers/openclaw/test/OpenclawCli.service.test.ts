@@ -13,6 +13,7 @@ import {
 import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Context, Duration, Effect, Layer, Result, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -454,7 +455,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(account.running).toBe(true);
         expect(O.getOrThrow(account.connected)).toBe(true);
         expect(O.getOrThrow(account.probeOk)).toBe(true);
-        expect(O.isNone(account.probeError)).toBe(true);
+        assertNone(account.probeError);
         expect(O.getOrThrow(account.tokenSource)).toBe("config");
 
         expect(lastSuccessRequest().args).toEqual([
@@ -584,7 +585,7 @@ describe("@beep/openclaw OpenclawCli service", () => {
           expect(error).toBeInstanceOf(OpenclawCommandExitError);
           if (isOpenclawCommandExitError(error)) {
             expect(error.exitCode).toBe(1);
-            expect(O.isNone(error.diagnostics)).toBe(true);
+            assertNone(error.diagnostics);
             expect(error.stderrLength).toBe("unauthorized: invalid token\n".length);
           }
         })

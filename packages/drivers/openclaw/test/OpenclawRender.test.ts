@@ -23,6 +23,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -355,7 +356,7 @@ describe("@beep/openclaw render adapter", () => {
 
       expect(second.canonicalJson).toBe(first.canonicalJson);
       expect(second.contentHash).toBe(first.contentHash);
-      expect(Result.isSuccess(UnknownFromJsonString.decodeResult(first.canonicalJson))).toBe(true);
+      pipe(UnknownFromJsonString.decodeResult(first.canonicalJson), Result.isSuccess, assertTrue);
     },
     { arbitrary: fcRuns(25) }
   );
