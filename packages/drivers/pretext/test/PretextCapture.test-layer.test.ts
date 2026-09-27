@@ -91,6 +91,14 @@ describe("PretextCaptureFixture", () => {
         );
 
         snapshot.metrics.sentence.pipe(O.isSome, assertTrue);
+        const fixture = yield* chromeLinuxArial16;
+        assertSome(snapshot.metrics.sentence, O.getOrThrow(fixture.metrics.sentence));
+        expect(snapshot.metrics.capturedAt).toBe(fixture.metrics.capturedAt);
+        expect(snapshot.metrics.engine).toBe(fixture.metrics.engine);
+        expect(snapshot.metrics.platform).toBe(fixture.metrics.platform);
+        expect(snapshot.metrics.engineProfile).toEqual(fixture.metrics.engineProfile);
+        assertSome(snapshot.metrics.oracle, O.getOrThrow(fixture.metrics.oracle));
+        assertSome(snapshot.metrics.domLineCounts, O.getOrThrow(fixture.metrics.domLineCounts));
       })
     );
   });
