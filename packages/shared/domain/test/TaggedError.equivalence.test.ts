@@ -1,6 +1,7 @@
 import { makeResult } from "@beep/shared-domain/entity/EntityRef";
 import { OrganizationId } from "@beep/shared-domain/identity/Shared";
-import { describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { identity } from "effect";
 import * as P from "effect/Predicate";

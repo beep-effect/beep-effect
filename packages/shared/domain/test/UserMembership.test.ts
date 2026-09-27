@@ -1,7 +1,8 @@
 import * as Membership from "@beep/shared-domain/entities/Membership";
 import * as User from "@beep/shared-domain/entities/User";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";

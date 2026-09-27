@@ -1,7 +1,8 @@
 import { $SharedDomainId, make } from "@beep/identity";
 import * as Identity from "@beep/shared-domain/identity";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import { cast } from "effect/Function";

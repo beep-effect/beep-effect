@@ -1,7 +1,8 @@
 import * as Organization from "@beep/shared-domain/entities/Organization";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";

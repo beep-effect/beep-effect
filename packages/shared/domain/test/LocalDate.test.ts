@@ -25,8 +25,9 @@ import {
   today,
   todayEffect,
 } from "@beep/shared-domain/values/LocalDate";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit } from "effect";
 import * as DateTime from "effect/DateTime";
