@@ -37,12 +37,14 @@ import {
 import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import { Result } from "effect";
+import { assertExitFailure, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
+import { Match, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -303,6 +305,46 @@ describe("M365 MCP server", () => {
       assert.isTrue(Str.includes(`"id":3`)(output), output);
       assert.isTrue(Str.includes("m365_list_drives")(output), output);
       assert.isTrue(Str.includes(DriveId)(output), output);
+    })
+  );
+
+  it.effect.each(["normal", "failed", "interrupted"])("awaits server teardown when its parent exits %s", (outcome) =>
+    Effect.gen(function* () {
+      const released = yield* Ref.make(0);
+      const stdout = yield* Ref.make("");
+      const stdin = yield* Queue.make<Uint8Array>();
+      const stage = yield* Ref.make(0);
+      const ready = yield* Deferred.make<void>();
+      const serverLayer = makeServerLayer(M365McpServerConfig.make({ name: "beep-m365-test", version: "0.0.0" })).pipe(
+        Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)),
+        Layer.provide(MockM365Layer)
+      );
+      const parent = yield* Effect.gen(function* () {
+        yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
+        yield* serverLayer.pipe(
+          Layer.launch,
+          Effect.ensuring(Ref.update(released, (count) => count + 1)),
+          Effect.forkChild({ startImmediately: true })
+        );
+        yield* Deferred.await(ready);
+        return yield* Match.value(outcome).pipe(
+          Match.when("normal", () => Effect.void),
+          Match.when("failed", () => Effect.fail("planned parent failure")),
+          Match.orElse(() => Effect.interrupt)
+        );
+      }).pipe(Effect.forkChild({ startImmediately: true }));
+      const exit = yield* Fiber.await(parent);
+      assert.strictEqual(yield* Ref.get(released), 1);
+      Match.value(outcome).pipe(
+        Match.when("normal", () => assertExitSuccess(exit, undefined)),
+        Match.when("failed", () => assertExitFailure(exit, Cause.fail("planned parent failure"))),
+        Match.orElse(() =>
+          Exit.match(exit, {
+            onFailure: (cause) => pipe(cause, Cause.hasInterrupts, assertTrue),
+            onSuccess: () => assert.fail("Expected parent interruption"),
+          })
+        )
+      );
     })
   );
 });
