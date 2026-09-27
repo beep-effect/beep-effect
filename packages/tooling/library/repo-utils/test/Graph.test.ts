@@ -181,6 +181,15 @@ describe("detectCycles", () => {
       const cycle = O.getOrThrow(A.head(cycles));
       expect(cycle[0]).toBe(cycle[cycle.length - 1]); // Should loop back
       expect(cycle.length).toBeGreaterThanOrEqual(3); // At least 3 distinct + repeat
+      expect(cycle).toContain("A");
+      expect(cycle).toContain("B");
+      expect(cycle).toContain("C");
+      for (const vertex of cycle) {
+        expect(["A", "B", "C"]).toContain(vertex);
+      }
+      for (const [from, to] of A.zip(A.dropRight(cycle, 1), A.drop(cycle, 1))) {
+        expect(["A->B", "B->C", "C->A"]).toContain(`${from}->${to}`);
+      }
     })
   );
 

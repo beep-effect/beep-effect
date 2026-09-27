@@ -42,6 +42,7 @@ const ConcurrentOutputSpawnerLayer = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const stderrStarted = yield* Deferred.make<void>();
+    const stdoutStarted = yield* Deferred.make<void>();
 
     return ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) {
@@ -59,12 +60,12 @@ const ConcurrentOutputSpawnerLayer = Layer.effect(
         .pipe(
           Effect.as(
             processHandle(
-              Stream.fromEffect(stderrStarted.pipe(Deferred.await)).pipe(
-                Stream.flatMap(() => Stream.make(encoder.encode(largeStdout)))
-              ),
-              Stream.fromEffect(Deferred.succeed(stderrStarted, undefined)).pipe(
-                Stream.flatMap(() => Stream.make(encoder.encode(largeStderr)))
-              )
+              Stream.fromEffect(
+                Deferred.succeed(stdoutStarted, undefined).pipe(Effect.andThen(Deferred.await(stderrStarted)))
+              ).pipe(Stream.flatMap(() => Stream.make(encoder.encode(largeStdout)))),
+              Stream.fromEffect(
+                Deferred.succeed(stderrStarted, undefined).pipe(Effect.andThen(Deferred.await(stdoutStarted)))
+              ).pipe(Stream.flatMap(() => Stream.make(encoder.encode(largeStderr))))
             )
           )
         );

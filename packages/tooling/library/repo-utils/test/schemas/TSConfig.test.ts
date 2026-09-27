@@ -219,6 +219,9 @@ describe("TSConfig schema", () => {
       });
 
       result.compilerOptions.pipe(O.isSome, assertTrue);
+      if (O.isSome(result.compilerOptions)) {
+        result.compilerOptions.value.plugins.pipe(O.isSome, assertTrue);
+      }
       if (O.isSome(result.compilerOptions) && O.isSome(result.compilerOptions.value.plugins)) {
         const firstPlugin = result.compilerOptions.value.plugins.value[0] as {
           readonly customSetting?: { readonly namespace: string };
@@ -227,6 +230,9 @@ describe("TSConfig schema", () => {
       }
 
       result["ts-node"].pipe(O.isSome, assertTrue);
+      if (O.isSome(result["ts-node"])) {
+        result["ts-node"].value.compilerOptions.pipe(O.isSome, assertTrue);
+      }
       if (O.isSome(result["ts-node"]) && O.isSome(result["ts-node"].value.compilerOptions)) {
         const compilerOptions = result["ts-node"].value.compilerOptions.value as {
           readonly customOption?: { readonly jsxRuntime: string };

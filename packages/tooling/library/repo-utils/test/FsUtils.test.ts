@@ -7,6 +7,7 @@ import { describe, expect, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Order, Path, pipe } from "effect";
 import * as Fs from "effect/FileSystem";
+import { vi } from "vitest";
 
 // Build a TestLayer that provides FsUtils AND also passes through FileSystem/Path
 // so tests can use them directly (e.g. for makeTempDirectory)
@@ -49,6 +50,7 @@ describe("FsUtils", () => {
           ignore: ["**/errors/**"],
         });
         expect(A.every(results, (r) => !Str.includes("errors/")(r))).toBe(true);
+        expect(results).toContain("src/index.ts");
       })
     );
 
@@ -83,6 +85,17 @@ describe("FsUtils", () => {
         // All results should have file extensions (not bare directory names)
         expect(results.length).toBeGreaterThan(0);
         expect(A.every(results, Str.includes("."))).toBe(true);
+
+        const fs = yield* Fs.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* fs.makeDirectory(`${root}/dotted.dir`);
+        yield* fs.writeFileString(`${root}/dotted.dir/inside.ts`, "");
+        const files = yield* utils.globFiles("**/*", { cwd: root });
+        expect(files).toContain("dotted.dir/inside.ts");
+        expect(files).not.toContain("dotted.dir");
+        for (const file of files) {
+          expect((yield* fs.stat(`${root}/${file}`)).type).toBe("File");
+        }
       })
     );
   });
@@ -173,11 +186,23 @@ describe("FsUtils", () => {
         const fs = yield* Fs.FileSystem;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
 
+        const writeSpy = yield* Effect.acquireRelease(
+          Effect.sync(() => vi.spyOn(fs, "writeFileString")),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
         const filePath = `${tmpDir}/noop.txt`;
         yield* fs.writeFileString(filePath, "unchanged");
+        writeSpy.mockClear();
 
         const changed = yield* utils.modifyFile(filePath, (content) => content);
         expect(changed).toBe(false);
+        expect(writeSpy).not.toHaveBeenCalled();
+        expect(yield* fs.readFileString(filePath)).toBe("unchanged");
+
+        const changedControl = yield* utils.modifyFile(filePath, () => "changed");
+        expect(changedControl).toBe(true);
+        expect(writeSpy).toHaveBeenCalledTimes(1);
+        expect(yield* fs.readFileString(filePath)).toBe("changed");
       })
     );
 
