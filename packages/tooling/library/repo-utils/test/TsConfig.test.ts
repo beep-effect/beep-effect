@@ -1,10 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig";
+import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
@@ -14,7 +15,7 @@ const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
 const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
+it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
   describe("collectTsConfigPaths", () => {
     it.effect(
       "should collect tsconfig files for root and workspaces",

@@ -1,13 +1,14 @@
 import { findRepoRoot } from "@beep/repo-utils/Root";
+import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
 
 describe("Root", () => {
   describe("findRepoRoot", () => {
-    layer(NodeFileSystem.layer, { timeout: "10 seconds" })((it) => {
+    it.layer(NodeFileSystem.layer, { timeout: "10 seconds" })((it) => {
       it.effect(
         "should find repo root from current directory",
         Effect.fn(function* () {
@@ -41,7 +42,7 @@ describe("Root", () => {
       );
     });
 
-    layer(Layer.succeed(Fs.FileSystem, Fs.makeNoop({ exists: () => Effect.succeed(false) })), {
+    it.layer(Layer.succeed(Fs.FileSystem, Fs.makeNoop({ exists: () => Effect.succeed(false) })), {
       timeout: "10 seconds",
     })((it) => {
       it.effect(
@@ -55,7 +56,7 @@ describe("Root", () => {
       );
     });
 
-    layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), {
+    it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), {
       timeout: "10 seconds",
     })((it) => {
       it.effect(

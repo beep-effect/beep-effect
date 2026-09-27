@@ -1,8 +1,9 @@
 import { fileURLToPath } from "node:url";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
+import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
@@ -111,10 +112,12 @@ describe("renderBiomeJson", () => {
     it.effect(
       "formats JSON when the requested target is excluded by repository Biome rules",
       Effect.fnUntraced(function* () {
+        yield* Effect.logInfo("repo-utils.biome.native.render.start");
         const rendered = yield* renderBiomeJson("scratchpad/docgen.json", {
           name: "@beep/example",
         });
 
+        yield* Effect.logInfo("repo-utils.biome.native.render.complete");
         expect(rendered).toBe('{ "name": "@beep/example" }\n');
       })
     );
@@ -127,10 +130,12 @@ describe("renderBiomeJson", () => {
     it.effect(
       "drains high-volume stdout and stderr concurrently",
       Effect.fnUntraced(function* () {
+        yield* Effect.logInfo("repo-utils.biome.duplex.render.start");
         const rendered = yield* renderBiomeJson("package.json", {
           name: "@beep/example",
         }).pipe(Effect.timeout(Duration.seconds(2)));
 
+        yield* Effect.logInfo("repo-utils.biome.duplex.render.complete");
         expect(rendered).toBe('{ "name": "@beep/example" }\n');
       })
     );
@@ -140,10 +145,12 @@ describe("renderBiomeJson", () => {
     it.effect(
       "fails closed when Biome leaves an empty rendered file",
       Effect.fnUntraced(function* () {
+        yield* Effect.logInfo("repo-utils.biome.empty-output.render.start");
         const error = yield* renderBiomeJson("scratchpad/docgen.json", {
           name: "@beep/example",
         }).pipe(Effect.flip);
 
+        yield* Effect.logInfo("repo-utils.biome.empty-output.render.complete");
         expect(error.message).toBe('Biome produced empty output for "scratchpad/docgen.json".');
       })
     );

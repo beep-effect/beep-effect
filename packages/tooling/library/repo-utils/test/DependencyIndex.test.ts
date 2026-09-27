@@ -1,9 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { buildRepoDependencyIndex } from "@beep/repo-utils/DependencyIndex";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { it } from "@beep/test-runner";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, HashMap, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
@@ -15,7 +16,7 @@ const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
 const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
+it.layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
   describe("buildRepoDependencyIndex", () => {
     it.effect(
       "should include root and all workspace packages",

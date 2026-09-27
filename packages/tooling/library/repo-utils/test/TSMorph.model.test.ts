@@ -53,9 +53,10 @@ import {
   InternalTsMorphProject,
   InternalTsMorphSourceFile,
 } from "@beep/repo-utils/TSMorph/TSMorph.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Option as O } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

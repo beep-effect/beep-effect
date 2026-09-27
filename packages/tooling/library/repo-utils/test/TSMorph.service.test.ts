@@ -15,9 +15,10 @@ import {
   TsMorphSymbolSourceRequest,
   TsMorphUnsupportedFileError,
 } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -101,13 +102,15 @@ describe("SymbolId schema arbitrary", () => {
   );
 });
 
-layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
+it.layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
   describe("resolveProjectScope", () => {
     it.effect(
       "resolves a workspace tsconfig into a stable scope",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
+        yield* Effect.logInfo("repo-utils.tsmorph.resolve.start");
         const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
+        yield* Effect.logInfo("repo-utils.tsmorph.resolve.complete");
 
         expect(scope.scopeId).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
         expect(scope.cacheKey).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");

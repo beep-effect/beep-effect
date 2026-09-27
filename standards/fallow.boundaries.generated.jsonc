@@ -3222,6 +3222,7 @@
           "@beep/identity",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3229,6 +3230,7 @@
           "@beep/identity",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

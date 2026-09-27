@@ -1,13 +1,13 @@
 import { exists, FsUtils, FsUtilsLive, findNearestPackageDir, walkFiles } from "@beep/repo-utils/FsUtils";
 import { normalizePath } from "@beep/schema";
+import { it as rootIt } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Order, Path, pipe } from "effect";
 import * as Fs from "effect/FileSystem";
-import { vi } from "vitest";
 
 // Build a TestLayer that provides FsUtils AND also passes through FileSystem/Path
 // so tests can use them directly (e.g. for makeTempDirectory)
@@ -17,7 +17,7 @@ const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 const MemoryTestLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer)));
 
 describe("FsUtils", () => {
-  layer(TestLayer, { timeout: "10 seconds" })("glob", (it) => {
+  rootIt.layer(TestLayer, { timeout: "10 seconds" })("glob", (it) => {
     it.effect(
       "should match files with a pattern",
       Effect.fn(function* () {
@@ -74,7 +74,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(TestLayer, { timeout: "10 seconds" })("globFiles", (it) => {
+  rootIt.layer(TestLayer, { timeout: "10 seconds" })("globFiles", (it) => {
     it.effect(
       "should only return files, not directories",
       Effect.fn(function* () {
@@ -100,7 +100,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("readJson / writeJson", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("readJson / writeJson", (it) => {
     it.effect(
       "should round-trip JSON through write and read",
       Effect.fn(function* () {
@@ -166,7 +166,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("modifyFile", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("modifyFile", (it) => {
     it.effect(
       "should modify file content and return true",
       Effect.fn(function* () {
@@ -231,7 +231,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("existsOrThrow", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("existsOrThrow", (it) => {
     it.effect(
       "should succeed for existing path",
       Effect.fn(function* () {
@@ -258,7 +258,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("isDirectory / isFile", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("isDirectory / isFile", (it) => {
     it.effect(
       "should return true for a directory",
       Effect.fn(function* () {
@@ -286,7 +286,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("getParentDirectory", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("getParentDirectory", (it) => {
     it.effect(
       "should return the parent directory",
       Effect.fn(function* () {
@@ -306,7 +306,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("walkFiles", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("walkFiles", (it) => {
     it.effect(
       "should return an empty array for a missing root",
       Effect.fn(function* () {
@@ -361,7 +361,7 @@ describe("FsUtils", () => {
       })
     );
 
-    layer(TestLayer, { timeout: "10 seconds" })((it) => {
+    rootIt.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       it.effect(
         "should exclude symlinked entries under the skip-symlinks guard",
         Effect.fn(function* () {
@@ -382,7 +382,7 @@ describe("FsUtils", () => {
       );
     });
 
-    layer(TestLayer, { timeout: "10 seconds" })((it) => {
+    rootIt.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       it.effect(
         "should terminate on a symlink directory cycle under the guard-cycles guard",
         Effect.fn(function* () {
@@ -403,7 +403,7 @@ describe("FsUtils", () => {
     });
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("exists", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("exists", (it) => {
     it.effect(
       "should return true for an existing path",
       Effect.fn(function* () {
@@ -426,7 +426,7 @@ describe("FsUtils", () => {
     );
   });
 
-  layer(MemoryTestLayer, { timeout: "10 seconds" })("findNearestPackageDir", (it) => {
+  rootIt.layer(MemoryTestLayer, { timeout: "10 seconds" })("findNearestPackageDir", (it) => {
     it.effect(
       "should find the nearest ancestor directory containing a package.json",
       Effect.fn(function* () {

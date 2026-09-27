@@ -2467,3 +2467,14 @@ semantics. The expected-name/count guard rejected that run; its report remains
 a diagnostic artifact with no passing credit. Select the actual existing test
 titles and validate all six expected full names in the resulting JSON before
 accepting focused proof. Process exit zero alone is insufficient evidence.
+
+## 2026-09-26: independent nested layers must retain independent memoization
+
+Repo-utils runner adoption changed a formerly standalone nested layer call into
+a callback-local it.layer call. The new Workspaces positive control caught reuse
+of its outer native FsUtils service against an inner memory fixture: the package
+proof had 231 passing cases and one introduced failure. Keep formerly standalone
+registrations on an unshadowed root runner alias, preserving independent memo
+maps and all original fixture/assertion semantics. No production defect was
+demonstrated. A runner migration checklist should distinguish lexical nesting
+from inherited layer composition before changing the registration receiver.

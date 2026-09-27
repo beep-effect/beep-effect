@@ -11,9 +11,10 @@ import {
   packageJsonJsonSchema,
 } from "@beep/repo-utils";
 import { PublishConfig } from "@beep/repo-utils/schemas/PackageJson";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Order, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

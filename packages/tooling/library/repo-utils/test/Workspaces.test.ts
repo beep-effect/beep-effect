@@ -6,10 +6,11 @@ import {
   resolveWorkspacePackages,
   workspaceGlobsFrom,
 } from "@beep/repo-utils/Workspaces";
+import { it as rootIt } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, HashMap, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
@@ -20,7 +21,7 @@ const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
 const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
+rootIt.layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
   describe("resolveWorkspaceDirs", () => {
     it.effect(
       "should resolve all workspace packages",
@@ -112,7 +113,7 @@ layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
       })
     );
 
-    layer(FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer))), {
+    rootIt.layer(FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer))), {
       timeout: "10 seconds",
     })((it) => {
       it.effect(

@@ -1,0 +1,2811 @@
+{
+  "numTotalTestSuites": 101,
+  "numPassedTestSuites": 101,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 232,
+  "numPassedTests": 232,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790469304763,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["workspaceDependencyNames"],
+          "fullName": "workspaceDependencyNames reads package names inside every bucket and drops the bucket names",
+          "status": "passed",
+          "title": "reads package names inside every bucket and drops the bucket names",
+          "duration": 3.64415699999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["sortWorkspacePackages"],
+          "fullName": "sortWorkspacePackages prints a dependency before the package that depends on it",
+          "status": "passed",
+          "title": "prints a dependency before the package that depends on it",
+          "duration": 9.43108099999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["sortWorkspacePackages"],
+          "fullName": "sortWorkspacePackages fails with CyclicDependencyError when two packages depend on each other",
+          "status": "passed",
+          "title": "fails with CyclicDependencyError when two packages depend on each other",
+          "duration": 2.6088740000000143,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should classify workspace dependencies separately from npm dependencies",
+          "status": "passed",
+          "title": "should classify workspace dependencies separately from npm dependencies",
+          "duration": 0.3426480000000538,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should classify devDependencies correctly",
+          "status": "passed",
+          "title": "should classify devDependencies correctly",
+          "duration": 0.2913179999998192,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should classify peerDependencies correctly",
+          "status": "passed",
+          "title": "should classify peerDependencies correctly",
+          "duration": 0.20530500000018037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should classify optionalDependencies correctly",
+          "status": "passed",
+          "title": "should classify optionalDependencies correctly",
+          "duration": 0.19359799999983807,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should handle package with no dependencies",
+          "status": "passed",
+          "title": "should handle package with no dependencies",
+          "duration": 0.2259079999998903,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should handle all-workspace dependencies",
+          "status": "passed",
+          "title": "should handle all-workspace dependencies",
+          "duration": 0.6648740000000544,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should handle all-npm dependencies",
+          "status": "passed",
+          "title": "should handle all-npm dependencies",
+          "duration": 0.22180099999991398,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Dependencies", "extractWorkspaceDependencies"],
+          "fullName": "Dependencies extractWorkspaceDependencies should use empty HashSet to treat all deps as npm",
+          "status": "passed",
+          "title": "should use empty HashSet to treat all deps as npm",
+          "duration": 0.18442400000003545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306459,
+      "endTime": 1790469306477.6648,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/Dependencies.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should include root and all workspace packages",
+          "status": "passed",
+          "title": "should include root and all workspace packages",
+          "duration": 20.205187999999907,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should classify workspace deps for pkg-a",
+          "status": "passed",
+          "title": "should classify workspace deps for pkg-a",
+          "duration": 4.931297000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should classify workspace devDeps for pkg-b",
+          "status": "passed",
+          "title": "should classify workspace devDeps for pkg-b",
+          "duration": 4.353638000000046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should handle pkg-c with only npm deps",
+          "status": "passed",
+          "title": "should handle pkg-c with only npm deps",
+          "duration": 5.047595999999885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should classify root package deps as npm",
+          "status": "passed",
+          "title": "should classify root package deps as npm",
+          "duration": 4.708204000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should fail with DomainError for invalid root package.json",
+          "status": "passed",
+          "title": "should fail with DomainError for invalid root package.json",
+          "duration": 2.770483000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DependencyIndex", "buildRepoDependencyIndex"],
+          "fullName": "DependencyIndex buildRepoDependencyIndex should fail with DomainError for invalid child package.json",
+          "status": "passed",
+          "title": "should fail with DomainError for invalid child package.json",
+          "duration": 2.4602250000000367,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306275,
+      "endTime": 1790469306319.4602,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["FsUtils", "glob"],
+          "fullName": "FsUtils glob should match files with a pattern",
+          "status": "passed",
+          "title": "should match files with a pattern",
+          "duration": 12.635911999999962,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "glob"],
+          "fullName": "FsUtils glob should return empty array for non-matching pattern",
+          "status": "passed",
+          "title": "should return empty array for non-matching pattern",
+          "duration": 1.731394999999793,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "glob"],
+          "fullName": "FsUtils glob should respect ignore option",
+          "status": "passed",
+          "title": "should respect ignore option",
+          "duration": 1.6682170000001406,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "glob"],
+          "fullName": "FsUtils glob supports array patterns, absolute paths, and deduped matches",
+          "status": "passed",
+          "title": "supports array patterns, absolute paths, and deduped matches",
+          "duration": 2.9893690000001243,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "globFiles"],
+          "fullName": "FsUtils globFiles should only return files, not directories",
+          "status": "passed",
+          "title": "should only return files, not directories",
+          "duration": 3.5370920000000297,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "readJson / writeJson"],
+          "fullName": "FsUtils readJson / writeJson should round-trip JSON through write and read",
+          "status": "passed",
+          "title": "should round-trip JSON through write and read",
+          "duration": 5.433320000000094,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "readJson / writeJson"],
+          "fullName": "FsUtils readJson / writeJson should write with 2-space indentation and trailing newline",
+          "status": "passed",
+          "title": "should write with 2-space indentation and trailing newline",
+          "duration": 1.7560419999999795,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "readJson / writeJson"],
+          "fullName": "FsUtils readJson / writeJson should fail with NoSuchFileError for missing file",
+          "status": "passed",
+          "title": "should fail with NoSuchFileError for missing file",
+          "duration": 1.7955629999999019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "readJson / writeJson"],
+          "fullName": "FsUtils readJson / writeJson should return None for invalid JSON",
+          "status": "passed",
+          "title": "should return None for invalid JSON",
+          "duration": 1.3340820000000804,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "modifyFile"],
+          "fullName": "FsUtils modifyFile should modify file content and return true",
+          "status": "passed",
+          "title": "should modify file content and return true",
+          "duration": 1.972234999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "modifyFile"],
+          "fullName": "FsUtils modifyFile should return false and not write when content unchanged",
+          "status": "passed",
+          "title": "should return false and not write when content unchanged",
+          "duration": 3.005092999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "modifyFile"],
+          "fullName": "FsUtils modifyFile should fail with NoSuchFileError for missing file",
+          "status": "passed",
+          "title": "should fail with NoSuchFileError for missing file",
+          "duration": 1.7292010000001028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "existsOrThrow"],
+          "fullName": "FsUtils existsOrThrow should succeed for existing path",
+          "status": "passed",
+          "title": "should succeed for existing path",
+          "duration": 0.9437010000001465,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "existsOrThrow"],
+          "fullName": "FsUtils existsOrThrow should fail for non-existing path",
+          "status": "passed",
+          "title": "should fail for non-existing path",
+          "duration": 1.0188379999999597,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "isDirectory / isFile"],
+          "fullName": "FsUtils isDirectory / isFile should return true for a directory",
+          "status": "passed",
+          "title": "should return true for a directory",
+          "duration": 1.0959869999999228,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "isDirectory / isFile"],
+          "fullName": "FsUtils isDirectory / isFile should return true for a file",
+          "status": "passed",
+          "title": "should return true for a file",
+          "duration": 1.1551070000000436,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "getParentDirectory"],
+          "fullName": "FsUtils getParentDirectory should return the parent directory",
+          "status": "passed",
+          "title": "should return the parent directory",
+          "duration": 0.5304970000001958,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "getParentDirectory"],
+          "fullName": "FsUtils getParentDirectory should handle root path",
+          "status": "passed",
+          "title": "should handle root path",
+          "duration": 0.4266170000000784,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "walkFiles"],
+          "fullName": "FsUtils walkFiles should return an empty array for a missing root",
+          "status": "passed",
+          "title": "should return an empty array for a missing root",
+          "duration": 2.278105000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "walkFiles"],
+          "fullName": "FsUtils walkFiles should sort the flat result globally by path, not per directory level",
+          "status": "passed",
+          "title": "should sort the flat result globally by path, not per directory level",
+          "duration": 2.1384109999999055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "walkFiles"],
+          "fullName": "FsUtils walkFiles should prune skipDirectories by exact base name and apply the include predicate",
+          "status": "passed",
+          "title": "should prune skipDirectories by exact base name and apply the include predicate",
+          "duration": 2.5115639999999075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "walkFiles"],
+          "fullName": "FsUtils walkFiles should exclude symlinked entries under the skip-symlinks guard",
+          "status": "passed",
+          "title": "should exclude symlinked entries under the skip-symlinks guard",
+          "duration": 8.101265000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "walkFiles"],
+          "fullName": "FsUtils walkFiles should terminate on a symlink directory cycle under the guard-cycles guard",
+          "status": "passed",
+          "title": "should terminate on a symlink directory cycle under the guard-cycles guard",
+          "duration": 2.99331600000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "exists"],
+          "fullName": "FsUtils exists should return true for an existing path",
+          "status": "passed",
+          "title": "should return true for an existing path",
+          "duration": 1.3435269999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "exists"],
+          "fullName": "FsUtils exists should return false and never fail for a missing path",
+          "status": "passed",
+          "title": "should return false and never fail for a missing path",
+          "duration": 1.126213000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "findNearestPackageDir"],
+          "fullName": "FsUtils findNearestPackageDir should find the nearest ancestor directory containing a package.json",
+          "status": "passed",
+          "title": "should find the nearest ancestor directory containing a package.json",
+          "duration": 2.610977000000048,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "findNearestPackageDir"],
+          "fullName": "FsUtils findNearestPackageDir should treat the stopAt boundary as exclusive",
+          "status": "passed",
+          "title": "should treat the stopAt boundary as exclusive",
+          "duration": 1.5743720000000394,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["FsUtils", "findNearestPackageDir"],
+          "fullName": "FsUtils findNearestPackageDir should support the data-last form",
+          "status": "passed",
+          "title": "should support the data-last form",
+          "duration": 1.4988570000000436,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306369,
+      "endTime": 1790469306452.4988,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/FsUtils.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should sort a simple linear DAG (A -> B -> C)",
+          "status": "passed",
+          "title": "should sort a simple linear DAG (A -> B -> C)",
+          "duration": 9.676748999999973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should sort a diamond dependency (A -> B,C; B,C -> D)",
+          "status": "passed",
+          "title": "should sort a diamond dependency (A -> B,C; B,C -> D)",
+          "duration": 1.2275990000000547,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should fail with CyclicDependencyError for a cycle (A -> B -> C -> A)",
+          "status": "passed",
+          "title": "should fail with CyclicDependencyError for a cycle (A -> B -> C -> A)",
+          "duration": 1.8256189999999606,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should fail with CyclicDependencyError for a self-cycle (A -> A)",
+          "status": "passed",
+          "title": "should fail with CyclicDependencyError for a self-cycle (A -> A)",
+          "duration": 0.7903959999998733,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should handle a disconnected graph",
+          "status": "passed",
+          "title": "should handle a disconnected graph",
+          "duration": 0.6292490000000726,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should handle an empty graph",
+          "status": "passed",
+          "title": "should handle an empty graph",
+          "duration": 0.7756030000000464,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["topologicalSort"],
+          "fullName": "topologicalSort should handle a single node with no dependencies",
+          "status": "passed",
+          "title": "should handle a single node with no dependencies",
+          "duration": 0.49872800000002826,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["detectCycles"],
+          "fullName": "detectCycles should return empty array for acyclic graph",
+          "status": "passed",
+          "title": "should return empty array for acyclic graph",
+          "duration": 0.5038750000001073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["detectCycles"],
+          "fullName": "detectCycles should detect a simple cycle (A -> B -> C -> A)",
+          "status": "passed",
+          "title": "should detect a simple cycle (A -> B -> C -> A)",
+          "duration": 1.031836999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["detectCycles"],
+          "fullName": "detectCycles should detect a self-cycle (A -> A)",
+          "status": "passed",
+          "title": "should detect a self-cycle (A -> A)",
+          "duration": 0.4507730000000265,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["detectCycles"],
+          "fullName": "detectCycles should return empty for empty graph",
+          "status": "passed",
+          "title": "should return empty for empty graph",
+          "duration": 0.3322910000001684,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["detectCycles"],
+          "fullName": "detectCycles should return empty for disconnected acyclic graph",
+          "status": "passed",
+          "title": "should return empty for disconnected acyclic graph",
+          "duration": 0.40470300000015413,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["detectCycles"],
+          "fullName": "detectCycles should detect multiple independent cycles",
+          "status": "passed",
+          "title": "should detect multiple independent cycles",
+          "duration": 0.5252479999999196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should compute direct + indirect deps for linear chain",
+          "status": "passed",
+          "title": "should compute direct + indirect deps for linear chain",
+          "duration": 0.9190940000000865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should compute transitive closure for diamond dependency",
+          "status": "passed",
+          "title": "should compute transitive closure for diamond dependency",
+          "duration": 0.4717749999999796,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should return empty set for leaf node",
+          "status": "passed",
+          "title": "should return empty set for leaf node",
+          "duration": 0.3766000000000531,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should return empty set for unknown package",
+          "status": "passed",
+          "title": "should return empty set for unknown package",
+          "duration": 0.41895399999998517,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should return empty set for empty graph",
+          "status": "passed",
+          "title": "should return empty set for empty graph",
+          "duration": 0.39652000000000953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should handle disconnected components (no cross-deps)",
+          "status": "passed",
+          "title": "should handle disconnected components (no cross-deps)",
+          "duration": 0.3789329999999609,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["computeTransitiveClosure"],
+          "fullName": "computeTransitiveClosure should handle single node with no dependencies",
+          "status": "passed",
+          "title": "should handle single node with no dependencies",
+          "duration": 0.3059410000000753,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306448,
+      "endTime": 1790469306470.379,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/Graph.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["JSDoc schema models"],
+          "fullName": "JSDoc schema models round-trips schema-derived tag names through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived tag names through the encoded wire shape",
+          "duration": 26.786366000000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["JSDoc schema models"],
+          "fullName": "JSDoc schema models round-trips schema-derived tag values through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived tag values through the encoded wire shape",
+          "duration": 9.760698000000048,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["JSDoc schema models"],
+          "fullName": "JSDoc schema models round-trips schema-derived category definitions and preserves priority bounds",
+          "status": "passed",
+          "title": "round-trips schema-derived category definitions and preserves priority bounds",
+          "duration": 14.364442000000054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["JSDoc schema models"],
+          "fullName": "JSDoc schema models round-trips schema-derived category signal and candidate values: CategorySignal",
+          "status": "passed",
+          "title": "round-trips schema-derived category signal and candidate values: CategorySignal",
+          "duration": 3.1591410000000906,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["JSDoc schema models"],
+          "fullName": "JSDoc schema models round-trips schema-derived category signal and candidate values: ScoredCategoryCandidate",
+          "status": "passed",
+          "title": "round-trips schema-derived category signal and candidate values: ScoredCategoryCandidate",
+          "duration": 6.5093859999999495,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306323,
+      "endTime": 1790469306383.5093,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["JSDocTagDefinition.make golden compatibility"],
+          "fullName": "JSDocTagDefinition.make golden compatibility matches the copied legacy body for representative tags",
+          "status": "passed",
+          "title": "matches the copied legacy body for representative tags",
+          "duration": 20.09462899999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["JSDocTagDefinition.make golden compatibility"],
+          "fullName": "JSDocTagDefinition.make golden compatibility matches every pre-migration JSDoc tag fingerprint",
+          "status": "passed",
+          "title": "matches every pre-migration JSDoc tag fingerprint",
+          "duration": 7.372284000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306303,
+      "endTime": 1790469306330.3723,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Root", "findRepoRoot"],
+          "fullName": "Root findRepoRoot should find repo root from current directory",
+          "status": "passed",
+          "title": "should find repo root from current directory",
+          "duration": 10.124868000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Root", "findRepoRoot"],
+          "fullName": "Root findRepoRoot should find repo root from a subdirectory",
+          "status": "passed",
+          "title": "should find repo root from a subdirectory",
+          "duration": 3.346038000000135,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Root", "findRepoRoot"],
+          "fullName": "Root findRepoRoot should find repo root when starting from itself",
+          "status": "passed",
+          "title": "should find repo root when starting from itself",
+          "duration": 2.4947779999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Root", "findRepoRoot"],
+          "fullName": "Root findRepoRoot should fail with NoSuchFileError when no marker is found",
+          "status": "passed",
+          "title": "should fail with NoSuchFileError when no marker is found",
+          "duration": 1.4821410000001833,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Root", "findRepoRoot"],
+          "fullName": "Root findRepoRoot should detect bun.lock as a root marker",
+          "status": "passed",
+          "title": "should detect bun.lock as a root marker",
+          "duration": 10.948615999999902,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Root", "findRepoRoot"],
+          "fullName": "Root findRepoRoot should detect .git as a root marker",
+          "status": "passed",
+          "title": "should detect .git as a root marker",
+          "duration": 3.1156439999999748,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306269,
+      "endTime": 1790469306301.1157,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/Root.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["sha256Hex"],
+          "fullName": "sha256Hex hashes UTF-8 text to lowercase SHA-256 hex",
+          "status": "passed",
+          "title": "hashes UTF-8 text to lowercase SHA-256 hex",
+          "duration": 2.2725470000000314,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469305120,
+      "endTime": 1790469305122.2725,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/Sha256Hex.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "path primitives"],
+          "fullName": "TSMorph model taxonomy path primitives accepts repo and workspace directory paths",
+          "status": "passed",
+          "title": "accepts repo and workspace directory paths",
+          "duration": 5.391455000000178,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "path primitives"],
+          "fullName": "TSMorph model taxonomy path primitives validates tsconfig file paths",
+          "status": "passed",
+          "title": "validates tsconfig file paths",
+          "duration": 1.6317109999999957,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "path primitives"],
+          "fullName": "TSMorph model taxonomy path primitives splits implementation and declaration TypeScript file paths strictly",
+          "status": "passed",
+          "title": "splits implementation and declaration TypeScript file paths strictly",
+          "duration": 1.2669399999999769,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "path primitives"],
+          "fullName": "TSMorph model taxonomy path primitives keeps SymbolFilePath implementation-only and delimiter-safe",
+          "status": "passed",
+          "title": "keeps SymbolFilePath implementation-only and delimiter-safe",
+          "duration": 0.7722279999998136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "pure transformations"],
+          "fullName": "TSMorph model taxonomy pure transformations refines generic file paths into stricter TypeScript path schemas",
+          "status": "passed",
+          "title": "refines generic file paths into stricter TypeScript path schemas",
+          "duration": 1.4809680000000753,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "pure transformations"],
+          "fullName": "TSMorph model taxonomy pure transformations maps exact symbol kinds to coarse categories",
+          "status": "passed",
+          "title": "maps exact symbol kinds to coarse categories",
+          "duration": 0.792269000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "pure transformations"],
+          "fullName": "TSMorph model taxonomy pure transformations roundtrips symbol ids and scope ids through parsed tuple parts",
+          "status": "passed",
+          "title": "roundtrips symbol ids and scope ids through parsed tuple parts",
+          "duration": 1.7491809999999077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "pure transformations"],
+          "fullName": "TSMorph model taxonomy pure transformations round-trips schema-derived project identity parts through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived project identity parts through the encoded wire shape",
+          "duration": 12.832994999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "pure transformations"],
+          "fullName": "TSMorph model taxonomy pure transformations round-trips schema-derived symbol identity parts through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived symbol identity parts through the encoded wire shape",
+          "duration": 8.551408000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "TSMorph model taxonomy",
+            "effectful transformations"
+          ],
+          "fullName": "TSMorph model taxonomy effectful transformations derives content hashes from source text",
+          "status": "passed",
+          "title": "derives content hashes from source text",
+          "duration": 1.2674999999999272,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "TSMorph model taxonomy",
+            "runtime instance schemas"
+          ],
+          "fullName": "TSMorph model taxonomy runtime instance schemas accepts live ts-morph runtime instances and rejects plain objects",
+          "status": "passed",
+          "title": "accepts live ts-morph runtime instances and rejects plain objects",
+          "duration": 6.6984359999999015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "symbol primitives"],
+          "fullName": "TSMorph model taxonomy symbol primitives accepts strict qualified names and exact kinds",
+          "status": "passed",
+          "title": "accepts strict qualified names and exact kinds",
+          "duration": 0.6168589999999767,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "symbol primitives"],
+          "fullName": "TSMorph model taxonomy symbol primitives decodes every schema-derived SymbolId and round-trips it identically",
+          "status": "passed",
+          "title": "decodes every schema-derived SymbolId and round-trips it identically",
+          "duration": 11.177849000000151,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorph model taxonomy", "symbol primitives"],
+          "fullName": "TSMorph model taxonomy symbol primitives builds normalized symbols with derived ids and categories",
+          "status": "passed",
+          "title": "builds normalized symbols with derived ids and categories",
+          "duration": 0.9655449999997927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "TSMorph model taxonomy",
+            "request/result classes"
+          ],
+          "fullName": "TSMorph model taxonomy request/result classes decodes project scope and file/source requests",
+          "status": "passed",
+          "title": "decodes project scope and file/source requests",
+          "duration": 1.4481080000000475,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "TSMorph model taxonomy",
+            "request/result classes"
+          ],
+          "fullName": "TSMorph model taxonomy request/result classes decodes symbol lookup, search, source, and diagnostics results",
+          "status": "passed",
+          "title": "decodes symbol lookup, search, source, and diagnostics results",
+          "duration": 1.005726999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306436,
+      "endTime": 1790469306495.0056,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TsMorphProjectInspectionRequest.packageSyntax"],
+          "fullName": "TsMorphProjectInspectionRequest.packageSyntax requests a syntax-only, workspace-only project over explicit files without the tsconfig include list",
+          "status": "passed",
+          "title": "requests a syntax-only, workspace-only project over explicit files without the tsconfig include list",
+          "duration": 7.597950999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TsMorphProjectInspectionRequest.packageSyntax"],
+          "fullName": "TsMorphProjectInspectionRequest.packageSyntax loads tsconfig files by default when a request omits the flag",
+          "status": "passed",
+          "title": "loads tsconfig files by default when a request omits the flag",
+          "duration": 1.0862210000000232,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306405,
+      "endTime": 1790469306414.0862,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["SymbolId schema arbitrary"],
+          "fullName": "SymbolId schema arbitrary only generates decodable, round-tripping symbol ids",
+          "status": "passed",
+          "title": "only generates decodable, round-tripping symbol ids",
+          "duration": 23.74753899999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "resolveProjectScope"],
+          "fullName": "TSMorphService resolveProjectScope resolves a workspace tsconfig into a stable scope",
+          "status": "passed",
+          "title": "resolves a workspace tsconfig into a stable scope",
+          "duration": 5.554196000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "inspectProject"],
+          "fullName": "TSMorphService inspectProject loads a semantic project and exposes scoped source files without saving mutations",
+          "status": "passed",
+          "title": "loads a semantic project and exposes scoped source files without saving mutations",
+          "duration": 19.160351999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "inspectProject"],
+          "fullName": "TSMorphService inspectProject skips missing source file glob directories during read-only inspection",
+          "status": "passed",
+          "title": "skips missing source file glob directories during read-only inspection",
+          "duration": 4.453312000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "inspectProject"],
+          "fullName": "TSMorphService inspectProject loads only the explicit files of a package syntax request and keeps ordinary inspection separate",
+          "status": "passed",
+          "title": "loads only the explicit files of a package syntax request and keeps ordinary inspection separate",
+          "duration": 4.278393000000051,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "readSourceText"],
+          "fullName": "TSMorphService readSourceText reads source text for a known TypeScript file through the scoped project",
+          "status": "passed",
+          "title": "reads source text for a known TypeScript file through the scoped project",
+          "duration": 59.341846999999916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "getFileOutline"],
+          "fullName": "TSMorphService getFileOutline extracts a non-empty outline for a known TypeScript file",
+          "status": "passed",
+          "title": "extracts a non-empty outline for a known TypeScript file",
+          "duration": 21.39100399999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "getFileOutline"],
+          "fullName": "TSMorphService getFileOutline preserves source declaration order within a file outline",
+          "status": "passed",
+          "title": "preserves source declaration order within a file outline",
+          "duration": 2.333539999999857,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "TSMorphService",
+            "getSymbolById / readSymbolSource"
+          ],
+          "fullName": "TSMorphService getSymbolById / readSymbolSource loads a normalized class symbol and its extracted source text",
+          "status": "passed",
+          "title": "loads a normalized class symbol and its extracted source text",
+          "duration": 103.48035100000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "TSMorphService",
+            "getSymbolById / readSymbolSource"
+          ],
+          "fullName": "TSMorphService getSymbolById / readSymbolSource fails with a typed error for missing symbol ids",
+          "status": "passed",
+          "title": "fails with a typed error for missing symbol ids",
+          "duration": 7.092212000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "searchSymbols"],
+          "fullName": "TSMorphService searchSymbols searches deterministically and honors category, kind, and limit filters",
+          "status": "passed",
+          "title": "searches deterministically and honors category, kind, and limit filters",
+          "duration": 2.8119659999997566,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "scope symbol index"],
+          "fullName": "TSMorphService scope symbol index refreshes the cached symbol index when a late-loaded implementation file enters the project",
+          "status": "passed",
+          "title": "refreshes the cached symbol index when a late-loaded implementation file enters the project",
+          "duration": 1.817225999999664,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "getDiagnostics"],
+          "fullName": "TSMorphService getDiagnostics returns no diagnostics for a known clean file in semantic mode",
+          "status": "passed",
+          "title": "returns no diagnostics for a known clean file in semantic mode",
+          "duration": 52.10170599999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "getDiagnostics"],
+          "fullName": "TSMorphService getDiagnostics normalizes file-local diagnostics for an intentionally broken fixture",
+          "status": "passed",
+          "title": "normalizes file-local diagnostics for an intentionally broken fixture",
+          "duration": 12.167071000000306,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "typed error coverage"],
+          "fullName": "TSMorphService typed error coverage rejects files outside the workspace boundary with a source file error",
+          "status": "passed",
+          "title": "rejects files outside the workspace boundary with a source file error",
+          "duration": 1.339230999999927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSMorphService", "typed error coverage"],
+          "fullName": "TSMorphService typed error coverage rejects declaration files for outline extraction with an unsupported file error",
+          "status": "passed",
+          "title": "rejects declaration files for outline extraction with an unsupported file error",
+          "duration": 1.585801000000174,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306594,
+      "endTime": 1790469306919.5857,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TSMorph.shared", "readSignature"],
+          "fullName": "TSMorph.shared readSignature strips multiline decorator spans before reading the declaration signature",
+          "status": "passed",
+          "title": "strips multiline decorator spans before reading the declaration signature",
+          "duration": 8.933164999999917,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306347,
+      "endTime": 1790469306355.933,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares TsMorphServiceUnavailableError by fields",
+          "status": "passed",
+          "title": "compares TsMorphServiceUnavailableError by fields",
+          "duration": 2.0626330000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares TsMorphScopeResolutionError by fields",
+          "status": "passed",
+          "title": "compares TsMorphScopeResolutionError by fields",
+          "duration": 0.24352399999997942,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares TsMorphProjectLoadError by fields",
+          "status": "passed",
+          "title": "compares TsMorphProjectLoadError by fields",
+          "duration": 0.5940840000000662,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares TsMorphSourceFileError by fields",
+          "status": "passed",
+          "title": "compares TsMorphSourceFileError by fields",
+          "duration": 0.6721649999999499,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares TsMorphSymbolNotFoundError by fields",
+          "status": "passed",
+          "title": "compares TsMorphSymbolNotFoundError by fields",
+          "duration": 0.4442940000001272,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares TsMorphUnsupportedFileError by fields",
+          "status": "passed",
+          "title": "compares TsMorphUnsupportedFileError by fields",
+          "duration": 0.23241800000005242,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares CyclicDependencyError by fields",
+          "status": "passed",
+          "title": "compares CyclicDependencyError by fields",
+          "duration": 0.229712999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares DomainError by message and ignores cause",
+          "status": "passed",
+          "title": "compares DomainError by message and ignores cause",
+          "duration": 0.443623000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares NoSuchFileError by fields",
+          "status": "passed",
+          "title": "compares NoSuchFileError by fields",
+          "duration": 0.1537869999999657,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["repo-utils declared-field equivalence"],
+          "fullName": "repo-utils declared-field equivalence compares OptionInjectionError by fields",
+          "status": "passed",
+          "title": "compares OptionInjectionError by fields",
+          "duration": 0.12001500000019405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306459,
+      "endTime": 1790469306465.12,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TsConfig", "collectTsConfigPaths"],
+          "fullName": "TsConfig collectTsConfigPaths should collect tsconfig files for root and workspaces",
+          "status": "passed",
+          "title": "should collect tsconfig files for root and workspaces",
+          "duration": 14.577950999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TsConfig", "collectTsConfigPaths"],
+          "fullName": "TsConfig collectTsConfigPaths should find tsconfig files in workspace packages",
+          "status": "passed",
+          "title": "should find tsconfig files in workspace packages",
+          "duration": 3.3845280000000457,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TsConfig", "collectTsConfigPaths"],
+          "fullName": "TsConfig collectTsConfigPaths should find single tsconfig in packages with one config",
+          "status": "passed",
+          "title": "should find single tsconfig in packages with one config",
+          "duration": 2.228048999999828,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TsConfig", "collectTsConfigPaths"],
+          "fullName": "TsConfig collectTsConfigPaths should return absolute paths",
+          "status": "passed",
+          "title": "should return absolute paths",
+          "duration": 2.2678290000001198,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TsConfig", "collectTsConfigPaths"],
+          "fullName": "TsConfig collectTsConfigPaths should include all workspace packages",
+          "status": "passed",
+          "title": "should include all workspace packages",
+          "duration": 1.913535000000138,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306320,
+      "endTime": 1790469306343.9136,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/TsConfig.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should collect all unique runtime npm dependencies",
+          "status": "passed",
+          "title": "should collect all unique runtime npm dependencies",
+          "duration": 19.069702000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should collect all unique dev npm dependencies",
+          "status": "passed",
+          "title": "should collect all unique dev npm dependencies",
+          "duration": 5.745009999999866,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should deduplicate dependencies that appear in multiple packages",
+          "status": "passed",
+          "title": "should deduplicate dependencies that appear in multiple packages",
+          "duration": 5.140570000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should return sorted arrays",
+          "status": "passed",
+          "title": "should return sorted arrays",
+          "duration": 12.875031000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should not include workspace package names in results",
+          "status": "passed",
+          "title": "should not include workspace package names in results",
+          "duration": 3.9668340000000626,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should include peer dependencies as runtime dependencies",
+          "status": "passed",
+          "title": "should include peer dependencies as runtime dependencies",
+          "duration": 5.747041999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["UniqueDeps", "collectUniqueNpmDependencies"],
+          "fullName": "UniqueDeps collectUniqueNpmDependencies should include optional dependencies as runtime dependencies",
+          "status": "passed",
+          "title": "should include optional dependencies as runtime dependencies",
+          "duration": 3.76920999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306280,
+      "endTime": 1790469306336.7693,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should resolve all workspace packages",
+          "status": "passed",
+          "title": "should resolve all workspace packages",
+          "duration": 23.38345900000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should map names to absolute directory paths",
+          "status": "passed",
+          "title": "should map names to absolute directory paths",
+          "duration": 4.06541500000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should return empty HashMap when no workspaces defined",
+          "status": "passed",
+          "title": "should return empty HashMap when no workspaces defined",
+          "duration": 1.6449109999998655,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should ignore generated coverage directories while resolving workspaces",
+          "status": "passed",
+          "title": "should ignore generated coverage directories while resolving workspaces",
+          "duration": 4.443166999999903,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should resolve only existing members when a workspace glob matches zero directories",
+          "status": "passed",
+          "title": "should resolve only existing members when a workspace glob matches zero directories",
+          "duration": 4.064063000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should fail with NoSuchFileError for missing root",
+          "status": "passed",
+          "title": "should fail with NoSuchFileError for missing root",
+          "duration": 12.397244999999884,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should fail with DomainError for invalid root package.json",
+          "status": "passed",
+          "title": "should fail with DomainError for invalid root package.json",
+          "duration": 1.8191999999999098,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should fail with DomainError for invalid child package.json",
+          "status": "passed",
+          "title": "should fail with DomainError for invalid child package.json",
+          "duration": 2.975789000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should fail closed for workspace globs that traverse outside the repo root",
+          "status": "passed",
+          "title": "should fail closed for workspace globs that traverse outside the repo root",
+          "duration": 1.6267430000000331,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should fail closed for Windows absolute workspace globs",
+          "status": "passed",
+          "title": "should fail closed for Windows absolute workspace globs",
+          "duration": 1.2427319999999327,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspaceDirs"],
+          "fullName": "Workspaces resolveWorkspaceDirs should reject symlinked workspace directories that resolve outside the repo root",
+          "status": "passed",
+          "title": "should reject symlinked workspace directories that resolve outside the repo root",
+          "duration": 2.1114890000001196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "getWorkspaceDir"],
+          "fullName": "Workspaces getWorkspaceDir should find an existing workspace by name",
+          "status": "passed",
+          "title": "should find an existing workspace by name",
+          "duration": 2.231223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "getWorkspaceDir"],
+          "fullName": "Workspaces getWorkspaceDir should return None for a non-existent workspace",
+          "status": "passed",
+          "title": "should return None for a non-existent workspace",
+          "duration": 2.2963830000001053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "resolveWorkspacePackages"],
+          "fullName": "Workspaces resolveWorkspacePackages should resolve each package with its dir, decoded manifest, and scripts",
+          "status": "passed",
+          "title": "should resolve each package with its dir, decoded manifest, and scripts",
+          "duration": 3.3174649999998564,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "workspaceGlobsFrom"],
+          "fullName": "Workspaces workspaceGlobsFrom should return the array form of workspace globs unchanged",
+          "status": "passed",
+          "title": "should return the array form of workspace globs unchanged",
+          "duration": 0.5822960000000421,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Workspaces", "workspaceGlobsFrom"],
+          "fullName": "Workspaces workspaceGlobsFrom should return an empty array when workspaces is None",
+          "status": "passed",
+          "title": "should return an empty array when workspaces is None",
+          "duration": 0.42912999999998647,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306285,
+      "endTime": 1790469306354.4292,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/Workspaces.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["integration (real monorepo)", "findRepoRoot"],
+          "fullName": "integration (real monorepo) findRepoRoot should find the monorepo root directory",
+          "status": "passed",
+          "title": "should find the monorepo root directory",
+          "duration": 13.64421399999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "integration (real monorepo)",
+            "resolveWorkspaceDirs"
+          ],
+          "fullName": "integration (real monorepo) resolveWorkspaceDirs should discover @beep/repo-cli and @beep/repo-utils",
+          "status": "passed",
+          "title": "should discover @beep/repo-cli and @beep/repo-utils",
+          "duration": 51.71782599999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "integration (real monorepo)",
+            "collectTsConfigPaths"
+          ],
+          "fullName": "integration (real monorepo) collectTsConfigPaths should find tsconfig files in workspaces",
+          "status": "passed",
+          "title": "should find tsconfig files in workspaces",
+          "duration": 42.062740000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "integration (real monorepo)",
+            "buildRepoDependencyIndex"
+          ],
+          "fullName": "integration (real monorepo) buildRepoDependencyIndex should build the dependency map for the monorepo",
+          "status": "passed",
+          "title": "should build the dependency map for the monorepo",
+          "duration": 49.34425400000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "integration (real monorepo)",
+            "collectUniqueNpmDependencies"
+          ],
+          "fullName": "integration (real monorepo) collectUniqueNpmDependencies should list all NPM deps across the monorepo",
+          "status": "passed",
+          "title": "should list all NPM deps across the monorepo",
+          "duration": 49.94086200000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306274,
+      "endTime": 1790469306480.941,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Error types", "NoSuchFileError"],
+          "fullName": "Error types NoSuchFileError should create with path and message",
+          "status": "passed",
+          "title": "should create with path and message",
+          "duration": 6.647038000000066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "NoSuchFileError"],
+          "fullName": "Error types NoSuchFileError should be catchable by tag in Effect",
+          "status": "passed",
+          "title": "should be catchable by tag in Effect",
+          "duration": 1.0573769999998603,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "DomainError"],
+          "fullName": "Error types DomainError should create with message only",
+          "status": "passed",
+          "title": "should create with message only",
+          "duration": 0.7342800000001262,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "DomainError"],
+          "fullName": "Error types DomainError should create with message and cause",
+          "status": "passed",
+          "title": "should create with message and cause",
+          "duration": 0.5255490000001828,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "DomainError"],
+          "fullName": "Error types DomainError should be catchable by tag in Effect",
+          "status": "passed",
+          "title": "should be catchable by tag in Effect",
+          "duration": 0.5072999999999865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "CyclicDependencyError"],
+          "fullName": "Error types CyclicDependencyError should create with message and cycles",
+          "status": "passed",
+          "title": "should create with message and cycles",
+          "duration": 0.9654649999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "CyclicDependencyError"],
+          "fullName": "Error types CyclicDependencyError should support multiple cycles",
+          "status": "passed",
+          "title": "should support multiple cycles",
+          "duration": 0.9032889999998588,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Error types", "CyclicDependencyError"],
+          "fullName": "Error types CyclicDependencyError should be catchable by tag in Effect",
+          "status": "passed",
+          "title": "should be catchable by tag in Effect",
+          "duration": 0.5352840000000469,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306436,
+      "endTime": 1790469306448.5354,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/errors/errors.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["renderBiomeJson"],
+          "fullName": "renderBiomeJson formats JSON when the requested target is excluded by repository Biome rules",
+          "status": "passed",
+          "title": "formats JSON when the requested target is excluded by repository Biome rules",
+          "duration": 49.97015699999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderBiomeJson"],
+          "fullName": "renderBiomeJson drains high-volume stdout and stderr concurrently",
+          "status": "passed",
+          "title": "drains high-volume stdout and stderr concurrently",
+          "duration": 16.42163800000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["renderBiomeJson"],
+          "fullName": "renderBiomeJson fails closed when Biome leaves an empty rendered file",
+          "status": "passed",
+          "title": "fails closed when Biome leaves an empty rendered file",
+          "duration": 6.046233000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306390,
+      "endTime": 1790469306462.0461,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["mergeManagedDocgenConfig"],
+          "fullName": "mergeManagedDocgenConfig preserves custom compiler settings, prunes managed path mappings, and keeps custom aliases",
+          "status": "passed",
+          "title": "preserves custom compiler settings, prunes managed path mappings, and keeps custom aliases",
+          "duration": 3.4824579999999514,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["mergeManagedDocgenConfig"],
+          "fullName": "mergeManagedDocgenConfig drops the paths key entirely when only managed aliases exist",
+          "status": "passed",
+          "title": "drops the paths key entirely when only managed aliases exist",
+          "duration": 0.39163299999995616,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["mergeManagedDocgenConfig"],
+          "fullName": "mergeManagedDocgenConfig uses managed defaults for a standard source directory",
+          "status": "passed",
+          "title": "uses managed defaults for a standard source directory",
+          "duration": 0.4004860000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306259,
+      "endTime": 1790469306263.4004,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures derives repo package names from the production field schema arbitrary",
+          "status": "passed",
+          "title": "derives repo package names from the production field schema arbitrary",
+          "duration": 7.040892999999869,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures round-trips schema-derived package.json dependency maps through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived package.json dependency maps through the encoded wire shape",
+          "duration": 15.538158000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures round-trips schema-derived npm peer dependency metadata through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived npm peer dependency metadata through the encoded wire shape",
+          "duration": 8.951372999999876,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures round-trips schema-derived package.json publishConfig through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived package.json publishConfig through the encoded wire shape",
+          "duration": 2.89335200000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures round-trips the full production PublishConfig domain through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips the full production PublishConfig domain through the encoded wire shape",
+          "duration": 5.016669000000093,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes minimal package.json (name only)",
+          "status": "passed",
+          "title": "decodes minimal package.json (name only)",
+          "duration": 0.32675300000005336,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes a full npm-oriented package.json with typed fields",
+          "status": "passed",
+          "title": "decodes a full npm-oriented package.json with typed fields",
+          "duration": 0.8427670000000944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes package exports and publishConfig exports as structured data",
+          "status": "passed",
+          "title": "decodes package exports and publishConfig exports as structured data",
+          "duration": 0.3756180000000313,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes imports mappings",
+          "status": "passed",
+          "title": "decodes imports mappings",
+          "duration": 0.20251099999995859,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes workspaces as an array",
+          "status": "passed",
+          "title": "decodes workspaces as an array",
+          "duration": 0.11905400000000554,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes workspaces as an object",
+          "status": "passed",
+          "title": "decodes workspaces as an object",
+          "duration": 0.14151799999990544,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes sideEffects as a boolean or array",
+          "status": "passed",
+          "title": "decodes sideEffects as a boolean or array",
+          "duration": 0.12035500000001775,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes repo-local top-level fields",
+          "status": "passed",
+          "title": "decodes repo-local top-level fields",
+          "duration": 0.20936200000005556,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes repo-local mixed-case workspace package names",
+          "status": "passed",
+          "title": "decodes repo-local mixed-case workspace package names",
+          "duration": 0.11346499999990556,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes Bun trusted dependencies",
+          "status": "passed",
+          "title": "decodes Bun trusted dependencies",
+          "duration": 0.09646799999995892,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures decodes repo-local beep package metadata",
+          "status": "passed",
+          "title": "decodes repo-local beep package metadata",
+          "duration": 0.4219399999999496,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "valid structures"],
+          "fullName": "PackageJson schema valid structures keeps npm-only schema separate from repo-only extensions",
+          "status": "passed",
+          "title": "keeps npm-only schema separate from repo-only extensions",
+          "duration": 0.25656400000002577,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects missing name field",
+          "status": "passed",
+          "title": "rejects missing name field",
+          "duration": 0.14074699999991935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects empty string names",
+          "status": "passed",
+          "title": "rejects empty string names",
+          "duration": 0.12151700000003984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects invalid package names",
+          "status": "passed",
+          "title": "rejects invalid package names",
+          "duration": 0.04553000000009888,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects invalid package type values",
+          "status": "passed",
+          "title": "rejects invalid package type values",
+          "duration": 0.1215469999999641,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects repository objects without required type",
+          "status": "passed",
+          "title": "rejects repository objects without required type",
+          "duration": 0.07836999999994987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects funding objects without a url",
+          "status": "passed",
+          "title": "rejects funding objects without a url",
+          "duration": 0.06363800000008268,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects exports objects with invalid keys",
+          "status": "passed",
+          "title": "rejects exports objects with invalid keys",
+          "duration": 0.07691799999997784,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects imports objects with invalid keys",
+          "status": "passed",
+          "title": "rejects imports objects with invalid keys",
+          "duration": 0.07008799999994153,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects workspaces as a string",
+          "status": "passed",
+          "title": "rejects workspaces as a string",
+          "duration": 0.06756399999994755,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects unexpected top-level keys",
+          "status": "passed",
+          "title": "rejects unexpected top-level keys",
+          "duration": 0.037407000000030166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects private as a string",
+          "status": "passed",
+          "title": "rejects private as a string",
+          "duration": 0.0757659999999305,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects dependency records with invalid keys or empty values",
+          "status": "passed",
+          "title": "rejects dependency records with invalid keys or empty values",
+          "duration": 0.12233900000001086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects invalid repo-local beep package metadata",
+          "status": "passed",
+          "title": "rejects invalid repo-local beep package metadata",
+          "duration": 0.13036000000010972,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "malformed structures"],
+          "fullName": "PackageJson schema malformed structures rejects non-object input",
+          "status": "passed",
+          "title": "rejects non-object input",
+          "duration": 0.06908599999997023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "edge cases"],
+          "fullName": "PackageJson schema edge cases handles empty arrays for list fields",
+          "status": "passed",
+          "title": "handles empty arrays for list fields",
+          "duration": 0.09659899999996924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "edge cases"],
+          "fullName": "PackageJson schema edge cases handles scoped package names",
+          "status": "passed",
+          "title": "handles scoped package names",
+          "duration": 0.08364900000015041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "edge cases"],
+          "fullName": "PackageJson schema edge cases keeps npm package names strict even when repo package names allow mixed case",
+          "status": "passed",
+          "title": "keeps npm package names strict even when repo package names allow mixed case",
+          "duration": 0.12275899999985995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "edge cases"],
+          "fullName": "PackageJson schema edge cases decodes a real-world workspace package shape from this repo",
+          "status": "passed",
+          "title": "decodes a real-world workspace package shape from this repo",
+          "duration": 0.2641960000000836,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "edge cases"],
+          "fullName": "PackageJson schema edge cases decodePackageJson throws on invalid input",
+          "status": "passed",
+          "title": "decodePackageJson throws on invalid input",
+          "duration": 0.7062169999999242,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "type inference"],
+          "fullName": "PackageJson schema type inference schema Type is correctly shaped",
+          "status": "passed",
+          "title": "schema Type is correctly shaped",
+          "duration": 0.13696100000015576,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "canonical helpers"],
+          "fullName": "PackageJson schema canonical helpers normalizes top-level ordering and nested map ordering",
+          "status": "passed",
+          "title": "normalizes top-level ordering and nested map ordering",
+          "duration": 1.7266759999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "canonical helpers"],
+          "fullName": "PackageJson schema canonical helpers encodes canonical pretty JSON",
+          "status": "passed",
+          "title": "encodes canonical pretty JSON",
+          "duration": 0.7131480000000465,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "canonical helpers"],
+          "fullName": "PackageJson schema canonical helpers preserves repo-local beep metadata in canonical output",
+          "status": "passed",
+          "title": "preserves repo-local beep metadata in canonical output",
+          "duration": 0.4275480000001153,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "canonical helpers"],
+          "fullName": "PackageJson schema canonical helpers diffs and applies typed JSON Patch with escaped scoped dependency keys",
+          "status": "passed",
+          "title": "diffs and applies typed JSON Patch with escaped scoped dependency keys",
+          "duration": 1.017816000000039,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "artifacts and diagnostics"],
+          "fullName": "PackageJson schema artifacts and diagnostics exports a JSON Schema document with strict object definitions",
+          "status": "passed",
+          "title": "exports a JSON Schema document with strict object definitions",
+          "duration": 0.22277200000007724,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "artifacts and diagnostics"],
+          "fullName": "PackageJson schema artifacts and diagnostics formats SchemaError issues with JSON Pointers",
+          "status": "passed",
+          "title": "formats SchemaError issues with JSON Pointers",
+          "duration": 0.9463160000000244,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PackageJson schema", "artifacts and diagnostics"],
+          "fullName": "PackageJson schema artifacts and diagnostics formats invalid package map keys with field-specific JSON Pointers",
+          "status": "passed",
+          "title": "formats invalid package map keys with field-specific JSON Pointers",
+          "duration": 0.8475639999999203,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306490,
+      "endTime": 1790469306541.8477,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TSConfig schema", "valid structures"],
+          "fullName": "TSConfig schema valid structures decodes a minimal tsconfig",
+          "status": "passed",
+          "title": "decodes a minimal tsconfig",
+          "duration": 2.897278000000142,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "valid structures"],
+          "fullName": "TSConfig schema valid structures round-trips schema-derived compiler options through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived compiler options through the encoded wire shape",
+          "duration": 100.96963800000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "valid structures"],
+          "fullName": "TSConfig schema valid structures decodes references and collapses nullable fields to Option.none",
+          "status": "passed",
+          "title": "decodes references and collapses nullable fields to Option.none",
+          "duration": 0.9601869999999053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "valid structures"],
+          "fullName": "TSConfig schema valid structures decodes JSONC text with comments and trailing commas",
+          "status": "passed",
+          "title": "decodes JSONC text with comments and trailing commas",
+          "duration": 3.592727999999852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "valid structures"],
+          "fullName": "TSConfig schema valid structures allows open JSON-valued extras inside plugins and ts-node compilerOptions",
+          "status": "passed",
+          "title": "allows open JSON-valued extras inside plugins and ts-node compilerOptions",
+          "duration": 0.5124390000000858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "valid structures"],
+          "fullName": "TSConfig schema valid structures decodes the TypeScript 7 target and library additions through ES2025",
+          "status": "passed",
+          "title": "decodes the TypeScript 7 target and library additions through ES2025",
+          "duration": 0.4004860000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation rejects unexpected keys outside open sections",
+          "status": "passed",
+          "title": "rejects unexpected keys outside open sections",
+          "duration": 2.117829000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation rejects prototype-polluting keys at the strict record boundary",
+          "status": "passed",
+          "title": "rejects prototype-polluting keys at the strict record boundary",
+          "duration": 0.7731890000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation rejects duplicate uniqueItems arrays",
+          "status": "passed",
+          "title": "rejects duplicate uniqueItems arrays",
+          "duration": 0.28221399999983987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation enforces allowImportingTsExtensions semantic requirements",
+          "status": "passed",
+          "title": "enforces allowImportingTsExtensions semantic requirements",
+          "duration": 0.3652220000001307,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation enforces reactNamespace to only be used with jsx=react",
+          "status": "passed",
+          "title": "enforces reactNamespace to only be used with jsx=react",
+          "duration": 0.2993309999999383,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation enforces maxNodeModuleJsDepth to require allowJs",
+          "status": "passed",
+          "title": "enforces maxNodeModuleJsDepth to require allowJs",
+          "duration": 0.29615499999999884,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation rejects negative and fractional maxNodeModuleJsDepth values",
+          "status": "passed",
+          "title": "rejects negative and fractional maxNodeModuleJsDepth values",
+          "duration": 0.40478299999995215,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "validation"],
+          "fullName": "TSConfig schema validation enforces ts-node experimentalReplAwait to require target >= ES2018",
+          "status": "passed",
+          "title": "enforces ts-node experimentalReplAwait to require target >= ES2018",
+          "duration": 0.36785600000007435,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "encoding"],
+          "fullName": "TSConfig schema encoding encodes compact and pretty JSON output",
+          "status": "passed",
+          "title": "encodes compact and pretty JSON output",
+          "duration": 1.3273529999999027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["TSConfig schema", "encoding"],
+          "fullName": "TSConfig schema encoding preserves open JSON extras inside plugin and ts-node compiler option sections",
+          "status": "passed",
+          "title": "preserves open JSON extras inside plugin and ts-node compiler option sections",
+          "duration": 1.4851250000001528,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790469306493,
+      "endTime": 1790469306610.485,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts"
+    }
+  ]
+}

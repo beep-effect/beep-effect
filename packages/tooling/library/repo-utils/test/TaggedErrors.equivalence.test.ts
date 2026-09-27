@@ -14,7 +14,8 @@ import {
   TypeScriptImplementationFilePath,
 } from "@beep/repo-utils";
 import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionError";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
