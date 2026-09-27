@@ -1873,7 +1873,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-runner": "workspace:*",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -3005,6 +3005,7 @@
         "ts-morph": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/babel__code-frame": "catalog:",
         "@types/doctrine": "catalog:",

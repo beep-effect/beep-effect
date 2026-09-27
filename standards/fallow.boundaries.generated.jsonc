@@ -3302,6 +3302,7 @@
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3311,6 +3312,7 @@
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
