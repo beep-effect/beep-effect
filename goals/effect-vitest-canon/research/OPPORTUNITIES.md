@@ -3217,3 +3217,12 @@ source hash snapshot included the audit's temporary copied fixture source,
 which correctly disappeared before the second snapshot. Exclude that timing
 observation and rerun after the audit. Exact-source timing should serialize
 against tests that create temporary sources under the audited tree.
+
+
+### Parser test layer boundary (2026-09-27)
+
+Replacing private Layer.build helpers with Effect.provide(layer) triggered
+TS377032 strictEffectProvide at eight parser call sites. The correct boundary
+is suite it.layer(Path.layer), with pure per-case Source/configuration values
+in Context. This removes manual builders without suppressing diagnostics or
+sharing source nodes between tests. Full package audit/docgen pass afterward.
