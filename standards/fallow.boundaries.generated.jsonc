@@ -1640,6 +1640,7 @@
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1649,6 +1650,7 @@
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2004,6 +2006,7 @@
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2013,6 +2016,7 @@
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

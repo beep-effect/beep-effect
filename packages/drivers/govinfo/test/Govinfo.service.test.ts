@@ -20,8 +20,9 @@ import {
 } from "@beep/govinfo";
 import { $GovinfoId } from "@beep/identity";
 import { PosInt, URLStr } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -335,7 +336,7 @@ describe("@beep/govinfo", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
+  it.layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
       "attaches api.data.gov api_key and parses X-RateLimit-* headers offline",
       Effect.fnUntraced(function* () {
@@ -368,7 +369,7 @@ describe("@beep/govinfo", () => {
     )
   );
 
-  layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
+  it.layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
       "serves a repeat identical search from cache (transport call-count == 1)",
       Effect.fnUntraced(function* () {
@@ -391,7 +392,7 @@ describe("@beep/govinfo", () => {
     )
   );
 
-  layer(makeGovinfoUnitLayer(), { timeout: "10 seconds" })((it) =>
+  it.layer(makeGovinfoUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "omits auth gracefully when no API key is configured (keyless-safe)",
       Effect.fnUntraced(function* () {

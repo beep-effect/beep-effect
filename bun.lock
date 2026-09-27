@@ -960,6 +960,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1088,6 +1089,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
