@@ -4,7 +4,6 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -433,31 +432,26 @@ describe("P3 identity namespaces", () => {
     })
   );
 
-  it.effect(
-    "round-trips schema-derived ids for every identity namespace",
-    Effect.fnUntraced(function* () {
-      for (const spec of specs) {
-        const decode = S.decodeEffect(spec.schema);
-        const encode = S.encodeEffect(spec.schema);
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.schema(spec.schema),
-          (id) =>
-            Effect.gen(function* () {
-              const decoded = yield* decode(id);
-              const encoded = yield* encode(decoded);
+  describe("round-trips schema-derived ids for every identity namespace", () => {
+    for (const spec of specs) {
+      const decode = S.decodeEffect(spec.schema);
+      const encode = S.encodeEffect(spec.schema);
+      it.effect.prop(
+        spec.label,
+        [spec.schema],
+        Effect.fnUntraced(function* ([id]) {
+          const decoded = yield* decode(id);
+          const encoded = yield* encode(decoded);
 
-              expect(encoded, spec.label).toBe(id);
-              assertTrue(spec.schema.equivalence(cast(decoded), cast(id)), spec.label);
+          expect(encoded, spec.label).toBe(id);
+          assertTrue(spec.schema.equivalence(cast(decoded), cast(id)), spec.label);
 
-              return true;
-            }),
-          fcRuns(10)
-        );
-
-        expect(result._tag, spec.label).toBe("Passed");
-      }
-    })
-  );
+          return true;
+        }),
+        { arbitrary: fcRuns(10) }
+      );
+    }
+  });
 
   it.effect(
     "validates runtime identity composers",

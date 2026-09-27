@@ -11,11 +11,10 @@ import * as ClaimLifecycle from "@beep/shared-domain/values/ClaimLifecycle";
 import { fromString, LocalDateFromString, Model as LocalDateModel } from "@beep/shared-domain/values/LocalDate";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import * as Rule from "@beep/shared-domain/values/Rule/Rule.model";
-import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -41,26 +40,36 @@ const CustomDocumentId = makeSharedId("document", {
   tableName: "custom_document",
 });
 
-const assertCodecRoundTrip = Effect.fn("assertCodecRoundTrip")(function* <A, I>(
-  schema: S.Codec<A, I, never, never>,
-  options?: { readonly runs?: number }
-) {
+const testSchemaDecodesToSelf = <Schema extends S.Codec<unknown>>(name: string, schema: Schema, runs = 25) => {
+  const decode = S.decodeUnknownEffect(schema);
+  const equivalent = S.toEquivalence(schema);
+  const isValue = S.is(schema);
+  it.effect.prop(
+    name,
+    [schema],
+    Effect.fnUntraced(function* ([value]) {
+      const decoded = yield* decode(value);
+      assertTrue(isValue(value) && equivalent(decoded, value));
+    }),
+    { arbitrary: fcRuns(runs) }
+  );
+};
+
+const testCodecRoundTrip = <A, I>(name: string, schema: S.Codec<A, I, never, never>) => {
   const decode = S.decodeUnknownEffect(schema);
   const encode = S.encodeEffect(schema);
   const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      Effect.gen(function* () {
-        const encoded = yield* encode(value);
-        const decoded = yield* decode(encoded);
-        return equivalent(decoded, value);
-      }),
-    fcRuns(options?.runs ?? 50)
+  it.effect.prop(
+    name,
+    [schema],
+    Effect.fnUntraced(function* ([value]) {
+      const encoded = yield* encode(value);
+      const decoded = yield* decode(encoded);
+      assertTrue(equivalent(decoded, value));
+    }),
+    { arbitrary: fcRuns(25) }
   );
-
-  expect(result._tag).toBe("Passed");
-});
+};
 
 describe("shared-domain schema parity", () => {
   it.effect(
@@ -172,36 +181,35 @@ describe("shared-domain schema parity", () => {
     expect(Rule.Effect.fromUnknown("deny")).toEqual(Result.succeed("deny"));
   });
 
-  it.effect(
-    "round-trips schema-derived values through absorbed invariants",
-    Effect.fnUntraced(function* () {
-      assertSchemaArbitraryDecodesToSelf(EntityId.EntityIdValue, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(EntityRef.EntityType, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(EntityRef.EntityRef, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(primitives.Ed25519Signature, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(primitives.EncryptionKeyId, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(primitives.HybridLogicalClock, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(primitives.VectorClock, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(SourceKind.SourceKind, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Organization.LicenseTier, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Membership.Role, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Membership.Status, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Principal.SystemComponent, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Rule.Effect, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Rule.Rule, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(Rule.Ruleset, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(ClaimLifecycle.ClaimLifecycle, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(ClaimLifecycle.ClaimLifecycleTransition, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(OnePasswordReference, { runs: 10 });
-
-      yield* assertCodecRoundTrip(EntityId.Options, { runs: 25 });
-      yield* assertCodecRoundTrip(EntityId.Definition, { runs: 25 });
-      yield* assertCodecRoundTrip(Principal.ServiceAccountPrincipal, { runs: 25 });
-      yield* assertCodecRoundTrip(Principal.AgentPrincipal, { runs: 25 });
-      yield* assertCodecRoundTrip(Principal.ConnectorAccountPrincipal, { runs: 25 });
-      yield* assertCodecRoundTrip(Principal.Principal, { runs: 25 });
-    })
-  );
+  describe("round-trips schema-derived values through absorbed invariants", () => {
+    testSchemaDecodesToSelf("EntityId.EntityIdValue decodes to self", EntityId.EntityIdValue);
+    testSchemaDecodesToSelf("EntityRef.EntityType decodes to self", EntityRef.EntityType);
+    testSchemaDecodesToSelf("EntityRef.EntityRef decodes to self", EntityRef.EntityRef);
+    testSchemaDecodesToSelf("primitives.Ed25519Signature decodes to self", primitives.Ed25519Signature);
+    testSchemaDecodesToSelf("primitives.EncryptionKeyId decodes to self", primitives.EncryptionKeyId);
+    testSchemaDecodesToSelf("primitives.HybridLogicalClock decodes to self", primitives.HybridLogicalClock);
+    testSchemaDecodesToSelf("primitives.VectorClock decodes to self", primitives.VectorClock);
+    testSchemaDecodesToSelf("SourceKind.SourceKind decodes to self", SourceKind.SourceKind);
+    testSchemaDecodesToSelf("Organization.LicenseTier decodes to self", Organization.LicenseTier);
+    testSchemaDecodesToSelf("Membership.Role decodes to self", Membership.Role);
+    testSchemaDecodesToSelf("Membership.Status decodes to self", Membership.Status);
+    testSchemaDecodesToSelf("Principal.SystemComponent decodes to self", Principal.SystemComponent);
+    testSchemaDecodesToSelf("Rule.Effect decodes to self", Rule.Effect);
+    testSchemaDecodesToSelf("Rule.Rule decodes to self", Rule.Rule);
+    testSchemaDecodesToSelf("Rule.Ruleset decodes to self", Rule.Ruleset);
+    testSchemaDecodesToSelf("ClaimLifecycle.ClaimLifecycle decodes to self", ClaimLifecycle.ClaimLifecycle);
+    testSchemaDecodesToSelf(
+      "ClaimLifecycle.ClaimLifecycleTransition decodes to self",
+      ClaimLifecycle.ClaimLifecycleTransition
+    );
+    testSchemaDecodesToSelf("OnePasswordReference decodes to self", OnePasswordReference, 10);
+    testCodecRoundTrip("EntityId.Options codec round trip", EntityId.Options);
+    testCodecRoundTrip("EntityId.Definition codec round trip", EntityId.Definition);
+    testCodecRoundTrip("Principal.ServiceAccountPrincipal codec round trip", Principal.ServiceAccountPrincipal);
+    testCodecRoundTrip("Principal.AgentPrincipal codec round trip", Principal.AgentPrincipal);
+    testCodecRoundTrip("Principal.ConnectorAccountPrincipal codec round trip", Principal.ConnectorAccountPrincipal);
+    testCodecRoundTrip("Principal.Principal codec round trip", Principal.Principal);
+  });
 
   it("keeps entity-id value statics colocated on the schema", () => {
     assertTrue(EntityId.EntityIdValue.is(EntityId.EntityIdValue.make(1)));
