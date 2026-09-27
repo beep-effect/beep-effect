@@ -1,7 +1,8 @@
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";

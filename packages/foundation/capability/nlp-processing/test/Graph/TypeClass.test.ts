@@ -10,7 +10,8 @@
 
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import * as TC from "@beep/nlp-processing/Graph/TypeClass";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 

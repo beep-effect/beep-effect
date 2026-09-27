@@ -1,8 +1,9 @@
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";

@@ -1,8 +1,9 @@
 import { EntityNode, LemmaNode, POSNode } from "@beep/nlp/Graph/Schema";
 import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend";
 import * as ATG from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

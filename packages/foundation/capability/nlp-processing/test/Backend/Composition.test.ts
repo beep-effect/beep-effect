@@ -1,8 +1,9 @@
 import * as Composition from "@beep/nlp-processing/Backend/Composition";
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import { PosInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
