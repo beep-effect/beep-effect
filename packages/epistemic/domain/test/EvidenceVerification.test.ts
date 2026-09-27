@@ -51,29 +51,24 @@ const manifestation = EvidenceVerificationManifestation.make({
 });
 
 describe("EvidenceVerification", () => {
-  it("round-trips schema-derived manifestations", () => {
-    const equivalent = S.toEquivalence(EvidenceVerificationManifestation);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(EvidenceVerificationManifestation)]),
-          ([value]) => {
-            const result = equivalent(
-              Result.getOrThrow(
-                decodeUnknownEvidenceVerificationManifestationResult(
-                  Result.getOrThrow(encodeEvidenceVerificationManifestationResult(value))
-                )
-              ),
-              value
-            );
-            return result;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips schema-derived manifestations",
+    [Arbitrary.schema(EvidenceVerificationManifestation)],
+    ([value]) =>
+      Effect.sync(() => {
+        const equivalent = S.toEquivalence(EvidenceVerificationManifestation);
+        const result = equivalent(
+          Result.getOrThrow(
+            decodeUnknownEvidenceVerificationManifestationResult(
+              Result.getOrThrow(encodeEvidenceVerificationManifestationResult(value))
+            )
+          ),
+          value
+        );
+        expect(result).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("uses the consolidated product identity", () => {
     expect(EvidenceVerification.sql.tableName).toBe(Epistemic.EvidenceVerificationId.tableName);

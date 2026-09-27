@@ -283,6 +283,72 @@ describe("CourtReporterVocabulary", () => {
       classify({ projectionVersion: NonNegativeInt.make(0) }, { projectionVersion: NonNegativeInt.make(1) }),
       classify({ courts: [tombstonedCourt, secondCourt] }, { courts: [removedSuccessorCourt, secondCourt] }),
     ];
+    const expectedChanges = [
+      { name: "court addition", changes: [{ kind: "addition", subjectIds: [addedCourt.id] }] },
+      { name: "alias addition", changes: [{ kind: "aliasAddition", subjectIds: [currentCourt.id] }] },
+      { name: "alias removal", changes: [{ kind: "aliasRemoval", subjectIds: [currentCourt.id] }] },
+      {
+        name: "tombstone and successor",
+        changes: [
+          { kind: "tombstone", subjectIds: [currentCourt.id] },
+          { kind: "successor", subjectIds: [currentCourt.id, secondCourt.id] },
+        ],
+      },
+      {
+        name: "merger",
+        changes: [
+          { kind: "tombstone", subjectIds: [currentCourt.id] },
+          { kind: "tombstone", subjectIds: [secondCourt.id] },
+          { kind: "merger", subjectIds: [currentCourt.id, secondCourt.id, thirdCourt.id] },
+        ],
+      },
+      {
+        name: "abbreviation reuse",
+        changes: [
+          { kind: "aliasAddition", subjectIds: [secondReporter.id] },
+          { kind: "abbreviationReuse", subjectIds: [currentReporter.id, secondReporter.id] },
+        ],
+      },
+      { name: "date split", changes: [{ kind: "dateSplit", subjectIds: [currentReporter.id, splitReporter.id] }] },
+      {
+        name: "ID reassignment",
+        changes: [{ kind: "idReassignment", subjectIds: [currentCourt.id, reassignedCourt.id] }],
+      },
+      { name: "semantic reuse", changes: [{ kind: "semanticReuse", subjectIds: [currentCourt.id] }] },
+      {
+        name: "removal without tombstone",
+        changes: [{ kind: "removalWithoutTombstone", subjectIds: [currentCourt.id] }],
+      },
+      {
+        name: "schema change",
+        changes: [
+          { kind: "schemaChange", subjectIds: [] },
+          { kind: "schemaChange", subjectIds: [] },
+          { kind: "schemaChange", subjectIds: [] },
+        ],
+      },
+      {
+        name: "projection change",
+        changes: [
+          { kind: "projectionChange", subjectIds: [] },
+          { kind: "projectionChange", subjectIds: [] },
+          { kind: "projectionChange", subjectIds: [] },
+        ],
+      },
+      {
+        name: "successor removal",
+        changes: [{ kind: "successorRemoval", subjectIds: [currentCourt.id, secondCourt.id] }],
+      },
+    ];
+    expect(reports).toHaveLength(expectedChanges.length);
+    A.forEach(expectedChanges, ({ name, changes }, index) => {
+      const report = O.getOrThrow(A.get(reports, index));
+      expect(
+        A.map(report.changes, ({ kind, subjectIds }) => ({ kind, subjectIds })),
+        name
+      ).toStrictEqual(changes);
+    });
+
     const kinds = A.sort(
       A.dedupe(A.flatMap(reports, ({ changes }) => A.map(changes, ({ kind }) => kind))),
       Order.String

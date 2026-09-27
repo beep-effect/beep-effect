@@ -33,7 +33,6 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { DateTime, pipe, Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -450,45 +449,35 @@ describe("Contradiction domain invariants", () => {
     );
   });
 
-  it("derives only constructive unique collections and canonical pairs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            ContradictionMatchBasisArbitrary,
-            ContradictionAssessmentArbitrary,
-            CanonicalContradictionBeliefPairArbitrary,
-          ]),
-          ([basis, arbitraryAssessment, canonicalPair]) => {
-            expect(A.dedupe(basis.leftEvidenceIds)).toHaveLength(basis.leftEvidenceIds.length);
-            expect(A.dedupe(basis.rightEvidenceIds)).toHaveLength(basis.rightEvidenceIds.length);
-            ContradictionMatchBasisKind.$match(basis.kind, {
-              "independent-evidence": () =>
-                expect(A.dedupe([...basis.leftEvidenceIds, ...basis.rightEvidenceIds])).toHaveLength(
-                  basis.leftEvidenceIds.length + basis.rightEvidenceIds.length
-                ),
-              "same-source-overlap": () => undefined,
-            });
-            expect(A.dedupe(arbitraryAssessment.proposals.map(({ proposalId }) => proposalId))).toHaveLength(
-              arbitraryAssessment.proposals.length
-            );
-            expect(
-              A.every(arbitraryAssessment.proposals, ({ validFrom, validTo }) =>
-                O.match(validTo, {
-                  onNone: () => true,
-                  onSome: (upperBound) => DateTime.isLessThan(validFrom, upperBound),
-                })
-              )
-            ).toBe(true);
-            expect(isCanonicalContradictionBeliefPair(canonicalPair)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "derives only constructive unique collections and canonical pairs",
+    [ContradictionMatchBasisArbitrary, ContradictionAssessmentArbitrary, CanonicalContradictionBeliefPairArbitrary],
+    ([basis, arbitraryAssessment, canonicalPair]) =>
+      Effect.sync(() => {
+        expect(A.dedupe(basis.leftEvidenceIds)).toHaveLength(basis.leftEvidenceIds.length);
+        expect(A.dedupe(basis.rightEvidenceIds)).toHaveLength(basis.rightEvidenceIds.length);
+        ContradictionMatchBasisKind.$match(basis.kind, {
+          "independent-evidence": () =>
+            expect(A.dedupe([...basis.leftEvidenceIds, ...basis.rightEvidenceIds])).toHaveLength(
+              basis.leftEvidenceIds.length + basis.rightEvidenceIds.length
+            ),
+          "same-source-overlap": () => undefined,
+        });
+        expect(A.dedupe(arbitraryAssessment.proposals.map(({ proposalId }) => proposalId))).toHaveLength(
+          arbitraryAssessment.proposals.length
+        );
+        expect(
+          A.every(arbitraryAssessment.proposals, ({ validFrom, validTo }) =>
+            O.match(validTo, {
+              onNone: () => true,
+              onSome: (upperBound) => DateTime.isLessThan(validFrom, upperBound),
+            })
+          )
+        ).toBe(true);
+        expect(isCanonicalContradictionBeliefPair(canonicalPair)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 
   it("recomputes every immutable candidate seal", () => {
     expect(Result.getOrThrow(hasValidSeals(candidate))).toBe(true);

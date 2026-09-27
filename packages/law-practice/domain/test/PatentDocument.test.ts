@@ -10,6 +10,7 @@ import {
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { Md } from "@beep/md";
 import { NonNegativeInt, PosInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe, Result } from "effect";
@@ -76,24 +77,20 @@ const dependentClaim = (claimNumber: number, parentClaimNumber: number) =>
   });
 
 describe("PatentDocument", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived patent application sections",
-    Effect.fnUntraced(function* () {
-      const equivalent = S.toEquivalence(PatentApplicationSection);
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(PatentApplicationSection),
-        (section) =>
-          Effect.gen(function* () {
-            return equivalent(
-              yield* decodeUnknownPatentApplicationSection(yield* encodePatentApplicationSection(section)),
-              section
-            );
-          }),
-        { runs: 20 }
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+    { section: Arbitrary.schema(PatentApplicationSection) },
+    ({ section }) =>
+      Effect.gen(function* () {
+        const equivalent = S.toEquivalence(PatentApplicationSection);
+        expect(
+          equivalent(
+            yield* decodeUnknownPatentApplicationSection(yield* encodePatentApplicationSection(section)),
+            section
+          )
+        ).toBe(true);
+      }),
+    { arbitrary: fcRuns(20) }
   );
 
   it.effect(

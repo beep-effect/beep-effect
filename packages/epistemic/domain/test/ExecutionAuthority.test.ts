@@ -59,31 +59,14 @@ const encodeExecutionDecisionRecord = S.encodeEffect(ExecutionDecisionRecord);
 const decodeExecutionOutcomeRecord = S.decodeEffect(ExecutionOutcomeRecord);
 const encodeExecutionOutcomeRecord = S.encodeEffect(ExecutionOutcomeRecord);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  options?: {
-    readonly runs?: number;
-  }
+  value: Schema["Type"],
+  label: string
 ): void => {
-  const arbitrary = Arbitrary.schema(schema);
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(options?.runs ?? 50)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 };
 
 const sha256HexPattern = /^[0-9a-f]{64}$/;
@@ -527,13 +510,22 @@ describe("ExecutionAuthority", () => {
   });
 
   describe("schema arbitraries", () => {
-    it("derives round-tripping arbitraries for execution authority schemas", () => {
-      const options = { runs: 10 };
-
-      assertSchemaArbitraryRoundTrip(ExecutionGrant, options);
-      assertSchemaArbitraryRoundTrip(DraftGrantSet, options);
-      assertSchemaArbitraryRoundTrip(ExecutionDecisionRecord, options);
-      assertSchemaArbitraryRoundTrip(ExecutionOutcomeRecord, options);
-    });
+    it.effect.prop(
+      "derives round-tripping arbitraries for execution authority schemas",
+      {
+        ExecutionGrant: Arbitrary.schema(ExecutionGrant),
+        DraftGrantSet: Arbitrary.schema(DraftGrantSet),
+        ExecutionDecisionRecord: Arbitrary.schema(ExecutionDecisionRecord),
+        ExecutionOutcomeRecord: Arbitrary.schema(ExecutionOutcomeRecord),
+      },
+      (values) =>
+        Effect.sync(() => {
+          assertSchemaRoundTrip(ExecutionGrant, values.ExecutionGrant, "ExecutionGrant");
+          assertSchemaRoundTrip(DraftGrantSet, values.DraftGrantSet, "DraftGrantSet");
+          assertSchemaRoundTrip(ExecutionDecisionRecord, values.ExecutionDecisionRecord, "ExecutionDecisionRecord");
+          assertSchemaRoundTrip(ExecutionOutcomeRecord, values.ExecutionOutcomeRecord, "ExecutionOutcomeRecord");
+        }),
+      { arbitrary: fcRuns(10) }
+    );
   });
 });
