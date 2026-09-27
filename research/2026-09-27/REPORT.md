@@ -85,7 +85,7 @@ Trends across `research/2026-09-22` → `09-23` → `09-25` → this `09-27` pac
 
 Across SUGGESTED_ACTIONS of 09-22 / 09-23 / 09-25, **pure reconfirm capture URLs** that appeared in all three packets and remain unactioned (proposals only; never admitted to ledger via capture) are proposed for tombstone:
 
-- Standing HOLD reconfirm noise: USPTO support / patent.dev, iManage partnership page, Harvey–Everlaw blog, Instant essay, drizzle #6162, Effect #8336, MCP #3306, go-sdk #1238, Evolu #708 (now settled — tombstone the *unpublished* capture habit; keep tip watch), jazz/zero registry root URLs (superseded by version-specific tips).
+- Standing HOLD reconfirm noise in the tombstone rows: USPTO support SPA (patent.dev stays the secondary capture, not a tombstone), iManage partnership page, Harvey–Everlaw blog, Instant essay, drizzle #6162, Effect #8336, MCP #3306, go-sdk #1238, jazz/zero registry root URLs (superseded by version-specific tips). Evolu #708 is not a tombstone row; the unpublished HOLD settled and the tip capture stays in SUGGESTED_ACTIONS.
 
 See `research/ledger/tombstones/2026-09-27.jsonl` for structured rows (url, reason, first_seen, last_seen, runs_unactioned). Human admits. Do not auto-append explorations/INBOX.
 
