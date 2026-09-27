@@ -11,7 +11,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -92,7 +93,7 @@ describe("@beep/file-processing SourceText", () => {
         text: "",
         totalCodeUnits: 0,
       });
-      expect(Result.isFailure(missing)).toBe(true);
+      pipe(missing, Result.isFailure, assertTrue);
       if (Result.isFailure(missing)) {
         expect(missing.failure).toBeInstanceOf(SourceTextResolverError);
         expect(missing.failure.reason).toBe("page-out-of-range");
@@ -114,13 +115,13 @@ describe("@beep/file-processing SourceText", () => {
       totalCodeUnits: 10,
     };
 
-    expect(Result.isSuccess(decodeUnknownSourceTextPageResult(validPage))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, pageIndex: 2 }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, startOffset: 6 }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, endOffset: 11 }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, text: "four" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, hasPreviousPage: true }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSourceTextPageResult({ ...validPage, hasNextPage: false }))).toBe(true);
+    pipe(decodeUnknownSourceTextPageResult(validPage), Result.isSuccess, assertTrue);
+    pipe(decodeUnknownSourceTextPageResult({ ...validPage, pageIndex: 2 }), Result.isFailure, assertTrue);
+    pipe(decodeUnknownSourceTextPageResult({ ...validPage, startOffset: 6 }), Result.isFailure, assertTrue);
+    pipe(decodeUnknownSourceTextPageResult({ ...validPage, endOffset: 11 }), Result.isFailure, assertTrue);
+    pipe(decodeUnknownSourceTextPageResult({ ...validPage, text: "four" }), Result.isFailure, assertTrue);
+    pipe(decodeUnknownSourceTextPageResult({ ...validPage, hasPreviousPage: true }), Result.isFailure, assertTrue);
+    pipe(decodeUnknownSourceTextPageResult({ ...validPage, hasNextPage: false }), Result.isFailure, assertTrue);
   });
 
   it("derives only relationally valid source-text pages", () =>

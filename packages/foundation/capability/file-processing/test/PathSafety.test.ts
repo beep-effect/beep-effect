@@ -6,7 +6,8 @@ import {
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Layer, Path, pipe, Ref, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 
@@ -29,7 +30,7 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       expect(target).toBe(path.join(root, "nested", "report.bin"));
       expect(new TextDecoder().decode(yield* fs.readFile(target))).toBe("safe payload");
       expect(yield* fs.readDirectory(path.dirname(target))).toEqual(["report.bin"]);
-      expect(Result.isFailure(yield* Effect.result(fs.readLink(target)))).toBe(true);
+      pipe(yield* Effect.result(fs.readLink(target)), Result.isFailure, assertTrue);
       expect((yield* fs.stat(target)).mode & 0o777).toBe(0o600);
     })
   );
@@ -52,7 +53,7 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         )
       );
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(yield* Ref.get(makeDirectoryCalls)).toBe(0);
       expect(yield* fs.readDirectory(root)).toEqual([]);
     })
@@ -82,7 +83,7 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         )
       );
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.exists(path.join(root, "result.bin"))).toBe(false);
       expect(yield* fs.exists(compromisedTemporaryDirectory)).toBe(false);
@@ -100,7 +101,7 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         writeFileWithinRootAtomically({ root, candidate: "blocked", bytes: payload })
       );
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
     })
   );
@@ -192,8 +193,8 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "victim.bin", bytes: payload })
       );
 
-      expect(Result.isFailure(readResult)).toBe(true);
-      expect(Result.isFailure(writeResult)).toBe(true);
+      pipe(readResult, Result.isFailure, assertTrue);
+      pipe(writeResult, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
     })
@@ -245,8 +246,8 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "linked.bin", bytes: payload })
       );
 
-      expect(Result.isFailure(resolveResult)).toBe(true);
-      expect(Result.isFailure(writeResult)).toBe(true);
+      pipe(resolveResult, Result.isFailure, assertTrue);
+      pipe(writeResult, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(link)).toBe(outsideVictim);
     })

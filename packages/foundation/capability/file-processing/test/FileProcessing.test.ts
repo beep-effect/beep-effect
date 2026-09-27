@@ -28,8 +28,10 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
@@ -193,8 +195,8 @@ describe("@beep/file-processing", () => {
       const negative = yield* Effect.exit(decodeTextSpan({ endOffset: 1, startOffset: -1, text: "bad" }));
       const inverted = yield* Effect.exit(decodeTextSpan({ endOffset: 1, startOffset: 2, text: "bad" }));
 
-      expect(negative._tag).toBe("Failure");
-      expect(inverted._tag).toBe("Failure");
+      pipe(negative, Exit.isFailure, assertTrue);
+      pipe(inverted, Exit.isFailure, assertTrue);
     })
   );
 
