@@ -1,6 +1,7 @@
 import { RULE_NAMES, RULES } from "@beep/lint-rules";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";

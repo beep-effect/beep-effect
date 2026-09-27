@@ -1,6 +1,7 @@
 import plugin from "@beep/lint-rules/oxlint";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";

@@ -31,6 +31,7 @@
   "devDependencies": {
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@beep/utils": "workspace:^",
     "@biomejs/biome": "catalog:",

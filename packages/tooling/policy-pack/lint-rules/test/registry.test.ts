@@ -1,8 +1,9 @@
 import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
