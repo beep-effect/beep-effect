@@ -1,5 +1,6 @@
 import { chromeLinuxArial16, PretextCapture, PretextCaptureFixture, PretextCaptureRequest } from "@beep/pretext";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -23,7 +24,13 @@ describe("PretextCaptureFixture", () => {
         expect(snapshot.version).toBe(1);
         expect(Struct.keys(snapshot.metrics.words)).toEqual(["the", "dragon"]);
         expect(snapshot.metrics.spaceWidth).toBe(fixture.metrics.spaceWidth);
-        expect(R.get(snapshot.metrics.words, "dragon")).toEqual(R.get(fixture.metrics.words, "dragon"));
+        {
+          const actualOption = R.get(snapshot.metrics.words, "dragon");
+          O.match(R.get(fixture.metrics.words, "dragon"), {
+            onNone: () => assertNone(actualOption),
+            onSome: (expectedValue) => assertSome(actualOption, expectedValue),
+          });
+        }
       })
     );
   });
@@ -83,7 +90,7 @@ describe("PretextCaptureFixture", () => {
           })
         );
 
-        expect(O.isSome(snapshot.metrics.sentence)).toBe(true);
+        snapshot.metrics.sentence.pipe(O.isSome, assertTrue);
       })
     );
   });

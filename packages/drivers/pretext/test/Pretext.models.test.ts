@@ -2,6 +2,7 @@ import {
   chromeLinuxArial16,
   chromeLinuxArial16Encoded,
   FontMetricsSnapshotV1,
+  LineRange,
   lineCount,
   lineRanges,
   lineStats,
@@ -10,6 +11,7 @@ import {
   textHeight,
 } from "@beep/pretext";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -23,7 +25,7 @@ describe("FontMetricsSnapshotV1", () => {
       expect(snapshot.version).toBe(1);
       expect(snapshot.metrics.font).toBe("16px Arial");
       expect(snapshot.metrics.engineProfile.preferEarlySoftHyphenBreak).toBe(false);
-      expect(O.isSome(snapshot.metrics.domLineCounts)).toBe(true);
+      snapshot.metrics.domLineCounts.pipe(O.isSome, assertTrue);
     })
   );
 
@@ -98,15 +100,27 @@ describe("pure layout helpers", () => {
       const sentence = O.getOrThrow(metrics.sentence);
       const domLineCounts = O.getOrThrow(metrics.domLineCounts);
 
-      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: 200, text: sentence }))).toEqual(
-        R.get(domLineCounts, "200")
-      );
-      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: 320, text: sentence }))).toEqual(
-        R.get(domLineCounts, "320")
-      );
-      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: 480, text: sentence }))).toEqual(
-        R.get(domLineCounts, "480")
-      );
+      {
+        const actualOption = lineCount(metrics, TextLayoutInput.make({ maxWidth: 200, text: sentence }));
+        O.match(R.get(domLineCounts, "200"), {
+          onNone: () => assertNone(actualOption),
+          onSome: (expectedValue) => assertSome(actualOption, expectedValue),
+        });
+      }
+      {
+        const actualOption = lineCount(metrics, TextLayoutInput.make({ maxWidth: 320, text: sentence }));
+        O.match(R.get(domLineCounts, "320"), {
+          onNone: () => assertNone(actualOption),
+          onSome: (expectedValue) => assertSome(actualOption, expectedValue),
+        });
+      }
+      {
+        const actualOption = lineCount(metrics, TextLayoutInput.make({ maxWidth: 480, text: sentence }));
+        O.match(R.get(domLineCounts, "480"), {
+          onNone: () => assertNone(actualOption),
+          onSome: (expectedValue) => assertSome(actualOption, expectedValue),
+        });
+      }
     })
   );
 
@@ -118,7 +132,7 @@ describe("pure layout helpers", () => {
       const sentence = O.getOrThrow(metrics.sentence);
       const width = O.getOrThrow(naturalWidth(metrics, sentence));
 
-      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: width, text: sentence }))).toEqual(O.some(1));
+      assertSome(lineCount(metrics, TextLayoutInput.make({ maxWidth: width, text: sentence })), 1);
       expect(
         O.getOrThrow(lineCount(metrics, TextLayoutInput.make({ maxWidth: width - 1, text: sentence })))
       ).toBeGreaterThan(1);
@@ -132,9 +146,7 @@ describe("pure layout helpers", () => {
       const metrics = snapshot.metrics;
       const sentence = O.getOrThrow(metrics.sentence);
 
-      expect(textHeight(metrics, TextLayoutInput.make({ maxWidth: 320, text: sentence }))).toEqual(
-        O.some(2 * metrics.lineHeight)
-      );
+      assertSome(textHeight(metrics, TextLayoutInput.make({ maxWidth: 320, text: sentence })), 2 * metrics.lineHeight);
     })
   );
 
@@ -143,10 +155,10 @@ describe("pure layout helpers", () => {
     Effect.fnUntraced(function* () {
       const snapshot = yield* chromeLinuxArial16;
 
-      expect(naturalWidth(snapshot.metrics, "unmeasured words entirely")).toEqual(O.none());
-      expect(
+      assertNone(naturalWidth(snapshot.metrics, "unmeasured words entirely"));
+      assertNone(
         lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 320, text: "unmeasured words entirely" }))
-      ).toEqual(O.none());
+      );
     })
   );
 
@@ -155,8 +167,8 @@ describe("pure layout helpers", () => {
     Effect.fnUntraced(function* () {
       const snapshot = yield* chromeLinuxArial16;
 
-      expect(naturalWidth(snapshot.metrics, "")).toEqual(O.none());
-      expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 320, text: "" }))).toEqual(O.none());
+      assertNone(naturalWidth(snapshot.metrics, ""));
+      assertNone(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 320, text: "" })));
     })
   );
 
@@ -165,7 +177,7 @@ describe("pure layout helpers", () => {
     Effect.fnUntraced(function* () {
       const snapshot = yield* chromeLinuxArial16;
 
-      expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 1, text: "slithers" }))).toEqual(O.some(1));
+      assertSome(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 1, text: "slithers" })), 1);
     })
   );
 
@@ -181,12 +193,18 @@ describe("pure layout helpers", () => {
       ];
 
       for (const input of inputs) {
-        expect(O.map(lineStats(metrics, input), (stats) => stats.lineCount)).toEqual(lineCount(metrics, input));
+        {
+          const actualOption = O.map(lineStats(metrics, input), (stats) => stats.lineCount);
+          O.match(lineCount(metrics, input), {
+            onNone: () => assertNone(actualOption),
+            onSome: (expectedValue) => assertSome(actualOption, expectedValue),
+          });
+        }
       }
 
       const missing = TextLayoutInput.make({ maxWidth: 320, text: "unmeasured" });
-      expect(lineStats(metrics, missing)).toEqual(O.none());
-      expect(lineCount(metrics, missing)).toEqual(O.none());
+      assertNone(lineStats(metrics, missing));
+      assertNone(lineCount(metrics, missing));
     })
   );
 
@@ -196,9 +214,16 @@ describe("pure layout helpers", () => {
       const snapshot = yield* chromeLinuxArial16;
       const text = "The dragon slithers across the page";
 
-      expect(O.map(lineStats(snapshot.metrics, { maxWidth: 100_000, text }), (stats) => stats.maxLineWidth)).toEqual(
-        naturalWidth(snapshot.metrics, text)
-      );
+      {
+        const actualOption = O.map(
+          lineStats(snapshot.metrics, { maxWidth: 100_000, text }),
+          (stats) => stats.maxLineWidth
+        );
+        O.match(naturalWidth(snapshot.metrics, text), {
+          onNone: () => assertNone(actualOption),
+          onSome: (expectedValue) => assertSome(actualOption, expectedValue),
+        });
+      }
     })
   );
 
@@ -209,16 +234,14 @@ describe("pure layout helpers", () => {
       const metrics = snapshot.metrics;
       const wordWidth = (word: string): number => O.getOrThrow(R.get(metrics.words, word));
 
-      expect(lineRanges(metrics, { maxWidth: 90, text: "The dragon slithers" })).toEqual(
-        O.some([
-          {
-            startWord: 0,
-            endWord: 2,
-            width: wordWidth("The") + metrics.spaceWidth + wordWidth("dragon"),
-          },
-          { startWord: 2, endWord: 3, width: wordWidth("slithers") },
-        ])
-      );
+      assertSome(lineRanges(metrics, { maxWidth: 90, text: "The dragon slithers" }), [
+        LineRange.make({
+          startWord: 0,
+          endWord: 2,
+          width: wordWidth("The") + metrics.spaceWidth + wordWidth("dragon"),
+        }),
+        LineRange.make({ startWord: 2, endWord: 3, width: wordWidth("slithers") }),
+      ]);
     })
   );
 
@@ -227,7 +250,7 @@ describe("pure layout helpers", () => {
     Effect.fnUntraced(function* () {
       const snapshot = yield* chromeLinuxArial16;
 
-      expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 0, text: "the dragon" }))).toEqual(O.some(2));
+      assertSome(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 0, text: "the dragon" })), 2);
     })
   );
 });

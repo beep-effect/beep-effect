@@ -1,0 +1,19 @@
+{
+  "beforeSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+  "someAssertions": 5,
+  "noneAssertions": 6,
+  "booleanAssertions": 2,
+  "optionParityAssertions": 6,
+  "onlyReviewedAssertionReplacements": true,
+  "originalExpectedOperandsPreserved": true,
+  "files": [
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "sha256": "cab0ecc5efb57306326d192ffa264011ac8495783d55a44ecc4083eae4c57dc7"
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "sha256": "7e6c4001f89b5b442afc7bcd16b45f6546dfebb97a320f0ad94f0716f586afc4"
+    }
+  ]
+}

@@ -2522,3 +2522,14 @@ limits and required explicit resubmission. Preserve terminal receipts, avoid
 restarting live handles, and gate fresh review/merge decisions on recovered
 GraphQL evidence. A fleet-aware polling budget and a directly exposed next-poll
 control would prevent parallel monitors from exhausting shared account quota.
+
+## 2026-09-27: Option helper exposed prototype-sensitive expected fixtures
+
+The Pretext assertion phase replaced an Option-wrapped loose equality matcher
+with `assertSome`. Both Node and Bun rejected the line-range expectation because
+the subject returns `LineRange` instances while the original independent expected
+values were plain objects. Package audit also identified two introduced nested
+call diagnostics. Preserve every numeric expected operand, construct matching
+expected values through the existing public model, and use the pipeable predicate
+form. A matcher-semantics review must include schema-class prototypes, not only
+payload fields, before counting a constructor-shaped assertion as migrated.
