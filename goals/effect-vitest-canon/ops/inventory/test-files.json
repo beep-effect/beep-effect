@@ -2257,78 +2257,78 @@
     "file": "packages/drivers/wink/test/Backend/WinkBackend.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 3389,
-    "lines": 92
+    "bytes": 3894,
+    "lines": 107
   },
   {
     "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 3737,
-    "lines": 104
+    "bytes": 4184,
+    "lines": 116
   },
   {
     "file": "packages/drivers/wink/test/Graph/TextGraph.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 3882,
-    "lines": 99
+    "bytes": 4234,
+    "lines": 109
   },
   {
     "file": "packages/drivers/wink/test/Layers.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 1129,
-    "lines": 30
+    "bytes": 858,
+    "lines": 25
   },
   {
     "file": "packages/drivers/wink/test/NLPService.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 1839,
-    "lines": 48
+    "bytes": 2099,
+    "lines": 55
   },
   {
     "file": "packages/drivers/wink/test/ParityTools.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 2997,
+    "bytes": 2866,
     "lines": 68
   },
   {
     "file": "packages/drivers/wink/test/ToolValidation.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 9056,
-    "lines": 239
+    "bytes": 9907,
+    "lines": 254
   },
   {
     "file": "packages/drivers/wink/test/Wink.equivalence.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 976,
-    "lines": 22
+    "bytes": 1012,
+    "lines": 23
   },
   {
     "file": "packages/drivers/wink/test/Wink.models.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 1134,
-    "lines": 26
+    "bytes": 1577,
+    "lines": 38
   },
   {
     "file": "packages/drivers/wink/test/WinkEngineRef.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 2421,
-    "lines": 70
+    "bytes": 2314,
+    "lines": 69
   },
   {
     "file": "packages/drivers/wink/test/WinkTokenization.test.ts",
     "package": "@beep/wink",
     "kind": "test",
-    "bytes": 2096,
-    "lines": 49
+    "bytes": 1986,
+    "lines": 47
   },
   {
     "file": "packages/drivers/xai/test/XAi.equivalence.test.ts",
