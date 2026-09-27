@@ -1,5 +1,10 @@
 # @beep/dock-react four-lens digest
 
+P2 update: all 14 saved findings are fixed. Current syntax exceptions preserve
+required graph lifetimes and compound assertions. See the
+[Dock React P2 proof](../../../research/dock-react-p2-proof.md) for controls,
+runner integration and final timings. The historical P1 audit follows.
+
 Four DOM suites are explicitly serial and run in the configured DOM harness. setup.dom.ts is fully covered support: controllable ResizeObserver, synthetic pointer IDs and no-op pointer-capture methods do not model real browser capture. Geometry/portal/focus assertions remain valuable adapter tests, not browser QA. No browser or provider ran in this audit.
 
 makeDockAtoms owns registry/runtime/persistence/operation mounts; dispose releases them (Dock.atoms.ts90-169). The four suites place dispose at successful tails, while React cleanup intentionally does not own that graph. Register per-case disposal immediately after acquisition so setup/assertion/DOM-wait failures release it; preserve StrictMode nonownership and existing early unmount/observer assertions. Do not share mutable graphs across cases. These are four affected files for the same lifetime pattern, not four observed leaked processes.

@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/dock-react",
+  "sourceHead": "b0084d4a12445762af954d191f0c5d401c57125c",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.922116479006945,
+  "bunWholeCommandSeconds": 2.618275293993065,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.3671875, 2.85400390625, 2.486328125],
+  "loadAfter": [4.21875, 3.0390625, 2.54833984375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.08 avg60=0.19 avg300=0.11 total=746143265\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202941\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128883\n",
+    "io": "some avg10=0.01 avg60=0.16 avg300=0.06 total=820674792\nfull avg10=0.01 avg60=0.11 avg300=0.04 total=718212742\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.04 avg60=0.17 avg300=0.10 total=746152662\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202941\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128883\n",
+    "io": "some avg10=0.00 avg60=0.14 avg300=0.06 total=820680130\nfull avg10=0.00 avg60=0.10 avg300=0.04 total=718217819\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "544e0fe928cd4ce3432e8b4a569648150f5dabeeef3614aa502cd5e207bb1cec"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/AGENTS.md",
+      "sha256": "53734748c861e1a92cd0f2c9cd1bc1f5bb755dc5f54f1c95b293151727189d10"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/CLAUDE.md",
+      "sha256": "53734748c861e1a92cd0f2c9cd1bc1f5bb755dc5f54f1c95b293151727189d10"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/README.md",
+      "sha256": "b2c188fa460e0a3abc122b487744fee9793c3b64023b5338988ef6dba5955853"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/docgen.json",
+      "sha256": "4dc1f83df841f188b2f6e13d41390834cd5bedbe1e1c354d47190929005420fc"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/package.json",
+      "sha256": "348dbdc34b572b2d0c5bede3d5474f28520a3153a3b04dd12f3e2d8eda5d1394"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "sha256": "9509fde759ccec32930b67146ec155acd0856f4cdb4050ef51c328d7669c51f1"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+      "sha256": "5da2d76d40b00909133c6087ef39ba868fa06bc170c18c9674091ca63869788b"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/index.ts",
+      "sha256": "6412a93c62364cecd826948bc7262571bf6cc67ccc956f49fdf6eaf72bfc1697"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "sha256": "82fbb20cb808263ec60b430935f92a52c3d983fc41e7acaf29e81e269ff1cd7e"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "sha256": "bf36b95ff10f5646be98e4c70880ce0ce1a8a7e26b2ad6bf15759b32f9d5e50f"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/FloatingPane.tsx",
+      "sha256": "96ea1e179ee2825893f99ed5f8e701097f60601c04f15537d71bb737a8dc93d3"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Gesture.models.ts",
+      "sha256": "106946af1b1f17f44d6fe774778f7ce5c4b4cbdc714b60f48f86d5b5cf3df551"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/GroupPane.tsx",
+      "sha256": "82c59fc33872f01ffd386314370b4ab6e3d06730dd5785e239271bb6b57d8933"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Icons.tsx",
+      "sha256": "f83a585690352ed68df07824d26fa9b5d3ee20549355e3be99f1c471a0131019"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/PanelHost.tsx",
+      "sha256": "c0ae3e61f506d27d153273b4b07935391aabb24bbc81bacae89e269b67b5d766"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
+      "sha256": "a2af3a799812a4c70e91028b702d64fb24402316ff44268de848bc935121f87b"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/Sash.tsx",
+      "sha256": "be7718fbe3cf7762644dffd14ea96ba2d29574a37a8af516a16d449452a52b60"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/stories/dock.stories.css",
+      "sha256": "2342d2d7156011f095d0381148d4577616af7a908b2e4cd2968e97b3c0e14bef"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/stories/dock.stories.tsx",
+      "sha256": "44f380a9f9891477cf095ff7bddeedde0cf713784f8f4ffa1628acdedb5bb776"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/stories/tsconfig.json",
+      "sha256": "c2d7ce7734d76cd3cfa73c8ee7ccfdea927bc2ebb93553becbf0335ceef2fb33"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "sha256": "94102cc41e434226ff316c3dcdeb1ac9f2113da83cf5628820c445c45edf3028"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "sha256": "93f9954bcf89f53d351c28249f22ff435279ac0957eb43af295b23fb10ea962a"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "sha256": "bc429e1a21a4e2b8b7c6d07dad7683707721acbc713d7c98702ac628719f8f54"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Minima.test.tsx",
+      "sha256": "9b84d0308bdc7b84287959c4774842072311a365ff13b0ca543f11af35841017"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/setup.dom.ts",
+      "sha256": "408eba778d6cf98f172825507e7b0625085569bd58dcc0a548a3c7b1b9c3920a"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/tsconfig.check.json",
+      "sha256": "43f554dc1f9117546374a8ca7aaa225d30d8c77115226f2eaa79876a9e4a8458"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/tsconfig.json",
+      "sha256": "263b0736d1e5dee138a8be898d54ac3ac80f54d78a94175ba6bfb75a2036103c"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/tsconfig.stories.json",
+      "sha256": "3376920bb7615dbb1d9ad0e4de3cd29bea70ffd568dae7ecebea5668b5c68782"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/tsconfig.test.json",
+      "sha256": "24fc16aa174d3b55f2a9d6189724bc5ccdd375bb6d3b546852619c547553deb7"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/vitest.config.ts",
+      "sha256": "8e2dd166bde02d4b0e31c109b449b340ecbf0e17e14c0079678dc5d9569d6d2f"
+    }
+  ],
+  "environmentMode": "Actual Dock React adapter in configured jsdom, controllable ResizeObserver and synthetic pointer events, graph ownership and portal identity subjects. No real browser pointer capture or visual proof claimed. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 30,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.21875, 3.0390625, 2.54833984375],
+    "loadAfter": [4.60205078125, 3.13818359375, 2.5830078125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.04 avg60=0.17 avg300=0.10 total=746152669\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202941\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128883\n",
+      "io": "some avg10=0.00 avg60=0.14 avg300=0.06 total=820680130\nfull avg10=0.00 avg60=0.10 avg300=0.04 total=718217819\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.03 avg60=0.16 avg300=0.10 total=746157362\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202941\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128883\n",
+      "io": "some avg10=0.00 avg60=0.13 avg300=0.06 total=820684619\nfull avg10=0.00 avg60=0.10 avg300=0.04 total=718222158\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 30,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 30 adapter tests before and after with zero skips. The original resize expansion witness remains, with one additional below-minimum shrink assertion. Real graph ownership and original DOM setup remain. Timing differences are not causal speedup evidence."
+}

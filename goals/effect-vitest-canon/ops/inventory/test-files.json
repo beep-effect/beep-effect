@@ -4448,29 +4448,29 @@
     "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
     "package": "@beep/dock-react",
     "kind": "test",
-    "bytes": 10551,
-    "lines": 262
+    "bytes": 10597,
+    "lines": 257
   },
   {
     "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
     "package": "@beep/dock-react",
     "kind": "test",
-    "bytes": 10858,
+    "bytes": 11089,
     "lines": 246
   },
   {
     "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
     "package": "@beep/dock-react",
     "kind": "test",
-    "bytes": 19785,
-    "lines": 405
+    "bytes": 19620,
+    "lines": 400
   },
   {
     "file": "packages/foundation/ui-system/dock-react/test/Minima.test.tsx",
     "package": "@beep/dock-react",
     "kind": "test",
-    "bytes": 3839,
-    "lines": 105
+    "bytes": 3858,
+    "lines": 104
   },
   {
     "file": "packages/foundation/ui-system/dock-react/test/setup.dom.ts",
