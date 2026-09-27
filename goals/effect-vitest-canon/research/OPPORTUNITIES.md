@@ -2519,3 +2519,12 @@ budgets as explicit instrumentation exceptions; ordinary cases adopt the runner.
 No capture was filtered/reset, assertion weakened or compiler rule suppressed.
 A separately approved runner facility for isolated logger subjects would remove
 this adoption constraint without changing the tested logging behavior.
+
+## 2026-09-26: Nested property assertion missed before registration
+
+Final admitted-inventory reconciliation found one generated redaction-law branch
+still using expect(O.isNone(safe.detail)).toBe(true). The earlier assertion pass
+missed this nested callback, so the later property checkpoint preserved its old
+syntax. Replaced it with assertNone on the identical value and retained the
+branch, input domains and run floor. A per-package residual detector review
+before leaving the assertion phase would have caught this missed conversion.

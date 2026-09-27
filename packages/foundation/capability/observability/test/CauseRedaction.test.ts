@@ -204,7 +204,7 @@ describe("CauseRedaction", () => {
       expect(safe.truncated).toBe(messageTruncated || detailTruncated);
 
       if (options.channel === "client") {
-        expect(O.isNone(safe.detail)).toBe(true);
+        assertNone(safe.detail);
       } else {
         expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
       }
