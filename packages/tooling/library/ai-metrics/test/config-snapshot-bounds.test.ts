@@ -451,9 +451,14 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         yield* makeFixtureRepo(repoRoot, { nestedWorktreeFileCount: 400 });
 
         const statCount = yield* Ref.make(0);
+        const statPaths = yield* Ref.make<ReadonlyArray<string>>([]);
         const countingFs: FileSystem.FileSystem = {
           ...fs,
-          stat: (path: string) => Ref.update(statCount, (count) => count + 1).pipe(Effect.flatMap(() => fs.stat(path))),
+          stat: (path: string) =>
+            Ref.update(statCount, (count) => count + 1).pipe(
+              Effect.andThen(Ref.update(statPaths, A.append(path))),
+              Effect.andThen(fs.stat(path))
+            ),
         };
 
         const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot })).pipe(
@@ -462,6 +467,16 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
         expect(result.fileCount).toBe(A.length(legitimatePaths));
         expect(yield* Ref.get(statCount)).toBeLessThan(100);
+        const observedPaths = yield* Ref.get(statPaths);
+        expect(observedPaths).toContain(pathApi.join(repoRoot, "AGENTS.md"));
+        const forbiddenPaths = A.map(A.range(1, 400), (index) =>
+          pathApi.join(repoRoot, `.claude/worktrees/wt1/pkg-${index}`)
+        );
+        expect(
+          A.filter(observedPaths, (observed) =>
+            A.some(forbiddenPaths, (forbidden) => observed === forbidden || Str.startsWith(`${forbidden}/`)(observed))
+          )
+        ).toEqual([]);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

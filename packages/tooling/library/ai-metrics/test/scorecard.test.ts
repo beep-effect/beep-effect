@@ -76,75 +76,69 @@ describe("scorecard schemas", () => {
     ).toBe("Passed");
   });
 
-  it.effect("round-trips label queue results through their JSON codec", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(labelQueueResultArbitrary, { count: 12 })),
-      Effect.fnUntraced(function* (value) {
-        const json = yield* AiMetricsLabelQueueResult.encodeJsonEffect(value);
-        const decoded = yield* AiMetricsLabelQueueResult.decodeJsonEffect(json);
-        pipe(labelQueueResultEquivalent(decoded, value), assertTrue);
-      }),
-      { discard: true }
-    )
+  it.effect.prop(
+    "round-trips label queue results through their JSON codec",
+    [labelQueueResultArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const json = yield* AiMetricsLabelQueueResult.encodeJsonEffect(value);
+      const decoded = yield* AiMetricsLabelQueueResult.decodeJsonEffect(json);
+      pipe(labelQueueResultEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(12) }
   );
 
-  it.effect("round-trips benchmark case list results through their JSON codec", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(benchmarkCaseListResultArbitrary, { count: 12 })),
-      Effect.fnUntraced(function* (value) {
-        const json = yield* AiMetricsBenchmarkCaseListResult.encodeJsonEffect(value);
-        const decoded = yield* AiMetricsBenchmarkCaseListResult.decodeJsonEffect(json);
-        pipe(benchmarkCaseListResultEquivalent(decoded, value), assertTrue);
-      }),
-      { discard: true }
-    )
+  it.effect.prop(
+    "round-trips benchmark case list results through their JSON codec",
+    [benchmarkCaseListResultArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const json = yield* AiMetricsBenchmarkCaseListResult.encodeJsonEffect(value);
+      const decoded = yield* AiMetricsBenchmarkCaseListResult.decodeJsonEffect(json);
+      pipe(benchmarkCaseListResultEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(12) }
   );
 
-  it.effect("round-trips weekly report results through their JSON codec", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(weeklyReportResultArbitrary, { count: 12 })),
-      Effect.fnUntraced(function* (value) {
-        const json = yield* AiMetricsWeeklyReportResult.encodeJsonEffect(value);
-        const decoded = yield* AiMetricsWeeklyReportResult.decodeJsonEffect(json);
-        pipe(weeklyReportResultEquivalent(decoded, value), assertTrue);
-      }),
-      { discard: true }
-    )
+  it.effect.prop(
+    "round-trips weekly report results through their JSON codec",
+    [weeklyReportResultArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const json = yield* AiMetricsWeeklyReportResult.encodeJsonEffect(value);
+      const decoded = yield* AiMetricsWeeklyReportResult.decodeJsonEffect(json);
+      pipe(weeklyReportResultEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(12) }
   );
 
-  it.effect("round-trips rendered outcome labels through their JSON codec", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(outcomeLabelArbitrary, { count: 12 })),
-      Effect.fnUntraced(function* (value) {
-        const json = yield* OutcomeLabel.encodeJsonEffect(value);
-        const decoded = yield* OutcomeLabel.decodeJsonEffect(json);
-        pipe(outcomeLabelEquivalent(decoded, value), assertTrue);
-      }),
-      { discard: true }
-    )
+  it.effect.prop(
+    "round-trips rendered outcome labels through their JSON codec",
+    [outcomeLabelArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const json = yield* OutcomeLabel.encodeJsonEffect(value);
+      const decoded = yield* OutcomeLabel.decodeJsonEffect(json);
+      pipe(outcomeLabelEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(12) }
   );
 
-  it.effect("round-trips rendered benchmark cases through their JSON codec", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(benchmarkCaseArbitrary, { count: 12 })),
-      Effect.fnUntraced(function* (value) {
-        const json = yield* BenchmarkCase.encodeJsonEffect(value);
-        const decoded = yield* BenchmarkCase.decodeJsonEffect(json);
-        pipe(benchmarkCaseEquivalent(decoded, value), assertTrue);
-      }),
-      { discard: true }
-    )
+  it.effect.prop(
+    "round-trips rendered benchmark cases through their JSON codec",
+    [benchmarkCaseArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const json = yield* BenchmarkCase.encodeJsonEffect(value);
+      const decoded = yield* BenchmarkCase.decodeJsonEffect(json);
+      pipe(benchmarkCaseEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(12) }
   );
 
-  it.effect("round-trips rendered benchmark runs through their JSON codec", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(benchmarkRunArbitrary, { count: 12 })),
-      Effect.fnUntraced(function* (value) {
-        const json = yield* BenchmarkRun.encodeJsonEffect(value);
-        const decoded = yield* BenchmarkRun.decodeJsonEffect(json);
-        pipe(benchmarkRunEquivalent(decoded, value), assertTrue);
-      }),
-      { discard: true }
-    )
+  it.effect.prop(
+    "round-trips rendered benchmark runs through their JSON codec",
+    [benchmarkRunArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const json = yield* BenchmarkRun.encodeJsonEffect(value);
+      const decoded = yield* BenchmarkRun.decodeJsonEffect(json);
+      pipe(benchmarkRunEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(12) }
   );
 });

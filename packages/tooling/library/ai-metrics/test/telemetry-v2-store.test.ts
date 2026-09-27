@@ -245,6 +245,8 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
           expect(reconciliationReceipt.artifactKind).toBe("session-lease-reconciliation");
           expect(persistedTransition.status).toBe("quarantined");
           expect(persistedReconciliation.status).toBe("deferred");
+          expect(persistedTransition).toEqual(transition);
+          expect(persistedReconciliation).toEqual(reconciliation);
         })
       )
     )

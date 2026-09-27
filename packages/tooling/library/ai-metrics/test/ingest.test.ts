@@ -1328,7 +1328,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
     Effect.fn(function* () {
       const plan = renderAiMetricsForwarderTimerPlan(
         AiMetricsForwarderTimerInput.make({
-          command: ["/bin/bun", "run", "beep", "--data-root", "/tmp/metrics; touch /tmp/pwn"],
+          command: ["/bin/bun", "run", "beep", "--data-root", "/tmp/metrics; touch /tmp/pwn", "agent's data"],
           intervalMinutes: 15,
           lockPath: "%t/beep-ai-metrics-forwarder.lock",
           serviceName: "beep\nmalicious.service",
@@ -1343,6 +1343,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(plan.serviceUnit).not.toContain("\nEnvironment=OWNED=1");
       expect(plan.serviceUnit).toContain("--data-root");
       expect(plan.serviceUnit).toContain("/tmp/metrics; touch /tmp/pwn");
+      // Fixed argv witness through the command quoting and outer bash -lc quoting.
+      expect(plan.serviceUnit).toContain(
+        String.raw`'\''/bin/bun'\'' '\''run'\'' '\''beep'\'' '\''--data-root'\'' '\''/tmp/metrics; touch /tmp/pwn'\'' '\''agent'\''\'\'''\''s data'\''`
+      );
     })
   );
 
@@ -3490,6 +3494,11 @@ volumes:
           yield* writeText(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"), "three\n");
           yield* writeText(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"), "latest\n");
 
+          // Deliberately disagree with filename order and avoid clock-resolution ties.
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-1"), 1_700_000_300, 1_700_000_300);
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-2"), 1_700_000_100, 1_700_000_100);
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-3"), 1_700_000_200, 1_700_000_200);
+
           const dryRun = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
               dataRoot,
@@ -3500,6 +3509,21 @@ volumes:
           expect(dryRun.deletedDerivedExportCount).toBe(1);
           expect(dryRun.keptDerivedExportCount).toBe(2);
           expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(3);
+          expect(A.sort(yield* fs.readDirectory(parquetRoot), Str.Order)).toEqual([
+            "forwarder-1",
+            "forwarder-2",
+            "forwarder-3",
+            "latest",
+          ]);
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet"))).toBe(
+            "one\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-2/ai_metrics_turns.parquet"))).toBe(
+            "two\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"))).toBe(
+            "three\n"
+          );
 
           const applied = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -3511,6 +3535,19 @@ volumes:
           expect(applied.deletedDerivedExportCount).toBe(1);
           expect(applied.keptDerivedExportCount).toBe(2);
           expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(2);
+          expect(A.sort(yield* fs.readDirectory(parquetRoot), Str.Order)).toEqual([
+            "forwarder-1",
+            "forwarder-3",
+            "latest",
+          ]);
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet"))).toBe(
+            "one\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"))).toBe(
+            "three\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"))).toBe("latest\n");
+
           pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));

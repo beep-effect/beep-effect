@@ -420,25 +420,24 @@ describe("HookPulseV1", () => {
     ).toBe("Passed");
   });
 
-  it.effect("derives a total wait reason for arbitrary raw events", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(HookPulseRawEvent), { count: 50, seed: 804 })),
-      Effect.fnUntraced(function* (event) {
-        const encodedEvent = yield* encodeRawHookPulse(event);
-        const decoded = yield* withSaltEnv(
-          {},
-          decodeHookPulseFromRaw({
-            ...baseRawInputFixture,
-            ts: "2026-08-01T08:00:00.000Z",
-            event: encodedEvent,
-          })
-        );
+  it.effect.prop(
+    "derives a total wait reason for arbitrary raw events",
+    [Arbitrary.schema(HookPulseRawEvent)],
+    Effect.fnUntraced(function* ([event]) {
+      const encodedEvent = yield* encodeRawHookPulse(event);
+      const decoded = yield* withSaltEnv(
+        {},
+        decodeHookPulseFromRaw({
+          ...baseRawInputFixture,
+          ts: "2026-08-01T08:00:00.000Z",
+          event: encodedEvent,
+        })
+      );
 
-        expect(decoded.waitReason).toBeDefined();
-        pipe(isHookPulseWaitReason(decoded.waitReason), assertTrue);
-      }),
-      { discard: true }
-    )
+      expect(decoded.waitReason).toBeDefined();
+      pipe(isHookPulseWaitReason(decoded.waitReason), assertTrue);
+    }),
+    { arbitrary: { ...fcRuns(50), seed: 804 } }
   );
 
   it.effect("pseudonymizes raw session and filesystem identifiers", () =>

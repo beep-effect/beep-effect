@@ -3542,3 +3542,18 @@ and update the stale title without changing production minima. Independent
 width/height clamp-removal controls fail the new witness and pass the old test.
 Binding inventory prose to the implementation constants would make this drift
 visible before remediation.
+
+## 2026-09-27: Invalid comparator mutation was not oracle evidence
+
+The AI metrics snapshot-order negative control initially called an unavailable
+`Order.reverse` helper in the pinned Effect release. Both revised and original
+tests failed with `Order.reverse is not a function`, so neither result counted
+as sensitivity evidence. Production and test files were restored by the
+control's finalizer. The control now reverses the existing comparator arguments;
+its receipts have a separate version. Mutation harnesses should validate their
+fault seam against the pinned API before interpreting a red test.
+
+A subsequent lease-payload control initially reused the fixture's existing
+all-f hash, so it changed nothing and the revised test correctly passed. That
+run is not sensitivity evidence. The corrected mutation uses a distinct hash;
+control setup should assert that replacement values differ from the fixture.
