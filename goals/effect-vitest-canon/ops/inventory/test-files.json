@@ -7794,15 +7794,15 @@
     "file": "packages/workspace/domain/test/EntityMaterialization.test.ts",
     "package": "@beep/workspace-domain",
     "kind": "test",
-    "bytes": 1237,
-    "lines": 31
+    "bytes": 1273,
+    "lines": 32
   },
   {
     "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
     "package": "@beep/workspace-domain",
     "kind": "test",
-    "bytes": 10236,
-    "lines": 265
+    "bytes": 11029,
+    "lines": 278
   },
   {
     "file": "packages/workspace/server/test/ThreadStore.test.ts",
@@ -7836,21 +7836,21 @@
     "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
     "package": "@beep/workspace-tables",
     "kind": "test",
-    "bytes": 10320,
-    "lines": 225
+    "bytes": 15638,
+    "lines": 347
   },
   {
     "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/workspace-use-cases",
     "kind": "test",
-    "bytes": 3695,
-    "lines": 83
+    "bytes": 3731,
+    "lines": 84
   },
   {
     "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
     "package": "@beep/workspace-use-cases",
     "kind": "test",
-    "bytes": 9883,
-    "lines": 260
+    "bytes": 10333,
+    "lines": 261
   }
 ]
