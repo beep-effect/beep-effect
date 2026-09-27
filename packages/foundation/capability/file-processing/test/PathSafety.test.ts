@@ -3,9 +3,10 @@ import {
   writeFileWithinCanonicalRootAtomically,
   writeFileWithinRootAtomically,
 } from "@beep/file-processing/PathSafety";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Ref, Result } from "effect";
 import * as Eq from "effect/Equal";
@@ -218,15 +219,13 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
     })
   );
 
-  it.effect(
-    "rejects a POSIX symlink escape through an outside sibling containing a literal backslash",
+  it.effect.skipIf(Eq.equals(process.platform, "win32"))(
+    "POSIX only: rejects a symlink escape through an outside sibling containing a literal backslash",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
-      if (!Eq.equals(path.sep, "/")) {
-        return;
-      }
+      expect(path.sep).toBe("/");
 
       const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
       const root = path.join(sandbox, "workspace");

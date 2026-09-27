@@ -3260,3 +3260,5 @@ Langextract native property conversion exposed nested Effect.gen yields
 (TS377083) where old runSync calls had hidden runtime boundaries. Inline the
 array/envelope encode-parse steps in the parent generator, preserving their
 order and separate equivalence checks.
+
+- File Processing platform registration: `quality package-verify @beep/file-processing` rejected a test-only `node:path` separator import with `TS377057 effect(nodeBuiltinImport)`. Use the runtime platform at registration and assert the injected Path separator inside the POSIX body. A documented native-test platform registration example would prevent this detour.

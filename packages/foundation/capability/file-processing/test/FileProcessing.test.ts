@@ -25,9 +25,10 @@ import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
