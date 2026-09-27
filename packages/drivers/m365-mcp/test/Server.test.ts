@@ -270,6 +270,7 @@ describe("M365 MCP server", () => {
         pipe(first, O.isSome, assertTrue);
         if (O.isSome(first)) {
           assert.isFalse(first.value.isFailure);
+          assert.deepStrictEqual(first.value.result, site);
         }
       })
     );
