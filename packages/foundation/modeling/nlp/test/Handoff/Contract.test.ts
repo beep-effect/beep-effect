@@ -1,9 +1,12 @@
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertEquals, assertExitFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -88,9 +91,16 @@ describe("AnnotatedDocument round-trip", () => {
       const mention = A.head(decoded.mentions);
       const entity = A.head(decoded.entities);
       const chunk = A.head(decoded.chunks);
-      expect(O.map(mention, (m) => m.id)).toEqual(O.flatMap(entity, (e) => A.head(e.mentions)));
-      expect(O.map(mention, (m) => m.chunkId)).toEqual(O.map(chunk, (c) => c.id));
-      expect(O.map(mention, (m) => m.text)).toEqual(
+      assertEquals(
+        O.map(mention, (m) => m.id),
+        O.flatMap(entity, (e) => A.head(e.mentions))
+      );
+      assertEquals(
+        O.map(mention, (m) => m.chunkId),
+        O.map(chunk, (c) => c.id)
+      );
+      assertEquals(
+        O.map(mention, (m) => m.text),
         O.zipWith(mention, chunk, (m, c) => Str.slice(m.span.start, m.span.end)(c.text))
       );
     })
@@ -108,57 +118,71 @@ describe("AnnotatedDocument round-trip", () => {
     })
   );
 
-  it("schema-derived documents encode and decode through the production contract", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([AnnotatedDocumentArbitrary]),
-          ([document]) => {
-            const decoded = Effect.runSync(
-              Effect.gen(function* () {
-                const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
-                return yield* decodeContractAnnotatedDocument(encoded);
-              })
-            );
+  it.effect.prop(
+    "schema-derived documents encode and decode through the production contract",
+    [AnnotatedDocumentArbitrary],
+    ([document]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeUnknownContractAnnotatedDocument(document);
+        const decoded = yield* decodeContractAnnotatedDocument(encoded);
 
-            expect(decoded).toEqual(document);
+        expect(decoded).toEqual(document);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+        return true;
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 describe("Span", () => {
-  it("round-trips integer spans with start <= end", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
-          ]),
-          ([a, b]) => {
-            const start = Math.min(a, b);
-            const end = Math.max(a, b);
-            const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
-            return span.start <= span.end && span.start === start && span.end === end;
-          }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips integer spans with start <= end",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1000))),
+    ],
+    ([a, b]) => {
+      const start = Math.min(a, b);
+      const end = Math.max(a, b);
+      const span = Contract.Span.make({ end: NonNegativeInt.make(end), start: NonNegativeInt.make(start) });
+      return span.start <= span.end && span.start === start && span.end === end;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "rejects negative offsets",
     Effect.fnUntraced(function* () {
       const negativeStart = yield* Effect.exit(decodeContractSpan({ end: 1, start: -1 }));
       const negativeEnd = yield* Effect.exit(decodeContractSpan({ end: -1, start: 0 }));
-      expect(Exit.isFailure(negativeStart)).toBe(true);
-      expect(Exit.isFailure(negativeEnd)).toBe(true);
+      assertExitFailure(
+        Exit.match(negativeStart, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      assertExitFailure(
+        Exit.match(negativeEnd, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -201,8 +225,34 @@ describe("Provenance confidence", () => {
         })
       );
 
-      expect(Exit.isFailure(low)).toBe(true);
-      expect(Exit.isFailure(high)).toBe(true);
+      assertExitFailure(
+        Exit.match(low, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      assertExitFailure(
+        Exit.match(high, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 });
