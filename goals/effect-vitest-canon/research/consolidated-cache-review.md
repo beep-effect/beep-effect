@@ -27,3 +27,15 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/shared-domain#package-test-typecheck`
 - `@beep/shared-domain#test`
 - `@beep/shared-domain#test:property`
+
+## Incoming 769c458492713cf271732e5e10ecb37a7f1a046e
+
+- `@beep/provenance#audit`
+- `@beep/provenance#build`
+- `@beep/provenance#check`
+- `@beep/provenance#coverage`
+- `@beep/provenance#doctest`
+- `@beep/provenance#lint:deprecated-apis`
+- `@beep/provenance#package-test-typecheck`
+- `@beep/provenance#test`
+- `@beep/provenance#test:property`

@@ -2543,6 +2543,14 @@ The authoritative `beep lint effect-vitest --census` emits both
 Partial validation therefore reports 28 missing lens entries, not 20. A
 source-aware delta against the full D9 census would prevent that undercount;
 the generated declaration requires scope reconciliation before final coverage.
+### Provenance scope migration: pure service overrides
+
+The scope-phase package check rejected two test-local Effect.provide(Layer)
+applications with TS377032 (strictEffectProvide), although the focused tests
+passed. Both fixtures construct pure Crypto values, so Effect.provideService
+preserves their per-case behavior without a nested Layer boundary. The corrected
+full package verification passed. Classifying pure service overrides before
+replacing scoped helpers would have prevented this failed check.
 
 ### Drizzle full-proof follow-up: compiled codecs and private output references
 
