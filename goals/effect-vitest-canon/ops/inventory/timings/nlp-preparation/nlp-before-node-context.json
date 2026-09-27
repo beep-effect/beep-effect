@@ -1,0 +1,367 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/nlp-before-node.json"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/package.json",
+      "sha256": "31f25b905240ed1ae96b97d0f75f96edf15b1e7754470e21ad284c9ccb187606"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/IdentifierText.ts",
+      "sha256": "3fe5724cfeb22e0bafa6c050b161623a8622f4bfdf223ded6aff7f9b80bb1a35"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/PathText.ts",
+      "sha256": "82dc0eca2c3cae2f795e4088ff03c17d86113f63b1d558b5d4d6270fc1c14f99"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/QueryText.ts",
+      "sha256": "f7bb42f45217272ca103b3378a94012002b749c0da67e70b562782cccccb7f53"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/VariantText.ts",
+      "sha256": "ca6ffdfc238221d706663957091eda6733dd92f8a205d2337eddfaaddb5a87c5"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/index.ts",
+      "sha256": "50ae977068b5b4ba5f766aa3f8eeca32fa0e6421cd31ce2fc7a126a7bd1f54d8"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+      "sha256": "03369384f469aebb0e3007d0e5d4e0b47cc4d082fcc8afb307565a40fc5520ac"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+      "sha256": "01d7f123c1de051f41a3f92bb0d089188e1ee477082f97e4a33f74a9f97a2c92"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/index.ts",
+      "sha256": "fd66d04e3110b1993f1caad53479624a5da3542414c2b9651e475929b21c8533"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
+      "sha256": "90c061179852f75fab9e8a513b5fa2ac869ab1e76c0d4ea3a8c984bd9fe4baa6"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+      "sha256": "8fe7b86a40e3c79b6890c20c2be678bce426b348bc0303d6a41fdf42c8dc083a"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
+      "sha256": "4402536f94cfbaddb76ced09419fb720985a1f8abc747c913917cffbe3fa304f"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
+      "sha256": "9a6cf01b9151c48574dc511aead83038d081b19e2bdfbd9e430818eb52b3f9df"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts",
+      "sha256": "95529fd856f0a264775c08e26c3d199c1d833c64313b2ae7eec291f98ab6ec9e"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
+      "sha256": "90f2381d441949e852111f83bc673ad17b61591ee7825cb00d13158d8ff38fa1"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Similarity.ts",
+      "sha256": "8ce4f3f9058c7fb163c094a68539cdc0ac5539ef806cb820fa0324552c48e719"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+      "sha256": "d7de63315dab330e3e994f647cf1de228e4acb7f4052b61e1238f3c40eac7e2d"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Vectorization.ts",
+      "sha256": "e4df8d50609cb7b25ab76b5ecbbd055716731bbffd2f6f73bd9d03114e5bc7a6"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/index.ts",
+      "sha256": "e4324d0146887c571eb0863ffcbfdb3bf5edff51004a0ff3d26ee96b315665fb"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "sha256": "f6654e0097ce711dcc191b953b11547c58092c4a8fb47d743f31e082c38ce947"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "sha256": "3561d46f36ac5a1fc655c250edbe5211c6af18713c912b03ffd971d0b3eb8256"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/index.ts",
+      "sha256": "337f96ff0dfbf0c3f23acb54ac3c9f38d5451eba4b7f036921c7ab3692cd990d"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+      "sha256": "9e67b67e15a2e425af0cfc0833c3a54d82ab5d59c484d8c4ee1807941f85e4bb"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Handoff/index.ts",
+      "sha256": "342a288c42c9aca3ecddf92dbcba42e7bc2d165ac77768b1eccff33862ef1d2c"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
+      "sha256": "c2c80e927bbee6bdcd2e2298249845f21ec7ec667ce6305218efde1b90998808"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Ontology/index.ts",
+      "sha256": "42fb52d9a60bea30a80619fcb5cb38160d0d46e82b9f3971b6bc5c33353d1ff1"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Composable.ts",
+      "sha256": "08233a56d6e42e83f8e3b2aa3f2e6e14b8a67df322cfa991ea9ca540bc9612cd"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Definition.ts",
+      "sha256": "94ba33cd1a86243916be0a001d7a20a6df24582aef6ded79889dca10f20c85c6"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/index.ts",
+      "sha256": "e1cb39b41fb07c4f7f46aabc92bba1928da1c32da1161ae92313cb693a7ee877"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/internal/numbers.ts",
+      "sha256": "d591330648c14f940ea6c5bdc1dd283cacf3e81aa173e1988ddd3652a1bf92ef"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "sha256": "1d922383aaffe466da7188675b00d7d8d29991783ac31169a0a9972bf5524d15"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+      "sha256": "ed81a2021958863d5e30465250982c825b3794052db7d606e1befd77b0d32de7"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
+      "sha256": "d24546f1cdd72222ae8af142556a567050be4085dc4c3aa35e25be78e52ef7cb"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
+      "sha256": "408b1d94c3aad9c7aea98b373f26705b15c9087a222fac24e877a73c52916a8c"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
+      "sha256": "96b748a41087d32d23c67f9ae63d6e3c7e78f4fcf416afea4536cf477eee6714"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
+      "sha256": "0cbc39036009b042973a47ce24079ebb92a15ab9106a9c4be53a3b126c3c4f80"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "sha256": "e1ebf32014be6f79a9d46cd97c813aea8892899b7c6af1aaa4cbf8f2e5f5769a"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
+      "sha256": "2baad22502fae8709aaf2b9a7d338a190ce47fc2545526aae21c45a60efc0e0e"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
+      "sha256": "0a5f5b0ea4596c53967c38a0d6f88fcc2d9c647e247f3a493a83c833e0aabbed"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
+      "sha256": "922007c5277a1a6adc4ff9b5c36c459194915d81e31317de875774bf1ca3ea4b"
+    }
+  ],
+  "loadBefore": [11.40771484375, 20.26708984375, 21.07666015625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.04 avg60=0.25 avg300=2.31 total=1736022432\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.04 total=152794964\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=139697370\n",
+    "io": "some avg10=0.07 avg60=0.14 avg300=0.28 total=849626946\nfull avg10=0.07 avg60=0.13 avg300=0.07 total=608437937\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 4.554105289003928,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/package.json",
+      "sha256": "31f25b905240ed1ae96b97d0f75f96edf15b1e7754470e21ad284c9ccb187606"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/IdentifierText.ts",
+      "sha256": "3fe5724cfeb22e0bafa6c050b161623a8622f4bfdf223ded6aff7f9b80bb1a35"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/PathText.ts",
+      "sha256": "82dc0eca2c3cae2f795e4088ff03c17d86113f63b1d558b5d4d6270fc1c14f99"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/QueryText.ts",
+      "sha256": "f7bb42f45217272ca103b3378a94012002b749c0da67e70b562782cccccb7f53"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/VariantText.ts",
+      "sha256": "ca6ffdfc238221d706663957091eda6733dd92f8a205d2337eddfaaddb5a87c5"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/index.ts",
+      "sha256": "50ae977068b5b4ba5f766aa3f8eeca32fa0e6421cd31ce2fc7a126a7bd1f54d8"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+      "sha256": "03369384f469aebb0e3007d0e5d4e0b47cc4d082fcc8afb307565a40fc5520ac"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+      "sha256": "01d7f123c1de051f41a3f92bb0d089188e1ee477082f97e4a33f74a9f97a2c92"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/index.ts",
+      "sha256": "fd66d04e3110b1993f1caad53479624a5da3542414c2b9651e475929b21c8533"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
+      "sha256": "90c061179852f75fab9e8a513b5fa2ac869ab1e76c0d4ea3a8c984bd9fe4baa6"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+      "sha256": "8fe7b86a40e3c79b6890c20c2be678bce426b348bc0303d6a41fdf42c8dc083a"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
+      "sha256": "4402536f94cfbaddb76ced09419fb720985a1f8abc747c913917cffbe3fa304f"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
+      "sha256": "9a6cf01b9151c48574dc511aead83038d081b19e2bdfbd9e430818eb52b3f9df"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts",
+      "sha256": "95529fd856f0a264775c08e26c3d199c1d833c64313b2ae7eec291f98ab6ec9e"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
+      "sha256": "90f2381d441949e852111f83bc673ad17b61591ee7825cb00d13158d8ff38fa1"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Similarity.ts",
+      "sha256": "8ce4f3f9058c7fb163c094a68539cdc0ac5539ef806cb820fa0324552c48e719"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+      "sha256": "d7de63315dab330e3e994f647cf1de228e4acb7f4052b61e1238f3c40eac7e2d"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/Vectorization.ts",
+      "sha256": "e4df8d50609cb7b25ab76b5ecbbd055716731bbffd2f6f73bd9d03114e5bc7a6"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Core/index.ts",
+      "sha256": "e4324d0146887c571eb0863ffcbfdb3bf5edff51004a0ff3d26ee96b315665fb"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "sha256": "f6654e0097ce711dcc191b953b11547c58092c4a8fb47d743f31e082c38ce947"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "sha256": "3561d46f36ac5a1fc655c250edbe5211c6af18713c912b03ffd971d0b3eb8256"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/index.ts",
+      "sha256": "337f96ff0dfbf0c3f23acb54ac3c9f38d5451eba4b7f036921c7ab3692cd990d"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+      "sha256": "9e67b67e15a2e425af0cfc0833c3a54d82ab5d59c484d8c4ee1807941f85e4bb"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Handoff/index.ts",
+      "sha256": "342a288c42c9aca3ecddf92dbcba42e7bc2d165ac77768b1eccff33862ef1d2c"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
+      "sha256": "c2c80e927bbee6bdcd2e2298249845f21ec7ec667ce6305218efde1b90998808"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Ontology/index.ts",
+      "sha256": "42fb52d9a60bea30a80619fcb5cb38160d0d46e82b9f3971b6bc5c33353d1ff1"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Composable.ts",
+      "sha256": "08233a56d6e42e83f8e3b2aa3f2e6e14b8a67df322cfa991ea9ca540bc9612cd"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Definition.ts",
+      "sha256": "94ba33cd1a86243916be0a001d7a20a6df24582aef6ded79889dca10f20c85c6"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/index.ts",
+      "sha256": "e1cb39b41fb07c4f7f46aabc92bba1928da1c32da1161ae92313cb693a7ee877"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/internal/numbers.ts",
+      "sha256": "d591330648c14f940ea6c5bdc1dd283cacf3e81aa173e1988ddd3652a1bf92ef"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "sha256": "1d922383aaffe466da7188675b00d7d8d29991783ac31169a0a9972bf5524d15"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+      "sha256": "ed81a2021958863d5e30465250982c825b3794052db7d606e1befd77b0d32de7"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
+      "sha256": "d24546f1cdd72222ae8af142556a567050be4085dc4c3aa35e25be78e52ef7cb"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
+      "sha256": "408b1d94c3aad9c7aea98b373f26705b15c9087a222fac24e877a73c52916a8c"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
+      "sha256": "96b748a41087d32d23c67f9ae63d6e3c7e78f4fcf416afea4536cf477eee6714"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
+      "sha256": "0cbc39036009b042973a47ce24079ebb92a15ab9106a9c4be53a3b126c3c4f80"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "sha256": "e1ebf32014be6f79a9d46cd97c813aea8892899b7c6af1aaa4cbf8f2e5f5769a"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
+      "sha256": "2baad22502fae8709aaf2b9a7d338a190ce47fc2545526aae21c45a60efc0e0e"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
+      "sha256": "0a5f5b0ea4596c53967c38a0d6f88fcc2d9c647e247f3a493a83c833e0aabbed"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
+      "sha256": "922007c5277a1a6adc4ff9b5c36c459194915d81e31317de875774bf1ca3ea4b"
+    }
+  ],
+  "loadAfter": [11.69580078125, 20.17919921875, 21.0439453125],
+  "pressureAfter": {
+    "cpu": "some avg10=0.03 avg60=0.23 avg300=2.28 total=1736047016\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.04 total=152794965\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=139697370\n",
+    "io": "some avg10=0.04 avg60=0.13 avg300=0.27 total=849628230\nfull avg10=0.04 avg60=0.12 avg300=0.07 total=608439157\n"
+  },
+  "sourceStable": true,
+  "commandRedaction": "Only the private output directory is replaced with <private-output>; output basename and remaining arguments are preserved."
+}
