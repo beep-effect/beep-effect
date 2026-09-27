@@ -239,21 +239,16 @@ describe("@beep/skill-contract Recovery", () => {
     expect(RecoveryPolicy.match(bounded, { bounded: ({ budget: value }) => value.maxAttempts, none: () => 0 })).toBe(2);
   });
 
-  it("round-trips schema-derived arbitrary recovery policies", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RecoveryPolicy)]),
-          ([candidate]) => {
-            const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
-            const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
+  it.effect.prop(
+    "round-trips schema-derived arbitrary recovery policies",
+    [Arbitrary.schema(RecoveryPolicy)],
+    ([candidate]) =>
+      Effect.gen(function* () {
+        const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
+        const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
 
-            expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

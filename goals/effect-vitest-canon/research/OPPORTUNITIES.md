@@ -3189,3 +3189,11 @@ before claiming package proof. Both were caught before publication.
 Installing the two runner dependencies normalized the already configured
 @beep/provenance runner workspace range from * to ^ in the lockfile; its manifest
 already uses ^. No provenance source or qualification change is included.
+
+
+### Skill Contract assertion export boundary (2026-09-27)
+
+The package audit caught TS2724 after importing assertTrue from @effect/vitest.
+The installed adapter exports the helper from @effect/vitest/utils. Correcting
+the explicit import restores the full package audit and docgen. Consult the
+installed utility barrel before grouping new assertion imports.

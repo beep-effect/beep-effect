@@ -128,21 +128,16 @@ describe("@beep/skill-contract GateSummary", () => {
     })
   );
 
-  it("round-trips schema-derived arbitrary attestation resources", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AttestationResource)]),
-          ([candidate]) => {
-            const encoded = Result.getOrThrow(encodeUnknownAttestationResourceResult(candidate));
-            const decoded = Result.getOrThrow(decodeAttestationResourceResult(encoded));
+  it.effect.prop(
+    "round-trips schema-derived arbitrary attestation resources",
+    [Arbitrary.schema(AttestationResource)],
+    ([candidate]) =>
+      Effect.gen(function* () {
+        const encoded = Result.getOrThrow(encodeUnknownAttestationResourceResult(candidate));
+        const decoded = Result.getOrThrow(decodeAttestationResourceResult(encoded));
 
-            expect(S.toEquivalence(AttestationResource)(decoded, candidate)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(S.toEquivalence(AttestationResource)(decoded, candidate)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });
