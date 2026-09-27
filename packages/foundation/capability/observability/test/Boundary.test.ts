@@ -1,4 +1,4 @@
-import { VERSION } from "@beep/observability";
+import { redactString, VERSION } from "@beep/observability";
 import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -6,6 +6,7 @@ import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const pathFromUrl = (url: URL): string => Str.replace(/\/$/u, "")(decodeURIComponent(url.pathname));
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
@@ -22,21 +23,40 @@ const PackageJson = S.Struct({
 });
 const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(PackageJson));
 const readText = (relativePath: string) => Effect.promise(() => Bun.file(joinPath(packageRoot, relativePath)).text());
+const compilerOutputLimit = 4_096;
+const collectCompilerOutput = Stream.runFold(
+  () => "",
+  (output: string, chunk: string) => Str.slice(0, compilerOutputLimit)(output + chunk)
+);
+const safeCompilerDiagnostic = (output: string): string =>
+  redactString(Str.replaceAll(repoRoot, "<repo>")(output), compilerOutputLimit);
 const runTypecheck = Effect.fn("BoundaryTest.runTypecheck")(function* (tscPath: string, tsconfigPath: string) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  // exitCode owns a shorter child scope, closing each real compiler before the next fixture.
-  const exitCode = yield* spawner.exitCode(
+  // Drain both pipes while awaiting exit; each compiler owns a shorter child scope.
+  const child = yield* spawner.spawn(
     ChildProcess.make(tscPath, ["--pretty", "false", "--noEmit", "-p", tsconfigPath], {
       cwd: repoRoot,
       stdin: "ignore",
-      stderr: "ignore",
-      stdout: "ignore",
+      stderr: "pipe",
+      stdout: "pipe",
     })
+  );
+  const [exitCode, stdout, stderr] = yield* Effect.all(
+    [
+      child.exitCode,
+      child.stdout.pipe(Stream.decodeText(), collectCompilerOutput),
+      child.stderr.pipe(Stream.decodeText(), collectCompilerOutput),
+    ],
+    { concurrency: "unbounded" }
   );
   return yield* exitCode === 0
     ? Effect.void
-    : Effect.die(new Error(`tsc failed for ${tsconfigPath} with exit code ${exitCode}`));
-});
+    : Effect.die(
+        new Error(
+          `tsc failed for ${safeCompilerDiagnostic(tsconfigPath)} with exit code ${exitCode}\nstdout:\n${safeCompilerDiagnostic(stdout)}\nstderr:\n${safeCompilerDiagnostic(stderr)}`
+        )
+      );
+}, Effect.scoped);
 
 describe("Boundary", () => {
   it.effect(
