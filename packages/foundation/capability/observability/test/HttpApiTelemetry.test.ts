@@ -9,13 +9,13 @@ import {
 } from "@beep/observability/server";
 import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeUnknownHttpStatusCodeOption = S.decodeUnknownOption(HttpStatusCode);
 const encodeHttpStatusCodeOption = S.encodeOption(HttpStatusCode);
@@ -49,102 +49,100 @@ describe("HttpApiTelemetry", () => {
     ).toBe("Passed");
   });
 
-  it("tracks HTTP API request metrics", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const requestsTotal = Metric.counter("test_http_api_requests_total");
-        const requestDuration = Metric.timer("test_http_api_request_duration_ms");
-        const descriptor = HttpApiTelemetryDescriptor.make({
-          apiName: "test-api",
-          groupName: "system",
-          endpointName: "health",
+  it.effect("tracks HTTP API request metrics", () =>
+    Effect.gen(function* () {
+      const requestsTotal = Metric.counter("test_http_api_requests_total");
+      const requestDuration = Metric.timer("test_http_api_request_duration_ms");
+      const descriptor = HttpApiTelemetryDescriptor.make({
+        apiName: "test-api",
+        groupName: "system",
+        endpointName: "health",
+        method: "GET",
+        route: "/health",
+        successStatus: httpApiSuccessStatus(S.String),
+      });
+
+      yield* observeHttpApiHandler(Effect.succeed("ok"), {
+        descriptor,
+        metrics: {
+          requestsTotal,
+          requestDuration,
+        },
+      });
+
+      const state = yield* Metric.value(
+        Metric.withAttributes(requestsTotal, {
           method: "GET",
           route: "/health",
-          successStatus: httpApiSuccessStatus(S.String),
-        });
+          status_class: "2xx",
+        })
+      );
 
-        yield* observeHttpApiHandler(Effect.succeed("ok"), {
-          descriptor,
-          metrics: {
-            requestsTotal,
-            requestDuration,
-          },
-        });
+      expect(state.count).toBe(1);
+    })
+  );
 
-        const state = yield* Metric.value(
-          Metric.withAttributes(requestsTotal, {
-            method: "GET",
-            route: "/health",
-            status_class: "2xx",
-          })
-        );
+  it.effect("observes encoded HttpServerResponse values and schema-derived failure statuses", () =>
+    Effect.gen(function* () {
+      const requestsTotal = Metric.counter("test_http_api_effect_requests_total");
+      const requestDuration = Metric.timer("test_http_api_effect_request_duration_ms");
+      const endpoint = HttpApiEndpoint.get("health", "/health", {
+        success: S.String,
+        error: S.Struct({
+          message: S.String,
+        }).pipe(HttpApiSchema.status(503)),
+      });
+      const descriptor = makeHttpApiTelemetryDescriptor("test-api", HttpApiGroup.make("system"), endpoint);
 
-        expect(state.count).toBe(1);
-      })
-    ));
+      const response = yield* observeHttpApiEffect(Effect.succeed(HttpServerResponse.text("ok", { status: 202 })), {
+        descriptor,
+        endpoint,
+        metrics: {
+          requestsTotal,
+          requestDuration,
+        },
+      });
 
-  it("observes encoded HttpServerResponse values and schema-derived failure statuses", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const requestsTotal = Metric.counter("test_http_api_effect_requests_total");
-        const requestDuration = Metric.timer("test_http_api_effect_request_duration_ms");
-        const endpoint = HttpApiEndpoint.get("health", "/health", {
-          success: S.String,
-          error: S.Struct({
-            message: S.String,
-          }).pipe(HttpApiSchema.status(503)),
-        });
-        const descriptor = makeHttpApiTelemetryDescriptor("test-api", HttpApiGroup.make("system"), endpoint);
+      expect(response.status).toBe(202);
 
-        const response = yield* observeHttpApiEffect(Effect.succeed(HttpServerResponse.text("ok", { status: 202 })), {
-          descriptor,
-          endpoint,
-          metrics: {
-            requestsTotal,
-            requestDuration,
-          },
-        });
+      const successState = yield* Metric.value(
+        Metric.withAttributes(requestsTotal, {
+          method: "GET",
+          route: "/health",
+          status_class: "2xx",
+        })
+      );
 
-        expect(response.status).toBe(202);
+      expect(successState.count).toBe(1);
+      expect(httpApiFailureStatus(endpoint, { message: "backend unavailable" })).toStrictEqual(O.some(503));
 
-        const successState = yield* Metric.value(
-          Metric.withAttributes(requestsTotal, {
-            method: "GET",
-            route: "/health",
-            status_class: "2xx",
-          })
-        );
+      const failureExit = yield* Effect.exit(
+        observeHttpApiEffect(
+          Effect.fail({
+            message: "backend unavailable",
+          }),
+          {
+            descriptor,
+            endpoint,
+            metrics: {
+              requestsTotal,
+              requestDuration,
+            },
+          }
+        )
+      );
 
-        expect(successState.count).toBe(1);
-        expect(httpApiFailureStatus(endpoint, { message: "backend unavailable" })).toStrictEqual(O.some(503));
+      expect(failureExit._tag).toBe("Failure");
 
-        const failureExit = yield* Effect.exit(
-          observeHttpApiEffect(
-            Effect.fail({
-              message: "backend unavailable",
-            }),
-            {
-              descriptor,
-              endpoint,
-              metrics: {
-                requestsTotal,
-                requestDuration,
-              },
-            }
-          )
-        );
+      const failureState = yield* Metric.value(
+        Metric.withAttributes(requestsTotal, {
+          method: "GET",
+          route: "/health",
+          status_class: "5xx",
+        })
+      );
 
-        expect(failureExit._tag).toBe("Failure");
-
-        const failureState = yield* Metric.value(
-          Metric.withAttributes(requestsTotal, {
-            method: "GET",
-            route: "/health",
-            status_class: "5xx",
-          })
-        );
-
-        expect(failureState.count).toBe(1);
-      })
-    ));
+      expect(failureState.count).toBe(1);
+    })
+  );
 });

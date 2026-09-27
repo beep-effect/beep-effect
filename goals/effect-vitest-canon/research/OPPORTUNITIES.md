@@ -2444,3 +2444,14 @@ receipts containing HttpApiTelemetry matched the generic API-key heuristic.
 The flagged values were verified source hashes, not credentials. Store the same
 path/hash facts as explicit `file` and `sha256` records, as in earlier waves,
 so public proof remains complete without weakening the scanner or adding ignores.
+
+## 2026-09-26: subprocess shim hides cancellation ownership
+
+The observability compiler-boundary scope review found that the configured Node
+Bun.spawn shim returns only an exit promise. Adding a Bun kill finalizer would
+therefore typecheck against Bun while failing under the configured Node runner.
+The subject is real compiler validation, so use the existing native Effect
+process service for the same commands and fixtures, with its shorter child scope.
+Preserve command ordering, exit assertions and deadlines. Documenting the shim's
+minimal contract alongside scope-migration guidance would prevent this mismatch;
+no shared shim or production change is required for this test ownership repair.

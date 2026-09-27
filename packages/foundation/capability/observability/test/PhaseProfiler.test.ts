@@ -112,32 +112,34 @@ describe("PhaseProfiler", () => {
     })
   );
 
-  it.layer(capturedAnnotationsLayer())("tracks interruption and emits safe Cause annotations", (it) =>
-    it.effect(
-      "captures the interruption annotation",
-      Effect.fnUntraced(function* () {
-        const interrupted = Metric.counter("test_phase_interrupted_outcomes_total");
-        const annotations = yield* CapturedAnnotations;
+  it.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
+    "tracks interruption and emits safe Cause annotations",
+    (it) =>
+      it.effect(
+        "captures the interruption annotation",
+        Effect.fnUntraced(function* () {
+          const interrupted = Metric.counter("test_phase_interrupted_outcomes_total");
+          const annotations = yield* CapturedAnnotations;
 
-        yield* Effect.exit(
-          profilePhase(
-            {
-              phase: "stream",
-              interrupted,
-            },
-            Effect.interrupt
-          )
-        );
+          yield* Effect.exit(
+            profilePhase(
+              {
+                phase: "stream",
+                interrupted,
+              },
+              Effect.interrupt
+            )
+          );
 
-        const interruptedState = yield* Metric.value(
-          Metric.withAttributes(interrupted, { phase: "stream", outcome: "interrupted" })
-        );
+          const interruptedState = yield* Metric.value(
+            Metric.withAttributes(interrupted, { phase: "stream", outcome: "interrupted" })
+          );
 
-        expect(interruptedState.count).toBe(1);
-        expect(annotations).toHaveLength(1);
-        expect(annotations[0]?.cause_classification).toBe("interrupted");
-        expect(annotations[0]?.phase_outcome).toBe("interrupted");
-      })
-    )
+          expect(interruptedState.count).toBe(1);
+          expect(annotations).toHaveLength(1);
+          expect(annotations[0]?.cause_classification).toBe("interrupted");
+          expect(annotations[0]?.phase_outcome).toBe("interrupted");
+        })
+      )
   );
 });

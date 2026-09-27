@@ -1,7 +1,7 @@
 import { DevToolsSpanFilter, LayerFilteredDevToolsOptions } from "@beep/observability/server";
+import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeDevToolsSpanFilterOption = S.decodeOption(DevToolsSpanFilter);
 const decodeLayerFilteredDevToolsOptionsOption = S.decodeOption(LayerFilteredDevToolsOptions);

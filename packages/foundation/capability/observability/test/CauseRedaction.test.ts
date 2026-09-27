@@ -103,60 +103,66 @@ describe("CauseRedaction", () => {
     })
   );
 
-  it.layer(capturedAnnotationsLayer())("logs only bounded redacted Cause diagnostics", (it) =>
-    it.effect(
-      "captures both log records",
-      Effect.fnUntraced(function* () {
-        const annotations = yield* CapturedAnnotations;
-        yield* logRedactedCause(
-          Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
-          LogRedactedCauseOptions.make({ message: "boundary failed" })
-        );
-        yield* logRedactedCause(
-          Cause.fail(new Error("info boundary")),
-          LogRedactedCauseOptions.make({ level: "Info", message: "info boundary failed" })
-        );
+  it.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
+    "logs only bounded redacted Cause diagnostics",
+    (it) =>
+      it.effect(
+        "captures both log records",
+        Effect.fnUntraced(function* () {
+          const annotations = yield* CapturedAnnotations;
+          yield* logRedactedCause(
+            Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
+            LogRedactedCauseOptions.make({ message: "boundary failed" })
+          );
+          yield* logRedactedCause(
+            Cause.fail(new Error("info boundary")),
+            LogRedactedCauseOptions.make({ level: "Info", message: "info boundary failed" })
+          );
 
-        expect(annotations).toHaveLength(2);
-        expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
-        expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
-        expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
-        expect(annotations[0]?.cause_classification).toBe("failure");
-      })
-    )
+          expect(annotations).toHaveLength(2);
+          expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+          expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
+          expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
+          expect(annotations[0]?.cause_classification).toBe("failure");
+        })
+      )
   );
 
-  it.layer(capturedAnnotationsLayer())("logs through the curried data-last form with the same redaction", (it) =>
-    it.effect(
-      "captures the curried log record",
-      Effect.fnUntraced(function* () {
-        const annotations = yield* CapturedAnnotations;
-        yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
-          Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
-        );
+  it.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
+    "logs through the curried data-last form with the same redaction",
+    (it) =>
+      it.effect(
+        "captures the curried log record",
+        Effect.fnUntraced(function* () {
+          const annotations = yield* CapturedAnnotations;
+          yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
+            Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
+          );
 
-        expect(annotations).toHaveLength(1);
-        expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
-        expect(annotations[0]?.cause_classification).toBe("failure");
-      })
-    )
+          expect(annotations).toHaveLength(1);
+          expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+          expect(annotations[0]?.cause_classification).toBe("failure");
+        })
+      )
   );
 
-  it.layer(Logger.layer([]))("observes a boundary failure without changing its Cause", (it) =>
-    it.effect(
-      "preserves the original cause",
-      Effect.fnUntraced(function* () {
-        const original = Cause.fail(new Error("boom"));
-        const exit = yield* Effect.exit(
-          Effect.failCause(original).pipe(
-            tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
-          )
-        );
+  it.layer(Logger.layer([]), { timeout: "10 seconds" })(
+    "observes a boundary failure without changing its Cause",
+    (it) =>
+      it.effect(
+        "preserves the original cause",
+        Effect.fnUntraced(function* () {
+          const original = Cause.fail(new Error("boom"));
+          const exit = yield* Effect.exit(
+            Effect.failCause(original).pipe(
+              tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
+            )
+          );
 
-        expect(exit._tag).toBe("Failure");
-        expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
-      })
-    )
+          expect(exit._tag).toBe("Failure");
+          expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
+        })
+      )
   );
 
   it("respects a custom message limit via options", () => {

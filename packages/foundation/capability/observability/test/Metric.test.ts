@@ -7,11 +7,11 @@ import {
   trackDuration,
 } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeUnknownTrackDurationOptionsOption = S.decodeUnknownOption(TrackDurationOptions);
 const encodeTrackDurationOptionsOption = S.encodeOption(TrackDurationOptions);
@@ -23,15 +23,14 @@ describe("Metric", () => {
     expect(statusClass(999)).toBe("unknown");
   });
 
-  it("measures elapsed milliseconds without changing the value", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const [value, elapsedMs] = yield* measureElapsedMillis(Effect.succeed("ok"));
+  it.effect("measures elapsed milliseconds without changing the value", () =>
+    Effect.gen(function* () {
+      const [value, elapsedMs] = yield* measureElapsedMillis(Effect.succeed("ok"));
 
-        expect(value).toBe("ok");
-        expect(elapsedMs).toBeGreaterThanOrEqual(0);
-      })
-    ));
+      expect(value).toBe("ok");
+      expect(elapsedMs).toBeGreaterThanOrEqual(0);
+    })
+  );
 
   it("round-trips schema-derived track duration options", () => {
     expect(
@@ -53,104 +52,99 @@ describe("Metric", () => {
     ).toBe("Passed");
   });
 
-  it("tracks workflow counters on success", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const started = Metric.counter("test_workflow_started_total");
-        const completed = Metric.counter("test_workflow_completed_total");
-        const failed = Metric.counter("test_workflow_failed_total");
+  it.effect("tracks workflow counters on success", () =>
+    Effect.gen(function* () {
+      const started = Metric.counter("test_workflow_started_total");
+      const completed = Metric.counter("test_workflow_completed_total");
+      const failed = Metric.counter("test_workflow_failed_total");
 
-        yield* observeWorkflow(
+      yield* observeWorkflow(
+        {
+          name: "test-workflow",
+          started,
+          completed,
+          failed,
+        },
+        Effect.succeed("done")
+      );
+
+      const startedState = yield* Metric.value(started);
+      const completedState = yield* Metric.value(completed);
+      const failedState = yield* Metric.value(failed);
+
+      expect(startedState.count).toBe(1);
+      expect(completedState.count).toBe(1);
+      expect(failedState.count).toBe(0);
+    })
+  );
+
+  it.effect("tracks workflow counters on interruption", () =>
+    Effect.gen(function* () {
+      const interrupted = Metric.counter("test_workflow_interrupted_total");
+
+      yield* Effect.exit(
+        observeWorkflow(
           {
             name: "test-workflow",
-            started,
-            completed,
-            failed,
+            interrupted,
           },
-          Effect.succeed("done")
-        );
+          Effect.interrupt
+        )
+      );
 
-        const startedState = yield* Metric.value(started);
-        const completedState = yield* Metric.value(completed);
-        const failedState = yield* Metric.value(failed);
+      const interruptedState = yield* Metric.value(interrupted);
 
-        expect(startedState.count).toBe(1);
-        expect(completedState.count).toBe(1);
-        expect(failedState.count).toBe(0);
-      })
-    ));
+      expect(interruptedState.count).toBe(1);
+    })
+  );
 
-  it("tracks workflow counters on interruption", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const interrupted = Metric.counter("test_workflow_interrupted_total");
+  it.effect("tracks duration while preserving a failed effect", () =>
+    Effect.gen(function* () {
+      const duration = Metric.timer("test_failed_task_duration");
+      const exit = yield* Effect.exit(trackDuration(Effect.fail("boom"), duration));
+      const state = yield* Metric.value(duration);
 
-        yield* Effect.exit(
-          observeWorkflow(
-            {
-              name: "test-workflow",
-              interrupted,
-            },
-            Effect.interrupt
-          )
-        );
+      expect(exit._tag).toBe("Failure");
+      expect(state.count).toBe(1);
+    })
+  );
 
-        const interruptedState = yield* Metric.value(interrupted);
+  it.effect("tracks duration while preserving interruption", () =>
+    Effect.gen(function* () {
+      const duration = Metric.timer("test_interrupted_task_duration");
+      const exit = yield* Effect.exit(trackDuration(Effect.interrupt, duration));
+      const state = yield* Metric.value(duration);
 
-        expect(interruptedState.count).toBe(1);
-      })
-    ));
+      expect(exit._tag).toBe("Failure");
+      expect(state.count).toBe(1);
+    })
+  );
 
-  it("tracks duration while preserving a failed effect", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const duration = Metric.timer("test_failed_task_duration");
-        const exit = yield* Effect.exit(trackDuration(Effect.fail("boom"), duration));
-        const state = yield* Metric.value(duration);
+  it.effect("tracks request counters with success labels", () =>
+    Effect.gen(function* () {
+      const requestsTotal = Metric.counter("test_http_requests_total");
+      const requestDuration = Metric.timer("test_http_request_duration_ms");
 
-        expect(exit._tag).toBe("Failure");
-        expect(state.count).toBe(1);
-      })
-    ));
+      yield* observeHttpRequest(
+        {
+          method: "GET",
+          route: "/health",
+          successStatus: 200,
+          requestsTotal,
+          requestDuration,
+        },
+        Effect.succeed("ok")
+      );
 
-  it("tracks duration while preserving interruption", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const duration = Metric.timer("test_interrupted_task_duration");
-        const exit = yield* Effect.exit(trackDuration(Effect.interrupt, duration));
-        const state = yield* Metric.value(duration);
+      const state = yield* Metric.value(
+        Metric.withAttributes(requestsTotal, {
+          method: "GET",
+          route: "/health",
+          status_class: "2xx",
+        })
+      );
 
-        expect(exit._tag).toBe("Failure");
-        expect(state.count).toBe(1);
-      })
-    ));
-
-  it("tracks request counters with success labels", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const requestsTotal = Metric.counter("test_http_requests_total");
-        const requestDuration = Metric.timer("test_http_request_duration_ms");
-
-        yield* observeHttpRequest(
-          {
-            method: "GET",
-            route: "/health",
-            successStatus: 200,
-            requestsTotal,
-            requestDuration,
-          },
-          Effect.succeed("ok")
-        );
-
-        const state = yield* Metric.value(
-          Metric.withAttributes(requestsTotal, {
-            method: "GET",
-            route: "/health",
-            status_class: "2xx",
-          })
-        );
-
-        expect(state.count).toBe(1);
-      })
-    ));
+      expect(state.count).toBe(1);
+    })
+  );
 });

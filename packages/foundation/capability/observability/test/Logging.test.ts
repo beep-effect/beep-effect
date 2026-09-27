@@ -82,22 +82,24 @@ describe("Logging", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");
   });
 
-  it.layer(capturedLevelsLayer("Info"))("filters logs through the independently composable minimum-level layer", (it) =>
-    it.effect(
-      "keeps Info and above",
-      Effect.fnUntraced(function* () {
-        const levels = yield* CapturedLevels;
-        yield* Effect.all(
-          [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
-          { discard: true }
-        );
+  it.layer(capturedLevelsLayer("Info"), { timeout: "10 seconds" })(
+    "filters logs through the independently composable minimum-level layer",
+    (it) =>
+      it.effect(
+        "keeps Info and above",
+        Effect.fnUntraced(function* () {
+          const levels = yield* CapturedLevels;
+          yield* Effect.all(
+            [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
+            { discard: true }
+          );
 
-        expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
-      })
-    )
+          expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
+        })
+      )
   );
 
-  it.layer(capturedLevelsLayer("None"))("filters every log at the None level", (it) =>
+  it.layer(capturedLevelsLayer("None"), { timeout: "10 seconds" })("filters every log at the None level", (it) =>
     it.effect(
       "captures no records",
       Effect.fnUntraced(function* () {
