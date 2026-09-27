@@ -210,3 +210,17 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/md#package-test-typecheck`
 - `@beep/md#test`
 - `@beep/md#test:property`
+
+## Incoming 09a8f7339788aadabce6933897d8c03ce65b2419
+
+- `@beep/acp#audit`
+- `@beep/acp#build`
+- `@beep/acp#check`
+- `@beep/acp#codegen`
+- `@beep/acp#coverage`
+- `@beep/acp#lint:deprecated-apis`
+- `@beep/acp#package-test-typecheck`
+- `@beep/acp#test`
+- `@beep/acp#test:integration`
+- `@beep/acp#test:integration:parallel`
+- `@beep/acp#test:property`

@@ -1284,15 +1284,15 @@
     "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
     "package": "@beep/acp",
     "kind": "test",
-    "bytes": 1018,
-    "lines": 20
+    "bytes": 1054,
+    "lines": 21
   },
   {
     "file": "packages/drivers/acp/test/agent.test.ts",
     "package": "@beep/acp",
     "kind": "test",
-    "bytes": 9982,
-    "lines": 258
+    "bytes": 11810,
+    "lines": 281
   },
   {
     "file": "packages/drivers/acp/test/fixtures/acp-mock-peer.ts",
@@ -1305,22 +1305,22 @@
     "file": "packages/drivers/acp/test/helpers.ts",
     "package": "@beep/acp",
     "kind": "support",
-    "bytes": 3224,
+    "bytes": 3236,
     "lines": 89
   },
   {
     "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
     "package": "@beep/acp",
     "kind": "test",
-    "bytes": 15673,
-    "lines": 430
+    "bytes": 16621,
+    "lines": 436
   },
   {
     "file": "packages/drivers/acp/test/protocol.test.ts",
     "package": "@beep/acp",
     "kind": "test",
-    "bytes": 21654,
-    "lines": 626
+    "bytes": 38412,
+    "lines": 995
   },
   {
     "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",

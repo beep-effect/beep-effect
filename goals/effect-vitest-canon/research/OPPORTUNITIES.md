@@ -2765,6 +2765,31 @@ standalone detached verify plus an until-ready monitor at the existing head.
 A publish recovery hint distinguishing an already-pushed head from missing work
 would avoid these discarded proof submissions. No empty commit is needed.
 
+## 2026-09-26: ACP scope wrapper cleanup
+
+The ACP scope phase removed manual context provision and cleanup, leaving two
+result-capture generators with a single yielded effect. Full package verification
+reported TS377083. Flattening the redundant generators preserved the exact effects
+and assertions; the next full audit and docgen passed. Include this compiler check
+when removing fixture wrappers so redundant generators are caught in the same phase.
+
+## 2026-09-26: ACP diagnostic level verification
+
+ACP package verification passed with debug-level phase events, but a temporary
+TestConsole positive control under BEEP_TEST_TRACE=1 captured the runner start
+and none of those events. The current minimum log level filters debug messages.
+Promote only the static phase events to info and repeat positive/negative capture
+controls before crediting observability. Package behavior alone cannot establish
+that the intended diagnostics are visible. The temporary probe was restored.
+
+## 2026-09-26: ACP inventory line-count convention
+
+The first strict ACP inventory validation rejected refreshed census line counts
+although all 55 rows were schema-valid and every lens had coverage. The source
+validator counts the terminal newline differently from splitlines. Use the
+public validator's line-count convention when refreshing both census entries
+and whole-file spans; do not weaken validation or alter source to fit metadata.
+
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
 PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed
