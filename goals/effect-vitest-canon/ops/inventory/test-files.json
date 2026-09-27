@@ -4889,22 +4889,22 @@
     "file": "packages/law-practice/tables/test/CandorConverters.test.ts",
     "package": "@beep/law-practice-tables",
     "kind": "test",
-    "bytes": 10874,
-    "lines": 284
+    "bytes": 10909,
+    "lines": 285
   },
   {
     "file": "packages/law-practice/tables/test/LawPracticeTables.test.ts",
     "package": "@beep/law-practice-tables",
     "kind": "test",
-    "bytes": 8263,
-    "lines": 219
+    "bytes": 8332,
+    "lines": 221
   },
   {
     "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
     "package": "@beep/law-practice-tables",
     "kind": "test",
-    "bytes": 24118,
-    "lines": 584
+    "bytes": 24230,
+    "lines": 600
   },
   {
     "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",

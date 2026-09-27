@@ -1,0 +1,256 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/law-practice-tables",
+  "sourceHead": "de58365b2a418439830abf86684afc2ab4091471",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.021233058010694,
+  "bunWholeCommandSeconds": 2.8684038659994258,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [4.68505859375, 3.7421875, 2.837890625],
+  "loadAfter": [4.71044921875, 3.76318359375, 2.849609375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.00 avg300=0.06 total=729769836\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199354\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125475\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=810126847\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=708996278\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.00 avg300=0.05 total=729774226\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199354\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125475\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=810127075\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=708996505\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "82ecddd1d459d4b543ae427f9d6452736bc012cca52bc427f1997f16e5e9c6e1"
+    },
+    {
+      "file": "packages/law-practice/tables/AGENTS.md",
+      "sha256": "0828a2cd7ac92fc300ac39d73f8840427d54744b22ae863a6b119428b29d6dd9"
+    },
+    {
+      "file": "packages/law-practice/tables/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/law-practice/tables/README.md",
+      "sha256": "cdedd0a58421c32507bde4e10df9f38a7af838a6b8f518fad6892a19f1f9aeae"
+    },
+    {
+      "file": "packages/law-practice/tables/docgen.json",
+      "sha256": "9d6160354c28738f9f12ca36cda480b24dbaae3e211e9138bdb2f785252baef4"
+    },
+    {
+      "file": "packages/law-practice/tables/package.json",
+      "sha256": "a9e05e71c98ff0f4d7d816c8736b5dcf9ac8dff08bcdf40a2e56ecf91831e5cd"
+    },
+    {
+      "file": "packages/law-practice/tables/src/ReadModels.ts",
+      "sha256": "bb61c17f78513ffdf7b52187e70ead883c71b15897308b7fa5ebe7dfd905730d"
+    },
+    {
+      "file": "packages/law-practice/tables/src/Tables.ts",
+      "sha256": "d60a6c6b25b2b7982a7e9c39a0c9d8d20dfb7a64a6bad99ea1952bfd7367e7af"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/ActFrame/ActFrame.converters.ts",
+      "sha256": "f711a02008251153fd298ace003bc163a06fb29f4fc9b4a9b0cb4c4fd818dd4b"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/ActFrame/ActFrame.table.ts",
+      "sha256": "b4c1534f7e30bd389d4dba48ea7c3b587eccc2baa8577f5ac6e86eaa6223e1d6"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/ActFrame/index.ts",
+      "sha256": "1a676cf4862de4cfcf7a5e0aa6940255ec33d8fa04d0ef8eb1323413aafa96f5"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/CandorDisposition/CandorDisposition.converters.ts",
+      "sha256": "85dafa407a10f728edf077f41a4db5b25618f53f68ef0497a167735f33d0e23a"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/CandorDisposition/CandorDisposition.table.ts",
+      "sha256": "3ac22d834859b1590eb14a8b2ec0db53be1e744a59a6413110420967bfffde35"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/CandorDisposition/index.ts",
+      "sha256": "5e8b4fb97acd67e51c1c0f3b21bc1476539846efcac91e685cb0a11d3b0fddab"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/CorrectionDelta/CorrectionDelta.converters.ts",
+      "sha256": "4cd86729d52d35fbb734d8f415d1d4806ce26853578f70a40f89bddbf6eae781"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/CorrectionDelta/CorrectionDelta.table.ts",
+      "sha256": "e4c8601518c7f8d081eab7a32789a9707c070b8b1a0a9b6c6901765ab367f0d6"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/CorrectionDelta/index.ts",
+      "sha256": "0c92f63f1354b7350eba43b42b2cf5d67a9dbd3b394a790c3ebe720f4caf6a25"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/IdsSubmissionFact/IdsSubmissionFact.converters.ts",
+      "sha256": "92b7155df435b8bed9986de037c7a3bf1149a271f29c0bb7d5149556a473f7c4"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/IdsSubmissionFact/IdsSubmissionFact.table.ts",
+      "sha256": "1507dbc8e1d14923424e1041029770b9373640f3f02674ee8e8fb21826efddb0"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/IdsSubmissionFact/index.ts",
+      "sha256": "bfee867fac7a217f36ac7263a6dcab1bd39d6dd134e1f88a6c51fecb9289d736"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/KgBuild/KgBuild.read-model-table.ts",
+      "sha256": "bf2603917fa9a99add0ed58d15f22e11a6f8975f3996b1f799c577d431b41e18"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/KgBuild/index.ts",
+      "sha256": "c84bebb468c195e09c32d8637c9e9935019a04f7198f3e0316cafc2fc66f6920"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/KgEdge/KgEdge.read-model-table.ts",
+      "sha256": "a370b7e78724a7584055420fab72b57d1399fc6adb4ec966ee0cc3a01b8d3592"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/KgEdge/index.ts",
+      "sha256": "f7ca524d4e67b3fc142dfa4ae09744fcf0b72ca2281fac2c65445559b57d14fb"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/KgNode/KgNode.read-model-table.ts",
+      "sha256": "3819b97eb3be1221181088de4f8034e9db9e828869560dc599c171358f344397"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/KgNode/index.ts",
+      "sha256": "516f046a2cdbf68ce58d812d718169578afdaedcfaaacd919e6cf1dc864e3dbc"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/LegalOppositionCandidate/LegalOppositionCandidate.converters.ts",
+      "sha256": "92726a824623ddb5f0dc9133efcfb05feea736e20c0ef369fdefc583915cfff1"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/LegalOppositionCandidate/LegalOppositionCandidate.table.ts",
+      "sha256": "0bcf3b6cc63d58f4aa7d1a8cf92eeb30944ab63247d20a9e9a73151ae5871ab5"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/LegalOppositionCandidate/index.ts",
+      "sha256": "93e5ce6b8f41688bca5c8e2f7b102e039a86d63ecc7c515650bc495ae82834e8"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/LegalPositionRelator/LegalPositionRelator.converters.ts",
+      "sha256": "8243f560126aade4a777596df12d084870abb621f05d21251dd430ecadf492ba"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/LegalPositionRelator/LegalPositionRelator.table.ts",
+      "sha256": "6cb4f7bd0a72629edf21a7da7055ff5adb19532d2f87b43b352394b39e99bdf4"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/LegalPositionRelator/index.ts",
+      "sha256": "be7660fbddcc8c556b6911061158b865277d6ad655263f08175b2eb5c3f1fa7e"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/PatentCitationEvent/PatentCitationEvent.converters.ts",
+      "sha256": "04705411d0e8e6d18d592557eac85d17b75b4c9f4614f5744b8c412d494d9e3f"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/PatentCitationEvent/PatentCitationEvent.table.ts",
+      "sha256": "c8e92f78cdaf46e4370ebbc16767a88d1dc33c912d0701805d5b412a66f7e2dc"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/PatentCitationEvent/index.ts",
+      "sha256": "b7c276c25d55d4e6c53ed50147a29f7e4249459c6c039590e118afb59a4d62b6"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/PowerExercise/PowerExercise.converters.ts",
+      "sha256": "7f3f87a8e34ab0dee7e04898cf2a1fb5201537f8504f90b0934f9ffcfb617d16"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/PowerExercise/PowerExercise.table.ts",
+      "sha256": "36b88c7279ed0a323f4f119dd743c27561f2030c54e17099974b114b0eb5a32b"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/PowerExercise/index.ts",
+      "sha256": "503fc7e39be394ed6cf7e63878b5b79188af9e9f26f0d4d6fc5b7b5c25cb7944"
+    },
+    {
+      "file": "packages/law-practice/tables/src/entities/index.ts",
+      "sha256": "161feaba5610f80ec7a2fbe6a244413bb6e9ea05503c4e728e858cc1bb190504"
+    },
+    {
+      "file": "packages/law-practice/tables/src/index.ts",
+      "sha256": "cfbbb83d8436403a42fef3038159249cbda0e7a3b1ad6a59fb0ac0e8936d7f64"
+    },
+    {
+      "file": "packages/law-practice/tables/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/law-practice/tables/test/CandorConverters.test.ts",
+      "sha256": "21171a783d6f1a495aa29255c68d23d90f3c8bd4fc46266be7374c537217b832"
+    },
+    {
+      "file": "packages/law-practice/tables/test/LawPracticeTables.test.ts",
+      "sha256": "070a87736598f4286fac45972542b3026a79e7e251882e6a5ef4b6193d8feb77"
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "sha256": "1b8070cb7fa0581e6da89219ba4aab6abf44769908105f4be4b44728153f1b2a"
+    },
+    {
+      "file": "packages/law-practice/tables/tsconfig.check.json",
+      "sha256": "f6cec6efea6cab90e8462b5a0b40d28204f94597c3d96274a8e6de0a17f131f1"
+    },
+    {
+      "file": "packages/law-practice/tables/tsconfig.json",
+      "sha256": "7983a4c61cc55d6a088d76b937606f3e57a250bf980f5a4a21d43e6b83ca1482"
+    },
+    {
+      "file": "packages/law-practice/tables/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/law-practice/tables/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual Drizzle table metadata and public row converters with authentic schema-derived fixtures; no live database connection or filesystem conformance claimed. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 45,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.71044921875, 3.76318359375, 2.849609375],
+    "loadAfter": [4.73388671875, 3.7841796875, 2.861328125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.00 avg300=0.05 total=729774236\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199354\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125475\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=810127075\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=708996505\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.00 avg300=0.05 total=729779754\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199354\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125475\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=810127075\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=708996505\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 45,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 45 registrations before and after with zero skips. Five native properties preserve all five schema domains and the ten-run floor; they now honor the configured run-count and replay seed. Timing differences are not causal speedup evidence."
+}
