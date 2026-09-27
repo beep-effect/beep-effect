@@ -18,7 +18,6 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -30,21 +29,11 @@ const JsonPathArbitrary = Arbitrary.schema(JsonPath);
 const JsonPathSegmentArbitrary = Arbitrary.schema(JsonPathSegment);
 const MdDocumentArbitrary = Arbitrary.schema(Md.Document);
 const PandocDocumentArbitrary = Arbitrary.schema(Pandoc.PandocDocument);
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
-      Effect.scoped
-    );
-const provideBunFileSystem = provideScopedLayer(BunFileSystem.layer);
-
 const fixture = Effect.fn("PandocMappingTest.fixture")((name: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     return yield* fs.readFileString(new URL(`./fixtures/${name}`, import.meta.url).pathname);
-  }).pipe(provideBunFileSystem)
+  })
 );
 const text = (value: string): Md.Text => Md.Text.make({ value });
 const inlineListPandocJson = () => ({
@@ -160,8 +149,8 @@ const expectReportInvariants = (report: PandocCompatibilityReport.Type): void =>
 };
 
 describe("Pandoc.mapping", () => {
-  it("maps md-core Pandoc JSON to @beep/md with a supported report", () =>
-    Effect.runPromise(
+  it.layer(BunFileSystem.layer)("maps md-core Pandoc JSON to @beep/md with a supported report", (it) => {
+    it.effect("maps md-core Pandoc JSON to @beep/md with a supported report", () =>
       Effect.gen(function* () {
         const source = yield* fixture("green-core.pandoc.json");
         const pandoc = yield* decodePandocJsonString(source);
@@ -179,7 +168,8 @@ describe("Pandoc.mapping", () => {
           "hr",
         ]);
       })
-    ));
+    );
+  });
 
   it("exhaustively distinguishes inline and display Pandoc math projections", () =>
     Effect.runPromise(
@@ -330,8 +320,8 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
-  it("records DOCX-origin compatibility gaps while producing partial Md output", () =>
-    Effect.runPromise(
+  it.layer(BunFileSystem.layer)("records DOCX-origin compatibility gaps while producing partial Md output", (it) => {
+    it.effect("records DOCX-origin compatibility gaps while producing partial Md output", () =>
       Effect.gen(function* () {
         const source = yield* fixture("gap-docx-styles.pandoc.json");
         const pandoc = yield* decodePandocJsonString(source);
@@ -348,7 +338,8 @@ describe("Pandoc.mapping", () => {
           expect(A.map(blockquote.children[0].children, (inline) => inline._tag)).toContain("inlineMath");
         }
       })
-    ));
+    );
+  });
 
   it("maps @beep/md documents to Pandoc with explicit lossiness for raw content and task lists", () =>
     Effect.runPromise(

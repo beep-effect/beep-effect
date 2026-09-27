@@ -41,7 +41,6 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
@@ -168,21 +167,11 @@ const pinnedPandocConstructorNames = [
   "NormalCitation",
   "TableCaption",
 ];
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
-      Effect.scoped
-    );
-const provideBunFileSystem = provideScopedLayer(BunFileSystem.layer);
-
 const fixture = Effect.fn("PandocCodecTest.fixture")((name: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     return yield* fs.readFileString(new URL(`./fixtures/${name}`, import.meta.url).pathname);
-  }).pipe(provideBunFileSystem)
+  })
 );
 
 const tableWire = ({
@@ -896,8 +885,8 @@ describe("Pandoc.codec", () => {
       })
     ));
 
-  it("decodes committed Pandoc JSON fixtures without a pandoc executable", () =>
-    Effect.runPromise(
+  it.layer(BunFileSystem.layer)("decodes committed Pandoc JSON fixtures without a pandoc executable", (it) => {
+    it.effect("decodes committed Pandoc JSON fixtures without a pandoc executable", () =>
       Effect.gen(function* () {
         const source = yield* fixture("green-core.pandoc.json");
         const document = yield* decodePandocJsonString(source);
@@ -913,10 +902,11 @@ describe("Pandoc.codec", () => {
           "horizontalrule",
         ]);
       })
-    ));
+    );
+  });
 
-  it("round-trips supported wire objects through the internal model", () =>
-    Effect.runPromise(
+  it.layer(BunFileSystem.layer)("round-trips supported wire objects through the internal model", (it) => {
+    it.effect("round-trips supported wire objects through the internal model", () =>
       Effect.gen(function* () {
         const source = yield* fixture("green-core.pandoc.json");
         const document = yield* decodePandocJsonString(source);
@@ -925,7 +915,8 @@ describe("Pandoc.codec", () => {
 
         expect(roundTripped).toEqual(document);
       })
-    ));
+    );
+  });
 
   it("preserves representative encoded wire shapes for attrs, targets, and API versions", () =>
     Effect.runPromise(
@@ -1032,15 +1023,16 @@ describe("Pandoc.codec", () => {
       )._tag
     ).toBe("Passed"));
 
-  it("keeps DOCX-style gap constructs decodable as explicit model nodes", () =>
-    Effect.runPromise(
+  it.layer(BunFileSystem.layer)("keeps DOCX-style gap constructs decodable as explicit model nodes", (it) => {
+    it.effect("keeps DOCX-style gap constructs decodable as explicit model nodes", () =>
       Effect.gen(function* () {
         const source = yield* fixture("gap-docx-styles.pandoc.json");
         const document = yield* decodePandocJsonString(source);
 
         expect(document.blocks.map((block) => block._tag)).toEqual(["div", "table"]);
       })
-    ));
+    );
+  });
 
   it("decodes authentic Pandoc 1.23.1 table attributes, captions, heads, and feet", () =>
     Effect.runPromise(
