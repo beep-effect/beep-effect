@@ -10,7 +10,7 @@ import {
 } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Config, Effect, FileSystem, Option as O, Path } from "effect";
@@ -28,9 +28,6 @@ const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 // Apache Tika's testPST.pst, pinned by commit URL and sha256 in the package
 // README; no PST binary is committed to this public repository.
 const livePstPath = Config.String(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
-
-const provideLive = provideScopedLayer(NodeServices.layer);
-
 const skipNotice = Effect.logInfo(
   `Skipping the live pffexport lane because ${BEEP_TEST_LIBPFF_PST_ENV} is not configured.`
 );
@@ -83,103 +80,105 @@ describe("@beep/libpff live pffexport", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.live(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "reports a runtime pffexport version and exports a real PST",
-    Effect.fnUntraced(
-      function* () {
-        const pstPath = yield* livePstPath;
-        if (O.isNone(pstPath)) {
-          return yield* skipNotice;
-        }
-
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const { exportRoot, operation } = yield* liveOperation(pstPath.value);
-        const engine = yield* makePffexportFileProcessingEngine(
-          PffexportEngineConfig.make({ existingExportPolicy: "replace", exportRoot })
-        );
-
-        expect(engine.descriptor.version).toBeDefined();
-
-        const result = yield* engine.exportArchive(operation);
-
-        expect(result.engine).toBe("libpff");
-        expect(result.children.length).toBeGreaterThan(0);
-        expect(result.children.every((child) => child.id.startsWith("artifact:"))).toBe(true);
-
-        const jsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;
-        const hasItems = result.children.some((child) => child.relativePath === jsonlName);
-        if (hasItems) {
-          const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
-          expect(emlChildren.length).toBeGreaterThan(0);
-          const jsonl = yield* fs.readFileString(path.join(exportRoot, jsonlName));
-          const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
-          expect(record.messagePath.length).toBeGreaterThan(0);
-
-          // Every assembled EML must be RFC 5322-shaped: no foldable line
-          // over the 998-octet limit anywhere in the message — headers fold,
-          // and a body part with a longer physical line is re-encoded as
-          // base64 rather than folded — plus a real Date header wherever
-          // pffexport gave us a parseable client-submit time.
-          //
-          // One deliberate exemption keeps this from becoming a false alarm
-          // on a future fixture. A header line with no space has no fold
-          // point to promote to a continuation indent, so the driver emits it
-          // intact rather than mutating the value — those lines are skipped
-          // here. Lines split on /\r?\n/, not "\r\n": remaining 8bit bodies
-          // may legally carry bare-LF endings, and splitting only on CRLF
-          // would glue their lines into false over-long positives.
-          const encoder = new TextEncoder();
-          const foldable = (line: string): boolean => line.includes(" ");
-          let datedEmlCount = 0;
-          for (const child of emlChildren) {
-            const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
-            const headerBlock = eml.slice(0, eml.indexOf("\r\n\r\n"));
-            const overLong = eml.split(/\r?\n/).filter((line) => foldable(line) && encoder.encode(line).length > 998);
-            expect(overLong).toStrictEqual([]);
-            expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
-            if (headerBlock.includes("\r\nDate: ") || headerBlock.startsWith("Date: ")) {
-              datedEmlCount += 1;
-            }
+    (it) => {
+      it.effect(
+        "reports a runtime pffexport version and exports a real PST",
+        Effect.fnUntraced(function* () {
+          const pstPath = yield* livePstPath;
+          if (O.isNone(pstPath)) {
+            return yield* skipNotice;
           }
-          expect(datedEmlCount).toBeGreaterThan(0);
-        }
-      },
-      Effect.scoped,
-      provideLive
-    )
+
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { exportRoot, operation } = yield* liveOperation(pstPath.value);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({ existingExportPolicy: "replace", exportRoot })
+          );
+
+          expect(engine.descriptor.version).toBeDefined();
+
+          const result = yield* engine.exportArchive(operation);
+
+          expect(result.engine).toBe("libpff");
+          expect(result.children.length).toBeGreaterThan(0);
+          expect(result.children.every((child) => child.id.startsWith("artifact:"))).toBe(true);
+
+          const jsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;
+          const hasItems = result.children.some((child) => child.relativePath === jsonlName);
+          if (hasItems) {
+            const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
+            expect(emlChildren.length).toBeGreaterThan(0);
+            const jsonl = yield* fs.readFileString(path.join(exportRoot, jsonlName));
+            const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
+            expect(record.messagePath.length).toBeGreaterThan(0);
+
+            // Every assembled EML must be RFC 5322-shaped: no foldable line
+            // over the 998-octet limit anywhere in the message — headers fold,
+            // and a body part with a longer physical line is re-encoded as
+            // base64 rather than folded — plus a real Date header wherever
+            // pffexport gave us a parseable client-submit time.
+            //
+            // One deliberate exemption keeps this from becoming a false alarm
+            // on a future fixture. A header line with no space has no fold
+            // point to promote to a continuation indent, so the driver emits it
+            // intact rather than mutating the value — those lines are skipped
+            // here. Lines split on /\r?\n/, not "\r\n": remaining 8bit bodies
+            // may legally carry bare-LF endings, and splitting only on CRLF
+            // would glue their lines into false over-long positives.
+            const encoder = new TextEncoder();
+            const foldable = (line: string): boolean => line.includes(" ");
+            let datedEmlCount = 0;
+            for (const child of emlChildren) {
+              const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
+              const headerBlock = eml.slice(0, eml.indexOf("\r\n\r\n"));
+              const overLong = eml.split(/\r?\n/).filter((line) => foldable(line) && encoder.encode(line).length > 998);
+              expect(overLong).toStrictEqual([]);
+              expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
+              if (headerBlock.includes("\r\nDate: ") || headerBlock.startsWith("Date: ")) {
+                datedEmlCount += 1;
+              }
+            }
+            expect(datedEmlCount).toBeGreaterThan(0);
+          }
+        })
+      );
+    }
   );
 
-  it.live(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "keeps a missing live source inside the operation error contract",
-    Effect.fnUntraced(
-      function* () {
-        const pstPath = yield* livePstPath;
-        if (O.isNone(pstPath)) {
-          return yield* skipNotice;
-        }
+    (it) => {
+      it.effect(
+        "keeps a missing live source inside the operation error contract",
+        Effect.fnUntraced(function* () {
+          const pstPath = yield* livePstPath;
+          if (O.isNone(pstPath)) {
+            return yield* skipNotice;
+          }
 
-        const fs = yield* FileSystem.FileSystem;
-        const exportRoot = yield* fs.makeTempDirectoryScoped({ prefix: "libpff-pffexport-live-missing-" });
-        const { operation } = yield* liveOperation(pstPath.value);
-        const engine = yield* makePffexportFileProcessingEngine(PffexportEngineConfig.make({ exportRoot }));
+          const fs = yield* FileSystem.FileSystem;
+          const exportRoot = yield* fs.makeTempDirectoryScoped({ prefix: "libpff-pffexport-live-missing-" });
+          const { operation } = yield* liveOperation(pstPath.value);
+          const engine = yield* makePffexportFileProcessingEngine(PffexportEngineConfig.make({ exportRoot }));
 
-        const missingSource = SourceArtifact.make({
-          ...operation.source,
-          locator: ArtifactLocator.make({
-            kind: "file",
-            value: yield* decodePosixPath("/nonexistent/beep-live-missing.pst"),
-          }),
-        });
-        const error = yield* engine
-          .exportArchive(ExportArchiveOperation.make({ ...operation, source: missingSource }))
-          .pipe(Effect.flip);
+          const missingSource = SourceArtifact.make({
+            ...operation.source,
+            locator: ArtifactLocator.make({
+              kind: "file",
+              value: yield* decodePosixPath("/nonexistent/beep-live-missing.pst"),
+            }),
+          });
+          const error = yield* engine
+            .exportArchive(ExportArchiveOperation.make({ ...operation, source: missingSource }))
+            .pipe(Effect.flip);
 
-        expect(error._tag).toBe("FileProcessingOperationError");
-        expect(error.reason).toBe("archive-export-failed");
-      },
-      Effect.scoped,
-      provideLive
-    )
+          expect(error._tag).toBe("FileProcessingOperationError");
+          expect(error.reason).toBe("archive-export-failed");
+        })
+      );
+    }
   );
 });
