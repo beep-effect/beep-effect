@@ -3417,3 +3417,12 @@ oracle compared this same textual value. An explicit `assertSome<string>` keeps
 that comparison and the exact payload without a cast or fabricated branded
 value. The restored package audit and docgen pass. Including branded payloads in
 the assertion migration checklist would have prevented this failed proof cycle.
+
+### Package proof omitted the manifest-order gate
+
+PR #1307 Repo Sanity on the NLP MCP batch failed `repo-sanity:sherif` because
+Wink and NLP MCP development dependencies were not alphabetized after adding the
+runner. Local reproduction found exactly those two manifests. Sorting only their
+development-dependency keys preserves every dependency value and the generated
+scripts; Sherif now passes all 143 packages. Add this root check to the batch
+publication sequence: individual package audit/docgen does not run it.

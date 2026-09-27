@@ -77,10 +77,10 @@
     "wink-nlp-utils": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "@beep/test-runner": "workspace:^"
+    "bun-types": "catalog:"
   }
 }
