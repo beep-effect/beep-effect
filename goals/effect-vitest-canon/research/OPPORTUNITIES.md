@@ -2495,3 +2495,23 @@ although all 55 rows were schema-valid and every lens had coverage. The source
 validator counts the terminal newline differently from splitlines. Use the
 public validator's line-count convention when refreshing both census entries
 and whole-file spans; do not weaken validation or alter source to fit metadata.
+
+### Service-driver property preparation: optional redacted generator branch
+
+Sanity's added token-present property initially filtered the default config
+arbitrary for a present token. Package audit failed with `Property exhausted
+after 0 run(s) and 501 discard(s)`. This is an introduced generator construction
+error, not a production counterexample. The field accepts `S.String` wrapped
+in `RedactedFromValue`; compose the existing valid token-absent config arbitrary
+with a generated string and `Redacted.make` to cover that branch directly.
+The original seven laws remain intact. Full package proof and the400-run
+fixed-seed property lane pass after this repair. Check branch reachability
+before relying on optional transformed-schema generation for coverage.
+
+## 2026-09-26: runner dependency project references
+
+PR #1290 Repo Sanity failed with `tsconfig-sync: drift detected (8 file change(s))`
+after test-runner devDependencies were added. Package audit and docgen had passed,
+but they did not establish generated project-reference parity. Run tsconfig-sync
+and its check after adding runner dependencies, before early publication. The
+service-driver wave applied the generator to its six affected configs as well.
