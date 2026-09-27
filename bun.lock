@@ -1035,6 +1035,7 @@
         "firecrawl": "^4.25.2",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1460,6 +1461,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@effect/openapi-generator": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1476,6 +1478,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
