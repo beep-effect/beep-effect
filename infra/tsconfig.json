@@ -28,6 +28,9 @@
       "path": "../packages/tooling/library/ai-metrics/tsconfig.json"
     },
     {
+      "path": "../packages/tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
       "path": "../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ]

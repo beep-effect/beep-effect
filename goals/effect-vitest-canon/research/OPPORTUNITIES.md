@@ -3581,3 +3581,11 @@ review and ledger reconciliation; this discrepancy is not a reason to waive them
 - Prevention: prepare local generated SDKs before first test transform, or include
   generated dependency entrypoint changes in resolution-cache invalidation.
   This is environment attribution; no production source or SDK stub was changed.
+
+The infrastructure runner dependency install reproduced the preparation boundary:
+`bun install --ignore-scripts` replaced the local file dependency without its
+compiled bin output. Package typechecking/docgen then entered generated CommonJS
+TypeScript and reported TS1295/TS1205. Running the existing
+`infra:prepare-gha-runners` command after installation restores the intended SDK
+entrypoint. Dependency-changing proof recipes should include this preparation
+before package verification; no generated SDK source was edited.

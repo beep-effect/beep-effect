@@ -1,5 +1,6 @@
 import { CiTurboCache, CiTurboCachePulumiConfigValues } from "@beep/infra";
-import { assert, describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";

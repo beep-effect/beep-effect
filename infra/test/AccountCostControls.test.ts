@@ -1,5 +1,6 @@
 import { AccountCostControls, AccountCostControlsConfig, loadAccountCostControlsConfig } from "@beep/infra";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";
@@ -7,7 +8,6 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { vi } from "vitest";
 
 const decode = S.decodeUnknownResult(AccountCostControlsConfig);
 

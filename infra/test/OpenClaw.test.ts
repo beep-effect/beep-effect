@@ -37,7 +37,7 @@ import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Crypto, Effect, pipe, Result } from "effect";
 import * as Hex from "effect/encoding/Hex";
 import * as P from "effect/Predicate";
@@ -51,6 +51,7 @@ const encodeUnknownOpenClawWorkstationPaths = S.encodeUnknownEffect(OpenClawWork
 const isOpenClawBackupShipScriptInput = S.is(OpenClawBackupShipScriptInput);
 const isOpenClawGenerationIdentityScriptInput = S.is(OpenClawGenerationIdentityScriptInput);
 
+import { it } from "@beep/test-runner";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import {
@@ -60,6 +61,10 @@ import {
   openClawSoulRelativePath,
 } from "../src/OpenClawArtifacts.ts";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
+
+const decodeOpenClawPulumiConfigValues = S.decodeEffect(OpenClawPulumiConfigValues);
+const isOpenClawPulumiConfigValues = S.is(OpenClawPulumiConfigValues);
+const OpenClawPulumiConfigValuesEquivalent = S.toEquivalence(OpenClawPulumiConfigValues);
 
 const identity = OpenClawExpectedIdentity.make({
   home: "/home/elpresidank",
@@ -225,48 +230,53 @@ describe("@beep/infra OpenClaw", () => {
     assertNone(args.backup);
   });
 
-  it("renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI", () => {
-    const intent = runCrypto(makeOpenClawDeploymentIntent(deploymentConfig));
-    const intentFromExplicitDefault = runCrypto(makeOpenClawDeploymentIntent(undefined)(deploymentConfig));
-    const document = parseDocument(defaultGeneration.canonicalJson);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect(
+      "renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI",
+      Effect.fnUntraced(function* () {
+        const intent = yield* makeOpenClawDeploymentIntent(deploymentConfig);
+        const intentFromExplicitDefault = yield* makeOpenClawDeploymentIntent(undefined)(deploymentConfig);
+        const document = parseDocument(defaultGeneration.canonicalJson);
 
-    expect(intentFromExplicitDefault).toEqual(intent);
-    expect(intent.agent.model).toBe("hosted/hosted-model");
-    expect(intent.agent.workspace).toBe("/etc/beep/openclaw/current/workspace");
-    expect(intent.providers).toHaveLength(2);
-    expect(intent.providers[0]?.id).toBe("hosted");
-    expect(intent.providers[1]?.id).toBe("local");
-    expect(intent.providers[1]?.baseUrl).toBe("http://127.0.0.1:11434/v1");
-    expect(intent.skills).toHaveLength(1);
-    expect(intent.skills[0]?.name).toBe("beep-proof-ping");
-    expect(O.getOrThrow(intent.telegram).groups).toEqual({});
-    expect(document).toMatchObject({
-      channels: { telegram: { configWrites: false, groups: {} } },
-      gateway: {
-        controlUi: {
-          allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
-          enabled: true,
-        },
-      },
-      models: {
-        providers: {
-          hosted: {
-            api: "openai-compat",
-            apiKey: { id: "value", provider: "op_provider_hosted", source: "exec" },
+        expect(intentFromExplicitDefault).toEqual(intent);
+        expect(intent.agent.model).toBe("hosted/hosted-model");
+        expect(intent.agent.workspace).toBe("/etc/beep/openclaw/current/workspace");
+        expect(intent.providers).toHaveLength(2);
+        expect(intent.providers[0]?.id).toBe("hosted");
+        expect(intent.providers[1]?.id).toBe("local");
+        expect(intent.providers[1]?.baseUrl).toBe("http://127.0.0.1:11434/v1");
+        expect(intent.skills).toHaveLength(1);
+        expect(intent.skills[0]?.name).toBe("beep-proof-ping");
+        expect(O.getOrThrow(intent.telegram).groups).toEqual({});
+        expect(document).toMatchObject({
+          channels: { telegram: { configWrites: false, groups: {} } },
+          gateway: {
+            controlUi: {
+              allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+              enabled: true,
+            },
           },
-          local: {
-            api: "openai-compat",
-            apiKey: "local-no-secret",
-            baseUrl: "http://127.0.0.1:11434/v1",
+          models: {
+            providers: {
+              hosted: {
+                api: "openai-compat",
+                apiKey: { id: "value", provider: "op_provider_hosted", source: "exec" },
+              },
+              local: {
+                api: "openai-compat",
+                apiKey: "local-no-secret",
+                baseUrl: "http://127.0.0.1:11434/v1",
+              },
+            },
           },
-        },
-      },
-    });
-    expect(defaultGeneration.canonicalJson).toContain("op://beep-openclaw/hosted/api-key");
-    expect(defaultGeneration.canonicalJson).not.toContain("raw-credential");
-    expect(defaultGeneration.canonicalJson).not.toContain("allowInsecureAuth");
-    expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyDisableDeviceAuth");
-    expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyAllowHostHeaderOriginFallback");
+        });
+        expect(defaultGeneration.canonicalJson).toContain("op://beep-openclaw/hosted/api-key");
+        expect(defaultGeneration.canonicalJson).not.toContain("raw-credential");
+        expect(defaultGeneration.canonicalJson).not.toContain("allowInsecureAuth");
+        expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyDisableDeviceAuth");
+        expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyAllowHostHeaderOriginFallback");
+      })
+    );
   });
 
   it("applies every Pulumi config override including backup shipping", () => {
@@ -316,30 +326,33 @@ describe("@beep/infra OpenClaw", () => {
     expect(O.getOrUndefined(O.getOrThrow(args.backup).agentSocketPath)).toBe("/run/user/1000/gcr/ssh");
   });
 
-  it("decodes typed Pulumi config values and rejects wrong types", () => {
-    const decoded = Effect.runSync(
-      OpenClawPulumiConfigValues.decodeEffect({
+  it.effect(
+    "decodes typed Pulumi config values and rejects wrong types",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* OpenClawPulumiConfigValues.decodeEffect({
         expectedUid: 1000,
         gatewayPort: 19_040,
-      })
-    );
+      });
 
-    expect(decoded.expectedUid).toBe(1000);
-    expect(decoded.gatewayPort).toBe(19_040);
-    expect(() => Effect.runSync(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: "19040" }))).toThrow();
-    expect(() => Effect.runSync(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: 80 }))).toThrow();
-    expect(() =>
-      Effect.runSync(OpenClawPulumiConfigValues.decodeEffect({ expectedMachineId: "not-a-machine-id" }))
-    ).toThrow();
-    expect(() =>
-      Effect.runSync(
-        OpenClawPulumiConfigValues.decodeEffect({ localProviderBaseUrl: "https://remote.example.test/v1" })
-      )
-    ).toThrow();
-    expect(Effect.runSync(OpenClawPulumiConfigValues.decodeEffect({ configWrites: true }))).not.toHaveProperty(
-      "configWrites"
-    );
-  });
+      expect(decoded.expectedUid).toBe(1000);
+      expect(decoded.gatewayPort).toBe(19_040);
+      expect((yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: "19040" })))._tag).toBe(
+        "SchemaError"
+      );
+      expect((yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ gatewayPort: 80 })))._tag).toBe(
+        "SchemaError"
+      );
+      expect(
+        (yield* Effect.flip(OpenClawPulumiConfigValues.decodeEffect({ expectedMachineId: "not-a-machine-id" })))._tag
+      ).toBe("SchemaError");
+      expect(
+        (yield* Effect.flip(
+          OpenClawPulumiConfigValues.decodeEffect({ localProviderBaseUrl: "https://remote.example.test/v1" })
+        ))._tag
+      ).toBe("SchemaError");
+      expect(yield* OpenClawPulumiConfigValues.decodeEffect({ configWrites: true })).not.toHaveProperty("configWrites");
+    })
+  );
 
   it("rejects an invalid openclaw:openclawVersion config value", () => {
     expect(() =>
@@ -360,39 +373,38 @@ describe("@beep/infra OpenClaw", () => {
     ).toThrow(/Missing openclaw:expectedMachineId/u);
   });
 
-  it("encodes OpenClaw config classes with unchanged optional-key wire shapes", () => {
-    const encodedPaths = Effect.runSync(
-      encodeUnknownOpenClawWorkstationPaths(OpenClawWorkstationPaths.make({ unitName: "beep.service" }))
-    );
-    const encodedBackup = Effect.runSync(
-      encodeUnknownOpenClawBackupConfig(
+  it.effect(
+    "encodes OpenClaw config classes with unchanged optional-key wire shapes",
+    Effect.fnUntraced(function* () {
+      const encodedPaths = yield* encodeUnknownOpenClawWorkstationPaths(
+        OpenClawWorkstationPaths.make({ unitName: "beep.service" })
+      );
+      const encodedBackup = yield* encodeUnknownOpenClawBackupConfig(
         OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" })
-      )
-    );
+      );
 
-    expect(encodedPaths).toEqual({
-      configRoot: "/etc/beep/openclaw",
-      nodeBinDir: "/opt/beep/openclaw/node/bin",
-      stateDir: "/var/lib/beep/openclaw",
-      unitName: "beep.service",
-    });
-    expect(encodedBackup).toEqual({
-      host: "dankserver",
-      passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
-      remoteDir: "/srv/data/beep-openclaw-backups",
-      user: "elpresidank",
-    });
-  });
+      expect(encodedPaths).toEqual({
+        configRoot: "/etc/beep/openclaw",
+        nodeBinDir: "/opt/beep/openclaw/node/bin",
+        stateDir: "/var/lib/beep/openclaw",
+        unitName: "beep.service",
+      });
+      expect(encodedBackup).toEqual({
+        host: "dankserver",
+        passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+        remoteDir: "/srv/data/beep-openclaw-backups",
+        user: "elpresidank",
+      });
+    })
+  );
 
   it.effect.prop(
     "round-trips OpenClaw config schemas through encoded wire values",
     [Arbitrary.schema(OpenClawPulumiConfigValues)],
     ([value]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(OpenClawPulumiConfigValues)(value);
-        assertTrue(
-          S.is(OpenClawPulumiConfigValues)(value) && S.toEquivalence(OpenClawPulumiConfigValues)(decoded, value)
-        );
+        const decoded = yield* decodeOpenClawPulumiConfigValues(value);
+        assertTrue(isOpenClawPulumiConfigValues(value) && OpenClawPulumiConfigValuesEquivalent(decoded, value));
       }),
     { arbitrary: fcRuns(25) }
   );
@@ -467,14 +479,17 @@ describe("@beep/infra OpenClaw", () => {
       )
   );
 
-  it("re-addresses the generation when the deployment intent changes", () => {
-    const other = runCrypto(
-      makeOpenClawGeneration(
-        OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ ...deploymentConfig, gatewayPort: 19_040 }))
-      )
-    );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect(
+      "re-addresses the generation when the deployment intent changes",
+      Effect.fnUntraced(function* () {
+        const other = yield* makeOpenClawGeneration(
+          OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ ...deploymentConfig, gatewayPort: 19_040 }))
+        );
 
-    expect(other.generationId).not.toBe(defaultGeneration.generationId);
+        expect(other.generationId).not.toBe(defaultGeneration.generationId);
+      })
+    );
   });
 
   it.layer(NodeServices.layer)("re-addresses the generation when only SOUL bytes change", (it) =>

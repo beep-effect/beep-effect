@@ -13,14 +13,19 @@ import {
   ciRunnersWorkerSecurityGroupName,
   makeCiRunnersStackArgsFromConfigValues,
 } from "@beep/infra";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
+
+const decodeCiRunnersPulumiConfigValues = S.decodeEffect(CiRunnersPulumiConfigValues);
+const isCiRunnersPulumiConfigValues = S.is(CiRunnersPulumiConfigValues);
+const CiRunnersPulumiConfigValuesEquivalent = S.toEquivalence(CiRunnersPulumiConfigValues);
 
 const decodeCiRunnersNetworkConfig = S.decodeEffect(CiRunnersNetworkConfig);
 const encodeUnknownCiRunnersNetworkConfig = S.encodeUnknownEffect(CiRunnersNetworkConfig);
@@ -125,43 +130,48 @@ describe("@beep/infra CiRunners", () => {
     expect(ciRunnersReaperFunctionName).toBe("beep-ci-runner-reaper");
   });
 
-  it("decodes optional Pulumi config shape", () => {
-    const decoded = Effect.runSync(
-      CiRunnersPulumiConfigValues.decodeEffect({ instanceType: "m7i.2xlarge", rootVolumeSizeGb: 150 })
-    );
+  it.effect(
+    "decodes optional Pulumi config shape",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* CiRunnersPulumiConfigValues.decodeEffect({
+        instanceType: "m7i.2xlarge",
+        rootVolumeSizeGb: 150,
+      });
 
-    expect(decoded.instanceType).toBe("m7i.2xlarge");
-    expect(decoded.rootVolumeSizeGb).toBe(150);
-  });
+      expect(decoded.instanceType).toBe("m7i.2xlarge");
+      expect(decoded.rootVolumeSizeGb).toBe(150);
+    })
+  );
 
-  it("round-trips the network config through its encoded wire value", () => {
-    // The class-level zones-within-region check makes independently generated
-    // arbitraries near-impossible to satisfy, so this round-trip is deterministic.
-    const network = CiRunnersNetworkConfig.make({
-      availabilityZoneA: "us-east-2a",
-      availabilityZoneB: "us-east-2b",
-      publicSubnetACidr: "10.99.0.0/20",
-      publicSubnetBCidr: "10.99.16.0/20",
-      region: "us-east-2",
-      vpcCidr: "10.99.0.0/16",
-    });
-    const equivalent = S.toEquivalence(CiRunnersNetworkConfig);
+  it.effect(
+    "round-trips the network config through its encoded wire value",
+    Effect.fnUntraced(function* () {
+      // The class-level zones-within-region check makes independently generated
+      // arbitraries near-impossible to satisfy, so this round-trip is deterministic.
+      const network = CiRunnersNetworkConfig.make({
+        availabilityZoneA: "us-east-2a",
+        availabilityZoneB: "us-east-2b",
+        publicSubnetACidr: "10.99.0.0/20",
+        publicSubnetBCidr: "10.99.16.0/20",
+        region: "us-east-2",
+        vpcCidr: "10.99.0.0/16",
+      });
+      const equivalent = S.toEquivalence(CiRunnersNetworkConfig);
 
-    const encoded = Effect.runSync(encodeUnknownCiRunnersNetworkConfig(network));
-    const decoded = Effect.runSync(decodeCiRunnersNetworkConfig(encoded));
+      const encoded = yield* encodeUnknownCiRunnersNetworkConfig(network);
+      const decoded = yield* decodeCiRunnersNetworkConfig(encoded);
 
-    pipe(equivalent(decoded, network), assertTrue);
-  });
+      pipe(equivalent(decoded, network), assertTrue);
+    })
+  );
 
   it.effect.prop(
     "round-trips CI runner config schemas through encoded wire values",
     [Arbitrary.schema(CiRunnersPulumiConfigValues)],
     ([value]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(CiRunnersPulumiConfigValues)(value);
-        assertTrue(
-          S.is(CiRunnersPulumiConfigValues)(value) && S.toEquivalence(CiRunnersPulumiConfigValues)(decoded, value)
-        );
+        const decoded = yield* decodeCiRunnersPulumiConfigValues(value);
+        assertTrue(isCiRunnersPulumiConfigValues(value) && CiRunnersPulumiConfigValuesEquivalent(decoded, value));
       }),
     { arbitrary: fcRuns(25) }
   );

@@ -2169,6 +2169,7 @@
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2178,6 +2179,7 @@
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

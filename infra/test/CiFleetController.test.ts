@@ -1,6 +1,7 @@
 import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra";
+import { it } from "@beep/test-runner";
 import { O, Str } from "@beep/utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";
@@ -325,7 +326,7 @@ describe("@beep/infra CiFleetController", () => {
         instance_metadata_tags: "enabled",
       });
       const decodedPolicy = decodePolicyDocument(capturedPolicy.value);
-      assert.isTrue(Result.isSuccess(decodedPolicy));
+      pipe(decodedPolicy, Result.isSuccess, assertTrue);
       if (Result.isSuccess(decodedPolicy)) {
         expect(decodedPolicy.success).toEqual({
           Version: "2012-10-17",
