@@ -12,8 +12,10 @@ import * as Evidence from "@beep/epistemic-tables/entities/Evidence";
 import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -420,7 +422,7 @@ describe("EpistemicTables", () => {
       expect(decoded.model).toBe("fixture-model");
       expect(O.getOrNull(decoded.inputTokens)).toBe(12);
       expect(O.getOrNull(decoded.costUsdApproxMicros)).toBeNull();
-      expect(O.isNone(decoded.unitCount)).toBe(true);
+      assertNone(decoded.unitCount);
     })
   );
 
@@ -482,7 +484,7 @@ describe("EpistemicTables", () => {
         spanFixtureKey: "span:oa-1:12-48",
       };
 
-      expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
+      pipe(decodeEvidenceModelResult(legacyRow), Result.isFailure, assertTrue);
 
       const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
       const canonicalInsert = yield* Effect.fromResult(Evidence.toEvidenceInsert(decoded));
@@ -511,7 +513,7 @@ describe("EpistemicTables", () => {
         },
       };
 
-      expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
+      pipe(decodeEvidenceModelResult(legacyRow), Result.isFailure, assertTrue);
 
       const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
 
@@ -519,7 +521,7 @@ describe("EpistemicTables", () => {
       expect(decoded.span.endChar).toBe(12 + Str.length(quote));
 
       const reencoded = Evidence.toEvidenceInsert(decoded);
-      expect(Result.isFailure(reencoded)).toBe(true);
+      pipe(reencoded, Result.isFailure, assertTrue);
       const encodeError = yield* reencoded.pipe(Result.flip, Effect.fromResult);
       expect(encodeError._tag).toBe("EvidenceConverterError");
       expect(encodeError.operation).toBe("toInsert");
@@ -537,7 +539,7 @@ describe("EpistemicTables", () => {
       } as unknown as Evidence.EvidenceRow;
 
       const decodeResult = Evidence.fromEvidenceRow(malformedRow);
-      expect(Result.isFailure(decodeResult)).toBe(true);
+      pipe(decodeResult, Result.isFailure, assertTrue);
       const decodeError = yield* decodeResult.pipe(Result.flip, Effect.fromResult);
       expect(decodeError._tag).toBe("EvidenceConverterError");
       expect(decodeError.operation).toBe("fromRow");
@@ -573,11 +575,11 @@ describe("EpistemicTables", () => {
       expect(decoded.relation).toBe("supports");
       expect(O.getOrNull(decoded.sourceClaimId)).toBe(1);
       expect(O.getOrNull(decoded.targetEvidenceId)).toBe(2);
-      expect(O.isNone(decoded.validTo)).toBe(true);
-      expect(O.isNone(decoded.expiredAt)).toBe(true);
-      expect(O.isNone(decoded.supersedesId)).toBe(true);
-      expect(O.isNone(decoded.matterScope)).toBe(true);
-      expect(O.isNone(decoded.evidenceScope)).toBe(true);
+      assertNone(decoded.validTo);
+      assertNone(decoded.expiredAt);
+      assertNone(decoded.supersedesId);
+      assertNone(decoded.matterScope);
+      assertNone(decoded.evidenceScope);
     })
   );
 
