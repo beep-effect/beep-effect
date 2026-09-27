@@ -10,8 +10,9 @@ import {
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { Md } from "@beep/md";
 import { NonNegativeInt, PosInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

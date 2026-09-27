@@ -11,8 +11,9 @@ import {
   PriorityBasis,
   ValidatorReport,
 } from "@beep/law-practice-domain";
+import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

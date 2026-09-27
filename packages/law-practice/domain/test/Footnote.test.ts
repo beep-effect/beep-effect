@@ -1,5 +1,6 @@
 import { Footnote } from "@beep/law-practice-domain";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("Footnote.detectTextFootnotes", () => {
   it("detects supported markers and preserves their source spans", () => {

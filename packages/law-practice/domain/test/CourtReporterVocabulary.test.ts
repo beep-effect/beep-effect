@@ -27,8 +27,9 @@ import {
   ReporterVocabularyRecord,
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { pipe } from "effect";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";

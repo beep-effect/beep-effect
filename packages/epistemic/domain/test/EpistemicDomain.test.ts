@@ -19,8 +19,9 @@ import {
 import { EvidenceSpanArbitrary } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

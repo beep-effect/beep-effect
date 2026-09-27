@@ -58,15 +58,15 @@ import {
 } from "@beep/law-practice-domain";
 import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
@@ -196,16 +196,16 @@ describe("@beep/law-practice-domain", () => {
 
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
-    expect(LegalClientStatus.fromUnknown("active_client")).toEqual(Result.succeed("active_client"));
+    assertSuccess(LegalClientStatus.fromUnknown("active_client"), "active_client");
     expect(LegalClientStatus.decodeOption("active_client")._tag).toBe("Some");
     expect(LegalContactRole.is.founder("founder")).toBe(true);
-    expect(LegalContactRole.fromUnknown("founder")).toEqual(Result.succeed("founder"));
+    assertSuccess(LegalContactRole.fromUnknown("founder"), "founder");
     expect(LegalContactRole.decodeOption("founder")._tag).toBe("Some");
     expect(MatterType.is.patent_application("patent_application")).toBe(true);
-    expect(MatterType.fromUnknown("patent_application")).toEqual(Result.succeed("patent_application"));
+    assertSuccess(MatterType.fromUnknown("patent_application"), "patent_application");
     expect(MatterType.decodeOption("patent_application")._tag).toBe("Some");
     expect(PatentAssetStatus.is.pre_filing("pre_filing")).toBe(true);
-    expect(PatentAssetStatus.fromUnknown("pre_filing")).toEqual(Result.succeed("pre_filing"));
+    assertSuccess(PatentAssetStatus.fromUnknown("pre_filing"), "pre_filing");
     expect(PatentAssetStatus.decodeOption("pre_filing")._tag).toBe("Some");
     expect(RejectionGround.is({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
     expect(DistinctionDetail.is({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
