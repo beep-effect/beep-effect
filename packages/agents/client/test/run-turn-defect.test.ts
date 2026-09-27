@@ -12,7 +12,8 @@ import { Document, P, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Layer, Stream } from "effect";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, Layer, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
 
@@ -61,19 +62,20 @@ describe("assistant turn defects", { concurrent: false }, () => {
         yield* AtomRegistry.mount(registry, streamingTurnAtom);
         yield* AtomRegistry.mount(registry, turnErrorAtom);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
+        assertNone(registry.get(draftAtom));
         expect(registry.get(draftRevisionAtom)).toBe(0);
 
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         const exit = yield* AtomRegistry.getResult(registry, runTurnAtom).pipe(Effect.exit);
 
         // the defect must surface as a failed run, not a silent success
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         // an exact terminal receipt ends the bounded poll on its first attempt
         expect(statusReads).toBe(1);
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-        expect(O.map(registry.get(turnErrorAtom), (error) => error.message)).toStrictEqual(
-          O.some("The reply failed unexpectedly before completing.")
+        assertNone(registry.get(streamingTurnAtom));
+        assertSome(
+          O.map(registry.get(turnErrorAtom), (error) => error.message),
+          "The reply failed unexpectedly before completing."
         );
         expect(registry.get(draftAtom)).toStrictEqual(status === "not_persisted" ? O.some(content) : O.none());
         expect(registry.get(draftRevisionAtom)).toBe(status === "not_persisted" ? 1 : 0);

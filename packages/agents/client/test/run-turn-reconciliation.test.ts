@@ -19,7 +19,8 @@ import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/reactivity";
@@ -172,10 +173,10 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
       expect(registry.get(turnActiveAtom)).toBe(false);
-      expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
-      expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
+      assertSome(registry.get(draftAtom), content);
+      pipe(registry.get(turnErrorAtom), O.isSome, assertTrue);
     })
   );
 
@@ -206,9 +207,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-      expect(registry.get(draftAtom)).toStrictEqual(O.none());
-      expect(registry.get(turnErrorAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
+      assertNone(registry.get(draftAtom));
+      assertNone(registry.get(turnErrorAtom));
     })
   );
 
@@ -253,7 +254,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     );
     yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
 
-    expect(registry.get(draftAtom)).toStrictEqual(O.none());
+    assertNone(registry.get(draftAtom));
     expect(registry.get(draftRevisionAtom)).toBe(0);
     const [fallback] = registry.get(unreconciledAtom);
     expect(fallback?.userContent).toStrictEqual(content);
@@ -315,8 +316,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.set(runTurnAtom, Atom.Interrupt);
         yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
+        assertNone(registry.get(streamingTurnAtom));
+        assertNone(registry.get(draftAtom));
         expect(registry.get(draftRevisionAtom)).toBe(0);
         const [fallback] = registry.get(unreconciledAtom);
         expect(fallback?.userContent).toStrictEqual(content);
@@ -324,7 +325,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         expect(fallback?.blocks).toMatchObject([
           { type: "paragraph", children: [{ type: "text", text: "(stopped)" }] },
         ]);
-        expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
+        pipe(registry.get(turnErrorAtom), O.isSome, assertTrue);
       }, Effect.scoped);
 
       yield* verifyUncertainStatus("accepted");
@@ -413,9 +414,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
         yield* Deferred.await(timelineRefreshed);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-        expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
+        assertNone(registry.get(draftAtom));
+        assertNone(registry.get(streamingTurnAtom));
+        pipe(registry.get(turnErrorAtom), O.isSome, assertTrue);
         expect(timelineReads).toBeGreaterThan(1);
       }, Effect.scoped);
 
@@ -452,7 +453,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
+        assertNone(registry.get(draftAtom));
         const [fallback] = registry.get(unreconciledTurnAtoms(threadId));
         expect(fallback?.userContent).toStrictEqual(content);
         expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(failed)" }] }]);
@@ -499,7 +500,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* Deferred.await(timelineRefreshAttempted);
       yield* Effect.sleep(Duration.millis(25));
 
-      expect(registry.get(draftAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(draftAtom));
       const [fallback] = registry.get(unreconciledTurnAtoms(threadId));
       expect(fallback?.userContent).toStrictEqual(content);
       expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(stopped)" }] }]);
@@ -543,9 +544,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       expect(localReply).toBeDefined();
       if (localReply === undefined) return;
       expect(localReply.blocks).toStrictEqual([assistantBlock]);
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
       expect(registry.get(turnActiveAtom)).toBe(false);
-      expect(AsyncResult.isFailure(registry.get(timelineAtom)) && O.isSome(registry.get(turnErrorAtom))).toBe(true);
+      assertTrue(AsyncResult.isFailure(registry.get(timelineAtom)) && O.isSome(registry.get(turnErrorAtom)));
 
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
@@ -642,7 +643,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         acceptedReceiptFallback,
         anotherNotPersistedFallback,
       ]);
-      expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
+      assertSome(registry.get(draftAtom), content);
       expect(registry.get(draftRevisionAtom)).toBe(1);
       expect(statusReads).toBeGreaterThanOrEqual(5);
 
@@ -661,7 +662,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true });
 
       expect(registry.get(unreconciledAtom)).toStrictEqual([notPersistedReceiptFallback, receiptFallback]);
-      expect(registry.get(draftAtom)).toStrictEqual(O.some(newerContent));
+      assertSome(registry.get(draftAtom), newerContent);
       expect(registry.get(draftRevisionAtom)).toBe(2);
     })
   );
@@ -690,7 +691,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true });
 
       expect(timelineReads).toBeGreaterThan(1);
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
       expect(registry.get(turnActiveAtom)).toBe(false);
     })
   );

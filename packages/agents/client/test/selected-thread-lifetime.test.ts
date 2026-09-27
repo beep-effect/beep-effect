@@ -1,6 +1,7 @@
 import { selectedThreadAtom } from "@beep/agents-client/Chat.atoms";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -39,7 +40,7 @@ describe("selected thread lifetime", () => {
       // ...and browses elsewhere for longer than the idle TTL.
       yield* Effect.sleep(Duration.millis(IDLE_TTL_MS * 5));
 
-      expect(registry.get(selectedThreadAtom)).toStrictEqual(O.some(olderThread));
+      assertSome(registry.get(selectedThreadAtom), olderThread);
     })
   );
 });

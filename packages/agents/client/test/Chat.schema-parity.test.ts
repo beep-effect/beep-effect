@@ -12,6 +12,7 @@ import { Document, P, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -70,8 +71,8 @@ describe("@beep/agents-client schema parity", () => {
       userContent: content,
       blocks: [block],
     });
-    expect(defaultedStreamingTurn.requestId).toStrictEqual(O.none());
-    expect(defaultedStreamingTurn.truncateFrom).toStrictEqual(O.none());
+    assertNone(defaultedStreamingTurn.requestId);
+    assertNone(defaultedStreamingTurn.truncateFrom);
     expect(defaultedStreamingTurn.reconciliation).toBe("timeline");
     expect(Result.getOrThrow(encodeStreamingTurnResult(defaultedStreamingTurn))).toStrictEqual(
       Result.getOrThrow(encodeStreamingTurnResult(explicitStreamingTurn))
