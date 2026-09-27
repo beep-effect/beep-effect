@@ -36,11 +36,15 @@ import {
   withMark,
 } from "@beep/nlp/Core/index";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Chunk, Effect, Exit, Schema } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
@@ -141,60 +145,58 @@ describe("Core Pattern", () => {
     expect(length(combined)).toBe(4);
   });
 
-  it("encodes and decodes element schemas", () =>
-    Effect.runPromise(
+  it.effect("encodes and decodes element schemas", () =>
+    Effect.gen(function* () {
+      const posResult = yield* decodeBracketStringToPOSPatternElement("[ADJ|NOUN]");
+      const entityResult = yield* decodeBracketStringToEntityPatternElement("[DATE|TIME]");
+      const literalResult = yield* decodeBracketStringToLiteralPatternElement("[|Apple|Google]");
+
+      expect(posResult.value).toEqual(["ADJ", "NOUN"]);
+      expect(entityResult.value).toEqual(["DATE", "TIME"]);
+      expect(literalResult.value).toEqual(["", "Apple", "Google"]);
+      expect(Pattern.POS.toBracketString(posResult.value)).toBe("[ADJ|NOUN]");
+      expect(Pattern.Entity.toBracketString(entityResult.value)).toBe("[DATE|TIME]");
+      expect(Pattern.Literal.toBracketString(literalResult.value)).toBe("[|Apple|Google]");
+    })
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived pattern values",
+    [
+      POSPatternOptionArbitrary,
+      EntityPatternOptionArbitrary,
+      LiteralPatternOptionArbitrary,
+      PatternElementArbitrary,
+      PatternArbitrary,
+    ],
+    ([posOption, entityOption, literalOption, patternElement, pattern]) =>
       Effect.gen(function* () {
-        const posResult = yield* decodeBracketStringToPOSPatternElement("[ADJ|NOUN]");
-        const entityResult = yield* decodeBracketStringToEntityPatternElement("[DATE|TIME]");
-        const literalResult = yield* decodeBracketStringToLiteralPatternElement("[|Apple|Google]");
+        const decodedPOSOption = yield* decodePOSPatternOption(posOption);
+        const decodedEntityOption = yield* decodeEntityPatternOption(entityOption);
+        const decodedLiteralOption = yield* decodeLiteralPatternOption(literalOption);
+        const encodedElement = yield* encodePatternElement(patternElement);
+        const decodedElement = yield* decodePatternElement(encodedElement);
+        const decodedPattern = Pattern.decode(Pattern.encode(pattern));
 
-        expect(posResult.value).toEqual(["ADJ", "NOUN"]);
-        expect(entityResult.value).toEqual(["DATE", "TIME"]);
-        expect(literalResult.value).toEqual(["", "Apple", "Google"]);
-        expect(Pattern.POS.toBracketString(posResult.value)).toBe("[ADJ|NOUN]");
-        expect(Pattern.Entity.toBracketString(entityResult.value)).toBe("[DATE|TIME]");
-        expect(Pattern.Literal.toBracketString(literalResult.value)).toBe("[|Apple|Google]");
-      })
-    ));
+        expect(decodedPOSOption).toEqual(posOption);
+        expect(decodedEntityOption).toEqual(entityOption);
+        expect(decodedLiteralOption).toEqual(literalOption);
+        expect(decodedElement).toEqual(patternElement);
+        expect(decodedPattern).toEqual(pattern);
+        expect(Pattern.is(decodedPattern)).toBe(true);
+        expect(Pattern.POS.toBracketString(decodedPOSOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+        expect(Pattern.Entity.toBracketString(decodedEntityOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
+        expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
 
-  it("round-trips schema-derived pattern values", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            POSPatternOptionArbitrary,
-            EntityPatternOptionArbitrary,
-            LiteralPatternOptionArbitrary,
-            PatternElementArbitrary,
-            PatternArbitrary,
-          ]),
-          ([posOption, entityOption, literalOption, patternElement, pattern]) => {
-            const decodedPOSOption = Effect.runSync(decodePOSPatternOption(posOption));
-            const decodedEntityOption = Effect.runSync(decodeEntityPatternOption(entityOption));
-            const decodedLiteralOption = Effect.runSync(decodeLiteralPatternOption(literalOption));
-            const encodedElement = Effect.runSync(encodePatternElement(patternElement));
-            const decodedElement = Effect.runSync(decodePatternElement(encodedElement));
-            const decodedPattern = Pattern.decode(Pattern.encode(pattern));
-
-            expect(decodedPOSOption).toEqual(posOption);
-            expect(decodedEntityOption).toEqual(entityOption);
-            expect(decodedLiteralOption).toEqual(literalOption);
-            expect(decodedElement).toEqual(patternElement);
-            expect(decodedPattern).toEqual(pattern);
-            expect(Pattern.is(decodedPattern)).toBe(true);
-            expect(Pattern.POS.toBracketString(decodedPOSOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
-            expect(Pattern.Entity.toBracketString(decodedEntityOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
-            expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/s));
-
-            return true;
-          },
-          // Every option schema rejects a sole empty choice and the literal option
-          // also rejects reserved tags, so the five-way tuple discards most roots;
-          // the default budget (10 per run) exhausts on some seeds.
-          { ...fcRuns(50), maxDiscards: 20_000 }
-        )
-      )._tag
-    ).toBe("Passed"));
+        return true;
+      }),
+    {
+      arbitrary: // Every option schema rejects a sole empty choice and the literal option
+        // also rejects reserved tags, so the five-way tuple discards most roots;
+        // the default budget (10 per run) exhausts on some seeds.
+        { ...fcRuns(50), maxDiscards: 20_000 },
+    }
+  );
 
   it("parses mixed pattern strings in order", () => {
     const elements = PatternFromString(["[ADJ|NOUN]", "[DATE]", "[|the]"]);
@@ -213,9 +215,48 @@ describe("Core Pattern", () => {
       const emptyPos = yield* Effect.exit(decodePOSPatternOption([""]));
       const emptyEntity = yield* Effect.exit(decodeEntityPatternOption([""]));
       const emptyLiteral = yield* Effect.exit(decodeLiteralPatternOption([""]));
-      expect(Exit.isFailure(emptyPos)).toBe(true);
-      expect(Exit.isFailure(emptyEntity)).toBe(true);
-      expect(Exit.isFailure(emptyLiteral)).toBe(true);
+      assertExitFailure(
+        Exit.match(emptyPos, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      assertExitFailure(
+        Exit.match(emptyEntity, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      assertExitFailure(
+        Exit.match(emptyLiteral, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
@@ -224,7 +265,20 @@ describe("Core Pattern", () => {
     Effect.fnUntraced(function* () {
       expect(() => literal("DATE")).toThrow();
       const reservedLiteral = yield* Effect.exit(decodeBracketStringToLiteralPatternElement("[DATE]"));
-      expect(Exit.isFailure(reservedLiteral)).toBe(true);
+      assertExitFailure(
+        Exit.match(reservedLiteral, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 
