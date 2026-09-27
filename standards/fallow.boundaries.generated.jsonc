@@ -2436,6 +2436,7 @@
           "@beep/identity",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2443,6 +2444,7 @@
           "@beep/identity",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
