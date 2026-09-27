@@ -2061,29 +2061,29 @@
     "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
     "package": "@beep/pretext",
     "kind": "test",
-    "bytes": 992,
-    "lines": 25
+    "bytes": 1028,
+    "lines": 26
   },
   {
     "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
     "package": "@beep/pretext",
     "kind": "test",
-    "bytes": 7609,
-    "lines": 232
+    "bytes": 8545,
+    "lines": 257
   },
   {
     "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
     "package": "@beep/pretext",
     "kind": "test",
-    "bytes": 2782,
-    "lines": 83
+    "bytes": 3924,
+    "lines": 106
   },
   {
     "file": "packages/drivers/pretext/test/browser.test.ts",
     "package": "@beep/pretext",
     "kind": "test",
-    "bytes": 2615,
-    "lines": 77
+    "bytes": 3480,
+    "lines": 100
   },
   {
     "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",

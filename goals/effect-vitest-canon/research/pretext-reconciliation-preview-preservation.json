@@ -1,0 +1,34 @@
+{
+  "rows": 40,
+  "statuses": {
+    "fixed": 26,
+    "open": 14
+  },
+  "historicalDetectorIdsRetained": 24,
+  "upstreamAttributedIds": 0,
+  "currentDetectorExceptions": 0,
+  "subjectLoggerExceptions": 0,
+  "admittedFiles": 4,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7718,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 695,
+  "sourceHashes": [
+    {
+      "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+      "sha256": "17c41b9bad0d736213139518db36fbc3c4a40b9820c10362130d2a1d8164a7a8"
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "sha256": "3721bdb9003c1d5fdade30019bc692a7ec88d44c23ea2226f6641978650c3344"
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "sha256": "2750ebcb8a58f48ba59bed2ca9e52ed1ebf746ff34333c49531700189c8ac6df"
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "sha256": "88d6b95e3a7a8bff844cae17ecb6cb052158236d4c693f38b5aad85c5c30b68f"
+    }
+  ]
+}
