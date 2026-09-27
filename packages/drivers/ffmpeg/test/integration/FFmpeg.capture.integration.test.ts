@@ -13,6 +13,7 @@ import {
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -280,7 +281,7 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
                 O.getOrElse(() => 0)
               )
             ).toBe(30);
-            expect(O.isSome(sourceProbe.startTimeSeconds)).toBe(true);
+            pipe(sourceProbe.startTimeSeconds, O.isSome, assertTrue);
 
             const clipPath = path.join(tmpDir, "clips", "cut.webm");
             const clip = yield* ffmpeg.extractClip(

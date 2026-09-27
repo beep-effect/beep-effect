@@ -40,6 +40,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
@@ -213,10 +214,10 @@ describe("@beep/ffmpeg capture", () => {
   it.effect("rejects unsafe metadata keys", () =>
     Effect.gen(function* () {
       expect(yield* decodeUnknownSafeMetadataKey("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
-      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP QA")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP=QA")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("1BEEP")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("")))).toBe(true);
+      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP QA")), Exit.isFailure, assertTrue);
+      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP=QA")), Exit.isFailure, assertTrue);
+      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("1BEEP")), Exit.isFailure, assertTrue);
+      pipe(yield* Effect.exit(decodeUnknownSafeMetadataKey("")), Exit.isFailure, assertTrue);
     })
   );
 
@@ -692,7 +693,7 @@ describe("@beep/ffmpeg capture", () => {
             });
             const result = yield* ffmpeg.extractClip(request);
 
-            expect(result.durationSeconds).toEqual(O.some(2));
+            assertSome(result.durationSeconds, 2);
             expect(result.startSeconds).toBe(1.5);
             expect(result.fileSizeBytes).toBe("fake output".length);
             expect(yield* fs.readFileString(outPath)).toBe("fake output");
