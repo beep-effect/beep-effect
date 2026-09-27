@@ -3091,3 +3091,11 @@ Both files matched main before repair. Decode every row with excess properties
 rejected before committing ledger updates; root ratchet success alone does not
 validate all human inventory families. Stable finding IDs and fix evidence are
 preserved by the narrow metadata corrections.
+
+## M365 assertion helper composition
+
+Replacing assert.isTrue(O.isSome(first)) with the native assertTrue helper
+exposed TS377050 missedPipeableOpportunity during package test typechecking.
+Use pipe(first, O.isSome, assertTrue), retaining the original Boolean observation
+and subsequent payload branch. The focused package audit catches this policy
+diagnostic even when runtime assertions are equivalent.

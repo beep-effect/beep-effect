@@ -37,6 +37,7 @@ import {
 import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -266,7 +267,7 @@ describe("M365 MCP server", () => {
         const stream = yield* toolkit.handle("m365_get_site", { siteId: SiteId });
         const first = yield* Stream.runHead(stream);
 
-        assert.isTrue(O.isSome(first));
+        pipe(first, O.isSome, assertTrue);
         if (O.isSome(first)) {
           assert.isFalse(first.value.isFailure);
         }
