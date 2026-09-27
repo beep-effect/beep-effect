@@ -52,34 +52,29 @@ const WorkItemDrizzleRepositoryLayer = Layer.mergeAll(ArchitectureLabConfigTest,
   Layer.provideMerge(makeMigrationCapableLayer())
 );
 
-it("round-trips schema-derived repository identity values through domain schemas", () =>
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([WorkItemIdArbitrary, WorkItemTitleArbitrary, WorkerIdArbitrary, OrganizationIdArbitrary]),
-        ([workItemId, title, workerId, organizationId]) => {
-          const encodedWorkItemId = Effect.runSync(encodeWorkItemId(workItemId));
-          const decodedWorkItemId = Effect.runSync(decodeWorkItemId(encodedWorkItemId));
-          expect(Effect.runSync(encodeWorkItemId(decodedWorkItemId))).toBe(encodedWorkItemId);
+it.effect.prop(
+  "round-trips schema-derived repository identity values through domain schemas",
+  [WorkItemIdArbitrary, WorkItemTitleArbitrary, WorkerIdArbitrary, OrganizationIdArbitrary],
+  ([workItemId, title, workerId, organizationId]) =>
+    Effect.gen(function* () {
+      const encodedWorkItemId = yield* encodeWorkItemId(workItemId);
+      const decodedWorkItemId = yield* decodeWorkItemId(encodedWorkItemId);
+      expect(yield* encodeWorkItemId(decodedWorkItemId)).toBe(encodedWorkItemId);
 
-          const encodedTitle = Effect.runSync(encodeWorkItemTitle(title));
-          const decodedTitle = Effect.runSync(decodeWorkItemTitle(encodedTitle));
-          expect(Effect.runSync(encodeWorkItemTitle(decodedTitle))).toBe(encodedTitle);
+      const encodedTitle = yield* encodeWorkItemTitle(title);
+      const decodedTitle = yield* decodeWorkItemTitle(encodedTitle);
+      expect(yield* encodeWorkItemTitle(decodedTitle)).toBe(encodedTitle);
 
-          const encodedWorkerId = Effect.runSync(encodeWorkerId(workerId));
-          const decodedWorkerId = Effect.runSync(decodeWorkerId(encodedWorkerId));
-          expect(Effect.runSync(encodeWorkerId(decodedWorkerId))).toBe(encodedWorkerId);
+      const encodedWorkerId = yield* encodeWorkerId(workerId);
+      const decodedWorkerId = yield* decodeWorkerId(encodedWorkerId);
+      expect(yield* encodeWorkerId(decodedWorkerId)).toBe(encodedWorkerId);
 
-          const encodedOrganizationId = Effect.runSync(encodeOrganizationId(organizationId));
-          const decodedOrganizationId = Effect.runSync(decodeOrganizationId(encodedOrganizationId));
-          expect(Effect.runSync(encodeOrganizationId(decodedOrganizationId))).toBe(encodedOrganizationId);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )._tag
-  ).toBe("Passed"));
+      const encodedOrganizationId = yield* encodeOrganizationId(organizationId);
+      const decodedOrganizationId = yield* decodeOrganizationId(encodedOrganizationId);
+      expect(yield* encodeOrganizationId(decodedOrganizationId)).toBe(encodedOrganizationId);
+    }),
+  { arbitrary: fcRuns(25) }
+);
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("ArchitectureLab Drizzle repository PgLite integration", () => {});

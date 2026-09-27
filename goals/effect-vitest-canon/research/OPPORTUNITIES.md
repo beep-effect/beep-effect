@@ -3137,3 +3137,10 @@ The architecture-lab UI assertion phase removed its last Option use but retained
 the namespace import. Package verification and the commit hook rejected it with
 noUnusedImports. Remove the unused import, then repeat the affected package proof
 before committing the phase. Check terminal results before writing pass receipts.
+
+## 2026-09-27: Recording fixture callbacks require Effect.fn
+
+Architecture use-case verification rejected a recording create callback with
+TS377047 (effectFnOpportunity). Name both recording create/get effects with
+Effect.fn and explicit schema-derived argument types. Run service-shaped test
+fixtures through the same Effect rules as production methods.

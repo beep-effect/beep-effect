@@ -55,21 +55,16 @@ describe("Worker table", () => {
     })
   );
 
-  it("round-trips schema-derived Workers through the row converters", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([WorkerArbitrary]),
-          ([worker]) => {
-            const insert = toWorkerInsert(worker);
-            const decoded = fromWorkerRow({ ...insert, id: worker.id });
+  it.effect.prop(
+    "round-trips schema-derived Workers through the row converters",
+    [WorkerArbitrary],
+    ([worker]) =>
+      Effect.sync(() => {
+        const insert = toWorkerInsert(worker);
+        const decoded = fromWorkerRow({ ...insert, id: worker.id });
 
-            expect(WorkerEquivalence(decoded, worker)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(WorkerEquivalence(decoded, worker)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 });

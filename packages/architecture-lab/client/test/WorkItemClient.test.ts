@@ -3,8 +3,10 @@ import { makeWorkItemClient } from "@beep/architecture-lab-client/aggregates/Wor
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
@@ -24,18 +26,24 @@ describe("WorkItem client", () => {
           title: "Document topology",
         })
       );
+      const observedGet = yield* Ref.make(O.none<WorkItemUseCases.GetWorkItemQuery>());
       const client = makeWorkItemClient({
-        create: () => Effect.succeed(created),
-        assign: () => Effect.succeed(created),
-        complete: () => Effect.succeed(created),
-        reopen: () => Effect.succeed(created),
-        archive: () => Effect.succeed(created),
-        get: () => Effect.succeed(created),
-        list: () => Effect.succeed([created]),
+        create: () => Effect.die("Unexpected transport operation: create"),
+        assign: () => Effect.die("Unexpected transport operation: assign"),
+        complete: () => Effect.die("Unexpected transport operation: complete"),
+        reopen: () => Effect.die("Unexpected transport operation: reopen"),
+        archive: () => Effect.die("Unexpected transport operation: archive"),
+        get: Effect.fn("ArchitectureWorkItemClientTest.get")(function* (query: WorkItemUseCases.GetWorkItemQuery) {
+          yield* Ref.set(observedGet, O.some(query));
+          return created;
+        }),
+        list: () => Effect.die("Unexpected transport operation: list"),
       });
 
       const workItem = yield* client.get(WorkItemUseCases.GetWorkItemQuery.make({ id: created.id }));
       assertNone(workItem.assignee);
+      assertSome(yield* Ref.get(observedGet), WorkItemUseCases.GetWorkItemQuery.make({ id: created.id }));
+      expect(workItem).toEqual(created);
     })
   );
 });

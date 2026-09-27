@@ -6,7 +6,6 @@ import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/Architect
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -44,30 +43,20 @@ const schemaParityCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
 ];
 
 describe("@beep/architecture-lab-use-cases schema parity", () => {
-  it("round-trips touched schemas with schema-derived arbitraries", () => {
-    for (const [, schema] of schemaParityCases) {
-      const encode = S.encodeResult(schema);
-      const decode = S.decodeUnknownResult(schema);
-      const equivalent = S.toEquivalence(schema);
-
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              const encoded = Result.getOrThrow(encode(value));
-              const decoded = Result.getOrThrow(decode(encoded));
-
-              expect(equivalent(decoded, value)).toBe(true);
-
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  for (const [name, schema] of schemaParityCases) {
+    const equivalent = S.toEquivalence(schema);
+    it.effect.prop(
+      `round-trips schema-derived ${name}`,
+      [schema],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(schema)(value);
+          const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+          expect(equivalent(decoded, value)).toBe(true);
+        }),
+      { arbitrary: fcRuns(10) }
+    );
+  }
 
   it("preserves command and query encoded wire shapes", () => {
     expect(

@@ -2,10 +2,10 @@ import * as WorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import * as Worker from "@beep/architecture-lab-domain/entities/Worker";
 import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -14,23 +14,6 @@ const decodeWorkItemId = S.decodeUnknownEffect(WorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const encodeCreateWorkItemInput = S.encodeUnknownEffect(WorkItem.CreateWorkItemInput);
 const encodeWorkItem = S.encodeUnknownEffect(WorkItem.WorkItem);
-
-const assertSchemaEncodedRoundTrips = Effect.fn("assertSchemaEncodedRoundTrips")(function* <
-  Schema extends S.Codec<unknown, unknown>,
->(schema: Schema, runs = 10) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeUnknownEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        return equivalent(decoded, value);
-      }),
-    { runs }
-  );
-  expect(result._tag).toBe("Passed");
-});
 
 const makeWorkItem = (id: WorkItem.WorkItemId) =>
   WorkItem.create(
@@ -42,20 +25,32 @@ const makeWorkItem = (id: WorkItem.WorkItemId) =>
   );
 
 describe("WorkItem aggregate", () => {
-  it.effect("round-trips schema-derived arbitrary values", () =>
-    Effect.gen(function* () {
-      yield* assertSchemaEncodedRoundTrips(WorkPriority.WorkPriority);
-      yield* assertSchemaEncodedRoundTrips(Worker.WorkerStatus);
-      yield* assertSchemaEncodedRoundTrips(Worker.CreateWorkerInput);
-      yield* assertSchemaEncodedRoundTrips(Worker.Worker);
-      yield* assertSchemaEncodedRoundTrips(WorkItem.WorkItemId);
-      yield* assertSchemaEncodedRoundTrips(WorkItem.WorkItemTitle);
-      yield* assertSchemaEncodedRoundTrips(WorkItem.WorkItemStatus);
-      yield* assertSchemaEncodedRoundTrips(WorkItem.CreateWorkItemInput);
-      yield* assertSchemaEncodedRoundTrips(WorkItem.WorkItem);
-      yield* assertSchemaEncodedRoundTrips(WorkItem.WorkItemDomainError);
-    })
-  );
+  const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown, unknown>]> = [
+    ["WorkPriority.WorkPriority", WorkPriority.WorkPriority],
+    ["Worker.WorkerStatus", Worker.WorkerStatus],
+    ["Worker.CreateWorkerInput", Worker.CreateWorkerInput],
+    ["Worker.Worker", Worker.Worker],
+    ["WorkItem.WorkItemId", WorkItem.WorkItemId],
+    ["WorkItem.WorkItemTitle", WorkItem.WorkItemTitle],
+    ["WorkItem.WorkItemStatus", WorkItem.WorkItemStatus],
+    ["WorkItem.CreateWorkItemInput", WorkItem.CreateWorkItemInput],
+    ["WorkItem.WorkItem", WorkItem.WorkItem],
+    ["WorkItem.WorkItemDomainError", WorkItem.WorkItemDomainError],
+  ];
+  for (const [name, schema] of schemaLawCases) {
+    const equivalent = S.toEquivalence(schema);
+    it.effect.prop(
+      `round-trips schema-derived ${name}`,
+      [schema],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeUnknownEffect(schema)(value);
+          const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+          expect(equivalent(decoded, value)).toBe(true);
+        }),
+      { arbitrary: fcRuns(10) }
+    );
+  }
 
   it.effect(
     "keeps encoded WorkItem wire shape stable after constructor defaults",
