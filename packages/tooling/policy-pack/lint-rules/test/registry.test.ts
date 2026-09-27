@@ -1,4 +1,5 @@
 import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
+import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -7,6 +8,13 @@ import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const BiomePluginSection = S.Struct({ plugins: S.Array(S.String).pipe(S.optionalKey) });
+const BiomePluginConfig = S.Struct({
+  ...BiomePluginSection.fields,
+  overrides: S.Array(BiomePluginSection).pipe(S.optionalKey),
+});
+const decodeBiomePluginConfig = decodeJsoncTextAs(BiomePluginConfig);
 
 const sortedRuleNames = [...RULE_NAMES].sort();
 const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);
@@ -112,14 +120,14 @@ describe("rule registry", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        // biome.jsonc is JSONC (comments); assert the plugin path substring is present —
-        // this covers both the top-level `plugins` array and any `overrides[].plugins`.
         const biomeConfig = yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"));
+        const config = yield* decodeBiomePluginConfig(biomeConfig);
+        const plugins = [
+          ...(config.plugins ?? []),
+          ...(config.overrides ?? []).flatMap((override) => override.plugins ?? []),
+        ].map((plugin) => path.resolve(repoRoot, plugin));
         for (const name of RULE_NAMES) {
-          const pluginRef = `rules/${name}.grit`;
-          expect(biomeConfig.includes(pluginRef), `${name} must be registered in biome.jsonc (${pluginRef})`).toBe(
-            true
-          );
+          expect(plugins, `${name} must be registered in biome.jsonc`).toContain(rulePath(name));
         }
       })
     )

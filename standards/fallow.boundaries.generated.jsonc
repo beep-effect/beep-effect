@@ -2331,12 +2331,14 @@
         "allow": [
           "@beep/identity",
           "@beep/lint-rules",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/lint-rules",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ]

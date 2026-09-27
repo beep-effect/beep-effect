@@ -1,11 +1,15 @@
 import plugin from "@beep/lint-rules/oxlint";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { OXLINT_RULES, runOxlintRule, runOxlintRuleFix } from "./oxlint-harness.ts";
 import { OXLINT_SOURCES } from "./oxlint-sources.ts";
+
+const ReportedNode = S.Struct({ node: S.Unknown });
+const decodeReportedNode = S.decodeUnknownResult(ReportedNode);
 
 describe("oxlint rules", () => {
   it("runs the global process rule in-process", () => {
@@ -73,13 +77,19 @@ describe("oxlint rules", () => {
       type: "ImportDeclaration",
     } as never);
     visitors.FunctionDeclaration!({} as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]) as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [member(identifier("Models"), "User")]) as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [schemaCall("Array", [identifier("rowSchema")])]) as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [member(identifier("input"), "schema")]) as never);
+    const staticArray = schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]);
+    const staticMember = schemaCall("decodeSync", [member(identifier("Models"), "User")]);
+    const runtimeArray = schemaCall("decodeSync", [schemaCall("Array", [identifier("rowSchema")])]);
+    const runtimeMember = schemaCall("decodeSync", [member(identifier("input"), "schema")]);
+    visitors.CallExpression!(staticArray as never);
+    visitors.CallExpression!(staticMember as never);
+    visitors.CallExpression!(runtimeArray as never);
+    visitors.CallExpression!(runtimeMember as never);
     visitors["FunctionDeclaration:exit"]!({} as never);
 
     expect(reports).toHaveLength(2);
+    expect(Result.getOrThrow(decodeReportedNode(reports[0])).node).toBe(staticArray.callee);
+    expect(Result.getOrThrow(decodeReportedNode(reports[1])).node).toBe(staticMember.callee);
   });
 
   for (const rule of OXLINT_RULES) {
