@@ -3886,15 +3886,15 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts:63:scoped@28#1",
+      "id": "EV004:packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts:65:scoped@28#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/openclaw",
       "file": "packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts",
-      "line": 63,
-      "endLine": 86,
+      "line": 65,
+      "endLine": 88,
       "symbol": "scoped",
-      "occurrence": "v2:7f1f18cd6b97ff8f46797c9eadcbdde6a411bf8aa1b3309479c1739d11415862",
+      "occurrence": "v2:3a5a183208d297a788f50e565ef0fc1928d0276be8fed31023fa05f2c8014dfa",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"beep-openclaw-timeout-\" }); const binaryPath = path.join(directory, \"openclaw\"); const marker =",
       "replacement": {
@@ -4414,15 +4414,15 @@
       "reason": "Pure injected runner, local recorder, Crypto service or native platform service wiring acquires no child process or slow external resource in this hook. Default unit fixture hook/body budgets are retained; native body has its separate explicit deadline."
     },
     {
-      "id": "EV014:packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts:54:it.layer@0#1",
+      "id": "EV014:packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts:56:it.layer@0#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/openclaw",
       "file": "packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts",
-      "line": 54,
-      "endLine": 54,
+      "line": 56,
+      "endLine": 56,
       "symbol": "it.layer",
-      "occurrence": "v2:26fcfbb19e5af7863ef237002eef1a1a2a4d7116a5440b755e3309325c38c491",
+      "occurrence": "v2:b0ea2ccde41541321bc1ec910e4f5704e373feb62fc06bb615e5fde772b7812c",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "it.layer(timeoutProbeLayer, { excludeTestServices: true })",
       "replacement": {
@@ -137544,20 +137544,20 @@
       "reason": "The installed ONNX installer uses real ZIP files, symlinks and atomic renames. Retain NodeServices under the instrumented harness; HTTPS and time are controlled, and no model inference occurs."
     },
     {
-      "id": "EV002:packages/drivers/duckdb/test/DuckDb.service.test.ts:620:provideScopedLayer@8#1",
+      "id": "EV002:packages/drivers/duckdb/test/DuckDb.service.test.ts:625:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 620,
-      "endLine": 620,
+      "line": 625,
+      "endLine": 625,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:677bda3470e92079e87b0fee76aa965ccb7336b730cddb46089a7157ef538330",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: \":memory:\" })))",
       "replacement": {
         "primitive": "it.layer",
-        "sketch": "The production layer must close before close-count assertions; suite teardown would change the lifecycle oracle."
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137566,20 +137566,20 @@
       "reason": "The production layer must close before close-count assertions; suite teardown would change the lifecycle oracle."
     },
     {
-      "id": "EV002:packages/drivers/duckdb/test/DuckDb.service.test.ts:655:provideScopedLayer@14#1",
+      "id": "EV002:packages/drivers/duckdb/test/DuckDb.service.test.ts:660:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 655,
-      "endLine": 655,
+      "line": 660,
+      "endLine": 660,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:96ef9db728263fcf617e7a82f5fcdecb91e112de235029fda25639c32346c911",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: \":memory:\" })))",
       "replacement": {
         "primitive": "it.layer",
-        "sketch": "The production layer must close before close-count assertions; suite teardown would change the lifecycle oracle."
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137588,20 +137588,20 @@
       "reason": "The production layer must close before close-count assertions; suite teardown would change the lifecycle oracle."
     },
     {
-      "id": "EV002:packages/drivers/duckdb/test/DuckDb.service.test.ts:696:provide@22#1",
+      "id": "EV002:packages/drivers/duckdb/test/DuckDb.service.test.ts:701:provide@22#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 696,
-      "endLine": 696,
+      "line": 701,
+      "endLine": 701,
       "symbol": "provide",
       "occurrence": "v2:ae6f0b2790dff9603c15183b972015692c32b52adc5f1947111f059622a50d93",
       "class": "unresolved-layer-provide",
       "evidence": "Effect.provide(context)",
       "replacement": {
         "primitive": "it.layer",
-        "sketch": "Context belongs to the explicitly shorter interrupted-acquisition scope; zero-before and one-after close assertions require this lifetime."
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137623,7 +137623,7 @@
       "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
       "replacement": {
         "primitive": "it.layer",
-        "sketch": "Only two documented close-count subject calls remain. This helper closes the production layer before assertions; it is not ordinary fixture ownership."
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137632,20 +137632,20 @@
       "reason": "Only two documented close-count subject calls remain. This helper closes the production layer before assertions; it is not ordinary fixture ownership."
     },
     {
-      "id": "EV004:packages/drivers/duckdb/test/DuckDb.service.test.ts:1011:scoped@71#1",
+      "id": "EV004:packages/drivers/duckdb/test/DuckDb.service.test.ts:1016:scoped@71#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 1011,
-      "endLine": 1011,
+      "line": 1016,
+      "endLine": 1016,
       "symbol": "scoped",
       "occurrence": "v2:057c9d2d739fec0f35ce4d775e6417b1bbbe2e08f1931c7a8cf7665a7685a969",
       "class": "inner-helper-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
         "primitive": "readme.resource-safety",
-        "sketch": "Managed connection acquisition/close is the subject. The production scope closes before exact cleanup-count assertions; Reactivity remains harness-owned."
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137654,20 +137654,20 @@
       "reason": "Managed connection acquisition/close is the subject. The production scope closes before exact cleanup-count assertions; Reactivity remains harness-owned."
     },
     {
-      "id": "EV004:packages/drivers/duckdb/test/DuckDb.service.test.ts:689:scoped@13#1",
+      "id": "EV004:packages/drivers/duckdb/test/DuckDb.service.test.ts:694:scoped@13#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 689,
-      "endLine": 708,
+      "line": 694,
+      "endLine": 713,
       "symbol": "scoped",
       "occurrence": "v2:63bbe0df7bd6b849ef3fc027a55e9f7f119a6ded6d5a417cb7c03b46c0b57e12",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: \":memory:\" }))).pipe( Effect.flatMap((context) => Effect.gen(function* () { const queryFiber = yield* Effec",
       "replacement": {
         "primitive": "readme.resource-safety",
-        "sketch": "Interrupted first acquisition is scoped shorter than the test to assert zero closes before completion and exactly one after scope closure. Pending connection release is ensured before child joins."
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137676,20 +137676,20 @@
       "reason": "Interrupted first acquisition is scoped shorter than the test to assert zero closes before completion and exactly one after scope closure. Pending connection release is ensured before child joins."
     },
     {
-      "id": "EV004:packages/drivers/duckdb/test/DuckDb.service.test.ts:981:scoped@84#1",
+      "id": "EV004:packages/drivers/duckdb/test/DuckDb.service.test.ts:986:scoped@84#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 981,
-      "endLine": 981,
+      "line": 986,
+      "endLine": 986,
       "symbol": "scoped",
       "occurrence": "v2:f7fe2d4ff2c729537935236701745fc5ea1a5273d79775956438b99ec403aff5",
       "class": "inner-helper-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
         "primitive": "readme.resource-safety",
-        "sketch": "Managed connection acquisition/close is the subject. The production scope closes before exact cleanup-count assertions; Reactivity remains harness-owned."
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137720,20 +137720,20 @@
       "reason": "Both generated cause-presence operands must remain: decoded Some status equals input Some status. An unconditional Some/None or invented payload assertion would weaken or change the law."
     },
     {
-      "id": "EV008:packages/drivers/duckdb/test/DuckDb.service.test.ts:750:sleep@37#1",
+      "id": "EV008:packages/drivers/duckdb/test/DuckDb.service.test.ts:755:sleep@37#1",
       "lens": "resource",
       "ruleId": "EV008",
       "package": "@beep/duckdb",
       "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
-      "line": 750,
-      "endLine": 750,
+      "line": 755,
+      "endLine": 755,
       "symbol": "sleep",
       "occurrence": "v2:ac97008478e94cf6f1b80a2df4e971be0dd4418f99ceee5f3f503911dbbb46bb",
       "class": "controlled-clock-wait-review",
       "evidence": "Effect.sleep(\"1 hour\")",
       "replacement": {
         "primitive": "readme.testclock",
-        "sketch": "The one-hour transaction callback is deliberately pending and explicitly interrupted after native BEGIN is armed; the test does not wait for this sleep to elapse."
+        "sketch": "readme.testclock: Use for test-clock-stall-risk findings (EV008, candidate class test-clock-stall-risk) by coordinating scheduled work with TestClock advancement in the same effect test. Diagnose the root cause first (D6). Only a bounded external-system wait that actually requires live time should use the TestClock.withLive alternative; wrap that wait and its timeout without replacing the surrounding test clock. TestClock.withLive: Use for test-clock-stall-risk findings (EV008, candidate class test-clock-stall-risk) only when a bounded external-system wait actually requires live time. Wrap that wait, including its timeout, with TestClock.withLive while retaining the surrounding test clock. Effect and default layer testers install TestClock; explicit provision can supply one elsewhere. Diagnose the wait's root cause first (D6)."
       },
       "severity": "major",
       "confidence": 0.55,
@@ -137755,7 +137755,7 @@
       "evidence": "import { NodeServices } from \"@effect/platform-node\";",
       "replacement": {
         "primitive": "it.layer",
-        "sketch": "Native DuckDB SQL, database files and Parquet paths are the subjects. Scoped native directories and separate instance/connection finalizers preserve host-visible compatibility; MemoryFileSystem would erase it."
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "info",
       "confidence": 0.55,

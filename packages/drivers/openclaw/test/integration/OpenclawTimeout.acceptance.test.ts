@@ -12,6 +12,8 @@ import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 
+const isOpenclawCommandTimeoutError = S.is(OpenclawCommandTimeoutError);
+
 class TrackedProcess extends Context.Service<
   TrackedProcess,
   {
@@ -72,7 +74,7 @@ it.layer(timeoutProbeLayer, { excludeTestServices: true })("native CLI timeout o
           yield* fs.chmod(binaryPath, 0o755);
           const error = yield* cli.version(OpenclawInvocationContext.make({ binaryPath })).pipe(Effect.flip);
           expect(error).toBeInstanceOf(OpenclawCommandTimeoutError);
-          if (S.is(OpenclawCommandTimeoutError)(error)) {
+          if (isOpenclawCommandTimeoutError(error)) {
             expect(error.timeoutMs).toBe(10_000);
             expect(error.subcommand).toBe("--version");
             expect(error.executable).toBe(binaryPath);

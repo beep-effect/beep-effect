@@ -3309,3 +3309,9 @@ ownership before cleaning the unscoped control's exact recorded roots.
   compilations across DuckDB, OpenClaw and lint-rules tests. All eight are additions
   relative to main. Package audits alone did not exercise the root oxlint policy;
   include the policy check before publishing future test batches.
+
+- During the hosted lint repair's line remap, two current detector IDs were
+  already owned by the historical resource ledger. A detector-local ID index
+  added duplicate entries; strict global validation rejected them before commit.
+  Preserve the original family ownership and consult the global ledger ID index
+  when joining fresh detector rows. The corrected ledger passes uniqueness.

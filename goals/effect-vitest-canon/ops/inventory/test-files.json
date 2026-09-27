@@ -1515,8 +1515,8 @@
     "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
     "package": "@beep/duckdb",
     "kind": "test",
-    "bytes": 54052,
-    "lines": 1384
+    "bytes": 54311,
+    "lines": 1389
   },
   {
     "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
@@ -5750,8 +5750,8 @@
     "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 4142,
-    "lines": 107
+    "bytes": 4184,
+    "lines": 109
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",
@@ -7857,7 +7857,7 @@
     "file": "packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 3639,
-    "lines": 92
+    "bytes": 3709,
+    "lines": 94
   }
 ]

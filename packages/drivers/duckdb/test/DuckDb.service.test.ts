@@ -95,6 +95,11 @@ const fakeRowReader = (rows: DuckDbRows): Awaited<ReturnType<DuckDBConnection["r
 
 const fakeRunResult = {} as Awaited<ReturnType<DuckDBConnection["run"]>>;
 
+const encodeDuckDbErrorFromUnknownOptions = S.encodeEffect(DuckDbErrorFromUnknownOptions);
+const decodeDuckDbErrorFromUnknownOptionsJson = S.decodeEffect(S.fromJsonString(DuckDbErrorFromUnknownOptions));
+const encodeDuckDbError = S.encodeEffect(DuckDbError);
+const decodeDuckDbErrorJson = S.decodeEffect(S.fromJsonString(DuckDbError));
+
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const encodeSchema = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]) =>
@@ -253,11 +258,11 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           statement: O.some(statement),
         });
         const expectedWire = { cause: { name, message: causeMessage, stack }, databasePath, message, statement };
-        const encoded = yield* S.encodeEffect(DuckDbErrorFromUnknownOptions)(options);
+        const encoded = yield* encodeDuckDbErrorFromUnknownOptions(options);
         expect(encoded).toEqual(expectedWire);
         const json = yield* encodeJson(encoded);
         expect(json).toBe(yield* encodeJson(expectedWire));
-        const decoded = yield* S.decodeEffect(S.fromJsonString(DuckDbErrorFromUnknownOptions))(json);
+        const decoded = yield* decodeDuckDbErrorFromUnknownOptionsJson(json);
         assertSome(decoded.cause, { name, message: causeMessage, stack });
         pipe(S.toEquivalence(DuckDbErrorFromUnknownOptions)(decoded, options), assertTrue);
       }),
@@ -288,12 +293,12 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           operation,
           statement,
         };
-        const encoded = yield* S.encodeEffect(DuckDbError)(error);
+        const encoded = yield* encodeDuckDbError(error);
         expect(encoded).toEqual(expectedWire);
-        expect(yield* S.encodeEffect(DuckDbError)(made)).toEqual(expectedWire);
+        expect(yield* encodeDuckDbError(made)).toEqual(expectedWire);
         const json = yield* encodeJson(encoded);
         expect(json).toBe(yield* encodeJson(expectedWire));
-        const decoded = yield* S.decodeEffect(S.fromJsonString(DuckDbError))(json);
+        const decoded = yield* decodeDuckDbErrorJson(json);
         assertSome(decoded.cause, { name, message: causeMessage, stack });
         pipe(S.toEquivalence(DuckDbError)(decoded, error), assertTrue);
       }),

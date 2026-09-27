@@ -11,6 +11,8 @@ import { JsonReportError, jsonReportParser } from "./codec.ts";
 import { BiomeReport } from "./harness.ts";
 import { OxlintReport } from "./oxlint-harness.ts";
 
+const isJsonReportError = S.is(JsonReportError);
+
 const ImportBindingArbitrary = Arbitrary.schema(ImportBinding);
 const BiomeReportArbitrary = Arbitrary.schema(BiomeReport);
 const OxlintReportArbitrary = Arbitrary.schema(OxlintReport);
@@ -83,7 +85,7 @@ describe("subprocess report failures", () => {
       it.effect(`rejects malformed ${report === BiomeReport ? "Biome" : "oxlint"} output: ${stdout}`, () =>
         Effect.gen(function* () {
           const error = yield* Effect.flip(jsonReportParser(report)(stdout));
-          error.pipe(S.is(JsonReportError), assertTrue);
+          error.pipe(isJsonReportError, assertTrue);
           expect(error.stdout).toBe(stdout);
           expect(error.cause).toBeDefined();
         })
@@ -101,7 +103,7 @@ it.effect("bounds malformed report stdout context", () =>
   Effect.gen(function* () {
     const error = yield* Effect.flip(jsonReportParser(BiomeReport)(Str.repeat(5000)("x")));
     expect(error.stdout).toBe(Str.repeat(4096)("x"));
-    error.pipe(S.is(JsonReportError), assertTrue);
+    error.pipe(isJsonReportError, assertTrue);
     expect(error.cause).toBeDefined();
   })
 );
