@@ -6,47 +6,20 @@ changed computation nodes are disjoint or identical. Every other projection
 field is equal across the merge base and both sides. No qualification state
 or cache configuration is changed.
 
-Branch review: `goals/effect-vitest-canon/research/business-drivers-cache-review.md`.
+Branch review: `goals/effect-vitest-canon/research/nlp-main-cache-review.md`.
 Main review: `goals/effect-vitest-canon/research/html-main-cache-review.md`.
 
 Retained branch nodes:
 
-- `@beep/freshbooks#audit`
-- `@beep/freshbooks#build`
-- `@beep/freshbooks#check`
-- `@beep/freshbooks#coverage`
-- `@beep/freshbooks#lint:deprecated-apis`
-- `@beep/freshbooks#package-test-typecheck`
-- `@beep/freshbooks#test`
-- `@beep/freshbooks#test:integration`
-- `@beep/hubspot#audit`
-- `@beep/hubspot#build`
-- `@beep/hubspot#check`
-- `@beep/hubspot#coverage`
-- `@beep/hubspot#lint:deprecated-apis`
-- `@beep/hubspot#package-test-typecheck`
-- `@beep/hubspot#test`
-- `@beep/hubspot#test:integration`
-- `@beep/hubspot#test:property`
-- `@beep/m365#audit`
-- `@beep/m365#build`
-- `@beep/m365#check`
-- `@beep/m365#coverage`
-- `@beep/m365#lint:deprecated-apis`
-- `@beep/m365#package-test-typecheck`
-- `@beep/m365#test`
-- `@beep/m365#test:integration`
-- `@beep/m365#test:integration:parallel`
-- `@beep/m365#test:property`
-- `@beep/uspto#audit`
-- `@beep/uspto#build`
-- `@beep/uspto#check`
-- `@beep/uspto#coverage`
-- `@beep/uspto#lint:deprecated-apis`
-- `@beep/uspto#package-test-typecheck`
-- `@beep/uspto#test`
-- `@beep/uspto#test:integration`
-- `@beep/uspto#test:property`
+- `@beep/nlp#audit`
+- `@beep/nlp#build`
+- `@beep/nlp#check`
+- `@beep/nlp#coverage`
+- `@beep/nlp#doctest`
+- `@beep/nlp#lint:deprecated-apis`
+- `@beep/nlp#package-test-typecheck`
+- `@beep/nlp#test`
+- `@beep/nlp#test:property`
 
 Retained main nodes:
 

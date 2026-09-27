@@ -2,7 +2,9 @@ import * as IdentifierText from "@beep/nlp/IdentifierText";
 import * as PathText from "@beep/nlp/PathText";
 import * as QueryText from "@beep/nlp/QueryText";
 import * as VariantText from "@beep/nlp/VariantText";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 
 describe("@beep/nlp deterministic helpers", () => {
@@ -15,8 +17,8 @@ describe("@beep/nlp deterministic helpers", () => {
   });
 
   it("returns none for missing or empty backtick captures", () => {
-    expect(O.isNone(QueryText.extractBacktickValue("describe knowledgeGraphAnswerHelper"))).toBe(true);
-    expect(O.isNone(QueryText.extractBacktickValue("describe ``"))).toBe(true);
+    assertNone(QueryText.extractBacktickValue("describe knowledgeGraphAnswerHelper"));
+    assertNone(QueryText.extractBacktickValue("describe ``"));
   });
 
   it("generates identifier variants for spaced and camelCase phrases", () => {
