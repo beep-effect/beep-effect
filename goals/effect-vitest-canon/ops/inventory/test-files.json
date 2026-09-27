@@ -2761,29 +2761,29 @@
     "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
     "package": "@beep/file-processing",
     "kind": "test",
-    "bytes": 14827,
-    "lines": 387
+    "bytes": 13951,
+    "lines": 331
   },
   {
     "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
     "package": "@beep/file-processing",
     "kind": "test",
-    "bytes": 10981,
-    "lines": 255
+    "bytes": 10699,
+    "lines": 254
   },
   {
     "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
     "package": "@beep/file-processing",
     "kind": "test",
-    "bytes": 7573,
-    "lines": 182
+    "bytes": 7288,
+    "lines": 173
   },
   {
     "file": "packages/foundation/capability/file-processing/test/TaggedError.equivalence.test.ts",
     "package": "@beep/file-processing",
     "kind": "test",
-    "bytes": 2412,
-    "lines": 65
+    "bytes": 2448,
+    "lines": 66
   },
   {
     "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
