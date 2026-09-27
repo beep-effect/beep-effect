@@ -9,6 +9,7 @@ import {
   WinkEngineRefLive,
 } from "@beep/wink";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 
@@ -58,7 +59,7 @@ describe("WinkEngineRef", () => {
         const tokens = yield* engine.getWinkTokens("I have $100 today.");
 
         expect(updatedState.instanceId).not.toBe(initialState.instanceId);
-        expect(updatedState.customEntities._tag).toBe("Some");
+        assertSome(updatedState.customEntities, moneyEntities);
         expect(O.getOrThrow(updatedState.customEntities).name).toBe("money");
         expect(A.map(tokens, (token) => token.out())).toContain("$");
       })

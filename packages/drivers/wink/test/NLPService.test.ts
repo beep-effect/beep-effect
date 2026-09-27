@@ -44,6 +44,7 @@ describe("NLPService", () => {
       "extractEntities delegates to the backend",
       Effect.fnUntraced(function* () {
         const entities = yield* NLPService.extractEntities("Meet me at 5pm.");
+        expect(entities.length).toBeGreaterThan(0);
         for (const entity of entities) {
           expect(typeof entity.entityType).toBe("string");
         }

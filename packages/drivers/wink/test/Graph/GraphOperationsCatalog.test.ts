@@ -1,3 +1,5 @@
+import { assertSome } from "@effect/vitest/utils";
+import * as O from "effect/Option";
 /**
  * Proofs for the GraphOperations Catalog: the backend-backed linguistic operations
  * (sentencize/tokenize/posTag/lemmatize/extractEntities) produce child nodes when
@@ -70,7 +72,7 @@ describe("Catalog backend-backed operations", () => {
         const root = yield* EG.makeNode("hello world");
         const children = yield* Catalog.tokenize.apply(root);
         const first = children[0];
-        expect(first?.metadata.operation._tag).toBe("Some");
+        assertSome(first?.metadata.operation ?? O.none(), "tokenize");
       })
     );
   });

@@ -70,6 +70,12 @@ describe("TextGraph from document (service-backed)", () => {
         expect(tokensAfterFirst).toBeGreaterThan(0);
         const g2 = yield* TG.tokenizeNodes(g1);
         expect(TG.findNodesByType(g2, "token").length).toBe(tokensAfterFirst);
+        expect(A.map(TG.toArray(g2), ({ timestamp: _timestamp, ...node }) => node)).toEqual(
+          A.map(TG.toArray(g1), ({ timestamp: _timestamp, ...node }) => node)
+        );
+        expect(A.fromIterable(g2.pipe(Graph.edges, Graph.entries))).toEqual(
+          A.fromIterable(g1.pipe(Graph.edges, Graph.entries))
+        );
       })
     );
   });

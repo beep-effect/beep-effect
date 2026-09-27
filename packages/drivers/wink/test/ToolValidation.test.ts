@@ -23,6 +23,7 @@ import {
   WinkNlpToolkitLive,
 } from "@beep/wink";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Exit, Schema, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -60,7 +61,7 @@ const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <
 });
 
 const assertDecodeFailure = Effect.fn("assertDecodeFailure")(function* <A, E>(decode: Effect.Effect<A, E>) {
-  expect(Exit.isFailure(yield* Effect.exit(decode))).toBe(true);
+  assertTrue(Exit.isFailure(yield* Effect.exit(decode)));
 });
 
 describe("Tool validation", () => {
@@ -205,7 +206,7 @@ describe("Tool validation", () => {
           onSuccess: () => "",
         });
 
-        expect(Exit.isFailure(result)).toBe(true);
+        assertTrue(Exit.isFailure(result));
         expect(rendered).toContain("learnCustomEntities");
         expect(rendered).toContain('incorrect token "not_a_tag"');
       })

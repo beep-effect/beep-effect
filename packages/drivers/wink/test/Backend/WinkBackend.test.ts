@@ -72,6 +72,7 @@ describe("WinkBackend", () => {
       Effect.fnUntraced(function* () {
         const backend = yield* Backend.NLPBackend;
         const entities = yield* backend.extractEntities("Meet me at 5pm on Monday.");
+        expect(entities.length).toBeGreaterThan(0);
         // wink detects temporal entities; each carries a type + span
         for (const entity of entities) {
           expect(typeof entity.entityType).toBe("string");

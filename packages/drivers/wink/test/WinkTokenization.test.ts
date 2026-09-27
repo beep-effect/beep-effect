@@ -1,7 +1,9 @@
 import { sentences, tokenCount, tokenize, tokenizeToDocument } from "@beep/nlp-processing/Core/Tokenization";
 import { WinkTokenizationLive } from "@beep/wink";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as O from "effect/Option";
 
 describe("WinkTokenization", () => {
   it.layer(WinkTokenizationLive)("tokenizes text with lemma and position metadata", (it) => {
@@ -12,7 +14,7 @@ describe("WinkTokenization", () => {
 
         expect(tokens).toHaveLength(7);
         expect(tokens[0]?.text).toBe("Ada");
-        expect(tokens[0]?.pos._tag).toBe("Some");
+        pipe(tokens[0]?.pos ?? O.none(), O.isSome, assertTrue);
         expect(tokens[0]?.start).toBe(0);
         expect(tokens[0]?.end).toBe(3);
         expect(tokens[6]?.text).toBe(".");
