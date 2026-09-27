@@ -2486,3 +2486,12 @@ limit while the REST endpoint confirmed the open PR and matching head. The
 readiness monitor terminated with "requires an open pull request". Its result
 was acknowledged; the publisher remains live. Preserve the original API error
 in discovery diagnostics to distinguish quota failure from a missing PR.
+
+## Runner dependency generated-boundary follow-up
+
+After TypeScript sync passed on PR #1300, the next Repo Sanity stage found
+`standards/fallow.boundaries.generated.jsonc` stale. The runner development
+dependency adds exactly two allowed-boundary entries for the owning package.
+Regenerated with `bun run fallow:boundaries:write`; no boundary policy or
+unrelated package entry changed. Include this command beside tsconfig-sync
+when admitting the runner dependency in later waves.
