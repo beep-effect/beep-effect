@@ -3235,3 +3235,10 @@ but that helper is private to the executor. Package typecheck caught TS2339.
 Use public getChildren to prove two terminal children and retain the exact
 numeric time/token relation; no production export is needed. The corrected
 package audit and docgen pass.
+
+## OpenClaw fixture service keys
+
+The first recorder isolation package check rejected two new test service keys
+with TS377049. The compiler supplies the exact deterministic file-qualified
+keys; using those keys repairs this introduced test-only error. Following the
+existing integration fixture key pattern would have prevented this iteration.

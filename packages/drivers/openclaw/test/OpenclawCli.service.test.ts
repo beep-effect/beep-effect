@@ -12,8 +12,8 @@ import {
 } from "@beep/openclaw/Openclaw.models";
 import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
-import { Duration, Effect, Layer, Result, Sink, Stream } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Context, Duration, Effect, Layer, Result, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -102,17 +102,26 @@ const successStdout: Record<string, string> = {
 
 const commandKey = (request: OpenclawProcessRequest): string => A.join(A.take(request.args, 2), " ");
 
-const successCalls: Array<OpenclawProcessRequest> = [];
-const successRunner: OpenclawCliRunner = (request) =>
-  Effect.sync(() => {
-    successCalls.push(request);
-    return OpenclawProcessResult.make({
-      exitCode: 0,
-      stderr: "",
-      stdout: O.getOrElse(R.get(successStdout, commandKey(request)), () => ""),
+const makeCliRecorder = () => {
+  const successCalls: Array<OpenclawProcessRequest> = [];
+  const successRunner: OpenclawCliRunner = (request) =>
+    Effect.sync(() => {
+      successCalls.push(request);
+      return OpenclawProcessResult.make({
+        exitCode: 0,
+        stderr: "",
+        stdout: O.getOrElse(R.get(successStdout, commandKey(request)), () => ""),
+      });
     });
-  });
-const lastSuccessRequest = (): OpenclawProcessRequest => O.getOrThrow(A.last(successCalls));
+  const lastSuccessRequest = (): OpenclawProcessRequest => O.getOrThrow(A.last(successCalls));
+  return { successCalls, successRunner, lastSuccessRequest };
+};
+class CliRecorder extends Context.Service<CliRecorder, ReturnType<typeof makeCliRecorder>>()(
+  "@beep/openclaw/test/OpenclawCli.service.test/CliRecorder"
+) {}
+const CliRecorderTest = Layer.unwrap(
+  Effect.map(CliRecorder, ({ successRunner }) => OpenclawCli.makeLayerFromRunner(successRunner))
+).pipe(Layer.provideMerge(Layer.sync(CliRecorder, makeCliRecorder)));
 
 const failureOutputs: Record<string, { readonly stderr: string; readonly stdout: string }> = {
   "--version": { stderr: "node: command failed\n", stdout: "" },
@@ -181,72 +190,87 @@ const liveSpawnerLayer = Layer.succeed(
   })
 );
 
-const stdinPayloads: Array<string> = [];
-const stdinSpawnerLayer = Layer.succeed(
+class StdinRecorder extends Context.Service<StdinRecorder, { readonly payloads: Array<string> }>()(
+  "@beep/openclaw/test/OpenclawCli.service.test/StdinRecorder"
+) {}
+const StdinRecorderTest = Layer.sync(StdinRecorder, () => ({ payloads: [] }));
+const stdinSpawnerLayer = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("Expected a standard OpenClaw command");
-    }
+  Effect.gen(function* () {
+    const { payloads: stdinPayloads } = yield* StdinRecorder;
+    return ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("Expected a standard OpenClaw command");
+      }
 
-    expect(command.options.stdin).toBe("pipe");
-    return Effect.succeed(
-      ChildProcessSpawner.makeHandle({
-        pid: ChildProcessSpawner.ProcessId(2),
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-        isRunning: Effect.succeed(false),
-        kill: () => Effect.void,
-        unref: Effect.succeed(Effect.void),
-        stdin: Sink.forEach((bytes: Uint8Array) =>
-          Effect.sync(() => {
-            stdinPayloads.push(new TextDecoder().decode(bytes));
-          })
-        ),
-        stdout: Stream.make(encoder.encode(agentTurnJson)),
-        stderr: Stream.empty,
-        all: Stream.empty,
-        getInputFd: () => Sink.drain,
-        getOutputFd: () => Stream.empty,
-      })
-    );
+      expect(command.options.stdin).toBe("pipe");
+      return Effect.succeed(
+        ChildProcessSpawner.makeHandle({
+          pid: ChildProcessSpawner.ProcessId(2),
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          unref: Effect.succeed(Effect.void),
+          stdin: Sink.forEach((bytes: Uint8Array) =>
+            Effect.sync(() => {
+              stdinPayloads.push(new TextDecoder().decode(bytes));
+            })
+          ),
+          stdout: Stream.make(encoder.encode(agentTurnJson)),
+          stderr: Stream.empty,
+          all: Stream.empty,
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+        })
+      );
+    });
   })
-);
+).pipe(Layer.provideMerge(StdinRecorderTest));
 
 describe("@beep/openclaw OpenclawCli service", () => {
-  layer(OpenclawCli.makeLayer().pipe(Layer.provide(liveSpawnerLayer)))((it) => {
-    it.effect(
-      "configures live child-process ownership and timeout escalation",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const info = yield* cli.version(baseContext);
+  it.layer(OpenclawCli.makeLayer().pipe(Layer.provide(liveSpawnerLayer)))(
+    "configures live child-process ownership and timeout escalation",
+    (it) => {
+      it.effect(
+        "configures live child-process ownership and timeout escalation",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const info = yield* cli.version(baseContext);
 
-        expect(info.version).toBe("2026.7.1-2");
-      })
-    );
-  });
+          expect(info.version).toBe("2026.7.1-2");
+        })
+      );
+    }
+  );
 
-  layer(OpenclawCli.makeLayer().pipe(Layer.provide(stdinSpawnerLayer)))((it) => {
-    it.effect(
-      "pipes private agent messages through stdin",
-      Effect.fnUntraced(function* () {
-        stdinPayloads.length = 0;
-        const cli = yield* OpenclawCli;
+  it.layer(OpenclawCli.makeLayer().pipe(Layer.provideMerge(stdinSpawnerLayer)))(
+    "pipes private agent messages through stdin",
+    (it) => {
+      it.effect(
+        "pipes private agent messages through stdin",
+        Effect.fnUntraced(function* () {
+          const { payloads: stdinPayloads } = yield* StdinRecorder;
+          expect(stdinPayloads).toEqual([]);
+          const cli = yield* OpenclawCli;
 
-        yield* cli.agentTurn(gatewayContext, {
-          agentId: "spike3",
-          message: "private prompt",
-          timeoutSeconds: 120,
-        });
+          yield* cli.agentTurn(gatewayContext, {
+            agentId: "spike3",
+            message: "private prompt",
+            timeoutSeconds: 120,
+          });
 
-        expect(stdinPayloads).toEqual(["private prompt"]);
-      })
-    );
-  });
+          expect(stdinPayloads).toEqual(["private prompt"]);
+        })
+      );
+    }
+  );
 
-  layer(OpenclawCli.makeLayerFromRunner(successRunner))((it) => {
+  it.layer(CliRecorderTest)("runs --version hermetically and parses the pinned version line", (it) => {
     it.effect(
       "runs --version hermetically and parses the pinned version line",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const info = yield* cli.version(baseContext);
 
@@ -262,10 +286,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(O.getOrThrow(request.timeoutMs)).toBe(10_000);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("lists eligible skills with the pinned argv and decoded workspace source", (it) => {
     it.effect(
       "lists eligible skills with the pinned argv and decoded workspace source",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const inventory = yield* cli.skillsList(baseContext, { agentId: "workstation", eligible: true });
 
@@ -274,10 +301,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(lastSuccessRequest().args).toEqual(["skills", "list", "--json", "--eligible", "--agent", "workstation"]);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("sends a synthetic Telegram message with the pinned argv and returns a receipt", (it) => {
     it.effect(
       "sends a synthetic Telegram message with the pinned argv and returns a receipt",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const result = yield* cli.messageSend(gatewayContext, {
           message: "P3 synthetic nonce",
@@ -298,10 +328,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         ]);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("validates config with the exact argv and reports Valid", (it) => {
     it.effect(
       "validates config with the exact argv and reports Valid",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const validation = yield* cli.configValidate(baseContext);
 
@@ -316,10 +349,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(O.getOrThrow(request.timeoutMs)).toBe(45_000);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("exports the config schema as a decoded JSON document", (it) => {
     it.effect(
       "exports the config schema as a decoded JSON document",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const schemaDocument = yield* cli.configSchema(baseContext);
 
@@ -331,10 +367,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(lastSuccessRequest().args).toEqual(["config", "schema"]);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("runs doctor read-only and never passes --fix", (it) => {
     it.effect(
       "runs doctor read-only and never passes --fix",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const report = yield* cli.doctor(baseContext);
 
@@ -346,10 +385,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(A.contains(request.args, "--fix")).toBe(false);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("reloads secrets with the token in env and never in argv", (it) => {
     it.effect(
       "reloads secrets with the token in env and never in argv",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const reload = yield* cli.secretsReload(gatewayContext, { timeoutMs: 15_000 });
 
@@ -366,10 +408,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(O.getOrThrow(request.timeoutMs)).toBe(30_000);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("calls gateway health with --url and projects the health document", (it) => {
     it.effect(
       "calls gateway health with --url and projects the health document",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const health = yield* cli.gatewayHealth(gatewayContext, { timeoutMs: 5_000 });
 
@@ -387,10 +432,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         expect(A.contains(request.args, "--token")).toBe(false);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("lists channel account statuses with the nested probe projected", (it) => {
     it.effect(
       "lists channel account statuses with the nested probe projected",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const accounts = yield* cli.channelsStatus(gatewayContext, {
           channel: "telegram",
@@ -421,10 +469,13 @@ describe("@beep/openclaw OpenclawCli service", () => {
         ]);
       })
     );
-
+  });
+  it.layer(CliRecorderTest)("runs a gateway agent turn and projects the nested result", (it) => {
     it.effect(
       "runs a gateway agent turn and projects the nested result",
       Effect.fnUntraced(function* () {
+        const { successCalls, lastSuccessRequest } = yield* CliRecorder;
+        expect(successCalls).toEqual([]);
         const cli = yield* OpenclawCli;
         const turn = yield* cli.agentTurn(gatewayContext, {
           agentId: "spike3",
@@ -466,115 +517,124 @@ describe("@beep/openclaw OpenclawCli service", () => {
     );
   });
 
-  layer(OpenclawCli.makeLayerFromRunner(failureRunner))((it) => {
-    it.effect(
-      "models nonzero config validate exits as Invalid results",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const validation = yield* cli.configValidate(baseContext);
+  it.layer(OpenclawCli.makeLayerFromRunner(failureRunner))(
+    "models nonzero config validate exits as Invalid results",
+    (it) => {
+      it.effect(
+        "models nonzero config validate exits as Invalid results",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const validation = yield* cli.configValidate(baseContext);
 
-        expect(Result.getOrThrow(encodeOpenclawConfigValidationResult(validation))).toEqual({
-          _tag: "Invalid",
-          diagnostics: "Unknown top-level key: unexpected",
-          exitCode: 1,
-        });
-      })
-    );
+          expect(Result.getOrThrow(encodeOpenclawConfigValidationResult(validation))).toEqual({
+            _tag: "Invalid",
+            diagnostics: "Unknown top-level key: unexpected",
+            exitCode: 1,
+          });
+        })
+      );
 
-    it.effect(
-      "models nonzero secrets reload exits as Degraded results",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const reload = yield* cli.secretsReload(gatewayContext);
+      it.effect(
+        "models nonzero secrets reload exits as Degraded results",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const reload = yield* cli.secretsReload(gatewayContext);
 
-        expect(Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload))).toEqual({
-          _tag: "Degraded",
-          diagnostics: "secrets.reload failed",
-          exitCode: 1,
-        });
-      })
-    );
+          expect(Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload))).toEqual({
+            _tag: "Degraded",
+            diagnostics: "secrets.reload failed",
+            exitCode: 1,
+          });
+        })
+      );
 
-    it.effect(
-      "models nonzero doctor exits as reports, not errors",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const report = yield* cli.doctor(baseContext);
+      it.effect(
+        "models nonzero doctor exits as reports, not errors",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const report = yield* cli.doctor(baseContext);
 
-        expect(report.exitCode).toBe(1);
-        expect(report.findings).toBe("Doctor config writes are disabled because OpenClaw is running in Nix mode.");
-      })
-    );
+          expect(report.exitCode).toBe(1);
+          expect(report.findings).toBe("Doctor config writes are disabled because OpenClaw is running in Nix mode.");
+        })
+      );
 
-    it.effect(
-      "fails version with a redacted exit error carrying diagnostics",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const error = yield* cli.version(baseContext).pipe(Effect.flip);
+      it.effect(
+        "fails version with a redacted exit error carrying diagnostics",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const error = yield* cli.version(baseContext).pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(OpenclawCommandExitError);
-        if (isOpenclawCommandExitError(error)) {
-          expect(error.exitCode).toBe(1);
-          expect(error.stdoutLength).toBe(0);
-          expect(error.stderrLength).toBe("node: command failed\n".length);
-          expect(O.getOrThrow(error.diagnostics)).toBe("node: command failed");
-        }
-      })
-    );
+          expect(error).toBeInstanceOf(OpenclawCommandExitError);
+          if (isOpenclawCommandExitError(error)) {
+            expect(error.exitCode).toBe(1);
+            expect(error.stdoutLength).toBe(0);
+            expect(error.stderrLength).toBe("node: command failed\n".length);
+            expect(O.getOrThrow(error.diagnostics)).toBe("node: command failed");
+          }
+        })
+      );
 
-    it.effect(
-      "fails gateway health with lengths only, never diagnostics",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const error = yield* cli.gatewayHealth(gatewayContext).pipe(Effect.flip);
+      it.effect(
+        "fails gateway health with lengths only, never diagnostics",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const error = yield* cli.gatewayHealth(gatewayContext).pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(OpenclawCommandExitError);
-        if (isOpenclawCommandExitError(error)) {
-          expect(error.exitCode).toBe(1);
-          expect(O.isNone(error.diagnostics)).toBe(true);
-          expect(error.stderrLength).toBe("unauthorized: invalid token\n".length);
-        }
-      })
-    );
-  });
+          expect(error).toBeInstanceOf(OpenclawCommandExitError);
+          if (isOpenclawCommandExitError(error)) {
+            expect(error.exitCode).toBe(1);
+            expect(O.isNone(error.diagnostics)).toBe(true);
+            expect(error.stderrLength).toBe("unauthorized: invalid token\n".length);
+          }
+        })
+      );
+    }
+  );
 
-  layer(OpenclawCli.makeLayerFromRunner(garbageRunner))((it) => {
-    it.effect(
-      "fails undecodable stdout with redacted parse errors",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
+  it.layer(OpenclawCli.makeLayerFromRunner(garbageRunner))(
+    "fails undecodable stdout with redacted parse errors",
+    (it) => {
+      it.effect(
+        "fails undecodable stdout with redacted parse errors",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
 
-        const reloadError = yield* cli.secretsReload(gatewayContext).pipe(Effect.flip);
-        expect(reloadError).toBeInstanceOf(OpenclawOutputParseError);
-        if (isOpenclawOutputParseError(reloadError)) {
-          expect(reloadError.subcommand).toBe("secrets reload");
-          expect(reloadError.stdoutLength).toBe("not-json".length);
-        }
+          const reloadError = yield* cli.secretsReload(gatewayContext).pipe(Effect.flip);
+          expect(reloadError).toBeInstanceOf(OpenclawOutputParseError);
+          if (isOpenclawOutputParseError(reloadError)) {
+            expect(reloadError.subcommand).toBe("secrets reload");
+            expect(reloadError.stdoutLength).toBe("not-json".length);
+          }
 
-        const versionError = yield* cli.version(baseContext).pipe(Effect.flip);
-        expect(versionError).toBeInstanceOf(OpenclawOutputParseError);
+          const versionError = yield* cli.version(baseContext).pipe(Effect.flip);
+          expect(versionError).toBeInstanceOf(OpenclawOutputParseError);
 
-        const healthError = yield* cli.gatewayHealth(gatewayContext).pipe(Effect.flip);
-        expect(healthError).toBeInstanceOf(OpenclawOutputParseError);
-      })
-    );
-  });
+          const healthError = yield* cli.gatewayHealth(gatewayContext).pipe(Effect.flip);
+          expect(healthError).toBeInstanceOf(OpenclawOutputParseError);
+        })
+      );
+    }
+  );
 
-  layer(OpenclawCli.makeLayerFromRunner(spawnFailureRunner))((it) => {
-    it.effect(
-      "propagates typed spawn failures from the runner",
-      Effect.fnUntraced(function* () {
-        const cli = yield* OpenclawCli;
-        const error = yield* cli.version(baseContext).pipe(Effect.flip);
+  it.layer(OpenclawCli.makeLayerFromRunner(spawnFailureRunner))(
+    "propagates typed spawn failures from the runner",
+    (it) => {
+      it.effect(
+        "propagates typed spawn failures from the runner",
+        Effect.fnUntraced(function* () {
+          const cli = yield* OpenclawCli;
+          const error = yield* cli.version(baseContext).pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(OpenclawCommandSpawnError);
-        if (isOpenclawCommandSpawnError(error)) {
-          expect(error.executable).toBe(binaryPath);
-          expect(error.subcommand).toBe("--version");
-        }
-      })
-    );
-  });
+          expect(error).toBeInstanceOf(OpenclawCommandSpawnError);
+          if (isOpenclawCommandSpawnError(error)) {
+            expect(error.executable).toBe(binaryPath);
+            expect(error.subcommand).toBe("--version");
+          }
+        })
+      );
+    }
+  );
 
   it("round-trips the schema-derived CLI result unions asserted above", () => {
     const validationEquivalence = S.toEquivalence(OpenclawConfigValidation);
