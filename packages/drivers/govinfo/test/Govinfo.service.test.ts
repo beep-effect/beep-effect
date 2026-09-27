@@ -93,25 +93,6 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  arbitrary = Arbitrary.schema(schema)
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
-
 const searchBodyEncoded = {
   historical: false,
   offsetMark: "*",
@@ -311,38 +292,48 @@ describe("@beep/govinfo", () => {
     })
   );
 
-  it("round-trips hand-authored schema-derived values through encoded form", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(GovinfoHttpStatus)]),
-          ([status]) => {
-            expectRoundTrip(GovinfoHttpStatus, status);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-
-    assertSchemaRoundTrip(GovinfoConfigInput, GovinfoConfigInputArbitrary);
-    assertSchemaRoundTrip(GovinfoErrorReason);
-    assertSchemaRoundTrip(GovinfoErrorOptions, GovinfoErrorOptionsArbitrary);
-    assertSchemaRoundTrip(GovinfoError, GovinfoErrorArbitrary);
-    assertSchemaRoundTrip(Sort);
-    assertSchemaRoundTrip(SearchBody);
-    assertSchemaRoundTrip(Search.Payload);
-    assertSchemaRoundTrip(Search.Success);
-    assertSchemaRoundTrip(Search.Failure, SearchFailureArbitrary);
-    assertSchemaRoundTrip(SearchResult);
-    assertSchemaRoundTrip(GranuleMetadata);
-    assertSchemaRoundTrip(PackageInfo);
-    assertSchemaRoundTrip(SummaryItem);
-    assertSchemaRoundTrip(CollectionSummary);
-    assertSchemaRoundTrip(GranuleContainer);
-    assertSchemaRoundTrip(CollectionContainer);
-  });
+  it.prop(
+    "round-trips hand-authored schema-derived values through encoded form",
+    {
+      GovinfoHttpStatus: Arbitrary.schema(GovinfoHttpStatus),
+      GovinfoConfigInput: GovinfoConfigInputArbitrary,
+      GovinfoErrorReason: Arbitrary.schema(GovinfoErrorReason),
+      GovinfoErrorOptions: GovinfoErrorOptionsArbitrary,
+      GovinfoError: GovinfoErrorArbitrary,
+      Sort: Arbitrary.schema(Sort),
+      SearchBody: Arbitrary.schema(SearchBody),
+      SearchPayload: Arbitrary.schema(Search.Payload),
+      SearchSuccess: Arbitrary.schema(Search.Success),
+      SearchFailure: SearchFailureArbitrary,
+      SearchResult: Arbitrary.schema(SearchResult),
+      GranuleMetadata: Arbitrary.schema(GranuleMetadata),
+      PackageInfo: Arbitrary.schema(PackageInfo),
+      SummaryItem: Arbitrary.schema(SummaryItem),
+      CollectionSummary: Arbitrary.schema(CollectionSummary),
+      GranuleContainer: Arbitrary.schema(GranuleContainer),
+      CollectionContainer: Arbitrary.schema(CollectionContainer),
+    },
+    (values) => {
+      expectRoundTrip(GovinfoHttpStatus, values.GovinfoHttpStatus);
+      expectRoundTrip(GovinfoConfigInput, values.GovinfoConfigInput);
+      expectRoundTrip(GovinfoErrorReason, values.GovinfoErrorReason);
+      expectRoundTrip(GovinfoErrorOptions, values.GovinfoErrorOptions);
+      expectRoundTrip(GovinfoError, values.GovinfoError);
+      expectRoundTrip(Sort, values.Sort);
+      expectRoundTrip(SearchBody, values.SearchBody);
+      expectRoundTrip(Search.Payload, values.SearchPayload);
+      expectRoundTrip(Search.Success, values.SearchSuccess);
+      expectRoundTrip(Search.Failure, values.SearchFailure);
+      expectRoundTrip(SearchResult, values.SearchResult);
+      expectRoundTrip(GranuleMetadata, values.GranuleMetadata);
+      expectRoundTrip(PackageInfo, values.PackageInfo);
+      expectRoundTrip(SummaryItem, values.SummaryItem);
+      expectRoundTrip(CollectionSummary, values.CollectionSummary);
+      expectRoundTrip(GranuleContainer, values.GranuleContainer);
+      expectRoundTrip(CollectionContainer, values.CollectionContainer);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
@@ -385,9 +376,15 @@ describe("@beep/govinfo", () => {
         const govinfo = yield* Govinfo;
         yield* testHttp.reset;
 
-        yield* govinfo.search(makePayload());
-        yield* govinfo.search(makePayload());
+        const encoded = { count: 1, offsetMark: "cached-next", results: [searchResultEncoded] };
+        const expected = yield* decodeSearchSuccess(encoded);
+        yield* testHttp.respondWith(() => Effect.succeed(Response.json(encoded)));
 
+        const first = yield* govinfo.search(makePayload());
+        const second = yield* govinfo.search(makePayload());
+
+        expect(first).toStrictEqual(expected);
+        expect(second).toStrictEqual(expected);
         const captures = yield* testHttp.captures;
         expect(captures).toHaveLength(1);
       })

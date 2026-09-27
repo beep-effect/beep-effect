@@ -1,0 +1,39 @@
+{
+  "controls": [
+    {
+      "control": "property",
+      "expectedFailureExit": 1,
+      "failedCase": "@beep/govinfo round-trips hand-authored schema-derived values through encoded form",
+      "diagnosticFields": {
+        "Replay:": true,
+        "20260708": true,
+        "Shrunk input:": true,
+        "GovinfoHttpStatus": true,
+        "CollectionContainer": true
+      },
+      "restoredExactSource": true
+    },
+    {
+      "control": "cache-first",
+      "expectedFailureExit": 1,
+      "failedCase": "@beep/govinfo serves a repeat identical search from cache (transport call-count == 1)",
+      "diagnosticFields": {
+        "count": true
+      },
+      "restoredExactSource": true
+    },
+    {
+      "control": "cache-second",
+      "expectedFailureExit": 1,
+      "failedCase": "@beep/govinfo serves a repeat identical search from cache (transport call-count == 1)",
+      "diagnosticFields": {
+        "count": true
+      },
+      "restoredExactSource": true
+    }
+  ],
+  "restoredSha256": "cad8063bcdf28ffe81bc44ecd593adf018e68f605d2bf2b49b0d782a1b23d35a",
+  "floor": 400,
+  "seed": 20260708,
+  "deepPropertyRegistrations": 3
+}

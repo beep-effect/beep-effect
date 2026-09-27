@@ -1,0 +1,102 @@
+{
+  "phase": "property",
+  "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+  "beforeSha256": "dfaf99d46865f52fb8398c3c4b6371b0ad9be7d3f89ec821b07be39e71d33706",
+  "afterSha256": "cad8063bcdf28ffe81bc44ecd593adf018e68f605d2bf2b49b0d782a1b23d35a",
+  "registeredPropertyCasesBefore": 1,
+  "registeredPropertyCasesAfter": 1,
+  "runFloorPerSchema": 25,
+  "schemaCount": 17,
+  "schemas": [
+    {
+      "key": "GovinfoHttpStatus",
+      "schema": "GovinfoHttpStatus",
+      "arbitrary": "Arbitrary.schema(GovinfoHttpStatus)"
+    },
+    {
+      "key": "GovinfoConfigInput",
+      "schema": "GovinfoConfigInput",
+      "arbitrary": "GovinfoConfigInputArbitrary"
+    },
+    {
+      "key": "GovinfoErrorReason",
+      "schema": "GovinfoErrorReason",
+      "arbitrary": "Arbitrary.schema(GovinfoErrorReason)"
+    },
+    {
+      "key": "GovinfoErrorOptions",
+      "schema": "GovinfoErrorOptions",
+      "arbitrary": "GovinfoErrorOptionsArbitrary"
+    },
+    {
+      "key": "GovinfoError",
+      "schema": "GovinfoError",
+      "arbitrary": "GovinfoErrorArbitrary"
+    },
+    {
+      "key": "Sort",
+      "schema": "Sort",
+      "arbitrary": "Arbitrary.schema(Sort)"
+    },
+    {
+      "key": "SearchBody",
+      "schema": "SearchBody",
+      "arbitrary": "Arbitrary.schema(SearchBody)"
+    },
+    {
+      "key": "SearchPayload",
+      "schema": "Search.Payload",
+      "arbitrary": "Arbitrary.schema(Search.Payload)"
+    },
+    {
+      "key": "SearchSuccess",
+      "schema": "Search.Success",
+      "arbitrary": "Arbitrary.schema(Search.Success)"
+    },
+    {
+      "key": "SearchFailure",
+      "schema": "Search.Failure",
+      "arbitrary": "SearchFailureArbitrary"
+    },
+    {
+      "key": "SearchResult",
+      "schema": "SearchResult",
+      "arbitrary": "Arbitrary.schema(SearchResult)"
+    },
+    {
+      "key": "GranuleMetadata",
+      "schema": "GranuleMetadata",
+      "arbitrary": "Arbitrary.schema(GranuleMetadata)"
+    },
+    {
+      "key": "PackageInfo",
+      "schema": "PackageInfo",
+      "arbitrary": "Arbitrary.schema(PackageInfo)"
+    },
+    {
+      "key": "SummaryItem",
+      "schema": "SummaryItem",
+      "arbitrary": "Arbitrary.schema(SummaryItem)"
+    },
+    {
+      "key": "CollectionSummary",
+      "schema": "CollectionSummary",
+      "arbitrary": "Arbitrary.schema(CollectionSummary)"
+    },
+    {
+      "key": "GranuleContainer",
+      "schema": "GranuleContainer",
+      "arbitrary": "Arbitrary.schema(GranuleContainer)"
+    },
+    {
+      "key": "CollectionContainer",
+      "schema": "CollectionContainer",
+      "arbitrary": "Arbitrary.schema(CollectionContainer)"
+    }
+  ],
+  "inverseEditEqualsOriginal": true,
+  "equivalenceOracleUnchanged": true,
+  "existingCustomArbitrariesUnchanged": true,
+  "caseDeadlineUnchanged": true,
+  "cacheWitness": "Both first and cached results equal an independently decoded nonempty fixture; original exact transport count one retained."
+}
