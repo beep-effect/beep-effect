@@ -11,8 +11,9 @@ import {
 } from "@beep/agents-use-cases/public";
 import { ProviderInstance } from "@beep/agents-use-cases/server";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";

@@ -996,6 +996,7 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -1009,6 +1010,7 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -2030,6 +2032,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2039,6 +2042,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

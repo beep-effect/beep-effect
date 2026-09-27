@@ -15,8 +15,9 @@ import {
   fixtureProviderUsage,
 } from "@beep/agents-use-cases/test";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Result, Stream } from "effect";
 import * as A from "effect/Array";

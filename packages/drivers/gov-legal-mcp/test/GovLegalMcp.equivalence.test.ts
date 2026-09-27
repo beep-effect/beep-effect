@@ -4,8 +4,9 @@ import {
   ToolNameRegistrationError,
 } from "@beep/gov-legal-mcp/ToolNames";
 import { GovinfoSearchFailure } from "@beep/gov-legal-mcp/Tools";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 

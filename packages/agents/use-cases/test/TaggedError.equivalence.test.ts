@@ -10,7 +10,8 @@ import {
 import { BlockRepairFailed } from "@beep/agents-use-cases/server";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { PromotionBlockReason, PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {

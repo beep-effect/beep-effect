@@ -1,7 +1,8 @@
 import { ChatActionError, ChatRpcs, SendMessageRpc } from "@beep/agents-use-cases/public";
 import { A, Document, P, RawHtml, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Result } from "effect";
 import { pipe } from "effect/Function";

@@ -15,9 +15,10 @@ import {
 } from "@beep/agents-use-cases/test";
 import { PromotionBlockReason, PromotionGateVerdict, PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
 import { PromotionGate } from "@beep/shared-use-cases/server";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Ref, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";

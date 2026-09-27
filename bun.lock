@@ -566,6 +566,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1089,6 +1090,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node-shared": "catalog:",
         "@effect/vitest": "catalog:",
