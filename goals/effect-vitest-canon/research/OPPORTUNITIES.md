@@ -3315,3 +3315,23 @@ ownership before cleaning the unscoped control's exact recorded roots.
   added duplicate entries; strict global validation rejected them before commit.
   Preserve the original family ownership and consult the global ledger ID index
   when joining fresh detector rows. The corrected ledger passes uniqueness.
+
+## Lexical property adoption: test-evidence discovery
+
+- The canonical `it.effect.prop` migration preserved test titles, but the real
+  conformance-ledger validation reported two titles as undeclared. The scanner
+  admitted only one method suffix. A focused fixture now includes plain and
+  effect properties through both `it` and `test`; the old scanner fails exactly
+  that registration. Supporting the additional `.prop` suffix restores the real
+  artifact check. This is test-evidence tooling support, not an application-code
+  or ledger-ID change.
+- The private generator codemod initially found zero yield nodes in non-generator
+  callbacks: the parser treats the temporary syntax outside a generator context
+  differently. A second explicit wrapper pass repaired those callbacks before
+  verification. Assertion, fixture and native editor-call conservation checks
+  plus the full package proof guard the transformation.
+- Native pure-property failures print shrunk inputs and run/shrink counts without
+  necessarily printing the seed. A control harness initially overrequired the
+  word `seed` after the expected assertion failed. Receipts now preserve the
+  actual diagnostic and explicit `BEEP_FC_SEED=20260708` replay environment;
+  they do not claim the failure text contains a seed when it does not.
