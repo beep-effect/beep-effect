@@ -3515,3 +3515,12 @@ produced an HTTP transport error rather than isolating RPC completion. Moving
 the temporary delay inside the two actual RPC handlers leaves setup intact:
 all three new tests pass and all three old fixed-yield tests fail. Keep mutation
 controls at the behavior boundary they are intended to measure.
+
+## Agents Client release-metadata gate mismatch
+
+The consolidated publishing proof rejected Agents Client because its new direct
+runner dependency lacked an in-range changeset. The earlier generic
+`bunx changeset status --since=origin/main` passed; it is weaker than the required
+`bun run beep quality changeset-status --since origin/main`. Add the package
+changeset and use the exact repository gate for subsequent package closeouts.
+This was introduced by the runner dependency, not an environment failure.

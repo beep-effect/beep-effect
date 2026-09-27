@@ -40,3 +40,8 @@ and 13,966 unique ledger IDs with zero invalid rows; owned line bounds and
 completion judgments pass. Forty packages containing 1,939 saved findings
 remain after this batch. No new global human remainder census has been taken.
 The consolidated goal and PR closeout remain incomplete.
+
+The subsequent consolidated publishing proof found a missing package changeset
+for the runner dependency. The generic Changesets status result was insufficient;
+the repository-specific changeset gate is authoritative. A follow-up changeset
+records the package change. This correction does not alter the measured source.
