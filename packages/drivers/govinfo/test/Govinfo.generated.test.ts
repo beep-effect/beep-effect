@@ -62,7 +62,7 @@ const operationIdentifiers = (source: string): ReadonlyArray<string> =>
     A.filter(Str.isNonEmpty)
   );
 
-layer(generatorLayer)("GovInfo generated drift oracle", (it) => {
+layer(generatorLayer, { timeout: "10 seconds" })("GovInfo generated drift oracle", (it) => {
   it.effect("is current and retains every operation without unsafe number or never schemas", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

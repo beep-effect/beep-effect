@@ -343,7 +343,7 @@ describe("@beep/govinfo", () => {
     assertSchemaRoundTrip(CollectionContainer);
   });
 
-  layer(makeGovinfoUnitLayer(keyedConfig))((it) =>
+  layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
       "attaches api.data.gov api_key and parses X-RateLimit-* headers offline",
       Effect.fnUntraced(function* () {
@@ -376,7 +376,7 @@ describe("@beep/govinfo", () => {
     )
   );
 
-  layer(makeGovinfoUnitLayer(keyedConfig))((it) =>
+  layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
       "serves a repeat identical search from cache (transport call-count == 1)",
       Effect.fnUntraced(function* () {
@@ -393,7 +393,7 @@ describe("@beep/govinfo", () => {
     )
   );
 
-  layer(makeGovinfoUnitLayer())((it) =>
+  layer(makeGovinfoUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "omits auth gracefully when no API key is configured (keyless-safe)",
       Effect.fnUntraced(function* () {

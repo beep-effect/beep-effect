@@ -1,0 +1,30 @@
+{
+  "phase": "scope",
+  "changes": [
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "beforeSha256": "756c9f560376b919238ee72afe8f98befa55b530630bcbaf91009b3bdf9f8518",
+      "afterSha256": "8c4cedbe4b75eaf1496b0724bc20757dc94a5b6eef0665f4510b06dcbc70de91",
+      "layerBlocks": 5,
+      "inverseEqualsOriginal": true
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "beforeSha256": "80e45bd31bfa2c7d7c0b7990e73079ea3c3ac90e49e06293ccc16a2be8053001",
+      "afterSha256": "4f1d28856b65344f9bb04555ad0be7c54482786ac86eac1c7195801353b7ff00",
+      "layerBlocks": 3,
+      "inverseEqualsOriginal": true
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "beforeSha256": "e7e96e0c32c0ff59eae980d544bdda4c3c9376b3453dc40cc47bc3a55a774d83",
+      "afterSha256": "98d0c3ba14156adf6ce016a06160dfce181a5c3054e70cd4351a3731df83afd3",
+      "layerBlocks": 1,
+      "inverseEqualsOriginal": true
+    }
+  ],
+  "caseBodiesUnchanged": true,
+  "nativeGenerationSubjectPreserved": true,
+  "fixtureIsolationUnchanged": true,
+  "caseTimeoutsUnchanged": true
+}

@@ -216,7 +216,7 @@ describe("@beep/ecfr", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "decodes a keyless listTitles response offline via mapRequest base-URL prefixing",
       Effect.fnUntraced(function* () {
@@ -236,7 +236,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "covers the admin operations with encoded paths and queries",
       Effect.fnUntraced(function* () {
@@ -265,7 +265,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "covers the search operations with encoded queries",
       Effect.fnUntraced(function* () {
@@ -307,7 +307,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "covers the versioner operations with encoded paths and queries",
       Effect.fnUntraced(function* () {
@@ -350,7 +350,7 @@ describe("@beep/ecfr", () => {
     )
   );
 
-  layer(makeEcfrUnitLayer())((it) =>
+  layer(makeEcfrUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "streams successive search-result pages offline",
       Effect.fnUntraced(function* () {
