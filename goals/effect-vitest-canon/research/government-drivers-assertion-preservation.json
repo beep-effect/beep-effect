@@ -1,0 +1,10 @@
+{
+  "phase": "assertions",
+  "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+  "beforeSha256": "4f1d28856b65344f9bb04555ad0be7c54482786ac86eac1c7195801353b7ff00",
+  "afterSha256": "dfaf99d46865f52fb8398c3c4b6371b0ad9be7d3f89ec821b07be39e71d33706",
+  "directAssertions": 2,
+  "inverseEqualsOriginal": true,
+  "originalSnapshotFieldsPreserved": ["limit", "remaining", "reset"],
+  "presenceOnlySomeNoInventedPayload": true
+}

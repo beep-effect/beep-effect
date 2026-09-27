@@ -22,6 +22,7 @@ import { $GovinfoId } from "@beep/identity";
 import { PosInt, URLStr } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -232,7 +233,7 @@ describe("@beep/govinfo", () => {
       expect(encode(GovinfoConfigInput, GovinfoConfigInput.make({}))).toEqual({
         apiUrl: GOVINFO_API_URL,
       });
-      expect(O.isNone(GovinfoConfigInput.make({}).apiKey)).toBe(true);
+      assertNone(GovinfoConfigInput.make({}).apiKey);
       expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({}))).toEqual({});
       expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({ status: O.some(429) }))).toEqual({
         status: 429,
@@ -368,7 +369,7 @@ describe("@beep/govinfo", () => {
         expect(result.count).toBe(0);
         expect(captures).toHaveLength(1);
         expect(captures[0]?.url).toContain("api_key=test-key");
-        expect(O.isSome(snapshot)).toBe(true);
+        snapshot.pipe(O.isSome, assertTrue);
         expect(snap.limit).toBe(1000);
         expect(snap.remaining).toBe(42);
         expect(snap.reset).toBe(60);
