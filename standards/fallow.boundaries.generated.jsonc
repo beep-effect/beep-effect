@@ -2921,7 +2921,6 @@
           "@beep/pretext",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2929,7 +2928,6 @@
           "@beep/pretext",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
