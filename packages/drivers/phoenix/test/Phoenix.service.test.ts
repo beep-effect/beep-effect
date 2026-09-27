@@ -27,7 +27,6 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type { PhoenixSdkShape } from "@beep/phoenix";
@@ -168,21 +167,17 @@ describe("@beep/phoenix", () => {
     });
   });
 
-  it("round-trips schema-derived Phoenix values through their encoded shapes", () => {
-    for (const [, schema] of publicSchemaRoundTripCases) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              expectEncodedRoundTrip(schema, value);
-
-              return true;
-            },
-            fcRuns(5)
-          )
-        )
-      ).toMatchObject({ _tag: "Passed" });
+  describe("round-trips schema-derived Phoenix values through their encoded shapes", () => {
+    for (const [name, schema] of publicSchemaRoundTripCases) {
+      it.prop(
+        name,
+        [schema],
+        ([value]) => {
+          expectEncodedRoundTrip(schema, value);
+          return true;
+        },
+        { arbitrary: fcRuns(5) }
+      );
     }
   });
 
@@ -272,17 +267,28 @@ describe("@beep/phoenix", () => {
     );
   });
 
-  it.layer(Phoenix.makeLayerWithSdk(okSdk), { timeout: "10 seconds" })((it) => {
-    it.effect(
-      "rejects empty prompt selectors before calling the SDK",
-      Effect.fnUntraced(function* () {
-        const phoenix = yield* Phoenix;
-        const error = yield* pipe(phoenix.getPrompt(PhoenixPromptSelector.make({})), Effect.flip);
+  describe("empty-selector SDK guard", () => {
+    let promptCalls = 0;
+    const guardSdk: PhoenixSdkShape = {
+      ...okSdk,
+      getPrompt: (selector) => {
+        promptCalls += 1;
+        return okSdk.getPrompt(selector);
+      },
+    };
+    it.layer(Phoenix.makeLayerWithSdk(guardSdk), { timeout: "10 seconds" })((it) => {
+      it.effect(
+        "rejects empty prompt selectors before calling the SDK",
+        Effect.fnUntraced(function* () {
+          const phoenix = yield* Phoenix;
+          const error = yield* pipe(phoenix.getPrompt(PhoenixPromptSelector.make({})), Effect.flip);
 
-        expect(error).toBeInstanceOf(PhoenixError);
-        expect(error.operation).toBe("getPrompt");
-        expect(error.reason).toBe("config");
-      })
-    );
+          expect(error).toBeInstanceOf(PhoenixError);
+          expect(error.operation).toBe("getPrompt");
+          expect(error.reason).toBe("config");
+          expect(promptCalls).toBe(0);
+        })
+      );
+    });
   });
 });

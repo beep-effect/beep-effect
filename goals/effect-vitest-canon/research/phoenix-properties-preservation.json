@@ -1,0 +1,86 @@
+{
+  "beforeSha": "be5b8f18bb",
+  "schemaCount": 22,
+  "schemaTableAndEncodedRoundTripOracleUnchanged": true,
+  "originalSdkFixturesUnchanged": true,
+  "originalFiveGeneratorBodiesPreserved": true,
+  "addedZeroCallWitness": true,
+  "runFloor": 5,
+  "equivalenceFileUnchanged": true,
+  "guardControl": {
+    "exit": 1,
+    "failedCases": 1,
+    "zeroCallWitnessRejectsOneSdkCall": true,
+    "sourceRestored": true,
+    "restoredSha256": "e35a232e8d8387f1a306c5fe5a1cdb4bc368bd48719ac967e55980dfdba1dbea"
+  },
+  "proofs": [
+    {
+      "runtime": "node",
+      "phase": "properties",
+      "passedCases": 30,
+      "suites": 2,
+      "failedCases": 0,
+      "wholeCommandSeconds": 3.2685716910054907,
+      "sourceStable": true,
+      "loadBefore": [15.134765625, 11.3359375, 8.67333984375],
+      "loadAfter": [15.134765625, 11.3359375, 8.67333984375],
+      "pressureBefore": {
+        "cpu": "some avg10=1.56 avg60=1.00 avg300=0.61 total=237978332\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=88331850\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=85725233\n",
+        "io": "some avg10=0.61 avg60=2.53 avg300=1.05 total=701168768\nfull avg10=0.42 avg60=1.91 avg300=0.78 total=634135610\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=1.04 avg60=0.94 avg300=0.60 total=237984333\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=88331850\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=85725233\n",
+        "io": "some avg10=0.41 avg60=2.37 avg300=1.04 total=701169115\nfull avg10=0.28 avg60=1.78 avg300=0.77 total=634135903\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "phase": "properties",
+      "passedCases": 30,
+      "suites": 2,
+      "failedCases": 0,
+      "wholeCommandSeconds": 1.4159748870006297,
+      "sourceStable": true,
+      "loadBefore": [15.134765625, 11.3359375, 8.67333984375],
+      "loadAfter": [14.48291015625, 11.263671875, 8.6640625],
+      "pressureBefore": {
+        "cpu": "some avg10=1.04 avg60=0.94 avg300=0.60 total=237984390\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=88331850\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=85725233\n",
+        "io": "some avg10=0.41 avg60=2.37 avg300=1.04 total=701169172\nfull avg10=0.28 avg60=1.78 avg300=0.77 total=634135904\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=1.04 avg60=0.94 avg300=0.60 total=237986993\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=88331850\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=85725233\n",
+        "io": "some avg10=0.41 avg60=2.37 avg300=1.04 total=701169571\nfull avg10=0.28 avg60=1.78 avg300=0.77 total=634136243\n"
+      }
+    },
+    {
+      "runtime": "node",
+      "phase": "properties-deep",
+      "passedCases": 28,
+      "suites": 1,
+      "failedCases": 0,
+      "wholeCommandSeconds": 3.770172646996798,
+      "sourceStable": true,
+      "loadBefore": [14.48291015625, 11.263671875, 8.6640625],
+      "loadAfter": [14.48291015625, 11.263671875, 8.6640625],
+      "pressureBefore": {
+        "cpu": "some avg10=1.04 avg60=0.94 avg300=0.60 total=237987995\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=88331850\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=85725233\n",
+        "io": "some avg10=0.41 avg60=2.37 avg300=1.04 total=701171420\nfull avg10=0.28 avg60=1.78 avg300=0.77 total=634137273\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.70 avg60=0.88 avg300=0.59 total=237997324\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=88331850\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=85725233\n",
+        "io": "some avg10=0.27 avg60=2.22 avg300=1.02 total=701172928\nfull avg10=0.18 avg60=1.67 avg300=0.76 total=634138045\n"
+      }
+    }
+  ],
+  "deepRuns": 400,
+  "deepSeed": 20260708,
+  "packageAuditSeconds": 6.8,
+  "docgenSeconds": 2.9
+}
