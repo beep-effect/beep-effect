@@ -198,3 +198,15 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/postgres#test:integration`
 - `@beep/postgres#test:integration:serial`
 - `@beep/postgres#test:property`
+
+## Incoming c03a3983e8839e13597791e8ca2569b4b9c0e356
+
+- `@beep/md#audit`
+- `@beep/md#build`
+- `@beep/md#check`
+- `@beep/md#coverage`
+- `@beep/md#doctest`
+- `@beep/md#lint:deprecated-apis`
+- `@beep/md#package-test-typecheck`
+- `@beep/md#test`
+- `@beep/md#test:property`

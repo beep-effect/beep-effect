@@ -2338,6 +2338,41 @@ while retaining the real test-utils layer/retry implementation. A mock-hit asser
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
 
+## Markdown CLI resume report-root mismatch
+
+Resuming the read-only preparation session for bounded assertion edits did not
+retain the additional writable private report directory. The child stopped
+before writing its required report or editing source because approvals were
+disabled. Start a fresh bounded CLI lane with explicit worktree and report
+write roots; do not turn this into permission prompts or treat the stopped
+resume as implementation progress. A resume launcher should verify and restore
+all required writable roots before dispatch.
+
+### Markdown detector command spelling
+
+During the Markdown final ratchet check, `beep lint effect-vitest --check` was
+rejected with `Unrecognized flag: --check`. The default command is already the
+check mode; rerunning without that flag passed. An explicit check-mode example
+in the command help would prevent borrowing flags from adjacent lint commands.
+
+### Detached proof user-manager environment
+
+The Markdown cheap-gates launch reported `Detached proof jobs require an active
+systemd user manager` before starting a job. The user manager was confirmed live;
+rerunning with the documented XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS
+restored the supported detached path. A launcher diagnostic distinguishing
+missing session environment from an unavailable manager would avoid ambiguity.
+
+### Exit error projection discards mixed Cause reasons
+
+Supplemental Markdown review traced installed rc.117 Exit.mapError to first-error
+selection. Controls reproduced acceptance of expected typed failure plus a defect,
+interruption or additional failure. Cause.map preserves those reasons. Grounding
+Cause preservation in implementation and mixed-failure controls, rather than an
+API name or pure-failure example, would have prevented the overbroad assertion
+claim. The same projection pattern is being repaired in the open HTML wave.
+
+
 ### 2026-09-25 — reference checkout ahead of installed Schema aliases
 
 While migrating HTML's runtime-boundary tests, the Effect reference checkout at
@@ -2483,6 +2518,26 @@ healthy, but the configured Git signer still failed. The source changes are
 preserved in the index and a private patch; signing was not disabled and no
 credential was exported. A signer-health preflight distinct from automation
 secret-backend health would have exposed this publication boundary earlier.
+
+### 2026-09-26 — Markdown proof reaches an unbuilt generated SDK
+
+The full Markdown proof stopped in infra docgen with TS1205, TS1294 and
+TS4114 under the installed Pulumi gharunners SDK. Its source, package
+manifest, build script, infra docgen config and compiler matched main, but
+its compiled `bin/index.d.ts` was absent. Running the SDK's existing build
+script restored the declarations; infra docgen then passed all 101 examples.
+No production source or compiler policy changed. Bootstrapping the generated
+SDK before admitting a full proof would have prevented this failed run. The
+full proof still requires a new successful run after main integration.
+
+
+### Markdown full proof: guard compilation and timing metadata
+
+The full Markdown proof rejected two inline NonEmptyArray safety-violation
+guards and three private timing output paths in root Lint Policy. Hoist the
+unchanged guard once and redact those destinations as `<private-output>`.
+Focused root-policy checks before publication would catch these conditions
+that package verification alone did not reject.
 
 ## 2026-09-26: Ready proof-job waves raced a negative-path deadline
 

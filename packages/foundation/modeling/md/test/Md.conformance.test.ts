@@ -33,9 +33,11 @@ import {
 import { renderHtmlBlock } from "@beep/md/Md.render";
 import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe";
 import { ConformanceReport } from "@beep/schema/Conformance";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -102,36 +104,44 @@ describe("Markdown semantic conformance", () => {
       children: [{ _tag: "p", children: [] }],
     });
 
-    expect(Result.isFailure(result)).toBe(true);
+    assertFailure(
+      Result.mapError(result, (error) => error._tag),
+      "SchemaError"
+    );
   });
 
-  it("round-trips schema-derived headings through their codec", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HeadingArbitrary]),
-          ([heading]) => {
-            const encoded = Result.getOrThrow(encodeHeadingResult(heading));
-            const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
+  it.prop(
+    "round-trips schema-derived headings through their codec",
+    [HeadingArbitrary],
+    ([heading]) => {
+      const encoded = Result.getOrThrow(encodeHeadingResult(heading));
+      const decoded = Result.getOrThrow(decodeHeadingResult(encoded));
 
-            expect(decoded).toEqual(heading);
+      expect(decoded).toEqual(heading);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("rejects unknown Markdown variant tags", () => {
-    expect(Result.isFailure(decodeUnknownInlineResult({ _tag: "futureInline" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownBlockResult({ _tag: "futureBlock" }))).toBe(true);
+    assertFailure(
+      Result.mapError(decodeUnknownInlineResult({ _tag: "futureInline" }), (error) => error._tag),
+      "SchemaError"
+    );
+    assertFailure(
+      Result.mapError(decodeUnknownBlockResult({ _tag: "futureBlock" }), (error) => error._tag),
+      "SchemaError"
+    );
   });
 
   it("rejects values outside the list item content grammar", () => {
     const result = decodeUnknownListItemChildResult({ _tag: "futureListItemChild" });
 
-    expect(Result.isFailure(result)).toBe(true);
+    assertFailure(
+      Result.mapError(result, (error) => error._tag),
+      "SchemaError"
+    );
   });
 
   it("rejects non-boolean GFM task item state", () => {
@@ -141,7 +151,10 @@ describe("Markdown semantic conformance", () => {
       children: [],
     });
 
-    expect(Result.isFailure(result)).toBe(true);
+    assertFailure(
+      Result.mapError(result, (error) => error._tag),
+      "SchemaError"
+    );
   });
 
   it("rejects block children inside GFM strikethrough", () => {
@@ -150,7 +163,10 @@ describe("Markdown semantic conformance", () => {
       children: [{ _tag: "p", children: [] }],
     });
 
-    expect(Result.isFailure(result)).toBe(true);
+    assertFailure(
+      Result.mapError(result, (error) => error._tag),
+      "SchemaError"
+    );
   });
 
   it("rejects block children inside GFM table cells", () => {
@@ -159,7 +175,10 @@ describe("Markdown semantic conformance", () => {
       children: [{ _tag: "p", children: [] }],
     });
 
-    expect(Result.isFailure(result)).toBe(true);
+    assertFailure(
+      Result.mapError(result, (error) => error._tag),
+      "SchemaError"
+    );
   });
 
   it("formats every conformance issue variant as a stable diagnostic", () => {
@@ -219,7 +238,10 @@ describe("Markdown semantic conformance", () => {
 
     expect(report.document).toBe(document);
     expect(tags(report.issues)).toEqual(["NestedLink"]);
-    expect(Result.isFailure(strict)).toBe(true);
+    assertFailure(
+      Result.mapError(strict, (error) => error._tag),
+      "MarkdownConformanceError"
+    );
   });
 
   it("keeps profile membership explicit for GFM and Beep extensions", () => {
@@ -332,11 +354,9 @@ describe("Markdown semantic conformance", () => {
     expect(isCommonMarkDocument(document)).toBe(true);
     expect(isGfmDocument(document)).toBe(true);
     expect(isBeepMarkdownDocument(document)).toBe(true);
-    expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.CommonMark))).toBe(
-      true
-    );
-    expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Gfm))).toBe(true);
-    expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Beep))).toBe(true);
+    assertSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.CommonMark), document);
+    assertSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Gfm), document);
+    assertSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Beep), document);
   });
 
   it("projects implemented checks into shared specification reports", () => {
