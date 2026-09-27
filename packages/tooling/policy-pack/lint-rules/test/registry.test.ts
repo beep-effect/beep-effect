@@ -6,10 +6,6 @@ import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { provideScopedLayer } from "./harness.ts";
-
-const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Promise<A> =>
-  Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
 
 const sortedRuleNames = [...RULE_NAMES].sort();
 const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);
@@ -24,8 +20,8 @@ describe("rule registry", () => {
     expect(Object.keys(RULES).sort()).toEqual(sortedRuleNames);
   });
 
-  it("every registered rule has a non-empty .grit file declaring `language js`", () =>
-    run(
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+    it.effect("every registered rule has a non-empty .grit file declaring `language js`", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         for (const name of RULE_NAMES) {
@@ -37,10 +33,11 @@ describe("rule registry", () => {
           expect(content.includes("register_diagnostic"), `${name}.grit must register a diagnostic`).toBe(true);
         }
       })
-    ));
+    )
+  );
 
-  it("has no orphan .grit files missing from the registry", () =>
-    run(
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+    it.effect("has no orphan .grit files missing from the registry", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -51,7 +48,8 @@ describe("rule registry", () => {
           .sort();
         expect(gritFiles).toEqual(sortedRuleNames);
       })
-    ));
+    )
+  );
 
   it("every rule metadata entry is self-consistent", () => {
     for (const name of RULE_NAMES) {
@@ -108,8 +106,8 @@ describe("rule registry", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  it("every rule is wired into the repo-root biome.jsonc lint pass", () =>
-    run(
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+    it.effect("every rule is wired into the repo-root biome.jsonc lint pass", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -123,5 +121,6 @@ describe("rule registry", () => {
           );
         }
       })
-    ));
+    )
+  );
 });

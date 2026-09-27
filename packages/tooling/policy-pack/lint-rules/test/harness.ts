@@ -14,23 +14,13 @@
  * registry through the `@beep/lint-rules` alias.
  */
 import { rulePath } from "@beep/lint-rules";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
 import { encodeConfig, jsonReportParser } from "./codec.ts";
 import type { RuleName } from "@beep/lint-rules";
 
 /** Absolute path to the package root (`.../lint-rules`). */
 const packageRoot = decodeURIComponent(new URL("../", import.meta.url).pathname);
-
-/**
- * Provide a layer to an effect inside a scoped lifetime. Builds the layer to a
- * `Context` and provides that (not the `Layer` itself), which is the test-friendly
- * shape the effect language-service accepts outside application entry points.
- */
-export const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 /** One parsed Biome plugin diagnostic. */
 type PluginDiagnostic = {

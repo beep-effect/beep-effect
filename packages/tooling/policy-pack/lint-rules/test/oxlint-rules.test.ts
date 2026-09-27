@@ -1,15 +1,11 @@
 import plugin from "@beep/lint-rules/oxlint";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
-import { describe, expect, it } from "vitest";
-import { provideScopedLayer } from "./harness.ts";
 import { OXLINT_RULES, runOxlintRule, runOxlintRuleFix } from "./oxlint-harness.ts";
 import { OXLINT_SOURCES } from "./oxlint-sources.ts";
-
-const run = <A2, E>(program: Effect.Effect<A2, E, NodeServices.NodeServices>): Promise<A2> =>
-  Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
 
 describe("oxlint rules", () => {
   it("runs the global process rule in-process", () => {
@@ -91,8 +87,8 @@ describe("oxlint rules", () => {
 
     describe(rule, () => {
       invalid.forEach((testCase, index) => {
-        it(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
-          run(
+        it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+          it.effect(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
             Effect.gen(function* () {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(testCase.count);
@@ -108,17 +104,19 @@ describe("oxlint rules", () => {
                 expect(fixedSource).toBe(`${testCase.fixedSource}\n`);
               }
             })
-          ));
+          )
+        );
       });
 
       valid.forEach((testCase, index) => {
-        it(`ignores valid case #${index}`, () =>
-          run(
+        it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+          it.effect(`ignores valid case #${index}`, () =>
             Effect.gen(function* () {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(0);
             })
-          ));
+          )
+        );
       });
     });
   }
