@@ -5400,15 +5400,15 @@
     "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
     "package": "@beep/ai-sync",
     "kind": "test",
-    "bytes": 1018,
-    "lines": 20
+    "bytes": 1054,
+    "lines": 21
   },
   {
     "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
     "package": "@beep/ai-sync",
     "kind": "test",
-    "bytes": 29539,
-    "lines": 749
+    "bytes": 31957,
+    "lines": 800
   },
   {
     "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
