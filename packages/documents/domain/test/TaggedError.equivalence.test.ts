@@ -1,5 +1,8 @@
 import { TaxonomyProjectionError } from "@beep/documents-domain/values/Taxonomy";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 describe("documents-domain tagged-error declared equivalence", () => {
@@ -9,7 +12,7 @@ describe("documents-domain tagged-error declared equivalence", () => {
     const b = TaxonomyProjectionError.make({ reason: "unknown taxonomy concept" });
     const c = TaxonomyProjectionError.make({ reason: "invalid filing context" });
 
-    expect(sameError(a, b)).toBe(true);
-    expect(sameError(a, c)).toBe(false);
+    pipe(sameError(a, b), assertTrue);
+    pipe(sameError(a, c), assertFalse);
   });
 });
