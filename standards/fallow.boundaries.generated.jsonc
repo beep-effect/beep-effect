@@ -2853,6 +2853,7 @@
           "@beep/identity",
           "@beep/phoenix",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2860,6 +2861,7 @@
           "@beep/identity",
           "@beep/phoenix",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

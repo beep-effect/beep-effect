@@ -1,5 +1,6 @@
 import { PhoenixError } from "@beep/phoenix";
-import { describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
 
