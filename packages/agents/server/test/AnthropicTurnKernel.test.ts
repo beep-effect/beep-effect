@@ -1,6 +1,7 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { AiError } from "effect/ai";
@@ -149,9 +150,7 @@ describe("AnthropicTurnKernel", () => {
             provider: "anthropic",
           },
         });
-        expect(events[2]?.type === "finalization" ? events[2].usage.stopReason : O.none()).toEqual(
-          O.some("tool-calls")
-        );
+        assertSome(events[2]?.type === "finalization" ? events[2].usage.stopReason : O.none(), "tool-calls");
       })
     );
 
