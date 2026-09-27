@@ -14,6 +14,8 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -334,8 +336,12 @@ describe("Pandoc.mapping", () => {
         expect(result.report.issues[0]?.pointer).toBe("/blocks/0/children/0/children/0");
         expect(A.map(result.document.children, (block) => block._tag)).toEqual(["blockquote", "p"]);
         const blockquote = result.document.children[0];
-        if (blockquote?._tag === "blockquote" && blockquote.children[0]?._tag === "p") {
-          expect(A.map(blockquote.children[0].children, (inline) => inline._tag)).toContain("inlineMath");
+        expect(blockquote?._tag).toBe("blockquote");
+        if (blockquote?._tag === "blockquote") {
+          expect(blockquote.children[0]?._tag).toBe("p");
+          if (blockquote.children[0]?._tag === "p") {
+            expect(A.map(blockquote.children[0].children, (inline) => inline._tag)).toContain("inlineMath");
+          }
         }
       })
     );
@@ -606,7 +612,7 @@ describe("Pandoc.mapping", () => {
         // `SchemaError` channel, so they can never reach `documentToPandoc`.
         for (const hostileVideoId of ["\ud800", "a b&c", "../../etc/passwd", "tooShort"]) {
           const exit = yield* Effect.exit(decodeUnknownMdYouTube({ _tag: "youtube", videoId: hostileVideoId }));
-          expect(Exit.isFailure(exit)).toBe(true);
+          pipe(exit, Exit.isFailure, assertTrue);
         }
 
         // The bare 11-character form still decodes successfully.
@@ -976,7 +982,7 @@ describe("Pandoc.mapping", () => {
         ]);
         expect(code?._tag).toBe("pre");
         if (code?._tag === "pre") {
-          expect(code.language).toEqual(O.none());
+          assertNone(code.language);
         }
       })
     ));

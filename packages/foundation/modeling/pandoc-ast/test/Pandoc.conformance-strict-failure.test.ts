@@ -1,7 +1,7 @@
 import { inspectPandocConformance } from "@beep/pandoc-ast/Pandoc.conformance";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import { vi } from "vitest";
 
 vi.mock("@beep/pandoc-ast/Pandoc.codec", (importOriginal) =>
@@ -30,7 +30,7 @@ describe("Pandoc conformance strict projection failure", () => {
     if (result._tag === "invalid") {
       expect(result.message).toBe("forced strict projection failure");
       expect(result.issues).toEqual([]);
-      expect(result.wire).toEqual(O.some(wire));
+      assertSome(result.wire, wire);
     }
   });
 });

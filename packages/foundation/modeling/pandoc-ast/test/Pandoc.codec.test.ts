@@ -37,8 +37,10 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { R } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as P from "effect/Predicate";
@@ -51,6 +53,7 @@ const encodeTable = S.encodeEffect(Table);
 const isPandocLosslessDocument = S.is(PandocLosslessDocument);
 const isPandocMetaValue = S.is(PandocMetaValue);
 const isTable = S.is(Table);
+const isPandocDocument = S.is(PandocDocument);
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
@@ -213,8 +216,23 @@ const captionPlainTextFromWire = (caption: unknown): string => {
   return block?._tag === "table" ? block.captionPlainText : "";
 };
 
-describe("Pandoc.codec", () => {
-  it("derives semantic documents without arbitrary warnings", () => {});
+describe("Pandoc.codec", { concurrent: false }, () => {
+  it.effect("derives semantic documents without arbitrary warnings", () =>
+    Effect.gen(function* () {
+      // Observe real derivation and sampling; restore the passthrough observer
+      // even when compilation, generation or an assertion fails.
+      const warnings = yield* Effect.acquireRelease(
+        Effect.sync(() => vi.spyOn(console, "warn")),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const { runs, seed } = fcRuns(50);
+      const arbitrary = yield* Effect.sync(() => Arbitrary.schema(PandocDocument));
+      const documents = yield* Arbitrary.sampleEffect(arbitrary, { count: runs, seed });
+      expect(documents).toHaveLength(runs);
+      assertTrue(A.every(documents, isPandocDocument));
+      expect(warnings).not.toHaveBeenCalled();
+    })
+  );
 
   it("preserves public model schema identities after centralizing constructor registries", () => {
     const publicSchemas = [

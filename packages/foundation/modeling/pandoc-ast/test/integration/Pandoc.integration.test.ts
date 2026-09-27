@@ -1,9 +1,14 @@
 import { decodePandocJsonString, encodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec";
 import { documentToPandoc, pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
+import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as S from "effect/Schema";
+
+const PandocDocumentEquivalence = S.toEquivalence(PandocDocument);
 
 const fixture = Effect.fn("PandocIntegrationTest.fixture")((name: string) =>
   Effect.gen(function* () {
@@ -26,6 +31,7 @@ describe("Pandoc integration", () => {
         expect(mapped.report.profile).toBe("supported");
         expect(projected.report.profile).toBe("supported");
         expect(roundTripped.blocks.length).toBe(projected.pandoc.blocks.length);
+        assertTrue(PandocDocumentEquivalence(roundTripped, projected.pandoc));
       })
     );
   });

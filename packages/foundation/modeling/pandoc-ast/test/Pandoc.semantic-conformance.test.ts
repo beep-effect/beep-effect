@@ -4,9 +4,9 @@ import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
 import { PandocColumnWidth } from "@beep/pandoc-ast/Pandoc.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const encodePandocConformanceResult = S.encodeEffect(PandocConformanceResult);
@@ -256,13 +256,11 @@ describe("Pandoc conformance facade", () => {
     expect(result._tag).toBe("invalid");
     if (result._tag === "invalid") {
       expect(result.issues.map((issue) => [issue.constructor, issue.pointer])).toEqual([["Figure", "/blocks/0"]]);
-      expect(result.wire).toEqual(
-        O.some({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [{ c: {}, t: "Figure" }],
-          meta: {},
-        })
-      );
+      assertSome(result.wire, {
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [{ c: {}, t: "Figure" }],
+        meta: {},
+      });
     }
   });
 
@@ -272,7 +270,7 @@ describe("Pandoc conformance facade", () => {
     expect(result._tag).toBe("invalid");
     if (result._tag === "invalid") {
       expect(result.issues).toEqual([]);
-      expect(O.isNone(result.wire)).toBe(true);
+      assertNone(result.wire);
       expect(Effect.runSync(encodePandocConformanceResult(result))).not.toHaveProperty("wire");
     }
   });
