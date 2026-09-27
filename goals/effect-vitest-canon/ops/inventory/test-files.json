@@ -2621,29 +2621,29 @@
     "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 17744,
+    "bytes": 17530,
     "lines": 488
   },
   {
     "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 26213,
-    "lines": 613
+    "bytes": 32841,
+    "lines": 793
   },
   {
     "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 11194,
+    "bytes": 10881,
     "lines": 275
   },
   {
     "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
     "package": "@beep/epistemic-tables",
     "kind": "test",
-    "bytes": 6502,
-    "lines": 202
+    "bytes": 10345,
+    "lines": 311
   },
   {
     "file": "packages/epistemic/ui/test/ContradictionTriagePanel.test.tsx",
