@@ -3,9 +3,11 @@ import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -120,12 +122,12 @@ describe("selectByCapability", () => {
     const a = stub("a", baseCapabilities, () => Effect.succeed([]));
     const b = stub("b", { ...baseCapabilities, ner: true }, () => Effect.succeed([]));
     const picked = Composition.selectByCapability([a, b], "ner");
-    expect(O.isSome(picked)).toBe(true);
+    pipe(picked, O.isSome, assertTrue);
     expect(O.getOrThrow(picked).name).toBe("b");
   });
 
   it("returns none when no backend supports the capability", () => {
     const a = stub("a", baseCapabilities, () => Effect.succeed([]));
-    expect(O.isNone(Composition.selectByCapability([a], "ner"))).toBe(true);
+    assertNone(Composition.selectByCapability([a], "ner"));
   });
 });

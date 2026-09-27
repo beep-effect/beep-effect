@@ -3,6 +3,7 @@ import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-proce
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -220,7 +221,7 @@ describe("ResultStore", () => {
         yield* store.store(key, result);
         expect(yield* store.has(key)).toBe(true);
         const got = yield* store.get(key);
-        expect(O.isSome(got)).toBe(true);
+        pipe(got, O.isSome, assertTrue);
         const stats = yield* store.stats;
         expect(stats.size).toBe(1);
         expect(stats.totalHits).toBe(1);
