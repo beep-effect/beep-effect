@@ -20,7 +20,7 @@ import {
 } from "@beep/agents-domain/values/AssistantContent";
 import * as Md from "@beep/md/Md.model";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
@@ -289,52 +289,54 @@ describe("@beep/agents-domain", () => {
     }
   });
 
-  it.effect(
-    "keeps agents source code off removed turn subpath imports",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "keeps agents source code off removed turn subpath imports",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
 
-      const repoRelativePath = (absolutePath: string): string =>
-        path.relative(repoRoot, absolutePath).split(path.sep).join("/");
+        const repoRelativePath = (absolutePath: string): string =>
+          path.relative(repoRoot, absolutePath).split(path.sep).join("/");
 
-      const collectAgentsSourceFiles = (
-        directory: string
-      ): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError> =>
-        Effect.gen(function* () {
-          const sourceFiles: Array<string> = [];
+        const collectAgentsSourceFiles = (
+          directory: string
+        ): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError> =>
+          Effect.gen(function* () {
+            const sourceFiles: Array<string> = [];
 
-          for (const entry of yield* fs.readDirectory(directory)) {
-            if (isIgnoredAgentsDirEntry(entry)) {
-              continue;
+            for (const entry of yield* fs.readDirectory(directory)) {
+              if (isIgnoredAgentsDirEntry(entry)) {
+                continue;
+              }
+
+              const entryPath = path.join(directory, entry);
+              const info = yield* fs.stat(entryPath);
+              if (info.type === "Directory") {
+                sourceFiles.push(...(yield* collectAgentsSourceFiles(entryPath)));
+              } else if (isAgentsSourceFile(entryPath, path.sep)) {
+                sourceFiles.push(entryPath);
+              }
             }
 
-            const entryPath = path.join(directory, entry);
-            const info = yield* fs.stat(entryPath);
-            if (info.type === "Directory") {
-              sourceFiles.push(...(yield* collectAgentsSourceFiles(entryPath)));
-            } else if (isAgentsSourceFile(entryPath, path.sep)) {
-              sourceFiles.push(entryPath);
-            }
+            return sourceFiles.sort();
+          });
+
+        const sourceFiles = yield* collectAgentsSourceFiles(path.join(repoRoot, "packages/agents"));
+        const violations: Array<{ readonly importDeclaration: string; readonly sourcePath: string }> = [];
+
+        for (const sourcePath of sourceFiles) {
+          const sourceText = yield* fs.readFileString(sourcePath);
+          for (const match of sourceText.matchAll(legacyTurnImportPattern)) {
+            const importDeclaration = match[0];
+            violations.push({ importDeclaration, sourcePath: repoRelativePath(sourcePath) });
           }
-
-          return sourceFiles.sort();
-        });
-
-      const sourceFiles = yield* collectAgentsSourceFiles(path.join(repoRoot, "packages/agents"));
-      const violations: Array<{ readonly importDeclaration: string; readonly sourcePath: string }> = [];
-
-      for (const sourcePath of sourceFiles) {
-        const sourceText = yield* fs.readFileString(sourcePath);
-        for (const match of sourceText.matchAll(legacyTurnImportPattern)) {
-          const importDeclaration = match[0];
-          violations.push({ importDeclaration, sourcePath: repoRelativePath(sourcePath) });
         }
-      }
 
-      expect(violations).toEqual([]);
-    }, provideScopedLayer(NodeServices.layer))
-  );
+        expect(violations).toEqual([]);
+      })
+    );
+  });
 
   it("lifts rich assistant blocks into canonical Md nodes", () => {
     const document = assistantContentToDocument([
