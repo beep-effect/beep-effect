@@ -10,6 +10,7 @@ import {
   PackageJson,
   packageJsonJsonSchema,
 } from "@beep/repo-utils";
+import { PublishConfig } from "@beep/repo-utils/schemas/PackageJson";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -37,11 +38,8 @@ const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll
 const PackageJsonNameArbitrary = Arbitrary.schema(PackageJson.fields.name);
 const PackageJsonDependenciesArbitrary = Arbitrary.schema(PackageJson.fields.dependencies);
 const NpmPackageJsonPeerDependenciesMetaArbitrary = Arbitrary.schema(NpmPackageJson.fields.peerDependenciesMeta);
-// `PublishConfig`'s `exports` field is a recursive suspend()-based schema
-// without a finite arbitrary generation path (pre-existing, unrelated to the
-// `PublishConfigBase` field-literal conversion below); this arbitrary covers
-// PublishConfigBase's non-recursive fields to exercise the StructWithRest
-// composition round-trip.
+// Retain the original non-recursive core law alongside the full production
+// schema law, which also generates bin, recursive exports and JSON-valued extras.
 const PublishConfigCoreArbitrary = Arbitrary.schema(
   S.Struct({
     access: S.optionalKey(S.Literals(["public", "restricted"] as const)),
@@ -50,6 +48,8 @@ const PublishConfigCoreArbitrary = Arbitrary.schema(
     provenance: S.optionalKey(S.Boolean),
   })
 );
+
+const PublishConfigArbitrary = Arbitrary.schema(PublishConfig);
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {
@@ -103,6 +103,22 @@ describe("PackageJson schema", () => {
       ([core]) =>
         Effect.gen(function* () {
           const value = O.some(core);
+          const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
+          const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
+
+          expect(decoded).toEqual(value);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
+    );
+
+    it.effect.prop(
+      "round-trips the full production PublishConfig domain through the encoded wire shape",
+      [PublishConfigArbitrary],
+      ([config]) =>
+        Effect.gen(function* () {
+          const value = O.some(config);
           const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
           const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
 
