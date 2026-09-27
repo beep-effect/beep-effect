@@ -1949,6 +1949,7 @@
           "@beep/firecrawl",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1956,6 +1957,7 @@
           "@beep/firecrawl",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3250,6 +3252,7 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3257,6 +3260,7 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3266,6 +3270,7 @@
           "@beep/identity",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3273,6 +3278,7 @@
           "@beep/identity",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

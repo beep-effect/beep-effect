@@ -1,0 +1,103 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/service-sanity-runner-final-node.json"
+  ],
+  "phase": "runner-final-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "c5f20f5f3e997f459a69c7d22ce11907db3e12202004a141158f6edf4befacff"
+    },
+    {
+      "file": "packages/drivers/sanity/package.json",
+      "sha256": "6c86fe581312d33ff9a09ea76dce05e78f415bb60df326c2b5b9b4b4436d906f"
+    },
+    {
+      "file": "packages/drivers/sanity/src/Sanity.config.ts",
+      "sha256": "be1f60b715738fe8e003e296ac84e261d476621ac4ba616362369a8dedb04e19"
+    },
+    {
+      "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+      "sha256": "fe1510f63ef7531a5438073d8d9a52d85306843e9c7e134e4147b4b43f7f3c8f"
+    },
+    {
+      "file": "packages/drivers/sanity/src/Sanity.service.ts",
+      "sha256": "e66bb7a8d1ed99e6e3fa80849adf5d787fb520e8c39625bb0e1c8d8aa4cb2ac3"
+    },
+    {
+      "file": "packages/drivers/sanity/src/index.ts",
+      "sha256": "f86726eb453d3e52e98a65d59be8072ef86efeb28463df4a588652f27c98da88"
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.equivalence.test.ts",
+      "sha256": "1234a87473cb262dae1d078eed643aeaa9bbd01949d4ac99e36f1da1a973a07b"
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "sha256": "d64ae8a752b185fb1cf62aea8f1cbaa72a26abec4a7d59859fed5d8737d27277"
+    }
+  ],
+  "loadBefore": [21.38525390625, 13.55126953125, 17.25146484375],
+  "pressureBefore": {
+    "cpu": "some avg10=1.86 avg60=1.81 avg300=1.01 total=2532309958\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.00 avg60=0.75 avg300=0.27 total=213905176\nfull avg10=0.84 avg60=0.65 avg300=0.24 total=185827546\n",
+    "io": "some avg10=0.46 avg60=0.21 avg300=0.14 total=992397578\nfull avg10=0.21 avg60=0.05 avg300=0.05 total=676812085\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Firecrawl and Runpod live gates disabled with blank key variables; no live-provider proof",
+  "exit": 0,
+  "wholeCommandSeconds": 4.222969185007969,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "c5f20f5f3e997f459a69c7d22ce11907db3e12202004a141158f6edf4befacff"
+    },
+    {
+      "file": "packages/drivers/sanity/package.json",
+      "sha256": "6c86fe581312d33ff9a09ea76dce05e78f415bb60df326c2b5b9b4b4436d906f"
+    },
+    {
+      "file": "packages/drivers/sanity/src/Sanity.config.ts",
+      "sha256": "be1f60b715738fe8e003e296ac84e261d476621ac4ba616362369a8dedb04e19"
+    },
+    {
+      "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+      "sha256": "fe1510f63ef7531a5438073d8d9a52d85306843e9c7e134e4147b4b43f7f3c8f"
+    },
+    {
+      "file": "packages/drivers/sanity/src/Sanity.service.ts",
+      "sha256": "e66bb7a8d1ed99e6e3fa80849adf5d787fb520e8c39625bb0e1c8d8aa4cb2ac3"
+    },
+    {
+      "file": "packages/drivers/sanity/src/index.ts",
+      "sha256": "f86726eb453d3e52e98a65d59be8072ef86efeb28463df4a588652f27c98da88"
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.equivalence.test.ts",
+      "sha256": "1234a87473cb262dae1d078eed643aeaa9bbd01949d4ac99e36f1da1a973a07b"
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "sha256": "d64ae8a752b185fb1cf62aea8f1cbaa72a26abec4a7d59859fed5d8737d27277"
+    }
+  ],
+  "loadAfter": [20.07275390625, 13.4091796875, 17.185546875],
+  "pressureAfter": {
+    "cpu": "some avg10=1.25 avg60=1.70 avg300=1.00 total=2532325220\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.67 avg60=0.70 avg300=0.27 total=213905312\nfull avg10=0.56 avg60=0.61 avg300=0.23 total=185827663\n",
+    "io": "some avg10=0.31 avg60=0.20 avg300=0.13 total=992415425\nfull avg10=0.14 avg60=0.05 avg300=0.05 total=676825333\n"
+  },
+  "sourceStable": true
+}
