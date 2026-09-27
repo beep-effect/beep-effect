@@ -1725,36 +1725,36 @@
     "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 11928,
-    "lines": 295
+    "bytes": 11979,
+    "lines": 298
   },
   {
     "file": "packages/drivers/libpff/test/Libpff.equivalence.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 604,
-    "lines": 16
+    "bytes": 640,
+    "lines": 17
   },
   {
     "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 55851,
-    "lines": 1443
+    "bytes": 59291,
+    "lines": 1402
   },
   {
     "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 7941,
-    "lines": 188
+    "bytes": 8078,
+    "lines": 194
   },
   {
     "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
     "package": "@beep/libpff",
     "kind": "test",
-    "bytes": 8033,
-    "lines": 185
+    "bytes": 8489,
+    "lines": 183
   },
   {
     "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
