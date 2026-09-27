@@ -1,4 +1,5 @@
 import { PosInt, URLStr } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
   BEEP_TIKA_BASE_URL_ENV,
@@ -10,7 +11,7 @@ import {
   TikaServerEngineConfig,
 } from "@beep/tika";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Context, Deferred, Effect, Fiber, Layer, Option as O, pipe, Result } from "effect";
 import * as HttpClient from "effect/http/HttpClient";

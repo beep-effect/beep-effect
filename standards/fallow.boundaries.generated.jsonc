@@ -3690,6 +3690,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -3698,6 +3699,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
