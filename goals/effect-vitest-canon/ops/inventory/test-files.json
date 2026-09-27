@@ -192,22 +192,22 @@
     "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/oip-web",
     "kind": "test",
-    "bytes": 2268,
-    "lines": 62
+    "bytes": 2385,
+    "lines": 65
   },
   {
     "file": "apps/oip-web/test/oip-seo.test.ts",
     "package": "@beep/oip-web",
     "kind": "test",
-    "bytes": 6547,
-    "lines": 182
+    "bytes": 7562,
+    "lines": 209
   },
   {
     "file": "apps/oip-web/test/oip-web.test.tsx",
     "package": "@beep/oip-web",
     "kind": "test",
-    "bytes": 32330,
-    "lines": 891
+    "bytes": 40440,
+    "lines": 1183
   },
   {
     "file": "apps/oip-web/test/setup.dom.ts",
