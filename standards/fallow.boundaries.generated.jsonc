@@ -2645,6 +2645,7 @@
           "@beep/repo-utils",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
@@ -2657,6 +2658,7 @@
           "@beep/repo-utils",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"

@@ -3611,3 +3611,26 @@ before package verification; no generated SDK source was edited.
   `--sequence.concurrent=false` only for the ordered private cleanup experiment.
   The shipped tests and normal package verification retain shared concurrency.
   Neither failed experiment counts as a successful cleanup proof.
+
+### OIP provider snapshots and mock hoisting
+
+- Work: migrate the OIP route/page tests to the canonical runner while excluding
+  ambient HubSpot and Sanity configuration.
+- Evidence: per-test environment stubs still allowed a provider attempt under a
+  synthetic hostile environment because Effect's default provider had already
+  captured its environment. Explicit Vitest worker env settings pass the paired
+  control; removing them fails the route and page no-request assertions.
+- Prevention: configure absence before application modules load, and assert at
+  the public fetch boundary that the no-provider route/page cases make no call.
+  All controls use synthetic values with fetch rejected or mocked.
+- Related evidence: routing `vi` through the Effect Vitest export-star failed
+  module loading with `problems in resolving the mocks API`. Preserve the direct
+  `vitest` import for `vi.mock` hoisting, while the three test files register
+  through the instrumented runner. Do not change globals or the root runner to
+  hide this compatibility requirement.
+
+- OIP full package proof exposed a cached FetchHttpClient.Fetch default after
+  filtered controls passed: the provider-rejection spy saw zero calls. Supplying
+  each native test's spy through the public Fetch reference prevents cross-test
+  reuse. A full-file run alongside filtered mutation controls would surface this
+  interaction earlier; the failed audit remains a diagnostic receipt.
