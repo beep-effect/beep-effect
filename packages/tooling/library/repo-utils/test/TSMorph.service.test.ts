@@ -87,24 +87,17 @@ const lateFileScopeRequest = (mode: "syntax" | "semantic" = "syntax") =>
 const TSMORPH_TIMEOUT = 40_000;
 
 describe("SymbolId schema arbitrary", () => {
-  it.effect(
+  it.effect.prop(
     "only generates decodable, round-tripping symbol ids",
-    Effect.fnUntraced(function* () {
-      const symbolIdArbitrary = Arbitrary.schema(SymbolId);
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([symbolIdArbitrary]),
-        ([symbolId]) =>
-          Effect.gen(function* () {
-            const decoded = yield* decodeUnknownSymbolId(symbolId);
-            expect(yield* encodeUnknownSymbolId(decoded)).toBe(symbolId);
+    [Arbitrary.schema(SymbolId)],
+    ([symbolId]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeUnknownSymbolId(symbolId);
+        expect(yield* encodeUnknownSymbolId(decoded)).toBe(symbolId);
 
-            return true;
-          }),
-        fcRuns(50)
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+        return true;
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });
 

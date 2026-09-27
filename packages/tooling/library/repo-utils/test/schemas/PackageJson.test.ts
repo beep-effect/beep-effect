@@ -53,87 +53,64 @@ const PublishConfigCoreArbitrary = Arbitrary.schema(
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {
-    it("derives repo package names from the production field schema arbitrary", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([PackageJsonNameArbitrary]),
-            ([name]) => {
-              const decoded = decodePackageJson({ name });
+    it.prop(
+      "derives repo package names from the production field schema arbitrary",
+      [PackageJsonNameArbitrary],
+      ([name]) => {
+        const decoded = decodePackageJson({ name });
 
-              expect(isPackageJson(decoded)).toBe(true);
-              expect(decoded.name).toBe(name);
+        expect(isPackageJson(decoded)).toBe(true);
+        expect(decoded.name).toBe(name);
 
-              return true;
-            },
-            fcRuns(20)
-          )
-        )._tag
-      ).toBe("Passed");
-    });
+        return true;
+      },
+      { arbitrary: fcRuns(20) }
+    );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived package.json dependency maps through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodePackageJsonFieldsDependencies(value);
-              const decoded = yield* decodePackageJsonFieldsDependencies(encoded);
+      [Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodePackageJsonFieldsDependencies(value);
+          const decoded = yield* decodePackageJsonFieldsDependencies(encoded);
 
-              expect(decoded).toEqual(value);
+          expect(decoded).toEqual(value);
 
-              return true;
-            }),
-          fcRuns(20)
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived npm peer dependency metadata through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeNpmPackageJsonFieldsPeerDependenciesMeta(value);
-              const decoded = yield* decodeNpmPackageJsonFieldsPeerDependenciesMeta(encoded);
+      [Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeNpmPackageJsonFieldsPeerDependenciesMeta(value);
+          const decoded = yield* decodeNpmPackageJsonFieldsPeerDependenciesMeta(encoded);
 
-              expect(decoded).toEqual(value);
+          expect(decoded).toEqual(value);
 
-              return true;
-            }),
-          fcRuns(20)
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived package.json publishConfig through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([PublishConfigCoreArbitrary]),
-          ([core]) =>
-            Effect.gen(function* () {
-              const value = O.some(core);
-              const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
-              const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
+      [PublishConfigCoreArbitrary],
+      ([core]) =>
+        Effect.gen(function* () {
+          const value = O.some(core);
+          const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
+          const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
 
-              expect(decoded).toEqual(value);
+          expect(decoded).toEqual(value);
 
-              return true;
-            }),
-          { runs: 20 }
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
     it("decodes minimal package.json (name only)", () => {

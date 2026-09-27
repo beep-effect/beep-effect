@@ -35,25 +35,19 @@ describe("TSConfig schema", () => {
       assertNone(result.references);
     });
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived compiler options through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([TSConfigCompilerOptionsArbitrary]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeTSConfigFieldsCompilerOptions(value);
-              const decoded = yield* decodeTSConfigFieldsCompilerOptions(encoded);
+      [TSConfigCompilerOptionsArbitrary],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeTSConfigFieldsCompilerOptions(value);
+          const decoded = yield* decodeTSConfigFieldsCompilerOptions(encoded);
 
-              expect(decoded).toEqual(value);
+          expect(decoded).toEqual(value);
 
-              return true;
-            }),
-          fcRuns(20)
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
     it("decodes references and collapses nullable fields to Option.none", () => {

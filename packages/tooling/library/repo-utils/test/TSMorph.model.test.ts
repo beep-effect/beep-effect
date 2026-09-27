@@ -249,48 +249,36 @@ describe("TSMorph model taxonomy", () => {
       })
     );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived project identity parts through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ProjectIdentityParts)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeProjectIdentityParts(value);
-              const decoded = yield* decodeProjectIdentityParts(encoded);
+      [Arbitrary.schema(ProjectIdentityParts)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeProjectIdentityParts(value);
+          const decoded = yield* decodeProjectIdentityParts(encoded);
 
-              expect(decoded).toEqual(value);
-              expect(yield* decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
+          expect(decoded).toEqual(value);
+          expect(yield* decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
 
-              return true;
-            }),
-          { runs: 20 }
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived symbol identity parts through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SymbolIdentityParts)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeSymbolIdentityParts(value);
-              const decoded = yield* decodeSymbolIdentityParts(encoded);
+      [Arbitrary.schema(SymbolIdentityParts)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeSymbolIdentityParts(value);
+          const decoded = yield* decodeSymbolIdentityParts(encoded);
 
-              expect(decoded).toEqual(value);
-              expect(yield* decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
+          expect(decoded).toEqual(value);
+          expect(yield* decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
 
-              return true;
-            }),
-          { runs: 20 }
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
   });
 
@@ -340,25 +328,18 @@ describe("TSMorph model taxonomy", () => {
       })
     );
 
-    it.effect(
+    it.effect.prop(
       "decodes every schema-derived SymbolId and round-trips it identically",
-      Effect.fnUntraced(function* () {
-        const arbitrary = Arbitrary.schema(SymbolId);
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([symbolId]) =>
-            Effect.gen(function* () {
-              const decoded = yield* decodeSymbolId(symbolId);
-              expect(decoded).toBe(symbolId);
-              expect(yield* decodeSymbolIdParts(symbolId)).toEqual([...(yield* decodeSymbolIdParts(decoded))]);
+      [Arbitrary.schema(SymbolId)],
+      ([symbolId]) =>
+        Effect.gen(function* () {
+          const decoded = yield* decodeSymbolId(symbolId);
+          expect(decoded).toBe(symbolId);
+          expect(yield* decodeSymbolIdParts(symbolId)).toEqual([...(yield* decodeSymbolIdParts(decoded))]);
 
-              return true;
-            }),
-          fcRuns(50)
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(50) }
     );
 
     it.effect(
