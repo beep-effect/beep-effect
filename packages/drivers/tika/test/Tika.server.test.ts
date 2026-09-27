@@ -12,12 +12,13 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, Context, Effect, Layer, Option as O, pipe, Result } from "effect";
+import { ConfigProvider, Context, Deferred, Effect, Fiber, Layer, Option as O, pipe, Result } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import { fixtureText, makeExtractOperationFixture, tikaRmetaResponse, tikaVersionResponse } from "./fixtures.ts";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 import type { TikaFixtureFormat } from "./fixtures.ts";
@@ -95,6 +96,20 @@ const testLayer = (respond: Respond) =>
 const CapturingTestLayer = Layer.unwrap(
   Effect.map(CapturedUrls, (urls) => testLayer(capturing(urls, stub(rmetaFor("plain-text")))))
 ).pipe(Layer.provideMerge(Layer.sync(CapturedUrls, () => [])));
+class RequestStarted extends Context.Service<RequestStarted, Deferred.Deferred<void>>()(
+  "@beep/tika/test/Tika.server.test/RequestStarted"
+) {}
+const SlowResponseTestLayer = Layer.unwrap(
+  Effect.map(RequestStarted, (started) =>
+    testLayer(
+      stub(() =>
+        Deferred.succeed(started, undefined).pipe(
+          Effect.andThen(Effect.succeed(jsonResponse(tikaRmetaResponse("plain-text"))).pipe(Effect.delay("500 millis")))
+        )
+      )
+    )
+  )
+).pipe(Layer.provideMerge(Layer.effect(RequestStarted, Deferred.make<void>())));
 
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
@@ -513,19 +528,20 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
     }
   );
 
-  it.layer(
-    testLayer(
-      stub(() => Effect.succeed(jsonResponse(tikaRmetaResponse("plain-text"))).pipe(Effect.delay("500 millis")))
-    ),
-    { excludeTestServices: true }
-  )("maps a slow Tika Server to operation-timed-out", (it) => {
+  it.layer(SlowResponseTestLayer)("maps a slow Tika Server to operation-timed-out", (it) => {
     it.effect(
       "maps a slow Tika Server to operation-timed-out",
       Effect.fnUntraced(function* () {
         const engine = yield* makeTikaServerFileProcessingEngine(
           TikaServerEngineConfig.make({ timeoutMillis: PosInt.make(5) })
         );
-        const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+        const operation = yield* makeExtractOperationFixture("plain-text");
+        const request = yield* engine.extract(operation).pipe(Effect.flip, Effect.forkChild);
+        yield* Deferred.await(yield* RequestStarted);
+        // TestClock waits for supervised fibers to suspend before advancing, so both
+        // the response delay and the unchanged operation deadline are armed.
+        yield* TestClock.adjust("5 millis");
+        const error = yield* Fiber.join(request);
 
         expect(error._tag).toBe("FileProcessingOperationError");
         expect(error.reason).toBe("operation-timed-out");
