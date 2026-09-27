@@ -3,7 +3,8 @@ import { makeWorkItemClient } from "@beep/architecture-lab-client/aggregates/Wor
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Option as O } from "effect";
+import { assertNone } from "@effect/vitest/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
@@ -34,7 +35,7 @@ describe("WorkItem client", () => {
       });
 
       const workItem = yield* client.get(WorkItemUseCases.GetWorkItemQuery.make({ id: created.id }));
-      expect(workItem.assignee).toStrictEqual(O.none());
+      assertNone(workItem.assignee);
     })
   );
 });

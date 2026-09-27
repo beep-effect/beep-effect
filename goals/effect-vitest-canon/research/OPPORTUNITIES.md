@@ -3130,3 +3130,10 @@ Launching workspace property proof from the repository root with `--root`
 returned exit zero but `No test files found`. That observation earns no proof.
 Run from each package directory instead and inspect passed-test counts, not
 only exit status. The shared property filter depends on package context.
+
+## 2026-09-27: Assertion migration left an unused import
+
+The architecture-lab UI assertion phase removed its last Option use but retained
+the namespace import. Package verification and the commit hook rejected it with
+noUnusedImports. Remove the unused import, then repeat the affected package proof
+before committing the phase. Check terminal results before writing pass receipts.

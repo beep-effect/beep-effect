@@ -8,9 +8,9 @@ import {
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeWorkItemSummaryViewModel = S.decodeEffect(WorkItemSummaryViewModel);
@@ -100,7 +100,7 @@ describe("WorkItem UI view model", () => {
         visibleActions: [WorkItemVisibleAction.Enum.assign],
       });
 
-      expect(O.isNone(summary.assigneeLabel)).toBe(true);
+      assertNone(summary.assigneeLabel);
       expect(yield* encodeWorkItemSummaryViewModel(summary)).toEqual({
         id: "work-item-1",
         title: "Document topology",

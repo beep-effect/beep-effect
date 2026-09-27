@@ -9,7 +9,8 @@ import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Option as O } from "effect";
+import { assertNone } from "@effect/vitest/utils";
+import { Effect, Equal } from "effect";
 import * as S from "effect/Schema";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
@@ -86,7 +87,7 @@ describe("WorkItem server", () => {
         );
 
         expect(workItem.status).toBe("open");
-        expect(O.isNone(workItem.assignee)).toBe(true);
+        assertNone(workItem.assignee);
       })
     );
   });
