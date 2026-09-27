@@ -20,9 +20,10 @@ import {
 } from "@beep/agents-domain/values/AssistantContent";
 import * as Md from "@beep/md/Md.model";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -261,8 +262,8 @@ describe("@beep/agents-domain", () => {
     expect(Result.getOrThrow(encodeAssistantContentResult(decoded))).toStrictEqual(encoded);
     const decodedBlock = decodeUnknownAssistantBlockResult(encoded.blocks[0]);
     const decodedInline = decodeInlineNodeResult({ type: "text", text: "Install" });
-    expect(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success)).toBe(true);
-    expect(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success)).toBe(true);
+    assertTrue(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success));
+    assertTrue(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success));
   });
 
   it.prop(

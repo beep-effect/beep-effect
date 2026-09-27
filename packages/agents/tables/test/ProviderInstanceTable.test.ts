@@ -6,8 +6,9 @@ import {
   providerInstanceTable,
   toProviderInstanceInsert,
 } from "@beep/agents-tables/entities/ProviderInstance";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";

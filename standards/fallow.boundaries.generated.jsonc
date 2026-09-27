@@ -921,6 +921,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -929,6 +930,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -971,13 +973,15 @@
           "@beep/agents-domain",
           "@beep/agents-tables",
           "@beep/effect-drizzle",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/agents-domain",
           "@beep/agents-tables",
           "@beep/effect-drizzle",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ]
       },
       {

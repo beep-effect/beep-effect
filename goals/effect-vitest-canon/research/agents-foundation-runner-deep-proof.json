@@ -1,0 +1,32 @@
+{
+  "floor": 400,
+  "seed": 20260708,
+  "domainRegistrationsPassed": 3,
+  "tableRegistrationsPassed": 1,
+  "stableDetectorRows": {
+    "agents-domain": [
+      {
+        "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:265:assertTrue@4#1",
+        "ruleId": "EV006",
+        "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+        "line": 265,
+        "evidence": "assertTrue(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success))"
+      },
+      {
+        "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:266:assertTrue@4#1",
+        "ruleId": "EV006",
+        "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+        "line": 266,
+        "evidence": "assertTrue(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success))"
+      },
+      {
+        "id": "EV010:packages/agents/domain/test/AgentsDomain.test.ts:25:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+        "line": 25,
+        "evidence": "import { NodeServices } from \"@effect/platform-node\";"
+      }
+    ],
+    "agents-tables": []
+  }
+}

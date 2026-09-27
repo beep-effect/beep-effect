@@ -9,8 +9,9 @@ import {
   UnauthenticatedSnapshot,
 } from "@beep/agents-domain";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
