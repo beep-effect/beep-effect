@@ -14,7 +14,7 @@ generators whose only boundary was the old provider are inlined after the
 compiler identified them as redundant. No production implementation changes.
 
 The conservation receipt compares normalized assertion expressions and test
-titles against the pre-admission commit. All 107 original assertions across the
+titles against the pre-admission commit. All 106 original assertions across the
 eleven executable files and all 47 registrations remain unchanged. Full package
 verification passes: audit 7.2 s and docgen 3.3 s. This proves the resource phase;
 property/oracle improvements, runner instrumentation and final saved-inventory

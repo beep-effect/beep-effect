@@ -3382,3 +3382,10 @@ both with `TS377083` (`nestedEffectGenYield`). Inlining their bodies preserves t
 same acquired services, stream drain, result binding and assertions. A resource
 migration preflight should flag generators whose only boundary was the provider
 being removed; this avoids a preventable full audit round trip.
+
+The Wink conservation receipt initially counted both a complete assertion and
+its nested `expect(...)` call in the fixed-seed smoke test. Filtering by the call
+expression before matching assertion syntax corrects the original count from
+107 to 106. Historical before/after source comparisons still preserve every
+assertion. Future receipts should identify matcher calls structurally instead
+of treating expression-text matches alone as distinct assertions.

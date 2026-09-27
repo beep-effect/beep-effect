@@ -43,21 +43,10 @@ const encodeSentenceSpanFailure = Schema.encodeEffect(SentenceSpanFailure);
 const encodeVectorizerError = Schema.encodeEffect(VectorizerError);
 const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <
   SchemaT extends Schema.ConstraintCodec<unknown, unknown, never, never>,
->(schema: SchemaT) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* Schema.encodeEffect(schema)(value);
-        const decoded = yield* Schema.decodeEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+>(schema: SchemaT, value: SchemaT["Type"]) {
+  const encoded = yield* Schema.encodeEffect(schema)(value);
+  const decoded = yield* Schema.decodeEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
 
 const assertDecodeFailure = Effect.fn("assertDecodeFailure")(function* <A, E>(decode: Effect.Effect<A, E>) {
@@ -121,19 +110,39 @@ describe("Tool validation", () => {
     })
   );
 
-  it.effect("round-trips Tversky success payloads derived from the source schema", () =>
-    assertRoundTrip(TverskySimilarity.successSchema)
+  it.effect.prop(
+    "round-trips Tversky success payloads derived from the source schema",
+    { value: Arbitrary.schema(TverskySimilarity.successSchema) },
+    ({ value }) => assertRoundTrip(TverskySimilarity.successSchema, value),
+    { arbitrary: fcRuns(25) }
   );
 
-  it.effect("round-trips wink schema models derived from the source schemas", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(EntityGroupName);
-      yield* assertRoundTrip(InstanceId);
-      yield* assertRoundTrip(CustomEntityExample);
-      yield* assertRoundTrip(WinkEngineCustomEntities);
-      yield* assertRoundTrip(WinkEngineState);
-      yield* assertRoundTrip(SentenceSpanFailure);
-    })
+  it.effect.prop(
+    "round-trips wink schema models derived from the source schemas",
+    {
+      entityGroupName: Arbitrary.schema(EntityGroupName),
+      instanceId: Arbitrary.schema(InstanceId),
+      customEntityExample: Arbitrary.schema(CustomEntityExample),
+      customEntities: Arbitrary.schema(WinkEngineCustomEntities),
+      engineState: Arbitrary.schema(WinkEngineState),
+      sentenceSpanFailure: Arbitrary.schema(SentenceSpanFailure),
+    },
+    Effect.fnUntraced(function* ({
+      entityGroupName,
+      instanceId,
+      customEntityExample,
+      customEntities,
+      engineState,
+      sentenceSpanFailure,
+    }) {
+      yield* assertRoundTrip(EntityGroupName, entityGroupName);
+      yield* assertRoundTrip(InstanceId, instanceId);
+      yield* assertRoundTrip(CustomEntityExample, customEntityExample);
+      yield* assertRoundTrip(WinkEngineCustomEntities, customEntities);
+      yield* assertRoundTrip(WinkEngineState, engineState);
+      yield* assertRoundTrip(SentenceSpanFailure, sentenceSpanFailure);
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("keeps absorbed wink schema invariants byte-stable at the wire boundary", () =>
