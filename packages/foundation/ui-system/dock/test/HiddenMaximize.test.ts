@@ -23,7 +23,8 @@ import {
   TabsNode,
   UpdateGroupCommand,
 } from "@beep/dock";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";

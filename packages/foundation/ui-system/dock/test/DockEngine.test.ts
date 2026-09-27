@@ -29,7 +29,8 @@ import {
 import { fcRuns } from "@beep/fc-runs";
 import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

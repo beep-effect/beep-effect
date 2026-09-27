@@ -35,7 +35,8 @@ import {
 } from "@beep/dock";
 import { fcRuns } from "@beep/fc-runs";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
