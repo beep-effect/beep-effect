@@ -1,12 +1,13 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/public";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { beforeEach, describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { AiError } from "effect/ai";
 import * as O from "effect/Option";
-import { beforeEach, vi } from "vitest";
+import { vi } from "vitest";
 import type { Response } from "effect/ai";
 
 const providerState = vi.hoisted(

@@ -1,7 +1,8 @@
 import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair";
 import { BlockRepairFailed } from "@beep/agents-use-cases/server";
 import { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";

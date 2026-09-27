@@ -1,7 +1,8 @@
 import { ArchitectureLabProofResult, runArchitectureLabProof } from "@beep/architecture-lab-proof";
 import { ArchitectureLabServerLive } from "@beep/architecture-lab-server/layer";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
