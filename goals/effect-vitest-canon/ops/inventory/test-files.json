@@ -3475,29 +3475,29 @@
     "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
     "package": "@beep/ontology",
     "kind": "test",
-    "bytes": 24234,
-    "lines": 703
+    "bytes": 24349,
+    "lines": 706
   },
   {
     "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
     "package": "@beep/ontology",
     "kind": "test",
-    "bytes": 7165,
-    "lines": 194
+    "bytes": 6819,
+    "lines": 187
   },
   {
     "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
     "package": "@beep/ontology",
     "kind": "test",
-    "bytes": 25107,
-    "lines": 619
+    "bytes": 26191,
+    "lines": 640
   },
   {
     "file": "packages/foundation/modeling/ontology/test/TaggedError.equivalence.test.ts",
     "package": "@beep/ontology",
     "kind": "test",
-    "bytes": 7089,
-    "lines": 165
+    "bytes": 7210,
+    "lines": 168
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
