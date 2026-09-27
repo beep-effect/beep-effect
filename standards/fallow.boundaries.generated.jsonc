@@ -897,6 +897,7 @@
           "@beep/observability",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-use-cases"
@@ -910,6 +911,7 @@
           "@beep/observability",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-use-cases"

@@ -6,8 +6,9 @@ import {
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderInstanceRpcs, ProviderUnauthenticated } from "@beep/agents-use-cases/public";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";

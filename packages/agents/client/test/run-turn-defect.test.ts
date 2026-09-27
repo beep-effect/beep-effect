@@ -10,8 +10,9 @@ import {
 import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer, pipe, Stream } from "effect";
 import * as O from "effect/Option";

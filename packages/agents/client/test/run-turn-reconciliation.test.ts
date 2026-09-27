@@ -17,8 +17,9 @@ import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P as MdP, Text } from "@beep/md/Md.model";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, pipe, Stream } from "effect";
 import * as A from "effect/Array";
@@ -143,7 +144,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "does not mistake a newly persisted user turn for the stopped assistant turn",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
@@ -186,7 +187,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "does not restore a cancelled prompt after the server confirms its user row persisted",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
@@ -270,19 +271,19 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     expect(timelineReads).toBeGreaterThan(1);
   }, Effect.scoped);
 
-  it.live("keeps accepted failed prompts non-sendable while receipt evidence is uncertain", () =>
+  it.effect("keeps accepted failed prompts non-sendable while receipt evidence is uncertain", () =>
     verifyUncertainFailedTurnStatus("accepted")
   );
 
-  it.live("keeps protocol-unknown failed prompts non-sendable while receipt evidence is uncertain", () =>
+  it.effect("keeps protocol-unknown failed prompts non-sendable while receipt evidence is uncertain", () =>
     verifyUncertainFailedTurnStatus("protocol_unknown")
   );
 
-  it.live("keeps transport-failed prompts non-sendable while receipt evidence is uncertain", () =>
+  it.effect("keeps transport-failed prompts non-sendable while receipt evidence is uncertain", () =>
     verifyUncertainFailedTurnStatus("transport_failure")
   );
 
-  it.live(
+  it.effect(
     "keeps interrupted prompts non-sendable while receipt evidence is uncertain",
     Effect.fnUntraced(function* () {
       const verifyUncertainStatus = Effect.fn("verifyUncertainInterruptedTurnStatus")(function* (
@@ -470,7 +471,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "retains a stopped turn when its durable timeline refresh fails",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
