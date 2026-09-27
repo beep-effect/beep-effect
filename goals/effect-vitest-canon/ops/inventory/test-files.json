@@ -2131,22 +2131,22 @@
     "file": "packages/drivers/shacl/test/Shacl.equivalence.test.ts",
     "package": "@beep/shacl",
     "kind": "test",
-    "bytes": 765,
-    "lines": 16
+    "bytes": 886,
+    "lines": 19
   },
   {
     "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
     "package": "@beep/shacl",
     "kind": "test",
-    "bytes": 3560,
-    "lines": 83
+    "bytes": 3272,
+    "lines": 77
   },
   {
     "file": "packages/drivers/shacl/test/ShaclLazyImport.test.ts",
     "package": "@beep/shacl",
     "kind": "test",
-    "bytes": 391,
-    "lines": 12
+    "bytes": 1893,
+    "lines": 50
   },
   {
     "file": "packages/drivers/tailscale/test/Tailscale.equivalence.test.ts",
