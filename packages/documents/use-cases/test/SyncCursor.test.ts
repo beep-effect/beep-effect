@@ -6,9 +6,11 @@ import {
 } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -17,25 +19,13 @@ import type { SyncCursorRepositoryShape } from "@beep/documents-use-cases/entiti
 
 const decodeUnknownSyncCursor = S.decodeUnknownEffect(DomainSyncCursor.SyncCursor);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
@@ -100,7 +90,7 @@ describe("SyncCursor repository port", () => {
       const repository = makeRepository();
       const found = yield* repository.find(FindSyncCursorInput.make({ provider: "box", workspaceId }));
 
-      expect(O.isNone(found)).toBe(true);
+      assertNone(found);
     })
   );
 
@@ -109,13 +99,35 @@ describe("SyncCursor repository port", () => {
     Effect.fnUntraced(function* () {
       const repository = makeRepository();
       const created = yield* repository.upsert(cursorSeed("now"));
+      const otherWorkspaceId = WorkspaceIdentity.WorkspaceId.make(3);
+      const other = yield* repository.upsert(
+        SyncCursorSeed.make({
+          ...cursorSeed("other-position"),
+          workspaceId: otherWorkspaceId,
+        })
+      );
+      expect(other.id).not.toBe(created.id);
       const replaced = yield* repository.upsert(cursorSeed("stream-position-2"));
 
       expect(replaced.id).toBe(created.id);
       expect(replaced.streamPosition).toBe("stream-position-2");
 
       const found = yield* repository.find(FindSyncCursorInput.make({ provider: "box", workspaceId }));
-      expect(O.map(found, (cursor) => cursor.streamPosition)).toEqual(O.some("stream-position-2"));
+      assertSome(
+        O.map(found, (cursor) => cursor.streamPosition),
+        "stream-position-2"
+      );
+      const otherFound = yield* repository.find(
+        FindSyncCursorInput.make({ provider: "box", workspaceId: otherWorkspaceId })
+      );
+      assertSome(
+        O.map(otherFound, (cursor) => cursor.id),
+        other.id
+      );
+      assertSome(
+        O.map(otherFound, (cursor) => cursor.streamPosition),
+        "other-position"
+      );
     })
   );
 
@@ -129,8 +141,13 @@ describe("SyncCursor repository port", () => {
     })
   );
 
-  it("round-trips schema-derived seeds and lookup inputs", () => {
-    assertSchemaArbitraryRoundTrip(SyncCursorSeed);
-    assertSchemaArbitraryRoundTrip(FindSyncCursorInput);
-  });
+  it.prop(
+    "round-trips schema-derived seeds and lookup inputs",
+    [Arbitrary.schema(SyncCursorSeed), Arbitrary.schema(FindSyncCursorInput)],
+    ([syncCursorSeed, findSyncCursorInput]) => {
+      assertSchemaRoundTrip(SyncCursorSeed, syncCursorSeed);
+      assertSchemaRoundTrip(FindSyncCursorInput, findSyncCursorInput);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });
