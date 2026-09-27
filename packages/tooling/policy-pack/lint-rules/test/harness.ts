@@ -16,7 +16,7 @@
 import { rulePath } from "@beep/lint-rules";
 import { Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
-import { encodeConfig, jsonReportParser } from "./codec.ts";
+import { encodeConfig, jsonReportParser, validateLinterProcess } from "./codec.ts";
 import type { RuleName } from "@beep/lint-rules";
 
 /** Absolute path to the package root (`.../lint-rules`). */
@@ -87,7 +87,7 @@ export const runRule = Effect.fn("harness.runRule")(function* (ruleName: RuleNam
         yield* fs.writeFileString(configPath, `${encodeConfig(config)}\n`);
         yield* fs.writeFileString(sourcePath, `${source}\n`);
 
-        const { exitCode, stdout } = yield* Effect.sync(() => {
+        const result = yield* Effect.sync(() => {
           const result = Bun.spawnSync(
             [
               "bunx",
@@ -100,10 +100,11 @@ export const runRule = Effect.fn("harness.runRule")(function* (ruleName: RuleNam
             ],
             { cwd: packageRoot, stdout: "pipe", stderr: "pipe" }
           );
-          return { exitCode: result.exitCode, stdout: result.stdout.toString() } as const;
+          return result;
         });
 
-        const report = yield* parseReport(stdout);
+        yield* validateLinterProcess(result);
+        const report = yield* parseReport(result.stdout.toString());
         const diagnostics: ReadonlyArray<PluginDiagnostic> = (report.diagnostics ?? [])
           .filter((d) => d.category === "plugin")
           .map((d) => ({
@@ -113,7 +114,7 @@ export const runRule = Effect.fn("harness.runRule")(function* (ruleName: RuleNam
             column: d.location?.start?.column ?? -1,
           }));
 
-        return { status: exitCode, diagnostics } as const;
+        return { status: result.exitCode, diagnostics } as const;
       }),
     (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
   );

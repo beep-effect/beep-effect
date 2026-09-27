@@ -1,7 +1,10 @@
 import { RULE_NAMES, RULES } from "@beep/lint-rules";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as O from "effect/Option";
+import { LinterProcessError, validateLinterProcess } from "./codec.ts";
 import { runRule } from "./harness.ts";
 import { SOURCES } from "./sources.ts";
 
@@ -32,5 +35,71 @@ describe("GritQL rules", () => {
         )
       );
     });
+  }
+});
+
+describe("native linter process outcomes", () => {
+  for (const exitCode of [0, 1]) {
+    it.effect(`accepts lint exit ${exitCode} with stderr`, () =>
+      Effect.gen(function* () {
+        const result = yield* Effect.sync(() =>
+          Bun.spawnSync([
+            "bun",
+            "-e",
+            `process.stdout.write("{}"); process.stderr.write("warning"); process.exit(${exitCode})`,
+          ])
+        );
+        const accepted = yield* validateLinterProcess(result);
+        expect(accepted.exitCode).toBe(exitCode);
+        expect(accepted.stderr.toString()).toBe("warning");
+      })
+    );
+  }
+
+  it.effect("retains abnormal exit status and both diagnostic streams", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.sync(() =>
+        Bun.spawnSync([
+          "bun",
+          "-e",
+          'process.stdout.write("partial report"); process.stderr.write("invalid configuration"); process.exit(2)',
+        ])
+      );
+      assertFailure(
+        yield* Effect.result(validateLinterProcess(result)),
+        LinterProcessError.make({
+          exitCode: 2,
+          stdout: "partial report",
+          stderr: "invalid configuration",
+          signal: O.none(),
+          timedOut: false,
+          outputTruncated: false,
+        })
+      );
+    })
+  );
+
+  for (const { name, ...termination } of [
+    { name: "timeout", exitedDueToTimeout: true },
+    { name: "buffer limit", exitedDueToMaxBuffer: true },
+    { name: "signal", signalCode: "SIGTERM" },
+  ]) {
+    it.effect(`rejects interrupted output ${name}`, () =>
+      Effect.gen(function* () {
+        const result = yield* Effect.sync(() => Bun.spawnSync(["bun", "-e", 'process.stdout.write("{}");']));
+        const interrupted = { ...result, ...termination };
+        assertFailure(
+          yield* Effect.result(validateLinterProcess(interrupted)),
+          LinterProcessError.make({
+            exitCode: 0,
+            stdout: "{}",
+            stderr: "",
+            signal: O.fromNullishOr(interrupted.signalCode),
+            timedOut: name === "timeout",
+            outputTruncated: name === "buffer limit",
+          })
+        );
+      })
+    );
   }
 });

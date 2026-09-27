@@ -24,7 +24,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { encodeConfig, jsonReportParser } from "./codec.ts";
+import { encodeConfig, jsonReportParser, validateLinterProcess } from "./codec.ts";
 
 /** Absolute path to the package root (`.../lint-rules`). */
 const packageRoot = decodeURIComponent(new URL("../", import.meta.url).pathname);
@@ -193,7 +193,7 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
     supportingFiles,
     ({ configPath, sourcePath }) =>
       Effect.gen(function* () {
-        const stdout = yield* Effect.sync(() => {
+        const result = yield* Effect.sync(() => {
           // Run from the package root so `bunx oxlint` and the plugin's `@oxlint/plugins` /
           // `effect` imports resolve against the repo's node_modules; the config and fixture
           // are passed by absolute path, so the working directory does not affect what is read.
@@ -202,10 +202,11 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
             stdout: "pipe",
             stderr: "pipe",
           });
-          return result.stdout.toString();
+          return result;
         });
 
-        const report = yield* parseReport(stdout);
+        yield* validateLinterProcess(result);
+        const report = yield* parseReport(result.stdout.toString());
         return A.getSomes(
           A.map(
             report.diagnostics ?? [],
@@ -246,14 +247,15 @@ export const runOxlintRuleFix = Effect.fn("oxlintHarness.runOxlintRuleFix")(func
     supportingFiles,
     ({ configPath, sourcePath }) =>
       Effect.gen(function* () {
-        yield* Effect.sync(() => {
+        const result = yield* Effect.sync(() =>
           Bun.spawnSync(["bunx", "oxlint", "--fix", `--config=${configPath}`, sourcePath], {
             cwd: packageRoot,
-            stdout: "ignore",
+            stdout: "pipe",
             stderr: "pipe",
-          });
-        });
+          })
+        );
 
+        yield* validateLinterProcess(result);
         return yield* fs.readFileString(sourcePath);
       })
   );

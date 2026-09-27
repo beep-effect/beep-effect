@@ -2520,3 +2520,14 @@ after test-runner devDependencies were added. Package audit and docgen had passe
 but they did not establish generated project-reference parity. Run tsconfig-sync
 and its check after adding runner dependencies, before early publication. The
 service-driver wave applied the generator to its six affected configs as well.
+
+## 2026-09-27: native subprocess signal absence differs across runners
+
+The lint-rules observability Node run failed with `Schema validation failed`
+when the new process-error guard treated absent signals as undefined-only.
+`vitest.setup.ts` forwards Node's `result.signal`, which is null on normal
+termination; Bun declares its corresponding field optional. Normalize nullish
+signal absence at the harness boundary before validating the error payload.
+This preserved the native subprocess subject and made all 78 cases pass on both
+runtimes. Running both runtimes before publishing caught the mismatch that the
+configured Bun-only package audit did not.

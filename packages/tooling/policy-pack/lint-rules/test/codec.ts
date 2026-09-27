@@ -9,6 +9,7 @@
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
@@ -65,3 +66,66 @@ export const jsonReportParser: {
     Effect.mapError((cause) => JsonReportError.make({ stdout, cause }))
   )
 );
+
+/**
+ * Retains the diagnostics of an abnormal native linter termination.
+ *
+ * **Example** (Inspect a failed invocation)
+ *
+ * ```ts
+ * import { LinterProcessError } from "./codec.ts"
+ * import * as O from "effect/Option"
+ * const error = LinterProcessError.make({
+ *   exitCode: 2, stdout: "", stderr: "invalid configuration", signal: O.none(),
+ *   timedOut: false, outputTruncated: false
+ * })
+ * console.log(error.stderr) // invalid configuration
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LinterProcessError extends S.TaggedError<LinterProcessError>()("LinterProcessError", {
+  exitCode: S.Int,
+  stdout: S.String,
+  stderr: S.String,
+  signal: S.Option(S.String),
+  timedOut: S.Boolean,
+  outputTruncated: S.Boolean,
+}) {}
+
+const isLintExit = S.is(S.Literals([0, 1]));
+
+/**
+ * Accept normal lint outcomes (zero or one) and preserve abnormal process diagnostics.
+ * Signals, timeouts, and truncated output always fail, even with an accepted exit code.
+ *
+ * **Example** (Validate a native result)
+ *
+ * ```ts
+ * import { validateLinterProcess } from "./codec.ts"
+ * const result = Bun.spawnSync(["bunx", "oxlint", "--version"])
+ * const checked = validateLinterProcess(result)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateLinterProcess = (result: Bun.SyncSubprocess<"pipe", "pipe">) => {
+  const signal = O.fromNullishOr(result.signalCode);
+  return isLintExit(result.exitCode) &&
+    O.isNone(signal) &&
+    result.exitedDueToTimeout !== true &&
+    result.exitedDueToMaxBuffer !== true
+    ? Effect.succeed(result)
+    : Effect.fail(
+        LinterProcessError.make({
+          exitCode: result.exitCode,
+          stdout: result.stdout.toString(),
+          stderr: result.stderr.toString(),
+          signal,
+          timedOut: result.exitedDueToTimeout === true,
+          outputTruncated: result.exitedDueToMaxBuffer === true,
+        })
+      );
+};
