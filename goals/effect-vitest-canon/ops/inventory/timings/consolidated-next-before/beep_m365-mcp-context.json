@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/m365-mcp",
+  "sourceHead": "a45f70825ee3a2178d3aa4a1b096b6eb447ec0ad",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.221445723000215,
+  "bunWholeCommandSeconds": 2.2178745810088003,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.62255859375, 9.97900390625, 17.619140625],
+  "loadAfter": [5.4921875, 9.87939453125, 17.5458984375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.00 avg300=0.63 total=654922036\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.17 total=161707672\nfull avg10=0.00 avg60=0.01 avg300=0.17 total=154094197\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=768929345\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=674468177\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.00 avg300=0.62 total=654927335\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.17 total=161708037\nfull avg10=0.00 avg60=0.00 avg300=0.16 total=154094427\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=768931395\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=674469422\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "1deed29a562d9cf57aabff8db5066e12f0317bb74fc014b138ebd1ba4325c6b1"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/package.json",
+      "sha256": "f6232b851e388c7dacb5c51f11d42e1115f695faff490bb9bf2f868dcad04adc"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/M365Handlers.ts",
+      "sha256": "2ed18b107689a9a888079cd822ae13cabaa68c6205eabae05ac531aa2e17f4dd"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/M365Tools.ts",
+      "sha256": "5fae3d97dc6c4cd60ad1bb1cf07898114e72355df2c4e72082afa989e3c7c221"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/Server.ts",
+      "sha256": "13cba17dff6857ac3506fc0c87cc0cec9d2a8d7409451d9b43aec3f092134b01"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/bin.ts",
+      "sha256": "e294ac2d9c262941d2f45b9abd7a36af72c53b5258a38b72aada825fc36bc15f"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/src/index.ts",
+      "sha256": "b2c5a684ad809c9e8ea90e48b2d7aa205ed934e560f215be229b672910efa870"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
+      "sha256": "a9685746c7723d4c675c62798cbac92d856a7afeaafb7731efea4483e8ade7be"
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "sha256": "e0941aefda371ab5a8b6e1d5f6891ea59fb504d6027b69844e6b2b632b794ddf"
+    }
+  ],
+  "environmentMode": "Configured M365 MCP suites use mock Graph service, inert client and in-memory stdio transport. No native process, credential lookup or Graph request is selected.",
+  "bunProof": {
+    "passedTests": 20,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [5.4921875, 9.87939453125, 17.5458984375],
+    "loadAfter": [5.4921875, 9.87939453125, 17.5458984375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.00 avg300=0.62 total=654927340\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.17 total=161708040\nfull avg10=0.00 avg60=0.00 avg300=0.16 total=154094431\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=768931395\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=674469422\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.00 avg300=0.61 total=654938288\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.16 total=161708045\nfull avg10=0.00 avg60=0.00 avg300=0.16 total=154094435\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=768931535\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=674469538\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

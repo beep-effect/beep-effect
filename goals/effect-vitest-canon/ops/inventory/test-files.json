@@ -1760,15 +1760,15 @@
     "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
     "package": "@beep/m365-mcp",
     "kind": "test",
-    "bytes": 4177,
-    "lines": 114
+    "bytes": 4195,
+    "lines": 115
   },
   {
     "file": "packages/drivers/m365-mcp/test/Server.test.ts",
     "package": "@beep/m365-mcp",
     "kind": "test",
-    "bytes": 10441,
-    "lines": 297
+    "bytes": 13852,
+    "lines": 368
   },
   {
     "file": "packages/drivers/m365/test/M365.service.test.ts",
@@ -1872,15 +1872,15 @@
     "file": "packages/drivers/onepassword-cli/test/OnePasswordCli.equivalence.test.ts",
     "package": "@beep/onepassword-cli",
     "kind": "test",
-    "bytes": 1201,
-    "lines": 24
+    "bytes": 1237,
+    "lines": 25
   },
   {
     "file": "packages/drivers/onepassword-cli/test/OnePasswordCli.service.test.ts",
     "package": "@beep/onepassword-cli",
     "kind": "test",
-    "bytes": 10246,
-    "lines": 254
+    "bytes": 11401,
+    "lines": 289
   },
   {
     "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
@@ -5197,8 +5197,8 @@
     "file": "packages/shared/tables/test/OrganizationTable.test.ts",
     "package": "@beep/shared-tables",
     "kind": "test",
-    "bytes": 3433,
-    "lines": 72
+    "bytes": 3469,
+    "lines": 74
   },
   {
     "file": "packages/shared/use-cases/test/PromotionGate.test.ts",

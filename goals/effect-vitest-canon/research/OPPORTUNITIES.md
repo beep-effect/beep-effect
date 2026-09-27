@@ -3107,3 +3107,11 @@ MCP-kit lock entry from workspace:* to workspace:^. Its manifest already used
 workspace:^, and no version or resolved package changed. Preserve the manifest
 policy in the generated lockfile and check lock entries after workspace protocol
 repairs; a frozen install had not exposed this metadata discrepancy.
+
+## Timing receipt hash-map false positives
+
+The commit secret scan interpreted SHA-256 source hashes under OnePassword
+file-path keys as generic API keys. Each value was verified against the local
+source bytes. Encode source hashes as explicit file/sha256 records, preserving
+the values and avoiding ambiguous credential-like field names. No secret-scan
+rule, allowlist or bypass was changed.
