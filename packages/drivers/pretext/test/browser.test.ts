@@ -1,5 +1,4 @@
 import { detectEngineProfile, PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
-import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as P from "effect/Predicate";
@@ -22,56 +21,62 @@ describe("detectEngineProfile", () => {
 });
 
 describe("PretextCaptureLive", () => {
-  it.effect(
-    "rejects system-ui with a typed error in any runtime",
-    Effect.fnUntraced(function* () {
-      const capture = yield* PretextCapture;
-      const error = yield* Effect.flip(
-        capture.captureFontMetrics(
-          PretextCaptureRequest.make({
-            font: "16px system-ui",
-            lineHeight: 20,
-            words: ["the"],
-          })
-        )
-      );
+  it.layer(PretextCaptureLive, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects system-ui with a typed error in any runtime",
+      Effect.fnUntraced(function* () {
+        const capture = yield* PretextCapture;
+        const error = yield* Effect.flip(
+          capture.captureFontMetrics(
+            PretextCaptureRequest.make({
+              font: "16px system-ui",
+              lineHeight: 20,
+              words: ["the"],
+            })
+          )
+        );
 
-      expect(error._tag).toBe("PretextUnsupportedFontError");
-    }, provideScopedLayer(PretextCaptureLive))
-  );
+        expect(error._tag).toBe("PretextUnsupportedFontError");
+      })
+    );
+  });
 
-  it.effect.skipIf(runtimeHasCanvas2d)(
-    "fails typed, not thrown, when the runtime cannot measure",
-    Effect.fnUntraced(function* () {
-      const capture = yield* PretextCapture;
-      const error = yield* Effect.flip(
-        capture.captureFontMetrics(
+  it.layer(PretextCaptureLive, { timeout: "10 seconds" })((it) => {
+    it.effect.skipIf(runtimeHasCanvas2d)(
+      "fails typed, not thrown, when the runtime cannot measure",
+      Effect.fnUntraced(function* () {
+        const capture = yield* PretextCapture;
+        const error = yield* Effect.flip(
+          capture.captureFontMetrics(
+            PretextCaptureRequest.make({
+              font: "16px Arial",
+              lineHeight: 20,
+              words: ["the"],
+            })
+          )
+        );
+
+        expect(error).toMatchObject({ _tag: "PretextMeasurementUnavailableError", reason: "missingCanvas2d" });
+      })
+    );
+  });
+
+  it.layer(PretextCaptureLive, { timeout: "10 seconds" })((it) => {
+    it.effect.skipIf(!runtimeHasCanvas2d)(
+      "captures a live snapshot when the runtime can measure",
+      Effect.fnUntraced(function* () {
+        const capture = yield* PretextCapture;
+        const snapshot = yield* capture.captureFontMetrics(
           PretextCaptureRequest.make({
             font: "16px Arial",
             lineHeight: 20,
-            words: ["the"],
+            words: ["the", "dragon"],
           })
-        )
-      );
+        );
 
-      expect(error).toMatchObject({ _tag: "PretextMeasurementUnavailableError", reason: "missingCanvas2d" });
-    }, provideScopedLayer(PretextCaptureLive))
-  );
-
-  it.effect.skipIf(!runtimeHasCanvas2d)(
-    "captures a live snapshot when the runtime can measure",
-    Effect.fnUntraced(function* () {
-      const capture = yield* PretextCapture;
-      const snapshot = yield* capture.captureFontMetrics(
-        PretextCaptureRequest.make({
-          font: "16px Arial",
-          lineHeight: 20,
-          words: ["the", "dragon"],
-        })
-      );
-
-      expect(snapshot.version).toBe(1);
-      expect(snapshot.metrics.lineHeight).toBe(20);
-    }, provideScopedLayer(PretextCaptureLive))
-  );
+        expect(snapshot.version).toBe(1);
+        expect(snapshot.metrics.lineHeight).toBe(20);
+      })
+    );
+  });
 });
