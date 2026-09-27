@@ -1,5 +1,8 @@
+import { it } from "@beep/test-runner";
 import { ReactContextInvariantError } from "@beep/ui/lib/react-invariant";
-import { describe, expect, it } from "@effect/vitest";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const sameReactContextInvariantError = S.toEquivalence(ReactContextInvariantError);
@@ -10,7 +13,7 @@ describe("React invariant tagged-error declared equivalence", () => {
     const b = ReactContextInvariantError.make({ message: "Provider missing" });
     const c = ReactContextInvariantError.make({ message: "Context missing" });
 
-    expect(sameReactContextInvariantError(a, b)).toBe(true);
-    expect(sameReactContextInvariantError(a, c)).toBe(false);
+    pipe(sameReactContextInvariantError(a, b), assertTrue);
+    pipe(sameReactContextInvariantError(a, c), assertFalse);
   });
 });

@@ -3779,12 +3779,14 @@
         "from": "@beep/ui",
         "allow": [
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"

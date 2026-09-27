@@ -192,9 +192,9 @@ const PositiveFiniteStep = S.Finite.check(
   })
 );
 
-const NonNegativePrecision = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)).pipe(
+const NonNegativePrecision = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(100)).pipe(
   $I.annoteSchema("NonNegativePrecision", {
-    description: "A non-negative integer precision used for fixed-point formatting.",
+    description: "An integer precision from zero through 100 supported by fixed-point formatting.",
   })
 );
 
