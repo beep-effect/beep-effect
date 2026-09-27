@@ -2950,113 +2950,113 @@
     "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 3759,
-    "lines": 91
+    "bytes": 5002,
+    "lines": 122
   },
   {
     "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 1537,
-    "lines": 43
+    "bytes": 2074,
+    "lines": 50
   },
   {
     "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 8970,
-    "lines": 217
+    "bytes": 8948,
+    "lines": 216
   },
   {
     "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 950,
-    "lines": 22
+    "bytes": 1065,
+    "lines": 25
   },
   {
     "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 2091,
-    "lines": 62
+    "bytes": 2842,
+    "lines": 83
   },
   {
     "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 2308,
-    "lines": 60
+    "bytes": 1987,
+    "lines": 51
   },
   {
     "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4984,
-    "lines": 150
+    "bytes": 4856,
+    "lines": 147
   },
   {
     "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 1138,
-    "lines": 35
+    "bytes": 1182,
+    "lines": 36
   },
   {
     "file": "packages/foundation/capability/observability/test/Logging.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 3810,
-    "lines": 110
+    "bytes": 3752,
+    "lines": 102
   },
   {
     "file": "packages/foundation/capability/observability/test/Metric.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4754,
-    "lines": 156
+    "bytes": 4854,
+    "lines": 154
   },
   {
     "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4086,
-    "lines": 112
+    "bytes": 4102,
+    "lines": 115
   },
   {
     "file": "packages/foundation/capability/observability/test/Observed.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 3074,
-    "lines": 93
+    "bytes": 7418,
+    "lines": 186
   },
   {
     "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 1774,
-    "lines": 47
+    "bytes": 1486,
+    "lines": 45
   },
   {
     "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 4635,
-    "lines": 143
+    "bytes": 5191,
+    "lines": 150
   },
   {
     "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 1191,
-    "lines": 32
+    "bytes": 1294,
+    "lines": 34
   },
   {
     "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/observability",
     "kind": "test",
-    "bytes": 9647,
-    "lines": 199
+    "bytes": 9704,
+    "lines": 201
   },
   {
     "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
@@ -3076,7 +3076,7 @@
     "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
     "package": "@beep/observability",
     "kind": "support",
-    "bytes": 1832,
+    "bytes": 1824,
     "lines": 61
   },
   {

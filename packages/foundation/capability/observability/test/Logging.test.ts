@@ -1,6 +1,8 @@
 import { layerMinimumLogLevel, PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, Logger } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -33,78 +35,68 @@ describe("Logging", () => {
 
     expect(pretty.theme).toBe("ocean");
     expect(pretty.bannerMode).toBe("off");
-    expect(encodePrettyLoggerConfigOption(pretty)).toStrictEqual(
-      O.some({
-        theme: "ocean",
-        bannerMode: "off",
-      })
-    );
+    assertSome(encodePrettyLoggerConfigOption(pretty), {
+      theme: "ocean",
+      bannerMode: "off",
+    });
   });
 
-  it("round-trips schema-derived pretty logger configs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(PrettyLoggerConfig)]),
-          ([pretty]) => {
-            const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
+  it.prop(
+    "round-trips schema-derived pretty logger configs",
+    [Arbitrary.schema(PrettyLoggerConfig)],
+    ([pretty]) => {
+      const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips schema-derived banner options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RenderLogBannerOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(
-              encodeRenderLogBannerOptionsOption(options),
-              decodeUnknownRenderLogBannerOptionsOption
-            );
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived banner options",
+    [Arbitrary.schema(RenderLogBannerOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(encodeRenderLogBannerOptionsOption(options), decodeUnknownRenderLogBannerOptionsOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("renders with default pretty config when options omit it", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");
   });
 
-  it.layer(capturedLevelsLayer("Info"))("filters logs through the independently composable minimum-level layer", (it) =>
-    it.effect(
-      "keeps Info and above",
-      Effect.fnUntraced(function* () {
-        const levels = yield* CapturedLevels;
-        yield* Effect.all(
-          [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
-          { discard: true }
-        );
+  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
+  loggerSubjectIt.layer(capturedLevelsLayer("Info"), { timeout: "10 seconds" })(
+    "filters logs through the independently composable minimum-level layer",
+    (it) =>
+      it.effect(
+        "keeps Info and above",
+        Effect.fnUntraced(function* () {
+          const levels = yield* CapturedLevels;
+          yield* Effect.all(
+            [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
+            { discard: true }
+          );
 
-        expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
-      })
-    )
+          expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
+        })
+      )
   );
 
-  it.layer(capturedLevelsLayer("None"))("filters every log at the None level", (it) =>
-    it.effect(
-      "captures no records",
-      Effect.fnUntraced(function* () {
-        const levels = yield* CapturedLevels;
-        yield* Effect.logError("hidden");
-        expect(levels).toStrictEqual([]);
-      })
-    )
+  loggerSubjectIt.layer(capturedLevelsLayer("None"), { timeout: "10 seconds" })(
+    "filters every log at the None level",
+    (it) =>
+      it.effect(
+        "captures no records",
+        Effect.fnUntraced(function* () {
+          const levels = yield* CapturedLevels;
+          yield* Effect.logError("hidden");
+          expect(levels).toStrictEqual([]);
+        })
+      )
   );
 });

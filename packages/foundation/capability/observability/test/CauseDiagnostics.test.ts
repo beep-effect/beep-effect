@@ -5,9 +5,10 @@ import {
   summarizeCause,
   summarizeExit,
 } from "@beep/observability";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Exit } from "effect";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 class TestCauseError extends S.TaggedError<TestCauseError>()("TestCauseError", {
   message: S.String,
@@ -28,6 +29,12 @@ describe("CauseDiagnostics", () => {
     const summary = summarizeCause(cause);
 
     expect(fingerprint.value).toContain("failure");
+    const equivalent = fingerprintCause(Cause.fail(TestCauseError.make({ message: "boom" })));
+    const differentMessage = fingerprintCause(Cause.fail(TestCauseError.make({ message: "kapow" })));
+    const differentClassification = fingerprintCause(Cause.die(TestCauseError.make({ message: "boom" })));
+    expect(equivalent.value).toBe(fingerprint.value);
+    expect(differentMessage.value).not.toBe(fingerprint.value);
+    expect(differentClassification.value).not.toBe(fingerprint.value);
     expect(summary.primaryMessage).toBe("boom");
     expect(renderObservedCause(cause)).toContain(fingerprint.value);
   });

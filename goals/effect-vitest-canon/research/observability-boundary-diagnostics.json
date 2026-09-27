@@ -1,0 +1,315 @@
+{
+  "checkpointBefore": "89e8485692cfa392a645ddbc44250734bf38f053",
+  "preservation": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "changed": true,
+      "beforeSha": "f7515bf2d51f533afaef6580ba2b013d1c0aae77b6cc63f70d00a02e5678868e",
+      "afterSha": "158aec828b0c5363d9048f5923661df5dd695e82cb303906d205cc1e322852c0",
+      "assertionCount": 11,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "changed": false,
+      "beforeSha": "7249c4fd9d3fbd3b1d337652dba5c2349f203f9ed578c28f799d277bfee408a2",
+      "afterSha": "7249c4fd9d3fbd3b1d337652dba5c2349f203f9ed578c28f799d277bfee408a2",
+      "assertionCount": 12,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "changed": false,
+      "beforeSha": "93de1599e0ede4eada42c79a15fad88a0c914c86d9dce918b435e9b5abfa813d",
+      "afterSha": "93de1599e0ede4eada42c79a15fad88a0c914c86d9dce918b435e9b5abfa813d",
+      "assertionCount": 43,
+      "propertyCount": 2,
+      "caseCount": 15,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "changed": false,
+      "beforeSha": "599d447877d0c6a29fb7ec14314a2d97dd0d06b46b571d3f1920d05da78e76ff",
+      "afterSha": "599d447877d0c6a29fb7ec14314a2d97dd0d06b46b571d3f1920d05da78e76ff",
+      "assertionCount": 2,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "changed": false,
+      "beforeSha": "0f1baefa5ac2a153f419a3bf072cfb0e78e5c54de6605a17857c1b5c7d7a28d7",
+      "afterSha": "0f1baefa5ac2a153f419a3bf072cfb0e78e5c54de6605a17857c1b5c7d7a28d7",
+      "assertionCount": 7,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "changed": false,
+      "beforeSha": "db7e9501788782ca2e5dfee668b24b7e64843b650baa49677a75190398172b05",
+      "afterSha": "db7e9501788782ca2e5dfee668b24b7e64843b650baa49677a75190398172b05",
+      "assertionCount": 5,
+      "propertyCount": 2,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "changed": false,
+      "beforeSha": "f496bfdf8975f5d512764c532cba29ff9ebb756d2d29918f135ed018b11a8691",
+      "afterSha": "f496bfdf8975f5d512764c532cba29ff9ebb756d2d29918f135ed018b11a8691",
+      "assertionCount": 13,
+      "propertyCount": 1,
+      "caseCount": 5,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "changed": false,
+      "beforeSha": "507bf5782162b4b7a1cd4f9aef51ee504b016c6ec4e670494ba145f99781c912",
+      "afterSha": "507bf5782162b4b7a1cd4f9aef51ee504b016c6ec4e670494ba145f99781c912",
+      "assertionCount": 9,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "changed": false,
+      "beforeSha": "ebc731f6695997744444b89c8e0dc00629fa36d9be4a2b85be1ea79d63a84a45",
+      "afterSha": "ebc731f6695997744444b89c8e0dc00629fa36d9be4a2b85be1ea79d63a84a45",
+      "assertionCount": 8,
+      "propertyCount": 2,
+      "caseCount": 6,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "changed": false,
+      "beforeSha": "50525eca7804001ea428cc47c7c25bdc1831c3a957dae3687025790fd80a73eb",
+      "afterSha": "50525eca7804001ea428cc47c7c25bdc1831c3a957dae3687025790fd80a73eb",
+      "assertionCount": 24,
+      "propertyCount": 1,
+      "caseCount": 8,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "changed": false,
+      "beforeSha": "fa7ab99b41808231b1899da1662c18d71fa90dca867da0279881159743dac1d5",
+      "afterSha": "fa7ab99b41808231b1899da1662c18d71fa90dca867da0279881159743dac1d5",
+      "assertionCount": 16,
+      "propertyCount": 0,
+      "caseCount": 5,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "changed": false,
+      "beforeSha": "f2d296781c16cf41fad29e070928c30974fc6c7ffd9efd070fedd5c01237b3dc",
+      "afterSha": "f2d296781c16cf41fad29e070928c30974fc6c7ffd9efd070fedd5c01237b3dc",
+      "assertionCount": 33,
+      "propertyCount": 4,
+      "caseCount": 10,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "changed": false,
+      "beforeSha": "c248d57ff0648d47f96c3d0e80c3d108029dc9d5f351c2b834110c794d664e5b",
+      "afterSha": "c248d57ff0648d47f96c3d0e80c3d108029dc9d5f351c2b834110c794d664e5b",
+      "assertionCount": 8,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "changed": false,
+      "beforeSha": "692c63eca6033cb4fe6d863fe551275778164d22227c2f0a3e5d9698d5c41c50",
+      "afterSha": "692c63eca6033cb4fe6d863fe551275778164d22227c2f0a3e5d9698d5c41c50",
+      "assertionCount": 16,
+      "propertyCount": 1,
+      "caseCount": 5,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "changed": false,
+      "beforeSha": "a60d45f005d2eb8435babf8b016ebf1626ac00296512218a3ee0ff1edceabe13",
+      "afterSha": "a60d45f005d2eb8435babf8b016ebf1626ac00296512218a3ee0ff1edceabe13",
+      "assertionCount": 4,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "changed": false,
+      "beforeSha": "8c486a5ff0226b2a10590ceaeb2e5b75b0d4954700033fdbb202b72bc999e65a",
+      "afterSha": "8c486a5ff0226b2a10590ceaeb2e5b75b0d4954700033fdbb202b72bc999e65a",
+      "assertionCount": 5,
+      "propertyCount": 0,
+      "caseCount": 14,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "changed": false,
+      "beforeSha": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+      "afterSha": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "changed": false,
+      "beforeSha": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8",
+      "afterSha": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "changed": false,
+      "beforeSha": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146",
+      "afterSha": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    }
+  ],
+  "outputLimitCharactersPerStream": 4096,
+  "streamsDrainedConcurrentlyWithExit": true,
+  "compilerFixturesSequential": true,
+  "unchangedCompilerArguments": [
+    "--pretty",
+    "false",
+    "--noEmit",
+    "-p",
+    "<original fixture config>"
+  ],
+  "packageVerify": {
+    "exit": 0,
+    "auditSeconds": 8.8,
+    "docgenSeconds": 3.4
+  },
+  "negativeCompilerProbe": {
+    "exitCode": 1,
+    "failedTests": 1,
+    "fixtureRestored": true,
+    "fixtureSha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+    "realCompilerDiagnostic": "TS2322",
+    "redactedFixtureLabel": true,
+    "streamLabelsPresent": true
+  },
+  "highOutputProbe": {
+    "exitCode": 1,
+    "failedTests": 1,
+    "fixtureRestored": true,
+    "fixtureSha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+    "intentionalTypeErrors": 1500,
+    "errorMessageCharacters": 4240,
+    "prefixBounded": true,
+    "completedWithoutPipeDeadlock": true
+  },
+  "node": {
+    "runtime": {
+      "node": "v24.20.0",
+      "bun": "1.4.2"
+    },
+    "loadBefore": [5.69677734375, 5.6279296875, 6.9072265625],
+    "loadAfter": [5.6025390625, 5.60791015625, 6.88720703125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.56 avg60=0.39 avg300=0.18 total=217894549\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.04 avg300=0.08 total=87387711\nfull avg10=0.00 avg60=0.04 avg300=0.08 total=84809743\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692530561\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627578081\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.31 avg60=0.35 avg300=0.17 total=217917456\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.04 avg300=0.08 total=87387715\nfull avg10=0.00 avg60=0.04 avg300=0.08 total=84809747\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692530773\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627578269\n"
+    },
+    "wholeCommandSeconds": 5.674401279997255,
+    "sourceStable": true,
+    "exit": 0,
+    "passed": 86,
+    "failed": 0,
+    "skipped": 0
+  },
+  "bun": {
+    "runtime": {
+      "node": "v24.20.0",
+      "bun": "1.4.2"
+    },
+    "loadBefore": [5.6025390625, 5.60791015625, 6.88720703125],
+    "loadAfter": [5.6025390625, 5.60791015625, 6.88720703125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.31 avg60=0.35 avg300=0.17 total=217917501\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.04 avg300=0.08 total=87387715\nfull avg10=0.00 avg60=0.04 avg300=0.08 total=84809747\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692530773\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627578269\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.38 avg60=0.36 avg300=0.18 total=217952311\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.03 avg300=0.08 total=87387908\nfull avg10=0.00 avg60=0.03 avg300=0.08 total=84809924\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692531232\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627578560\n"
+    },
+    "wholeCommandSeconds": 3.469980891000887,
+    "sourceStable": true,
+    "exit": 0,
+    "passed": 86,
+    "failed": 0,
+    "skipped": 0
+  }
+}

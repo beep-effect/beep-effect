@@ -247,3 +247,15 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/repo-utils#package-test-typecheck`
 - `@beep/repo-utils#test`
 - `@beep/repo-utils#test:property`
+
+## Incoming 9b8d959e1d641dc40b4aa6e6138445790ead670b
+
+- `@beep/observability#audit`
+- `@beep/observability#build`
+- `@beep/observability#check`
+- `@beep/observability#coverage`
+- `@beep/observability#doctest`
+- `@beep/observability#lint:deprecated-apis`
+- `@beep/observability#package-test-typecheck`
+- `@beep/observability#test`
+- `@beep/observability#test:property`

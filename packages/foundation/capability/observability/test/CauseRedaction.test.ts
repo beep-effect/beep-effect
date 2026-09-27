@@ -11,8 +11,10 @@ import {
   tapRedactedCause,
 } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Equal, Layer, Logger, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -44,7 +46,7 @@ describe("CauseRedaction", () => {
   it("caps length with redactString", () => {
     const out = redactString("token=sk-EXAMPLEKEY00 and a long tail of more text here", 16);
     expect(out.length).toBeLessThanOrEqual(16 + 3);
-    expect(out.endsWith("...")).toBe(true);
+    assertTrue(out.endsWith("..."));
   });
 
   it("redacts an unknown error into a transport-safe summary on the diagnostic channel", () => {
@@ -54,7 +56,7 @@ describe("CauseRedaction", () => {
     expect(safe.message).toContain("[REDACTED]");
     expect(safe.message).not.toContain("sk-EXAMPLEKEY00");
     expect(safe.message).not.toContain("/home/ada");
-    expect(O.isSome(safe.detail)).toBe(true);
+    safe.detail.pipe(O.isSome, assertTrue);
     expect(safe.fingerprint.length).toBeGreaterThan(0);
   });
 
@@ -76,7 +78,7 @@ describe("CauseRedaction", () => {
   it("drops all internal detail on the client channel", () => {
     const safe = redactCauseForClient(Cause.die("internal invariant /home/ada broke"));
     expect(safe.tag).toBe("defect");
-    expect(O.isNone(safe.detail)).toBe(true);
+    assertNone(safe.detail);
     expect(safe.message).not.toContain("/home/ada");
   });
 
@@ -90,7 +92,7 @@ describe("CauseRedaction", () => {
     const redactForClient = redactCause(RedactCauseOptions.make({ channel: "client" }));
     const safe = redactForClient(Cause.fail(new Error("token=sk-EXAMPLEKEY00")));
 
-    expect(O.isNone(safe.detail)).toBe(true);
+    assertNone(safe.detail);
     expect(safe.message).not.toContain("sk-EXAMPLEKEY00");
   });
 
@@ -103,60 +105,67 @@ describe("CauseRedaction", () => {
     })
   );
 
-  it.layer(capturedAnnotationsLayer())("logs only bounded redacted Cause diagnostics", (it) =>
-    it.effect(
-      "captures both log records",
-      Effect.fnUntraced(function* () {
-        const annotations = yield* CapturedAnnotations;
-        yield* logRedactedCause(
-          Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
-          LogRedactedCauseOptions.make({ message: "boundary failed" })
-        );
-        yield* logRedactedCause(
-          Cause.fail(new Error("info boundary")),
-          LogRedactedCauseOptions.make({ level: "Info", message: "info boundary failed" })
-        );
+  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
+  loggerSubjectIt.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
+    "logs only bounded redacted Cause diagnostics",
+    (it) =>
+      it.effect(
+        "captures both log records",
+        Effect.fnUntraced(function* () {
+          const annotations = yield* CapturedAnnotations;
+          yield* logRedactedCause(
+            Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
+            LogRedactedCauseOptions.make({ message: "boundary failed" })
+          );
+          yield* logRedactedCause(
+            Cause.fail(new Error("info boundary")),
+            LogRedactedCauseOptions.make({ level: "Info", message: "info boundary failed" })
+          );
 
-        expect(annotations).toHaveLength(2);
-        expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
-        expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
-        expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
-        expect(annotations[0]?.cause_classification).toBe("failure");
-      })
-    )
+          expect(annotations).toHaveLength(2);
+          expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+          expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
+          expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
+          expect(annotations[0]?.cause_classification).toBe("failure");
+        })
+      )
   );
 
-  it.layer(capturedAnnotationsLayer())("logs through the curried data-last form with the same redaction", (it) =>
-    it.effect(
-      "captures the curried log record",
-      Effect.fnUntraced(function* () {
-        const annotations = yield* CapturedAnnotations;
-        yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
-          Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
-        );
+  loggerSubjectIt.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
+    "logs through the curried data-last form with the same redaction",
+    (it) =>
+      it.effect(
+        "captures the curried log record",
+        Effect.fnUntraced(function* () {
+          const annotations = yield* CapturedAnnotations;
+          yield* logRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))(
+            Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project"))
+          );
 
-        expect(annotations).toHaveLength(1);
-        expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
-        expect(annotations[0]?.cause_classification).toBe("failure");
-      })
-    )
+          expect(annotations).toHaveLength(1);
+          expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+          expect(annotations[0]?.cause_classification).toBe("failure");
+        })
+      )
   );
 
-  it.layer(Logger.layer([]))("observes a boundary failure without changing its Cause", (it) =>
-    it.effect(
-      "preserves the original cause",
-      Effect.fnUntraced(function* () {
-        const original = Cause.fail(new Error("boom"));
-        const exit = yield* Effect.exit(
-          Effect.failCause(original).pipe(
-            tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
-          )
-        );
+  it.layer(Logger.layer([]), { timeout: "10 seconds" })(
+    "observes a boundary failure without changing its Cause",
+    (it) =>
+      it.effect(
+        "preserves the original cause",
+        Effect.fnUntraced(function* () {
+          const original = Cause.fail(new Error("boom"));
+          const exit = yield* Effect.exit(
+            Effect.failCause(original).pipe(
+              tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
+            )
+          );
 
-        expect(exit._tag).toBe("Failure");
-        expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
-      })
-    )
+          expect(exit._tag).toBe("Failure");
+          assertTrue(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false);
+        })
+      )
   );
 
   it("respects a custom message limit via options", () => {
@@ -165,53 +174,43 @@ describe("CauseRedaction", () => {
       RedactCauseOptions.make({ messageLimit: NonNegativeInt.make(32) })
     );
     expect(safe.message.length).toBeLessThanOrEqual(32 + 3);
-    expect(safe.truncated).toBe(true);
+    assertTrue(safe.truncated);
   });
 
-  it("round-trips schema-derived redaction options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RedactCauseOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(encodeRedactCauseOptionsOption(options), decodeUnknownRedactCauseOptionsOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived redaction options",
+    [Arbitrary.schema(RedactCauseOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(encodeRedactCauseOptionsOption(options), decodeUnknownRedactCauseOptionsOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("honors generated redaction bounds and channel rules", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RedactCauseOptions), Arbitrary.schema(S.String)]),
-          ([options, rawMessage]) => {
-            const cause = Cause.fail(new Error(rawMessage));
-            const summary = summarizeCause(cause);
-            const safe = redactCause(cause, options);
-            const messageTruncated = sanitizeSensitiveText(summary.primaryMessage).length > options.messageLimit;
-            const detailTruncated =
-              options.channel === "diagnostic" && sanitizeSensitiveText(summary.pretty).length > options.detailLimit;
+  it.prop(
+    "honors generated redaction bounds and channel rules",
+    [Arbitrary.schema(RedactCauseOptions), Arbitrary.schema(S.String)],
+    ([options, rawMessage]) => {
+      const cause = Cause.fail(new Error(rawMessage));
+      const summary = summarizeCause(cause);
+      const safe = redactCause(cause, options);
+      const messageTruncated = sanitizeSensitiveText(summary.primaryMessage).length > options.messageLimit;
+      const detailTruncated =
+        options.channel === "diagnostic" && sanitizeSensitiveText(summary.pretty).length > options.detailLimit;
 
-            expect(safe.message.length).toBeLessThanOrEqual(options.messageLimit + 3);
-            expect(safe.truncated).toBe(messageTruncated || detailTruncated);
+      expect(safe.message.length).toBeLessThanOrEqual(options.messageLimit + 3);
+      expect(safe.truncated).toBe(messageTruncated || detailTruncated);
 
-            if (options.channel === "client") {
-              expect(O.isNone(safe.detail)).toBe(true);
-            } else {
-              expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
-            }
+      if (options.channel === "client") {
+        assertNone(safe.detail);
+      } else {
+        expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
+      }
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

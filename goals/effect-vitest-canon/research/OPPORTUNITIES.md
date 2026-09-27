@@ -2662,6 +2662,107 @@ readiness monitor terminated with "requires an open pull request". Its result
 was acknowledged; the publisher remains live. Preserve the original API error
 in discovery diagnostics to distinguish quota failure from a missing PR.
 
+## 2026-09-26: timing hash keys trigger secret scanning heuristics
+
+The observability baseline commit was rejected because file-path-keyed SHA-256
+receipts containing HttpApiTelemetry matched the generic API-key heuristic.
+The flagged values were verified source hashes, not credentials. Store the same
+path/hash facts as explicit `file` and `sha256` records, as in earlier waves,
+so public proof remains complete without weakening the scanner or adding ignores.
+
+## 2026-09-26: subprocess shim hides cancellation ownership
+
+The observability compiler-boundary scope review found that the configured Node
+Bun.spawn shim returns only an exit promise. Adding a Bun kill finalizer would
+therefore typecheck against Bun while failing under the configured Node runner.
+The subject is real compiler validation, so use the existing native Effect
+process service for the same commands and fixtures, with its shorter child scope.
+Preserve command ordering, exit assertions and deadlines. Documenting the shim's
+minimal contract alongside scope-migration guidance would prevent this mismatch;
+no shared shim or production change is required for this test ownership repair.
+
+## 2026-09-27: publisher retained proof capacity while watching hosted checks
+
+PR #1287's publisher completed all 33 reported local proof lanes successfully,
+then entered its GitHub check watch while other publishers still reported that
+process as the merged-preview reservation holder. A dedicated until-ready monitor
+was started and confirmed live before stopping the completed publisher's watch.
+The saved proof remains intact; no failing job was bypassed. Release proof
+reservations before remote-only monitoring so finished local work does not keep
+other exact-head proofs waiting.
+
+## 2026-09-27: Effect test adapter overload differs from plain Vitest
+
+The observability scope conversion initially retained Vitest's options-before-body
+argument order. The installed Effect adapter accepts the body second and options
+third; typecheck caught all three Boundary registrations. Moving the same timeout
+objects preserves the two 60-second and one 600-second budgets. Removing obsolete
+provider wrappers also exposed three nested generators to nestedEffectGenYield;
+flattening them preserved every assertion and capture order. Check adapter
+overloads and generator adjacency during mechanical registration migrations.
+
+## 2026-09-26: Assertion helpers expose branded payload and composition requirements
+
+The observability assertion-only checkpoint passed its configured Node and Bun
+suites, but package verification caught a branded expected status mismatch
+(TS2345) and three nested-call composition diagnostics (TS377050). The repairs
+construct the same literal 503 with NonNegativeInt.make and use equivalent
+pipe composition for the three Option predicates. No expected value, domain or
+production behavior changes. Including the package test compiler in the
+assertion conversion checklist would expose these constraints earlier.
+
+## 2026-09-26: Traced Cause annotations affect strict Exit assertions
+
+The observability witness checkpoint initially used assertExitFailure with a
+fresh unannotated Cause for trackDuration and profilePhase. Both failed only
+on installed Effect stack annotations; the original error payloads were intact.
+The new witness now requires a Failure Exit, exactly one Fail reason and the
+independently supplied original payload. No original assertion was removed and
+no annotation was stripped. The untraced HTTP witness retains complete Cause
+comparison. A testing guide example distinguishing semantic payload preservation
+from runtime Cause annotation identity would prevent this mismatched oracle.
+
+## 2026-09-26: Codec composition and hosted API quota
+
+The Observed codec pilot passed its full generated domains and pinned cases,
+but package verification rejected two nested toCodecJson/fromJsonString calls
+with TS377050. Equivalent schema.pipe(...) composition preserves the same
+codec and passed the next validation. Use pipe when hoisting composed codecs.
+Separately, refreshing the goal PR set reached the GitHub GraphQL rate limit.
+Required hosted readiness remains unverified while quota is unavailable; local
+work continues. Sharing a bounded PR-state read across active monitors would
+reduce redundant quota use without relaxing any merge gate.
+
+## 2026-09-26: Runner lifecycle logs enter logger-subject captures
+
+The observability trace-on pilot failed four exact logger assertions because
+runner start events reached the subject arrays (three instead of two records,
+two instead of one, and an extra Info level). Moving the subject layers inside
+the body passed both trace modes but violated strictEffectProvide. The five
+logger-subject cases therefore retain native harness layer ownership and hook
+budgets as explicit instrumentation exceptions; ordinary cases adopt the runner.
+No capture was filtered/reset, assertion weakened or compiler rule suppressed.
+A separately approved runner facility for isolated logger subjects would remove
+this adoption constraint without changing the tested logging behavior.
+
+## 2026-09-26: Nested property assertion missed before registration
+
+Final admitted-inventory reconciliation found one generated redaction-law branch
+still using expect(O.isNone(safe.detail)).toBe(true). The earlier assertion pass
+missed this nested callback, so the later property checkpoint preserved its old
+syntax. Replaced it with assertNone on the identical value and retained the
+branch, input domains and run floor. A per-package residual detector review
+before leaving the assertion phase would have caught this missed conversion.
+
+## Observability runner dependency publication parity
+
+PR #1300 Repo Sanity failed because adding the test-runner development dependency
+also requires generated project references and an in-range changeset. The hosted
+`beep tsconfig-sync --check` named two package reference files; changeset-status
+named @beep/observability. This was introduced by the runner integration. Run
+`beep tsconfig-sync` and `beep quality changeset-status --since origin/main`
+before each future runner publication to catch both together.
+
 ## Runner dependency generated-boundary follow-up
 
 After TypeScript sync passed on PR #1300, the next Repo Sanity stage found
@@ -2886,6 +2987,7 @@ includes the line. Preserve the existing golden-test rationale and all unrelated
 entries; carry only the generator-confirmed line change. The focused schema-first
 check then passed. A post-import inventory preflight should detect moved anchors
 and retain reviewed dispositions rather than resetting them on line drift.
+
 
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
