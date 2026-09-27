@@ -1,7 +1,10 @@
 import { CanonicalizationError } from "@beep/semantic-web/services/canonicalization";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(
@@ -12,8 +15,8 @@ const expectDeclaredEquivalence = <Schema extends S.Top>(
 ): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(first, second)).toBe(true);
-  expect(same(first, different)).toBe(false);
+  pipe(same(first, second), assertTrue);
+  pipe(same(first, different), assertFalse);
 };
 
 describe("@beep/semantic-web tagged-error declared equivalence", () => {

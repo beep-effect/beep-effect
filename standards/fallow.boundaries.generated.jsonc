@@ -3512,6 +3512,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3520,6 +3521,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
