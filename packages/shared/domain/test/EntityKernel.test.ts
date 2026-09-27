@@ -58,10 +58,6 @@ const TestCryptoLayer = Layer.succeed(
   })
 );
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(TestCryptoLayer));
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);
@@ -170,15 +166,17 @@ describe("PublicEntityId", () => {
     })
   );
 
-  it.effect(
-    "generates public ids with the entity prefix",
-    Effect.fnUntraced(function* () {
-      const publicId = yield* PublicEntityId.generate(DocumentId);
+  it.layer(CuidTestLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "generates public ids with the entity prefix",
+      Effect.fnUntraced(function* () {
+        const publicId = yield* PublicEntityId.generate(DocumentId);
 
-      expect(DocumentPublicId.is(publicId)).toBe(true);
-      expect(publicId.startsWith(`${DocumentId.tableName}_`)).toBe(true);
-    }, provideScopedLayer(CuidTestLayer))
-  );
+        expect(DocumentPublicId.is(publicId)).toBe(true);
+        expect(publicId.startsWith(`${DocumentId.tableName}_`)).toBe(true);
+      })
+    );
+  });
 });
 
 describe("ProductEntity", () => {
@@ -210,9 +208,10 @@ describe("ProductEntity", () => {
     expect(Object.keys(ProductDocument.jsonUpdate.fields)).toEqual(["note"]);
   });
 
-  it("applies insert-time audit defaults without inventing row identity", () => {
-    const inserted = Effect.runSync(
-      makeEffect(ProductDocument.insert)({
+  it.effect(
+    "applies insert-time audit defaults without inventing row identity",
+    Effect.fnUntraced(function* () {
+      const inserted = yield* makeEffect(ProductDocument.insert)({
         createdByPrincipal: systemPrincipal,
         entityType: DocumentId.entityType,
         note: "hello",
@@ -221,14 +220,14 @@ describe("ProductEntity", () => {
         schemaVersion: "0.0.0",
         source: "Application",
         updatedByPrincipal: systemPrincipal,
-      })
-    );
+      });
 
-    expect(inserted.createdAt).toBeDefined();
-    expect(inserted.updatedAt).toBeDefined();
-    expect("id" in inserted).toBe(false);
-    expect("rowVersion" in inserted).toBe(false);
-  });
+      expect(inserted.createdAt).toBeDefined();
+      expect(inserted.updatedAt).toBeDefined();
+      expect("id" in inserted).toBe(false);
+      expect("rowVersion" in inserted).toBe(false);
+    })
+  );
 
   it("materializes model extras into kit-provided table indexes", () => {
     const membership = Membership.Model.pipe(toPgTable, getTableConfig);
