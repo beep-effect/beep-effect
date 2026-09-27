@@ -1,0 +1,112 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/transport-api-transport-before-bun.json"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/package.json",
+      "sha256": "3b55bfa7855825ba6bd36da26ccc829131c248f70c189a9fb14e90371f067a5f"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/EgressDenied.ts",
+      "sha256": "65128037a7d2e1652e7e8a50834f5c07a4087f90129eb3fe21340af4dfbc95e0"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+      "sha256": "ee879770b1d7acf904a039f181c27eab7595c927363440039776655c3ca0b71b"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Version.ts",
+      "sha256": "76825d7f111b3a513c7e44d5efe355b6f127c7020c9acd4c4c997bb2b0f067ff"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/index.ts",
+      "sha256": "03be93b28c5de38dfd2bff8b31d67990c382cde4924f09c231e711b9cb6eb84c"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
+      "sha256": "282f26a8806093a047eef3599cb55e5a7fe8dee391ee47a572117dc0643abfea"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts",
+      "sha256": "e24690f5592be54baa6f3a54cfaea315bcfb12522014c5200d1ec34dc32be2f1"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "sha256": "b2053bdc287307b351cf8bbe398e5eeccf1289368218512cee3743008bc48de2"
+    }
+  ],
+  "loadBefore": [26.92041015625, 17.779296875, 16.15380859375],
+  "pressureBefore": {
+    "cpu": "some avg10=8.95 avg60=6.38 avg300=2.39 total=2545538921\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.14 avg60=0.14 avg300=0.06 total=214798561\nfull avg10=0.11 avg60=0.12 avg300=0.05 total=186635856\n",
+    "io": "some avg10=0.30 avg60=0.47 avg300=0.41 total=996065412\nfull avg10=0.05 avg60=0.31 avg300=0.30 total=679704210\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
+  "exit": 0,
+  "wholeCommandSeconds": 4.139825518999714,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/package.json",
+      "sha256": "3b55bfa7855825ba6bd36da26ccc829131c248f70c189a9fb14e90371f067a5f"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/EgressDenied.ts",
+      "sha256": "65128037a7d2e1652e7e8a50834f5c07a4087f90129eb3fe21340af4dfbc95e0"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+      "sha256": "ee879770b1d7acf904a039f181c27eab7595c927363440039776655c3ca0b71b"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Version.ts",
+      "sha256": "76825d7f111b3a513c7e44d5efe355b6f127c7020c9acd4c4c997bb2b0f067ff"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/index.ts",
+      "sha256": "03be93b28c5de38dfd2bff8b31d67990c382cde4924f09c231e711b9cb6eb84c"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
+      "sha256": "282f26a8806093a047eef3599cb55e5a7fe8dee391ee47a572117dc0643abfea"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts",
+      "sha256": "e24690f5592be54baa6f3a54cfaea315bcfb12522014c5200d1ec34dc32be2f1"
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "sha256": "b2053bdc287307b351cf8bbe398e5eeccf1289368218512cee3743008bc48de2"
+    }
+  ],
+  "loadAfter": [30.93115234375, 18.7626953125, 16.48095703125],
+  "pressureAfter": {
+    "cpu": "some avg10=8.42 avg60=6.45 avg300=2.46 total=2545925867\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.48 avg60=0.39 avg300=0.12 total=214983817\nfull avg10=1.31 avg60=0.34 avg300=0.09 total=186813434\n",
+    "io": "some avg10=0.20 avg60=0.44 avg300=0.41 total=996090783\nfull avg10=0.03 avg60=0.29 avg300=0.30 total=679715644\n"
+  },
+  "sourceStable": true
+}
