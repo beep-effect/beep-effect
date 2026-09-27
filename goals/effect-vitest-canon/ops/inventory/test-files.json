@@ -5029,15 +5029,15 @@
     "file": "packages/ontology/domain/test/Session.test.ts",
     "package": "@beep/ontology-domain",
     "kind": "test",
-    "bytes": 6498,
-    "lines": 196
+    "bytes": 7895,
+    "lines": 220
   },
   {
     "file": "packages/ontology/domain/test/TaggedError.equivalence.test.ts",
     "package": "@beep/ontology-domain",
     "kind": "test",
-    "bytes": 1027,
-    "lines": 27
+    "bytes": 1148,
+    "lines": 30
   },
   {
     "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
