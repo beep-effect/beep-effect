@@ -17,13 +17,13 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { resize } from "@beep/dock-react/internal/ResizeObserverHarness";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { afterEach, describe, expect } from "vitest";
 import type { AnchoredBox } from "@beep/dock";
 import type { DockPanelProps } from "@beep/dock-react";
 
@@ -214,15 +214,15 @@ describe("floating dock adapter", { concurrent: false }, () => {
       fireEvent.click(screen.getByRole("button", { name: `Maximize group ${dockedId}` }));
       yield* graph.awaitIdle;
       let result = graph.registry.get(graph.workspaceAtom);
-      expect(result.kind === "populated" && O.contains(result.maximized, dockedId)).toBe(true);
+      assertTrue(result.kind === "populated" && O.contains(result.maximized, dockedId));
       fireEvent.click(screen.getByRole("button", { name: `Restore group ${dockedId}` }));
       yield* graph.awaitIdle;
       result = graph.registry.get(graph.workspaceAtom);
-      expect(result.kind === "populated" && O.isNone(result.maximized)).toBe(true);
+      assertTrue(result.kind === "populated" && O.isNone(result.maximized));
       fireEvent.doubleClick(screen.getByRole("tablist"));
       yield* graph.awaitIdle;
       result = graph.registry.get(graph.workspaceAtom);
-      expect(result.kind === "populated" && O.contains(result.maximized, dockedId)).toBe(true);
+      assertTrue(result.kind === "populated" && O.contains(result.maximized, dockedId));
     })
   );
 

@@ -14,14 +14,13 @@ import {
 import { DockviewReact } from "@beep/dock-react";
 import { resize } from "@beep/dock-react/internal/ResizeObserverHarness";
 import { chromeLinuxArial16, naturalWidth, PretextCaptureFixture } from "@beep/pretext";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { Effect, pipe } from "effect";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { afterEach, describe, expect } from "vitest";
 import type { DockviewReactProps } from "@beep/dock-react";
 
 const metrics = Effect.runSync(chromeLinuxArial16).metrics;

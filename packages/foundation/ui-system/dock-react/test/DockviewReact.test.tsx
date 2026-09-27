@@ -21,13 +21,12 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { activeResizeObserverCount, resize } from "@beep/dock-react/internal/ResizeObserverHarness";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import React from "react";
-import { afterEach, describe, expect, vi } from "vitest";
 import type { DockAtomGraph, DockPanelProps } from "@beep/dock-react";
 
 const group1 = GroupId.make("group-1");

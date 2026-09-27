@@ -14,12 +14,12 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { resize } from "@beep/dock-react/internal/ResizeObserverHarness";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { afterEach, describe, expect } from "vitest";
 import type { DockviewAdapterApi } from "@beep/dock-react";
 
 const group1 = GroupId.make("gesture-group-1");
@@ -206,7 +206,7 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       // shown, so the release must still read as a plain activation click.
       // (A promoted drag instead concludes and keeps its record; see the
       // activation-leak test.)
-      expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
+      assertNone(mounted.graph.registry.get(mounted.api.atoms.drag));
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
       pointer(tab(panel1.id), "pointerDown", 100, 16);
       pointer(tab(panel1.id), "pointerUp", 400, 220);
@@ -239,7 +239,7 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(tab(panel3.id), "pointerDown", 600, 16);
       pointer(tab(panel3.id), "pointerUp", 600, 16);
       yield* mounted.graph.awaitIdle;
-      expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
+      assertNone(mounted.graph.registry.get(mounted.api.atoms.drag));
     })
   );
 
