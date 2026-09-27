@@ -110,25 +110,21 @@ const makeSource = Effect.fn("FileProcessingTest.makeSource")(function* (
     ...(text === undefined ? {} : { text }),
   });
 });
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const serviceLayer = makeFileProcessingServiceLayer([TestFileProcessingEngine]).pipe(Layer.provide(BunCrypto.layer));
 
 describe("@beep/file-processing", () => {
-  it.effect(
-    "derives child artifact ids distinct from their source artifact",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const childId = yield* deriveArtifactId([ids.artifactId, "children/synthetic-message.txt"]);
+  it.layer(BunCrypto.layer)("derives child artifact ids distinct from their source artifact", (it) => {
+    it.effect(
+      "derives child artifact ids distinct from their source artifact",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const childId = yield* deriveArtifactId([ids.artifactId, "children/synthetic-message.txt"]);
 
-      expect(childId).not.toBe(ids.artifactId);
-      expect(childId.startsWith("artifact:")).toBe(true);
-    }, provideScopedLayer(BunCrypto.layer))
-  );
+        expect(childId).not.toBe(ids.artifactId);
+        expect(childId.startsWith("artifact:")).toBe(true);
+      })
+    );
+  });
 
   it("round-trips schema-derived artifact and operation payloads", () =>
     expect(
@@ -302,86 +298,94 @@ describe("@beep/file-processing", () => {
       )._tag
     ).toBe("Passed"));
 
-  it.effect(
-    "extracts synthetic text through the service contract",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const result = yield* extractFile(
-        ExtractFileOperation.make({
-          format: "markdown",
-          operationId: ids.operationId,
-          operationKind: "extract",
-          preference: { engine: "test" },
-          source: yield* makeSource(ids, "md", "hello proof"),
-        })
-      ).pipe(provideScopedLayer(serviceLayer));
+  it.layer(serviceLayer)("extracts synthetic text through the service contract", (it) => {
+    it.effect(
+      "extracts synthetic text through the service contract",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const result = yield* extractFile(
+          ExtractFileOperation.make({
+            format: "markdown",
+            operationId: ids.operationId,
+            operationKind: "extract",
+            preference: { engine: "test" },
+            source: yield* makeSource(ids, "md", "hello proof"),
+          })
+        );
 
-      expect(result.text).toBe("hello proof");
-      expect(result.format).toBe("markdown");
-    })
-  );
+        expect(result.text).toBe("hello proof");
+        expect(result.format).toBe("markdown");
+      })
+    );
+  });
 
-  it.effect(
-    "processes synthetic text through the service contract",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const result = yield* processFile(
-        ProcessFileOperation.make({
-          exportChildren: false,
-          operationId: ids.operationId,
-          operationKind: "process",
-          preference: { engine: "test" },
-          source: yield* makeSource(ids, "md", "hello proof"),
-        })
-      ).pipe(provideScopedLayer(serviceLayer));
+  it.layer(serviceLayer)("processes synthetic text through the service contract", (it) => {
+    it.effect(
+      "processes synthetic text through the service contract",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const result = yield* processFile(
+          ProcessFileOperation.make({
+            exportChildren: false,
+            operationId: ids.operationId,
+            operationKind: "process",
+            preference: { engine: "test" },
+            source: yield* makeSource(ids, "md", "hello proof"),
+          })
+        );
 
-      expect(result.resultKind).toBe("extracted");
-      if (result.resultKind === "extracted") {
-        expect(result.extraction.text).toBe("hello proof");
-      }
-    })
-  );
+        expect(result.resultKind).toBe("extracted");
+        if (result.resultKind === "extracted") {
+          expect(result.extraction.text).toBe("hello proof");
+        }
+      })
+    );
+  });
 
-  it.effect(
-    "exports PST children through process when requested",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const result = yield* processFile(
-        ProcessFileOperation.make({
-          exportChildren: true,
-          operationId: ids.operationId,
-          operationKind: "process",
-          preference: { engine: "test" },
-          source: yield* makeSource(ids, "pst"),
-        })
-      ).pipe(provideScopedLayer(serviceLayer));
+  it.layer(serviceLayer)("exports PST children through process when requested", (it) => {
+    it.effect(
+      "exports PST children through process when requested",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const result = yield* processFile(
+          ProcessFileOperation.make({
+            exportChildren: true,
+            operationId: ids.operationId,
+            operationKind: "process",
+            preference: { engine: "test" },
+            source: yield* makeSource(ids, "pst"),
+          })
+        );
 
-      expect(result.resultKind).toBe("archive-exported");
-      if (result.resultKind === "archive-exported") {
-        expect(result.archiveExport.children).toHaveLength(1);
-        expect(result.archiveExport.children[0]?.id).not.toBe(ids.artifactId);
-      }
-    })
-  );
+        expect(result.resultKind).toBe("archive-exported");
+        if (result.resultKind === "archive-exported") {
+          expect(result.archiveExport.children).toHaveLength(1);
+          expect(result.archiveExport.children[0]?.id).not.toBe(ids.artifactId);
+        }
+      })
+    );
+  });
 
-  it.effect(
-    "skips PST child export when it is not requested",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const result = yield* processFile(
-        ProcessFileOperation.make({
-          exportChildren: false,
-          operationId: ids.operationId,
-          operationKind: "process",
-          preference: { engine: "test" },
-          source: yield* makeSource(ids, "pst"),
-        })
-      ).pipe(provideScopedLayer(serviceLayer));
+  it.layer(serviceLayer)("skips PST child export when it is not requested", (it) => {
+    it.effect(
+      "skips PST child export when it is not requested",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const result = yield* processFile(
+          ProcessFileOperation.make({
+            exportChildren: false,
+            operationId: ids.operationId,
+            operationKind: "process",
+            preference: { engine: "test" },
+            source: yield* makeSource(ids, "pst"),
+          })
+        );
 
-      expect(result.resultKind).toBe("skipped");
-      if (result.resultKind === "skipped") {
-        expect(result.skipReason).toBe("operation-not-required");
-      }
-    })
-  );
+        expect(result.resultKind).toBe("skipped");
+        if (result.resultKind === "skipped") {
+          expect(result.skipReason).toBe("operation-not-required");
+        }
+      })
+    );
+  });
 });
