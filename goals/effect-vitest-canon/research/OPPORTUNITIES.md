@@ -3426,3 +3426,13 @@ runner. Local reproduction found exactly those two manifests. Sorting only their
 development-dependency keys preserves every dependency value and the generated
 scripts; Sherif now passes all 143 packages. Add this root check to the batch
 publication sequence: individual package audit/docgen does not run it.
+
+### Resource-sharing controls need a defined state transition order
+
+The Workspace Server negative control combined two originally independent vault
+fixtures. Under concurrent scheduling it passed without establishing that the
+configured state existed before the missing-root case. Making only the control
+sequential reproduces the unwanted shared state and fails the original
+post-failure absence assertion. Production tests remain independently layered;
+all control edits were restored. Future isolation controls should define the
+prior state explicitly instead of relying on registration order.

@@ -1,5 +1,5 @@
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { WorkspaceVaultStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Workspace";
 import { Workspace } from "@beep/workspace-use-cases/server";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -47,52 +47,56 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
     assertSchemaRoundTrip(Workspace.WorkspaceVaultStoreError);
   });
 
-  it.effect(
-    "starts unconfigured and persists the selected vault root",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const store = yield* Workspace.WorkspaceVaultStore;
-      const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
-      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-" });
+  it.layer(Layer.fresh(WorkspaceVaultStoreTestLayer))((it) => {
+    it.effect(
+      "starts unconfigured and persists the selected vault root",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* Workspace.WorkspaceVaultStore;
+        const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
+        const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-" });
 
-      const before = yield* store.getVaultConfig(workspaceId);
-      expect(O.isNone(before.vaultRootPath)).toBe(true);
+        const before = yield* store.getVaultConfig(workspaceId);
+        expect(O.isNone(before.vaultRootPath)).toBe(true);
 
-      const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
-        vaultRootPath,
-        workspaceId: 1,
-      });
-      const configured = yield* store.setVaultRoot(input);
-      const after = yield* store.getVaultConfig(workspaceId);
+        const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
+          vaultRootPath,
+          workspaceId: 1,
+        });
+        const configured = yield* store.setVaultRoot(input);
+        const after = yield* store.getVaultConfig(workspaceId);
 
-      expect(O.getOrUndefined(configured.vaultRootPath)).toBe(vaultRootPath);
-      expect(after).toStrictEqual(configured);
-    }, provideScopedLayer(WorkspaceVaultStoreTestLayer))
-  );
+        expect(O.getOrUndefined(configured.vaultRootPath)).toBe(vaultRootPath);
+        expect(after).toStrictEqual(configured);
+      })
+    );
+  });
 
-  it.effect(
-    "rejects a missing vault root before persisting it",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const store = yield* Workspace.WorkspaceVaultStore;
-      const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
-      const parent = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-parent-" });
-      const missingVaultRootPath = path.join(parent, "missing-vault");
+  it.layer(Layer.fresh(WorkspaceVaultStoreTestLayer))((it) => {
+    it.effect(
+      "rejects a missing vault root before persisting it",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* Workspace.WorkspaceVaultStore;
+        const workspaceId = yield* decodeWorkspaceIdentityWorkspaceId(1);
+        const parent = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-parent-" });
+        const missingVaultRootPath = path.join(parent, "missing-vault");
 
-      const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
-        vaultRootPath: missingVaultRootPath,
-        workspaceId: 1,
-      });
-      const result = yield* Effect.result(store.setVaultRoot(input));
-      const after = yield* store.getVaultConfig(workspaceId);
+        const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
+          vaultRootPath: missingVaultRootPath,
+          workspaceId: 1,
+        });
+        const result = yield* Effect.result(store.setVaultRoot(input));
+        const after = yield* store.getVaultConfig(workspaceId);
 
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isFailure(result)) {
-        expect(result.failure._tag).toBe("WorkspaceVaultRootInvalid");
-        expect(result.failure.reason).toContain("does not exist");
-      }
-      expect(O.isNone(after.vaultRootPath)).toBe(true);
-    }, provideScopedLayer(WorkspaceVaultStoreTestLayer))
-  );
+        expect(Result.isFailure(result)).toBe(true);
+        if (Result.isFailure(result)) {
+          expect(result.failure._tag).toBe("WorkspaceVaultRootInvalid");
+          expect(result.failure.reason).toContain("does not exist");
+        }
+        expect(O.isNone(after.vaultRootPath)).toBe(true);
+      })
+    );
+  });
 });
