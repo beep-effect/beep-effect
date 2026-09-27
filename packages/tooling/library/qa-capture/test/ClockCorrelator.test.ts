@@ -1,4 +1,12 @@
-import { ExtractClipResult, FFmpeg, FFmpegError, LuminanceSample, ProbeRegionLuminanceResult } from "@beep/ffmpeg";
+import {
+  ExtractClipRequest,
+  ExtractClipResult,
+  FFmpeg,
+  FFmpegError,
+  LuminanceSample,
+  ProbeRegionLuminanceRequest,
+  ProbeRegionLuminanceResult,
+} from "@beep/ffmpeg";
 import {
   BeaconEdge,
   BeaconEvent,
@@ -9,8 +17,9 @@ import {
 } from "@beep/qa-capture";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
-import type { ExtractClipRequest, FFmpegShape, ProbeRegionLuminanceRequest } from "@beep/ffmpeg";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Context, Effect, Layer, pipe } from "effect";
+import type { FFmpegShape } from "@beep/ffmpeg";
 
 const T0 = 1753838000000;
 const FLIP_INTERVAL_MS = 150;
@@ -86,6 +95,40 @@ const beaconCapableFfmpeg = stubFfmpeg({
     });
   }),
 });
+class ProbeCalls extends Context.Service<
+  ProbeCalls,
+  { readonly clips: Array<ExtractClipRequest>; readonly probes: Array<ProbeRegionLuminanceRequest> }
+>()("@beep/qa-capture/test/ClockCorrelator.test/ProbeCalls") {}
+const DelayedBeaconTestLayer = Layer.suspend(() => {
+  const clips: Array<ExtractClipRequest> = [];
+  const probes: Array<ProbeRegionLuminanceRequest> = [];
+  const ffmpeg = stubFfmpeg({
+    extractClip: Effect.fnUntraced(function* (request: ExtractClipRequest) {
+      clips[A.length(clips)] = request;
+      return ExtractClipResult.make({
+        durationSeconds: request.durationSeconds,
+        fileSizeBytes: 1024,
+        outPath: request.outPath,
+        startSeconds: request.startSeconds,
+        videoPath: request.videoPath,
+      });
+    }),
+    probeRegionLuminance: Effect.fnUntraced(function* (request: ProbeRegionLuminanceRequest) {
+      probes[A.length(probes)] = request;
+      const clip = O.getOrThrow(A.last(clips));
+      const samples = A.makeBy(Math.floor(O.getOrThrow(clip.durationSeconds) * 30), (frameIndex) =>
+        LuminanceSample.make({
+          frameIndex,
+          meanLuma: lumaAtSeconds(frameIndex / 30 + clip.startSeconds - 4),
+          ptsTimeSeconds: frameIndex / 30,
+        })
+      );
+      expect(A.length(detectBeaconEdges(samples))).toBe(8);
+      return ProbeRegionLuminanceResult.make({ samples, videoPath: request.videoPath });
+    }),
+  });
+  return Layer.merge(Layer.succeed(ProbeCalls, { clips, probes }), ClockCorrelator.layer.pipe(Layer.provide(ffmpeg)));
+});
 
 const failingClipFfmpeg = stubFfmpeg({
   extractClip: Effect.fnUntraced(function* () {
@@ -113,7 +156,7 @@ describe("@beep/qa-capture clock correlator", () => {
       BeaconEdge.make({ timeSeconds: (flip.tPaintEpochMs - T0) / 1000, toWhite: flip.isWhite })
     );
     const sync = fitBeaconClockSync(edges, flips);
-    expect(O.isSome(sync)).toBe(true);
+    pipe(sync, O.isSome, assertTrue);
     O.match(sync, {
       onNone: () => undefined,
       onSome: (fit) => {
@@ -134,7 +177,7 @@ describe("@beep/qa-capture clock correlator", () => {
     );
     const edges = [BeaconEdge.make({ timeSeconds: 0.1, toWhite: false }), ...aligned];
     const sync = fitBeaconClockSync(edges, flips);
-    expect(O.isSome(sync)).toBe(true);
+    pipe(sync, O.isSome, assertTrue);
     O.match(sync, {
       onNone: () => undefined,
       onSome: (fit) => {
@@ -149,7 +192,7 @@ describe("@beep/qa-capture clock correlator", () => {
     const edges = A.map(flips, (flip) =>
       BeaconEdge.make({ timeSeconds: (flip.tPaintEpochMs - T0) / 1000, toWhite: flip.isWhite })
     );
-    expect(O.isNone(fitBeaconClockSync(edges, flips))).toBe(true);
+    assertNone(fitBeaconClockSync(edges, flips));
   });
 
   it.layer(ClockCorrelator.layer.pipe(Layer.provide(beaconCapableFfmpeg)))(
@@ -244,5 +287,48 @@ describe("@beep/qa-capture clock correlator", () => {
         })
       );
     }
+  );
+});
+it.layer(DelayedBeaconTestLayer)("delayed first paint and probe ownership", (it) => {
+  it.effect(
+    "probes the requested clip and configured region after a delayed first paint",
+    Effect.fnUntraced(function* () {
+      const correlator = yield* ClockCorrelator;
+      const calls = yield* ProbeCalls;
+      const sync = yield* correlator.correlate(
+        CorrelateClockRequest.make({
+          assumedStartEpochMs: T0,
+          beaconEvents: makeFlips(4000),
+          beaconRegionSize: 96,
+          probePadSeconds: 0.5,
+          recordStartEpochMs: O.none(),
+          videoPath: "/delayed/recording.webm",
+          workDir: "/delayed/clips",
+        })
+      );
+      expect(calls.clips).toEqual([
+        ExtractClipRequest.make({
+          codec: "h264",
+          durationSeconds: O.some(2.05),
+          outPath: "/delayed/clips/beacon-probe.mp4",
+          overwrite: true,
+          startSeconds: 4,
+          videoPath: "/delayed/recording.webm",
+        }),
+      ]);
+      expect(calls.probes).toEqual([
+        ProbeRegionLuminanceRequest.make({
+          height: 96,
+          width: 96,
+          x: 0,
+          y: 0,
+          videoPath: "/delayed/clips/beacon-probe.mp4",
+        }),
+      ]);
+      expect(sync.method).toBe("beacon");
+      expect(sync.confidence).toBe("high");
+      expect(Math.abs(sync.offsetMs + T0)).toBeLessThan(40);
+      expect(sync.residualRmsMs).toBeLessThanOrEqual(25);
+    })
   );
 });

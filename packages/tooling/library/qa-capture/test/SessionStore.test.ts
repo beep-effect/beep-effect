@@ -2,7 +2,8 @@ import { CaptureSession, CollectorHandle, SessionManifest, SessionStore, Viewpor
 import { O } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, FileSystem, Layer } from "effect";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, FileSystem, Layer, pipe } from "effect";
 
 const TestLayer = Layer.mergeAll(SessionStore.layer.pipe(Layer.provide(NodeServices.layer)), NodeServices.layer);
 
@@ -123,7 +124,7 @@ describe("@beep/qa-capture session store", () => {
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const qaRoot = `${tmpDir}/qa`;
 
-        expect(O.isNone(yield* store.readCollectorHandle(qaRoot))).toBe(true);
+        assertNone(yield* store.readCollectorHandle(qaRoot));
 
         const handle = CollectorHandle.make({
           eventsPath: `${qaRoot}/round-1/events.ndjson`,
@@ -138,7 +139,7 @@ describe("@beep/qa-capture session store", () => {
         expect(handlePath).toBe(store.collectorHandlePath(qaRoot));
 
         const read = yield* store.readCollectorHandle(qaRoot);
-        expect(O.isSome(read)).toBe(true);
+        pipe(read, O.isSome, assertTrue);
         O.match(read, {
           onNone: () => undefined,
           onSome: (found) => {
@@ -148,7 +149,7 @@ describe("@beep/qa-capture session store", () => {
         });
 
         yield* store.clearCollectorHandle(qaRoot);
-        expect(O.isNone(yield* store.readCollectorHandle(qaRoot))).toBe(true);
+        assertNone(yield* store.readCollectorHandle(qaRoot));
       })
     );
   });

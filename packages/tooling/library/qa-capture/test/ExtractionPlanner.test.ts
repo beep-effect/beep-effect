@@ -25,6 +25,8 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -139,7 +141,7 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(window?.priority).toBe("P1");
     expect(window?.startEpochMs).toBe(T0 - 100);
     expect(window?.endEpochMs).toBe(T0 + 1000 + 300);
-    expect(O.isSome(window?.gif ?? O.none())).toBe(true);
+    pipe(window?.gif ?? O.none(), O.isSome, assertTrue);
     expect(A.length(window?.frameTimesEpochMs ?? [])).toBe(3);
   });
 
@@ -190,7 +192,7 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(A.length(windows)).toBe(1);
     expect(windows[0]?.ruleKind).toBe("click");
     expect(windows[0]?.priority).toBe("P2");
-    expect(O.isNone(windows[0]?.gif ?? O.none())).toBe(true);
+    assertNone(windows[0]?.gif ?? O.none());
   });
 
   it("ignores hovers dwelling under the rule threshold", () => {
@@ -318,7 +320,7 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(A.length(strips)).toBe(A.length(plan.windows));
     A.forEach(strips, (strip) => {
       if (strip.kind === "extract-frames-at") {
-        expect(strip.request.maxWidth).toEqual(O.some(FRAME_MAX_WIDTH));
+        assertSome(strip.request.maxWidth, FRAME_MAX_WIDTH);
         A.forEach(strip.request.timestampsSeconds, (timestamp) => {
           expect(timestamp).toBeGreaterThanOrEqual(0);
           expect(timestamp).toBeLessThanOrEqual(10 - END_SEEK_GUARD_SECONDS);
@@ -327,6 +329,15 @@ describe("@beep/qa-capture extraction planner", () => {
     });
 
     const gifs = A.filter(requests, (request) => request.kind === "render-gif");
+    // Both the drag and marker rules request GIFs for this two-window fixture.
+    expect(A.map(gifs, (gif) => gif.request.outPath)).toEqual([
+      "/round/clips/drag-w0.gif",
+      "/round/clips/marker-w1.gif",
+    ]);
+    expect(A.map(gifs, (gif) => gif.request.videoPath)).toEqual([
+      "/round/video/capture.webm",
+      "/round/video/capture.webm",
+    ]);
     A.forEach(gifs, (gif) => {
       if (gif.kind === "render-gif") {
         expect(gif.request.durationSeconds).toBeGreaterThan(0);
@@ -363,6 +374,9 @@ describe("@beep/qa-capture extraction planner", () => {
     );
 
     const guarded = videoDurationSeconds - END_SEEK_GUARD_SECONDS;
+    const gifs = A.filter(requests, (request) => request.kind === "render-gif");
+    expect(A.map(gifs, (gif) => gif.request.outPath)).toEqual(["/round/clips/drag-w0.gif"]);
+    expect(A.map(gifs, (gif) => gif.request.videoPath)).toEqual(["/round/video/capture.webm"]);
     const strips = A.filter(requests, (request) => request.kind === "extract-frames-at");
     expect(A.length(strips)).toBeGreaterThan(0);
     A.forEach(strips, (strip) => {
