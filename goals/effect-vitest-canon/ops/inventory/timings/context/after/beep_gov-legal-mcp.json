@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/gov-legal-mcp",
+  "sourceHead": "669559408cc801c83ff4553e5446bd25a9da466b",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.27390673699847,
+  "bunWholeCommandSeconds": 2.41705000399088,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [6.7470703125, 6.2919921875, 5.98046875],
+  "loadAfter": [7.568359375, 6.47021484375, 6.0400390625],
+  "pressureBefore": {
+    "cpu": "some avg10=1.10 avg60=0.41 avg300=0.22 total=671218797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.01 avg60=0.29 avg300=0.43 total=171489925\nfull avg10=0.01 avg60=0.29 avg300=0.42 total=163692161\n",
+    "io": "some avg10=0.23 avg60=0.33 avg300=0.10 total=782747699\nfull avg10=0.11 avg60=0.30 avg300=0.09 total=685484549\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.33 avg60=0.51 avg300=0.25 total=671329985\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.73 avg60=0.40 avg300=0.45 total=171584083\nfull avg10=0.73 avg60=0.40 avg300=0.44 total=163786293\n",
+    "io": "some avg10=0.15 avg60=0.31 avg300=0.09 total=782749378\nfull avg10=0.07 avg60=0.28 avg300=0.09 total=685486086\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "5b1d05a4f6f24594419f22853ee6473a4e88ff0e26960434d45dd6bfc3cf6328"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/package.json",
+      "sha256": "f0f72e8d96b898ad776292686f9b0e538ad19d3e8351b5a5d8744f22f48f982e"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/Handlers.ts",
+      "sha256": "bdbed48ceb2c7084aa55d2688fd2e88351918a027b53ab855eea1d4ae8212c99"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/Server.ts",
+      "sha256": "701c12ba2298bfd23706230128b7a80aa34ecb3c794f7c9f5e227df1fb48e45d"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/SourceAuth.ts",
+      "sha256": "a99707b6a6ba3cd6a41f61aa31aa3c45086709d20b835301551288cc52be0bd1"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "sha256": "fab8c7111af4d62f9994e45f2a6e35d46b53bea5355887253949fedf3086cfa5"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/Tools.ts",
+      "sha256": "c7a77f084d94b1caea336faa2335f427c95530cd7fc8b7459aa899a250550367"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/_generated/version.ts",
+      "sha256": "7585afb7cbcb684dffaa1bd5e58364f2f98fa21b2bf91a07e6fc61f7e22a92de"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/bin.ts",
+      "sha256": "dc3cfadbe5efc5f752c0b528512cc37abe52116993b465126116847de9eb568b"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/src/index.ts",
+      "sha256": "934bf85165474e042d89e1eae8076c41d3e98a07b1a1dbdf0a85ace8df43600b"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "sha256": "bd9c79d1c3e0e3985afd4e7ac9cbb679afb7a1c0646a9bd7c1940527062328d6"
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "sha256": "5e83ca532861c612f462cee99fe893ee1efd2ad296c4e945eb34bf3b24351898"
+    }
+  ],
+  "environmentMode": "Synthetic provider/MCP services with real scoped temporary-file comparison for the generated artifact; no provider process, credential lookup or live HTTP.",
+  "bunProof": {
+    "passedTests": 32,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [7.568359375, 6.47021484375, 6.0400390625],
+    "loadAfter": [7.60302734375, 6.49609375, 6.05078125],
+    "pressureBefore": {
+      "cpu": "some avg10=1.33 avg60=0.51 avg300=0.25 total=671330029\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.73 avg60=0.40 avg300=0.45 total=171584083\nfull avg10=0.73 avg60=0.40 avg300=0.44 total=163786293\n",
+      "io": "some avg10=0.15 avg60=0.31 avg300=0.09 total=782749391\nfull avg10=0.07 avg60=0.28 avg300=0.09 total=685486088\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.09 avg60=0.49 avg300=0.24 total=671339871\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.60 avg60=0.39 avg300=0.45 total=171584090\nfull avg10=0.60 avg60=0.38 avg300=0.44 total=163786300\n",
+      "io": "some avg10=0.13 avg60=0.30 avg300=0.09 total=782752511\nfull avg10=0.06 avg60=0.27 avg300=0.09 total=685488056\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

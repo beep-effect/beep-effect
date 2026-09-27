@@ -927,36 +927,36 @@
     "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 6766,
-    "lines": 172
+    "bytes": 6791,
+    "lines": 163
   },
   {
     "file": "packages/agents/use-cases/test/Chat.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 2526,
-    "lines": 71
+    "bytes": 2631,
+    "lines": 74
   },
   {
     "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 13274,
-    "lines": 356
+    "bytes": 12820,
+    "lines": 338
   },
   {
     "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 6757,
-    "lines": 165
+    "bytes": 7233,
+    "lines": 174
   },
   {
     "file": "packages/agents/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/agents-use-cases",
     "kind": "test",
-    "bytes": 5044,
-    "lines": 112
+    "bytes": 5080,
+    "lines": 113
   },
   {
     "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
@@ -1662,15 +1662,15 @@
     "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
     "package": "@beep/gov-legal-mcp",
     "kind": "test",
-    "bytes": 4687,
-    "lines": 119
+    "bytes": 4288,
+    "lines": 105
   },
   {
     "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
     "package": "@beep/gov-legal-mcp",
     "kind": "test",
-    "bytes": 28814,
-    "lines": 691
+    "bytes": 30684,
+    "lines": 738
   },
   {
     "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
