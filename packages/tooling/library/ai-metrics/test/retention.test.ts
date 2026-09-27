@@ -9,9 +9,10 @@ import {
   AiMetricsRetentionSelector,
   runAiMetricsRetentionDelete,
 } from "@beep/repo-ai-metrics/retention";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

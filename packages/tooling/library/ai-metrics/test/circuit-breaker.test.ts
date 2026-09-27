@@ -8,8 +8,9 @@ import {
   circuitBreakerRoot,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
@@ -108,7 +109,7 @@ const decodedEvents = Effect.fnUntraced(function* (store: BreakerStore) {
   return yield* Effect.forEach(yield* eventRows(store), (row) => CircuitBreakerEventV1.decodeJsonEffect(row));
 });
 
-layer(NodeServices.layer)("agent command circuit breaker", (it) => {
+it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
   it("declares only bounded content-free persisted fields", () => {
     expect(A.difference(R.keys(CircuitBreakerEventV1.fields), canonicalEventKeys)).toEqual([]);
     expect(A.difference(canonicalEventKeys, R.keys(CircuitBreakerEventV1.fields))).toEqual([]);

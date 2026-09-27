@@ -94,10 +94,11 @@ import {
 } from "@beep/repo-ai-metrics";
 import { NonEmptyTrimmedStr } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -370,7 +371,7 @@ it("rejects impossible line and measurement values at construction", () => {
   ).toThrow();
 });
 
-layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
+it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -626,7 +627,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(plaintext).toContain("secret-value");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -725,7 +726,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2")), assertFalse);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -797,7 +798,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1076,7 +1077,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             yield* markAiMetricsOtlpTurnsExported([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1189,7 +1190,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(reportMarkdown).toContain("AI Metrics Weekly Config-Impact Report");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1314,7 +1315,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           expect(planJson).not.toContain(tmpDir);
           expect(doctorJson).not.toContain(tmpDir);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -1605,7 +1606,7 @@ volumes:
             expect(json).not.toContain(tmpDir);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -1698,7 +1699,7 @@ volumes:
           expect(json).not.toContain(tmpDir);
           expect(json).not.toContain(sourcePath);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -1814,7 +1815,7 @@ volumes:
             expect(turnRows).toEqual([{ sourceRole: "subagent" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -1852,7 +1853,7 @@ volumes:
             expect(scorecardRows).toEqual([{ completionReady: false, coverageGapsJson: "[]" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -1992,7 +1993,7 @@ volumes:
             expect(migrationRows).toEqual([{ migrationId: "ai-metrics-agent-task-id-v2" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2057,7 +2058,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2164,136 +2165,138 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
-  it.effect(
-    "delivers projections to a real OTLP endpoint as chunked protobuf",
-    Effect.fn(function* () {
-      yield* Effect.acquireUseRelease(
-        Effect.sync(() => {
-          const requests: Array<{
-            readonly body: string;
-            readonly contentType: string;
-          }> = [];
-          const server = Bun.serve({
-            // Continuation-passing rather than `async`/`await`: this repo represents async
-            // control flow with Effect, and a bare `async function` here trips the
-            // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
-            // either way. Body is captured as latin1 so protobuf's length-delimited string
-            // fields stay byte-addressable for the resource assertion below.
-            fetch: (request) =>
-              request.arrayBuffer().then((buffer) => {
-                A.appendInPlace(requests, {
-                  body: Buffer.from(buffer).toString("latin1"),
-                  contentType: request.headers.get("content-type") ?? "",
-                });
-                const rejecting = Str.includes("reject")(new URL(request.url).pathname);
-                return new Response(null, { status: rejecting ? 415 : 200 });
-              }),
-            hostname: "127.0.0.1",
-            port: 0,
-          });
-          return { requests, server };
-        }),
-        Effect.fnUntraced(function* ({ requests, server }) {
-          const endpointFor = (path: string) =>
-            AiMetricsOtlpEndpointSpec.make({
-              baseUrl: `http://127.0.0.1:${server.port}`,
-              protocol: "http/protobuf",
-              resourceAttributes: { "beep.test": "otlp-wire" },
-              signalScope: "traces_only",
-              traceUrl: `http://127.0.0.1:${server.port}${path}`,
+  it.layer(TestClock.layer())((it) => {
+    it.effect(
+      "delivers projections to a real OTLP endpoint as chunked protobuf",
+      Effect.fn(function* () {
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            const requests: Array<{
+              readonly body: string;
+              readonly contentType: string;
+            }> = [];
+            const server = Bun.serve({
+              // Continuation-passing rather than `async`/`await`: this repo represents async
+              // control flow with Effect, and a bare `async function` here trips the
+              // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
+              // either way. Body is captured as latin1 so protobuf's length-delimited string
+              // fields stay byte-addressable for the resource assertion below.
+              fetch: (request) =>
+                request.arrayBuffer().then((buffer) => {
+                  A.appendInPlace(requests, {
+                    body: Buffer.from(buffer).toString("latin1"),
+                    contentType: request.headers.get("content-type") ?? "",
+                  });
+                  const rejecting = Str.includes("reject")(new URL(request.url).pathname);
+                  return new Response(null, { status: rejecting ? 415 : 200 });
+                }),
+              hostname: "127.0.0.1",
+              port: 0,
             });
-          const inputFor = (path: string) =>
-            AiMetricsOtlpExportInput.make({
-              duckDbPath: "unused.duckdb",
-              endpoint: endpointFor(path),
-              target: AiMetricsDeployTarget.Enum.local,
-            });
-          // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
-          // thousands of turns, and one request that large is the backpressure collapse this
-          // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
-          const projections = A.makeBy(1200, (index) =>
-            AiMetricsOtlpSpanProjection.make({
-              attributes: {
-                "ai_metrics.line_number": index + 1,
-                "openinference.span.kind": "CHAIN",
-              },
-              parentSpanId: O.some("aabbccddeeff0011"),
-              spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
-              spanName: "ai_metrics.agent.turn",
-              traceId: "0123456789abcdef0123456789abcdef",
-            })
-          );
-          const batch = AiMetricsOtlpSpanProjectionBatch.make({
-            projections,
-            sessionSpanCount: 0,
-            turnIds: [],
-            turnSpanCount: projections.length,
-          });
-
-          // The live sender, not a stub: real ReadableSpan construction through the real
-          // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
-          // with HTTP 415, which is also what the rejection path below asserts.
-          const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
-            provideScopedLayer(AiMetricsOtlpSpanSender.layer)
-          );
-
-          expect(exported.spanCount).toBe(1200);
-          expect(requests.length).toBe(3);
-          pipe(
-            A.every(requests, (request) => request.contentType === "application/x-protobuf"),
-            assertTrue
-          );
-
-          // Phoenix routes spans into a project by this resource attribute. Without it every
-          // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
-          // named a project that never existed. Asserted on the wire, and pinned to the constant
-          // the reader queries for, so the two cannot drift apart silently.
-          expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
-          pipe(
-            A.every(
-              requests,
-              (request) =>
-                Str.includes("openinference.project.name")(request.body) &&
-                Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
-            ),
-            assertTrue
-          );
-
-          const retryCalls = yield* Ref.make(0);
-          const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
-            inputFor("/v1/traces"),
-            AiMetricsOtlpSpanProjectionBatch.make({
-              projections: A.take(projections, 1),
+            return { requests, server };
+          }),
+          Effect.fnUntraced(function* ({ requests, server }) {
+            const endpointFor = (path: string) =>
+              AiMetricsOtlpEndpointSpec.make({
+                baseUrl: `http://127.0.0.1:${server.port}`,
+                protocol: "http/protobuf",
+                resourceAttributes: { "beep.test": "otlp-wire" },
+                signalScope: "traces_only",
+                traceUrl: `http://127.0.0.1:${server.port}${path}`,
+              });
+            const inputFor = (path: string) =>
+              AiMetricsOtlpExportInput.make({
+                duckDbPath: "unused.duckdb",
+                endpoint: endpointFor(path),
+                target: AiMetricsDeployTarget.Enum.local,
+              });
+            // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
+            // thousands of turns, and one request that large is the backpressure collapse this
+            // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
+            const projections = A.makeBy(1200, (index) =>
+              AiMetricsOtlpSpanProjection.make({
+                attributes: {
+                  "ai_metrics.line_number": index + 1,
+                  "openinference.span.kind": "CHAIN",
+                },
+                parentSpanId: O.some("aabbccddeeff0011"),
+                spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
+                spanName: "ai_metrics.agent.turn",
+                traceId: "0123456789abcdef0123456789abcdef",
+              })
+            );
+            const batch = AiMetricsOtlpSpanProjectionBatch.make({
+              projections,
               sessionSpanCount: 0,
               turnIds: [],
-              turnSpanCount: 1,
-            })
-          ).pipe(provideScopedLayer(retryableThenSucceedingSpanSender(retryCalls)), Effect.forkChild);
-          yield* TestClock.adjust("2 seconds");
-          const retried = yield* Fiber.join(retryFiber);
+              turnSpanCount: projections.length,
+            });
 
-          expect(retried.spanCount).toBe(1);
-          expect(yield* Ref.get(retryCalls)).toBe(2);
+            // The live sender, not a stub: real ReadableSpan construction through the real
+            // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
+            // with HTTP 415, which is also what the rejection path below asserts.
+            const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
+              provideScopedLayer(AiMetricsOtlpSpanSender.layer)
+            );
 
-          // A collector that rejects the batch must surface as a typed failure, never a
-          // silent success. That confirmation is the whole reason delivery moved off
-          // fire-and-forget span emission.
-          const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
-            provideScopedLayer(AiMetricsOtlpSpanSender.layer),
-            Effect.flip
-          );
+            expect(exported.spanCount).toBe(1200);
+            expect(requests.length).toBe(3);
+            pipe(
+              A.every(requests, (request) => request.contentType === "application/x-protobuf"),
+              assertTrue
+            );
 
-          expect(rejected.message).toContain("did not accept the exported spans");
-        }),
-        ({ server }) => Effect.promise(() => server.stop(true))
-      );
-    }),
-    AI_METRICS_LONG_TEST_TIMEOUT
-  );
+            // Phoenix routes spans into a project by this resource attribute. Without it every
+            // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
+            // named a project that never existed. Asserted on the wire, and pinned to the constant
+            // the reader queries for, so the two cannot drift apart silently.
+            expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
+            pipe(
+              A.every(
+                requests,
+                (request) =>
+                  Str.includes("openinference.project.name")(request.body) &&
+                  Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
+              ),
+              assertTrue
+            );
+
+            const retryCalls = yield* Ref.make(0);
+            const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
+              inputFor("/v1/traces"),
+              AiMetricsOtlpSpanProjectionBatch.make({
+                projections: A.take(projections, 1),
+                sessionSpanCount: 0,
+                turnIds: [],
+                turnSpanCount: 1,
+              })
+            ).pipe(provideScopedLayer(retryableThenSucceedingSpanSender(retryCalls)), Effect.forkChild);
+            yield* TestClock.adjust("2 seconds");
+            const retried = yield* Fiber.join(retryFiber);
+
+            expect(retried.spanCount).toBe(1);
+            expect(yield* Ref.get(retryCalls)).toBe(2);
+
+            // A collector that rejects the batch must surface as a typed failure, never a
+            // silent success. That confirmation is the whole reason delivery moved off
+            // fire-and-forget span emission.
+            const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
+              provideScopedLayer(AiMetricsOtlpSpanSender.layer),
+              Effect.flip
+            );
+
+            expect(rejected.message).toContain("did not accept the exported spans");
+          }),
+          ({ server }) => Effect.promise(() => server.stop(true))
+        );
+      }),
+      AI_METRICS_LONG_TEST_TIMEOUT
+    );
+  });
 
   it.effect(
     "keeps a session row whose turns outlive the run that last touched it",
@@ -2408,7 +2411,7 @@ volumes:
             expect(sessions).toEqual([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2496,7 +2499,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2588,7 +2591,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2676,7 +2679,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2754,7 +2757,7 @@ volumes:
             expect(exported.sessionSpanCount).toBe(1);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2859,7 +2862,7 @@ volumes:
             expect(turnParents).toEqual(sessionSpanIds);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2934,7 +2937,7 @@ volumes:
           expect(changed.diff.modifiedPaths).toEqual([".codex/config.toml"]);
           expect(O.getOrThrow(changed.snapshot.previousSnapshotId)).toBe(result.snapshot.snapshotId);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -2978,7 +2981,7 @@ volumes:
           expect(O.getOrThrow(result.snapshot.previousSnapshotId)).toBe("config-legacy");
           expect(result.diff.modifiedPaths).toEqual(["AGENTS.md"]);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3002,7 +3005,7 @@ volumes:
 
           expect(error.message).toContain("Failed to decode previous AI metrics config snapshot artifact");
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3047,7 +3050,7 @@ volumes:
           pipe(yield* fs.exists(path.join(snapshotDir, "latest.json")), assertFalse);
           pipe(A.some(snapshotFiles, Str.endsWith(".json")), assertTrue);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3112,7 +3115,7 @@ volumes:
           expect(json).not.toContain(tmpDir);
           expect(json).not.toContain("super-secret-token");
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3154,7 +3157,7 @@ volumes:
           expect(claude.value.includedFileCount).toBe(1);
           expect(claude.value.files[0]?.sourceRole).toBe("primary");
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3199,7 +3202,7 @@ volumes:
           pipe(codex.value.limitedByMaxFiles, assertFalse);
           expect(result.discoveredFileCount).toBe(1);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3250,7 +3253,7 @@ volumes:
           expect(codex.value.files[0]?.sizeBytes).toBeLessThanOrEqual(128);
           expect(codex.value.sizeExcludedFileCount).toBe(1);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3292,7 +3295,7 @@ volumes:
           expect(codex.value.files[0]?.sourceRole).toBe("subagent");
           pipe(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none()), assertTrue);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3411,7 +3414,7 @@ volumes:
           expect(statusText).not.toContain(dataRoot);
           expect(statusText).not.toContain("secret-value");
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3475,7 +3478,7 @@ volumes:
           pipe(drill.transcriptTextPrinted, assertFalse);
           pipe(yield* fs.exists(drill.derivedDuckDbPath), assertTrue);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3522,7 +3525,7 @@ volumes:
           pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-new")), assertFalse);
           pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3599,7 +3602,7 @@ volumes:
 
           pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3687,7 +3690,7 @@ volumes:
 
           pipe(exit, Exit.isFailure, assertTrue);
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 
@@ -3825,7 +3828,7 @@ volumes:
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
           expect(labelOnlyCounts).toEqual({ agentTasks: 0, labels: 0 });
         })
-      ).pipe(Effect.scoped);
+      );
     })
   );
 });

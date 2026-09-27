@@ -11,8 +11,9 @@ import {
   requireAbsoluteAiMetricsDataRoot,
   resolveAiMetricsDataRoot,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";

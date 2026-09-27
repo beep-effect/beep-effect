@@ -10,9 +10,10 @@ import {
   makeAiMetricsInstallSpec,
 } from "@beep/repo-ai-metrics/install";
 import { AiMetricsDeployTarget, AiMetricsPrivacyMode, AiMetricsTool } from "@beep/repo-ai-metrics/models";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

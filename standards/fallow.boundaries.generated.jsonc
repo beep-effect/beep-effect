@@ -3232,6 +3232,7 @@
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3243,6 +3244,7 @@
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

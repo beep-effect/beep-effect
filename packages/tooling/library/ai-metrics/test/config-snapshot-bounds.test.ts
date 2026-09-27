@@ -9,10 +9,11 @@ import {
   makeAiMetricsConfigSnapshot,
 } from "@beep/repo-ai-metrics/config-snapshot";
 import { ConfigSnapshot } from "@beep/repo-ai-metrics/models";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

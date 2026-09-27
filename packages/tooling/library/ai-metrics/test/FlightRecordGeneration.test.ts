@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FlightRecordCompositionInput, FlightRecordCompositionInputArbitrary } from "@beep/repo-ai-metrics";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as S from "effect/Schema";

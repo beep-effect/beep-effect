@@ -21,9 +21,10 @@ import {
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
@@ -556,7 +557,7 @@ const expectSilentRefusal = (run: WriterRun): void => {
   expect(run.rows).toEqual([]);
 };
 
-layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
+it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
@@ -1254,7 +1255,7 @@ const expectSwitchOk = (run: SwitchRun): void => {
 // stderr is still expected empty on every success path: `jq` failing to parse a
 // hand-mangled sentinel is handled, and letting its diagnostics through would
 // train operators to ignore the one channel that reports real trouble.
-layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
+it.layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
   it.effect("keeps the first disarm's window start and reason when disarm runs again", () =>
     Effect.gen(function* () {
       const store = yield* makeSwitchStore();

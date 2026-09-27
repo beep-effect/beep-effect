@@ -16,9 +16,10 @@ import {
   sequenceBreakRoot,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, Match, Path, pipe, Result, Schedule, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -363,7 +364,7 @@ const expectSilentSuccess = (run: { readonly exitCode: number; readonly stderr: 
   expect(run.stdout).toBe("");
 };
 
-layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notification contracts", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notification contracts", (it) => {
   it.effect("reads UTC notification shards chronologically and preserves their row order", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

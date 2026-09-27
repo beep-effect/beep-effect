@@ -1,4 +1,5 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer, Ref, Schema } from "effect";
 import * as EventGroup from "effect/eventlog/EventGroup";
 import * as EventJournal from "effect/eventlog/EventJournal";

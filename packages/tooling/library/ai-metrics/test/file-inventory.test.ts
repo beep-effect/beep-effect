@@ -1,6 +1,7 @@
 import { AiMetricsFileInventoryError, listAiMetricsDirectoryFileInfo } from "@beep/repo-ai-metrics/file-inventory";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -12,7 +13,7 @@ const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, 
     (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))
   );
 
-layer(NodeServices.layer)("AI metrics file inventory", (it) => {
+it.layer(NodeServices.layer)("AI metrics file inventory", (it) => {
   it.effect("recursively inventories regular files", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {

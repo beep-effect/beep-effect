@@ -17,8 +17,9 @@ import {
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

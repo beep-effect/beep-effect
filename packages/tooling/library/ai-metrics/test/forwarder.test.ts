@@ -4,7 +4,8 @@ import {
   AiMetricsForwarderRunResult,
   AiMetricsForwarderTimerInput,
 } from "@beep/repo-ai-metrics/forwarder";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect, Redacted } from "effect";
 import * as Base64 from "effect/encoding/Base64";

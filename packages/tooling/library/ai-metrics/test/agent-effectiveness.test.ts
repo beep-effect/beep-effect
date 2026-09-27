@@ -30,10 +30,11 @@ import {
   makeAgentEffectivenessPromptBundle,
   syncAgentEffectivenessPhoenix,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { privacySafeSystemTempRoot } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient } from "effect/http";

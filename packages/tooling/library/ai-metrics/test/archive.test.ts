@@ -3,9 +3,10 @@ import {
   decryptEncryptedRawArchiveEnvelope,
   writeEncryptedRawArchiveObject,
 } from "@beep/repo-ai-metrics/archive";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, pipe, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

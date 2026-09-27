@@ -7,7 +7,8 @@ import {
   AiMetricsMirrorStatus,
   aiMetricsMirrorPayloadContainsJsonStringPrefix,
 } from "@beep/repo-ai-metrics";
-import { expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 

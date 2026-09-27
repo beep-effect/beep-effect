@@ -11,9 +11,10 @@ import {
   SessionLeaseTransition,
   TelemetryV2Store,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -60,7 +61,7 @@ const compositionInputFrom = (record: FlightRecord): FlightRecordCompositionInpu
     evidenceRefs: record.evidenceRefs,
   });
 
-layer(NodeServices.layer)("telemetry-v2 store", (it) => {
+it.layer(NodeServices.layer)("telemetry-v2 store", (it) => {
   it.prop(
     "keeps record-wide evidence tier and OIP taint out of generated composition inputs",
     [FlightRecordCompositionInputArbitrary],

@@ -11,9 +11,10 @@ import {
   WaitReason,
   weakestEvidenceTier,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -74,7 +75,7 @@ const singleSummary = (status: "read" | "tombstoned" | "unreachable" | "skipped"
   unemittableCount: status === "unemittable" ? 1 : 0,
 });
 
-layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
+it.layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
   it.effect("round-trips the hand-written real-session flight record", () =>
     Effect.gen(function* () {
       const raw = yield* readFixture("flight-record.json");

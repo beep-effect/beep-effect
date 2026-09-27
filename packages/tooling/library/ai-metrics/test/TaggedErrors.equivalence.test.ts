@@ -16,7 +16,8 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
-import { describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as S from "effect/Schema";

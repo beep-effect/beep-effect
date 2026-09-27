@@ -26,8 +26,9 @@ import {
 } from "@beep/repo-ai-metrics";
 import { Sha256Hex } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
