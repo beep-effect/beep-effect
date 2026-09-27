@@ -1544,14 +1544,16 @@
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/dock",
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-runner"
         ]
       },
       {

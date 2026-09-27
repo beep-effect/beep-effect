@@ -17,7 +17,8 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { resize } from "@beep/dock-react/internal/ResizeObserverHarness";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Effect } from "effect";

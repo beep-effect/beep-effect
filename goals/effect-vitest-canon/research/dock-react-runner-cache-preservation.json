@@ -1,0 +1,42 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/dock-react#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/dock-react#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/dock-react#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/dock-react#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/dock-react#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock-react#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock-react#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock-react#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "5ca571572267b616eb8232dfba16dbe8fa9f542b99fdabcd8dcc63e28f3a5b7b"
+}

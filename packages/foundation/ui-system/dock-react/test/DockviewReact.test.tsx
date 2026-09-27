@@ -21,7 +21,8 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { activeResizeObserverCount, resize } from "@beep/dock-react/internal/ResizeObserverHarness";
-import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
 import * as A from "effect/Array";

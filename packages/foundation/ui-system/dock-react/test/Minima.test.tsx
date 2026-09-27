@@ -14,7 +14,8 @@ import {
 import { DockviewReact } from "@beep/dock-react";
 import { resize } from "@beep/dock-react/internal/ResizeObserverHarness";
 import { chromeLinuxArial16, naturalWidth, PretextCaptureFixture } from "@beep/pretext";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { Effect, pipe } from "effect";
 import * as Layer from "effect/Layer";
