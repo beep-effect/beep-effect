@@ -1788,15 +1788,15 @@
     "file": "packages/drivers/n3/test/N3.equivalence.test.ts",
     "package": "@beep/n3",
     "kind": "test",
-    "bytes": 778,
-    "lines": 16
+    "bytes": 899,
+    "lines": 19
   },
   {
     "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
     "package": "@beep/n3",
     "kind": "test",
-    "bytes": 5306,
-    "lines": 123
+    "bytes": 4913,
+    "lines": 122
   },
   {
     "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
