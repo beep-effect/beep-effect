@@ -38,3 +38,21 @@ Strict schemas validate 5,780 unique root findings and 14,577 unique ledger rows
 plus census and timing artifacts. Reconciliation preserves 683 unrelated ledger
 hashes and all unrelated root/census objects byte-for-byte. The saved remaining
 worklist has 32 packages and 1,246 actions. Final goal-wide proof remains open.
+
+## Timestamp property follow-up
+
+Source commit: `ec942da37b`. The consolidated publish proof identified a new
+schema-first advisory in `ProvO.test.ts`: its new boundary regressions brought
+the file to three codec assertions without a local schema-derived property.
+A native property now encodes and decodes `Arbitrary.schema(ProvDateTime)` and
+checks source-schema equivalence, with default floor 100 and environment replay.
+The boundary examples and all earlier assertions remain unchanged. Inverting
+only this predicate fails with seed 20260708 and a shrunk counterexample.
+
+Full RDF audit and docgen pass at 400 trials with seed 20260708 (8.7 and 3.5
+seconds). Root schema-first passes with zero advisories. Normal configured
+suites now pass 104 cases with zero skips on both runtimes. Fresh, source-stable
+observations are 4.521 seconds on Node and 1.616 seconds on Bun; their public
+context receipts replace the earlier after observations and include load,
+pressure, versions and limits. These observations ran after package proof with
+no own publisher active and do not establish a causal speedup.

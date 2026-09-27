@@ -1,7 +1,7 @@
 {
   "schemaVersion": "effect-vitest-p2-timing-context/v1",
   "package": "@beep/rdf",
-  "sourceHead": "9b28db6c53c137315b452afc81a095db2799beab",
+  "sourceHead": "ec942da37b4ba80f7153a822470d1749075dceb0",
   "runtime": {
     "node": "v24.20.0",
     "bun": "1.4.2"
@@ -14,20 +14,20 @@
     "--reporter=json",
     "--outputFile=<private absolute raw report>"
   ],
-  "wholeCommandSeconds": 4.371177141001681,
-  "bunWholeCommandSeconds": 1.6665270310040796,
+  "wholeCommandSeconds": 4.520596259011654,
+  "bunWholeCommandSeconds": 1.6164561809855513,
   "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
-  "loadBefore": [7.79443359375, 3.75244140625, 2.755859375],
-  "loadAfter": [7.79443359375, 3.75244140625, 2.755859375],
+  "loadBefore": [2.62939453125, 2.681640625, 3.30126953125],
+  "loadAfter": [3.1396484375, 2.78662109375, 3.33203125],
   "pressureBefore": {
-    "cpu": "some avg10=0.12 avg60=0.18 avg300=0.08 total=774811639\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215911\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139871\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=841016743\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=735753619\n"
+    "cpu": "some avg10=0.00 avg60=0.08 avg300=0.08 total=787756574\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217499\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141394\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=849199633\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742850608\n"
   },
   "pressureAfter": {
-    "cpu": "some avg10=0.08 avg60=0.17 avg300=0.07 total=774819804\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215911\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139871\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=841016780\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=735753656\n"
+    "cpu": "some avg10=0.00 avg60=0.08 avg300=0.07 total=787766264\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217499\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141394\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=849200474\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742851254\n"
   },
   "limits": {
     "RLIMIT_NOFILE": [1048576, 1048576],
@@ -38,7 +38,7 @@
   "sourceHashes": [
     {
       "file": "bun.lock",
-      "sha256": "71bf58efc72c59e163c15c2d84d8258b8713f6739df0959624269f1798eca4e9"
+      "sha256": "ae3c610ff6b37fa36d3616297537f0109f2ba325310bbb486b20d19ccfcd8db8"
     },
     {
       "file": "packages/foundation/modeling/rdf/AGENTS.md",
@@ -198,7 +198,7 @@
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
-      "sha256": "050b27d701c756c29c7fc4af43ad8d1dee12d947921861e3f844488d89da3ce0"
+      "sha256": "ac437f6a8067ba32948fd064354171e4de6d89d814dc3c6fae58e0ea96b971a8"
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
@@ -243,26 +243,26 @@
   ],
   "environmentMode": "Configured RDF schema, RDF/JS term and PROV codec Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
   "bunProof": {
-    "passedTests": 103,
+    "passedTests": 104,
     "skippedTests": 0,
     "failedTests": 0,
     "sourceStable": true,
-    "loadBefore": [7.79443359375, 3.75244140625, 2.755859375],
-    "loadAfter": [8.53173828125, 3.97265625, 2.83251953125],
+    "loadBefore": [3.1396484375, 2.78662109375, 3.33203125],
+    "loadAfter": [3.44921875, 2.85693359375, 3.35205078125],
     "pressureBefore": {
-      "cpu": "some avg10=0.08 avg60=0.17 avg300=0.07 total=774819851\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215911\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139871\n",
-      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=841016780\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=735753656\n"
+      "cpu": "some avg10=0.00 avg60=0.08 avg300=0.07 total=787766288\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217499\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141394\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=849200474\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742851254\n"
     },
     "pressureAfter": {
-      "cpu": "some avg10=0.06 avg60=0.16 avg300=0.07 total=774824208\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215911\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139871\n",
-      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=841017810\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=735754672\n"
+      "cpu": "some avg10=0.00 avg60=0.07 avg300=0.07 total=787771539\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217499\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141394\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=849200474\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742851254\n"
     }
   },
   "nodeOutcomes": {
-    "passed": 103,
+    "passed": 104,
     "skipped": 0
   },
-  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Configured RDF suites pass90 cases before and103 after, with no skips.351 original assertions and90 registrations remain;11 formerly grouped laws now register separately, plus the new core law and two timestamp boundaries.21original schema laws retain domains and floors25/50/100. The after phase overlaps an early publisher. No external endpoint is contacted."
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Configured RDF suites pass90 cases before and104 after, with no skips.351 original assertions and90 registrations remain;11 formerly grouped laws now register separately, plus the core law, two timestamp boundaries, and the source-derived timestamp round-trip law.21original schema laws retain domains and floors25/50/100. The follow-up after phase ran after full package proof with no own publisher active. No external endpoint is contacted."
 }

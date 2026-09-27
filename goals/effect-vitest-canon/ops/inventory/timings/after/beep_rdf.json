@@ -1,53 +1,53 @@
 {
   "package": "@beep/rdf",
   "runner": "node-vitest",
-  "capturedAt": "2026-09-27T21:49:51.051000+00:00",
-  "totalMs": 4046.070068359375,
-  "testCount": 103,
+  "capturedAt": "2026-09-27T23:20:11.887000+00:00",
+  "totalMs": 4155.055908203125,
+  "testCount": 104,
   "files": [
     {
       "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
-      "ms": 44.22265625,
+      "ms": 41.744873046875,
       "tests": 10
     },
     {
       "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
-      "ms": 12.59130859375,
+      "ms": 10.179443359375,
       "tests": 2
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
-      "ms": 11.61376953125,
-      "tests": 8
+      "ms": 13.76123046875,
+      "tests": 9
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
-      "ms": 223.070068359375,
+      "ms": 213.055908203125,
       "tests": 27
     },
     {
       "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
-      "ms": 189.575439453125,
+      "ms": 188.59423828125,
       "tests": 40
     },
     {
       "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
-      "ms": 9.725341796875,
+      "ms": 10.3974609375,
       "tests": 5
     },
     {
       "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
-      "ms": 1.263671875,
+      "ms": 0.91064453125,
       "tests": 1
     },
     {
       "file": "packages/foundation/modeling/rdf/test/URI.test.ts",
-      "ms": 36.796875,
+      "ms": 33.59619140625,
       "tests": 9
     },
     {
       "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
-      "ms": 1.389892578125,
+      "ms": 1.878662109375,
       "tests": 1
     }
   ],
@@ -55,52 +55,52 @@
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
       "testName": "round-trips constructive supported PROV records and qualified relations without RDF loss",
-      "ms": 205.6192000000001
+      "ms": 196.40838299999996
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
       "testName": "ProvRdf round-trips the supported core through a named audit graph",
-      "ms": 205.43821100000014
+      "ms": 196.19948000000022
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
       "testName": "ProvRdf keeps local object references reversible",
-      "ms": 205.43438500000002
+      "ms": 196.19463300000052
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
       "testName": "ProvRdf requires relation discriminators when decoding a provenance bundle",
-      "ms": 205.35025600000017
+      "ms": 196.11313800000016
     },
     {
       "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
       "testName": "ProvRdf exports the PROV-O terms required by the core codec",
-      "ms": 205.3295839999996
+      "ms": 196.08661699999993
     },
     {
       "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
       "testName": "@beep/rdf semantic metadata round-trips decode/encode for metadata derived from the source schema",
-      "ms": 134.56128800000033
+      "ms": 124.05673700000034
     },
     {
       "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
       "testName": "@beep/rdf crispening parity round-trips schema-derived arbitrary values through crispened schemas JsonLdDocument",
-      "ms": 104.57546999999977
-    },
-    {
-      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
-      "testName": "@beep/rdf crispening parity round-trips schema-derived arbitrary values through crispened schemas GraphTerm",
-      "ms": 43.977840000000015
-    },
-    {
-      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
-      "testName": "@beep/rdf crispening parity round-trips schema-derived arbitrary values through crispened schemas EvidenceAnchor",
-      "ms": 43.73702900000035
+      "ms": 105.59427899999991
     },
     {
       "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
       "testName": "IRI only generates RFC 3987 IRIReference values that decode to themselves",
-      "ms": 43.318534
+      "ms": 40.74489900000026
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf crispening parity round-trips schema-derived arbitrary values through crispened schemas GraphTerm",
+      "ms": 40.09519
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
+      "testName": "IRI only generates RFC 3987 AbsoluteIRI values that decode to themselves",
+      "ms": 40.05542800000012
     }
   ]
 }

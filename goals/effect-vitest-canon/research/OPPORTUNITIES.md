@@ -3677,3 +3677,12 @@ whole-value toEqual assertion is retained with a scoped detector exception.
 Helper selection must account for nested schema instances, not only Option shape.
 Two optional Boolean assertions also require strictEqual so undefined remains a
 failure without narrowing the assertion input type prematurely.
+
+## Codec regressions can cross the schema-property lint threshold
+
+The consolidated early publisher stopped at `lint:schema-first` after adding
+PROV timestamp boundary regressions. `ProvO.test.ts` now had three codec
+assertions without a local schema-derived property, despite adjacent RDF
+property coverage and a passing package audit. A native source-derived timestamp
+round-trip property closes the gap. Run the root schema-first gate when adding
+codec regressions; package audit alone does not enforce this file-level policy.
