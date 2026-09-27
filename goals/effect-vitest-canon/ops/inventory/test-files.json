@@ -822,43 +822,43 @@
     "file": "packages/agents/client/test/Chat.layer.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 1112,
-    "lines": 19
+    "bytes": 1148,
+    "lines": 20
   },
   {
     "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 5131,
-    "lines": 138
+    "bytes": 5268,
+    "lines": 134
   },
   {
     "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 4768,
-    "lines": 126
+    "bytes": 5701,
+    "lines": 135
   },
   {
     "file": "packages/agents/client/test/run-turn-defect.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 3886,
-    "lines": 87
+    "bytes": 4504,
+    "lines": 106
   },
   {
     "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 32335,
-    "lines": 762
+    "bytes": 31264,
+    "lines": 705
   },
   {
     "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
     "package": "@beep/agents-client",
     "kind": "test",
-    "bytes": 1854,
-    "lines": 40
+    "bytes": 2410,
+    "lines": 53
   },
   {
     "file": "packages/agents/domain/test/AgentsDomain.test.ts",

@@ -1,5 +1,10 @@
 # @beep/agents-client P1 four-lens digest
 
+P2 update: this historical P1 audit is now adjudicated. All nine human proposals
+are fixed; current detector exceptions are explained in the ledger. See the
+[Agents Client P2 proof](../../../research/agents-client-p2-proof.md) for changes,
+controls, runner integration and final timings. The original audit follows.
+
 6 complete census files, 24 rows: 9 review proposals and 15 coverage-only NONE rows. All remain open judgments. This is a source-only audit, not remediation.
 
 | Lens | Reviews | NONE | Major | Minor | Info |
