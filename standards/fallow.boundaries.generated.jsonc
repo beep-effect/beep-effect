@@ -1620,6 +1620,7 @@
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1628,6 +1629,7 @@
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
