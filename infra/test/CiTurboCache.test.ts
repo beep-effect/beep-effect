@@ -1,5 +1,6 @@
 import { CiTurboCache, CiTurboCachePulumiConfigValues } from "@beep/infra";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -18,14 +19,14 @@ const decodeConfigValues = S.decodeUnknownResult(CiTurboCachePulumiConfigValues)
 
 describe("@beep/infra CiTurboCache", () => {
   it("accepts a complete cache configuration", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
   });
 
   it("accepts DNS-compatible bucket names and rejects malformed names", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, bucketName: "Beep_Cache" }))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, bucketName: "192.168.0.1" }))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, bucketName: "ab" }))).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, bucketName: "Beep_Cache" }), Result.isFailure, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, bucketName: "192.168.0.1" }), Result.isFailure, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, bucketName: "ab" }), Result.isFailure, assertTrue);
   });
 
   it("rejects S3-reserved bucket name prefixes and suffixes", () => {
@@ -40,49 +41,49 @@ describe("@beep/infra CiTurboCache", () => {
       "beep-cache--table-s3",
     ];
     for (const bucketName of reserved) {
-      expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, bucketName }))).toBe(true);
+      pipe(decodeConfigValues({ ...validConfigValues, bucketName }), Result.isFailure, assertTrue);
     }
-    expect(Result.isSuccess(decodeConfigValues({ ...validConfigValues, bucketName: "beep-cache-s3aliased" }))).toBe(
-      true
+    pipe(
+      decodeConfigValues({ ...validConfigValues, bucketName: "beep-cache-s3aliased" }),
+      Result.isSuccess,
+      assertTrue
     );
   });
 
   it("accepts SSM parameter ARNs and rejects other ARN kinds", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeConfigValues({
-          ...validConfigValues,
-          readOnlyTokenSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeConfigValues({
-          ...validConfigValues,
-          writerSharedSecretSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
-        })
-      )
-    ).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(
+      decodeConfigValues({
+        ...validConfigValues,
+        readOnlyTokenSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeConfigValues({
+        ...validConfigValues,
+        writerSharedSecretSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
     const { writerSharedSecretSsmParameterArn: _writerSharedSecretSsmParameterArn, ...missingWriterSharedSecret } =
       validConfigValues;
-    expect(Result.isFailure(decodeConfigValues(missingWriterSharedSecret))).toBe(true);
+    pipe(decodeConfigValues(missingWriterSharedSecret), Result.isFailure, assertTrue);
   });
 
   it("accepts a KMS key ARN and rejects malformed or missing values", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, tokenKmsKeyArn: "not-an-arn" }))).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, tokenKmsKeyArn: "not-an-arn" }), Result.isFailure, assertTrue);
     const { tokenKmsKeyArn: _tokenKmsKeyArn, ...missingKmsKeyArn } = validConfigValues;
-    expect(Result.isFailure(decodeConfigValues(missingKmsKeyArn))).toBe(true);
+    pipe(decodeConfigValues(missingKmsKeyArn), Result.isFailure, assertTrue);
   });
 
   it("accepts absolute ZIP paths and rejects relative or non-ZIP paths", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, lambdaZipPath: "cache.zip" }))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, lambdaZipPath: "/artifacts/cache" }))).toBe(
-      true
-    );
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, lambdaZipPath: "cache.zip" }), Result.isFailure, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, lambdaZipPath: "/artifacts/cache" }), Result.isFailure, assertTrue);
   });
 
   it.effect(

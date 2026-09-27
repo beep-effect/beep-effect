@@ -8,7 +8,8 @@ import {
 } from "@beep/infra";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
@@ -21,12 +22,12 @@ describe("@beep/infra OipWeb", () => {
     const args = makeOipWebStackArgsFromConfigValues();
 
     expect(args.state.bucketName).toBe("oip-law-pulumi-state");
-    expect(args.state.createDynamoDbLockTable).toBe(false);
-    expect(args.state.protect).toBe(true);
-    expect(args.dns.attachProductionDomains).toBe(false);
-    expect(args.dns.attachStagingDomain).toBe(true);
+    pipe(args.state.createDynamoDbLockTable, assertFalse);
+    pipe(args.state.protect, assertTrue);
+    pipe(args.dns.attachProductionDomains, assertFalse);
+    pipe(args.dns.attachStagingDomain, assertTrue);
     expect(args.assets.bucketName).toBe("assets.oip.law");
-    expect(args.assets.protect).toBe(true);
+    pipe(args.assets.protect, assertTrue);
     expect(args.dns.productionDomain).toBe("oip.law");
     expect(args.dns.stagingDomain).toBe("staging.oip.law");
     expect(args.dns.vercelApexTarget).toBe("76.76.21.21");
@@ -68,12 +69,12 @@ describe("@beep/infra OipWeb", () => {
 
     expect(args.state.bucketName).toBe("example-pulumi-state");
     expect(args.state.lockTableName).toBe("example-pulumi-state-locks");
-    expect(args.state.createDynamoDbLockTable).toBe(true);
+    pipe(args.state.createDynamoDbLockTable, assertTrue);
     expect(args.state.region).toBe("us-west-2");
     expect(args.assets.bucketName).toBe("assets.example.com");
     expect(args.assets.region).toBe("us-west-2");
-    expect(args.dns.attachProductionDomains).toBe(true);
-    expect(args.dns.attachStagingDomain).toBe(false);
+    pipe(args.dns.attachProductionDomains, assertTrue);
+    pipe(args.dns.attachStagingDomain, assertFalse);
     expect(O.getOrUndefined(args.dns.cloudflareZoneId)).toBe("zone_123");
     expect(O.getOrUndefined(args.dns.legacyCloudflareZoneId)).toBe("legacy_zone_123");
     expect(O.getOrUndefined(args.dns.legacyProductionDnsRecordImportId)).toBe("legacy_zone_123/legacy_apex_record");
@@ -115,9 +116,9 @@ describe("@beep/infra OipWeb", () => {
       })
     );
 
-    expect(decoded.attachProductionDomains).toBe(true);
-    expect(decoded.attachStagingDomain).toBe(false);
-    expect(decoded.createDynamoDbLockTable).toBe(true);
+    pipe(decoded.attachProductionDomains, assertTrue);
+    strictEqual(decoded.attachStagingDomain, false);
+    pipe(decoded.createDynamoDbLockTable, assertTrue);
     expect(decoded.productionDnsRecordImportId).toBe("zone_123/apex_record");
     expect(decoded.pulumiStateBucketName).toBe("oip-state");
   });

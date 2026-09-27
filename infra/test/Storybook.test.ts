@@ -7,6 +7,7 @@ import {
 } from "@beep/infra";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -26,7 +27,7 @@ describe("@beep/infra Storybook", () => {
     expect(args.vercel.buildCommand).toBe("cd ../.. && bun run storybook:build");
     expect(args.vercel.productionBranch).toBe("main");
     expect(args.vercel.vercelAuthenticationDeploymentType).toBe("none");
-    expect(O.isNone(args.vercel.teamId)).toBe(true);
+    assertNone(args.vercel.teamId);
   });
 
   it("maps Pulumi config overrides into Storybook Vercel args", () => {

@@ -51,6 +51,7 @@ const encodeUnknownOpenClawWorkstationPaths = S.encodeUnknownEffect(OpenClawWork
 const isOpenClawBackupShipScriptInput = S.is(OpenClawBackupShipScriptInput);
 const isOpenClawGenerationIdentityScriptInput = S.is(OpenClawGenerationIdentityScriptInput);
 
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import {
   openClawLegalSoulMarkdown,
   openClawProofSkillMarkdown,
@@ -189,15 +190,15 @@ describe("@beep/infra OpenClaw", () => {
       providerId: "hosted",
     };
 
-    expect(Result.isSuccess(decodeOpenClawHostedProviderConfigResult(provider))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeOpenClawHostedProviderConfigResult({
-          ...provider,
-          baseUrl: "http://hosted.example.test/v1",
-        })
-      )
-    ).toBe(true);
+    pipe(decodeOpenClawHostedProviderConfigResult(provider), Result.isSuccess, assertTrue);
+    pipe(
+      decodeOpenClawHostedProviderConfigResult({
+        ...provider,
+        baseUrl: "http://hosted.example.test/v1",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("applies workstation defaults around a declared identity", () => {
@@ -210,7 +211,7 @@ describe("@beep/infra OpenClaw", () => {
     expect(defaultArgs.deployment.gatewayAuthTokenRef).toBe("op://beep-openclaw/gateway/token");
     expect(defaultArgs.deployment.telegramDmPolicy).toBe("pairing");
     expect(defaultArgs.deployment.telegramGroupPolicy).toBe("disabled");
-    expect(O.isNone(defaultArgs.backup)).toBe(true);
+    assertNone(defaultArgs.backup);
   });
 
   it("maps the workstation Pulumi stack config to stack args", () => {
@@ -220,7 +221,7 @@ describe("@beep/infra OpenClaw", () => {
     expect(args.identity.uid).toBe(1000);
     expect(args.paths.configRoot).toBe("/etc/beep/openclaw");
     expect(args.deployment.agentId).toBe("workstation");
-    expect(O.isNone(args.backup)).toBe(true);
+    assertNone(args.backup);
   });
 
   it("renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI", () => {
@@ -402,8 +403,8 @@ describe("@beep/infra OpenClaw", () => {
     });
     const backupInput = OpenClawBackupShipScriptInput.make({ backup, generation: defaultGeneration });
 
-    expect(isOpenClawGenerationIdentityScriptInput(generationIdentityInput)).toBe(true);
-    expect(isOpenClawBackupShipScriptInput(backupInput)).toBe(true);
+    pipe(isOpenClawGenerationIdentityScriptInput(generationIdentityInput), assertTrue);
+    pipe(isOpenClawBackupShipScriptInput(backupInput), assertTrue);
   });
 
   it.layer(NodeServices.layer)(
@@ -454,7 +455,7 @@ describe("@beep/infra OpenClaw", () => {
   it("renders a run script that resolves the pointer and dispatches on mode", () => {
     const runScript = renderOpenClawRunScript(defaultGeneration);
 
-    expect(runScript.startsWith("#!/usr/bin/env bash\n# BEEP_OPENCLAW_MANAGED\nset -euo pipefail\n")).toBe(true);
+    pipe(runScript.startsWith("#!/usr/bin/env bash\n# BEEP_OPENCLAW_MANAGED\nset -euo pipefail\n"), assertTrue);
     expect(runScript).toContain('generation_dir="$(dirname "$(readlink -f "$0")")"');
     expect(runScript).toContain("unset OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN");
     expect(runScript).toContain('"${op_binary}" whoami >/dev/null');
@@ -564,7 +565,7 @@ describe("@beep/infra OpenClaw", () => {
     for (const command of rendered) {
       // A login shell sources the user-writable ~/.bash_profile before the first rendered line,
       // which lets an unprivileged user define a `sudo` function and hijack the armed ticket.
-      expect(command.startsWith(scriptWrapperPrefix)).toBe(true);
+      pipe(command.startsWith(scriptWrapperPrefix), assertTrue);
       expect(command).not.toContain("/bin/bash -lc");
 
       const body = scriptBody(command);
@@ -728,7 +729,7 @@ describe("@beep/infra OpenClaw", () => {
     expect(script).toContain("alert identity-runtime-dir");
     expect(script).toContain("DRIFT-AUDIT-COMPLETE");
     // Alert-only: the audit reports, an operator redeploys.
-    expect(script.endsWith("exit 0")).toBe(true);
+    pipe(script.endsWith("exit 0"), assertTrue);
     expect(script).not.toContain("systemctl --user restart");
   });
 
@@ -759,7 +760,7 @@ describe("@beep/infra OpenClaw", () => {
     expect(script).toContain("channels status --probe");
     expect(script).toContain("ALERT: OPENCLAW_CONFIG_DRIFT");
     expect(script).toContain("PROBE-COMPLETE");
-    expect(script.endsWith("exit 0")).toBe(true);
+    pipe(script.endsWith("exit 0"), assertTrue);
   });
 
   it.layer(NodeServices.layer)("renders a separate fail-closed live acceptance command", (it) =>
@@ -777,7 +778,7 @@ describe("@beep/infra OpenClaw", () => {
         expect(script).toContain("P3_SKILL_OK");
         expect(script).toContain("export OPENCLAW_CONFIG_PATH='/etc/beep/openclaw/current/openclaw.json'");
         expect(script).toContain("export OPENCLAW_STATE_DIR='/var/lib/beep/openclaw'");
-        expect(script.trimEnd().endsWith("exit 0")).toBe(false);
+        pipe(script.trimEnd().endsWith("exit 0"), assertFalse);
         const [stderr, exitCode] = yield* runCaptured(ChildProcess.make("/bin/bash", ["-lc", script]));
         expect(exitCode).toBe(1);
         expect(stderr).toContain("usage: live-acceptance degraded|restored");

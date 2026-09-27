@@ -3567,3 +3567,17 @@ focused schema-first rerun was unnecessary attribution work. Operator summaries
 should preserve the actual failed inner lane from the verdict instead of an
 older or broad wrapper category. The remaining AI metrics findings still need
 review and ledger reconciliation; this discrepancy is not a reason to waive them.
+
+### Infra baseline: stale SDK transform after dependency preparation
+
+- Task: establish the unchanged infrastructure Node/Vitest baseline.
+- Evidence: 92 cases passed and the CiFleetController wiring case failed with
+  `Cannot find module './provider'`. The existing `infra:prepare-gha-runners`
+  command built the local SDK successfully, and plain Node loaded its Provider,
+  but the cached Vitest case still failed. Disabling only the filesystem module
+  cache passed all11 cases in that file. The cached CiFleetController transform
+  retained the pre-build `@pulumi/gharunners/index.ts` target; that single entry
+  was archived with a hash receipt before refreshing the normal cached baseline.
+- Prevention: prepare local generated SDKs before first test transform, or include
+  generated dependency entrypoint changes in resolution-cache invalidation.
+  This is environment attribution; no production source or SDK stub was changed.

@@ -8,6 +8,7 @@ import {
 import { AiMetricsDeployTarget, AiMetricsInstallInput, makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -28,7 +29,7 @@ describe("@beep/infra AIMetrics", () => {
     );
 
     expect(args.install.target).toBe("dankserver");
-    expect(O.isNone(args.install.dataRoot)).toBe(true);
+    assertNone(args.install.dataRoot);
     expect(args.remote.remoteConfigRoot).toBe("/home/elpresidank/ai-metrics");
     expect(args.remote.remoteMirrorRoot).toBe("/srv/data/ai-metrics/p7-derived-mirror");
     expect(args.remote.phoenixTailnetHttpsPort).toBe(8447);

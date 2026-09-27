@@ -15,7 +15,8 @@ import {
 } from "@beep/infra";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
@@ -37,7 +38,7 @@ describe("@beep/infra CiRunners", () => {
     expect(args.worker.rootVolumeSizeGb).toBe(100);
     expect(args.worker.maxRunMinutes).toBe(60);
     expect(args.reaper.ttlMinutes).toBe(90);
-    expect(O.isNone(args.image.amiId)).toBe(true);
+    assertNone(args.image.amiId);
     expect(args.image.ssmParameterName).toBe(
       "/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"
     );
@@ -148,7 +149,7 @@ describe("@beep/infra CiRunners", () => {
     const encoded = Effect.runSync(encodeUnknownCiRunnersNetworkConfig(network));
     const decoded = Effect.runSync(decodeCiRunnersNetworkConfig(encoded));
 
-    expect(equivalent(decoded, network)).toBe(true);
+    pipe(equivalent(decoded, network), assertTrue);
   });
 
   it("round-trips CI runner config schemas through encoded wire values", () => {
