@@ -2520,3 +2520,14 @@ after test-runner devDependencies were added. Package audit and docgen had passe
 but they did not establish generated project-reference parity. Run tsconfig-sync
 and its check after adding runner dependencies, before early publication. The
 service-driver wave applied the generator to its six affected configs as well.
+
+## Early publication retry after GraphQL exhaustion (2026-09-27)
+
+Pretext's early publisher pushed its reviewed head, then `gh pr create` failed
+with `API rate limit already exceeded`. After quota recovery, retrying the same
+canonical early-publish command refused because no local commit remained ahead
+of the publish remote. No full proof had started. A subsequent required merge
+from main supplied a meaningful new commit and publication created PR #1303.
+A retry path that recognizes an already-pushed reviewed head with no PR would
+avoid coupling PR-creation recovery to another branch change. Preserve the
+normal proof and provenance gates; this receipt does not authorize bypassing them.
