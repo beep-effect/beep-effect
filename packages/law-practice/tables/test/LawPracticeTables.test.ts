@@ -6,9 +6,10 @@ import { KG_EDGE_TABLE_NAME, kgEdgeTable } from "@beep/law-practice-tables/entit
 import { KG_NODE_TABLE_NAME, kgNodeTable } from "@beep/law-practice-tables/entities/KgNode";
 import * as PatentCitationEvent from "@beep/law-practice-tables/entities/PatentCitationEvent";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { Order, Result } from "effect";
+import { Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 
@@ -128,15 +129,15 @@ describe("PatentCitationEventTable", () => {
   });
 
   it("rejects a row carrying no recorded observation", () => {
-    expect(Result.isFailure(PatentCitationEvent.fromPatentCitationEventRow({}))).toBe(true);
-    expect(
-      Result.isFailure(
-        Result.flatMap(
-          PatentCitationEvent.fromPatentCitationEventRow({}),
-          PatentCitationEvent.toPatentCitationEventInsert
-        )
-      )
-    ).toBe(true);
+    pipe(PatentCitationEvent.fromPatentCitationEventRow({}), Result.isFailure, assertTrue);
+    pipe(
+      Result.flatMap(
+        PatentCitationEvent.fromPatentCitationEventRow({}),
+        PatentCitationEvent.toPatentCitationEventInsert
+      ),
+      Result.isFailure,
+      assertTrue
+    );
   });
 });
 
@@ -169,12 +170,12 @@ describe("CandorDispositionTable", () => {
   });
 
   it("rejects a row carrying no recorded judgment", () => {
-    expect(Result.isFailure(CandorDisposition.fromCandorDispositionRow({}))).toBe(true);
-    expect(
-      Result.isFailure(
-        Result.flatMap(CandorDisposition.fromCandorDispositionRow({}), CandorDisposition.toCandorDispositionInsert)
-      )
-    ).toBe(true);
+    pipe(CandorDisposition.fromCandorDispositionRow({}), Result.isFailure, assertTrue);
+    pipe(
+      Result.flatMap(CandorDisposition.fromCandorDispositionRow({}), CandorDisposition.toCandorDispositionInsert),
+      Result.isFailure,
+      assertTrue
+    );
   });
 });
 
@@ -209,11 +210,11 @@ describe("IdsSubmissionFactTable", () => {
   });
 
   it("rejects a row carrying no recorded submission facts", () => {
-    expect(Result.isFailure(IdsSubmissionFact.fromIdsSubmissionFactRow({}))).toBe(true);
-    expect(
-      Result.isFailure(
-        Result.flatMap(IdsSubmissionFact.fromIdsSubmissionFactRow({}), IdsSubmissionFact.toIdsSubmissionFactInsert)
-      )
-    ).toBe(true);
+    pipe(IdsSubmissionFact.fromIdsSubmissionFactRow({}), Result.isFailure, assertTrue);
+    pipe(
+      Result.flatMap(IdsSubmissionFact.fromIdsSubmissionFactRow({}), IdsSubmissionFact.toIdsSubmissionFactInsert),
+      Result.isFailure,
+      assertTrue
+    );
   });
 });

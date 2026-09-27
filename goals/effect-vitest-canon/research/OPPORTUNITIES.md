@@ -3407,3 +3407,13 @@ side with S.toType here: applying the wire decoder to an already-decoded error
 misinterprets its Option-valued cause and fails with "Expected JSON value".
 A test-repair checklist distinguishing captured service contexts and decoded
 values from wire inputs would have prevented these audit round trips.
+
+### Branded Option expectations need an explicit comparison domain
+
+Law Practice Tables assertion migration initially failed package verification:
+`assertSome(returned.reference.number, "7654321")` inferred the branded
+PatentNumber payload, so the literal expected string failed TS2345. The original
+oracle compared this same textual value. An explicit `assertSome<string>` keeps
+that comparison and the exact payload without a cast or fabricated branded
+value. The restored package audit and docgen pass. Including branded payloads in
+the assertion migration checklist would have prevented this failed proof cycle.
