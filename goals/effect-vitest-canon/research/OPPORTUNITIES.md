@@ -3123,3 +3123,10 @@ TS2345 because the option carries a branded TurnId. The original oracle used
 the numeric literal 12. Explicitly select the safe numeric supertype with
 `assertSome<number>` to preserve that exact expected value without a cast or
 new decoding operation. Review branded operands before mechanical migrations.
+
+## 2026-09-27: Vitest root flag does not select the package property configuration
+
+Launching workspace property proof from the repository root with `--root`
+returned exit zero but `No test files found`. That observation earns no proof.
+Run from each package directory instead and inspect passed-test counts, not
+only exit status. The shared property filter depends on package context.

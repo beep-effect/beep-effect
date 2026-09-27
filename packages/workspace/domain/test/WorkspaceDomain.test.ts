@@ -22,7 +22,6 @@ import {
 } from "@beep/workspace-domain";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
@@ -74,23 +73,6 @@ const baseEntityInput = (entityType: string, id: number) => ({
   source: "System",
   updatedAt: id + 1,
   updatedByPrincipal: systemPrincipal,
-});
-
-const assertSchemaArbitraryRoundTrips = Effect.fn("WorkspaceDomainTest.assertSchemaArbitraryRoundTrips")(function* <
-  Schema extends S.Codec<unknown>,
->(schema: Schema) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        return equivalent(decoded, value);
-      }),
-    fcRuns(10)
-  );
-  expect(result._tag).toBe("Passed");
 });
 
 describe("@beep/workspace-domain", () => {
@@ -277,11 +259,18 @@ describe("@beep/workspace-domain", () => {
     })
   );
 
-  it.effect("round-trips schema-derived exported workspace domain schemas", () =>
-    Effect.gen(function* () {
-      for (const [, schema] of schemaLawCases) {
-        yield* assertSchemaArbitraryRoundTrips(schema);
-      }
-    })
-  );
+  for (const [name, schema] of schemaLawCases) {
+    const equivalent = S.toEquivalence(schema);
+    it.effect.prop(
+      `round-trips schema-derived ${name}`,
+      [schema],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(schema)(value);
+          const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+          expect(equivalent(decoded, value)).toBe(true);
+        }),
+      { arbitrary: fcRuns(10) }
+    );
+  }
 });

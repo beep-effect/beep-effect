@@ -6,9 +6,7 @@ import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeThreadThreadTimeline = S.decodeEffect(Thread.ThreadTimeline);
@@ -141,47 +139,34 @@ describe("ThreadTimeline", () => {
     })
   );
 
-  it("schema-derived arbitraries round-trip through exported schemas", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [
-      ServerThread.CreateThreadInput,
-      ServerThread.AppendTurnInput,
-      ServerThread.SetThreadTitleIfEmptyInput,
-      Thread.TimelineMessageItem,
-      Thread.TimelineToolCallItem,
-      Thread.TimelineItem,
-      Thread.TimelineTurn,
-      Thread.ThreadTimeline,
-      ServerThread.ThreadStoreNotFound,
-      ServerThread.ThreadStoreConflict,
-      ServerThread.ThreadStoreUnavailable,
-      ServerThread.ThreadStoreError,
-    ];
-
-    for (const schema of schemas) {
-      const decode = S.decodeUnknownResult(schema);
-      const encode = S.encodeResult(schema);
-      const equivalent = S.toEquivalence(schema);
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.schema(schema),
-            (value) => {
-              const encoded = encode(value);
-              if (Result.isFailure(encoded)) {
-                return false;
-              }
-              const decoded = decode(encoded.success);
-              if (Result.isFailure(decoded)) {
-                return false;
-              }
-              return equivalent(decoded.success, value);
-            },
-            fcRuns(5)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
+    ["ServerThread.CreateThreadInput", ServerThread.CreateThreadInput],
+    ["ServerThread.AppendTurnInput", ServerThread.AppendTurnInput],
+    ["ServerThread.SetThreadTitleIfEmptyInput", ServerThread.SetThreadTitleIfEmptyInput],
+    ["Thread.TimelineMessageItem", Thread.TimelineMessageItem],
+    ["Thread.TimelineToolCallItem", Thread.TimelineToolCallItem],
+    ["Thread.TimelineItem", Thread.TimelineItem],
+    ["Thread.TimelineTurn", Thread.TimelineTurn],
+    ["Thread.ThreadTimeline", Thread.ThreadTimeline],
+    ["ServerThread.ThreadStoreNotFound", ServerThread.ThreadStoreNotFound],
+    ["ServerThread.ThreadStoreConflict", ServerThread.ThreadStoreConflict],
+    ["ServerThread.ThreadStoreUnavailable", ServerThread.ThreadStoreUnavailable],
+    ["ServerThread.ThreadStoreError", ServerThread.ThreadStoreError],
+  ];
+  for (const [name, schema] of schemaLawCases) {
+    const equivalent = S.toEquivalence(schema);
+    it.effect.prop(
+      `round-trips schema-derived ${name}`,
+      [schema],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(schema)(value);
+          const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+          expect(equivalent(decoded, value)).toBe(true);
+        }),
+      { arbitrary: fcRuns(5) }
+    );
+  }
 
   // Editing a turn appends a replacement parented to the turn it replaces. The
   // transcript used to render every turn in index order, so the exchange an edit
