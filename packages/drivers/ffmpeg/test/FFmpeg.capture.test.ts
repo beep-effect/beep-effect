@@ -25,6 +25,7 @@ import {
   ProbeRegionLuminanceRequest,
   ProbeRegionLuminanceResult,
   ProbeVideoRequest,
+  ProcessExitCode,
   RenderContactSheetRequest,
   RenderContactSheetResult,
   RenderGifRequest,
@@ -41,7 +42,7 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Context, Deferred, Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -52,23 +53,13 @@ const decodeUnknownSafeMetadataKey = S.decodeUnknownEffect(SafeMetadataKey);
 const encoder = new TextEncoder();
 const decodeFramesAtManifest = S.decodeUnknownEffect(S.fromJsonString(ExtractFramesAtManifest));
 
-const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
-  schema: Schema
+const assertRoundTrip = Effect.fn("FFmpegTest.assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
 
 const ffprobeJson = UnknownFromJsonString.encodeUnknownSync({
@@ -98,10 +89,15 @@ const luminanceStdout = [
 
 const makeStream = (text: string) => (text.length === 0 ? Stream.empty : Stream.succeed(encoder.encode(text)));
 
-const makeHandle = (stdout: string, stderr = "", exitCode = 0): ChildProcessSpawner.ChildProcessHandle =>
+const makeHandle = (
+  stdout: string,
+  stderr = "",
+  exitCode = 0,
+  onExit: Effect.Effect<void> = Effect.void
+): ChildProcessSpawner.ChildProcessHandle =>
   ChildProcessSpawner.makeHandle({
     all: Stream.empty,
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)).pipe(Effect.tap(() => onExit)),
     getInputFd: () => Sink.drain,
     getOutputFd: () => Stream.empty,
     isRunning: Effect.succeed(false),
@@ -113,11 +109,16 @@ const makeHandle = (stdout: string, stderr = "", exitCode = 0): ChildProcessSpaw
     unref: Effect.succeed(Effect.void),
   });
 
-const makeCaptureSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
+const makeCaptureSpawnerLayer = (
+  commands: Array<ChildProcess.StandardCommand>,
+  exitCode = 0,
+  failAfterFirstSuccess = false
+) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      const firstSucceeded = yield* FirstFrameSucceeded;
       return ChildProcessSpawner.ChildProcessSpawner.of(
         ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
@@ -131,36 +132,58 @@ const makeCaptureSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, 
               return makeHandle(ffprobeJson);
             }
 
+            const encodeNumber = A.length(A.filter(commands, (command) => command.command === "ffmpeg"));
+            const commandExitCode = failAfterFirstSuccess && encodeNumber === 1 ? 0 : exitCode;
+            if (failAfterFirstSuccess && encodeNumber > 1) {
+              const firstPath = yield* Deferred.await(firstSucceeded);
+              expect(yield* fs.readFileString(firstPath)).toBe("fake output");
+            }
             // The null muxer probe emits per-frame metadata on stdout and
             // writes no output file.
             if (A.contains(command.args, "null")) {
-              return makeHandle(luminanceStdout, "ffmpeg stderr", exitCode);
+              return makeHandle(luminanceStdout, "ffmpeg stderr", commandExitCode);
             }
 
             const target = A.last(command.args);
-            if (O.isSome(target) && exitCode === 0) {
+            if (O.isSome(target) && commandExitCode === 0) {
               yield* fs.writeFileString(target.value, "fake output");
             }
 
-            return makeHandle("", "ffmpeg stderr", exitCode);
+            if (failAfterFirstSuccess && encodeNumber === 1 && O.isSome(target)) {
+              return makeHandle(
+                "",
+                "ffmpeg stderr",
+                commandExitCode,
+                Deferred.succeed(firstSucceeded, target.value).pipe(Effect.asVoid)
+              );
+            }
+            return makeHandle("", "ffmpeg stderr", commandExitCode);
           })
         )
       );
     })
   );
 
-const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
+const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0, failAfterFirstSuccess = false) =>
   FFmpeg.makeLayer().pipe(
-    Layer.provide(makeCaptureSpawnerLayer(commands, exitCode)),
+    Layer.provide(makeCaptureSpawnerLayer(commands, exitCode, failAfterFirstSuccess)),
     Layer.provide(NodeServices.layer)
   );
 class Commands extends Context.Service<Commands, Array<ChildProcess.StandardCommand>>()(
   "@beep/ffmpeg/test/FFmpeg.capture.test/Commands"
 ) {}
-const makeTestLayer = (exitCode = 0) =>
+class FirstFrameSucceeded extends Context.Service<FirstFrameSucceeded, Deferred.Deferred<string>>()(
+  "@beep/ffmpeg/test/FFmpeg.capture.test/FirstFrameSucceeded"
+) {}
+const makeTestLayer = (exitCode = 0, failAfterFirstSuccess = false) =>
   Layer.unwrap(
-    Effect.map(Commands, (commands) => Layer.mergeAll(NodeServices.layer, makeLayer(commands, exitCode)))
-  ).pipe(Layer.provideMerge(Layer.sync(Commands, () => [])));
+    Effect.map(Commands, (commands) =>
+      Layer.mergeAll(NodeServices.layer, makeLayer(commands, exitCode, failAfterFirstSuccess))
+    )
+  ).pipe(
+    Layer.provideMerge(Layer.sync(Commands, () => [])),
+    Layer.provideMerge(Layer.effect(FirstFrameSucceeded, Deferred.make<string>()))
+  );
 
 const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
@@ -180,35 +203,66 @@ const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, 
   );
 
 describe("@beep/ffmpeg capture", () => {
-  it.effect("round-trips schema-modeled capture payloads", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(PositiveSeconds);
-      yield* assertRoundTrip(FileSizeBytes);
-      yield* assertRoundTrip(TileCount);
-      yield* assertRoundTrip(JpegQuality);
-      yield* assertRoundTrip(PixelOffset);
-      yield* assertRoundTrip(LumaValue);
-      yield* assertRoundTrip(SafeMetadataKey);
-      yield* assertRoundTrip(GifDither);
-      yield* assertRoundTrip(ClipCodec);
-      yield* assertRoundTrip(MetadataPair);
-      yield* assertRoundTrip(ExtractFrameAtRequest);
-      yield* assertRoundTrip(TimestampedFrame);
-      yield* assertRoundTrip(ExtractFramesAtRequest);
-      yield* assertRoundTrip(ExtractFramesAtManifest);
-      yield* assertRoundTrip(ExtractFramesAtResult);
-      yield* assertRoundTrip(ExtractClipRequest);
-      yield* assertRoundTrip(ExtractClipResult);
-      yield* assertRoundTrip(RenderGifRequest);
-      yield* assertRoundTrip(RenderGifResult);
-      yield* assertRoundTrip(RenderContactSheetRequest);
-      yield* assertRoundTrip(RenderContactSheetResult);
-      yield* assertRoundTrip(WriteContainerMetadataRequest);
-      yield* assertRoundTrip(WriteContainerMetadataResult);
-      yield* assertRoundTrip(ProbeRegionLuminanceRequest);
-      yield* assertRoundTrip(LuminanceSample);
-      yield* assertRoundTrip(ProbeRegionLuminanceResult);
-    })
+  it.effect.prop(
+    "round-trips schema-modeled capture payloads",
+    {
+      PositiveSeconds: Arbitrary.schema(PositiveSeconds),
+      FileSizeBytes: Arbitrary.schema(FileSizeBytes),
+      TileCount: Arbitrary.schema(TileCount),
+      JpegQuality: Arbitrary.schema(JpegQuality),
+      PixelOffset: Arbitrary.schema(PixelOffset),
+      LumaValue: Arbitrary.schema(LumaValue),
+      SafeMetadataKey: Arbitrary.schema(SafeMetadataKey),
+      GifDither: Arbitrary.schema(GifDither),
+      ClipCodec: Arbitrary.schema(ClipCodec),
+      MetadataPair: Arbitrary.schema(MetadataPair),
+      ExtractFrameAtRequest: Arbitrary.schema(ExtractFrameAtRequest),
+      TimestampedFrame: Arbitrary.schema(TimestampedFrame),
+      ExtractFramesAtRequest: Arbitrary.schema(ExtractFramesAtRequest),
+      ExtractFramesAtManifest: Arbitrary.schema(ExtractFramesAtManifest),
+      ExtractFramesAtResult: Arbitrary.schema(ExtractFramesAtResult),
+      ExtractClipRequest: Arbitrary.schema(ExtractClipRequest),
+      ExtractClipResult: Arbitrary.schema(ExtractClipResult),
+      RenderGifRequest: Arbitrary.schema(RenderGifRequest),
+      RenderGifResult: Arbitrary.schema(RenderGifResult),
+      RenderContactSheetRequest: Arbitrary.schema(RenderContactSheetRequest),
+      RenderContactSheetResult: Arbitrary.schema(RenderContactSheetResult),
+      WriteContainerMetadataRequest: Arbitrary.schema(WriteContainerMetadataRequest),
+      WriteContainerMetadataResult: Arbitrary.schema(WriteContainerMetadataResult),
+      ProbeRegionLuminanceRequest: Arbitrary.schema(ProbeRegionLuminanceRequest),
+      LuminanceSample: Arbitrary.schema(LuminanceSample),
+      ProbeRegionLuminanceResult: Arbitrary.schema(ProbeRegionLuminanceResult),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertRoundTrip(PositiveSeconds, values.PositiveSeconds);
+        yield* assertRoundTrip(FileSizeBytes, values.FileSizeBytes);
+        yield* assertRoundTrip(TileCount, values.TileCount);
+        yield* assertRoundTrip(JpegQuality, values.JpegQuality);
+        yield* assertRoundTrip(PixelOffset, values.PixelOffset);
+        yield* assertRoundTrip(LumaValue, values.LumaValue);
+        yield* assertRoundTrip(SafeMetadataKey, values.SafeMetadataKey);
+        yield* assertRoundTrip(GifDither, values.GifDither);
+        yield* assertRoundTrip(ClipCodec, values.ClipCodec);
+        yield* assertRoundTrip(MetadataPair, values.MetadataPair);
+        yield* assertRoundTrip(ExtractFrameAtRequest, values.ExtractFrameAtRequest);
+        yield* assertRoundTrip(TimestampedFrame, values.TimestampedFrame);
+        yield* assertRoundTrip(ExtractFramesAtRequest, values.ExtractFramesAtRequest);
+        yield* assertRoundTrip(ExtractFramesAtManifest, values.ExtractFramesAtManifest);
+        yield* assertRoundTrip(ExtractFramesAtResult, values.ExtractFramesAtResult);
+        yield* assertRoundTrip(ExtractClipRequest, values.ExtractClipRequest);
+        yield* assertRoundTrip(ExtractClipResult, values.ExtractClipResult);
+        yield* assertRoundTrip(RenderGifRequest, values.RenderGifRequest);
+        yield* assertRoundTrip(RenderGifResult, values.RenderGifResult);
+        yield* assertRoundTrip(RenderContactSheetRequest, values.RenderContactSheetRequest);
+        yield* assertRoundTrip(RenderContactSheetResult, values.RenderContactSheetResult);
+        yield* assertRoundTrip(WriteContainerMetadataRequest, values.WriteContainerMetadataRequest);
+        yield* assertRoundTrip(WriteContainerMetadataResult, values.WriteContainerMetadataResult);
+        yield* assertRoundTrip(ProbeRegionLuminanceRequest, values.ProbeRegionLuminanceRequest);
+        yield* assertRoundTrip(LuminanceSample, values.LuminanceSample);
+        yield* assertRoundTrip(ProbeRegionLuminanceResult, values.ProbeRegionLuminanceResult);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("rejects unsafe metadata keys", () =>
@@ -586,6 +640,55 @@ describe("@beep/ffmpeg capture", () => {
             expect(error.operation).toBe("extractFramesAt");
             expect(error.message).toContain("could not extract a frame at");
             expect(yield* fs.readDirectory(outDir)).toEqual([]);
+          })
+        );
+      })
+    );
+  });
+  it.layer(makeTestLayer(7, true))("cleans a staged first frame when the second encode fails", (it) => {
+    it.effect(
+      "cleans a staged first frame when the second encode fails",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outDir = path.join(tmpDir, "frames");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const error = yield* Effect.flip(
+              ffmpeg.extractFramesAt(
+                ExtractFramesAtRequest.make({
+                  manifestPath: O.none(),
+                  outDir,
+                  overwrite: false,
+                  prefix: O.none(),
+                  timestampsSeconds: [0.25, 1.5],
+                  videoPath,
+                })
+              )
+            );
+
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("extractFramesAt");
+            expect(error.message).toContain("could not extract a frame at");
+            expect(yield* fs.readDirectory(outDir)).toEqual([]);
+            const firstSucceeded = yield* FirstFrameSucceeded;
+            pipe(yield* Deferred.poll(firstSucceeded), O.isSome, assertTrue);
+            const firstStagedPath = yield* Deferred.await(firstSucceeded);
+            expect(yield* fs.exists(firstStagedPath)).toBe(false);
+            expect(yield* fs.exists(path.dirname(firstStagedPath))).toBe(false);
+            expect(yield* fs.exists(path.join(outDir, "sample_at_00000.png"))).toBe(false);
+            expect(yield* fs.exists(path.join(outDir, "sample_at_00001.png"))).toBe(false);
+            expect(yield* fs.exists(path.join(outDir, "extract-frames-at-manifest.json"))).toBe(false);
+            expect(A.sort(yield* fs.readDirectory(tmpDir), Order.String)).toEqual(["frames", "sample.webm"]);
+            expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe", "ffmpeg", "ffmpeg"]);
+            assertSome(error.exitCode, ProcessExitCode.make(7));
           })
         );
       })

@@ -41,23 +41,13 @@ type FFmpegEventValue = FFmpegEvent;
 const encoder = new TextEncoder();
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(ExtractFramesManifest));
 
-const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
-  schema: Schema
+const assertRoundTrip = Effect.fn("FFmpegTest.assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
 
 // TODO(effect-native-migration): model schema
@@ -153,38 +143,49 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
   );
 
 describe("@beep/ffmpeg", () => {
-  it.effect("round-trips schema-modeled public payloads", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(PositiveFrameRate);
-      yield* assertRoundTrip(PositiveMilliseconds);
-      yield* assertRoundTrip(SafeFramePrefix);
-      yield* assertRoundTrip(FrameIndex);
-      yield* assertRoundTrip(FrameCount);
-      yield* assertRoundTrip(VideoDimension);
-      yield* assertRoundTrip(FFmpegProgressPercent);
-      yield* assertRoundTrip(ProcessExitCode);
-      yield* assertRoundTrip(ProbeVideoRequest);
-      yield* assertRoundTrip(VideoProbe);
-      yield* assertRoundTrip(ExtractFramesRequest);
-      yield* assertRoundTrip(FFmpegProgressEvent);
-      yield* assertRoundTrip(FFmpegEvent);
-      yield* assertRoundTrip(ExtractFramesManifest);
-      yield* assertRoundTrip(FFmpegErrorContext);
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([
-          Arbitrary.schema(FFmpegErrorFromUnknownOptions).pipe(Arbitrary.filter((options) => O.isNone(options.cause))),
-        ]),
-        ([options]) =>
-          Effect.gen(function* () {
-            const encoded = yield* encodeFFmpegErrorFromUnknownOptions(options);
-            expect(Equal.equals(yield* decodeFFmpegErrorFromUnknownOptions(encoded), options)).toBe(true);
-
-            return true;
-          }),
-        fcRuns(25)
-      );
-      expect(result).toMatchObject({ _tag: "Passed" });
-    })
+  it.effect.prop(
+    "round-trips schema-modeled public payloads",
+    {
+      PositiveFrameRate: Arbitrary.schema(PositiveFrameRate),
+      PositiveMilliseconds: Arbitrary.schema(PositiveMilliseconds),
+      SafeFramePrefix: Arbitrary.schema(SafeFramePrefix),
+      FrameIndex: Arbitrary.schema(FrameIndex),
+      FrameCount: Arbitrary.schema(FrameCount),
+      VideoDimension: Arbitrary.schema(VideoDimension),
+      FFmpegProgressPercent: Arbitrary.schema(FFmpegProgressPercent),
+      ProcessExitCode: Arbitrary.schema(ProcessExitCode),
+      ProbeVideoRequest: Arbitrary.schema(ProbeVideoRequest),
+      VideoProbe: Arbitrary.schema(VideoProbe),
+      ExtractFramesRequest: Arbitrary.schema(ExtractFramesRequest),
+      FFmpegProgressEvent: Arbitrary.schema(FFmpegProgressEvent),
+      FFmpegEvent: Arbitrary.schema(FFmpegEvent),
+      ExtractFramesManifest: Arbitrary.schema(ExtractFramesManifest),
+      FFmpegErrorContext: Arbitrary.schema(FFmpegErrorContext),
+      errorOptions: Arbitrary.schema(FFmpegErrorFromUnknownOptions).pipe(
+        Arbitrary.filter((options) => O.isNone(options.cause))
+      ),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertRoundTrip(PositiveFrameRate, values.PositiveFrameRate);
+        yield* assertRoundTrip(PositiveMilliseconds, values.PositiveMilliseconds);
+        yield* assertRoundTrip(SafeFramePrefix, values.SafeFramePrefix);
+        yield* assertRoundTrip(FrameIndex, values.FrameIndex);
+        yield* assertRoundTrip(FrameCount, values.FrameCount);
+        yield* assertRoundTrip(VideoDimension, values.VideoDimension);
+        yield* assertRoundTrip(FFmpegProgressPercent, values.FFmpegProgressPercent);
+        yield* assertRoundTrip(ProcessExitCode, values.ProcessExitCode);
+        yield* assertRoundTrip(ProbeVideoRequest, values.ProbeVideoRequest);
+        yield* assertRoundTrip(VideoProbe, values.VideoProbe);
+        yield* assertRoundTrip(ExtractFramesRequest, values.ExtractFramesRequest);
+        yield* assertRoundTrip(FFmpegProgressEvent, values.FFmpegProgressEvent);
+        yield* assertRoundTrip(FFmpegEvent, values.FFmpegEvent);
+        yield* assertRoundTrip(ExtractFramesManifest, values.ExtractFramesManifest);
+        yield* assertRoundTrip(FFmpegErrorContext, values.FFmpegErrorContext);
+        const encoded = yield* encodeFFmpegErrorFromUnknownOptions(values.errorOptions);
+        expect(Equal.equals(yield* decodeFFmpegErrorFromUnknownOptions(encoded), values.errorOptions)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("keeps Option-modeled optional metadata encoded as omitted keys", () =>
