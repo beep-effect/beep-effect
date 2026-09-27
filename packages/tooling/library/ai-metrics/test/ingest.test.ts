@@ -98,6 +98,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Base64 from "effect/encoding/Base64";
@@ -1695,9 +1696,21 @@ volumes:
 
             expect(privacy.sanitized.sourceRole).toBe("subagent");
             expect(O.getOrThrow(privacy.sanitized.threadSpawn)).toBe(true);
-            expect(privacy.sanitized.sessionIdHash).not.toBe("child-session");
-            expect(privacy.sanitized.parentThreadIdHash).not.toBe("parent-thread");
-            expect(privacy.sanitized.agentRoleHash).not.toBe("worker");
+            expect(O.getOrThrow(privacy.sanitized.sessionIdHash)).not.toBe("child-session");
+            assertSome(
+              privacy.sanitized.sessionIdHash,
+              "e22d5c87f0b0a3e7b302d4f367fc68e51c62f231034c62225d5a3c41e50df897"
+            );
+            expect(O.getOrThrow(privacy.sanitized.parentThreadIdHash)).not.toBe("parent-thread");
+            assertSome(
+              privacy.sanitized.parentThreadIdHash,
+              "9d281c40bf21ddf2995b05c678cbe7b486dcb7e9f82936b559f72af521bae6d6"
+            );
+            expect(O.getOrThrow(privacy.sanitized.agentRoleHash)).not.toBe("worker");
+            assertSome(
+              privacy.sanitized.agentRoleHash,
+              "1172d710ffe3652a0cdc44d4a16bb14efe4bd97df39cd0fa6bf2c09fc6933851"
+            );
             expect(privacy.sanitized.rawEventEnvelopes[0]?.sourceRole).toBe("subagent");
 
             yield* writeAiMetricsDerivedStorage(

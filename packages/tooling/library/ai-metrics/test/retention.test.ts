@@ -160,22 +160,23 @@ it.effect(
   })
 );
 
-it.effect(
-  "does not select a legacy NULL timestamp for a before window",
-  Effect.fn(function* () {
-    yield* withTempDirectory(
-      Effect.fn(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const dataRoot = path.join(tmpDir, "metrics");
-        const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-        yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
+it.layer(NodeServices.layer)((it) => {
+  it.effect(
+    "does not select a legacy NULL timestamp for a before window",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dataRoot = path.join(tmpDir, "metrics");
+          const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
+          yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
 
-        const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }));
-        yield* Effect.gen(function* () {
-          const duckdb = yield* DuckDb;
-          yield* duckdb.runMany([
-            `CREATE TABLE ai_metrics_raw_archive_objects (
+          const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }));
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* duckdb.runMany([
+              `CREATE TABLE ai_metrics_raw_archive_objects (
               archive_run_object_id VARCHAR,
               archive_object_id VARCHAR,
               ingest_run_id VARCHAR,
@@ -185,42 +186,43 @@ it.effect(
               archive_path VARCHAR,
               encrypted_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_ingest_runs (
+              `CREATE TABLE ai_metrics_ingest_runs (
               ingest_run_id VARCHAR,
               completed_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_outcome_labels (
+              `CREATE TABLE ai_metrics_outcome_labels (
               label_id VARCHAR,
               labeled_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_benchmark_runs (
+              `CREATE TABLE ai_metrics_benchmark_runs (
               benchmark_run_id VARCHAR,
               recorded_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_scorecards (
+              `CREATE TABLE ai_metrics_scorecards (
               scorecard_id VARCHAR,
               window_end_epoch_ms DOUBLE
             )`,
-          ]);
-          yield* duckdb.run(
-            "INSERT INTO ai_metrics_outcome_labels (label_id, labeled_at_epoch_ms) VALUES ('legacy-null', NULL)"
-          );
-        }).pipe(provideScopedLayer(duckDbLayer));
+            ]);
+            yield* duckdb.run(
+              "INSERT INTO ai_metrics_outcome_labels (label_id, labeled_at_epoch_ms) VALUES ('legacy-null', NULL)"
+            );
+          }).pipe(provideScopedLayer(duckDbLayer));
 
-        yield* runAiMetricsRetentionDelete(
-          AiMetricsRetentionSelector.make({
-            beforeEpochMillis: O.some(4_102_444_800_000),
-            dataRoot,
-          }),
-          false
-        ).pipe(provideScopedLayer(duckDbLayer));
+          yield* runAiMetricsRetentionDelete(
+            AiMetricsRetentionSelector.make({
+              beforeEpochMillis: O.some(4_102_444_800_000),
+              dataRoot,
+            }),
+            false
+          ).pipe(provideScopedLayer(duckDbLayer));
 
-        const rows = yield* Effect.gen(function* () {
-          const duckdb = yield* DuckDb;
-          return yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_outcome_labels");
-        }).pipe(provideScopedLayer(duckDbLayer));
-        expect(globalThis.Number(rows[0]?.count)).toBe(1);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer));
-  })
-);
+          const rows = yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            return yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_outcome_labels");
+          }).pipe(provideScopedLayer(duckDbLayer));
+          expect(globalThis.Number(rows[0]?.count)).toBe(1);
+        })
+      );
+    })
+  );
+});

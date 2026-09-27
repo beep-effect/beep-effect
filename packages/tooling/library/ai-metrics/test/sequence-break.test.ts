@@ -429,84 +429,78 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
   });
 
   it.effect("sends one desktop stage, damps its duplicate, and stops after exact bracket resolution", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
 
-        expectSilentSuccess(yield* runNotifier(store));
-        const initial = yield* decodedNotifications(store);
-        expect(A.map(initial, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
-          "desktop:sent",
-          "ntfy:skipped",
-        ]);
-        expect(initial[1]?.delivery).toMatchObject({ status: "skipped", reason: "transport-unconfigured" });
+      expectSilentSuccess(yield* runNotifier(store));
+      const initial = yield* decodedNotifications(store);
+      expect(A.map(initial, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
+        "desktop:sent",
+        "ntfy:skipped",
+      ]);
+      expect(initial[1]?.delivery).toMatchObject({ status: "skipped", reason: "transport-unconfigured" });
 
-        const damping = yield* SequenceBreakDampingV1.decodeJsonEffect(yield* fs.readFileString(store.dampingPath));
-        expect(damping.sessionId).toBe(SESSION_ID);
-        expect(damping.target).toBe("human-input");
+      const damping = yield* SequenceBreakDampingV1.decodeJsonEffect(yield* fs.readFileString(store.dampingPath));
+      expect(damping.sessionId).toBe(SESSION_ID);
+      expect(damping.target).toBe("human-input");
 
-        expectSilentSuccess(yield* runNotifier(store));
-        const damped = yield* decodedNotifications(store);
-        expect(A.map(A.takeRight(damped, 2), ({ delivery }) => delivery)).toEqual([
-          { status: "skipped", reason: "storm-damped" },
-          { status: "skipped", reason: "storm-damped" },
-        ]);
+      expectSilentSuccess(yield* runNotifier(store));
+      const damped = yield* decodedNotifications(store);
+      expect(A.map(A.takeRight(damped, 2), ({ delivery }) => delivery)).toEqual([
+        { status: "skipped", reason: "storm-damped" },
+        { status: "skipped", reason: "storm-damped" },
+      ]);
 
-        yield* fs.writeFileString(store.hookPath, `${yield* postToolUseLine}\n`, { flag: "a" });
-        expectSilentSuccess(yield* runNotifier(store));
-        const resolved = yield* decodedNotifications(store);
-        expect(A.map(A.takeRight(resolved, 2), ({ delivery }) => delivery)).toEqual([
-          { status: "skipped", reason: "bracket-resolved" },
-          { status: "skipped", reason: "bracket-resolved" },
-        ]);
-        expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      })
-    )
+      yield* fs.writeFileString(store.hookPath, `${yield* postToolUseLine}\n`, { flag: "a" });
+      expectSilentSuccess(yield* runNotifier(store));
+      const resolved = yield* decodedNotifications(store);
+      expect(A.map(A.takeRight(resolved, 2), ({ delivery }) => delivery)).toEqual([
+        { status: "skipped", reason: "bracket-resolved" },
+        { status: "skipped", reason: "bracket-resolved" },
+      ]);
+      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+    })
   );
 
   it.effect("refuses equal-time same-tool candidates even when one candidate later closes", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(
-          store.hookPath,
-          `${yield* preToolUseLine()}\n${yield* preToolUseLine(SESSION_ID, CWD_ID, PRE_TS, AMBIGUOUS_TOOL_USE_ID)}\n${yield* permissionRequestLine}\n${yield* ambiguousPostToolUseLine}\n`
-        );
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(
+        store.hookPath,
+        `${yield* preToolUseLine()}\n${yield* preToolUseLine(SESSION_ID, CWD_ID, PRE_TS, AMBIGUOUS_TOOL_USE_ID)}\n${yield* permissionRequestLine}\n${yield* ambiguousPostToolUseLine}\n`
+      );
 
-        expectSilentSuccess(yield* runNotifier(store));
-        const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery }) => delivery)).toEqual([
-          { status: "skipped", reason: "bracket-unattributed" },
-          { status: "skipped", reason: "bracket-unattributed" },
-        ]);
-        expect(yield* fs.exists(store.dampingPath)).toBe(false);
-      })
-    )
+      expectSilentSuccess(yield* runNotifier(store));
+      const notifications = yield* decodedNotifications(store);
+      expect(A.map(notifications, ({ delivery }) => delivery)).toEqual([
+        { status: "skipped", reason: "bracket-unattributed" },
+        { status: "skipped", reason: "bracket-unattributed" },
+      ]);
+      expect(yield* fs.exists(store.dampingPath)).toBe(false);
+    })
   );
 
   it.effect("refuses an invalid damping document instead of honoring its expiry", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-        yield* fs.makeDirectory(path.dirname(store.dampingPath), { recursive: true });
-        const invalidState = yield* encodeJson({ expiresEpochMs: 9_007_199_254_740_991 });
-        yield* fs.writeFileString(store.dampingPath, invalidState);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.makeDirectory(path.dirname(store.dampingPath), { recursive: true });
+      const invalidState = yield* encodeJson({ expiresEpochMs: 9_007_199_254_740_991 });
+      yield* fs.writeFileString(store.dampingPath, invalidState);
 
-        expectSilentSuccess(yield* runNotifier(store));
-        const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery }) => delivery)).toEqual([
-          { status: "skipped", reason: "coordination-unavailable" },
-          { status: "skipped", reason: "coordination-unavailable" },
-        ]);
-        expect(yield* fs.readFileString(store.dampingPath)).toBe(invalidState);
-      })
-    )
+      expectSilentSuccess(yield* runNotifier(store));
+      const notifications = yield* decodedNotifications(store);
+      expect(A.map(notifications, ({ delivery }) => delivery)).toEqual([
+        { status: "skipped", reason: "coordination-unavailable" },
+        { status: "skipped", reason: "coordination-unavailable" },
+      ]);
+      expect(yield* fs.readFileString(store.dampingPath)).toBe(invalidState);
+    })
   );
 
   it.effect("labels the agent and escapes local origin without adding it to evidence or phone payloads", () =>
@@ -717,133 +711,124 @@ touch "$HOME/finished"
   );
 
   it.effect("launches the notifier from the durable PermissionRequest writer path", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        const rawSessionId = "sequence-break-writer-session";
-        const rawCwd = "/workspace/sequence-break-writer";
-        const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
-        const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
-        const preLine = yield* preToolUseLine(sessionDigest, cwdDigest, "2020-01-01T00:00:00.000Z");
-        const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
-        yield* fs.writeFileString(prePath, `${preLine}\n`);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      const rawSessionId = "sequence-break-writer-session";
+      const rawCwd = "/workspace/sequence-break-writer";
+      const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
+      const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
+      const preLine = yield* preToolUseLine(sessionDigest, cwdDigest, "2020-01-01T00:00:00.000Z");
+      const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
+      yield* fs.writeFileString(prePath, `${preLine}\n`);
 
-        const run = yield* runWriter(
-          { ...store, hookPath: prePath },
-          yield* writerPermissionRequestInput(rawSessionId, rawCwd)
-        );
-        expectSilentSuccess(run);
+      const run = yield* runWriter(
+        { ...store, hookPath: prePath },
+        yield* writerPermissionRequestInput(rawSessionId, rawCwd)
+      );
+      expectSilentSuccess(run);
 
-        const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
-          "desktop:sent",
-          "ntfy:skipped",
-        ]);
-        expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      })
-    )
+      const notifications = yield* decodedNotifications(store);
+      expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
+        "desktop:sent",
+        "ntfy:skipped",
+      ]);
+      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+    })
   );
 
   it.effect("launches the production detached notifier with closed hook streams and forwarded identifiers", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        const rawSessionId = "sequence-break-detached-session";
-        const rawCwd = "/workspace/sequence-break-detached";
-        const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
-        const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
-        const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
-        yield* fs.writeFileString(prePath, `${yield* preToolUseLine(sessionDigest, cwdDigest)}\n`);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      const rawSessionId = "sequence-break-detached-session";
+      const rawCwd = "/workspace/sequence-break-detached";
+      const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
+      const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
+      const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
+      yield* fs.writeFileString(prePath, `${yield* preToolUseLine(sessionDigest, cwdDigest)}\n`);
 
-        expectSilentSuccess(
-          yield* runWriter(
-            { ...store, hookPath: prePath },
-            yield* writerPermissionRequestInput(rawSessionId, rawCwd),
-            false
-          )
-        );
-        yield* waitForNotificationRows(store, 2);
+      expectSilentSuccess(
+        yield* runWriter(
+          { ...store, hookPath: prePath },
+          yield* writerPermissionRequestInput(rawSessionId, rawCwd),
+          false
+        )
+      );
+      yield* waitForNotificationRows(store, 2);
 
-        const notifications = yield* decodedNotifications(store);
-        expect(
-          A.map(notifications, ({ delivery, sessionId, transport }) => `${sessionId}:${transport}:${delivery.status}`)
-        ).toEqual([`${sessionDigest}:desktop:sent`, `${sessionDigest}:ntfy:skipped`]);
-        expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      })
-    )
+      const notifications = yield* decodedNotifications(store);
+      expect(
+        A.map(notifications, ({ delivery, sessionId, transport }) => `${sessionId}:${transport}:${delivery.status}`)
+      ).toEqual([`${sessionDigest}:desktop:sent`, `${sessionDigest}:ntfy:skipped`]);
+      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+    })
   );
 
   it.effect("routes configured ntfy delivery through the shared network breaker", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
 
-        expectSilentSuccess(yield* runNotifier(store, CANARY));
-        const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
-          "desktop:sent",
-          "ntfy:sent",
-        ]);
+      expectSilentSuccess(yield* runNotifier(store, CANARY));
+      const notifications = yield* decodedNotifications(store);
+      expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
+        "desktop:sent",
+        "ntfy:sent",
+      ]);
 
-        const breakerEvents = yield* decodedBreakerEvents(store);
-        expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
-          "network:probe-succeeded",
-        ]);
-        expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
-        expect(A.every(yield* breakerEventRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      })
-    )
+      const breakerEvents = yield* decodedBreakerEvents(store);
+      expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
+        "network:probe-succeeded",
+      ]);
+      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      expect(A.every(yield* breakerEventRows(store), (row) => !row.includes(CANARY))).toBe(true);
+    })
   );
 
   it.effect("distinguishes breaker coordination failure from an open cooldown", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-        yield* fs.makeDirectory(path.dirname(store.circuitOpenPath), { recursive: true });
-        yield* fs.writeFileString(store.circuitOpenPath, yield* encodeJson({ schemaVersion: "unknown" }));
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.makeDirectory(path.dirname(store.circuitOpenPath), { recursive: true });
+      yield* fs.writeFileString(store.circuitOpenPath, yield* encodeJson({ schemaVersion: "unknown" }));
 
-        expectSilentSuccess(yield* runNotifier(store, CANARY));
-        const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery, transport }) => ({ delivery, transport }))).toEqual([
-          { delivery: { status: "sent" }, transport: "desktop" },
-          { delivery: { status: "skipped", reason: "coordination-unavailable" }, transport: "ntfy" },
-        ]);
+      expectSilentSuccess(yield* runNotifier(store, CANARY));
+      const notifications = yield* decodedNotifications(store);
+      expect(A.map(notifications, ({ delivery, transport }) => ({ delivery, transport }))).toEqual([
+        { delivery: { status: "sent" }, transport: "desktop" },
+        { delivery: { status: "skipped", reason: "coordination-unavailable" }, transport: "ntfy" },
+      ]);
 
-        const breakerEvents = yield* decodedBreakerEvents(store);
-        expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
-          "network:coordination-skipped",
-        ]);
-      })
-    )
+      const breakerEvents = yield* decodedBreakerEvents(store);
+      expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
+        "network:coordination-skipped",
+      ]);
+    })
   );
 
   it.effect("keeps ntfy secrets out of child environments while delivering the token by descriptor", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        const fakeCurl = `${store.fakeBin}/curl`;
-        const fakeNotifySend = `${store.fakeBin}/notify-send`;
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-        yield* fs.writeFileString(
-          fakeNotifySend,
-          `#!/usr/bin/env bash
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      const fakeCurl = `${store.fakeBin}/curl`;
+      const fakeNotifySend = `${store.fakeBin}/notify-send`;
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.writeFileString(
+        fakeNotifySend,
+        `#!/usr/bin/env bash
 if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_BASE_URL:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
   exit 96
 fi
 exit 0
 `
-        );
-        yield* fs.writeFileString(
-          fakeCurl,
-          `#!/usr/bin/env bash
+      );
+      yield* fs.writeFileString(
+        fakeCurl,
+        `#!/usr/bin/env bash
 if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_BASE_URL:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
   exit 97
 fi
@@ -862,70 +847,65 @@ esac
 cat >/dev/null
 exit 0
 `
-        );
-        yield* fs.chmod(fakeCurl, 0o755);
-        yield* fs.chmod(fakeNotifySend, 0o755);
+      );
+      yield* fs.chmod(fakeCurl, 0o755);
+      yield* fs.chmod(fakeNotifySend, 0o755);
 
-        expectSilentSuccess(yield* runNotifier(store, "private-topic", "private-token", "urgent"));
-        const notifications = yield* decodedNotifications(store);
-        expect(
-          A.map(notifications, ({ delivery, stage, transport }) => `${stage}:${transport}:${delivery.status}`)
-        ).toEqual([
-          "initial:desktop:sent",
-          "initial:ntfy:sent",
-          "reminder:desktop:sent",
-          "reminder:ntfy:sent",
-          "urgent:desktop:sent",
-          "urgent:ntfy:sent",
-        ]);
-      })
-    )
+      expectSilentSuccess(yield* runNotifier(store, "private-topic", "private-token", "urgent"));
+      const notifications = yield* decodedNotifications(store);
+      expect(
+        A.map(notifications, ({ delivery, stage, transport }) => `${stage}:${transport}:${delivery.status}`)
+      ).toEqual([
+        "initial:desktop:sent",
+        "initial:ntfy:sent",
+        "reminder:desktop:sent",
+        "reminder:ntfy:sent",
+        "urgent:desktop:sent",
+        "urgent:ntfy:sent",
+      ]);
+    })
   );
 
   it.effect("honors a disarm raised during the network probe before phone delivery", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const store = yield* makeNotifierStore();
-        const curlCallsPath = path.join(store.evidenceRoot, "curl-calls");
-        const fakeCurl = path.join(store.fakeBin, "curl");
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-        yield* fs.writeFileString(
-          fakeCurl,
-          `#!/usr/bin/env bash
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const store = yield* makeNotifierStore();
+      const curlCallsPath = path.join(store.evidenceRoot, "curl-calls");
+      const fakeCurl = path.join(store.fakeBin, "curl");
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.writeFileString(
+        fakeCurl,
+        `#!/usr/bin/env bash
 case " $* " in
   *" --request POST "*) printf 'post\\n' >>"${curlCallsPath}"; cat >/dev/null ;;
   *) printf 'disarmed\\n' >"${hookPulseDisarmSentinelPath(store.evidenceRoot)}" ;;
 esac
 exit 0
 `
-        );
-        yield* fs.chmod(fakeCurl, 0o755);
+      );
+      yield* fs.chmod(fakeCurl, 0o755);
 
-        expectSilentSuccess(yield* runNotifier(store, CANARY));
-        const notifications = yield* decodedNotifications(store);
-        expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
-          "desktop:sent",
-        ]);
-        expect(yield* fs.exists(curlCallsPath)).toBe(false);
-        expect(yield* fs.exists(hookPulseDisarmSentinelPath(store.evidenceRoot))).toBe(true);
-      })
-    )
+      expectSilentSuccess(yield* runNotifier(store, CANARY));
+      const notifications = yield* decodedNotifications(store);
+      expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
+        "desktop:sent",
+      ]);
+      expect(yield* fs.exists(curlCallsPath)).toBe(false);
+      expect(yield* fs.exists(hookPulseDisarmSentinelPath(store.evidenceRoot))).toBe(true);
+    })
   );
 
   it.effect("creates neither delivery nor damping state while the shared instrument is disarmed", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-        yield* fs.writeFileString(hookPulseDisarmSentinelPath(store.evidenceRoot), "disarmed\n");
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
+      yield* fs.writeFileString(hookPulseDisarmSentinelPath(store.evidenceRoot), "disarmed\n");
 
-        expectSilentSuccess(yield* runNotifier(store));
-        expect(yield* notificationRows(store)).toEqual([]);
-        expect(yield* fs.exists(store.dampingPath)).toBe(false);
-      })
-    )
+      expectSilentSuccess(yield* runNotifier(store));
+      expect(yield* notificationRows(store)).toEqual([]);
+      expect(yield* fs.exists(store.dampingPath)).toBe(false);
+    })
   );
 });
