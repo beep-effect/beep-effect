@@ -16,6 +16,7 @@ import {
 import { Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { WorkspaceVaultStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Workspace";
 import { WorkspaceSourceTextResolverLayer } from "@beep/workspace-server/SourceText";
@@ -23,7 +24,7 @@ import { Workspace } from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
 import * as A from "effect/Array";

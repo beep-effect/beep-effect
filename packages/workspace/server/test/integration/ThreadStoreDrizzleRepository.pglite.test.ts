@@ -4,13 +4,14 @@ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { CuidState } from "@beep/schema/Cuid";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
 import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread";
 import { DbSchema } from "@beep/workspace-tables";
 import { toThreadInsert } from "@beep/workspace-tables/entities/Thread";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -56,7 +57,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Workspace ThreadStore Drizzle repository PgLite integration", () => {});
 } else {
   describe("Workspace ThreadStore Drizzle repository PgLite integration", { concurrent: false }, () => {
-    layer(ThreadStoreDrizzleRepositoryLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(ThreadStoreDrizzleRepositoryLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "persists a thread, ordered turns, and projects a timeline through Drizzle",
         Effect.fnUntraced(function* () {
