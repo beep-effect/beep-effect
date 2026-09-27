@@ -3503,64 +3503,64 @@
     "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 385,
-    "lines": 9
+    "bytes": 421,
+    "lines": 10
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 50773,
-    "lines": 1517
+    "bytes": 52606,
+    "lines": 1581
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 2178,
-    "lines": 50
+    "bytes": 2214,
+    "lines": 51
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 1230,
-    "lines": 36
+    "bytes": 1331,
+    "lines": 40
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 40487,
-    "lines": 1118
+    "bytes": 38384,
+    "lines": 1081
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 10445,
-    "lines": 294
+    "bytes": 10978,
+    "lines": 310
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 1342,
-    "lines": 33
+    "bytes": 1378,
+    "lines": 34
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/Version.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 225,
-    "lines": 8
+    "bytes": 261,
+    "lines": 9
   },
   {
     "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
     "package": "@beep/pandoc-ast",
     "kind": "test",
-    "bytes": 1889,
-    "lines": 42
+    "bytes": 1872,
+    "lines": 39
   },
   {
     "file": "packages/foundation/modeling/provenance/test/TaggedError.equivalence.test.ts",
