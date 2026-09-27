@@ -1,0 +1,114 @@
+{
+  "reviewedNodes": 41,
+  "changedDependencyLists": 26,
+  "edges": [
+    {
+      "computation": "@beep/workspace-domain#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/workspace-domain#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-domain#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-domain#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-domain#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-domain#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-domain#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-domain#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-tables#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/workspace-tables#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-tables#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-tables#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-tables#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-tables#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-tables#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-tables#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-tables#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/workspace-use-cases#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "8b2082ac0aa032a769dfa759c147e6e24a5ccee7bbd89c5d35a3075601d517df"
+}

@@ -1,9 +1,10 @@
 import { Document } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Thread } from "@beep/workspace-use-cases/public";
 import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";

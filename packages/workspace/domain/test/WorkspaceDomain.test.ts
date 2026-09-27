@@ -1,5 +1,6 @@
 import { Document, P, Text } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
   ApprovalDecision,
@@ -20,10 +21,11 @@ import {
   Workspace as WorkspaceEntity,
   WorkspaceVaultRootPath,
 } from "@beep/workspace-domain";
-import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
@@ -136,10 +138,10 @@ describe("@beep/workspace-domain", () => {
       const relativeExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:relative-vault"));
       const tildeExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("~/Vault"));
       const blankExit = yield* Effect.exit(decodeWorkspaceVaultRootPath(" "));
-      expect(Exit.isFailure(vaultExit)).toBe(true);
-      expect(Exit.isFailure(relativeExit)).toBe(true);
-      expect(Exit.isFailure(tildeExit)).toBe(true);
-      expect(Exit.isFailure(blankExit)).toBe(true);
+      pipe(vaultExit, Exit.isFailure, assertTrue);
+      pipe(relativeExit, Exit.isFailure, assertTrue);
+      pipe(tildeExit, Exit.isFailure, assertTrue);
+      pipe(blankExit, Exit.isFailure, assertTrue);
       expect(yield* decodeWorkspaceVaultRootPath("C:\\Vault")).toBe("C:\\Vault");
     })
   );
@@ -152,8 +154,8 @@ describe("@beep/workspace-domain", () => {
       expect(yield* decodeWorkspaceVaultRootPath("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
       const rootExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("/"));
       const driveExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:\\"));
-      expect(Exit.isFailure(rootExit)).toBe(true);
-      expect(Exit.isFailure(driveExit)).toBe(true);
+      pipe(rootExit, Exit.isFailure, assertTrue);
+      pipe(driveExit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -255,7 +257,7 @@ describe("@beep/workspace-domain", () => {
       assertNone(constructed.parentTurnId);
       expect(yield* encodeTurn(constructed)).toStrictEqual(turnWire);
       const emptyItemsExit = yield* Effect.exit(decodeUnknownTurnItems([]));
-      expect(Exit.isFailure(emptyItemsExit)).toBe(true);
+      pipe(emptyItemsExit, Exit.isFailure, assertTrue);
     })
   );
 

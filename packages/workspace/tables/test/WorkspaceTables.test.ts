@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { CandidateDraft as CandidateDraftModel } from "@beep/workspace-domain/entities/CandidateDraft";
 import { CandidateProject as CandidateProjectModel } from "@beep/workspace-domain/entities/CandidateProject";
@@ -12,7 +13,7 @@ import * as Message from "@beep/workspace-tables/entities/Message";
 import * as Thread from "@beep/workspace-tables/entities/Thread";
 import * as Turn from "@beep/workspace-tables/entities/Turn";
 import * as Workspace from "@beep/workspace-tables/entities/Workspace";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";

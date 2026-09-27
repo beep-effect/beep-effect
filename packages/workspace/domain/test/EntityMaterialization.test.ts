@@ -1,6 +1,7 @@
 import { toPgTable } from "@beep/effect-drizzle/pg";
+import { it } from "@beep/test-runner";
 import { Message, Thread, Turn } from "@beep/workspace-domain";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
 
 const indexNames = (config: { indexes: ReadonlyArray<{ config: { name?: string } }> }) =>
