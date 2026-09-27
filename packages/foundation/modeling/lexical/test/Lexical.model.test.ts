@@ -339,68 +339,45 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(JSON.parse(decoded(encodeEditorStateFromJsonResult(state)))).toEqual(fixture);
   });
 
-  it("round-trips schema-derived arbitrary nodes through encode/decode", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([NodeArbitrary]),
-          ([node]) => {
-            expect(matchedNodeType(node)).toBe(node.type);
-            expect(decoded(LexicalNode.decodeUnknownResult(decoded(encodeLexicalNodeResult(node))))).toEqual(node);
+  it.prop(
+    "round-trips schema-derived arbitrary nodes through encode/decode",
+    { node: NodeArbitrary },
+    ({ node }) => {
+      expect(matchedNodeType(node)).toBe(node.type);
+      expect(decoded(LexicalNode.decodeUnknownResult(decoded(encodeLexicalNodeResult(node))))).toEqual(node);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips schema-derived arbitrary editor states through encode/decode",
+    { state: StateArbitrary },
+    ({ state }) => {
+      const encodedState = decoded(encodeSerializedEditorStateResult(state));
+      expect(decoded(decodeUnknownSerializedEditorStateResult(encodedState))).toEqual(state);
+      assertSome(SerializedEditorState.decodeOption(encodedState), state);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips schema-derived arbitrary editor states through encode/decode", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([StateArbitrary]),
-          ([state]) => {
-            const encodedState = decoded(encodeSerializedEditorStateResult(state));
-            expect(decoded(decodeUnknownSerializedEditorStateResult(encodedState))).toEqual(state);
-            assertSome(SerializedEditorState.decodeOption(encodedState), state);
-
-            return true;
-          },
-          { runs: 50 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
-
-  it("sanitizes link URLs at the schema boundary and keeps safe URLs fixed", () => {
-    const unsafeDataUrl = "data:text/html,\x3cscript>x\x3c/script>";
-
-    expect(decoded(decodeSafeUrlResult("javascript:alert(1)"))).toBe("#");
-    expect(decoded(decodeSafeUrlResult("file:///tmp/beep.txt"))).toBe("#");
-    expect(decoded(decodeSafeUrlResult("/\n/evil.example/path"))).toBe("#");
-    expect(decoded(decodeSafeUrlResult("/\r/evil.example/path"))).toBe("#");
-    expect(decoded(decodeSafeUrlResult("/\t/evil.example/path"))).toBe("#");
-    expect(decoded(decodeSafeUrlResult("https://example.com/docs"))).toBe("https://example.com/docs");
-    expect(decoded(decodeSafeUrlResult("docs/page"))).toBe("docs/page");
-    expect(decoded(encodeSafeUrlResult(decoded(decodeSafeUrlResult(unsafeDataUrl))))).toBe("#");
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([SafeUrlArbitrary]),
-          ([url]) => {
-            expect(sanitizeUrl(url)).toBe(url);
-            expect(decoded(decodeSafeUrlResult(decoded(encodeSafeUrlResult(url))))).toBe(url);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "sanitizes link URLs at the schema boundary and keeps safe URLs fixed",
+    { url: SafeUrlArbitrary },
+    ({ url }) => {
+      const unsafeDataUrl = "data:text/html,\x3cscript>x\x3c/script>";
+      expect(decoded(decodeSafeUrlResult("javascript:alert(1)"))).toBe("#");
+      expect(decoded(decodeSafeUrlResult("file:///tmp/beep.txt"))).toBe("#");
+      expect(decoded(decodeSafeUrlResult("/\n/evil.example/path"))).toBe("#");
+      expect(decoded(decodeSafeUrlResult("/\r/evil.example/path"))).toBe("#");
+      expect(decoded(decodeSafeUrlResult("/\t/evil.example/path"))).toBe("#");
+      expect(decoded(decodeSafeUrlResult("https://example.com/docs"))).toBe("https://example.com/docs");
+      expect(decoded(decodeSafeUrlResult("docs/page"))).toBe("docs/page");
+      expect(decoded(encodeSafeUrlResult(decoded(decodeSafeUrlResult(unsafeDataUrl))))).toBe("#");
+      expect(sanitizeUrl(url)).toBe(url);
+      expect(decoded(decodeSafeUrlResult(decoded(encodeSafeUrlResult(url))))).toBe(url);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("rejects unsafe values passed directly to semantic node constructors", () => {
     expect(() => LinkNode.make({ children: [], url: "javascript:alert(1)" })).toThrow();
@@ -427,160 +404,173 @@ describe("Lexical.model", { concurrent: false }, () => {
     ).toBe("color: red");
   });
 
-  it("preserves future JSON wire extensions and reports strict incompatibility", () => {
-    const future = {
-      root: {
-        type: "root",
-        version: 7,
-        children: [
-          {
-            type: "future-node",
-            version: 3,
-            $: { "future-state": { enabled: true, revision: 2 } },
-            pluginPayload: { enabled: true, values: [1, 2, 3] },
-          },
-        ],
-        futureRootField: "retained",
-      },
-      editorExtension: { revision: 9 },
-    };
+  it.effect(
+    "preserves future JSON wire extensions and reports strict incompatibility",
+    Effect.fnUntraced(function* () {
+      const future = {
+        root: {
+          type: "root",
+          version: 7,
+          children: [
+            {
+              type: "future-node",
+              version: 3,
+              $: { "future-state": { enabled: true, revision: 2 } },
+              pluginPayload: { enabled: true, values: [1, 2, 3] },
+            },
+          ],
+          futureRootField: "retained",
+        },
+        editorExtension: { revision: 9 },
+      };
 
-    const wire = Effect.runSync(decodeEditorStateLossless(future));
-    expect(wire).toEqual(future);
+      const wire = yield* decodeEditorStateLossless(future);
+      expect(wire).toEqual(future);
 
-    const compatibility = Effect.runSync(analyzeEditorStateCompatibility(future));
-    expect(compatibility.wire).toEqual(future);
-    expect(compatibility.isCompatible).toBe(false);
-    assertNone(compatibility.state);
-    expect(compatibility.issues).toHaveLength(1);
-    expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
-  });
+      const compatibility = yield* analyzeEditorStateCompatibility(future);
+      expect(compatibility.wire).toEqual(future);
+      expect(compatibility.isCompatible).toBe(false);
+      assertNone(compatibility.state);
+      expect(compatibility.issues).toHaveLength(1);
+      expect((yield* Effect.exit(decodeEditorStateStrict(future)))._tag).toBe("Failure");
+    })
+  );
 
-  it("requires strict NodeState values to be lossless JSON", () => {
-    const nodeState = {
-      enabled: true,
-      nested: { count: 2, nullable: null, values: ["one", false] },
-    };
-    const valid = {
-      root: {
-        ...element,
-        type: "root",
-        children: [{ ...element, type: "paragraph", $: { plugin: nodeState }, children: [] }],
-      },
-    };
-
-    const decoded = Result.getOrThrow(decodeUnknownSerializedEditorStateResult(valid));
-    expect(Result.getOrThrow(encodeSerializedEditorStateResult(decoded))).toEqual(valid);
-    pipe(
-      decoded,
-      encodeEditorStateFromJsonResult,
-      Result.getOrThrow,
-      decodeEditorStateFromJsonResult,
-      Result.isSuccess,
-      assertTrue
-    );
-
-    const nonJsonValues: ReadonlyArray<unknown> = [
-      () => true,
-      Symbol("node-state"),
-      1n,
-      undefined,
-      Number.NaN,
-      Number.POSITIVE_INFINITY,
-      Number.NEGATIVE_INFINITY,
-    ];
-    A.forEach(nonJsonValues, (plugin) => {
-      const invalid = {
+  it.effect(
+    "requires strict NodeState values to be lossless JSON",
+    Effect.fnUntraced(function* () {
+      const nodeState = {
+        enabled: true,
+        nested: { count: 2, nullable: null, values: ["one", false] },
+      };
+      const valid = {
         root: {
           ...element,
           type: "root",
-          children: [{ ...element, type: "paragraph", $: { plugin }, children: [] }],
+          children: [{ ...element, type: "paragraph", $: { plugin: nodeState }, children: [] }],
         },
       };
 
-      expect(decodeUnknownSerializedEditorStateResult(invalid)._tag).toBe("Failure");
-      expect(Effect.runSyncExit(decodeEditorStateStrict(invalid))._tag).toBe("Failure");
-      expect(encodeUnknownSerializedEditorStateResult(invalid)._tag).toBe("Failure");
-      expect(encodeUnknownEditorStateFromJsonResult(invalid)._tag).toBe("Failure");
-      expect(Effect.runSyncExit(decodeEditorStateLossless(invalid))._tag).toBe("Failure");
-    });
-  });
+      const decoded = Result.getOrThrow(decodeUnknownSerializedEditorStateResult(valid));
+      expect(Result.getOrThrow(encodeSerializedEditorStateResult(decoded))).toEqual(valid);
+      pipe(
+        decoded,
+        encodeEditorStateFromJsonResult,
+        Result.getOrThrow,
+        decodeEditorStateFromJsonResult,
+        Result.isSuccess,
+        assertTrue
+      );
 
-  it("rejects excess fields through every strict surface while retaining their lossless wire", () => {
-    const state = {
-      root: {
-        ...element,
-        type: "root",
-        children: [{ ...element, type: "paragraph", children: [] }],
-      },
-    } as const;
-    const nodeWithExtension = { ...state.root.children[0], futureNode: true } as const;
-    const rootWithNestedExtension = { ...state.root, children: [nodeWithExtension] } as const;
-    const cases = [
-      [
-        { ...state, futureEnvelope: true },
-        '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[]}]},"futureEnvelope":true}',
-      ],
-      [
-        { root: { ...state.root, futureRoot: true } },
-        '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[]}],"futureRoot":true}}',
-      ],
-      [
-        { root: { ...state.root, children: [nodeWithExtension] } },
-        '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[],"futureNode":true}]}}',
-      ],
-    ] as const;
+      const nonJsonValues: ReadonlyArray<unknown> = [
+        () => true,
+        Symbol("node-state"),
+        1n,
+        undefined,
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+        Number.NEGATIVE_INFINITY,
+      ];
+      yield* Effect.forEach(
+        nonJsonValues,
+        Effect.fnUntraced(function* (plugin) {
+          const invalid = {
+            root: {
+              ...element,
+              type: "root",
+              children: [{ ...element, type: "paragraph", $: { plugin }, children: [] }],
+            },
+          };
 
-    expect(decodeLexicalNodeResult(nodeWithExtension)._tag).toBe("Failure");
-    assertNone(LexicalNode.decodeUnknownOption(nodeWithExtension));
-    expect(decodeLexicalNodeResult(rootWithNestedExtension)._tag).toBe("Failure");
-    assertNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension));
-    A.forEach(cases, ([stateWithExtension, jsonWithExtension]) => {
-      expect(decodeSerializedEditorStateResult(stateWithExtension)._tag).toBe("Failure");
-      assertNone(SerializedEditorState.decodeOption(stateWithExtension));
-      expect(decodeEditorStateFromJsonResult(jsonWithExtension)._tag).toBe("Failure");
-      expect(Effect.runSyncExit(decodeEditorStateStrict(stateWithExtension))._tag).toBe("Failure");
-      expect(Effect.runSync(decodeEditorStateLossless(stateWithExtension))).toEqual(stateWithExtension);
-      expect(Effect.runSync(decodeEditorStateWireFromJson(jsonWithExtension))).toEqual(stateWithExtension);
-    });
-  });
+          expect(decodeUnknownSerializedEditorStateResult(invalid)._tag).toBe("Failure");
+          expect((yield* Effect.exit(decodeEditorStateStrict(invalid)))._tag).toBe("Failure");
+          expect(encodeUnknownSerializedEditorStateResult(invalid)._tag).toBe("Failure");
+          expect(encodeUnknownEditorStateFromJsonResult(invalid)._tag).toBe("Failure");
+          expect((yield* Effect.exit(decodeEditorStateLossless(invalid)))._tag).toBe("Failure");
+        }),
+        { discard: true }
+      );
+    })
+  );
 
-  it("round-trips arbitrary open wire states without losing extension fields", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([WireStateArbitrary]),
-          ([wire]) => {
-            const decoded = Effect.runSync(decodeEditorStateLossless(wire));
-
-            expect(decoded).toEqual(wire);
-            expect(Effect.runSync(encodeSerializedEditorStateWire(decoded))).toEqual(wire);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it("preserves opaque future children fields without imposing semantic child grammar", () => {
-    const future = {
-      root: {
-        type: "root",
-        version: 7,
-        children: [
-          {
-            type: "future-node",
-            version: 3,
-            children: { extensionOwnedShape: ["not", "lexical", "nodes"] },
-          },
+  it.effect(
+    "rejects excess fields through every strict surface while retaining their lossless wire",
+    Effect.fnUntraced(function* () {
+      const state = {
+        root: {
+          ...element,
+          type: "root",
+          children: [{ ...element, type: "paragraph", children: [] }],
+        },
+      } as const;
+      const nodeWithExtension = { ...state.root.children[0], futureNode: true } as const;
+      const rootWithNestedExtension = { ...state.root, children: [nodeWithExtension] } as const;
+      const cases = [
+        [
+          { ...state, futureEnvelope: true },
+          '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[]}]},"futureEnvelope":true}',
         ],
-      },
-    };
+        [
+          { root: { ...state.root, futureRoot: true } },
+          '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[]}],"futureRoot":true}}',
+        ],
+        [
+          { root: { ...state.root, children: [nodeWithExtension] } },
+          '{"root":{"version":1,"direction":null,"format":"","indent":0,"type":"root","children":[{"version":1,"direction":null,"format":"","indent":0,"type":"paragraph","children":[],"futureNode":true}]}}',
+        ],
+      ] as const;
 
-    expect(Effect.runSync(decodeEditorStateLossless(future))).toEqual(future);
-    expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
-  });
+      expect(decodeLexicalNodeResult(nodeWithExtension)._tag).toBe("Failure");
+      assertNone(LexicalNode.decodeUnknownOption(nodeWithExtension));
+      expect(decodeLexicalNodeResult(rootWithNestedExtension)._tag).toBe("Failure");
+      assertNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension));
+      yield* Effect.forEach(
+        cases,
+        Effect.fnUntraced(function* ([stateWithExtension, jsonWithExtension]) {
+          expect(decodeSerializedEditorStateResult(stateWithExtension)._tag).toBe("Failure");
+          assertNone(SerializedEditorState.decodeOption(stateWithExtension));
+          expect(decodeEditorStateFromJsonResult(jsonWithExtension)._tag).toBe("Failure");
+          expect((yield* Effect.exit(decodeEditorStateStrict(stateWithExtension)))._tag).toBe("Failure");
+          expect(yield* decodeEditorStateLossless(stateWithExtension)).toEqual(stateWithExtension);
+          expect(yield* decodeEditorStateWireFromJson(jsonWithExtension)).toEqual(stateWithExtension);
+        }),
+        { discard: true }
+      );
+    })
+  );
+
+  it.effect.prop(
+    "round-trips arbitrary open wire states without losing extension fields",
+    { wire: WireStateArbitrary },
+    Effect.fnUntraced(function* ({ wire }) {
+      const decoded = yield* decodeEditorStateLossless(wire);
+      expect(decoded).toEqual(wire);
+      expect(yield* encodeSerializedEditorStateWire(decoded)).toEqual(wire);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "preserves opaque future children fields without imposing semantic child grammar",
+    Effect.fnUntraced(function* () {
+      const future = {
+        root: {
+          type: "root",
+          version: 7,
+          children: [
+            {
+              type: "future-node",
+              version: 3,
+              children: { extensionOwnedShape: ["not", "lexical", "nodes"] },
+            },
+          ],
+        },
+      };
+
+      expect(yield* decodeEditorStateLossless(future)).toEqual(future);
+      expect((yield* Effect.exit(decodeEditorStateStrict(future)))._tag).toBe("Failure");
+    })
+  );
 
   it("constructs exhaustive list payload cases with canonical tags", () => {
     const numberPayload = ListNodeValue.cases.number.make({ children: [], start: PosInt.make(3) });
@@ -608,100 +598,145 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(node).toMatchObject({ type: "list", listType: "number", start: 3, tag: "ol", children: [] });
   });
 
-  it("rejects contradictory list metadata strictly while retaining the exact lossless wire", () => {
-    const mismatches: ReadonlyArray<readonly [ListType, ListTag]> = [
-      ["number", "ul"],
-      ["bullet", "ol"],
-      ["check", "ol"],
-    ];
+  it.effect(
+    "rejects contradictory list metadata strictly while retaining the exact lossless wire",
+    Effect.fnUntraced(function* () {
+      const mismatches: ReadonlyArray<readonly [ListType, ListTag]> = [
+        ["number", "ul"],
+        ["bullet", "ol"],
+        ["check", "ol"],
+      ];
 
-    A.forEach(mismatches, ([listType, tag]) => {
-      const node = {
-        ...element,
-        type: "list",
-        listType,
-        start: 1,
-        tag,
-        children: [
-          {
+      yield* Effect.forEach(
+        mismatches,
+        Effect.fnUntraced(function* ([listType, tag]) {
+          const node = {
             ...element,
-            type: "listitem",
-            value: 1,
-            children: [text("item")],
-          },
-        ],
-      };
-      const state = {
-        root: {
-          ...element,
-          type: "root",
-          children: [node],
-        },
-      };
-      const source = Effect.runSync(UnknownFromJsonString.encodeEffect(state));
-      const canonicalTag = ListType.$match(listType, {
+            type: "list",
+            listType,
+            start: 1,
+            tag,
+            children: [
+              {
+                ...element,
+                type: "listitem",
+                value: 1,
+                children: [text("item")],
+              },
+            ],
+          };
+          const state = {
+            root: {
+              ...element,
+              type: "root",
+              children: [node],
+            },
+          };
+          const source = yield* UnknownFromJsonString.encodeEffect(state);
+          const canonicalTag = ListType.$match(listType, {
+            number: ListTag.thunk.ol,
+            bullet: ListTag.thunk.ul,
+            check: ListTag.thunk.ul,
+          });
+          const semanticNode = yield* decodeUnknownListNode({ ...node, tag: canonicalTag });
+          const semanticMismatch = { ...semanticNode, tag };
+
+          expect(() => ListNode.make(semanticMismatch)).toThrow();
+          expect((yield* Effect.exit(ListNode.makeEffect(semanticMismatch)))._tag).toBe("Failure");
+          expect(decodeUnknownListNodeResult(node)._tag).toBe("Failure");
+          expect(decodeUnknownLexicalNodeResult(node)._tag).toBe("Failure");
+          expect(decodeUnknownSerializedEditorStateResult(state)._tag).toBe("Failure");
+          assertNone(SerializedEditorState.decodeOption(state));
+          expect(decodeEditorStateFromJsonResult(source)._tag).toBe("Failure");
+          expect((yield* Effect.exit(decodeEditorStateStrict(state)))._tag).toBe("Failure");
+
+          const compatibility = yield* analyzeEditorStateCompatibility(state);
+          expect(compatibility.isCompatible).toBe(false);
+          assertNone(compatibility.state);
+          expect(compatibility.wire).toEqual(state);
+          expect(compatibility.issues).toHaveLength(1);
+
+          const wire = yield* decodeEditorStateLossless(state);
+          expect(wire).toEqual(state);
+          expect(yield* encodeSerializedEditorStateWire(wire)).toEqual(state);
+          expect(yield* decodeEditorStateWireFromJson(source)).toEqual(state);
+        }),
+        { discard: true }
+      );
+    })
+  );
+
+  it.prop(
+    "generates only runtime-canonical list metadata",
+    { node: ListNodeArbitrary },
+    ({ node }) => {
+      const expectedTag = ListType.$match(node.listType, {
         number: ListTag.thunk.ol,
         bullet: ListTag.thunk.ul,
         check: ListTag.thunk.ul,
       });
-      const semanticNode = Effect.runSync(decodeUnknownListNode({ ...node, tag: canonicalTag }));
-      const semanticMismatch = { ...semanticNode, tag };
+      expect(node.tag).toBe(expectedTag);
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-      expect(() => ListNode.make(semanticMismatch)).toThrow();
-      expect(Effect.runSyncExit(ListNode.makeEffect(semanticMismatch))._tag).toBe("Failure");
-      expect(decodeUnknownListNodeResult(node)._tag).toBe("Failure");
-      expect(decodeUnknownLexicalNodeResult(node)._tag).toBe("Failure");
-      expect(decodeUnknownSerializedEditorStateResult(state)._tag).toBe("Failure");
-      assertNone(SerializedEditorState.decodeOption(state));
-      expect(decodeEditorStateFromJsonResult(source)._tag).toBe("Failure");
-      expect(Effect.runSyncExit(decodeEditorStateStrict(state))._tag).toBe("Failure");
+  it.effect(
+    "keeps canonical list metadata fixed through the real Lexical runtime",
+    Effect.fnUntraced(function* () {
+      const editor = createEditor({
+        namespace: "lexical-schema-list-fixed-point",
+        nodes: [RuntimeListNode, RuntimeListItemNode],
+      });
+      const canonical: ReadonlyArray<readonly [ListType, ListTag]> = [
+        ["number", "ol"],
+        ["bullet", "ul"],
+        ["check", "ul"],
+      ];
 
-      const compatibility = Effect.runSync(analyzeEditorStateCompatibility(state));
-      expect(compatibility.isCompatible).toBe(false);
-      assertNone(compatibility.state);
-      expect(compatibility.wire).toEqual(state);
-      expect(compatibility.issues).toHaveLength(1);
+      yield* Effect.forEach(
+        canonical,
+        Effect.fnUntraced(function* ([listType, tag]) {
+          const state = {
+            root: {
+              ...element,
+              type: "root",
+              children: [
+                {
+                  ...element,
+                  type: "list",
+                  listType,
+                  start: 1,
+                  tag,
+                  children: [
+                    {
+                      ...element,
+                      type: "listitem",
+                      value: 1,
+                      children: [text("item")],
+                    },
+                  ],
+                },
+              ],
+            },
+          };
 
-      const wire = Effect.runSync(decodeEditorStateLossless(state));
-      expect(wire).toEqual(state);
-      expect(Effect.runSync(encodeSerializedEditorStateWire(wire))).toEqual(state);
-      expect(Effect.runSync(decodeEditorStateWireFromJson(source))).toEqual(state);
-    });
-  });
+          const strict = yield* decodeEditorStateStrict(state);
+          const source = yield* encodeEditorStateFromJson(strict);
 
-  it("generates only runtime-canonical list metadata", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ListNodeArbitrary]),
-          ([node]) => {
-            const expectedTag = ListType.$match(node.listType, {
-              number: ListTag.thunk.ol,
-              bullet: ListTag.thunk.ul,
-              check: ListTag.thunk.ul,
-            });
+          expect(editor.parseEditorState(source).toJSON().root.children[0]).toMatchObject({ listType, tag });
+        }),
+        { discard: true }
+      );
+    })
+  );
 
-            expect(node.tag).toBe(expectedTag);
-
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it("keeps canonical list metadata fixed through the real Lexical runtime", () => {
-    const editor = createEditor({
-      namespace: "lexical-schema-list-fixed-point",
-      nodes: [RuntimeListNode, RuntimeListItemNode],
-    });
-    const canonical: ReadonlyArray<readonly [ListType, ListTag]> = [
-      ["number", "ol"],
-      ["bullet", "ul"],
-      ["check", "ul"],
-    ];
-
-    A.forEach(canonical, ([listType, tag]) => {
+  it.effect(
+    "keeps shadow-root quote topology fixed through the real Lexical runtime",
+    Effect.fnUntraced(function* () {
+      const editor = createEditor({
+        namespace: "lexical-schema-shadow-root-quote-fixed-point",
+        nodes: [RuntimeQuoteNode],
+      });
       const state = {
         root: {
           ...element,
@@ -709,70 +744,38 @@ describe("Lexical.model", { concurrent: false }, () => {
           children: [
             {
               ...element,
-              type: "list",
-              listType,
-              start: 1,
-              tag,
-              children: [
-                {
-                  ...element,
-                  type: "listitem",
-                  value: 1,
-                  children: [text("item")],
-                },
-              ],
+              type: "quote",
+              shadowRoot: true,
+              children: [paragraphNode([text("first block")]), paragraphNode([text("second block")])],
             },
           ],
         },
       };
+      const strict = yield* decodeEditorStateStrict(state);
+      const source = yield* encodeEditorStateFromJson(strict);
 
-      const strict = Effect.runSync(decodeEditorStateStrict(state));
-      const source = Effect.runSync(encodeEditorStateFromJson(strict));
+      expect(editor.parseEditorState(source).toJSON()).toEqual(state);
+    })
+  );
 
-      expect(editor.parseEditorState(source).toJSON().root.children[0]).toMatchObject({ listType, tag });
-    });
-  });
+  it.effect(
+    "enforces the strict v1 child grammar on the established semantic schema",
+    Effect.fnUntraced(function* () {
+      const misplacedText = {
+        root: {
+          ...element,
+          type: "root",
+          children: [text("not a block")],
+        },
+      };
 
-  it("keeps shadow-root quote topology fixed through the real Lexical runtime", () => {
-    const editor = createEditor({
-      namespace: "lexical-schema-shadow-root-quote-fixed-point",
-      nodes: [RuntimeQuoteNode],
-    });
-    const state = {
-      root: {
-        ...element,
-        type: "root",
-        children: [
-          {
-            ...element,
-            type: "quote",
-            shadowRoot: true,
-            children: [paragraphNode([text("first block")]), paragraphNode([text("second block")])],
-          },
-        ],
-      },
-    };
-    const strict = Effect.runSync(decodeEditorStateStrict(state));
-    const source = Effect.runSync(encodeEditorStateFromJson(strict));
-
-    expect(editor.parseEditorState(source).toJSON()).toEqual(state);
-  });
-
-  it("enforces the strict v1 child grammar on the established semantic schema", () => {
-    const misplacedText = {
-      root: {
-        ...element,
-        type: "root",
-        children: [text("not a block")],
-      },
-    };
-
-    const misplacedRoot = decoded(decodeUnknownRootNodeResult(misplacedText.root));
-    expect(() => SerializedEditorState.make({ root: misplacedRoot })).toThrow();
-    pipe(decodeUnknownSerializedEditorStateResult(misplacedText), Result.isFailure, assertTrue);
-    expect(Effect.runSync(decodeEditorStateLossless(misplacedText))).toEqual(misplacedText);
-    expect(Effect.runSyncExit(decodeEditorStateStrict(misplacedText))._tag).toBe("Failure");
-  });
+      const misplacedRoot = decoded(decodeUnknownRootNodeResult(misplacedText.root));
+      expect(() => SerializedEditorState.make({ root: misplacedRoot })).toThrow();
+      pipe(decodeUnknownSerializedEditorStateResult(misplacedText), Result.isFailure, assertTrue);
+      expect(yield* decodeEditorStateLossless(misplacedText)).toEqual(misplacedText);
+      expect((yield* Effect.exit(decodeEditorStateStrict(misplacedText)))._tag).toBe("Failure");
+    })
+  );
 
   it("enforces recursive child placement and non-empty roots on the public node schema", () => {
     const paragraph = { ...element, type: "paragraph", children: [text("valid paragraph")] };
@@ -811,23 +814,26 @@ describe("Lexical.model", { concurrent: false }, () => {
     );
   });
 
-  it("preserves an empty root losslessly while reporting strict incompatibility", () => {
-    const empty = {
-      root: {
-        ...element,
-        type: "root",
-        children: [],
-      },
-    };
+  it.effect(
+    "preserves an empty root losslessly while reporting strict incompatibility",
+    Effect.fnUntraced(function* () {
+      const empty = {
+        root: {
+          ...element,
+          type: "root",
+          children: [],
+        },
+      };
 
-    expect(Effect.runSync(decodeEditorStateLossless(empty))).toEqual(empty);
-    expect(Effect.runSyncExit(decodeEditorStateStrict(empty))._tag).toBe("Failure");
+      expect(yield* decodeEditorStateLossless(empty)).toEqual(empty);
+      expect((yield* Effect.exit(decodeEditorStateStrict(empty)))._tag).toBe("Failure");
 
-    const compatibility = Effect.runSync(analyzeEditorStateCompatibility(empty));
-    expect(compatibility.wire).toEqual(empty);
-    assertNone(compatibility.state);
-    expect(compatibility.issues).toHaveLength(1);
-  });
+      const compatibility = yield* analyzeEditorStateCompatibility(empty);
+      expect(compatibility.wire).toEqual(empty);
+      assertNone(compatibility.state);
+      expect(compatibility.issues).toHaveLength(1);
+    })
+  );
 
   it("rejects impossible serialized formatting and structural values", () => {
     const boldUnderline = decoded(decodeTextFormatMaskResult(TextFormatBits.bold | TextFormatBits.underline));
@@ -997,8 +1003,10 @@ describe("Lexical.model", { concurrent: false }, () => {
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.
-it.effect("encodes SerializedEditorState through its generation link", () =>
-  Effect.gen(function* () {
+it.effect.prop(
+  "encodes SerializedEditorState through its generation link",
+  { value: Arbitrary.schema(SerializedEditorState) },
+  Effect.fnUntraced(function* ({ value }) {
     const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
       SerializedEditorState.ast
     ).annotations;
@@ -1008,16 +1016,8 @@ it.effect("encodes SerializedEditorState through its generation link", () =>
     const codec = S.make<S.Codec<SerializedEditorState, unknown>>(
       SchemaAST.decodeTo(link.to, SchemaAST.toType(SerializedEditorState.ast), link.transformation)
     );
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(SerializedEditorState),
-      (value) =>
-        Effect.gen(function* () {
-          const encoded = yield* S.encodeEffect(codec)(value);
-          expect(encoded).toEqual([]);
-          return true;
-        }),
-      fcRuns(50)
-    );
-    expect(result._tag).toBe("Passed");
-  })
+    const encoded = yield* S.encodeEffect(codec)(value);
+    expect(encoded).toEqual([]);
+  }),
+  { arbitrary: fcRuns(50) }
 );
