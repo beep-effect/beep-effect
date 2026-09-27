@@ -2842,6 +2842,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2854,6 +2855,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
