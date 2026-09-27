@@ -49,7 +49,9 @@ const mount = Effect.fn("MinimaTest.mount")(function* (
   longTitle: string,
   options?: DockviewReactProps["options"] | undefined
 ) {
-  const graph = yield* makeDockAtoms(workspace(longTitle));
+  const graph = yield* Effect.acquireRelease(makeDockAtoms(workspace(longTitle)), (graph) =>
+    Effect.sync(() => graph.dispose())
+  );
   render(<DockviewReact graph={graph} components={{}} options={options} />);
   resize(screen.getByTestId("dockview-react"), { width: containerWidth, height: 100 });
   return graph;
@@ -78,7 +80,6 @@ describe("dock title minima", { concurrent: false }, () => {
       const graph = yield* mount("dragon slithers", { titleMinima });
       yield* graph.awaitIdle;
       yield* Effect.promise(() => waitFor(() => expect(width()).toBeGreaterThanOrEqual(requirement)));
-      graph.dispose();
     })
   );
 
@@ -87,7 +88,6 @@ describe("dock title minima", { concurrent: false }, () => {
       const graph = yield* mount("dragon slithers");
       yield* graph.awaitIdle;
       yield* Effect.promise(() => waitFor(() => expect(width()).toBeLessThan(requirement)));
-      graph.dispose();
     })
   );
 
@@ -99,7 +99,6 @@ describe("dock title minima", { concurrent: false }, () => {
       // here): the synchronous estimate holds the floor — "wyvern" is 6 chars
       // at the 7px estimate with zero default chrome, so 42px.
       yield* Effect.promise(() => waitFor(() => expect(width()).toBe(42)));
-      graph.dispose();
     })
   );
 });

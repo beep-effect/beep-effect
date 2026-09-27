@@ -73,7 +73,9 @@ const workspace = (floating = true, twoDocked = false) =>
       : [],
   });
 const mount = Effect.fn("FloatingTest.mount")(function* (floating = true, twoDocked = false) {
-  const graph = yield* makeDockAtoms(workspace(floating, twoDocked));
+  const graph = yield* Effect.acquireRelease(makeDockAtoms(workspace(floating, twoDocked)), (graph) =>
+    Effect.sync(() => graph.dispose())
+  );
   const Input = (props: DockPanelProps) => <input data-testid={`input-${props.api.id}`} defaultValue="kept" />;
   render(<DockviewReact graph={graph} components={{ input: Input }} options={{ gap: 8 }} />);
   resize(screen.getByTestId("dockview-react"), { width: 800, height: 500 });
@@ -117,7 +119,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       yield* Effect.promise(() => waitFor(() => expect(screen.getByTestId(`input-${dockedPanel.id}`)).toBe(input)));
       expect(input.closest("[data-floating-pane]")).not.toBeNull();
-      graph.dispose();
     })
   );
 
@@ -127,7 +128,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       pointer(query(`[data-floating-pane='${floating1Id}']`), "pointerDown", 100, 120);
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).floating.at(-1)?.root).toEqual(tabs(floating1Id, floatingPanel1));
-      graph.dispose();
     })
   );
 
@@ -150,7 +150,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).revision).toBe(revision);
       expect(query(`[data-floating-pane='${floating2Id}']`).style.left).toBe("370px");
-      graph.dispose();
     })
   );
 
@@ -168,7 +167,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).revision).toBe(revision);
       expect(query(`[data-floating-pane='${floating2Id}']`).style.left).toBe("320px");
-      graph.dispose();
     })
   );
 
@@ -181,7 +179,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       pointer(handle, "pointerUp", 600, 280);
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).floating.at(-1)?.anchoredBox).toEqual(anchored(320, 80, 280, 200));
-      graph.dispose();
     })
   );
 
@@ -208,7 +205,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
           expect(DockNode.panels(result.root.layout.left)[0]?.id).toBe(dockedPanel.id);
         }
       }
-      graph.dispose();
     })
   );
 
@@ -227,7 +223,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       result = graph.registry.get(graph.workspaceAtom);
       expect(result.kind === "populated" && O.contains(result.maximized, dockedId)).toBe(true);
-      graph.dispose();
     })
   );
 
@@ -240,7 +235,6 @@ describe("floating dock adapter", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       const destination = O.getOrThrow(graph.registry.get(graph.tabsAtom(floating1Id)));
       expect(A.map(TabsNode.panels(destination), (panel) => panel.id)).toContain(dockedPanel.id);
-      graph.dispose();
     })
   );
 });

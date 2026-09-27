@@ -52,7 +52,9 @@ const workspace = (twoGroups = false) => {
   });
 };
 const mount = Effect.fn("GesturesTest.mount")(function* (twoGroups = false) {
-  const graph = yield* makeDockAtoms(workspace(twoGroups));
+  const graph = yield* Effect.acquireRelease(makeDockAtoms(workspace(twoGroups)), (graph) =>
+    Effect.sync(() => graph.dispose())
+  );
   let api: DockviewAdapterApi | undefined;
   render(<DockviewReact graph={graph} components={{}} options={{ gap: 8 }} onReady={(event) => (api = event.api)} />);
   resize(screen.getByTestId("dockview-react"), { width: 800, height: 400 });
@@ -76,7 +78,7 @@ afterEach(cleanup);
 describe("dock pointer gestures", { concurrent: false }, () => {
   it.effect("previews the compiled group quadrant and center placements", () =>
     Effect.gen(function* () {
-      const mounted = yield* mount(true);
+      yield* mount(true);
       const source = tab(panel1.id);
       const indicator = (): HTMLElement => {
         const node = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-indicator]");
@@ -112,7 +114,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       const stripCaret = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-caret]");
       expect(stripCaret?.style.left).toBe("404px");
       fireEvent.keyDown(document, { key: "Escape" });
-      mounted.graph.dispose();
     })
   );
 
@@ -140,7 +141,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-indicator]")).toBeNull();
       expect(screen.getByTestId("dockview-react").querySelector("[data-drop-caret]")).toBeNull();
       expect(screen.getByTestId("dockview-react").querySelector("[data-drag-ghost]")).toBeNull();
-      mounted.graph.dispose();
     })
   );
 
@@ -152,29 +152,31 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       yield* mounted.graph.awaitIdle;
       const result = O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group2)));
       expect(A.map(TabsNode.panels(result), (panel) => panel.id)).toEqual([panel2.id, panel3.id]);
-      mounted.graph.dispose();
     })
   );
 
   it.effect("docks to a group left edge and the container bottom edge", () =>
     Effect.gen(function* () {
-      const left = yield* mount(true);
-      pointer(tab(panel1.id), "pointerDown", 100, 16);
-      pointer(tab(panel1.id), "pointerUp", 410, 200);
-      yield* left.graph.awaitIdle;
-      const leftWorkspace = left.graph.registry.get(left.graph.workspaceAtom);
-      expect(leftWorkspace.kind).toBe("populated");
-      if (leftWorkspace.kind === "populated") {
-        expect(
-          A.some(
-            DockNode.splits(leftWorkspace.root),
-            (split) =>
-              split.layout.axis === "horizontal" &&
-              DockNode.panels(SplitLayout.children(split.layout)[0]).some((panel) => panel.id === panel1.id)
-          )
-        ).toBe(true);
-      }
-      left.graph.dispose();
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const left = yield* mount(true);
+          pointer(tab(panel1.id), "pointerDown", 100, 16);
+          pointer(tab(panel1.id), "pointerUp", 410, 200);
+          yield* left.graph.awaitIdle;
+          const leftWorkspace = left.graph.registry.get(left.graph.workspaceAtom);
+          expect(leftWorkspace.kind).toBe("populated");
+          if (leftWorkspace.kind === "populated") {
+            expect(
+              A.some(
+                DockNode.splits(leftWorkspace.root),
+                (split) =>
+                  split.layout.axis === "horizontal" &&
+                  DockNode.panels(SplitLayout.children(split.layout)[0]).some((panel) => panel.id === panel1.id)
+              )
+            ).toBe(true);
+          }
+        })
+      );
 
       cleanup();
       const bottom = yield* mount(true);
@@ -190,7 +192,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
           expect(DockNode.panels(SplitLayout.children(bottomWorkspace.root.layout)[1])[0]?.id).toBe(panel1.id);
         }
       }
-      bottom.graph.dispose();
     })
   );
 
@@ -211,7 +212,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(tab(panel1.id), "pointerUp", 400, 220);
       yield* mounted.graph.awaitIdle;
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
-      mounted.graph.dispose();
     })
   );
 
@@ -240,13 +240,12 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(tab(panel3.id), "pointerUp", 600, 16);
       yield* mounted.graph.awaitIdle;
       expect(O.isNone(mounted.graph.registry.get(mounted.api.atoms.drag))).toBe(true);
-      mounted.graph.dispose();
     })
   );
 
   it.effect("positions the insertion caret by measured tab midpoints", () =>
     Effect.gen(function* () {
-      const mounted = yield* mount(true);
+      yield* mount(true);
       const root = screen.getByTestId("dockview-react");
       const strip = root.querySelector<HTMLElement>(`[data-group-id='${group1}'] [role='tablist']`);
       if (strip === null) throw new Error("Missing tab strip");
@@ -283,13 +282,12 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(source, "pointerMove", 150, 16);
       expect(caretLeft()).toBe("160px");
       fireEvent.keyDown(document, { key: "Escape" });
-      mounted.graph.dispose();
     })
   );
 
   it.effect("targets rendered tabs when the strip has padding and hidden overflow", () =>
     Effect.gen(function* () {
-      const mounted = yield* mount(true);
+      yield* mount(true);
       const root = screen.getByTestId("dockview-react");
       const strip = root.querySelector<HTMLElement>(`[data-group-id='${group1}'] [role='tablist']`);
       if (strip === null) throw new Error("Missing tab strip");
@@ -317,7 +315,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(source, "pointerMove", 100, 16);
       expect(caret().style.left).toBe("116px");
       fireEvent.keyDown(document, { key: "Escape" });
-      mounted.graph.dispose();
     })
   );
 
@@ -339,7 +336,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       fireEvent.click(tab(panel2.id), { clientX: 100, clientY: 200 });
       yield* mounted.graph.awaitIdle;
       expect(O.getOrThrow(mounted.graph.registry.get(mounted.graph.tabsAtom(group1))).active.id).toBe(panel1.id);
-      mounted.graph.dispose();
     })
   );
 
@@ -373,7 +369,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       expect(root.querySelector("[data-drop-indicator]")).toBeNull();
       yield* mounted.graph.awaitIdle;
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(initialRevision);
-      mounted.graph.dispose();
     })
   );
 
@@ -399,7 +394,6 @@ describe("dock pointer gestures", { concurrent: false }, () => {
       pointer(sash, "pointerUp", 500, 200);
       yield* mounted.graph.awaitIdle;
       expect(mounted.graph.registry.get(mounted.graph.workspaceAtom).revision).toBe(revision);
-      mounted.graph.dispose();
     })
   );
 });

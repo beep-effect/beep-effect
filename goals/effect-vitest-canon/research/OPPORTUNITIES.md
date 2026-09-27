@@ -3524,3 +3524,11 @@ runner dependency lacked an in-range changeset. The earlier generic
 `bun run beep quality changeset-status --since origin/main`. Add the package
 changeset and use the exact repository gate for subsequent package closeouts.
 This was introduced by the runner dependency, not an environment failure.
+
+## Dock React bindings after scoped disposal
+
+The first resource package proof identified three TS6133 bindings whose only
+use had been a manual disposal tail. Preserve their `yield* mount(true)` calls
+and remove only the unused bindings. The next full package proof passes.
+A resource rewrite should inspect references when removing disposal tails,
+including multi-graph tests that need an intermediate scope boundary.
