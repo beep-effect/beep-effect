@@ -2790,6 +2790,32 @@ validator counts the terminal newline differently from splitlines. Use the
 public validator's line-count convention when refreshing both census entries
 and whole-file spans; do not weaken validation or alter source to fit metadata.
 
+## 2026-09-26: Repository-config trace selection guard
+
+The temporary compiler diagnostic trace probe initially used an inaccurate test
+name. Vitest exited zero while selecting no tests; the receipt's exact count
+check rejected both positive and negative runs. Source was restored byte for
+byte. Read the actual registered name from the JSON reporter and rerun that
+case. Reusing reporter names instead of reconstructing them prevents this
+false-positive verification path. No product test or deadline was changed.
+
+## 2026-09-26: Inventory line-count convention
+
+Repository-config strict validation rejected census line counts that included the
+trailing empty line. Use the active validator bridge's source-line count rather
+than inheriting a previous wave's newline convention. Preserve file bytes and
+membership, correct only owned counts and spans, and rerun the unchanged
+validator. A shared count function in receipt generation would prevent this
+off-by-one evidence drift.
+
+## 2026-09-26: Repository-config changeset gate
+
+The first repository-config cheap-gate run passed fourteen lanes but rejected
+`quality:changeset-status`: the versioned workspace needed an in-range changeset
+even though this wave changes tests and their development dependency. Add a real
+package patch changeset, then rerun the gate. Check release-policy classification
+before publication instead of inferring exemption from a private package flag.
+
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
 PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed

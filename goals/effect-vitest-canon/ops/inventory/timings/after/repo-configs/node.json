@@ -1,0 +1,1067 @@
+{
+  "numTotalTestSuites": 30,
+  "numPassedTestSuites": 30,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 83,
+  "numPassedTests": 83,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790465568627,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy accepts package names containing s and rejects whitespace independently",
+          "status": "passed",
+          "title": "accepts package names containing s and rejects whitespace independently",
+          "duration": 11.703066999999919,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy CacheQualificationKey: preserves the complete qualification tuple through schema serialization",
+          "status": "passed",
+          "title": "CacheQualificationKey: preserves the complete qualification tuple through schema serialization",
+          "duration": 11.465631999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy requires the documented lifecycle edges including requalification",
+          "status": "passed",
+          "title": "requires the documented lifecycle edges including requalification",
+          "duration": 11.4103869999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy accepts a complete matrix only after the operational receipt verifier supplies its facts",
+          "status": "passed",
+          "title": "accepts a complete matrix only after the operational receipt verifier supplies its facts",
+          "duration": 11.431969999999637,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy keeps stable and canary evidence separate",
+          "status": "passed",
+          "title": "keeps stable and canary evidence separate",
+          "duration": 11.425410000000284,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy requires independently observed activation invariance for both clients and an enabled target",
+          "status": "passed",
+          "title": "requires independently observed activation invariance for both clients and an enabled target",
+          "duration": 3.8305300000001807,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy rejects changed client bytes and overlapping stable/canary namespaces",
+          "status": "passed",
+          "title": "rejects changed client bytes and overlapping stable/canary namespaces",
+          "duration": 3.807966000000306,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy does not count duplicate shadow or pair receipts as independent experiments",
+          "status": "passed",
+          "title": "does not count duplicate shadow or pair receipts as independent experiments",
+          "duration": 3.800564000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy rejects failed observations and every pin or tuple change",
+          "status": "passed",
+          "title": "rejects failed observations and every pin or tuple change",
+          "duration": 3.792692999999872,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy requires individual semantic and negative perturbations",
+          "status": "passed",
+          "title": "requires individual semantic and negative perturbations",
+          "duration": 3.7888570000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy requires real conformance and trust imports before promotion",
+          "status": "passed",
+          "title": "requires real conformance and trust imports before promotion",
+          "duration": 2.3269540000001143,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy cannot promote required statuses, other proof owners, or persistent services",
+          "status": "passed",
+          "title": "cannot promote required statuses, other proof owners, or persistent services",
+          "duration": 2.316898999999921,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy accepts portable scoped package evidence paths",
+          "status": "passed",
+          "title": "accepts portable scoped package evidence paths",
+          "duration": 2.313825000000179,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache qualification policy"],
+          "fullName": "cache qualification policy rejects invalid identities, unbound evidence and unsafe receipt paths at decode",
+          "status": "passed",
+          "title": "rejects invalid identities, unbound evidence and unsafe receipt paths at decode",
+          "duration": 2.308686999999736,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit retains all reviews and reconstructs the current entry from legal contiguous history",
+          "status": "passed",
+          "title": "retains all reviews and reconstructs the current entry from legal contiguous history",
+          "duration": 2.8036480000000665,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit rejects history that skips candidate and shadow even when the head claims qualification",
+          "status": "passed",
+          "title": "rejects history that skips candidate and shadow even when the head claims qualification",
+          "duration": 2.7601620000000366,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit reports legacy cached executions as unassessed without granting qualification",
+          "status": "passed",
+          "title": "reports legacy cached executions as unassessed without granting qualification",
+          "duration": 2.7398400000001857,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit keeps ordinary candidate and shadow reuse disabled even when the legacy baseline allowed caching",
+          "status": "passed",
+          "title": "keeps ordinary candidate and shadow reuse disabled even when the legacy baseline allowed caching",
+          "duration": 2.726239000000078,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit allows disabling existing cache reuse but blocks newly cached computations",
+          "status": "passed",
+          "title": "allows disabling existing cache reuse but blocks newly cached computations",
+          "duration": 2.7125080000000708,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit detects every effective configuration field, nested script and graph dependency change",
+          "status": "passed",
+          "title": "detects every effective configuration field, nested script and graph dependency change",
+          "duration": 1.2084310000000187,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit blocks global semantic changes while attributing source-only root/child changes as review findings",
+          "status": "passed",
+          "title": "blocks global semantic changes while attributing source-only root/child changes as review findings",
+          "duration": 1.1946899999998095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit blocks reuse of suspended and excluded tuples at their exact boundary",
+          "status": "passed",
+          "title": "blocks reuse of suspended and excluded tuples at their exact boundary",
+          "duration": 1.189491999999973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit refuses duplicate identities and stale contract configuration even with a qualified label",
+          "status": "passed",
+          "title": "refuses duplicate identities and stale contract configuration even with a qualified label",
+          "duration": 1.1830119999999624,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit does not borrow assessments from another profile, epoch or reuse owner",
+          "status": "passed",
+          "title": "does not borrow assessments from another profile, epoch or reuse owner",
+          "duration": 1.1785749999999098,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit keeps explicit unassessed entries on the legacy audit path",
+          "status": "passed",
+          "title": "keeps explicit unassessed entries on the legacy audit path",
+          "duration": 0.19082399999979316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit rejects a contract belonging to another tuple even when its configuration matches",
+          "status": "passed",
+          "title": "rejects a contract belonging to another tuple even when its configuration matches",
+          "duration": 0.8418369999999413,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit blocks candidate reuse outside the reviewed cached population or explicit scope",
+          "status": "passed",
+          "title": "blocks candidate reuse outside the reviewed cached population or explicit scope",
+          "duration": 0.8337440000000242,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["cache governance audit"],
+          "fullName": "cache governance audit omits the cross-root receipt requirement only for a contract that does not claim it",
+          "status": "passed",
+          "title": "omits the cross-root receipt requirement only for a contract that does not claim it",
+          "duration": 0.8281750000001011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572536,
+      "endTime": 1790465572558.8418,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Effect laws allowlist schemas"],
+          "fullName": "Effect laws allowlist schemas normalizes entry file paths during JSONC decode",
+          "status": "passed",
+          "title": "normalizes entry file paths during JSONC decode",
+          "duration": 18.116285999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Effect laws allowlist schemas"],
+          "fullName": "Effect laws allowlist schemas EffectLawsAllowlistDocument: round-trips allowlist document and snapshot schemas",
+          "status": "passed",
+          "title": "EffectLawsAllowlistDocument: round-trips allowlist document and snapshot schemas",
+          "duration": 17.924491000000216,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Effect laws allowlist schemas"],
+          "fullName": "Effect laws allowlist schemas EffectLawsAllowlistSnapshot: round-trips allowlist document and snapshot schemas",
+          "status": "passed",
+          "title": "EffectLawsAllowlistSnapshot: round-trips allowlist document and snapshot schemas",
+          "duration": 17.90906700000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572535,
+      "endTime": 1790465572553.1162,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TypeScript compiler routing"],
+          "fullName": "TypeScript compiler routing keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler",
+          "status": "passed",
+          "title": "keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler",
+          "duration": 292.87039500000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Effect tsgo effectFn policy"],
+          "fullName": "Effect tsgo effectFn policy fails reusable Effect.gen wrappers with a named Effect.fn suggestion",
+          "status": "passed",
+          "title": "fails reusable Effect.gen wrappers with a named Effect.fn suggestion",
+          "duration": 307.53193999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465569386,
+      "endTime": 1790465569694.532,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["NextConfig"],
+          "fullName": "NextConfig decodes user-authored config without invoking function-valued fields",
+          "status": "passed",
+          "title": "decodes user-authored config without invoking function-valued fields",
+          "duration": 8.515897999999652,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NextConfig"],
+          "fullName": "NextConfig strips unknown and internal-only Next.js fields",
+          "status": "passed",
+          "title": "strips unknown and internal-only Next.js fields",
+          "duration": 8.281406999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NextConfig"],
+          "fullName": "NextConfig rejects invalid literal values and documented numeric constraints",
+          "status": "passed",
+          "title": "rejects invalid literal values and documented numeric constraints",
+          "duration": 8.263859000000139,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NextConfig"],
+          "fullName": "NextConfig defines a sync validated Next.js config",
+          "status": "passed",
+          "title": "defines a sync validated Next.js config",
+          "duration": 8.223297000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572636,
+      "endTime": 1790465572644.5159,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AllowedDevOrigin"],
+          "fullName": "AllowedDevOrigin accepts documented exact and wildcard host entries",
+          "status": "passed",
+          "title": "accepts documented exact and wildcard host entries",
+          "duration": 5.187340999999833,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["AllowedDevOrigin"],
+          "fullName": "AllowedDevOrigin rejects URL-like values and invalid wildcard domains",
+          "status": "passed",
+          "title": "rejects URL-like values and invalid wildcard domains",
+          "duration": 4.970977999999832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["AllowedDevOrigin"],
+          "fullName": "AllowedDevOrigin AllowedDevOrigin: round-trips schema-derived allowed origins",
+          "status": "passed",
+          "title": "AllowedDevOrigin: round-trips schema-derived allowed origins",
+          "duration": 4.958838000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572535,
+      "endTime": 1790465572540.971,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Next shared schemas"],
+          "fullName": "Next shared schemas accepts Next.js file size suffixes and size limits",
+          "status": "passed",
+          "title": "accepts Next.js file size suffixes and size limits",
+          "duration": 8.262187000000267,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next shared schemas"],
+          "fullName": "Next shared schemas rejects malformed size suffixes and size limit strings",
+          "status": "passed",
+          "title": "rejects malformed size suffixes and size limit strings",
+          "duration": 8.05782199999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next shared schemas"],
+          "fullName": "Next shared schemas FileSizeSuffix: round-trips schema-derived primitive values",
+          "status": "passed",
+          "title": "FileSizeSuffix: round-trips schema-derived primitive values",
+          "duration": 8.049259999999776,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next shared schemas"],
+          "fullName": "Next shared schemas SizeLimit: round-trips schema-derived primitive values",
+          "status": "passed",
+          "title": "SizeLimit: round-trips schema-derived primitive values",
+          "duration": 8.041045999999824,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas accepts route predicates and public route config shapes",
+          "status": "passed",
+          "title": "accepts route predicates and public route config shapes",
+          "duration": 8.029989999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas RouteHas: decodes schema-derived route predicates",
+          "status": "passed",
+          "title": "RouteHas: decodes schema-derived route predicates",
+          "duration": 14.106439000000137,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas RedirectStatusCodeValue: round-trips redirect status-code values",
+          "status": "passed",
+          "title": "RedirectStatusCodeValue: round-trips redirect status-code values",
+          "duration": 14.07578199999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas Rewrite: round-trips route object schemas that do not contain never fields",
+          "status": "passed",
+          "title": "Rewrite: round-trips route object schemas that do not contain never fields",
+          "duration": 14.057223999999678,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas Header: round-trips route object schemas that do not contain never fields",
+          "status": "passed",
+          "title": "Header: round-trips route object schemas that do not contain never fields",
+          "duration": 14.050493000000188,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas Middleware: round-trips route object schemas that do not contain never fields",
+          "status": "passed",
+          "title": "Middleware: round-trips route object schemas that do not contain never fields",
+          "duration": 1.9920680000000175,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next route schemas"],
+          "fullName": "Next route schemas rejects invalid route discriminators and redirect mode mixing",
+          "status": "passed",
+          "title": "rejects invalid route discriminators and redirect mode mixing",
+          "duration": 1.9703940000003968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next image schemas"],
+          "fullName": "Next image schemas ImageConfigComplete: round-trips schema-derived complete image configs",
+          "status": "passed",
+          "title": "ImageConfigComplete: round-trips schema-derived complete image configs",
+          "duration": 14.038184000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next image schemas"],
+          "fullName": "Next image schemas ImageConfig: round-trips schema-derived partial image configs",
+          "status": "passed",
+          "title": "ImageConfig: round-trips schema-derived partial image configs",
+          "duration": 4.088638000000174,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next image schemas"],
+          "fullName": "Next image schemas rejects out-of-domain image quality values",
+          "status": "passed",
+          "title": "rejects out-of-domain image quality values",
+          "duration": 4.050600000000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next config primitive schemas"],
+          "fullName": "Next config primitive schemas accepts logging config with empty incoming request options",
+          "status": "passed",
+          "title": "accepts logging config with empty incoming request options",
+          "duration": 4.035225999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next compiler schemas"],
+          "fullName": "Next compiler schemas accepts Sass options with implementation and package-specific passthrough keys",
+          "status": "passed",
+          "title": "accepts Sass options with implementation and package-specific passthrough keys",
+          "duration": 4.030748000000131,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Next compiler schemas"],
+          "fullName": "Next compiler schemas rejects non-object Sass options and non-string implementations",
+          "status": "passed",
+          "title": "rejects non-object Sass options and non-string implementations",
+          "duration": 4.026351999999861,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572651,
+      "endTime": 1790465572678.9922,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["NoNativeRuntimeHotspots"],
+          "fullName": "NoNativeRuntimeHotspots keeps ontology files and explicit legacy files in blocking scope",
+          "status": "passed",
+          "title": "keeps ontology files and explicit legacy files in blocking scope",
+          "duration": 1.7061780000000226,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NoNativeRuntimeHotspots"],
+          "fullName": "NoNativeRuntimeHotspots matches ontology TypeScript files and explicit extra-check hotspots",
+          "status": "passed",
+          "title": "matches ontology TypeScript files and explicit extra-check hotspots",
+          "duration": 1.468071000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465569000,
+      "endTime": 1790465569001.7063,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset decodes only the env toggles owned by the shared preset",
+          "status": "passed",
+          "title": "decodes only the env toggles owned by the shared preset",
+          "duration": 8.384676000000127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset builds the current shared base config with additive app overrides",
+          "status": "passed",
+          "title": "builds the current shared base config with additive app overrides",
+          "duration": 8.12838099999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset keeps omitted repo-owned list options byte-equivalent to explicit empty lists",
+          "status": "passed",
+          "title": "keeps omitted repo-owned list options byte-equivalent to explicit empty lists",
+          "duration": 8.143073999999615,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset adds secure headers without invoking app headers during construction",
+          "status": "passed",
+          "title": "adds secure headers without invoking app headers during construction",
+          "duration": 8.157906999999796,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset can disable every shared feature wrapper explicitly",
+          "status": "passed",
+          "title": "can disable every shared feature wrapper explicitly",
+          "duration": 8.126998999999614,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset applies secure-header object defaults through the schema",
+          "status": "passed",
+          "title": "applies secure-header object defaults through the schema",
+          "duration": 7.014683999999761,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset applies secure-header partial object defaults in direct helpers",
+          "status": "passed",
+          "title": "applies secure-header partial object defaults in direct helpers",
+          "duration": 6.99096899999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset BeepNextMdxConfig: round-trips defaulted shared feature schemas",
+          "status": "passed",
+          "title": "BeepNextMdxConfig: round-trips defaulted shared feature schemas",
+          "duration": 6.9744229999996605,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset BeepNextPwaConfig: round-trips defaulted shared feature schemas",
+          "status": "passed",
+          "title": "BeepNextPwaConfig: round-trips defaulted shared feature schemas",
+          "duration": 6.96207400000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset SecureHeadersConfig: round-trips defaulted shared feature schemas",
+          "status": "passed",
+          "title": "SecureHeadersConfig: round-trips defaulted shared feature schemas",
+          "duration": 3.7739630000000943,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset composes plugin helpers in explicit left-to-right order",
+          "status": "passed",
+          "title": "composes plugin helpers in explicit left-to-right order",
+          "duration": 0.210454000000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Shared Next.js config preset"],
+          "fullName": "Shared Next.js config preset supports data-last composition for pipeline use",
+          "status": "passed",
+          "title": "supports data-last composition for pipeline use",
+          "duration": 0.18127000000004045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572647,
+      "endTime": 1790465572663.2104,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["docs-eslint-config"],
+          "fullName": "docs-eslint-config does not register the legacy beep-laws plugin",
+          "status": "passed",
+          "title": "does not register the legacy beep-laws plugin",
+          "duration": 1.6226799999999457,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["docs-eslint-config"],
+          "fullName": "docs-eslint-config keeps jsdoc and tsdoc plugins available for the docs lane",
+          "status": "passed",
+          "title": "keeps jsdoc and tsdoc plugins available for the docs lane",
+          "duration": 1.3679369999999835,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["docs-eslint-config"],
+          "fullName": "docs-eslint-config ignores apps/labs in the docs (ceremony) profile via global ignores",
+          "status": "passed",
+          "title": "ignores apps/labs in the docs (ceremony) profile via global ignores",
+          "duration": 1.3498500000000604,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["docs-eslint-config"],
+          "fullName": "docs-eslint-config keeps apps/labs under the deprecated-apis LAW profile",
+          "status": "passed",
+          "title": "keeps apps/labs under the deprecated-apis LAW profile",
+          "duration": 1.333824999999706,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572491,
+      "endTime": 1790465572492.6226,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions disallows Match.value usage in retained docs and governance modules",
+          "status": "passed",
+          "title": "disallows Match.value usage in retained docs and governance modules",
+          "duration": 6.328389000000243,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions disallows try/catch blocks in retained docs and governance modules",
+          "status": "passed",
+          "title": "disallows try/catch blocks in retained docs and governance modules",
+          "duration": 8.32395200000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions keeps allowlist runtime free of Promise APIs",
+          "status": "passed",
+          "title": "keeps allowlist runtime free of Promise APIs",
+          "duration": 4.733001000000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions keeps docs linting on the dedicated docs config surface",
+          "status": "passed",
+          "title": "keeps docs linting on the dedicated docs config surface",
+          "duration": 5.389671999999791,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions disallows direct JSON.stringify in internal eslint source",
+          "status": "passed",
+          "title": "disallows direct JSON.stringify in internal eslint source",
+          "duration": 8.142992999999933,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions keeps generated allowlist snapshot in sync with standards allowlist",
+          "status": "passed",
+          "title": "keeps generated allowlist snapshot in sync with standards allowlist",
+          "duration": 3.605083000000377,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "effect-first regressions",
+            "effect-first regressions"
+          ],
+          "fullName": "effect-first regressions effect-first regressions resolves import kinds in data-first and data-last forms",
+          "status": "passed",
+          "title": "resolves import kinds in data-first and data-last forms",
+          "duration": 0.5258100000000923,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465572581,
+      "endTime": 1790465572589.605,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "effect steering guidance",
+            "effect steering guidance"
+          ],
+          "fullName": "effect steering guidance effect steering guidance aligns the canonical skill with flat control flow guidance",
+          "status": "passed",
+          "title": "aligns the canonical skill with flat control flow guidance",
+          "duration": 4.231207999999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790465569110,
+      "endTime": 1790465569114.2312,
+      "status": "passed",
+      "message": "",
+      "name": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts"
+    }
+  ]
+}
