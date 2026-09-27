@@ -2755,6 +2755,7 @@
           "@beep/ontology-domain",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2762,6 +2763,7 @@
           "@beep/ontology-domain",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },

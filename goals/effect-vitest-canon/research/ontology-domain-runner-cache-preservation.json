@@ -1,0 +1,42 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/ontology-domain#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/ontology-domain#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/ontology-domain#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/ontology-domain#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/ontology-domain#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ontology-domain#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ontology-domain#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ontology-domain#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "8cfcb9558579b2347fd5f937a2a6fbcb7c92b763e92f23a1c9ca458ecdbaf46e"
+}
