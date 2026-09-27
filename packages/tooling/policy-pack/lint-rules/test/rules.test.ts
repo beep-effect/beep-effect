@@ -5,6 +5,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import { LinterProcessError, validateLinterProcess } from "./codec.ts";
 import { runRule } from "./harness.ts";
 import { SOURCES } from "./sources.ts";
@@ -104,3 +105,26 @@ describe("native linter process outcomes", () => {
     );
   }
 });
+
+it.effect("bounds abnormal subprocess stream diagnostics", () =>
+  Effect.gen(function* () {
+    const result = yield* Effect.sync(() =>
+      Bun.spawnSync([
+        "bun",
+        "-e",
+        'process.stdout.write("x".repeat(5000)); process.stderr.write("y".repeat(5000)); process.exit(2)',
+      ])
+    );
+    assertFailure(
+      yield* Effect.result(validateLinterProcess(result)),
+      LinterProcessError.make({
+        exitCode: 2,
+        stdout: Str.repeat(4096)("x"),
+        stderr: Str.repeat(4096)("y"),
+        signal: O.none(),
+        timedOut: false,
+        outputTruncated: false,
+      })
+    );
+  })
+);

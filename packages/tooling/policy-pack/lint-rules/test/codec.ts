@@ -11,6 +11,7 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
 // unary by contract: `options` stays reachable through `S.encodeUnknownSync(...)`;
@@ -38,7 +39,8 @@ export class JsonReportError extends S.TaggedError<JsonReportError>()("JsonRepor
 
 /**
  * Decode subprocess stdout with the supplied report schema, retaining failed output
- * and its decoding cause in the error channel.
+ * and its decoding cause in the error channel. The stdout context is capped at
+ * 4096 characters; decoding still checks the complete input.
  *
  * **Example** (Decode a report)
  *
@@ -63,7 +65,7 @@ export const jsonReportParser: {
   ): Effect.Effect<Report["Type"], JsonReportError, Report["DecodingServices"]>;
 } = dual(2, <Report extends S.Top>(stdout: string, report: Report) =>
   S.decodeEffect(S.fromJsonString(report))(stdout).pipe(
-    Effect.mapError((cause) => JsonReportError.make({ stdout, cause }))
+    Effect.mapError((cause) => JsonReportError.make({ stdout: Str.takeLeft(stdout, 4096), cause }))
   )
 );
 
@@ -99,6 +101,7 @@ const isLintExit = S.is(S.Literals([0, 1]));
 /**
  * Accept normal lint outcomes (zero or one) and preserve abnormal process diagnostics.
  * Signals, timeouts, and truncated output always fail, even with an accepted exit code.
+ * Error stdout and stderr context each retain at most 4096 characters.
  *
  * **Example** (Validate a native result)
  *
@@ -121,8 +124,8 @@ export const validateLinterProcess = (result: Bun.SyncSubprocess<"pipe", "pipe">
     : Effect.fail(
         LinterProcessError.make({
           exitCode: result.exitCode,
-          stdout: result.stdout.toString(),
-          stderr: result.stderr.toString(),
+          stdout: Str.takeLeft(result.stdout.toString(), 4096),
+          stderr: Str.takeLeft(result.stderr.toString(), 4096),
           signal,
           timedOut: result.exitedDueToTimeout === true,
           outputTruncated: result.exitedDueToMaxBuffer === true,
