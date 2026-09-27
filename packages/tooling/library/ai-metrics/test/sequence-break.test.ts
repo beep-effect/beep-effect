@@ -314,7 +314,7 @@ const notificationRows = Effect.fnUntraced(function* (store: NotifierStore) {
   const exists = yield* fs.exists(store.notificationDir);
   if (!exists) return A.empty<string>();
 
-  const files = yield* fs.readDirectory(store.notificationDir);
+  const files = A.sort(yield* fs.readDirectory(store.notificationDir), Str.Order);
   const rows = yield* Effect.forEach(files, (file) =>
     Effect.map(fs.readFileString(path.join(store.notificationDir, file)), (contents) =>
       A.filter(contents.split("\n"), (line) => line.length > 0)
@@ -364,6 +364,28 @@ const expectSilentSuccess = (run: { readonly exitCode: number; readonly stderr: 
 };
 
 layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notification contracts", (it) => {
+  it.effect("reads UTC notification shards chronologically and preserves their row order", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const store = yield* makeNotifierStore();
+      const earlier = `sequence-break-2026-09-27-${SESSION_ID}.ndjson`;
+      const later = `sequence-break-2026-09-28-${SESSION_ID}.ndjson`;
+      yield* fs.makeDirectory(store.notificationDir, { recursive: true });
+      yield* fs.writeFileString(path.join(store.notificationDir, later), "later-2\nlater-1\n");
+      yield* fs.writeFileString(path.join(store.notificationDir, earlier), "earlier-2\nearlier-1\n");
+      const reverseDirectoryFs: FileSystem.FileSystem = {
+        ...fs,
+        readDirectory: (directory) =>
+          directory === store.notificationDir ? Effect.succeed([later, earlier]) : fs.readDirectory(directory),
+      };
+      const rows = yield* notificationRows(store).pipe(
+        Effect.provideService(FileSystem.FileSystem, reverseDirectoryFs)
+      );
+      expect(rows).toEqual(["earlier-2", "earlier-1", "later-2", "later-1"]);
+    })
+  );
+
   it("declares exactly the two content-free persisted surfaces", () => {
     expect(A.difference(R.keys(SequenceBreakNotificationV1.fields), canonicalNotificationKeys)).toEqual([]);
     expect(A.difference(canonicalNotificationKeys, R.keys(SequenceBreakNotificationV1.fields))).toEqual([]);
