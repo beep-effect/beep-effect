@@ -11,6 +11,7 @@ import {
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -144,8 +145,8 @@ describe("@beep/agents-domain ProviderInstance", () => {
       expect(constructed).toBeInstanceOf(ProviderInstance);
       expect(constructed.entityType).toBe("AgentsProviderInstance");
       expect(constructed.kind).toBe("claude");
-      expect(O.isSome(constructed.homePath)).toBe(true);
-      expect(O.isSome(constructed.lastProbe)).toBe(true);
+      constructed.homePath.pipe(O.isSome, assertTrue);
+      constructed.lastProbe.pipe(O.isSome, assertTrue);
       expect(Result.getOrThrow(encodeProviderInstanceResult(decoded))).toStrictEqual(encoded);
     })
   );
@@ -165,8 +166,8 @@ describe("@beep/agents-domain ProviderInstance", () => {
       const constructed = ProviderInstance.make(Struct.omit(decoded, ["envVars", "homePath", "lastProbe"]));
 
       expect(constructed.envVars).toStrictEqual({});
-      expect(O.isNone(constructed.homePath)).toBe(true);
-      expect(O.isNone(constructed.lastProbe)).toBe(true);
+      assertNone(constructed.homePath);
+      assertNone(constructed.lastProbe);
       expect(Result.getOrThrow(encodeProviderInstanceResult(constructed))).toStrictEqual(encoded);
     })
   );
@@ -182,7 +183,7 @@ describe("@beep/agents-domain ProviderInstance", () => {
       lastProbe: null,
     };
 
-    expect(Result.isFailure(decodeUnknownProviderInstanceResult(encoded))).toBe(true);
+    decodeUnknownProviderInstanceResult(encoded).pipe(Result.isFailure, assertTrue);
   });
 
   it("returns exact login guidance for unauthenticated instances", () => {

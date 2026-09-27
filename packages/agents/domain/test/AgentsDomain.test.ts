@@ -23,6 +23,7 @@ import * as Agents from "@beep/shared-domain/identity/Agents";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
@@ -154,11 +155,11 @@ describe("@beep/agents-domain", () => {
       license: null,
       metadata: null,
     };
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "Review Skill" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "-review" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review_skill" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review.skill" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review--skill" }))).toBe(true);
+    decodeUnknownSkillResult({ ...base, name: "Review Skill" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "-review" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "review_skill" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "review.skill" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "review--skill" }).pipe(Result.isFailure, assertTrue);
   });
 
   it.effect("decodes Agent Skills frontmatter through the derived codec", () =>
@@ -390,7 +391,7 @@ describe("@beep/agents-domain", () => {
         },
       ],
     });
-    expect(Result.isFailure(table)).toBe(true);
+    table.pipe(Result.isFailure, assertTrue);
     if (Result.isFailure(table)) {
       expect(String(table.failure)).toMatch(/Tables must contain/);
     }
@@ -399,7 +400,7 @@ describe("@beep/agents-domain", () => {
       type: "youtube",
       videoId: "https://youtu.be/dQw4w9WgXcQ",
     });
-    expect(Result.isFailure(youtube)).toBe(true);
+    youtube.pipe(Result.isFailure, assertTrue);
     if (Result.isFailure(youtube)) {
       expect(String(youtube.failure)).toMatch(/YouTube blocks/);
     }
