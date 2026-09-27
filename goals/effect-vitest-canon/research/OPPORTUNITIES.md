@@ -3350,3 +3350,26 @@ control likewise expected `pending`, while dynamic `context.skip` reports
 reports; failing mutations still fail their intended registrations and the
 original source bytes are restored. A shared diagnostic normalizer covering
 these reporter variants would prevent repeated harness-only failures.
+
+### Pandoc migration receipts and inherited JSON boundary
+
+Moving the arbitrary-future-JSON law into an Effect generator exposed TS377026
+on its existing `JSON.stringify` call. The current public compact JSON schema
+codec supplies the equivalent wire encoding; the input arbitrary and decoded
+roundtrip equality remain unchanged. The first package proof reports the policy
+error, and the corrected full proof passes.
+
+The codemod found nine generic throw/rejection expectations, including two in the
+mapping suite, while its assertion expected seven codec-only cases. It had
+already saved source before writing receipts. Replaying the transformation from
+the committed source in an in-memory project recovered all nine receipts without
+reapplying edits. Future transforms should validate complete input counts and
+persist their receipt before any source write. All nine before/after controls
+reject unexpected successful operations.
+
+The strict-projection fault fixture must import `vi` directly from `vitest`.
+Moving it to the Effect re-export typechecks but Vitest's hoisted `vi.mock`
+transform rejects the module with “problems in resolving the mocks API”. The
+original direct import is restored as a reviewed exception; the public Effect
+runner still owns registration. Detector guidance should distinguish ordinary
+`vi.spyOn` calls from hoisted `vi.mock` bindings before suggesting this rewrite.

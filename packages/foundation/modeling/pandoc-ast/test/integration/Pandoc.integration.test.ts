@@ -1,8 +1,9 @@
 import { decodePandocJsonString, encodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec";
 import { documentToPandoc, pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
 import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

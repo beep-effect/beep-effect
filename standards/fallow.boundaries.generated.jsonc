@@ -2920,6 +2920,7 @@
           "@beep/md",
           "@beep/pandoc-ast",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2928,6 +2929,7 @@
           "@beep/md",
           "@beep/pandoc-ast",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

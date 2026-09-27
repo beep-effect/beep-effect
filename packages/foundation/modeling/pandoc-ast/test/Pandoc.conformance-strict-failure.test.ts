@@ -1,5 +1,6 @@
 import { inspectPandocConformance } from "@beep/pandoc-ast/Pandoc.conformance";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { vi } from "vitest";

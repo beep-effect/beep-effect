@@ -2,8 +2,9 @@ import { decodePandocJsonLossless, decodePandocJsonStrict, encodePandocJson } fr
 import { inspectPandocConformance, PandocConformanceResult } from "@beep/pandoc-ast/Pandoc.conformance";
 import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
 import { PandocColumnWidth } from "@beep/pandoc-ast/Pandoc.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
