@@ -18,6 +18,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -526,7 +527,10 @@ describe("GroundedExtractionsFromCandidates", () => {
       );
 
       expect(A.length(grounded)).toBe(1);
-      expect(O.map(A.head(grounded), (extraction) => extraction.alignmentStatus)).toEqual(O.some("match_exact"));
+      assertSome(
+        O.map(A.head(grounded), (extraction) => extraction.alignmentStatus),
+        "match_exact"
+      );
     })
   );
 });

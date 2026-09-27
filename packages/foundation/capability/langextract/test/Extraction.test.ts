@@ -12,8 +12,10 @@ import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -49,7 +51,7 @@ describe("parseModelOutput", () => {
 
       expect(candidates).toHaveLength(1);
       expect(candidates[0]?.label).toBe("person");
-      expect(candidates[0]?.confidence).toStrictEqual(O.some(UnitInterval.make(0.9)));
+      assertSome(O.getOrThrow(A.head(candidates)).confidence, UnitInterval.make(0.9));
     })
   );
 
@@ -213,10 +215,10 @@ describe("parseModelOutput", () => {
 
       expect(request.targets).toHaveLength(1);
       expect(request.targets[0]?.attributes).toEqual([]);
-      expect(O.isNone(request.targets[0]?.description)).toBe(true);
+      assertNone(request.targets[0]?.description);
       expect(request.examples).toEqual([]);
-      expect(O.isNone(request.options.fuzzyThreshold)).toBe(true);
-      expect(O.isNone(request.options.maxExtractions)).toBe(true);
+      assertNone(request.options.fuzzyThreshold);
+      assertNone(request.options.maxExtractions);
 
       expect(yield* encodeLangExtractRequest(request)).toEqual({
         documentId: "doc-1",

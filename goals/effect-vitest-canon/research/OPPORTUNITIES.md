@@ -3247,3 +3247,11 @@ OpenClaw property preparation also caught a stale Option.fromNullable API
 reference (TS2339). The fixture already needs a head Option, so Array.head
 provides the exact operation directly. Using the live helper rather than a
 remembered nullable conversion avoids the unnecessary intermediate value.
+
+## Langextract native assertion typing
+
+The assertion migration exposed an optional array access and an unbranded zero
+that broad matchers accepted. Use the existing Array.head/Option.getOrThrow
+path to require the candidate, and NonNegativeInt.make(0) for the same expected
+number. Include the required imports in the same edit; missing imports caused
+an avoidable second typecheck failure. All original cardinality checks remain.
