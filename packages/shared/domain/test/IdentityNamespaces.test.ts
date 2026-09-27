@@ -2,6 +2,7 @@ import { $SharedDomainId, make } from "@beep/identity";
 import * as Identity from "@beep/shared-domain/identity";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { cast } from "effect/Function";
@@ -381,7 +382,7 @@ const specs = [
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
 });
 const codecStaticKeys = [
   "decodeEffect",
@@ -410,10 +411,10 @@ describe("P3 identity namespaces", () => {
   it("carry the factory-attached codec statics at runtime", () => {
     for (const spec of specs) {
       for (const key of codecStaticKeys) {
-        expect(hasFunctionStatic(spec.schema, key), `${spec.label}.${key}`).toBe(true);
+        assertTrue(hasFunctionStatic(spec.schema, key), `${spec.label}.${key}`);
       }
-      expect(hasFunctionStatic(spec.schema, "fromUnknown"), `${spec.label}.fromUnknown`).toBe(false);
-      expect(hasFunctionStatic(spec.schema, "decodeOption"), `${spec.label}.decodeOption`).toBe(false);
+      assertFalse(hasFunctionStatic(spec.schema, "fromUnknown"), `${spec.label}.fromUnknown`);
+      assertFalse(hasFunctionStatic(spec.schema, "decodeOption"), `${spec.label}.decodeOption`);
       expect(O.getOrThrow(invokeStatic(spec.schema, "decodeUnknownSync", 1)), spec.label).toBe(1);
     }
   });
@@ -425,8 +426,8 @@ describe("P3 identity namespaces", () => {
         const decode = S.decodeUnknownEffect(spec.schema);
 
         expect(yield* decode(1), spec.label).toBe(1);
-        expect(spec.schema.equivalence(cast(1), cast(1)), spec.label).toBe(true);
-        expect(spec.schema.equivalence(cast(1), cast(2)), spec.label).toBe(false);
+        assertTrue(spec.schema.equivalence(cast(1), cast(1)), spec.label);
+        assertFalse(spec.schema.equivalence(cast(1), cast(2)), spec.label);
         yield* expectFailure(decode(0));
       }
     })
@@ -446,7 +447,7 @@ describe("P3 identity namespaces", () => {
               const encoded = yield* encode(decoded);
 
               expect(encoded, spec.label).toBe(id);
-              expect(spec.schema.equivalence(cast(decoded), cast(id)), spec.label).toBe(true);
+              assertTrue(spec.schema.equivalence(cast(decoded), cast(id)), spec.label);
 
               return true;
             }),

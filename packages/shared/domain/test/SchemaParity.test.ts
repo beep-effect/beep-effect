@@ -13,6 +13,7 @@ import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordRefe
 import * as Rule from "@beep/shared-domain/values/Rule/Rule.model";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -74,7 +75,7 @@ describe("shared-domain schema parity", () => {
         tableName: "custom_document",
       });
 
-      expect(O.isNone(emptyOptions.brand)).toBe(true);
+      assertNone(emptyOptions.brand);
       expect(yield* encodeEntityIdOptions(emptyOptions)).toEqual({});
       expect(yield* encodeEntityIdOptions(explicitOptions)).toEqual({
         brand: "CustomDocumentId",
@@ -143,7 +144,7 @@ describe("shared-domain schema parity", () => {
       const viaHelper = yield* fromString("2024-06-15");
       const viaSchema = yield* decodeLocalDateFromString("2024-06-15");
 
-      assert.strictEqual(Equal.equals(viaHelper, viaSchema), true);
+      assertTrue(Equal.equals(viaHelper, viaSchema));
       assert.deepEqual(yield* encodeLocalDateFromString(viaHelper), "2024-06-15");
       assert.deepEqual(yield* encodeLocalDateModel(viaHelper), {
         day: 15,
@@ -154,20 +155,20 @@ describe("shared-domain schema parity", () => {
   );
 
   it("keeps literal-kit member guards while adding decode statics", () => {
-    expect(Organization.LicenseTier.is.enterprise("enterprise")).toBe(true);
+    assertTrue(Organization.LicenseTier.is.enterprise("enterprise"));
     expect(Organization.LicenseTier.fromUnknown("team")).toEqual(Result.succeed("team"));
-    expect(O.isSome(Organization.LicenseTier.decodeOption("solo"))).toBe(true);
-    expect(Membership.Role.is.owner("owner")).toBe(true);
+    Organization.LicenseTier.decodeOption("solo").pipe(O.isSome, assertTrue);
+    assertTrue(Membership.Role.is.owner("owner"));
     expect(Membership.Role.fromUnknown("member")).toEqual(Result.succeed("member"));
-    expect(Membership.Status.is.active("active")).toBe(true);
+    assertTrue(Membership.Status.is.active("active"));
     expect(Membership.Status.fromUnknown("active")).toEqual(Result.succeed("active"));
-    expect(SourceKind.SourceKind.is.Agent("Agent")).toBe(true);
+    assertTrue(SourceKind.SourceKind.is.Agent("Agent"));
     expect(SourceKind.SourceKind.fromUnknown("System")).toEqual(Result.succeed("System"));
-    expect(Principal.SystemComponent.is.Runtime("Runtime")).toBe(true);
+    assertTrue(Principal.SystemComponent.is.Runtime("Runtime"));
     expect(Principal.SystemComponent.fromUnknown("Policy")).toEqual(Result.succeed("Policy"));
-    expect(ClaimLifecycle.ClaimLifecycle.is.admitted("admitted")).toBe(true);
+    assertTrue(ClaimLifecycle.ClaimLifecycle.is.admitted("admitted"));
     expect(ClaimLifecycle.ClaimLifecycle.fromUnknown("candidate")).toEqual(Result.succeed("candidate"));
-    expect(Rule.Effect.is.allow("allow")).toBe(true);
+    assertTrue(Rule.Effect.is.allow("allow"));
     expect(Rule.Effect.fromUnknown("deny")).toEqual(Result.succeed("deny"));
   });
 
@@ -203,9 +204,9 @@ describe("shared-domain schema parity", () => {
   );
 
   it("keeps entity-id value statics colocated on the schema", () => {
-    expect(EntityId.EntityIdValue.is(EntityId.EntityIdValue.make(1))).toBe(true);
+    assertTrue(EntityId.EntityIdValue.is(EntityId.EntityIdValue.make(1)));
     expect(EntityId.EntityIdValue.decodeUnknownSync(1)).toBe(EntityId.EntityIdValue.make(1));
-    expect(O.isSome(EntityId.EntityIdValue.decodeUnknownOption(1))).toBe(true);
-    expect(DocumentId.equivalence(DocumentId.make(1), DocumentId.make(1))).toBe(true);
+    EntityId.EntityIdValue.decodeUnknownOption(1).pipe(O.isSome, assertTrue);
+    assertTrue(DocumentId.equivalence(DocumentId.make(1), DocumentId.make(1)));
   });
 });

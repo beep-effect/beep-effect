@@ -27,6 +27,7 @@ import {
 } from "@beep/shared-domain/values/LocalDate";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -52,7 +53,7 @@ const encodeParams = S.encodeEffect(Params);
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  assert.strictEqual(Exit.isFailure(exit), true);
+  assertTrue(Exit.isFailure(exit));
 });
 
 describe("LocalDate.Model", () => {
@@ -65,8 +66,8 @@ describe("LocalDate.Model", () => {
     expect(date.toISOString()).toBe("0099-02-05");
     expect(date.toString()).toBe("0099-02-05");
     expect(Hash.hash(date)).toBe(Hash.string("0099-02-05"));
-    expect(Equal.equals(date, sameDate)).toBe(true);
-    expect(Equal.equals(date, nextDate)).toBe(false);
+    assertTrue(Equal.equals(date, sameDate));
+    assertFalse(Equal.equals(date, nextDate));
   });
 
   it("converts to DateTime.Utc and JavaScript Date at midnight UTC", () => {
@@ -103,9 +104,9 @@ describe("LocalDate.Model", () => {
       const decodedString = yield* decodeLocalDateFromString(encodedString);
 
       assert.instanceOf(decoded, Model);
-      assert.strictEqual(equals(decoded, date), true);
+      assertTrue(equals(decoded, date));
       assert.strictEqual(encodedString, date.toISOString());
-      assert.strictEqual(equals(decodedString, date), true);
+      assertTrue(equals(decodedString, date));
 
       return true;
     }),
@@ -125,9 +126,9 @@ describe("constructors", () => {
     const impossibleDate = makeOption({ year: 2024, month: 2, day: 30 });
 
     expect(date.toISOString()).toBe("2024-06-15");
-    expect(O.isSome(optionalDate)).toBe(true);
-    expect(O.isNone(invalidDate)).toBe(true);
-    expect(O.isNone(impossibleDate)).toBe(true);
+    optionalDate.pipe(O.isSome, assertTrue);
+    assertNone(invalidDate);
+    assertNone(impossibleDate);
     expect(() => make({ year: 2024, month: 6, day: 31 })).toThrow();
   });
 
@@ -140,9 +141,9 @@ describe("constructors", () => {
   );
 
   it("guards LocalDate instances", () => {
-    expect(isLocalDate(juneFifteenth())).toBe(true);
-    expect(isLocalDate({ year: 2024, month: 6, day: 15 })).toBe(false);
-    expect(isLocalDate(null)).toBe(false);
+    assertTrue(isLocalDate(juneFifteenth()));
+    assertFalse(isLocalDate({ year: 2024, month: 6, day: 15 }));
+    assertFalse(isLocalDate(null));
   });
 
   it.effect(
@@ -165,7 +166,7 @@ describe("constructors", () => {
 
     expect(fromDate(dateTime.pipe(DateTime.toDateUtc)).toISOString()).toBe("2024-06-15");
     expect(fromDateTime(dateTime).toISOString()).toBe("2024-06-15");
-    expect(isLocalDate(today())).toBe(true);
+    assertTrue(isLocalDate(today()));
   });
 
   it.effect(
@@ -204,18 +205,18 @@ describe("ordering and predicates", () => {
     const nextMonth = make({ year: 2024, month: 7, day: 15 });
     const nextYear = make({ year: 2025, month: 6, day: 15 });
 
-    expect(isBefore(base, nextDay)).toBe(true);
-    expect(isBefore(nextDay)(base)).toBe(true);
-    expect(isBefore(nextDay, base)).toBe(false);
-    expect(isBefore(base, base)).toBe(false);
-    expect(isAfter(nextDay, base)).toBe(true);
-    expect(isAfter(base)(nextDay)).toBe(true);
-    expect(isAfter(base, nextDay)).toBe(false);
-    expect(isAfter(base, base)).toBe(false);
-    expect(equals(base, juneFifteenth())).toBe(true);
-    expect(equals(nextDay)(base)).toBe(false);
-    expect(equals(base, nextMonth)).toBe(false);
-    expect(equals(base, nextYear)).toBe(false);
+    assertTrue(isBefore(base, nextDay));
+    assertTrue(isBefore(nextDay)(base));
+    assertFalse(isBefore(nextDay, base));
+    assertFalse(isBefore(base, base));
+    assertTrue(isAfter(nextDay, base));
+    assertTrue(isAfter(base)(nextDay));
+    assertFalse(isAfter(base, nextDay));
+    assertFalse(isAfter(base, base));
+    assertTrue(equals(base, juneFifteenth()));
+    assertFalse(equals(nextDay)(base));
+    assertFalse(equals(base, nextMonth));
+    assertFalse(equals(base, nextYear));
   });
 });
 
@@ -252,10 +253,10 @@ describe("date arithmetic", () => {
   });
 
   it("handles leap years and month lengths", () => {
-    expect(isLeapYear(2024)).toBe(true);
-    expect(isLeapYear(2000)).toBe(true);
-    expect(isLeapYear(2023)).toBe(false);
-    expect(isLeapYear(1900)).toBe(false);
+    assertTrue(isLeapYear(2024));
+    assertTrue(isLeapYear(2000));
+    assertFalse(isLeapYear(2023));
+    assertFalse(isLeapYear(1900));
     expect(daysInMonth(2024, 1)).toBe(31);
     expect(daysInMonth(2024, 2)).toBe(29);
     expect(daysInMonth(2)(2023)).toBe(28);
