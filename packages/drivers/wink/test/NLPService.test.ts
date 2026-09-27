@@ -7,7 +7,6 @@
 
 import * as Graph from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
 import * as NLPService from "@beep/nlp-processing/NLPService";
-import { provideScopedLayer } from "@beep/test-utils";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect, it } from "@effect/vitest";
@@ -18,31 +17,37 @@ import * as Layer from "effect/Layer";
 const TestLayer = Layer.provide(NLPService.layer(WinkBackendLive), WinkEngine.WinkEngineLive);
 
 describe("NLPService", () => {
-  it.effect(
-    "processText builds an annotated text graph with a document root",
-    Effect.fnUntraced(function* () {
-      const graph = yield* NLPService.processText("The cat sat. The dog ran.");
-      expect(EffectGraph.nodeCount(graph)).toBeGreaterThan(0);
-      const docs = Graph.getTextNodes(graph).filter((entry) => entry.node.type === "document");
-      expect(docs.length).toBe(1);
-    }, provideScopedLayer(TestLayer))
-  );
+  it.layer(TestLayer)("processText builds an annotated text graph with a document root", (it) => {
+    it.effect(
+      "processText builds an annotated text graph with a document root",
+      Effect.fnUntraced(function* () {
+        const graph = yield* NLPService.processText("The cat sat. The dog ran.");
+        expect(EffectGraph.nodeCount(graph)).toBeGreaterThan(0);
+        const docs = Graph.getTextNodes(graph).filter((entry) => entry.node.type === "document");
+        expect(docs.length).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "tagPartsOfSpeech delegates to the backend",
-    Effect.fnUntraced(function* () {
-      const tagged = yield* NLPService.tagPartsOfSpeech("dogs run");
-      expect(tagged.length).toBe(2);
-    }, provideScopedLayer(TestLayer))
-  );
+  it.layer(TestLayer)("tagPartsOfSpeech delegates to the backend", (it) => {
+    it.effect(
+      "tagPartsOfSpeech delegates to the backend",
+      Effect.fnUntraced(function* () {
+        const tagged = yield* NLPService.tagPartsOfSpeech("dogs run");
+        expect(tagged.length).toBe(2);
+      })
+    );
+  });
 
-  it.effect(
-    "extractEntities delegates to the backend",
-    Effect.fnUntraced(function* () {
-      const entities = yield* NLPService.extractEntities("Meet me at 5pm.");
-      for (const entity of entities) {
-        expect(typeof entity.entityType).toBe("string");
-      }
-    }, provideScopedLayer(TestLayer))
-  );
+  it.layer(TestLayer)("extractEntities delegates to the backend", (it) => {
+    it.effect(
+      "extractEntities delegates to the backend",
+      Effect.fnUntraced(function* () {
+        const entities = yield* NLPService.extractEntities("Meet me at 5pm.");
+        for (const entity of entities) {
+          expect(typeof entity.entityType).toBe("string");
+        }
+      })
+    );
+  });
 });

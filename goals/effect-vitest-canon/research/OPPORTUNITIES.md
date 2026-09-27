@@ -3373,3 +3373,12 @@ transform rejects the module with “problems in resolving the mocks API”. The
 original direct import is restored as a reviewed exception; the public Effect
 runner still owns registration. Detector guidance should distinguish ordinary
 `vi.spyOn` calls from hoisted `vi.mock` bindings before suggesting this rewrite.
+
+### Wink native layer migration exposes redundant generators
+
+Removing test-local provider wrappers exposed two existing nested `Effect.gen`
+blocks in the bundle and toolkit-result cases. Full package verification rejected
+both with `TS377083` (`nestedEffectGenYield`). Inlining their bodies preserves the
+same acquired services, stream drain, result binding and assertions. A resource
+migration preflight should flag generators whose only boundary was the provider
+being removed; this avoids a preventable full audit round trip.
