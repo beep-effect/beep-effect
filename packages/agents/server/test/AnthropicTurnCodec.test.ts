@@ -7,7 +7,8 @@
 import { assistantBlockOutput, assistantOutput } from "@beep/agents-server/AnthropicTurnCodec";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 
 const decodeBlock = S.decodeUnknownEffect(S.fromJsonString(assistantBlockOutput.codec));
@@ -53,7 +54,7 @@ describe("AnthropicTurnCodec", () => {
       const mermaid = yield* Effect.exit(
         decodeBlock('{"type":"code","language":"mermaid","code":"notDiagram A --> B"}')
       );
-      expect(Exit.isFailure(mermaid)).toBe(true);
+      pipe(mermaid, Exit.isFailure, assertTrue);
       if (Exit.isFailure(mermaid)) {
         expect(Cause.pretty(mermaid.cause)).toMatch(/Mermaid code blocks/);
       }
@@ -63,13 +64,13 @@ describe("AnthropicTurnCodec", () => {
           '{"type":"table","rows":[{"cells":[{"children":[{"type":"text","text":"A"}]}]},{"cells":[{"children":[{"type":"text","text":"B"}]},{"children":[{"type":"text","text":"C"}]}]}]}'
         )
       );
-      expect(Exit.isFailure(table)).toBe(true);
+      pipe(table, Exit.isFailure, assertTrue);
       if (Exit.isFailure(table)) {
         expect(Cause.pretty(table.cause)).toMatch(/Tables must contain/);
       }
 
       const youtube = yield* Effect.exit(decodeBlock('{"type":"youtube","videoId":"https://youtu.be/dQw4w9WgXcQ"}'));
-      expect(Exit.isFailure(youtube)).toBe(true);
+      pipe(youtube, Exit.isFailure, assertTrue);
       if (Exit.isFailure(youtube)) {
         expect(Cause.pretty(youtube.cause)).toMatch(/YouTube blocks/);
       }
