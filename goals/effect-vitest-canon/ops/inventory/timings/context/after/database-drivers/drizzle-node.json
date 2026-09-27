@@ -1,0 +1,106 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/database-drivers-drizzle-final-runner-r2-node.json"
+  ],
+  "phase": "final-runner-r2",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "9398507218247637e39d2ec50b51269a9c565a60784c77d108651901f0b5cbb6"
+    },
+    {
+      "file": "packages/drivers/drizzle/package.json",
+      "sha256": "f6ea4c0fc915a726f1ea42405958b962a1bdcdbefae03becc00a2ce398641b5b"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+      "sha256": "bf6e42ce0496312d20a27142fac4d507be77a85abe7cf5da4d28ffcc2e20f794"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+      "sha256": "ce67444a06b26e3c32f35c45912c09f9406b0bdd5e72b6bfd470dfc1d48e3637"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/index.ts",
+      "sha256": "3231b604692a16d7b0cdc7257528c2344dbdfab3ced9323768f9450f975fd222"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
+      "sha256": "277c084dd445c913d0786f8addfaaf4535ae03df63a3293f4ea801ca69b76ed8"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "sha256": "b30636a0e692d1b3e53ee140db0f12663c00493b0779e654ff73bf213fc9b90c"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "sha256": "1846e642fa52b90c434420920f0dd117696de5cc8bfbe5ae8811930282202ae2"
+    }
+  ],
+  "loadBefore": [4.1044921875, 6.97900390625, 7.64306640625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.01 avg300=0.10 total=54172639\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.09 avg300=0.16 total=59416605\nfull avg10=0.00 avg60=0.09 avg300=0.16 total=58263621\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=650189532\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=596725182\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "BEEP_TEST_DATABASE_URL empty; BEEP_TEST_DATABASE_DRIVER=pglite-inprocess; no external database or container selected",
+  "hostTimeoutSeconds": 180,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 4.571870855004818,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "9398507218247637e39d2ec50b51269a9c565a60784c77d108651901f0b5cbb6"
+    },
+    {
+      "file": "packages/drivers/drizzle/package.json",
+      "sha256": "f6ea4c0fc915a726f1ea42405958b962a1bdcdbefae03becc00a2ce398641b5b"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+      "sha256": "bf6e42ce0496312d20a27142fac4d507be77a85abe7cf5da4d28ffcc2e20f794"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+      "sha256": "ce67444a06b26e3c32f35c45912c09f9406b0bdd5e72b6bfd470dfc1d48e3637"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/index.ts",
+      "sha256": "3231b604692a16d7b0cdc7257528c2344dbdfab3ced9323768f9450f975fd222"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
+      "sha256": "277c084dd445c913d0786f8addfaaf4535ae03df63a3293f4ea801ca69b76ed8"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "sha256": "b30636a0e692d1b3e53ee140db0f12663c00493b0779e654ff73bf213fc9b90c"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "sha256": "1846e642fa52b90c434420920f0dd117696de5cc8bfbe5ae8811930282202ae2"
+    }
+  ],
+  "loadAfter": [4.25634765625, 6.96240234375, 7.6337890625],
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.01 avg300=0.10 total=54185891\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.09 avg300=0.16 total=59416620\nfull avg10=0.00 avg60=0.09 avg300=0.16 total=58263636\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=650190644\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=596726028\n"
+  },
+  "sourceStable": true,
+  "traceEnvironment": "BEEP_FC_NUM_RUNS and BEEP_FC_SEED unset; ordinary configured whole-package run"
+}

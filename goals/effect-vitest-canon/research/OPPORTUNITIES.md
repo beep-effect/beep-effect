@@ -2676,6 +2676,40 @@ under-ten-second detector target. Concurrent workstation load is recorded in
 this wave's timing receipts; no performance improvement or target waiver is
 claimed from a passing ratchet.
 
+
+## Database test migration compiler feedback
+
+While moving the existing DuckDB wire-format fixture into an Effect test,
+`package-verify @beep/duckdb` rejected the unchanged JSON.stringify oracle
+with TS377026. The installed Schema declaration also lacked the
+UnknownFromJsonString convenience export present in the reference source.
+The compatible public expression is S.fromJsonString(S.Unknown); using its
+Effect encoder retains the independently specified expected wire payloads.
+A pinned example checked against the installed declaration surface would
+have prevented both edit/proof iterations. This is migration-tooling friction,
+not evidence of a production codec defect.
+
+
+## Generated infra SDK declarations missing after lane install
+
+The media wave's full proof stopped in infra docgen on TypeScript diagnostics
+inside node_modules/@pulumi/gharunners. Source and docgen configuration matched
+main; main passed its 101 examples while the worktree lacked bin/index.d.ts.
+Running the dependency's existing build script restored declarations, after
+which the same infra docgen command passed. No tracked source or compiler rule
+changed. An install preflight checking generated file dependencies for their
+declared build artifacts would prevent this expensive late-proof failure.
+The full proof was resubmitted; focused docgen alone is not full proof credit.
+
+## Reproof after an already published clean head
+
+Four SDK-repaired lanes retried `yeet publish --start-pr-early` after their heads
+had already reached GitHub. Each stopped before proof with "requires reviewed
+staged changes or a clean local commit ahead". The correct recovery is a
+standalone detached verify plus an until-ready monitor at the existing head.
+A publish recovery hint distinguishing an already-pushed head from missing work
+would avoid these discarded proof submissions. No empty commit is needed.
+
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
 PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed

@@ -1,0 +1,153 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/database-drivers-postgres-before-node.json"
+  ],
+  "phase": "before",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/postgres/package.json",
+      "sha256": "b5e4c716ae2a5c909056f8d8d2c7ad25ea2cb62d3dfc593edbdeebbaa4e51465"
+    },
+    {
+      "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+      "sha256": "95852de434c01fbb56a94352588070b8e81a1afa150b66aae2a260ac5976bb36"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresClient.service.ts",
+      "sha256": "c6ca2f56dcf37bf8ad3430b65ec03cd12c9603901c57c6de960958d851a2f354"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+      "sha256": "2ee671188369194ff7d6695a489d0853251774e30293e07d647070dc17aded49"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "sha256": "d7b97a2ac767b463f3da5d5d793d11b7f88c3e430c2974d1d135272c2ea0a641"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresInterop.models.ts",
+      "sha256": "602c95ce9040a237ea9f13082e3e3eeee2a61344d3de790f7bc51a5ca5261a55"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+      "sha256": "435225bd064b6f8ec8b319b0250077cdffa9596746acd29c20d40276e432ac27"
+    },
+    {
+      "file": "packages/drivers/postgres/src/index.ts",
+      "sha256": "7b47453f769e59d52affa33fa8b86ef2a015134e82bd6ca213cf5ba5230569d8"
+    },
+    {
+      "file": "packages/drivers/postgres/src/internal/PostgresDiagnosticGuards.ts",
+      "sha256": "b0f9a261fd9563b4047a71e72f2f953cf5ed9c8d0099c73499a4ceb51220355e"
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.equivalence.test.ts",
+      "sha256": "4614f8f33644fe726d93991cf8583c69451f07f435f1ce11e454f17f187796af"
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "sha256": "e5cef3f9cb7b606808503b807df8b43821cf94a185a267083ee0973cb0ab0d9f"
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "sha256": "c278bcb9134f01f66835287fb534ce1f6fccec5bb9daac00a8574a9652401266"
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/fixtures/migrations/20260101000000_create_driver_migrated_notes/migration.sql",
+      "sha256": "949e2b38b4b2470e456dee4c02da48c75209a93f98fef8b9b6cd8f6274645776"
+    }
+  ],
+  "loadBefore": [58.55908203125, 54.14306640625, 47.0224609375],
+  "pressureBefore": {
+    "cpu": "some avg10=7.78 avg60=9.57 avg300=8.14 total=2806406908\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.01 avg60=0.28 avg300=0.20 total=233620113\nfull avg10=0.01 avg60=0.20 avg300=0.14 total=203251993\n",
+    "io": "some avg10=6.79 avg60=5.29 avg300=3.81 total=1053352287\nfull avg10=4.15 avg60=3.05 avg300=2.21 total=711750358\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "BEEP_TEST_DATABASE_URL empty; BEEP_TEST_DATABASE_DRIVER=pglite-inprocess; no external database or container selected",
+  "hostTimeoutSeconds": 180,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 24.022166080991155,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/postgres/package.json",
+      "sha256": "b5e4c716ae2a5c909056f8d8d2c7ad25ea2cb62d3dfc593edbdeebbaa4e51465"
+    },
+    {
+      "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+      "sha256": "95852de434c01fbb56a94352588070b8e81a1afa150b66aae2a260ac5976bb36"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresClient.service.ts",
+      "sha256": "c6ca2f56dcf37bf8ad3430b65ec03cd12c9603901c57c6de960958d851a2f354"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+      "sha256": "2ee671188369194ff7d6695a489d0853251774e30293e07d647070dc17aded49"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "sha256": "d7b97a2ac767b463f3da5d5d793d11b7f88c3e430c2974d1d135272c2ea0a641"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresInterop.models.ts",
+      "sha256": "602c95ce9040a237ea9f13082e3e3eeee2a61344d3de790f7bc51a5ca5261a55"
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+      "sha256": "435225bd064b6f8ec8b319b0250077cdffa9596746acd29c20d40276e432ac27"
+    },
+    {
+      "file": "packages/drivers/postgres/src/index.ts",
+      "sha256": "7b47453f769e59d52affa33fa8b86ef2a015134e82bd6ca213cf5ba5230569d8"
+    },
+    {
+      "file": "packages/drivers/postgres/src/internal/PostgresDiagnosticGuards.ts",
+      "sha256": "b0f9a261fd9563b4047a71e72f2f953cf5ed9c8d0099c73499a4ceb51220355e"
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.equivalence.test.ts",
+      "sha256": "4614f8f33644fe726d93991cf8583c69451f07f435f1ce11e454f17f187796af"
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "sha256": "e5cef3f9cb7b606808503b807df8b43821cf94a185a267083ee0973cb0ab0d9f"
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "sha256": "c278bcb9134f01f66835287fb534ce1f6fccec5bb9daac00a8574a9652401266"
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/fixtures/migrations/20260101000000_create_driver_migrated_notes/migration.sql",
+      "sha256": "949e2b38b4b2470e456dee4c02da48c75209a93f98fef8b9b6cd8f6274645776"
+    }
+  ],
+  "loadAfter": [55.2255859375, 53.85498046875, 47.1240234375],
+  "pressureAfter": {
+    "cpu": "some avg10=1.63 avg60=7.22 avg300=7.71 total=2807157449\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.18 avg300=0.18 total=233630403\nfull avg10=0.00 avg60=0.13 avg300=0.13 total=203261929\n",
+    "io": "some avg10=13.77 avg60=7.53 avg300=4.42 total=1056266859\nfull avg10=11.41 avg60=5.24 avg300=2.76 total=714078111\n"
+  },
+  "sourceStable": true
+}

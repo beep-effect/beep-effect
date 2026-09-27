@@ -167,3 +167,34 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/face-detection#test`
 - `@beep/face-detection#test:integration`
 - `@beep/face-detection#test:property`
+
+## Incoming 9ab680a91284e255bc389cc70980ef502f0af6d3
+
+- `@beep/drizzle#audit`
+- `@beep/drizzle#build`
+- `@beep/drizzle#check`
+- `@beep/drizzle#coverage`
+- `@beep/drizzle#lint:deprecated-apis`
+- `@beep/drizzle#package-test-typecheck`
+- `@beep/drizzle#test`
+- `@beep/drizzle#test:integration`
+- `@beep/drizzle#test:integration:serial`
+- `@beep/drizzle#test:property`
+- `@beep/duckdb#audit`
+- `@beep/duckdb#build`
+- `@beep/duckdb#check`
+- `@beep/duckdb#coverage`
+- `@beep/duckdb#lint:deprecated-apis`
+- `@beep/duckdb#package-test-typecheck`
+- `@beep/duckdb#test`
+- `@beep/duckdb#test:property`
+- `@beep/postgres#audit`
+- `@beep/postgres#build`
+- `@beep/postgres#check`
+- `@beep/postgres#coverage`
+- `@beep/postgres#lint:deprecated-apis`
+- `@beep/postgres#package-test-typecheck`
+- `@beep/postgres#test`
+- `@beep/postgres#test:integration`
+- `@beep/postgres#test:integration:serial`
+- `@beep/postgres#test:property`

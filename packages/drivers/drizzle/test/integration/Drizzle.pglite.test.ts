@@ -1,8 +1,9 @@
 import { Drizzle, DrizzleError, DrizzleErrorContext } from "@beep/drizzle";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
-import { Effect, Exit, Layer, pipe } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { Deferred, Effect, Exit, Fiber, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -42,16 +43,7 @@ const makeSqlBackedDrizzleClient = (sqlClient: SqlClient.SqlClient): DrizzleClie
         )
       ),
     withTransaction: Effect.fn("withTransaction")(
-      function* (use) {
-        yield* sql`BEGIN`;
-        const exit = yield* Effect.exit(use(client));
-        if (Exit.isSuccess(exit)) {
-          return yield* sql`COMMIT`.pipe(Effect.as(exit.value));
-        }
-
-        yield* sql`ROLLBACK`.pipe(Effect.catch(() => Effect.void));
-        return yield* Effect.failCause(exit.cause);
-      },
+      (use) => sqlClient.withTransaction(Effect.suspend(() => use(client))),
       Effect.mapError((cause) => DrizzleError.fromUnknown("withTransaction", cause))
     ),
   };
@@ -74,7 +66,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Drizzle PgLite integration", () => {});
 } else {
   describe.concurrent("Drizzle PgLite integration", () => {
-    layer(DrizzlePgliteLayer, { timeout: "2 minutes" })((it) => {
+    it.layer(DrizzlePgliteLayer, { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs execute and transaction flows against a PgLite-backed adapter",
         Effect.fnUntraced(function* () {
@@ -104,6 +96,42 @@ if (!shouldRunPgliteIntegration) {
           expect(afterRollbackBodies).toEqual(["alpha", "beta", "gamma"]);
           expect(rollbackFailure).toBeInstanceOf(DrizzleError);
           expect(rollbackFailure.operation).toBe("withTransaction");
+        }),
+        120_000
+      );
+    });
+    it.layer(Layer.fresh(DrizzlePgliteLayer), { timeout: "2 minutes" })((it) => {
+      it.effect(
+        "rolls back an interrupted transaction and remains usable",
+        Effect.fnUntraced(function* () {
+          const drizzle = yield* Drizzle;
+          const inserted = yield* Deferred.make<void>();
+          const transaction = yield* drizzle
+            .withTransaction(
+              Effect.fnUntraced(function* (tx) {
+                yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["interrupted"]);
+                yield* Deferred.succeed(inserted, undefined);
+                return yield* Effect.never;
+              })
+            )
+            .pipe(Effect.forkChild({ startImmediately: true }));
+
+          yield* Deferred.await(inserted);
+          yield* Fiber.interrupt(transaction);
+          const exit = yield* Fiber.await(transaction);
+          expect(Exit.hasInterrupts(exit)).toBe(true);
+          const afterInterruption = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
+          expect(yield* readBodies(afterInterruption)).toEqual([]);
+
+          const committed = yield* drizzle.withTransaction(
+            Effect.fnUntraced(function* (tx) {
+              yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["after interruption"]);
+              return "committed";
+            })
+          );
+          expect(committed).toBe("committed");
+          const afterCommit = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
+          expect(yield* readBodies(afterCommit)).toEqual(["after interruption"]);
         }),
         120_000
       );
