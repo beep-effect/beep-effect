@@ -19,7 +19,6 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref, Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -73,19 +72,16 @@ const clearPromotionGate = PromotionGate.of({
     })
   ),
 });
-const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"], label: string): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), label).toBe(true);
 };
 
-// Sequential: the schema-arbitrary round-trip below runs 6 schemas x the
-// BEEP_FC_NUM_RUNS floor (400 in the PR deep sweep) = 2,400 encode/decode
-// cycles and saturates a CI core. Under the global `sequence.concurrent`
-// default that CPU-bound test starves its millisecond-fast fixture siblings
-// past the deep-sweep timeout; running the suite sequentially keeps the fast
-// tests instant and gives the heavy property its own core.
+// Keep the five-schema property under one 600-second deadline. At the PR
+// floor it checks 2,000 round trips; sequential suite execution preserves
+// the existing CPU-bound property and fixture-sibling concurrency contract.
 describe("@beep/agents-use-cases", { concurrent: false }, () => {
   it.effect("runs deterministic fixtures into structured candidate output sets", () =>
     Effect.gen(function* () {
@@ -325,32 +321,17 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
     })
   );
 
-  it("round-trips bounded runtime schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [
-      RuntimeScope,
-      RuntimeEvidenceRef,
-      RuntimeCandidateClaim,
-      RuntimeActivity,
-      SdkContextPacket,
-    ];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-    // Explicit generous cap: 2,400 schema round-trips at the deep-sweep floor
-    // can approach the shared 300s testTimeout on a loaded runner even running
-    // alone; give this single heavy property its own headroom without raising
-    // the global cap or lowering the BEEP_FC_NUM_RUNS floor for the lane.
-  }, 600_000);
+  it.effect.prop(
+    "round-trips bounded runtime schemas with schema-derived arbitraries",
+    { RuntimeScope, RuntimeEvidenceRef, RuntimeCandidateClaim, RuntimeActivity, SdkContextPacket },
+    (values) =>
+      Effect.sync(() => {
+        roundTrip(RuntimeScope, values.RuntimeScope, "RuntimeScope");
+        roundTrip(RuntimeEvidenceRef, values.RuntimeEvidenceRef, "RuntimeEvidenceRef");
+        roundTrip(RuntimeCandidateClaim, values.RuntimeCandidateClaim, "RuntimeCandidateClaim");
+        roundTrip(RuntimeActivity, values.RuntimeActivity, "RuntimeActivity");
+        roundTrip(SdkContextPacket, values.SdkContextPacket, "SdkContextPacket");
+      }),
+    { arbitrary: fcRuns(10), timeout: 600_000 }
+  );
 });

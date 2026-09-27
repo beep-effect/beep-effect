@@ -13,10 +13,12 @@ import { ProviderInstance } from "@beep/agents-use-cases/server";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { ProviderInstanceRepositoryShape, ProviderProbeShape } from "@beep/agents-use-cases/server";
 
@@ -69,9 +71,13 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
     Effect.fnUntraced(function* () {
       const initial = yield* makeInstance();
       const state = makeRepository([initial]);
+      const observedAdd = yield* Ref.make(O.none<AddProviderInstanceCommand>());
       const repository: ProviderInstanceRepositoryShape = {
         ...state.repository,
-        add: () => Effect.succeed(initial),
+        add: Effect.fn("ProviderInstanceTest.add")(function* (command: AddProviderInstanceCommand) {
+          yield* Ref.set(observedAdd, O.some(command));
+          return initial;
+        }),
       };
       const probe: ProviderProbeShape = {
         probe: () => Effect.succeed(Domain.AuthenticatedSnapshot.make({ probedAt })),
@@ -85,6 +91,7 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
         label: initial.label,
       });
       expect((yield* useCases.add(add)).id).toBe(id);
+      assertSome(yield* Ref.get(observedAdd), add);
       const updated = yield* useCases.update(
         UpdateProviderInstanceCommand.make({
           id,

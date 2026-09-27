@@ -632,41 +632,35 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 describe("tool-name report determinism", () => {
-  it.effect(
+  it.effect.prop(
     "projects arbitrary candidates deterministically under the frozen cap and digest contract",
-    Effect.fnUntraced(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([ToolNameCandidateArbitrary]),
-        ([candidate]) =>
-          withToolNameCrypto(
-            Effect.gen(function* () {
-              expectRoundTrip(ToolNameCandidate, candidate);
+    [ToolNameCandidateArbitrary],
+    ([candidate]) =>
+      withToolNameCrypto(
+        Effect.gen(function* () {
+          expectRoundTrip(ToolNameCandidate, candidate);
 
-              const first = yield* Effect.result(projectToolNameCandidate(candidate));
-              const second = yield* Effect.result(projectToolNameCandidate(candidate));
-              assert.deepEqual(second, first);
-              if (Result.isFailure(first)) {
-                return true;
-              }
+          const first = yield* Effect.result(projectToolNameCandidate(candidate));
+          const second = yield* Effect.result(projectToolNameCandidate(candidate));
+          assert.deepEqual(second, first);
+          if (Result.isFailure(first)) {
+            return true;
+          }
 
-              const row = first.success;
-              expectRoundTrip(ToolNameCollisionRow, row);
-              assert.isAtMost(Str.length(row.finalWireName), 64);
-              if (row.truncated) {
-                assert.strictEqual(Str.length(row.finalWireName), 64);
-                assert.isTrue(P.isNotNull(row.digest));
-              } else {
-                assert.strictEqual(row.finalWireName, row.normalized);
-                assert.isTrue(P.isNull(row.digest));
-              }
-              return true;
-            })
-          ),
-        fcRuns(50)
-      );
-
-      assert.strictEqual(result._tag, "Passed");
-    })
+          const row = first.success;
+          expectRoundTrip(ToolNameCollisionRow, row);
+          assert.isAtMost(Str.length(row.finalWireName), 64);
+          if (row.truncated) {
+            assert.strictEqual(Str.length(row.finalWireName), 64);
+            assert.isTrue(P.isNotNull(row.digest));
+          } else {
+            assert.strictEqual(row.finalWireName, row.normalized);
+            assert.isTrue(P.isNull(row.digest));
+          }
+          return true;
+        })
+      ),
+    { arbitrary: fcRuns(50) }
   );
 
   layer(NodeServices.layer)("with platform filesystem services", (it) => {

@@ -19,7 +19,6 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Result, Stream } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -27,11 +26,11 @@ import * as S from "effect/Schema";
 
 const userItem = (text: string) => UserTurnHistoryItem.make({ text });
 const assistantItem = (text: string) => AssistantTurnHistoryItem.make({ text });
-const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"], label: string): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), label).toBe(true);
 };
 
 describe("@beep/agents-use-cases AssistantTurn", () => {
@@ -75,29 +74,18 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     });
   });
 
-  it("round-trips touched schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [
-      TurnHistoryItem,
-      IndexedBlock,
-      ProviderUsageMetadata,
-      AssistantTurnEvent,
-    ];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  it.effect.prop(
+    "round-trips touched schemas with schema-derived arbitraries",
+    { TurnHistoryItem, IndexedBlock, ProviderUsageMetadata, AssistantTurnEvent },
+    (values) =>
+      Effect.sync(() => {
+        roundTrip(TurnHistoryItem, values.TurnHistoryItem, "TurnHistoryItem");
+        roundTrip(IndexedBlock, values.IndexedBlock, "IndexedBlock");
+        roundTrip(ProviderUsageMetadata, values.ProviderUsageMetadata, "ProviderUsageMetadata");
+        roundTrip(AssistantTurnEvent, values.AssistantTurnEvent, "AssistantTurnEvent");
+      }),
+    { arbitrary: fcRuns(10) }
+  );
 
   it.effect(
     "round-trips provider usage through its JSON-safe encoded boundary",

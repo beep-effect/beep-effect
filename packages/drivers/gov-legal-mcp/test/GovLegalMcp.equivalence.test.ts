@@ -6,7 +6,6 @@ import {
 import { GovinfoSearchFailure } from "@beep/gov-legal-mcp/Tools";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -83,30 +82,23 @@ describe("gov-legal-mcp declared-field equivalence", () => {
     })
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived error values under the declared comparator",
-    Effect.fnUntraced(function* () {
-      const searchResult = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(GovinfoSearchFailure)]),
-        ([value]) =>
-          encodeGovinfoSearchFailure(value).pipe(
-            Effect.flatMap(decodeGovinfoSearchFailure),
-            Effect.map((decoded) => sameGovinfoSearchFailure(decoded, value))
-          ),
-        fcRuns(25)
-      );
-      const normalizationResult = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(ToolNameNormalizationError)]),
-        ([value]) =>
-          encodeToolNameNormalizationError(value).pipe(
-            Effect.flatMap(decodeToolNameNormalizationError),
-            Effect.map((decoded) => sameNormalizationError(decoded, value))
-          ),
-        fcRuns(25)
-      );
-
-      expect(searchResult).toMatchObject({ _tag: "Passed" });
-      expect(normalizationResult).toMatchObject({ _tag: "Passed" });
-    })
+    { GovinfoSearchFailure, ToolNameNormalizationError },
+    (values) =>
+      Effect.gen(function* () {
+        const search = yield* encodeGovinfoSearchFailure(values.GovinfoSearchFailure).pipe(
+          Effect.flatMap(decodeGovinfoSearchFailure)
+        );
+        expect(sameGovinfoSearchFailure(search, values.GovinfoSearchFailure), "GovinfoSearchFailure").toBe(true);
+        const normalization = yield* encodeToolNameNormalizationError(values.ToolNameNormalizationError).pipe(
+          Effect.flatMap(decodeToolNameNormalizationError)
+        );
+        expect(
+          sameNormalizationError(normalization, values.ToolNameNormalizationError),
+          "ToolNameNormalizationError"
+        ).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 });
