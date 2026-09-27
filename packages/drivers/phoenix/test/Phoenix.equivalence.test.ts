@@ -1,5 +1,6 @@
 import { PhoenixError } from "@beep/phoenix";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
 
 const samePhoenixError = S.toEquivalence(PhoenixError);
@@ -10,8 +11,8 @@ describe("Phoenix declared-field equivalence", () => {
     const b = PhoenixError.operation("doctor", "transport", { cause: "offline" });
     const c = PhoenixError.operation("init", "transport", { cause: "offline" });
 
-    expect(samePhoenixError(a, b)).toBe(true);
-    expect(samePhoenixError(a, c)).toBe(false);
+    assertTrue(samePhoenixError(a, b));
+    assertFalse(samePhoenixError(a, c));
   });
 
   it("treats defect-only differences as equivalent", () => {
@@ -19,6 +20,6 @@ describe("Phoenix declared-field equivalence", () => {
     const b = PhoenixError.operation("doctor", "transport", { cause: new RangeError("boom") });
 
     // the defect cause is payload, never identity
-    expect(samePhoenixError(a, b)).toBe(true);
+    assertTrue(samePhoenixError(a, b));
   });
 });

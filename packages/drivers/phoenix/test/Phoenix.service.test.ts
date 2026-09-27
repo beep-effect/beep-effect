@@ -25,6 +25,7 @@ import {
 } from "@beep/phoenix";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -265,7 +266,7 @@ describe("@beep/phoenix", () => {
 
         expect(dataset.name).toBe("agent-outcomes-v1");
         expect(examples.versionId).toBe("version-id");
-        expect(prompt.exists).toBe(true);
+        assertTrue(prompt.exists);
         expect(experiment.experimentId).toBe("experiment-id");
       })
     );
