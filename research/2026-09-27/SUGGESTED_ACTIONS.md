@@ -1,5 +1,7 @@
 # SUGGESTED_ACTIONS — 2026-09-27
 # Proposals only. Human admits. Never auto-merge.
+# Pure refute-reconfirm captures tombstoned in research/ledger/tombstones/2026-09-27.jsonl
+# are omitted here so admit guidance does not contradict the reaper.
 
 ## Kickoff priority
 
@@ -13,8 +15,6 @@ bun run beep research capture https://arxiv.org/abs/2609.30217 --tags agents,eva
 ## Law
 
 bun run beep research capture https://patent.dev/heads-up-complete-your-uspto-profile-by-august-18/ --tags law,uspto,odp,auth,refute
-bun run beep research capture https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/ --tags law,imanage,tr,mcp,refute
-bun run beep research capture https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery --tags law,harvey,everlaw,mcp,refute
 bun run beep research capture https://www.haqq.ai/blog/harvey-vs-legora-vs-cocounsel --tags law,harvey,legora,cocounsel,rubric
 bun run beep research capture https://legora.com/newsroom/legora-announces-its-plugin-for-chatgpt-enterprise --tags law,legora,chatgpt,mcp
 bun run beep research capture https://www.everlaw.com/blog/ai-and-law/chatgpt-plugin/ --tags law,everlaw,chatgpt,plugin
@@ -22,16 +22,11 @@ bun run beep research capture https://iamvera.ai/blog/legora-ontology-citator-re
 
 ## Effect
 
-bun run beep research capture https://github.com/Effect-TS/effect/pull/8336 --tags effect,rc,refute
 bun run beep research capture https://github.com/evoluhq/evolu/pull/708 --tags effect,evolu,settled
 bun run beep research capture https://www.evolu.dev/playgrounds/sync --tags effect,evolu,sync
-bun run beep research capture https://github.com/drizzle-team/drizzle-orm/issues/6162 --tags effect,drizzle,refute
-bun run beep research capture https://www.instantdb.com/essays/instant_team_joins_openai --tags effect,instant,refute
 
 ## Agents
 
-bun run beep research capture https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306 --tags agents,mcp,enterprise,refute
-bun run beep research capture https://github.com/modelcontextprotocol/go-sdk/pull/1238 --tags agents,mcp,sep2640,refute
 bun run beep research capture https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004 --tags agents,mcp,sep3004,refute
 bun run beep research capture https://instrumental-evasion.com --tags agents,evasion,benchmark
 bun run beep research capture https://dev.to/piekwerk/skills-over-mcp-is-final-what-3-methods-and-per-file-digests-change-for-your-agents-25jk --tags agents,skills,sep2640

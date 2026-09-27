@@ -87,7 +87,7 @@ Across SUGGESTED_ACTIONS of 09-22 / 09-23 / 09-25, **pure reconfirm capture URLs
 
 - Standing HOLD reconfirm noise: USPTO support / patent.dev, iManage partnership page, Harvey–Everlaw blog, Instant essay, drizzle #6162, Effect #8336, MCP #3306, go-sdk #1238, Evolu #708 (now settled — tombstone the *unpublished* capture habit; keep tip watch), jazz/zero registry root URLs (superseded by version-specific tips).
 
-See `TOMBSTONES_PATCH.jsonl` for structured rows (url, reason, first_seen, last_seen, runs_unactioned). Human admits. Do not auto-append explorations/INBOX.
+See `research/ledger/tombstones/2026-09-27.jsonl` for structured rows (url, reason, first_seen, last_seen, runs_unactioned). Human admits. Do not auto-append explorations/INBOX.
 
 ## Topical appendix
 
@@ -105,4 +105,4 @@ Spec/SDK ship gates unchanged. New research edge: **SpecHarness** (who may estab
 
 ## Watchlist patch note (publisher)
 
-Proposed ledger edits in `WATCHLIST_PATCH.md` and stamp draft in `LEDGER_PATCH.md` (draft until human merge of `research/2026-09-27`). **Update** Zero → canary.15 / head 20260926; jazz → alpha.57; Evolu → shipped 8.11.0; Effect #8336 / rc.117 evidence dates; **add** Beri buyer-guide, SpecHarness, Instrumental Evasion, ChatGPT plugin fabric rows. Never auto-merge.
+Ledger edits are in `research/ledger/WATCHLIST.md` and the stamp draft is `research/ledger/stamp.json` (draft until human merge of `research/2026-09-27`). **Update** Zero → canary.15 / head 20260926; jazz → alpha.57; Evolu → shipped 8.11.0; Effect #8336 / rc.117 evidence dates; **add** Beri buyer-guide, SpecHarness, Instrumental Evasion, ChatGPT plugin fabric rows. Never auto-merge.
