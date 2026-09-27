@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/lexical-schema",
+  "sourceHead": "6c411abe5adcaf6d3d4046191f7010f1513405b0",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.570327724999515,
+  "bunWholeCommandSeconds": 1.616543644995545,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.70751953125, 3.1064453125, 2.68115234375],
+  "loadAfter": [3.650390625, 3.1044921875, 2.68310546875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.04 avg60=0.22 avg300=0.15 total=717251414\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196682\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123035\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=803401740\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=703006405\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.02 avg60=0.20 avg300=0.14 total=717261213\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196682\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123035\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=803404139\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=703008678\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "30dd71a3abc665a56632d4a01c72afe535b9b14722882cc25cbf9741a70d4f0e"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/README.md",
+      "sha256": "1bb7feb1a30639f54a77c0355ce916745cd4d81346246c48b546c10cd7f47e95"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/data/conformance/SOURCES.md",
+      "sha256": "2a508485d9c4d47fcfed8dcf92aa90310fda9d75cb1eaa5b97151054e400d191"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/data/conformance/coverage.json",
+      "sha256": "392a5f6df42dbe2a29c59d60a44128168dcad95166a22eb78bd8bdf5b3cb0af8"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/data/conformance/invariants.json",
+      "sha256": "7b61a017a9a6714012881b1a1138ccef682f5d60ed3a828aacbe73132630ba8c"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/data/conformance/inventory.json",
+      "sha256": "fc730e9c1e74dfbdee95dda8d88e18c687d6e4bdb495695cac682bd33278f11a"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/data/conformance/sources.json",
+      "sha256": "dd0564f5bafec14c97bd97c4824d91bd60ff13adb6bc7491cda9e0c249648056"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/docgen.json",
+      "sha256": "510163138ad6fabd6e3dbd9afeed8d30ecf3a0a59681859d8dd33b92d5d76b52"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/package.json",
+      "sha256": "6b74dc9a8f4fac948c9b625b0909f8a7788c97e90e73d8136004817da0221a24"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.behavior.ts",
+      "sha256": "d0769e94f6c0f57f95dda4a84ba109fd33af86cc42f45342e1c1fcda0125b91e"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+      "sha256": "8b3beab4fe942c8bb0b4eb09943884abc57fba3f4f6920a0e03f6707a5b0d389"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.conformance.ts",
+      "sha256": "271a2c8f36835530a8e9d29b6ab63b6bd7d939b4077456794ed5dc14174493a8"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "sha256": "c81ecffe8adca84add1e1f1659d5a4c4a054e5c0a255ab3bf0d1253ad86debe6"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.normalize.ts",
+      "sha256": "0806484b23cb44b2d9a65d9e030a6855ed447dd9608506a08debef6c621c0f5d"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Version.ts",
+      "sha256": "b28867edd74378d4a9f2215378a908bc7919e5b974313ab8e38a32d761012056"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/index.ts",
+      "sha256": "ecadc5621a9b241ef54140f67dbd3a9d157c06f606416a2099994d4651866ba2"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.conformance-registry.ts",
+      "sha256": "18b3a1d1844e8769b2761bb9412fafaf74ef4ddb0491739864b2e670879f42d9"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.strict-invariants.ts",
+      "sha256": "456395f4911a2d56367bafac38ef5f27d4113b8c88e05e5d4741b3f50a9ee329"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/ConformanceLedger.test.ts",
+      "sha256": "369f166db2383cdfb323fd850d46d95156017eabc1507bfd95f1610941849e8f"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "sha256": "b5e6730e74d07c226d8ba9a20d7e437c0ae0bb968c1ce182e6dd2c256586e1d0"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
+      "sha256": "e9950c4f186deb2f081518a1e3c1661d441830adfb02472b79218ac088ba841d"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance.test.ts",
+      "sha256": "eb05e641ecfc6ded1a976dd9846b8ce2bedb16f642fe4a8822873847842ef371"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "sha256": "9d00a422d571019e42dfcb0d6838a19ff4c1d5e48e4ce13972911d9958cc1f15"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
+      "sha256": "0010570a9c663a94f1bb6c719704f6772274c979ffa41444eb4f2a44101fabcc"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/TaggedError.equivalence.test.ts",
+      "sha256": "689b86921a94a554c1d1ccf0d66deee78ba49730b964d3f89b27bf3f7f2c7ecb"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/tsconfig.check.json",
+      "sha256": "c7ab76cca78354c96f1baef1d247797179f45bbe7b076865a7b5317750156d62"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/tsconfig.json",
+      "sha256": "22785eab827135728dc8fdf58c08c46554860f7d14cb44bc09835b6ee7dbc405"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/tsconfig.test.json",
+      "sha256": "a75fb483faa0db9c1e828904eb6e863ea775d0412c9bbc6a90c035a7ced02a46"
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/vitest.config.ts",
+      "sha256": "e447ff52934c91dbdab1e912f08d556a9feababcd8d9e880c260f9b450542fd0"
+    }
+  ],
+  "environmentMode": "Actual conformance artifact reads and real headless Lexical editor remain. Native effect/property adapters and instrumented runner; conformance test-title scanner now recognizes effect property declarations. No application-code changes.",
+  "bunProof": {
+    "passedTests": 71,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.0703125, 3.0400390625, 2.6787109375],
+    "loadAfter": [2.984375, 3.0224609375, 2.6748046875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.10 avg300=0.12 total=717281183\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196683\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123036\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=803430611\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=703034263\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.09 avg300=0.12 total=717285493\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196683\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123036\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=803430615\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=703034267\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 71,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all71registrations before and after with no skipped cases. Exact fixtures and intentionally lossy contracts remain. Nine generated registrations preserve their domains; two literal50floors now respect fcRuns environment floors and seeds."
+}

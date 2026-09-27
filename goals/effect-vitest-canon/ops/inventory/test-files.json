@@ -3321,50 +3321,50 @@
     "file": "packages/foundation/modeling/lexical/test/ConformanceLedger.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 390,
-    "lines": 9
+    "bytes": 426,
+    "lines": 10
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 27614,
-    "lines": 807
+    "bytes": 29197,
+    "lines": 864
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 2343,
-    "lines": 55
+    "bytes": 2379,
+    "lines": 56
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.conformance.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 2533,
-    "lines": 93
+    "bytes": 2569,
+    "lines": 94
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 34156,
-    "lines": 992
+    "bytes": 34932,
+    "lines": 1024
   },
   {
     "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 6257,
-    "lines": 220
+    "bytes": 6251,
+    "lines": 224
   },
   {
     "file": "packages/foundation/modeling/lexical/test/TaggedError.equivalence.test.ts",
     "package": "@beep/lexical-schema",
     "kind": "test",
-    "bytes": 786,
-    "lines": 15
+    "bytes": 822,
+    "lines": 16
   },
   {
     "file": "packages/foundation/modeling/md/test/ConformanceLedger.test.ts",
@@ -5862,8 +5862,8 @@
     "file": "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
     "package": "@beep/test-utils",
     "kind": "test",
-    "bytes": 18681,
-    "lines": 507
+    "bytes": 19128,
+    "lines": 512
   },
   {
     "file": "packages/tooling/test-kit/test-utils/test/Entity.test.ts",

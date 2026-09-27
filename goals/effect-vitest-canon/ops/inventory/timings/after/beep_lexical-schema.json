@@ -1,0 +1,96 @@
+{
+  "package": "@beep/lexical-schema",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T14:08:59.609000+00:00",
+  "totalMs": 4232.34521484375,
+  "testCount": 71,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/lexical/test/ConformanceLedger.test.ts",
+      "ms": 16.1396484375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "ms": 78.34521484375,
+      "tests": 30
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
+      "ms": 16.123779296875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance.test.ts",
+      "ms": 6.4873046875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "ms": 168.08447265625,
+      "tests": 27
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
+      "ms": 6.54248046875,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/TaggedError.equivalence.test.ts",
+      "ms": 1.11865234375,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "testName": "Lexical.model generates only runtime-canonical list metadata",
+      "ms": 54.519362
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "testName": "Lexical.codec stabilizes after one Md → Lexical → Md pass (lossy codec idempotent on its stable image)",
+      "ms": 26.604521999999633
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "testName": "Lexical.model sanitizes link URLs at the schema boundary and keeps safe URLs fixed",
+      "ms": 26.33020899999974
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "testName": "Lexical.model round-trips schema-derived arbitrary nodes through encode/decode",
+      "ms": 22.23141799999985
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "testName": "Lexical.model round-trips arbitrary open wire states without losing extension fields",
+      "ms": 16.692818000000443
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/ConformanceLedger.test.ts",
+      "testName": "validates the Lexical conformance ledger",
+      "ms": 16.139734999999973
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
+      "testName": "@beep/lexical-schema conformance annotations matches the exact selected Lexical ledger records and enforcement evidence",
+      "ms": 16.123801000000185
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "testName": "Lexical.codec projects schema-derived arbitrary editor states onto valid Md documents (totality)",
+      "ms": 11.163371999999981
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "testName": "encodes SerializedEditorState through its generation link",
+      "ms": 10.084490000000187
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "testName": "Lexical.codec keeps safe nested-link content inside the strict Lexical grammar",
+      "ms": 8.059311999999409
+    }
+  ]
+}
