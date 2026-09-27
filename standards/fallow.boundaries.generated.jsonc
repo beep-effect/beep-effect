@@ -1974,6 +1974,7 @@
           "@beep/freshbooks",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1981,6 +1982,7 @@
           "@beep/freshbooks",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2069,6 +2071,7 @@
           "@beep/hubspot",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2076,6 +2079,7 @@
           "@beep/hubspot",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2357,6 +2361,7 @@
           "@beep/identity",
           "@beep/m365",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2364,6 +2369,7 @@
           "@beep/identity",
           "@beep/m365",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3673,6 +3679,7 @@
         "allow": [
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/utils"
@@ -3680,6 +3687,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/utils"

@@ -2623,6 +2623,20 @@ drift despite unchanged task configuration. The current census and main both
 retain those edges. Restored their exact multiplicity; future merge checks must
 compare dependency multisets and serialized lists, not just membership. The
 provider proof queued on the incorrect metadata was cancelled before correction.
+### Business-driver assertions: preserve observation and branded expectations
+
+During the assertion phase, a provisional FreshBooks full-Cause comparison
+introduced a stricter singleton expectation and failed on stack annotations.
+The original oracle observes the first typed error. Preserve that observation
+with `Exit.match`, `Cause.findErrorOption` and native `assertSome`, retaining
+all original class and payload checks without reconstructing the cause.
+
+USPTO package verification then rejected four raw string expectations with
+`TS2345` because native assertion helpers enforce the branded payload type.
+Use the existing `NonEmptyTrimmedStr.make` constructor for the unchanged literal
+values. A small preflight against the actual test compiler would catch this
+introduced typing error before the full package audit. Neither failure
+justifies a production change, weakened assertion or quality-gate waiver.
 
 ## 2026-09-26: generated boundary parity after test-runner adoption
 

@@ -86,3 +86,42 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/xai#test`
 - `@beep/xai#test:integration`
 - `@beep/xai#test:property`
+
+## Incoming 3d79b3530aa77ccf6d3af7005a8cf9e02db5d489
+
+- `@beep/freshbooks#audit`
+- `@beep/freshbooks#build`
+- `@beep/freshbooks#check`
+- `@beep/freshbooks#coverage`
+- `@beep/freshbooks#lint:deprecated-apis`
+- `@beep/freshbooks#package-test-typecheck`
+- `@beep/freshbooks#test`
+- `@beep/freshbooks#test:integration`
+- `@beep/hubspot#audit`
+- `@beep/hubspot#build`
+- `@beep/hubspot#check`
+- `@beep/hubspot#coverage`
+- `@beep/hubspot#lint:deprecated-apis`
+- `@beep/hubspot#package-test-typecheck`
+- `@beep/hubspot#test`
+- `@beep/hubspot#test:integration`
+- `@beep/hubspot#test:property`
+- `@beep/m365#audit`
+- `@beep/m365#build`
+- `@beep/m365#check`
+- `@beep/m365#coverage`
+- `@beep/m365#lint:deprecated-apis`
+- `@beep/m365#package-test-typecheck`
+- `@beep/m365#test`
+- `@beep/m365#test:integration`
+- `@beep/m365#test:integration:parallel`
+- `@beep/m365#test:property`
+- `@beep/uspto#audit`
+- `@beep/uspto#build`
+- `@beep/uspto#check`
+- `@beep/uspto#coverage`
+- `@beep/uspto#lint:deprecated-apis`
+- `@beep/uspto#package-test-typecheck`
+- `@beep/uspto#test`
+- `@beep/uspto#test:integration`
+- `@beep/uspto#test:property`
