@@ -113,16 +113,14 @@ const snapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>):
   A.map(files, (file) => file.relativePath);
 
 describe("@beep/repo-ai-metrics bounded config snapshots", () => {
-  it("generates only canonical truncation reasons", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AiMetricsConfigSnapshotTruncationReason)]),
-          (values) => isAiMetricsConfigSnapshotTruncationReason(...values),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "generates only canonical truncation reasons",
+    [Arbitrary.schema(AiMetricsConfigSnapshotTruncationReason)],
+    (values) => {
+      assertTrue(isAiMetricsConfigSnapshotTruncationReason(...values));
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("stops at every nested git root and records it instead of walking into it", () =>
     withTempDirectory(

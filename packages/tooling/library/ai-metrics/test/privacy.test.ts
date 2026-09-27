@@ -36,21 +36,16 @@ describe("AI metrics privacy boundaries", () => {
     })
   );
 
-  it("redacts arbitrary bearer credentials without exposing the token", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([SecretTokenArbitrary]),
-          ([token]) => {
-            const redacted = redactAiMetricsSensitiveText(`Authorization: Bearer ${token}`);
+  it.prop(
+    "redacts arbitrary bearer credentials without exposing the token",
+    [SecretTokenArbitrary],
+    ([token]) => {
+      const redacted = redactAiMetricsSensitiveText(`Authorization: Bearer ${token}`);
 
-            expect(redacted).not.toContain(token);
-            expect(redacted).toContain("[REDACTED]");
+      expect(redacted).not.toContain(token);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(redacted).toContain("[REDACTED]");
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

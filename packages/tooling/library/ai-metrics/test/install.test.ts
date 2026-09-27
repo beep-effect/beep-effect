@@ -26,16 +26,14 @@ const decodeInstallDoctorCheck = S.decodeUnknownEffect(AiMetricsInstallDoctorChe
 const decodeInstallPlanJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsInstallPlan));
 
 describe("@beep/repo-ai-metrics install contracts", () => {
-  it("generates plan steps accepted by their domain schema", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AiMetricsInstallPlanStep)]),
-          (values) => isAiMetricsInstallPlanStep(...values),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "generates plan steps accepted by their domain schema",
+    [Arbitrary.schema(AiMetricsInstallPlanStep)],
+    (values) => {
+      assertTrue(isAiMetricsInstallPlanStep(...values));
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("applies plan-step and doctor metadata defaults during construction and decoding", () =>
     Effect.gen(function* () {

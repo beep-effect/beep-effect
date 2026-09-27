@@ -26,7 +26,6 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, FileSystem, Path, pipe, Stream } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
@@ -709,32 +708,21 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     expect(A.difference(schemaKeys, canonicalRowKeys)).toEqual([]);
   });
 
-  it.effect("keeps every schema-inhabitable canonical row inside the declared ledger surface", () =>
-    Effect.gen(function* () {
-      // The fixtures above only reach the key combinations the measured harness
-      // emits. This walks the whole space `HookPulseV1` admits, so a future field
-      // — or an encoder that starts emitting one conditionally — cannot slip past
-      // the leak allowlist just because no fixture happens to populate it. The
-      // round-trip half proves the NDJSON line the ledger stores is lossless for
-      // every such row, which is what P4 replay actually depends on.
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([HookPulseV1Arbitrary]),
-        ([value]) =>
-          Effect.gen(function* () {
-            const line = yield* HookPulseV1.encodeJsonEffect(value);
-            const keys = yield* decodeRowKeys(line);
-            const decoded = yield* HookPulseV1.decodeJsonEffect(line);
+  it.effect.prop(
+    "keeps every schema-inhabitable canonical row inside the declared ledger surface",
+    [HookPulseV1Arbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      const line = yield* HookPulseV1.encodeJsonEffect(value);
 
-            expect(A.difference(R.keys(keys), canonicalRowKeys)).toEqual([]);
-            pipe(hookPulseEquivalent(decoded, value), assertTrue);
+      const keys = yield* decodeRowKeys(line);
 
-            return true;
-          }),
-        fcRuns(50)
-      );
+      const decoded = yield* HookPulseV1.decodeJsonEffect(line);
 
-      expect(result._tag).toBe("Passed");
-    })
+      expect(A.difference(R.keys(keys), canonicalRowKeys)).toEqual([]);
+
+      pipe(hookPulseEquivalent(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect("keeps the jq allowlists set-equal to the schema literal domains", () =>

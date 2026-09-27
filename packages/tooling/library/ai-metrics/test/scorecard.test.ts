@@ -13,10 +13,11 @@ import {
   AiMetricsWeeklyReportInput,
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics/scorecard";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const schemaCases = [
@@ -60,20 +61,15 @@ const benchmarkCaseEquivalent = S.toEquivalence(BenchmarkCase);
 const benchmarkRunEquivalent = S.toEquivalence(BenchmarkRun);
 
 describe("scorecard schemas", () => {
-  it.each(schemaCases)("generates %s values accepted by its source schema", (_name, arbitrary, isValue) => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([value]) => {
-            pipe(isValue(value), assertTrue);
-
-            return true;
-          },
-          fcRuns(12)
-        )
-      )._tag
-    ).toBe("Passed");
+  A.forEach(schemaCases, ([name, arbitrary, isValue]) => {
+    it.prop(
+      `generates ${name} values accepted by its source schema`,
+      [arbitrary],
+      ([value]) => {
+        pipe(isValue(value), assertTrue);
+      },
+      { arbitrary: fcRuns(12) }
+    );
   });
 
   it.effect.prop(

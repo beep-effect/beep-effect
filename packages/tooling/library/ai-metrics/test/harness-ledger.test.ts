@@ -123,9 +123,19 @@ describe("harness-ledger", () => {
         const same = yield* fingerprintFor("gpt-6-astra", hashA);
         const otherEffort = yield* fingerprintFor("gpt-6-astra", hashA, "xhigh");
         const otherHarness = yield* fingerprintFor("gpt-6-astra", hashC);
+        const otherModel = yield* fingerprintFor("gpt-5.6-sol", hashA);
+        const otherBaseline = yield* makeHarnessFingerprint(
+          HarnessFingerprintInput.make({
+            modelId: O.some("gpt-6-astra"),
+            reasoningEffort: O.some("medium"),
+            snapshot: snapshotResult(hashA, hashC),
+          })
+        );
         expect(same.fingerprintId).toBe(base.fingerprintId);
         expect(otherEffort.fingerprintId).not.toBe(base.fingerprintId);
         expect(otherHarness.fingerprintId).not.toBe(base.fingerprintId);
+        expect(otherModel.fingerprintId).not.toBe(base.fingerprintId);
+        expect(otherBaseline.fingerprintId).not.toBe(base.fingerprintId);
       })
     );
 
@@ -161,28 +171,23 @@ describe("harness-ledger", () => {
     const editRefEquivalent = S.toEquivalence(HarnessEditRef);
     const claimEquivalent = S.toEquivalence(BehavioralClaim);
 
-    it.effect("roundtrips arbitrary fingerprints, edit refs, and claims", () =>
-      Effect.gen(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(HarnessFingerprint),
-            Arbitrary.schema(HarnessEditRef),
-            Arbitrary.schema(BehavioralClaim),
-          ]),
-          ([fingerprint, edit, claim]) =>
-            Effect.gen(function* () {
-              const fingerprintRoundtrip = yield* decodeFingerprint(yield* encodeFingerprint(fingerprint));
-              const editRoundtrip = yield* decodeEditRef(yield* encodeEditRef(edit));
-              const claimRoundtrip = yield* decodeClaim(yield* encodeClaim(claim));
-              pipe(fingerprintEquivalent(fingerprintRoundtrip, fingerprint), assertTrue);
-              pipe(editRefEquivalent(editRoundtrip, edit), assertTrue);
-              pipe(claimEquivalent(claimRoundtrip, claim), assertTrue);
-              return true;
-            }),
-          fcRuns(25)
-        );
-        expect(result._tag).toBe("Passed");
-      })
+    it.effect.prop(
+      "roundtrips arbitrary fingerprints, edit refs, and claims",
+      [Arbitrary.schema(HarnessFingerprint), Arbitrary.schema(HarnessEditRef), Arbitrary.schema(BehavioralClaim)],
+      Effect.fnUntraced(function* ([fingerprint, edit, claim]) {
+        const fingerprintRoundtrip = yield* decodeFingerprint(yield* encodeFingerprint(fingerprint));
+
+        const editRoundtrip = yield* decodeEditRef(yield* encodeEditRef(edit));
+
+        const claimRoundtrip = yield* decodeClaim(yield* encodeClaim(claim));
+
+        pipe(fingerprintEquivalent(fingerprintRoundtrip, fingerprint), assertTrue);
+
+        pipe(editRefEquivalent(editRoundtrip, edit), assertTrue);
+
+        pipe(claimEquivalent(claimRoundtrip, claim), assertTrue);
+      }),
+      { arbitrary: fcRuns(25) }
     );
   });
 

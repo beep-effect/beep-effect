@@ -422,34 +422,31 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
     pipe(SequenceBreakDampingV1.decodeResult(damping), Result.isFailure, assertTrue);
   });
 
-  it("round-trips schema-derived notification and damping states", () => {
+  {
     const notificationEquivalent = S.toEquivalence(SequenceBreakNotificationV1);
+
     const dampingEquivalent = S.toEquivalence(SequenceBreakDampingV1);
+    it.prop(
+      "round-trips schema-derived notification and damping states",
+      [Arbitrary.schema(SequenceBreakNotificationV1), Arbitrary.schema(SequenceBreakDampingV1)],
+      ([notification, damping]) => {
+        const decodedNotification = Result.getOrThrow(
+          decodeUnknownSequenceBreakNotificationV1Result(
+            Result.getOrThrow(encodeSequenceBreakNotificationV1Result(notification))
+          )
+        );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SequenceBreakNotificationV1), Arbitrary.schema(SequenceBreakDampingV1)]),
-          ([notification, damping]) => {
-            const decodedNotification = Result.getOrThrow(
-              decodeUnknownSequenceBreakNotificationV1Result(
-                Result.getOrThrow(encodeSequenceBreakNotificationV1Result(notification))
-              )
-            );
-            const decodedDamping = Result.getOrThrow(
-              decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
-            );
+        const decodedDamping = Result.getOrThrow(
+          decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
+        );
 
-            pipe(notificationEquivalent(decodedNotification, notification), assertTrue);
-            pipe(dampingEquivalent(decodedDamping, damping), assertTrue);
+        pipe(notificationEquivalent(decodedNotification, notification), assertTrue);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+        pipe(dampingEquivalent(decodedDamping, damping), assertTrue);
+      },
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
   it.effect("sends one desktop stage, damps its duplicate, and stops after exact bracket resolution", () =>
     Effect.gen(function* () {

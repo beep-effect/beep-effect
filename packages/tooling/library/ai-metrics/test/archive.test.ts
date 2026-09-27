@@ -105,22 +105,18 @@ describe("AI metrics encrypted raw archive envelope", () => {
     )
   );
 
-  it("round-trips schema-derived envelopes", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ArchiveEnvelopeArbitrary]),
-          ([envelope]) => {
-            const encoded = Result.getOrThrow(encodeArchiveEnvelope(envelope));
-            const decoded = Result.getOrThrow(decodeArchiveEnvelope(encoded));
-            expect(Result.getOrThrow(encodeArchiveEnvelope(decoded))).toBe(encoded);
+  it.prop(
+    "round-trips schema-derived envelopes",
+    [ArchiveEnvelopeArbitrary],
+    ([envelope]) => {
+      const encoded = Result.getOrThrow(encodeArchiveEnvelope(envelope));
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+      const decoded = Result.getOrThrow(decodeArchiveEnvelope(encoded));
+
+      expect(Result.getOrThrow(encodeArchiveEnvelope(decoded))).toBe(encoded);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("rejects malformed cryptographic encodings and identities", () => {
     const fixture = Result.getOrThrow(decodeUnknownJson(currentEncoderFixture));

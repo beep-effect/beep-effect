@@ -109,24 +109,19 @@ const reconciliationEvidence = (overrides: Record<string, unknown> = {}) =>
 const reconciliationStatus = (result: SessionLeaseReconciliation) => result.status;
 
 describe("telemetry-v2 session leases", () => {
-  it.effect("round-trips schema-generated leases and liveness events", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)]),
-        ([lease, event]) =>
-          Effect.gen(function* () {
-            const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
-            const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
-            pipe(leaseEquivalent(lease, roundTrippedLease), assertTrue);
-            pipe(eventEquivalent(event, roundTrippedEvent), assertTrue);
+  it.effect.prop(
+    "round-trips schema-generated leases and liveness events",
+    [Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)],
+    Effect.fnUntraced(function* ([lease, event]) {
+      const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
 
-            return true;
-          }),
-        fcRuns(25)
-      );
+      const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
 
-      expect(result._tag).toBe("Passed");
-    })
+      pipe(leaseEquivalent(lease, roundTrippedLease), assertTrue);
+
+      pipe(eventEquivalent(event, roundTrippedEvent), assertTrue);
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("creates a lease only from SessionStart and renews on ordinary activity", () =>

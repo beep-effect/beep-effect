@@ -246,21 +246,11 @@ const assertEncodeDecodeRoundTrip = Effect.fn("assertEncodeDecodeRoundTrip")(fun
     readonly encode: (value: A) => Effect.Effect<unknown, S.SchemaError>;
     readonly equivalent: (self: A, that: A) => boolean;
   },
-  options?: { readonly runs?: number }
+  value: A
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([law.arbitrary]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* law.encode(value);
-        const decoded = yield* law.decode(encoded);
-
-        return Equal.equals(decoded, value) || law.equivalent(decoded, value);
-      }),
-    fcRuns(options?.runs ?? 12)
-  );
-
-  expect(result._tag).toBe("Passed");
+  const encoded = yield* law.encode(value);
+  const decoded = yield* law.decode(encoded);
+  pipe(Equal.equals(decoded, value) || law.equivalent(decoded, value), assertTrue);
 });
 
 const transcriptTextSummaryInputLaw = {
@@ -276,12 +266,6 @@ const agentSessionLaw = {
   equivalent: S.toEquivalence(AgentSession),
 };
 const isAgentSession = S.is(AgentSession);
-const AgentSessionSchemaProperty = (options: Arbitrary.CheckOptions) =>
-  Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(AgentSession)]),
-    ([session]) => isAgentSession(session),
-    options
-  );
 const agentTurnLaw = {
   arbitrary: Arbitrary.schema(AgentTurn),
   decode: S.decodeUnknownEffect(AgentTurn),
@@ -349,8 +333,14 @@ const phoenixService = <A extends { readonly tool: string }>(spec: { readonly se
     A.findFirst((service) => service.tool === AiMetricsTool.Enum.phoenix)
   );
 
-it("derives valid agent sessions from the schema", () =>
-  expect(Effect.runSync(AgentSessionSchemaProperty(fcRuns(12)))._tag).toBe("Passed"));
+it.prop(
+  "derives valid agent sessions from the schema",
+  [Arbitrary.schema(AgentSession)],
+  ([session]) => {
+    pipe(isAgentSession(session), assertTrue);
+  },
+  { arbitrary: fcRuns(12) }
+);
 
 it("rejects impossible line and measurement values at construction", () => {
   expect(() =>
@@ -443,20 +433,79 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(
         yield* OpenClawTranscriptLine.encodeJsonEffect(OpenClawTranscriptLine.make({ event: O.some("message") }))
       ).toBe('{"event":"message"}');
-
-      yield* assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
-      yield* assertEncodeDecodeRoundTrip(agentSessionLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(agentTurnLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
-      yield* assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
-      yield* assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);
-      yield* assertEncodeDecodeRoundTrip(retentionMutationResultLaw);
-      yield* assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw);
     })
+  );
+  it.effect.prop(
+    "round-trips transcriptTextSummaryInputLaw through its declared wire codec",
+    [transcriptTextSummaryInputLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips agentSessionLaw through its declared wire codec",
+    [agentSessionLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(agentSessionLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips agentTurnLaw through its declared wire codec",
+    [agentTurnLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(agentTurnLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips codexTranscriptLineLaw through its declared wire codec",
+    [codexTranscriptLineLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips claudeTranscriptLineLaw through its declared wire codec",
+    [claudeTranscriptLineLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips openClawTranscriptLineLaw through its declared wire codec",
+    [openClawTranscriptLineLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips transcriptIngestSummaryLaw through its declared wire codec",
+    [transcriptIngestSummaryLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips otlpAttributeValueLaw through its declared wire codec",
+    [otlpAttributeValueLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(otlpAttributeValueLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips forwarderOtlpExportLaw through its declared wire codec",
+    [forwarderOtlpExportLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips effectivenessAnnotationValueLaw through its declared wire codec",
+    [effectivenessAnnotationValueLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips retentionMutationResultLaw through its declared wire codec",
+    [retentionMutationResultLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(retentionMutationResultLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips nonEmptyTrimmedStringLaw through its declared wire codec",
+    [nonEmptyTrimmedStringLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw, value),
+    { arbitrary: fcRuns(12) }
   );
 
   it.effect(

@@ -16,7 +16,6 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type { TelemetryV2StoreShape } from "@beep/repo-ai-metrics";
@@ -62,22 +61,16 @@ const compositionInputFrom = (record: FlightRecord): FlightRecordCompositionInpu
   });
 
 layer(NodeServices.layer)("telemetry-v2 store", (it) => {
-  it("keeps record-wide evidence tier and OIP taint out of generated composition inputs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([FlightRecordCompositionInputArbitrary]),
-          ([input]) => {
-            pipe("evidenceTier" in input, assertFalse);
-            pipe("oipTaint" in input, assertFalse);
+  it.prop(
+    "keeps record-wide evidence tier and OIP taint out of generated composition inputs",
+    [FlightRecordCompositionInputArbitrary],
+    ([input]) => {
+      pipe("evidenceTier" in input, assertFalse);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      pipe("oipTaint" in input, assertFalse);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("commits the enumeration before source reading and the linked manifest afterward", () =>
     Effect.scoped(

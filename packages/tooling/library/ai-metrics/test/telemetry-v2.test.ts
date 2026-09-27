@@ -236,22 +236,16 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
     expect(weakestEvidenceTier(["heuristic", "unknown", "reconstructed"])).toBe(EvidenceTier.Enum.unknown);
   });
 
-  it("keeps weakest-link propagation stable for schema-derived tier collections", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceTier.pipe(S.Array, Arbitrary.schema)]),
-          ([tiers]) => {
-            expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers)));
-            expect(weakestEvidenceTier(A.append(tiers, EvidenceTier.Enum.unknown))).toBe(EvidenceTier.Enum.unknown);
+  it.prop(
+    "keeps weakest-link propagation stable for schema-derived tier collections",
+    [EvidenceTier.pipe(S.Array, Arbitrary.schema)],
+    ([tiers]) => {
+      expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers)));
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      expect(weakestEvidenceTier(A.append(tiers, EvidenceTier.Enum.unknown))).toBe(EvidenceTier.Enum.unknown);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("preserves hook-pulse/v1 literal compatibility without accepting P2-only cases", () => {
     expect(HookPulseInstrumentClass.Options).toEqual(InstrumentClass.Options);

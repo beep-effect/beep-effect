@@ -11,7 +11,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const encodeAiMetricsSection = S.encodeUnknownResult(AgentEffectivenessAiMetricsSection);
@@ -24,16 +23,14 @@ const isTargetKind = S.is(AgentEffectivenessAnnotationTargetKind);
 const isFindingCode = S.is(AgentEffectivenessAnnotationCheckFindingCode);
 
 describe("agent-effectiveness schema laws", () => {
-  it("generates only members of the annotation optimization domain", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AgentEffectivenessAnnotationOptimization)]),
-          ([value]) => isOptimization(value),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "generates only members of the annotation optimization domain",
+    [Arbitrary.schema(AgentEffectivenessAnnotationOptimization)],
+    ([value]) => {
+      assertTrue(isOptimization(value));
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps required null wire fields while decoding absence to Option", () => {
     const section = AgentEffectivenessAiMetricsSection.make({

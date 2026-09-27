@@ -324,25 +324,20 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
-  it("round-trips disarm artifacts through their production JSON codecs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(HookPulseDisarmSentinel), Arbitrary.schema(HookPulseDisarmWindow)]),
-          ([sentinel, window]) => {
-            const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
-            const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
+  it.prop(
+    "round-trips disarm artifacts through their production JSON codecs",
+    [Arbitrary.schema(HookPulseDisarmSentinel), Arbitrary.schema(HookPulseDisarmWindow)],
+    ([sentinel, window]) => {
+      const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
 
-            expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
-            expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
+      const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
+
+      expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("migrates legacy v1 rows without retaining raw private identifiers", () =>
     Effect.gen(function* () {
@@ -376,49 +371,38 @@ describe("HookPulseV1", () => {
     })
   );
 
-  it("round-trips schema-derived arbitrary values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HookPulseV1Arbitrary]),
-          ([value]) => {
-            const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
-            const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
+  it.prop(
+    "round-trips schema-derived arbitrary values",
+    [HookPulseV1Arbitrary],
+    ([value]) => {
+      const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
 
-            pipe(hookPulseEquivalent(decoded, value), assertTrue);
+      const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      pipe(hookPulseEquivalent(decoded, value), assertTrue);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips arbitrary encodable canonical values through the raw-event codec", () => {
+  {
     // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
     const arbitrary = Arbitrary.filter(
       Arbitrary.filter(HookPulseV1Arbitrary, (value) => O.isSome(value.transcriptPath)),
       (value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier))
     );
+    it.prop(
+      "round-trips arbitrary encodable canonical values through the raw-event codec",
+      [arbitrary],
+      ([value]) => {
+        const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([value]) => {
-            const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
-            const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
+        const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
 
-            pipe(hookPulseEquivalent(decoded, value), assertTrue);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+        pipe(hookPulseEquivalent(decoded, value), assertTrue);
+      },
+      { arbitrary: fcRuns(50) }
+    );
+  }
 
   it.effect.prop(
     "derives a total wait reason for arbitrary raw events",

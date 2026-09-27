@@ -133,16 +133,14 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
   expect(Result.getOrThrow(encodeDerivedStorageWriteResult(absentParquetDir))).not.toHaveProperty("parquetExportDir");
 });
 
-it("derives valid storage results from the schema", () =>
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([DerivedStorageWriteResultArbitrary]),
-        ([result]) => isDerivedStorageWriteResult(result),
-        fcRuns(12)
-      )
-    )._tag
-  ).toBe("Passed"));
+it.prop(
+  "derives valid storage results from the schema",
+  [DerivedStorageWriteResultArbitrary],
+  ([result]) => {
+    assertTrue(isDerivedStorageWriteResult(result));
+  },
+  { arbitrary: fcRuns(12) }
+);
 
 it.effect(
   "defaults and encodes the retention inventory schema version",
