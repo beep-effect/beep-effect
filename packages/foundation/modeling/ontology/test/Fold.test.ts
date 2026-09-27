@@ -2,7 +2,9 @@ import { CoreVocab, make, mergeVocab } from "@beep/identity";
 import { $OntologyId } from "@beep/identity/packages";
 import { fold, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
 import { OWLClass } from "@beep/ontology/Ontology.models";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -115,7 +117,7 @@ describe("Ontology.fold", () => {
       expect(text.termIri).toBe("https://ns.beep.sh/patent/text");
       expect(O.getOrThrow(text.description)).toBe("Claim text.");
       expect(children.kind).toBe("datatype");
-      expect(children.reverse).toBe(true);
+      pipe(children.reverse, assertTrue);
       expect(children.termIri).toBe("http://www.w3.org/2000/01/rdf-schema#subClassOf");
       expect(claimRef.kind).toBe("object");
       expect(O.getOrThrow(claimRef.rangeIri)).toBe("https://ns.beep.sh/patent/Claim");
@@ -215,11 +217,12 @@ describe("Ontology.fold projections", () => {
       const jsonLd = toJsonLd(assembled);
       const turtle = toTurtle(assembled);
 
-      expect(
+      pipe(
         jsonLd["@graph"].some(
           (node) => node["@id"] === "http://www.w3.org/2004/02/skos/core#prefLabel" && node["@type"] !== undefined
-        )
-      ).toBe(false);
+        ),
+        assertFalse
+      );
       expect(turtle).not.toContain("skos:prefLabel a owl:DatatypeProperty");
       expect(turtle).not.toContain("rdfs:subClassOf a owl:DatatypeProperty");
     })
@@ -266,7 +269,7 @@ describe("Ontology.fold projections", () => {
       const assembled = yield* assemble;
       const markdown = toMarkdown(assembled);
 
-      expect(markdown.startsWith("# Patent Core")).toBe(true);
+      pipe(markdown.startsWith("# Patent Core"), assertTrue);
       expect(markdown).toContain("{#ns-beep-sh-patent-claim}");
       expect(markdown).toContain("`prefLabel`");
       expect(markdown).toContain("`rdfs:subClassOf`");
@@ -373,8 +376,8 @@ describe("Ontology.fold SKOS gate", () => {
       );
 
       expect(error.reason).toBe("skosIntegrity");
-      expect(O.isSome(error.subjectIri)).toBe(true);
-      expect(O.isSome(error.objectIri)).toBe(true);
+      pipe(error.subjectIri, O.isSome, assertTrue);
+      pipe(error.objectIri, O.isSome, assertTrue);
     })
   );
 
@@ -625,7 +628,7 @@ describe("Ontology.fold rebase", () => {
       const turtle = toTurtle(assembled);
       const context = toContext(assembled);
 
-      expect(assembled.baseIri.startsWith("https://opip.law/ns/patent#")).toBe(true);
+      pipe(assembled.baseIri.startsWith("https://opip.law/ns/patent#"), assertTrue);
       expect(assembled.prefix).toBe("patent");
       expect(turtle).toContain("@prefix patent: <https://opip.law/ns/patent#");
       expect(turtle).toContain("patent:");
@@ -695,9 +698,9 @@ describe("Ontology.fold FOLIO-derived module", () => {
       const subClassOf = claimClass?.predicates.find((predicate) => predicate.key === "sub_class_of");
       const parentClassOf = claimClass?.predicates.find((predicate) => predicate.key === "parent_class_of");
       expect(subClassOf?.termIri).toBe("http://www.w3.org/2000/01/rdf-schema#subClassOf");
-      expect(subClassOf?.reverse).toBe(false);
+      strictEqual(subClassOf?.reverse, false);
       expect(parentClassOf?.termIri).toBe("http://www.w3.org/2000/01/rdf-schema#subClassOf");
-      expect(parentClassOf?.reverse).toBe(true);
+      strictEqual(parentClassOf?.reverse, true);
     })
   );
 });

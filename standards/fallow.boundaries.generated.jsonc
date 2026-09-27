@@ -2698,6 +2698,7 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2706,6 +2707,7 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

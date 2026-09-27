@@ -3667,3 +3667,13 @@ Oxigraph missing an in-range changeset. An uncommitted new changeset did not
 satisfy the range check either. A committed changeset now names both Oxigraph and
 SHACL. Run the range-based gate after committing each source batch and its
 changeset; a dirty-worktree preflight alone does not prove committed coverage.
+
+## Ontology Option payload needs its original comparison semantics
+
+The Option helper conversion for admitted alignment arrays failed because
+assertSome uses strict deep equality: the actual ConceptAlignment instance and
+original plain-object expected value have different prototypes. The original
+whole-value toEqual assertion is retained with a scoped detector exception.
+Helper selection must account for nested schema instances, not only Option shape.
+Two optional Boolean assertions also require strictEqual so undefined remains a
+failure without narrowing the assertion input type prematurely.
