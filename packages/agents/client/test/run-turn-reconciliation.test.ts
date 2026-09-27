@@ -504,7 +504,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* Deferred.await(streamStarted);
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* Deferred.await(timelineRefreshAttempted);
-      yield* Effect.sleep(Duration.millis(25));
+      yield* waitForAtom(registry, unreconciledTurnAtoms(threadId), A.isReadonlyArrayNonEmpty);
 
       assertNone(registry.get(draftAtom));
       const [fallback] = registry.get(unreconciledTurnAtoms(threadId));

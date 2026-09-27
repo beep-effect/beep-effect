@@ -27,7 +27,6 @@ const encodedInstance = {
 };
 const loadInstance = S.decodeUnknownEffect(ProviderInstance)(encodedInstance).pipe(Effect.orDie);
 
-const settle = Effect.repeat(Effect.yieldNow, { times: 4 });
 let listReads = 0;
 let probeFailure: O.Option<ProviderUnauthenticated> = O.none();
 const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
@@ -67,7 +66,7 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
         const registry = yield* AtomRegistry.AtomRegistry;
         yield* AtomRegistry.mount(registry, providerInstancesAtom);
 
-        yield* settle;
+        yield* AtomRegistry.getResult(registry, providerInstancesAtom, { suspendOnWaiting: true });
 
         const result = registry.get(providerInstancesAtom);
         expect(AsyncResult.isSuccess(result)).toBe(true);
@@ -89,11 +88,12 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
         yield* AtomRegistry.mount(registry, providerInstancesAtom);
         yield* AtomRegistry.mount(registry, probeProviderInstanceAtom);
 
-        yield* settle;
+        yield* AtomRegistry.getResult(registry, providerInstancesAtom, { suspendOnWaiting: true });
         expect(listReads).toBe(1);
 
         registry.set(probeProviderInstanceAtom, { id: instance.id });
-        yield* settle;
+        yield* AtomRegistry.getResult(registry, probeProviderInstanceAtom, { suspendOnWaiting: true });
+        yield* AtomRegistry.getResult(registry, providerInstancesAtom, { suspendOnWaiting: true });
 
         expect(listReads).toBe(2);
       })
@@ -112,7 +112,9 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
         yield* AtomRegistry.mount(registry, probeProviderInstanceAtom);
 
         registry.set(probeProviderInstanceAtom, { id: Agents.ProviderInstanceId.make(7) });
-        yield* settle;
+        yield* AtomRegistry.getResult(registry, probeProviderInstanceAtom, { suspendOnWaiting: true }).pipe(
+          Effect.exit
+        );
 
         const result = registry.get(probeProviderInstanceAtom);
         expect(AsyncResult.isFailure(result)).toBe(true);

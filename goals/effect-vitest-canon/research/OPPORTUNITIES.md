@@ -3496,3 +3496,22 @@ and post-suite cleanup probes passed because the outer test eventually disposed
 them. An AST ownership audit found all six helpers; return-boundary probes now
 pass and reject the intermediate version in four tests. Preserve and test the
 shortest original resource lifetime, not just eventual suite cleanup.
+
+## Agents Client storage capability during flake repair
+
+The exact-key restoration edit initially assumed `globalThis.localStorage`
+existed. `quality package-verify @beep/agents-client` reproduced a TypeError
+at the acquisition read under Bun, before the original defect assertions ran.
+The root setup only supplies its shim for the unsupported Node getter case;
+absence is legitimate in this test environment. Capture the storage capability
+once and restore the exact key only when it exists. Validate both capability
+states and preserve actual draft atom behavior; never clear all storage.
+An explicit runtime capability note in the saved inventory would have prevented
+the assumption. This is an introduced test repair, not a product regression.
+
+The first delayed-RPC control delayed the shared fixture decoder, including
+its call before atom mounting. That also changed registry setup lifetime and
+produced an HTTP transport error rather than isolating RPC completion. Moving
+the temporary delay inside the two actual RPC handlers leaves setup intact:
+all three new tests pass and all three old fixed-yield tests fail. Keep mutation
+controls at the behavior boundary they are intended to measure.

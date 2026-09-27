@@ -41,6 +41,22 @@ describe("assistant turn defects", { concurrent: false }, () => {
     "clears the died turn and restores the prompt only when its receipt is provably not persisted",
     Effect.fnUntraced(function* () {
       const verifyDefectedTurn = Effect.fn("verifyDefectedTurn")(function* (status: "persisted" | "not_persisted") {
+        const draftKey = `draft:${threadId}`;
+        const storage = globalThis.localStorage;
+        yield* Effect.acquireRelease(
+          Effect.sync(() => {
+            const previous = O.fromNullishOr(storage?.getItem(draftKey));
+            storage?.removeItem(draftKey);
+            return previous;
+          }),
+          (previous) =>
+            Effect.sync(() =>
+              O.match(previous, {
+                onNone: () => storage?.removeItem(draftKey),
+                onSome: (value) => storage?.setItem(draftKey, value),
+              })
+            )
+        );
         let statusReads = 0;
         const client = ChatClient.of(((tag: string) => {
           if (tag === "GetTimeline") return Effect.succeed(emptyTimeline);
@@ -81,8 +97,7 @@ describe("assistant turn defects", { concurrent: false }, () => {
         expect(registry.get(draftRevisionAtom)).toBe(status === "not_persisted" ? 1 : 0);
       }, Effect.scoped);
 
-      // the not_persisted case writes the restored draft into localStorage, so
-      // the durable case must run first to see an empty draft baseline
+      // Each scenario restores its exact draft key after the registry is disposed.
       yield* verifyDefectedTurn("persisted");
       yield* verifyDefectedTurn("not_persisted");
     })
