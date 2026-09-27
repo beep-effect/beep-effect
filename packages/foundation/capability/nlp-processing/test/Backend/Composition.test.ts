@@ -13,21 +13,10 @@ import * as S from "effect/Schema";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
->(schema: Schema) {
-  const equals = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(50)
-  );
-  expect(result._tag).toBe("Passed");
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 const baseCapabilities: Backend.BackendCapabilities = {
@@ -87,13 +76,17 @@ describe("withFallback", () => {
 });
 
 describe("withCaching", () => {
-  it.effect("round-trips schema-derived cache options and applies defaults", () =>
-    Effect.gen(function* () {
-      yield* assertSchemaRoundTrip(Composition.CachingOptions);
-      const defaults = Composition.CachingOptions.make({});
-      expect(defaults.capacity).toBe(1024);
-      expect(Duration.equals(defaults.timeToLive, Duration.minutes(10))).toBe(true);
-    })
+  it.effect.prop(
+    "round-trips schema-derived cache options and applies defaults",
+    { CachingOptions: Arbitrary.schema(Composition.CachingOptions) },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaRoundTrip(Composition.CachingOptions, values.CachingOptions, "Composition.CachingOptions");
+        const defaults = Composition.CachingOptions.make({});
+        expect(defaults.capacity).toBe(1024);
+        expect(Duration.equals(defaults.timeToLive, Duration.minutes(10))).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect(

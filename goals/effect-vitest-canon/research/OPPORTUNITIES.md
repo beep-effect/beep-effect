@@ -3226,3 +3226,12 @@ TS377032 strictEffectProvide at eight parser call sites. The correct boundary
 is suite it.layer(Path.layer), with pure per-case Source/configuration values
 in Context. This removes manual builders without suppressing diagnostics or
 sharing source nodes between tests. Full package audit/docgen pass afterward.
+
+
+### NLP graph witness uses public topology (2026-09-27)
+
+The cost-scaling test draft referenced getLeafNodes from the public graph module,
+but that helper is private to the executor. Package typecheck caught TS2339.
+Use public getChildren to prove two terminal children and retain the exact
+numeric time/token relation; no production export is needed. The corrected
+package audit and docgen pass.

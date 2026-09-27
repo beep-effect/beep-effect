@@ -33,65 +33,59 @@ const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
->(schema: Schema) {
-  const equals = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(50)
-  );
-  expect(result._tag).toBe("Passed");
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 describe("ExecutionMetrics monoid laws", () => {
-  it.effect("round-trips schema-derived metrics through encode/decode", () =>
-    assertSchemaRoundTrip(Types.ExecutionMetrics)
+  it.effect.prop(
+    "round-trips schema-derived metrics through encode/decode",
+    { ExecutionMetrics: Arbitrary.schema(Types.ExecutionMetrics) },
+    (values) => assertSchemaRoundTrip(Types.ExecutionMetrics, values.ExecutionMetrics, "Types.ExecutionMetrics"),
+    { arbitrary: fcRuns(50) }
   );
 
-  it("satisfies left identity: empty ⊕ x = x", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([arbMetrics]), ([x]) =>
-          metricsEqual(Types.ExecutionMetrics.combine(Types.ExecutionMetrics.empty(), x), x)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "satisfies left identity: empty ⊕ x = x",
+    [arbMetrics],
+    ([x]) => {
+      expect(metricsEqual(Types.ExecutionMetrics.combine(Types.ExecutionMetrics.empty(), x), x)).toBe(true);
+    },
+    { arbitrary: fcRuns() }
+  );
 
-  it("satisfies right identity: x ⊕ empty = x", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([arbMetrics]), ([x]) =>
-          metricsEqual(Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.empty()), x)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "satisfies right identity: x ⊕ empty = x",
+    [arbMetrics],
+    ([x]) => {
+      expect(metricsEqual(Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.empty()), x)).toBe(true);
+    },
+    { arbitrary: fcRuns() }
+  );
 
-  it("satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([arbMetrics, arbMetrics, arbMetrics]), ([x, y, z]) =>
-          metricsEqual(
-            Types.ExecutionMetrics.combine(Types.ExecutionMetrics.combine(x, y), z),
-            Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.combine(y, z))
-          )
+  it.prop(
+    "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+    [arbMetrics, arbMetrics, arbMetrics],
+    ([x, y, z]) => {
+      expect(
+        metricsEqual(
+          Types.ExecutionMetrics.combine(Types.ExecutionMetrics.combine(x, y), z),
+          Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.combine(y, z))
         )
-      )._tag
-    ).toBe("Passed");
-  });
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns() }
+  );
 });
 
 describe("OperationCost", () => {
-  it.effect("round-trips schema-derived operation costs through encode/decode", () =>
-    assertSchemaRoundTrip(Types.OperationCost)
+  it.effect.prop(
+    "round-trips schema-derived operation costs through encode/decode",
+    { OperationCost: Arbitrary.schema(Types.OperationCost) },
+    (values) => assertSchemaRoundTrip(Types.OperationCost, values.OperationCost, "Types.OperationCost"),
+    { arbitrary: fcRuns(50) }
   );
 
   it("scales O(1) cost by a constant factor of 1", () => {
@@ -113,7 +107,12 @@ describe("OperationCost", () => {
 });
 
 describe("ExecutionId", () => {
-  it.effect("round-trips schema-derived ids through encode/decode", () => assertSchemaRoundTrip(Types.ExecutionId));
+  it.effect.prop(
+    "round-trips schema-derived ids through encode/decode",
+    { ExecutionId: Arbitrary.schema(Types.ExecutionId) },
+    (values) => assertSchemaRoundTrip(Types.ExecutionId, values.ExecutionId, "Types.ExecutionId"),
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect(
     "generates distinct ids",
@@ -345,6 +344,32 @@ describe("GraphExecutor", () => {
         const executor = yield* Executor.GraphExecutor;
         const cost = yield* executor.estimateCost(graph, upper);
         expect(cost.complexity).toBe("O(1)");
+        const priced = Operation.make({
+          ...upper,
+          name: "priced-upper",
+          estimateCost: () =>
+            Effect.succeed(
+              Types.OperationCost.make({
+                complexity: "O(n)",
+                estimatedTime: Duration.millis(3),
+                memoryCost: NonNegativeInt.make(2),
+                tokenCost: NonNegativeInt.make(5),
+              })
+            ),
+        });
+        const parent = yield* EG.makeNode("parent");
+        const firstLeaf = yield* EG.makeNode("a", O.some(parent.id));
+        const secondLeaf = yield* EG.makeNode("b", O.some(parent.id));
+        const twoLeaves = EG.addNode(EG.addNode(EG.addNode(EG.empty<string>(), parent), firstLeaf), secondLeaf);
+        const singleCost = yield* executor.estimateCost(graph, priced);
+        const multipleCost = yield* executor.estimateCost(twoLeaves, priced);
+        expect(EG.getChildren(twoLeaves, parent.id)).toHaveLength(2);
+        expect(EG.getChildren(twoLeaves, firstLeaf.id)).toHaveLength(0);
+        expect(EG.getChildren(twoLeaves, secondLeaf.id)).toHaveLength(0);
+        expect(Duration.toMillis(singleCost.estimatedTime)).toBe(3);
+        expect(singleCost.tokenCost).toBe(5);
+        expect(Duration.toMillis(multipleCost.estimatedTime)).toBe(6);
+        expect(multipleCost.tokenCost).toBe(10);
       })
     );
   });

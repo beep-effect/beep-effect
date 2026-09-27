@@ -12,21 +12,10 @@ import * as S from "effect/Schema";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
->(schema: Schema) {
-  const equals = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(50)
-  );
-  expect(result._tag).toBe("Passed");
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 const words = (text: string): ReadonlyArray<string> => text.split(/\s+/).filter((w) => w.length > 0);
@@ -76,7 +65,12 @@ const StubBackend = Layer.succeed(
 );
 
 describe("AnnotatedTextGraph construction", () => {
-  it.effect("round-trips schema-derived annotated nodes", () => assertSchemaRoundTrip(ATG.AnnotatedNode));
+  it.effect.prop(
+    "round-trips schema-derived annotated nodes",
+    { AnnotatedNode: Arbitrary.schema(ATG.AnnotatedNode) },
+    (values) => assertSchemaRoundTrip(ATG.AnnotatedNode, values.AnnotatedNode, "ATG.AnnotatedNode"),
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect(
     "empty has no nodes",
