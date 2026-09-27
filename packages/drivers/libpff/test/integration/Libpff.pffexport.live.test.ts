@@ -69,14 +69,14 @@ const liveOperation = Effect.fn("LibpffLive.operation")(function* (pstPath: stri
 describe("@beep/libpff live pffexport", () => {
   // Deterministic even without the opt-in PST: proves the JSONL codec the
   // live assertions below decode through.
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived message records through the JSONL string codec",
     [PffexportMessageRecordArbitrary],
-    ([record]) => {
-      const json = Effect.runSync(encodePffexportMessageRecordJson(record));
-      const decoded = Effect.runSync(decodeMessageRecord(json));
-      expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
-    },
+    Effect.fnUntraced(function* ([record]) {
+      const json = yield* encodePffexportMessageRecordJson(record);
+      const decoded = yield* decodeMessageRecord(json);
+      expect(yield* encodePffexportMessageRecordJson(decoded)).toBe(json);
+    }),
     { arbitrary: fcRuns(25) }
   );
 

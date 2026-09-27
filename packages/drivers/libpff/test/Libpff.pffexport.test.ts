@@ -287,14 +287,14 @@ const readExported = Effect.fn(function* (exportRoot: string, relativePath: stri
 });
 
 describe("makePffexportFileProcessingEngine", () => {
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived message records through the JSONL string codec",
     [PffexportMessageRecordArbitrary],
-    ([record]) => {
-      const json = Effect.runSync(encodePffexportMessageRecordJson(record));
-      const decoded = Effect.runSync(decodeMessageRecord(json));
-      expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
-    },
+    Effect.fnUntraced(function* ([record]) {
+      const json = yield* encodePffexportMessageRecordJson(record);
+      const decoded = yield* decodeMessageRecord(json);
+      expect(yield* encodePffexportMessageRecordJson(decoded)).toBe(json);
+    }),
     { arbitrary: fcRuns(25) }
   );
 
