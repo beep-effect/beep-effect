@@ -14,7 +14,8 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -67,8 +68,8 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
         Arbitrary.checkEffect(
           Arbitrary.all([FlightRecordCompositionInputArbitrary]),
           ([input]) => {
-            expect("evidenceTier" in input).toBe(false);
-            expect("oipTaint" in input).toBe(false);
+            pipe("evidenceTier" in input, assertFalse);
+            pipe("oipTaint" in input, assertFalse);
 
             return true;
           },
@@ -90,8 +91,8 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
           const result = yield* store.runIngest(enumeration, (enumerationReceipt) =>
             Effect.gen(function* () {
-              expect(yield* fs.exists(path.join(dataRoot, enumerationReceipt.relativePath))).toBe(true);
-              expect(yield* fs.exists(manifestsDirectory)).toBe(false);
+              pipe(yield* fs.exists(path.join(dataRoot, enumerationReceipt.relativePath)), assertTrue);
+              pipe(yield* fs.exists(manifestsDirectory), assertFalse);
               return manifest;
             })
           );
@@ -124,8 +125,8 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
             .pipe(Effect.flip);
 
           expect(failure).toBe("source-read-failed");
-          expect(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-enumerations"))).toBe(true);
-          expect(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests"))).toBe(false);
+          pipe(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-enumerations")), assertTrue);
+          pipe(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests")), assertFalse);
         })
       )
     )
@@ -151,7 +152,7 @@ layer(NodeServices.layer)("telemetry-v2 store", (it) => {
 
           expect(error._tag).toBe("TelemetryV2StoreError");
           expect(error.operation).toBe("validate-ingest-manifest");
-          expect(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests"))).toBe(false);
+          pipe(yield* fs.exists(path.join(dataRoot, "telemetry-v2/ingest-manifests")), assertFalse);
         })
       )
     )

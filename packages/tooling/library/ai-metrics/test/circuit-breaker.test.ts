@@ -10,7 +10,8 @@ import {
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
@@ -137,11 +138,11 @@ layer(NodeServices.layer)("agent command circuit breaker", (it) => {
           codexBreakerPath
         );
         expect(skipped).toEqual({ exitCode: 75, stderr: "", stdout: "" });
-        expect(yield* fs.exists(store.markerPath)).toBe(false);
+        pipe(yield* fs.exists(store.markerPath), assertFalse);
 
         const reset = yield* runBreaker(store, ["reset", "op", "operator"]);
         expect(reset).toEqual({ exitCode: 0, stderr: "", stdout: "" });
-        expect(yield* fs.exists(store.openStatePath)).toBe(false);
+        pipe(yield* fs.exists(store.openStatePath), assertFalse);
 
         const succeeded = yield* runBreaker(store, ["run", "op", "codex-cli", "--", "/bin/true"]);
         expect(succeeded).toEqual({ exitCode: 0, stderr: "", stdout: "" });
@@ -154,7 +155,10 @@ layer(NodeServices.layer)("agent command circuit breaker", (it) => {
           "probe-succeeded",
         ]);
         expect(A.map(events, ({ caller }) => caller)).toEqual(["claude-code", "codex-cli", "operator", "codex-cli"]);
-        expect(A.every(yield* eventRows(store), (row) => !row.includes(CANARY))).toBe(true);
+        pipe(
+          A.every(yield* eventRows(store), (row) => !row.includes(CANARY)),
+          assertTrue
+        );
       })
     )
   );
@@ -173,11 +177,14 @@ layer(NodeServices.layer)("agent command circuit breaker", (it) => {
 
         const run = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/usr/bin/touch", store.markerPath]);
         expect(run).toEqual({ exitCode: 76, stderr: "", stdout: "" });
-        expect(yield* fs.exists(store.markerPath)).toBe(false);
+        pipe(yield* fs.exists(store.markerPath), assertFalse);
 
         const events = yield* decodedEvents(store);
         expect(A.map(events, ({ outcome }) => outcome.status)).toEqual(["coordination-skipped"]);
-        expect(A.every(yield* eventRows(store), (row) => !row.includes(CANARY))).toBe(true);
+        pipe(
+          A.every(yield* eventRows(store), (row) => !row.includes(CANARY)),
+          assertTrue
+        );
       })
     )
   );

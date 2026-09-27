@@ -98,7 +98,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Base64 from "effect/encoding/Base64";
@@ -405,8 +405,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(summary.acceptedEvents).toBe(2);
       expect(summary.rejectedLines).toBe(1);
       expect(summary.eventNames).toEqual(["event_msg", "session_meta"]);
-      expect(summary.firstTimestamp).toEqual(O.some("2026-05-05T10:00:00Z"));
-      expect(summary.lastTimestamp).toEqual(O.some("2026-05-05T10:01:00Z"));
+      assertSome(summary.firstTimestamp, "2026-05-05T10:00:00Z");
+      assertSome(summary.lastTimestamp, "2026-05-05T10:01:00Z");
       expect(summary.sourcePathHash).not.toBe("codex.jsonl");
       const encoded = yield* summaryToJson(summary);
       expect(encoded).toContain('"firstTimestamp":"2026-05-05T10:00:00Z"');
@@ -473,11 +473,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       });
 
       expect(attribution.sourceRole).toBe("subagent");
-      expect(attribution.agentNicknameHash).toEqual(O.none());
-      expect(attribution.parentSessionIdHash).toEqual(O.none());
-      expect(attribution.agentRoleHash).toEqual(O.some(yield* hashPrivateIdentifier("reviewer", hashSalt)));
-      expect(attribution.parentThreadIdHash).toEqual(O.some(yield* hashPrivateIdentifier("thread-1", hashSalt)));
-      expect(attribution.sessionIdHash).toEqual(O.some(yield* hashPrivateIdentifier("session-1", hashSalt)));
+      assertNone(attribution.agentNicknameHash);
+      assertNone(attribution.parentSessionIdHash);
+      assertSome(attribution.agentRoleHash, yield* hashPrivateIdentifier("reviewer", hashSalt));
+      assertSome(attribution.parentThreadIdHash, yield* hashPrivateIdentifier("thread-1", hashSalt));
+      assertSome(attribution.sessionIdHash, yield* hashPrivateIdentifier("session-1", hashSalt));
     })
   );
 
@@ -548,12 +548,12 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(yield* forwarderRunResultToJson(result)).toContain(result.ingestRunId);
             expect(result.parquetExportMode).toBe("snapshot");
             const parquetExportDir = result.parquetExportDir;
-            expect(O.isSome(parquetExportDir)).toBe(true);
+            pipe(parquetExportDir, O.isSome, assertTrue);
             if (O.isNone(parquetExportDir)) {
               return;
             }
-            expect(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet"))).toBe(true);
-            expect(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json"))).toBe(true);
+            pipe(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet")), assertTrue);
+            pipe(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json")), assertTrue);
 
             const duckdb = yield* DuckDb;
             const turnRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_turns");
@@ -649,9 +649,9 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             expect(disabled.parquetExportMode).toBe("none");
-            expect(disabled.parquetExportDir).toEqual(O.none());
+            assertNone(disabled.parquetExportDir);
             expect(disabled.parquetTables).toEqual([]);
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet"))).toBe(false);
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet")), assertFalse);
 
             const latest = yield* writeAiMetricsDerivedStorage(
               AiMetricsDerivedStorageWriteInput.make({
@@ -661,8 +661,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             expect(latest.parquetExportMode).toBe("latest");
-            expect(latest.parquetExportDir).toEqual(O.some(path.join(dataRoot, "derived/parquet/latest")));
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet"))).toBe(true);
+            assertSome(latest.parquetExportDir, path.join(dataRoot, "derived/parquet/latest"));
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet")), assertTrue);
 
             yield* writeText(path.join(dataRoot, "derived/parquet/latest/stale.tmp"), "stale\n");
             yield* writeAiMetricsDerivedStorage(
@@ -672,8 +672,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
                 parquetExportMode: AiMetricsParquetExportMode.Enum.latest,
               })
             );
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/stale.tmp"))).toBe(false);
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2"))).toBe(false);
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/stale.tmp")), assertFalse);
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2")), assertFalse);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
@@ -889,7 +889,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             // committed turns would be stranded and never reach Phoenix. Export state
             // is tracked on its own watermark for exactly that reason.
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -938,7 +938,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             // reads as one trace in Phoenix rather than as unrelated roots.
             expect(turnSpan.traceId).toBe(sessionSpan.traceId);
             expect(O.getOrThrow(turnSpan.parentSpanId)).toBe(sessionSpan.spanId);
-            expect(O.isNone(sessionSpan.parentSpanId)).toBe(true);
+            assertNone(sessionSpan.parentSpanId);
 
             // A rejected delivery must leave the watermark open. Without the failure
             // short-circuiting the mark, these turns would be recorded as exported after
@@ -948,7 +948,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               provideScopedLayer(rejectingSpanSender),
               Effect.exit
             );
-            expect(Exit.isFailure(rejectedExit)).toBe(true);
+            pipe(rejectedExit, Exit.isFailure, assertTrue);
             const afterRejectedExport = yield* readAiMetricsOtlpSpanProjections;
             expect(afterRejectedExport.turnIds).toEqual(pending.turnIds);
 
@@ -992,7 +992,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               provideScopedLayer(succeedingThenRejectingSpanSender(senderCalls)),
               Effect.exit
             );
-            expect(Exit.isFailure(partialExit)).toBe(true);
+            pipe(partialExit, Exit.isFailure, assertTrue);
             const afterPartialExport = yield* readAiMetricsOtlpSpanProjections;
             expect(afterPartialExport.turnIds.length, "partial checkpoint turn count").toBe(258);
             const remainingTurnSpanIds = spanIdsByName(afterPartialExport.projections, "ai_metrics.agent.turn");
@@ -1081,7 +1081,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             const firstTask = A.head(queue.items);
-            expect(O.isSome(firstTask)).toBe(true);
+            pipe(firstTask, O.isSome, assertTrue);
             if (O.isNone(firstTask)) {
               return;
             }
@@ -1129,10 +1129,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
 
             expect(queue.items).toHaveLength(1);
             expect(O.getOrThrow(label.note)).toContain("[REDACTED]");
-            expect(benchmarkRun.passed).toBe(true);
+            pipe(benchmarkRun.passed, assertTrue);
             expect(listedCases.cases).toHaveLength(1);
             expect(report.document.scores).toHaveLength(1);
-            expect(report.document.scores[0]?.scorecard.completionReady).toBe(true);
+            pipe(report.document.scores[0]?.scorecard.completionReady, assertTrue);
             expect(reportJson).toContain(forwarder.configSnapshotId);
             expect(reportJson).not.toContain("private benchmark prompt");
             expect(reportJson).not.toContain("secret-scorecard-fixture");
@@ -1168,7 +1168,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
         )
       ).toEqual(["langfuse", "phoenix", "opik"]);
       const phoenix = phoenixService(spec);
-      expect(O.isSome(phoenix)).toBe(true);
+      pipe(phoenix, O.isSome, assertTrue);
       if (O.isNone(phoenix)) {
         return;
       }
@@ -1176,20 +1176,19 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(phoenix.value.otlp.traceUrl).toBe("https://dankserver.tailc7c348.ts.net:8447/v1/traces");
       expect(phoenix.value.publicUrl).toBe("https://dankserver.tailc7c348.ts.net:8447");
       expect(O.getOrThrow(spec.hashSaltSecretRef)).toBe("op://TBK/ai-metrics/hash-salt");
-      expect(
-        pipe(
-          spec.plannedCommands,
-          A.some(
-            P.every([
-              Str.includes("ai-metrics otlp export --target dankserver"),
-              Str.includes("--data-root /srv/data/ai-metrics"),
-              Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
-              Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
-              Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
-            ])
-          )
-        )
-      ).toBe(true);
+      pipe(
+        spec.plannedCommands,
+        A.some(
+          P.every([
+            Str.includes("ai-metrics otlp export --target dankserver"),
+            Str.includes("--data-root /srv/data/ai-metrics"),
+            Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
+            Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
+            Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
+          ])
+        ),
+        assertTrue
+      );
       expect(spec.plannedCommands).toEqual(
         expect.arrayContaining([
           expect.stringContaining("ai-metrics label queue --target dankserver --data-root /srv/data/ai-metrics"),
@@ -1248,7 +1247,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const doctorJson = yield* aiMetricsInstallDoctorToJson(doctor);
           const applyJson = yield* aiMetricsInstallApplyDryRunToJson(apply);
 
-          expect(plan.dryRunOnly).toBe(true);
+          pipe(plan.dryRunOnly, assertTrue);
           expect(plan.steps).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -1259,7 +1258,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           );
           expect(doctor.status).toBe("warning");
           expect(doctor.availableSourceCount).toBe(1);
-          expect(apply.dryRun).toBe(true);
+          pipe(apply.dryRun, assertTrue);
           expect(planJson).toContain("backend.phoenix.plan");
           expect(doctorJson).toContain("sources.available");
           expect(applyJson).toContain("CLI install apply is dry-run-only");
@@ -1372,7 +1371,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
         })
       );
       const phoenix = phoenixService(spec);
-      expect(O.isSome(phoenix)).toBe(true);
+      pipe(phoenix, O.isSome, assertTrue);
       if (O.isNone(phoenix)) {
         return;
       }
@@ -1411,7 +1410,7 @@ volumes:
       const compose = yield* renderAiMetricsLocalPhoenixCompose(spec);
 
       const phoenix = phoenixService(spec);
-      expect(O.isSome(phoenix)).toBe(true);
+      pipe(phoenix, O.isSome, assertTrue);
       if (O.isNone(phoenix)) {
         return;
       }
@@ -1490,7 +1489,7 @@ volumes:
             );
 
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -1636,7 +1635,7 @@ volumes:
           const json = yield* privacyCheckToJson(result);
 
           expect(result.hashSaltStatus).toBe("provided");
-          expect(result.redaction.safeForDerivedUi).toBe(false);
+          pipe(result.redaction.safeForDerivedUi, assertFalse);
           expect(result.redaction.excludedRawTextFieldCount).toBeGreaterThan(0);
           expect(result.redaction.openAiKeyCount).toBe(1);
           expect(result.sanitized.rawEventEnvelopes).toHaveLength(2);
@@ -1695,7 +1694,7 @@ volumes:
             );
 
             expect(privacy.sanitized.sourceRole).toBe("subagent");
-            expect(O.getOrThrow(privacy.sanitized.threadSpawn)).toBe(true);
+            pipe(O.getOrThrow(privacy.sanitized.threadSpawn), assertTrue);
             expect(O.getOrThrow(privacy.sanitized.sessionIdHash)).not.toBe("child-session");
             assertSome(
               privacy.sanitized.sessionIdHash,
@@ -2191,21 +2190,25 @@ volumes:
 
           expect(exported.spanCount).toBe(1200);
           expect(requests.length).toBe(3);
-          expect(A.every(requests, (request) => request.contentType === "application/x-protobuf")).toBe(true);
+          pipe(
+            A.every(requests, (request) => request.contentType === "application/x-protobuf"),
+            assertTrue
+          );
 
           // Phoenix routes spans into a project by this resource attribute. Without it every
           // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
           // named a project that never existed. Asserted on the wire, and pinned to the constant
           // the reader queries for, so the two cannot drift apart silently.
           expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
-          expect(
+          pipe(
             A.every(
               requests,
               (request) =>
                 Str.includes("openinference.project.name")(request.body) &&
                 Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
-            )
-          ).toBe(true);
+            ),
+            assertTrue
+          );
 
           const retryCalls = yield* Ref.make(0);
           const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
@@ -2680,7 +2683,7 @@ volumes:
               })
             );
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -2772,7 +2775,7 @@ volumes:
               })
             );
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -2824,7 +2827,7 @@ volumes:
         summary,
       });
 
-      expect(result.redaction.safeForDerivedUi).toBe(true);
+      pipe(result.redaction.safeForDerivedUi, assertTrue);
     })
   );
 
@@ -2864,7 +2867,7 @@ volumes:
           expect(result.snapshot.configHash).toBe(again.snapshot.configHash);
           expect(json).not.toContain(".repos/effect-v4/AGENTS.md");
           expect(json).not.toContain("node_modules/pkg/CLAUDE.md");
-          expect(yield* fs.exists(path.join(snapshotDir, "latest.json.tmp"))).toBe(false);
+          pipe(yield* fs.exists(path.join(snapshotDir, "latest.json.tmp")), assertFalse);
 
           yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5.1"\n');
           const changed = yield* makeAiMetricsConfigSnapshot(
@@ -2988,8 +2991,8 @@ volumes:
           const snapshotFiles = yield* fs.readDirectory(snapshotDir);
 
           expect(error.message).toContain("Failed to write encrypted AI metrics raw archive object");
-          expect(yield* fs.exists(path.join(snapshotDir, "latest.json"))).toBe(false);
-          expect(A.some(snapshotFiles, Str.endsWith(".json"))).toBe(true);
+          pipe(yield* fs.exists(path.join(snapshotDir, "latest.json")), assertFalse);
+          pipe(A.some(snapshotFiles, Str.endsWith(".json")), assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3090,7 +3093,7 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.claude)
           );
 
-          expect(O.isSome(claude)).toBe(true);
+          pipe(claude, O.isSome, assertTrue);
           if (O.isNone(claude)) {
             return;
           }
@@ -3134,13 +3137,13 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(O.isSome(codex)).toBe(true);
+          pipe(codex, O.isSome, assertTrue);
           if (O.isNone(codex)) {
             return;
           }
           expect(codex.value.candidateFileCount).toBe(2);
           expect(codex.value.includedFileCount).toBe(1);
-          expect(codex.value.limitedByMaxFiles).toBe(false);
+          pipe(codex.value.limitedByMaxFiles, assertFalse);
           expect(result.discoveredFileCount).toBe(1);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
@@ -3184,8 +3187,8 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(result.maxFileBytes).toEqual(O.some(128));
-          expect(O.isSome(codex)).toBe(true);
+          assertSome(result.maxFileBytes, 128);
+          pipe(codex, O.isSome, assertTrue);
           if (O.isNone(codex)) {
             return;
           }
@@ -3227,14 +3230,14 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(O.isSome(codex)).toBe(true);
+          pipe(codex, O.isSome, assertTrue);
           if (O.isNone(codex)) {
             return;
           }
           expect(codex.value.files).toHaveLength(1);
-          expect(O.isSome(codex.value.files[0]?.agentRoleHash ?? O.none())).toBe(true);
+          pipe(codex.value.files[0]?.agentRoleHash ?? O.none(), O.isSome, assertTrue);
           expect(codex.value.files[0]?.sourceRole).toBe("subagent");
-          expect(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none())).toBe(true);
+          pipe(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none()), assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3337,15 +3340,15 @@ volumes:
             return A.map(rows, (row) => globalThis.String(row.column_name));
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))));
 
-          expect(bundle.manifest.privacyProof.safe).toBe(true);
+          pipe(bundle.manifest.privacyProof.safe, assertTrue);
           expect(bundle.manifest.omittedTables).toContain("ai_metrics_raw_archive_objects");
           expect(bundle.manifest.includedTables).not.toContain("ai_metrics_raw_archive_objects");
           expect(yield* locateLatestAiMetricsMirrorBundle(dataRoot)).toBe(bundle.bundleDir);
-          expect(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_ingest_runs.parquet"))).toBe(true);
-          expect(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_raw_archive_objects.parquet"))).toBe(false);
-          expect(yield* fs.exists(path.join(bundle.bundleDir, "mirror.duckdb"))).toBe(false);
+          pipe(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_ingest_runs.parquet")), assertTrue);
+          pipe(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_raw_archive_objects.parquet")), assertFalse);
+          pipe(yield* fs.exists(path.join(bundle.bundleDir, "mirror.duckdb")), assertFalse);
           expect(bundle.mirrorDuckDbPath).not.toContain(bundle.bundleDir);
-          expect(yield* fs.exists(bundle.mirrorDuckDbPath)).toBe(false);
+          pipe(yield* fs.exists(bundle.mirrorDuckDbPath), assertFalse);
           expect(sourceFileColumns).toContain("source_path_hash");
           expect(sourceFileColumns).not.toContain("archive_path");
           expect(labelColumns).toContain("note_hash");
@@ -3414,10 +3417,10 @@ volumes:
           expect(inventory.selectedRawArchiveObjectCount).toBe(1);
           expect(inventory.selectedDerivedExportCount).toBe(1);
           expect(inventory.selectedReportCount).toBe(1);
-          expect(drill.hashMatches).toBe(true);
+          pipe(drill.hashMatches, assertTrue);
           expect(drill.replayedObjectCount).toBe(1);
-          expect(drill.transcriptTextPrinted).toBe(false);
-          expect(yield* fs.exists(drill.derivedDuckDbPath)).toBe(true);
+          pipe(drill.transcriptTextPrinted, assertFalse);
+          pipe(yield* fs.exists(drill.derivedDuckDbPath), assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3449,9 +3452,9 @@ volumes:
           );
           const dryRunJson = yield* aiMetricsRetentionEnforcementToJson(dryRun);
           expect(dryRun.deletedDerivedExportCount).toBe(2);
-          expect(dryRun.dryRun).toBe(true);
+          pipe(dryRun.dryRun, assertTrue);
           expect(dryRunJson).toContain("beep.ai_metrics.retention_enforcement.v1");
-          expect(yield* fs.exists(path.join(parquetRoot, "forwarder-old"))).toBe(true);
+          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-old")), assertTrue);
 
           const applied = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -3462,9 +3465,9 @@ volumes:
           );
           expect(applied.deletedDerivedExportCount).toBe(2);
           expect(applied.keptDerivedExportCount).toBe(0);
-          expect(yield* fs.exists(path.join(parquetRoot, "forwarder-old"))).toBe(false);
-          expect(yield* fs.exists(path.join(parquetRoot, "forwarder-new"))).toBe(false);
-          expect(yield* fs.exists(path.join(parquetRoot, "latest"))).toBe(true);
+          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-old")), assertFalse);
+          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-new")), assertFalse);
+          pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3508,7 +3511,7 @@ volumes:
           expect(applied.deletedDerivedExportCount).toBe(1);
           expect(applied.keptDerivedExportCount).toBe(2);
           expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(2);
-          expect(yield* fs.exists(path.join(parquetRoot, "latest"))).toBe(true);
+          pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3574,7 +3577,7 @@ volumes:
               })
             )
           );
-          expect(Exit.isFailure(invalidPathExit)).toBe(true);
+          pipe(invalidPathExit, Exit.isFailure, assertTrue);
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
@@ -3596,7 +3599,7 @@ volumes:
             )
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          pipe(exit, Exit.isFailure, assertTrue);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3672,16 +3675,16 @@ volumes:
             dataRoot,
           });
           const compactResult = yield* runAiMetricsRetentionCompact(selector, false);
-          expect(compactResult.dryRun).toBe(false);
+          pipe(compactResult.dryRun, assertFalse);
           expect(compactResult.deletedDerivedExportCount).toBe(1);
           expect(compactResult.deletedReportCount).toBe(1);
-          expect(yield* fs.exists(path.join(dataRoot, "derived/parquet"))).toBe(true);
-          expect(yield* fs.exists(path.join(dataRoot, "reports/weekly.md"))).toBe(false);
+          pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet")), assertTrue);
+          pipe(yield* fs.exists(path.join(dataRoot, "reports/weekly.md")), assertFalse);
 
           const deleteResult = yield* runAiMetricsRetentionDelete(selector, false).pipe(
             provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })))
           );
-          expect(deleteResult.dryRun).toBe(false);
+          pipe(deleteResult.dryRun, assertFalse);
           expect(deleteResult.deletedRawArchiveObjectCount).toBe(1);
           const rawFiles = yield* fs.readDirectory(path.join(dataRoot, "raw/codex"));
           expect(rawFiles).toEqual([]);

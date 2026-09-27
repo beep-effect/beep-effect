@@ -6,7 +6,8 @@ import {
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Redacted, Result } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, pipe, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
@@ -51,7 +52,7 @@ describe("AI metrics encrypted raw archive envelope", () => {
         ciphertextBase64: `${Str.slice(0, middle)(ciphertext)}!${Str.slice(middle + 1)(ciphertext)}`,
       })
     );
-    expect(Result.isFailure(decodeArchiveEnvelope(encoded))).toBe(true);
+    pipe(decodeArchiveEnvelope(encoded), Result.isFailure, assertTrue);
   });
 
   it.effect(
@@ -70,7 +71,7 @@ describe("AI metrics encrypted raw archive envelope", () => {
           sourceKind: "codex",
           sourcePath: "large-session.jsonl",
         });
-        expect(yield* fs.exists(object.archivePath)).toBe(true);
+        pipe(yield* fs.exists(object.archivePath), assertTrue);
         const envelope = Result.getOrThrow(decodeArchiveEnvelope(yield* fs.readFileString(object.archivePath)));
         expect(yield* decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey })).toBe(content);
       },
@@ -126,12 +127,12 @@ describe("AI metrics encrypted raw archive envelope", () => {
     const decodeFixture = (override: Record<string, unknown>) =>
       decodeArchiveEnvelope(Result.getOrThrow(encodeUnknownJson({ ...fixture, ...override })));
 
-    expect(Result.isFailure(decodeFixture({ algorithm: "AES-128-GCM" }))).toBe(true);
-    expect(Result.isFailure(decodeFixture({ archiveObjectId: "raw-not-a-sha256" }))).toBe(true);
-    expect(Result.isFailure(decodeFixture({ ciphertextBase64: "not base64" }))).toBe(true);
-    expect(Result.isFailure(decodeFixture({ nonceBase64: "AAAA" }))).toBe(true);
-    expect(Result.isFailure(decodeFixture({ plaintextContentHash: "content-hash" }))).toBe(true);
-    expect(Result.isFailure(decodeFixture({ sourcePathHash: "source-hash" }))).toBe(true);
+    pipe(decodeFixture({ algorithm: "AES-128-GCM" }), Result.isFailure, assertTrue);
+    pipe(decodeFixture({ archiveObjectId: "raw-not-a-sha256" }), Result.isFailure, assertTrue);
+    pipe(decodeFixture({ ciphertextBase64: "not base64" }), Result.isFailure, assertTrue);
+    pipe(decodeFixture({ nonceBase64: "AAAA" }), Result.isFailure, assertTrue);
+    pipe(decodeFixture({ plaintextContentHash: "content-hash" }), Result.isFailure, assertTrue);
+    pipe(decodeFixture({ sourcePathHash: "source-hash" }), Result.isFailure, assertTrue);
   });
 
   it.effect("rejects malformed and wrong-length keys before decryption", () =>

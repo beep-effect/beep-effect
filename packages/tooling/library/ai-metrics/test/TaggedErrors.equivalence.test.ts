@@ -16,15 +16,17 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(schema: S.Schema<A>, a: A, b: A, different: A, differentCause: A): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(a, b)).toBe(true);
-  expect(same(a, different)).toBe(false);
-  expect(same(a, differentCause)).toBe(true);
+  pipe(same(a, b), assertTrue);
+  pipe(same(a, different), assertFalse);
+  pipe(same(a, differentCause), assertTrue);
 };
 
 describe("AI metrics declared-field equivalence", () => {

@@ -13,6 +13,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -133,8 +134,14 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
         const paths = snapshotPaths(result.files);
 
-        expect(A.some(paths, (path) => pipe(path, Str.startsWith(".claude/worktrees/")))).toBe(false);
-        expect(A.some(paths, (path) => pipe(path, Str.startsWith("vendor/sub")))).toBe(false);
+        pipe(
+          A.some(paths, (path) => pipe(path, Str.startsWith(".claude/worktrees/"))),
+          assertFalse
+        );
+        pipe(
+          A.some(paths, (path) => pipe(path, Str.startsWith("vendor/sub"))),
+          assertFalse
+        );
         expect(result.bounds.excludedNestedRootPaths).toContain(".claude/worktrees/wt1");
         expect(result.bounds.excludedNestedRootPaths).toContain("vendor/sub");
       })
@@ -152,8 +159,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
         expect(snapshotPaths(result.files)).toEqual(legitimatePaths);
         expect(result.fileCount).toBe(A.length(legitimatePaths));
-        expect(result.bounds.truncated).toBe(false);
-        expect(O.isNone(result.bounds.truncationReason)).toBe(true);
+        pipe(result.bounds.truncated, assertFalse);
+        assertNone(result.bounds.truncationReason);
         expect(result.bounds.skippedOversizeFileCount).toBe(0);
         expect(result.bounds.totalBytes).toBeGreaterThan(0);
       })
@@ -235,10 +242,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         const first = yield* makeAiMetricsConfigSnapshot(input);
         const second = yield* makeAiMetricsConfigSnapshot(input);
 
-        expect(first.bounds.truncated).toBe(true);
-        expect(first.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
-        );
+        pipe(first.bounds.truncated, assertTrue);
+        assertSome(first.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
         expect(first.fileCount).toBe(3);
         expect(snapshotPaths(second.files)).toEqual(snapshotPaths(first.files));
       })
@@ -270,10 +275,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
         expect(paths).toContain("AGENTS.md");
         expect(paths).toContain("CLAUDE.md");
-        expect(result.bounds.truncated).toBe(true);
-        expect(result.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
-        );
+        pipe(result.bounds.truncated, assertTrue);
+        assertSome(result.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -291,10 +294,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
             repoRoot,
           })
         );
-        expect(byBytes.bounds.truncated).toBe(true);
-        expect(byBytes.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"])
-        );
+        pipe(byBytes.bounds.truncated, assertTrue);
+        assertSome(byBytes.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"]);
 
         const byDepth = yield* makeAiMetricsConfigSnapshot(
           AiMetricsConfigSnapshotInput.make({
@@ -302,10 +303,8 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
             repoRoot,
           })
         );
-        expect(byDepth.bounds.truncated).toBe(true);
-        expect(byDepth.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"])
-        );
+        pipe(byDepth.bounds.truncated, assertTrue);
+        assertSome(byDepth.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]);
         expect(snapshotPaths(byDepth.files)).not.toContain(".claude/skills/a/SKILL.md");
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
@@ -328,7 +327,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
         expect(result.bounds.skippedOversizeFileCount).toBe(1);
         expect(snapshotPaths(result.files)).not.toContain(".claude/skills/a/SKILL.md");
-        expect(result.bounds.truncated).toBe(false);
+        pipe(result.bounds.truncated, assertFalse);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -348,9 +347,18 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           AiMetricsConfigSnapshotStage.Enum.hash,
           AiMetricsConfigSnapshotStage.Enum.diff,
         ]);
-        expect(A.every(result.stageTimings, (timing) => timing.durationMillis >= 0)).toBe(true);
-        expect(A.every(result.stageTimings, (timing) => timing.byteCount >= 0)).toBe(true);
-        expect(A.every(result.stageTimings, (timing) => timing.fileCount === result.fileCount)).toBe(true);
+        pipe(
+          A.every(result.stageTimings, (timing) => timing.durationMillis >= 0),
+          assertTrue
+        );
+        pipe(
+          A.every(result.stageTimings, (timing) => timing.byteCount >= 0),
+          assertTrue
+        );
+        pipe(
+          A.every(result.stageTimings, (timing) => timing.fileCount === result.fileCount),
+          assertTrue
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -371,7 +379,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           })
         );
 
-        expect(result.previousSnapshotId).toEqual(O.some("config-legacy"));
+        assertSome(result.previousSnapshotId, "config-legacy");
         expect(result.diff.modifiedPaths).toContain("AGENTS.md");
         expect(result.diff.removedPaths).toContain(".claude/worktrees/wt1/AGENTS.md");
         expect(result.diff.addedPaths).toContain(".claude/skills/a/SKILL.md");

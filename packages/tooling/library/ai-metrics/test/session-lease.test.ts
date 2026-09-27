@@ -9,6 +9,8 @@ import {
 } from "@beep/repo-ai-metrics";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -115,8 +117,8 @@ describe("telemetry-v2 session leases", () => {
           Effect.gen(function* () {
             const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
             const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
-            expect(leaseEquivalent(lease, roundTrippedLease)).toBe(true);
-            expect(eventEquivalent(event, roundTrippedEvent)).toBe(true);
+            pipe(leaseEquivalent(lease, roundTrippedLease), assertTrue);
+            pipe(eventEquivalent(event, roundTrippedEvent), assertTrue);
 
             return true;
           }),

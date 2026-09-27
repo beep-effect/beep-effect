@@ -1,7 +1,7 @@
 import { AiMetricsSourceDiscoveryInput } from "@beep/repo-ai-metrics/source-discovery";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
-import * as O from "effect/Option";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as S from "effect/Schema";
 
 const decodeSourceDiscoveryInput = S.decodeUnknownResult(AiMetricsSourceDiscoveryInput);
@@ -16,19 +16,19 @@ describe("AI metrics source discovery schemas", () => {
   it("defaults the scan bound through the schema", () => {
     const decoded = Result.getOrThrow(decodeSourceDiscoveryInput(validInput));
 
-    expect(decoded.includeAll).toBe(false);
+    pipe(decoded.includeAll, assertFalse);
     expect(decoded.maxFiles).toBe(200);
-    expect(decoded.hashSalt).toEqual(O.none());
-    expect(decoded.maxFileBytes).toEqual(O.none());
+    assertNone(decoded.hashSalt);
+    assertNone(decoded.maxFileBytes);
     expect(Result.getOrThrow(encodeSourceDiscoveryInput(decoded))).not.toHaveProperty("hashSalt");
   });
 
   it("rejects negative and fractional scan bounds", () => {
-    expect(Result.isFailure(decodeSourceDiscoveryInput({ ...validInput, maxFiles: -1 }))).toBe(true);
-    expect(Result.isFailure(decodeSourceDiscoveryInput({ ...validInput, maxFiles: 1.5 }))).toBe(true);
-    expect(Result.isFailure(decodeSourceDiscoveryInput({ ...validInput, maxFileBytes: -1 }))).toBe(true);
-    expect(Result.isFailure(decodeSourceDiscoveryInput({ ...validInput, maxFileBytes: 1.5 }))).toBe(true);
-    expect(Result.isFailure(decodeSourceDiscoveryInput({ ...validInput, sinceEpochMillis: -1 }))).toBe(true);
-    expect(Result.isFailure(decodeSourceDiscoveryInput({ ...validInput, sinceEpochMillis: 1.5 }))).toBe(true);
+    pipe(decodeSourceDiscoveryInput({ ...validInput, maxFiles: -1 }), Result.isFailure, assertTrue);
+    pipe(decodeSourceDiscoveryInput({ ...validInput, maxFiles: 1.5 }), Result.isFailure, assertTrue);
+    pipe(decodeSourceDiscoveryInput({ ...validInput, maxFileBytes: -1 }), Result.isFailure, assertTrue);
+    pipe(decodeSourceDiscoveryInput({ ...validInput, maxFileBytes: 1.5 }), Result.isFailure, assertTrue);
+    pipe(decodeSourceDiscoveryInput({ ...validInput, sinceEpochMillis: -1 }), Result.isFailure, assertTrue);
+    pipe(decodeSourceDiscoveryInput({ ...validInput, sinceEpochMillis: 1.5 }), Result.isFailure, assertTrue);
   });
 });

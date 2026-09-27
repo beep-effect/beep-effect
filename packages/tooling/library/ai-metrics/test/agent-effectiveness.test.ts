@@ -34,6 +34,7 @@ import { privacySafeSystemTempRoot } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
@@ -555,33 +556,30 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
           // Aggregates report as not-measured rather than as zero or false, so the
           // report cannot be misread as "Phoenix has no traces".
-          expect(
-            pipe(
-              A.head(report.phoenix.projects),
-              O.flatMap((project) => project.hasTraces),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(
-            pipe(
-              A.head(report.phoenix.projects),
-              O.flatMap((project) => project.recordCount),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(
-            pipe(
-              A.head(report.phoenix.projects),
-              O.flatMap((project) => project.traceCount),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(Str.includes("unmeasured")(report.phoenix.message)).toBe(true);
+          pipe(
+            A.head(report.phoenix.projects),
+            O.flatMap((project) => project.hasTraces),
+            O.isNone,
+            assertTrue
+          );
+          pipe(
+            A.head(report.phoenix.projects),
+            O.flatMap((project) => project.recordCount),
+            O.isNone,
+            assertTrue
+          );
+          pipe(
+            A.head(report.phoenix.projects),
+            O.flatMap((project) => project.traceCount),
+            O.isNone,
+            assertTrue
+          );
+          pipe(Str.includes("unmeasured")(report.phoenix.message), assertTrue);
           // The message must name the mode it actually hit. Reporting a rejected
           // query as a timeout sends an operator after store size instead of the
           // server's own refusal.
-          expect(Str.includes("HTTP 500")(report.phoenix.message)).toBe(true);
-          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
+          pipe(Str.includes("HTTP 500")(report.phoenix.message), assertTrue);
+          pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
         }).pipe(
           provideScopedLayer(
             phoenixAggregatesUnavailableRuntimeLayer(
@@ -610,17 +608,16 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           );
 
           expect(report.phoenix.projectCount).toBe(1);
-          expect(
-            pipe(
-              A.head(report.phoenix.projects),
-              O.flatMap((project) => project.traceCount),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(Str.includes("could not be decoded")(report.phoenix.message)).toBe(true);
+          pipe(
+            A.head(report.phoenix.projects),
+            O.flatMap((project) => project.traceCount),
+            O.isNone,
+            assertTrue
+          );
+          pipe(Str.includes("could not be decoded")(report.phoenix.message), assertTrue);
           // A 200 carrying an unreadable body is not a rejection and not a timeout.
-          expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
-          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
+          pipe(Str.includes("HTTP")(report.phoenix.message), assertFalse);
+          pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
         }).pipe(
           provideScopedLayer(
             phoenixAggregatesUnavailableRuntimeLayer(
@@ -651,16 +648,15 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           // The inventory still answered, so the section stays readable rather
           // than collapsing to `unavailable`.
           expect(report.phoenix.projectCount).toBe(1);
-          expect(
-            pipe(
-              A.head(report.phoenix.projects),
-              O.flatMap((project) => project.traceCount),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(Str.includes("could not be reached")(report.phoenix.message)).toBe(true);
-          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
-          expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
+          pipe(
+            A.head(report.phoenix.projects),
+            O.flatMap((project) => project.traceCount),
+            O.isNone,
+            assertTrue
+          );
+          pipe(Str.includes("could not be reached")(report.phoenix.message), assertTrue);
+          pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
+          pipe(Str.includes("HTTP")(report.phoenix.message), assertFalse);
         }).pipe(
           provideScopedLayer(
             phoenixAggregatesUnavailableRuntimeLayer(
@@ -733,12 +729,11 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           expect(json).not.toContain("draftJsDoc");
           expect(json).not.toContain("@example");
           expect(check.status).toBe(AgentEffectivenessStatus.Enum.passed);
-          expect(
-            pipe(
-              plan.annotations,
-              A.some((annotation) => annotation.name === "worker.policy_violation")
-            )
-          ).toBe(true);
+          pipe(
+            plan.annotations,
+            A.some((annotation) => annotation.name === "worker.policy_violation"),
+            assertTrue
+          );
         }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
@@ -928,7 +923,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
             })
           );
 
-          expect(dryRun.dryRun).toBe(true);
+          pipe(dryRun.dryRun, assertTrue);
           expect(dryRun.datasetCount).toBe(5);
           expect(dryRun.promptCount).toBe(2);
           expect(dryRun.experimentCount).toBe(5);

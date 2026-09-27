@@ -19,7 +19,8 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Duration, Effect, FileSystem, Match, Path, Result, Schedule, Stream } from "effect";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Duration, Effect, FileSystem, Match, Path, pipe, Result, Schedule, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -395,8 +396,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
       expiresEpochMs: 1,
     };
 
-    expect(Result.isFailure(SequenceBreakNotificationV1.decodeResult(notification))).toBe(true);
-    expect(Result.isFailure(SequenceBreakDampingV1.decodeResult(damping))).toBe(true);
+    pipe(SequenceBreakNotificationV1.decodeResult(notification), Result.isFailure, assertTrue);
+    pipe(SequenceBreakDampingV1.decodeResult(damping), Result.isFailure, assertTrue);
   });
 
   it("round-trips schema-derived notification and damping states", () => {
@@ -417,8 +418,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
               decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
             );
 
-            expect(notificationEquivalent(decodedNotification, notification)).toBe(true);
-            expect(dampingEquivalent(decodedDamping, damping)).toBe(true);
+            pipe(notificationEquivalent(decodedNotification, notification), assertTrue);
+            pipe(dampingEquivalent(decodedDamping, damping), assertTrue);
 
             return true;
           },
@@ -460,7 +461,10 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
         { status: "skipped", reason: "bracket-resolved" },
         { status: "skipped", reason: "bracket-resolved" },
       ]);
-      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      pipe(
+        A.every(yield* notificationRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
     })
   );
 
@@ -479,7 +483,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
         { status: "skipped", reason: "bracket-unattributed" },
         { status: "skipped", reason: "bracket-unattributed" },
       ]);
-      expect(yield* fs.exists(store.dampingPath)).toBe(false);
+      pipe(yield* fs.exists(store.dampingPath), assertFalse);
     })
   );
 
@@ -519,7 +523,10 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
       expect(desktop).toContain("Clone: clone&lt;&amp;  name");
       expect(desktop).not.toContain("\u001b");
       expect(yield* fs.readFileString(`${store.stateHome}/phone.txt`)).not.toContain("clone");
-      expect(A.every(yield* notificationRows(store), (row) => !row.includes("clone"))).toBe(true);
+      pipe(
+        A.every(yield* notificationRows(store), (row) => !row.includes("clone")),
+        assertTrue
+      );
       expect(yield* fs.readFileString(store.dampingPath)).not.toContain("clone");
     })
   );
@@ -575,7 +582,10 @@ esac
         );
       expect(opened).toBe(`${uri}\n`);
       expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).toContain("--action=default=Open task");
-      expect(A.every(yield* notificationRows(store), (row) => !row.includes(uri))).toBe(true);
+      pipe(
+        A.every(yield* notificationRows(store), (row) => !row.includes(uri)),
+        assertTrue
+      );
     })
   );
 
@@ -657,11 +667,14 @@ cat >/dev/null
       expect(A.length(Str.split(run.stdout, "\u001b]777;notify;"))).toBe(4);
       expect(run.stdout).toContain("Claude Code needs your input");
       expect(run.stdout).toContain("Clone: clone");
-      expect(yield* fs.exists(`${store.stateHome}/fallback`)).toBe(false);
+      pipe(yield* fs.exists(`${store.stateHome}/fallback`), assertFalse);
       expect(yield* fs.readFileString(`${store.stateHome}/auth.txt`)).toBe("auth\nauth\nauth\n");
       const notifications = yield* decodedNotifications(store);
       expect(A.length(notifications)).toBe(6);
-      expect(A.every(notifications, ({ delivery }) => delivery.status === "sent")).toBe(true);
+      pipe(
+        A.every(notifications, ({ delivery }) => delivery.status === "sent"),
+        assertTrue
+      );
     })
   );
 
@@ -733,7 +746,10 @@ touch "$HOME/finished"
         "desktop:sent",
         "ntfy:skipped",
       ]);
-      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      pipe(
+        A.every(yield* notificationRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
     })
   );
 
@@ -761,7 +777,10 @@ touch "$HOME/finished"
       expect(
         A.map(notifications, ({ delivery, sessionId, transport }) => `${sessionId}:${transport}:${delivery.status}`)
       ).toEqual([`${sessionDigest}:desktop:sent`, `${sessionDigest}:ntfy:skipped`]);
-      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      pipe(
+        A.every(yield* notificationRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
     })
   );
 
@@ -782,8 +801,14 @@ touch "$HOME/finished"
       expect(A.map(breakerEvents, ({ outcome, probe }) => `${probe}:${outcome.status}`)).toEqual([
         "network:probe-succeeded",
       ]);
-      expect(A.every(yield* notificationRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      expect(A.every(yield* breakerEventRows(store), (row) => !row.includes(CANARY))).toBe(true);
+      pipe(
+        A.every(yield* notificationRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
+      pipe(
+        A.every(yield* breakerEventRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
     })
   );
 
@@ -891,8 +916,8 @@ exit 0
       expect(A.map(notifications, ({ delivery, transport }) => `${transport}:${delivery.status}`)).toEqual([
         "desktop:sent",
       ]);
-      expect(yield* fs.exists(curlCallsPath)).toBe(false);
-      expect(yield* fs.exists(hookPulseDisarmSentinelPath(store.evidenceRoot))).toBe(true);
+      pipe(yield* fs.exists(curlCallsPath), assertFalse);
+      pipe(yield* fs.exists(hookPulseDisarmSentinelPath(store.evidenceRoot)), assertTrue);
     })
   );
 
@@ -905,7 +930,7 @@ exit 0
 
       expectSilentSuccess(yield* runNotifier(store));
       expect(yield* notificationRows(store)).toEqual([]);
-      expect(yield* fs.exists(store.dampingPath)).toBe(false);
+      pipe(yield* fs.exists(store.dampingPath), assertFalse);
     })
   );
 });

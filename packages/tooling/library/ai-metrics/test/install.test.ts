@@ -13,6 +13,7 @@ import { AiMetricsDeployTarget, AiMetricsPrivacyMode, AiMetricsTool } from "@bee
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -61,8 +62,8 @@ describe("@beep/repo-ai-metrics install contracts", () => {
         status: "passed",
       });
 
-      expect(madeStep.required).toBe(true);
-      expect(decodedStep.required).toBe(true);
+      pipe(madeStep.required, assertTrue);
+      pipe(decodedStep.required, assertTrue);
       expect(madeCheck.metadata).toEqual({});
       expect(decodedCheck.metadata).toEqual({});
     })
@@ -96,7 +97,7 @@ describe("@beep/repo-ai-metrics install contracts", () => {
       expect(defaultService.publicUrl).toBe("https://metrics.example.test/ai-metrics/opik");
       expect(specCommands).toHaveLength(3);
       expect(planCommands).toHaveLength(3);
-      expect(A.every(A.appendAll(specCommands, planCommands), Str.includes(expectedFlag))).toBe(true);
+      pipe(A.every(A.appendAll(specCommands, planCommands), Str.includes(expectedFlag)), assertTrue);
     })
   );
 
@@ -115,7 +116,7 @@ describe("@beep/repo-ai-metrics install contracts", () => {
       const encoded = yield* aiMetricsInstallPlanToJson(plan);
       const decoded = yield* decodeInstallPlanJson(encoded);
 
-      expect(apply.dryRun).toBe(true);
+      pipe(apply.dryRun, assertTrue);
       expect(decoded).toEqual(plan);
     })
   );

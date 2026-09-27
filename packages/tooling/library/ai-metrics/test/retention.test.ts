@@ -12,7 +12,8 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -90,33 +91,33 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
       untilEpochMillis: O.some(10),
     })
   ).toThrow();
-  expect(
-    Result.isFailure(
-      decodeRetentionInventoryResult({
-        derivedExports: [],
-        explicitWindow: false,
-        rawArchiveObjects: [],
-        reports: [],
-        schemaVersion: "beep.ai_metrics.retention_inventory.v2",
-        selectedDerivedExportCount: 0,
-        selectedRawArchiveObjectCount: 0,
-        selectedReportCount: 0,
-      })
-    )
-  ).toBe(true);
-  expect(
-    Result.isFailure(
-      decodeDerivedStorageWriteResult({
-        archiveObjectCount: 0,
-        duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb",
-        ingestRunId: "ingest-1",
-        parquetExportMode: "snapshot",
-        parquetTables: ["not_a_derived_table"],
-        sourceFileCount: 0,
-        turnCount: 0,
-      })
-    )
-  ).toBe(true);
+  pipe(
+    decodeRetentionInventoryResult({
+      derivedExports: [],
+      explicitWindow: false,
+      rawArchiveObjects: [],
+      reports: [],
+      schemaVersion: "beep.ai_metrics.retention_inventory.v2",
+      selectedDerivedExportCount: 0,
+      selectedRawArchiveObjectCount: 0,
+      selectedReportCount: 0,
+    }),
+    Result.isFailure,
+    assertTrue
+  );
+  pipe(
+    decodeDerivedStorageWriteResult({
+      archiveObjectCount: 0,
+      duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb",
+      ingestRunId: "ingest-1",
+      parquetExportMode: "snapshot",
+      parquetTables: ["not_a_derived_table"],
+      sourceFileCount: 0,
+      turnCount: 0,
+    }),
+    Result.isFailure,
+    assertTrue
+  );
   const absentParquetDir = Result.getOrThrow(
     decodeDerivedStorageWriteResult({
       archiveObjectCount: 0,
@@ -128,7 +129,7 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
       turnCount: 0,
     })
   );
-  expect(absentParquetDir.parquetExportDir).toEqual(O.none());
+  assertNone(absentParquetDir.parquetExportDir);
   expect(Result.getOrThrow(encodeDerivedStorageWriteResult(absentParquetDir))).not.toHaveProperty("parquetExportDir");
 });
 

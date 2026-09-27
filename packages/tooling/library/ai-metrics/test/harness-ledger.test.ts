@@ -28,6 +28,8 @@ import { Sha256Hex } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -172,9 +174,9 @@ describe("harness-ledger", () => {
               const fingerprintRoundtrip = yield* decodeFingerprint(yield* encodeFingerprint(fingerprint));
               const editRoundtrip = yield* decodeEditRef(yield* encodeEditRef(edit));
               const claimRoundtrip = yield* decodeClaim(yield* encodeClaim(claim));
-              expect(fingerprintEquivalent(fingerprintRoundtrip, fingerprint)).toBe(true);
-              expect(editRefEquivalent(editRoundtrip, edit)).toBe(true);
-              expect(claimEquivalent(claimRoundtrip, claim)).toBe(true);
+              pipe(fingerprintEquivalent(fingerprintRoundtrip, fingerprint), assertTrue);
+              pipe(editRefEquivalent(editRoundtrip, edit), assertTrue);
+              pipe(claimEquivalent(claimRoundtrip, claim), assertTrue);
               return true;
             }),
           fcRuns(25)
@@ -195,7 +197,7 @@ describe("harness-ledger", () => {
           const decoded = yield* decodeUnknownEditRef(encoded);
           expect(yield* encodeEditRef(decoded)).toStrictEqual(encoded);
         }
-        expect(isHarnessEditRef({ kind: "diff-digest", ref: "not-a-digest" })).toBe(false);
+        pipe(isHarnessEditRef({ kind: "diff-digest", ref: "not-a-digest" }), assertFalse);
       })
     );
 
@@ -240,7 +242,7 @@ describe("harness-ledger", () => {
         const row = yield* makeRow();
         const json = yield* encodeRowJson(row);
         const parsed = yield* asRecord(yield* parseJson(json));
-        expect(A.isArray(parsed.touched)).toBe(true);
+        pipe(A.isArray(parsed.touched), assertTrue);
         const decoded = yield* decodeRowJson(json);
         expect(decoded.rowId).toBe(row.rowId);
         expect(HashSet.size(decoded.touched)).toBe(1);
@@ -262,9 +264,9 @@ describe("harness-ledger", () => {
             disposition: "proposed",
           })
         );
-        expect(HashSet.isEmpty(decoded.touched)).toBe(true);
-        expect(O.isNone(decoded.hypothesis)).toBe(true);
-        expect(O.isNone(decoded.repoRevision)).toBe(true);
+        pipe(HashSet.isEmpty(decoded.touched), assertTrue);
+        assertNone(decoded.hypothesis);
+        assertNone(decoded.repoRevision);
       })
     );
 
@@ -281,7 +283,7 @@ describe("harness-ledger", () => {
         );
         expect(badId._tag).toBe("Failure");
         expect(badResurrect._tag).toBe("Failure");
-        expect(tombstone.resurrectWhen).toStrictEqual(O.some("model changes"));
+        assertSome(tombstone.resurrectWhen, "model changes");
       })
     );
 
@@ -296,9 +298,9 @@ describe("harness-ledger", () => {
         });
         const json = yield* encodeRowJson(row);
         const decoded = yield* decodeRowJson(json);
-        expect(decoded.previousRowId).toStrictEqual(O.some("hl-20260924-deadbeef"));
-        expect(decoded.targetSurface).toStrictEqual(O.some(target));
-        expect(decoded.windowSessions).toStrictEqual(O.some(30));
+        assertSome(decoded.previousRowId, "hl-20260924-deadbeef");
+        assertSome(decoded.targetSurface, target);
+        assertSome(decoded.windowSessions, 30);
         const encoded = yield* asRecord(yield* parseJson(json));
         const badPrevious = yield* Effect.result(
           decodeRowJson(yield* stringifyJson({ ...encoded, previousRowId: "row-1" }))
@@ -322,7 +324,7 @@ describe("harness-ledger", () => {
         const again = yield* makeHarnessLedgerRowId(createdAt).pipe(Random.withSeed("ledger"));
         expect(first).toMatch(/^hl-20260925-[0-9a-f]{8}$/);
         expect(again).toBe(first);
-        expect(isHarnessLedgerRowId(first)).toBe(true);
+        pipe(isHarnessLedgerRowId(first), assertTrue);
       })
     );
 
@@ -347,15 +349,15 @@ describe("harness-ledger", () => {
         const release = yield* fingerprintFor("gpt-7", hashA);
         const row = { fingerprint: base };
 
-        expect(isStale(row, base)).toBe(false);
-        expect(isStale(row, harnessEdit)).toBe(true);
-        expect(isStale(row, effortEdit)).toBe(true);
-        expect(isStale(row, release)).toBe(true);
+        pipe(isStale(row, base), assertFalse);
+        pipe(isStale(row, harnessEdit), assertTrue);
+        pipe(isStale(row, effortEdit), assertTrue);
+        pipe(isStale(row, release), assertTrue);
 
-        expect(isWarmRestart(base, base)).toBe(false);
-        expect(isWarmRestart(base, harnessEdit)).toBe(false);
-        expect(isWarmRestart(base, effortEdit)).toBe(false);
-        expect(isWarmRestart(base, release)).toBe(true);
+        pipe(isWarmRestart(base, base), assertFalse);
+        pipe(isWarmRestart(base, harnessEdit), assertFalse);
+        pipe(isWarmRestart(base, effortEdit), assertFalse);
+        pipe(isWarmRestart(base, release), assertTrue);
       })
     );
   });

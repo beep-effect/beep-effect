@@ -24,7 +24,8 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Path, Stream } from "effect";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { ConfigProvider, Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -672,8 +673,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // without: `HookPulseRawEvent.transcript_path` is required, so a row
         // missing it still decodes but can never be re-encoded — a replay
         // break that only surfaces in P4, long after the evidence is gone.
-        expect(decoded.transcriptPath).toEqual(O.some(yield* privateDigest(baseFields.transcript_path)));
-        expect(decoded.promptId).toEqual(O.some(baseFields.prompt_id));
+        assertSome(decoded.transcriptPath, yield* privateDigest(baseFields.transcript_path));
+        assertSome(decoded.promptId, baseFields.prompt_id);
         expect(decoded.permissionMode).toEqual(permissionMode);
         // Weakest-link: `waitReason` is derived, and the codec's
         // `clampDerivedEvidenceTier` maps `observed` to `derived`. A writer
@@ -725,7 +726,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
             const decoded = yield* HookPulseV1.decodeJsonEffect(line);
 
             expect(A.difference(R.keys(keys), canonicalRowKeys)).toEqual([]);
-            expect(hookPulseEquivalent(decoded, value)).toBe(true);
+            pipe(hookPulseEquivalent(decoded, value), assertTrue);
 
             return true;
           }),
@@ -787,7 +788,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 
       expect(decoded.sessionId).toBe(yield* privateDigest(session));
       expect(decoded.cwd).toBe(yield* privateDigest(baseFields.cwd));
-      expect(decoded.transcriptPath).toEqual(O.some(yield* privateDigest(baseFields.transcript_path)));
+      assertSome(decoded.transcriptPath, yield* privateDigest(baseFields.transcript_path));
     })
   );
 
@@ -908,7 +909,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       // exiting 0. A no-match must omit the optional key, never annihilate the
       // object.
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.Notification);
-      expect(decoded.notificationType).toEqual(O.none());
+      assertNone(decoded.notificationType);
       expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum.unknown);
     })
   );
@@ -918,7 +919,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const run = yield* runWriter(yield* encodeJson(permissionPromptNotificationPayload));
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.notificationType).toEqual(O.some(HookPulseNotificationType.Enum.permission_prompt));
+      assertSome(decoded.notificationType, HookPulseNotificationType.Enum.permission_prompt);
     })
   );
 
@@ -931,10 +932,10 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const decodedStop = yield* decodeHookPulseRow(expectSingleRow(stopped));
       const decodedDenied = yield* decodeHookPulseRow(expectSingleRow(denied));
 
-      expect(decodedEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
-      expect(decodedStop.sessionEndReason).toEqual(O.none());
+      assertSome(decodedEnd.sessionEndReason, "prompt_input_exit");
+      assertNone(decodedStop.sessionEndReason);
       // `PermissionDenied` carries its own `reason`, and it is content.
-      expect(decodedDenied.sessionEndReason).toEqual(O.none());
+      assertNone(decodedDenied.sessionEndReason);
     })
   );
 
@@ -943,8 +944,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const run = yield* runWriter(yield* encodeJson(postToolUsePayload));
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.durationMs).toEqual(O.some(477));
-      expect(decoded.toolUseId).toEqual(O.some("toolu_writer_1"));
+      assertSome(decoded.durationMs, 477);
+      assertSome(decoded.toolUseId, "toolu_writer_1");
     })
   );
 
@@ -957,7 +958,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const run = yield* runWriter(yield* nonFiniteDurationStdin);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.durationMs).toEqual(O.none());
+      assertNone(decoded.durationMs);
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
     })
   );
@@ -968,8 +969,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       // The two-hop join in P4 depends on this absence being real.
-      expect(decoded.toolUseId).toEqual(O.none());
-      expect(decoded.toolName).toEqual(O.some("ExitPlanMode"));
+      assertNone(decoded.toolUseId);
+      assertSome(decoded.toolName, "ExitPlanMode");
     })
   );
 
@@ -1021,12 +1022,12 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
       const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
 
-      expect(decodedInterrupted.toolUseId).toEqual(O.some("toolu_writer_1"));
-      expect(decodedInterrupted.durationMs).toEqual(O.some(12));
+      assertSome(decodedInterrupted.toolUseId, "toolu_writer_1");
+      assertSome(decodedInterrupted.durationMs, 12);
       // `false` is a value, not an absence — omitting it would erase the
       // distinction between "the tool errored" and "the human hit escape".
-      expect(decodedInterrupted.isInterrupt).toEqual(O.some(true));
-      expect(decodedErrored.isInterrupt).toEqual(O.some(false));
+      assertSome(decodedInterrupted.isInterrupt, true);
+      assertSome(decodedErrored.isInterrupt, false);
     })
   );
 
@@ -1038,7 +1039,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
-      expect(decoded.isInterrupt).toEqual(O.none());
+      assertNone(decoded.isInterrupt);
     })
   );
 
@@ -1304,7 +1305,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
       // Byte-identical to what was seeded: not the reason, not the timestamp,
       // not the trailing newline. The seeded start is far enough in the past
       // that an overwrite is unambiguous rather than clock-resolution noise.
-      expect(yield* readSentinel(store)).toEqual(O.some(yield* seededSentinelJson));
+      assertSome(yield* readSentinel(store), yield* seededSentinelJson);
       expect(run.stdout).toContain(SEEDED_DISARM.disarmedAt);
     })
   );
@@ -1342,18 +1343,18 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
 
       expectSwitchOk(armed);
       expect(window.schemaVersion).toBe(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"]);
-      expect(window.disarmedAt).toEqual(O.some(SEEDED_DISARM.disarmedAt));
-      expect(window.reason).toEqual(O.some(SEEDED_DISARM.reason));
+      assertSome(window.disarmedAt, SEEDED_DISARM.disarmedAt);
+      assertSome(window.reason, SEEDED_DISARM.reason);
       // Self-labelled `unknown`: no hook rows exist for the window, so anything
       // computed across it is uninstrumented by construction.
       expect(window.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
       expect(window.rearmedAt).toMatch(isoSecond);
       // ISO-8601 UTC at fixed width sorts lexicographically, so this is a real
       // ordering check: a window that closes before it opens is not a window.
-      expect(window.rearmedAt > SEEDED_DISARM.disarmedAt).toBe(true);
+      pipe(window.rearmedAt > SEEDED_DISARM.disarmedAt, assertTrue);
       // The switch is armed again only if the sentinel is actually gone — the
       // writer tests for its existence and nothing else.
-      expect(yield* readSentinel(store)).toEqual(O.none());
+      assertNone(yield* readSentinel(store));
     })
   );
 
@@ -1379,7 +1380,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
           // Idempotent here too: a sentinel it cannot parse is still a
           // sentinel, and stamping a fresh timestamp onto it would invent a
           // window start where the honest answer is that there isn't one.
-          expect(yield* readSentinel(store)).toEqual(O.some(contents));
+          assertSome(yield* readSentinel(store), contents);
 
           const armed = yield* runSwitch(store, ["arm"]);
           const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
@@ -1388,10 +1389,10 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
           // `null`, never the rearm instant: a window whose start defaulted to
           // "now" would read as a zero-length gap, which is worse than an
           // admitted unknown because it looks like coverage.
-          expect(window.disarmedAt).toEqual(O.none());
-          expect(window.reason).toEqual(O.none());
+          assertNone(window.disarmedAt);
+          assertNone(window.reason);
           expect(window.rearmedAt).toMatch(isoSecond);
-          expect(yield* readSentinel(store)).toEqual(O.none());
+          assertNone(yield* readSentinel(store));
         })
       );
     }
@@ -1411,7 +1412,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
       // at all also keeps "no windows yet" distinguishable from "a window whose
       // fields all came out empty".
       expect(yield* readWindowRows(store)).toEqual([]);
-      expect(yield* fs.exists(store.windowsPath)).toBe(false);
+      pipe(yield* fs.exists(store.windowsPath), assertFalse);
     })
   );
 

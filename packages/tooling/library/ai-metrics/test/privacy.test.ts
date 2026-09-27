@@ -7,7 +7,8 @@ import {
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -19,7 +20,7 @@ describe("AI metrics privacy boundaries", () => {
   it.effect("returns schema-valid SHA-256 digests", () =>
     Effect.gen(function* () {
       const hash = yield* hashPublicTextSha256("public identity");
-      expect(isSha256Hex(hash)).toBe(true);
+      pipe(isSha256Hex(hash), assertTrue);
     })
   );
 

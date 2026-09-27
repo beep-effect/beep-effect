@@ -1,7 +1,8 @@
 import { fcRuns } from "@beep/fc-runs";
 import { FlightRecordCompositionInput, FlightRecordCompositionInputArbitrary } from "@beep/repo-ai-metrics";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -13,7 +14,7 @@ describe("flight record generation", () => {
       const result = yield* Arbitrary.checkEffect(
         FlightRecordCompositionInputArbitrary,
         (input) => {
-          expect(isFlightRecordCompositionInput(input)).toBe(true);
+          pipe(isFlightRecordCompositionInput(input), assertTrue);
           const mechanical = input.mechanical;
           expect(mechanical).toBeDefined();
           if (mechanical === undefined) throw new Error("Missing generated mechanical record");

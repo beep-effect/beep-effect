@@ -15,6 +15,7 @@ import {
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Order, Path, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 
@@ -109,7 +110,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
 
         expect(root.kind).toBe(AiMetricsRootKind.Enum["primary-clone"]);
         expect(root.parentRootId).toBeUndefined();
-        expect(root.excludedFromParentSnapshot).toBe(false);
+        pipe(root.excludedFromParentSnapshot, assertFalse);
         expect(root.revision).toBe(mainSha);
         expect(root.rootId).toBe(`root-${root.cloneIdHash}`);
       })
@@ -136,7 +137,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         );
 
         expect(worktree.kind).toBe(AiMetricsRootKind.Enum["linked-worktree"]);
-        expect(worktree.excludedFromParentSnapshot).toBe(true);
+        pipe(worktree.excludedFromParentSnapshot, assertTrue);
         expect(worktree.parentRootId).toBe(clone.rootId);
         expect(worktree.revision).toBe(detachedSha);
       })
@@ -311,7 +312,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
 
         const migrated = yield* upsertRoot(dataRoot, clonePath, homeDir);
 
-        expect(O.isSome(migrated.hashSaltNamespaceId)).toBe(true);
+        pipe(migrated.hashSaltNamespaceId, O.isSome, assertTrue);
         expect(A.map(migrated.roots, (root) => root.rootId)).toEqual(A.map(current.roots, (root) => root.rootId));
         expect(A.map(migrated.sourceInstances, (instance) => instance.instanceIdHash)).toEqual(
           A.map(current.sourceInstances, (instance) => instance.instanceIdHash)
@@ -557,8 +558,8 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         );
 
         const registryPath = pathApi.join(dataRoot, "identity/registry.json");
-        expect(yield* fs.exists(registryPath)).toBe(true);
-        expect(yield* fs.exists(`${registryPath}.tmp`)).toBe(false);
+        pipe(yield* fs.exists(registryPath), assertTrue);
+        pipe(yield* fs.exists(`${registryPath}.tmp`), assertFalse);
 
         const json = yield* identityRegistryToJson(registry);
         const decoded = yield* AiMetricsIdentityRegistry.decodeJsonEffect(json);
@@ -723,7 +724,10 @@ describe("@beep/repo-ai-metrics identity registry", () => {
 
         expect(A.length(tmpWrites)).toBe(A.length(clonePaths));
         expect(A.length(A.dedupe(tmpWrites))).toBe(A.length(tmpWrites));
-        expect(A.some(tmpWrites, (path) => Str.endsWith(path, "registry.json.tmp"))).toBe(false);
+        pipe(
+          A.some(tmpWrites, (path) => Str.endsWith(path, "registry.json.tmp")),
+          assertFalse
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -748,7 +752,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         expect(failure).toBeInstanceOf(AiMetricsIdentityRegistryError);
         expect(failure.message).toContain("Timed out waiting");
         // The upsert failed instead of quietly doing nothing, and wrote no registry.
-        expect(yield* fs.exists(pathApi.join(dataRoot, "identity/registry.json"))).toBe(false);
+        pipe(yield* fs.exists(pathApi.join(dataRoot, "identity/registry.json")), assertFalse);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -783,20 +787,22 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         yield* makeClone(vendorPath);
         yield* writeText(pathApi.join(plainPath, "AGENTS.md"), "guidance\n");
 
-        expect(yield* isNestedGitRoot({ dirPath: clonePath, scanRoot: clonePath })).toBe(false);
-        expect(
+        pipe(yield* isNestedGitRoot({ dirPath: clonePath, scanRoot: clonePath }), assertFalse);
+        pipe(
           yield* isNestedGitRoot({
             dirPath: worktreePath,
             scanRoot: clonePath,
-          })
-        ).toBe(true);
-        expect(
+          }),
+          assertTrue
+        );
+        pipe(
           yield* isNestedGitRoot({
             dirPath: vendorPath,
             scanRoot: clonePath,
-          })
-        ).toBe(true);
-        expect(yield* isNestedGitRoot({ dirPath: plainPath, scanRoot: clonePath })).toBe(false);
+          }),
+          assertTrue
+        );
+        pipe(yield* isNestedGitRoot({ dirPath: plainPath, scanRoot: clonePath }), assertFalse);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -820,13 +826,20 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         );
 
         const rootId = registry.roots[0]?.rootId;
-        expect(O.isSome(A.findFirst(registry.sourceInstances, (instance) => instance.sourceKind === "codex"))).toBe(
-          true
+        pipe(
+          A.findFirst(registry.sourceInstances, (instance) => instance.sourceKind === "codex"),
+          O.isSome,
+          assertTrue
         );
-        expect(O.isSome(A.findFirst(registry.sourceInstances, (instance) => instance.sourceKind === "claude"))).toBe(
-          true
+        pipe(
+          A.findFirst(registry.sourceInstances, (instance) => instance.sourceKind === "claude"),
+          O.isSome,
+          assertTrue
         );
-        expect(A.every(registry.sourceInstances, (instance) => instance.rootId === rootId)).toBe(true);
+        pipe(
+          A.every(registry.sourceInstances, (instance) => instance.rootId === rootId),
+          assertTrue
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

@@ -14,7 +14,8 @@ import {
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics/scorecard";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -65,7 +66,7 @@ describe("scorecard schemas", () => {
         Arbitrary.checkEffect(
           Arbitrary.all([arbitrary]),
           ([value]) => {
-            expect(isValue(value)).toBe(true);
+            pipe(isValue(value), assertTrue);
 
             return true;
           },
@@ -81,7 +82,7 @@ describe("scorecard schemas", () => {
       Effect.fnUntraced(function* (value) {
         const json = yield* AiMetricsLabelQueueResult.encodeJsonEffect(value);
         const decoded = yield* AiMetricsLabelQueueResult.decodeJsonEffect(json);
-        expect(labelQueueResultEquivalent(decoded, value)).toBe(true);
+        pipe(labelQueueResultEquivalent(decoded, value), assertTrue);
       }),
       { discard: true }
     )
@@ -93,7 +94,7 @@ describe("scorecard schemas", () => {
       Effect.fnUntraced(function* (value) {
         const json = yield* AiMetricsBenchmarkCaseListResult.encodeJsonEffect(value);
         const decoded = yield* AiMetricsBenchmarkCaseListResult.decodeJsonEffect(json);
-        expect(benchmarkCaseListResultEquivalent(decoded, value)).toBe(true);
+        pipe(benchmarkCaseListResultEquivalent(decoded, value), assertTrue);
       }),
       { discard: true }
     )
@@ -105,7 +106,7 @@ describe("scorecard schemas", () => {
       Effect.fnUntraced(function* (value) {
         const json = yield* AiMetricsWeeklyReportResult.encodeJsonEffect(value);
         const decoded = yield* AiMetricsWeeklyReportResult.decodeJsonEffect(json);
-        expect(weeklyReportResultEquivalent(decoded, value)).toBe(true);
+        pipe(weeklyReportResultEquivalent(decoded, value), assertTrue);
       }),
       { discard: true }
     )
@@ -117,7 +118,7 @@ describe("scorecard schemas", () => {
       Effect.fnUntraced(function* (value) {
         const json = yield* OutcomeLabel.encodeJsonEffect(value);
         const decoded = yield* OutcomeLabel.decodeJsonEffect(json);
-        expect(outcomeLabelEquivalent(decoded, value)).toBe(true);
+        pipe(outcomeLabelEquivalent(decoded, value), assertTrue);
       }),
       { discard: true }
     )
@@ -129,7 +130,7 @@ describe("scorecard schemas", () => {
       Effect.fnUntraced(function* (value) {
         const json = yield* BenchmarkCase.encodeJsonEffect(value);
         const decoded = yield* BenchmarkCase.decodeJsonEffect(json);
-        expect(benchmarkCaseEquivalent(decoded, value)).toBe(true);
+        pipe(benchmarkCaseEquivalent(decoded, value), assertTrue);
       }),
       { discard: true }
     )
@@ -141,7 +142,7 @@ describe("scorecard schemas", () => {
       Effect.fnUntraced(function* (value) {
         const json = yield* BenchmarkRun.encodeJsonEffect(value);
         const decoded = yield* BenchmarkRun.decodeJsonEffect(json);
-        expect(benchmarkRunEquivalent(decoded, value)).toBe(true);
+        pipe(benchmarkRunEquivalent(decoded, value), assertTrue);
       }),
       { discard: true }
     )

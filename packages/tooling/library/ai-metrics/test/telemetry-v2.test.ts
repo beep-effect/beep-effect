@@ -14,7 +14,8 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Result } from "effect";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -81,7 +82,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       const encoded = yield* FlightRecord.encodeJsonEffect(decoded);
       const roundTripped = yield* FlightRecord.decodeJsonEffect(encoded);
 
-      expect(flightRecordEquivalent(decoded, roundTripped)).toBe(true);
+      pipe(flightRecordEquivalent(decoded, roundTripped), assertTrue);
       expect(decoded.mechanical.observedEventCount).toBe(37);
       expect(decoded.mechanical.turnCount).toBe(1);
       expect(decoded.mechanical.toolCallCount).toBe(17);
@@ -101,8 +102,8 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       const roundTrippedEnumeration = yield* IngestEnumeration.decodeJsonEffect(encodedEnumeration);
       const roundTrippedManifest = yield* IngestManifest.decodeJsonEffect(encodedManifest);
 
-      expect(ingestEnumerationEquivalent(enumeration, roundTrippedEnumeration)).toBe(true);
-      expect(ingestManifestEquivalent(manifest, roundTrippedManifest)).toBe(true);
+      pipe(ingestEnumerationEquivalent(enumeration, roundTrippedEnumeration), assertTrue);
+      pipe(ingestManifestEquivalent(manifest, roundTrippedManifest), assertTrue);
       expect(enumeration.enumeratedCount).toBe(6);
       expect(manifest.summary.accountedCount).toBe(6);
       expect(manifest.summary.skippedCount).toBe(6);
@@ -145,7 +146,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       singleSummary("skipped")
     );
 
-    expect(Result.isFailure(IngestManifest.decodeResult(invalid))).toBe(true);
+    pipe(IngestManifest.decodeResult(invalid), Result.isFailure, assertTrue);
   });
 
   it("strips skip-only fields from a read disposition", () => {
@@ -167,7 +168,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
     const encoded = Result.getOrThrow(IngestManifest.encodeResult(decoded));
     const firstDisposition = O.getOrThrow(A.head(encoded.dispositions));
 
-    expect("reason" in firstDisposition).toBe(false);
+    pipe("reason" in firstDisposition, assertFalse);
   });
 
   it("retains an unemittable source in the accounted denominator", () => {
@@ -225,8 +226,8 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       enumeratedCount: 2,
     };
 
-    expect(Result.isFailure(IngestManifest.decodeResult(duplicate))).toBe(true);
-    expect(Result.isFailure(IngestManifest.decodeResult(omitted))).toBe(true);
+    pipe(IngestManifest.decodeResult(duplicate), Result.isFailure, assertTrue);
+    pipe(IngestManifest.decodeResult(omitted), Result.isFailure, assertTrue);
   });
 
   it("propagates the weakest evidence tier, including reconstruction", () => {
@@ -262,7 +263,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       WaitReason.Enum.none,
       WaitReason.Enum.unknown,
     ]);
-    expect(isHookPulseEvidenceTier(EvidenceTier.Enum.reconstructed)).toBe(false);
-    expect(isHookPulseWaitReason(WaitReason.Enum.scheduler)).toBe(false);
+    pipe(isHookPulseEvidenceTier(EvidenceTier.Enum.reconstructed), assertFalse);
+    pipe(isHookPulseWaitReason(WaitReason.Enum.scheduler), assertFalse);
   });
 });
