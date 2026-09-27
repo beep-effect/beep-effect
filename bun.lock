@@ -1423,7 +1423,6 @@
       },
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
-        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
