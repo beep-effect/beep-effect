@@ -6,8 +6,9 @@ import {
   NodeSdkServerOptions,
   ServerObservabilityConfig,
 } from "@beep/observability/server";
+import { it } from "@beep/test-runner";
 import * as OtelTracer from "@effect/opentelemetry/OtelTracer";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { BatchSpanProcessor, InMemorySpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";

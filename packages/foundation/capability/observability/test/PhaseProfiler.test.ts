@@ -1,7 +1,8 @@
 import { PhaseProfile, profilePhase } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
 import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Equal, Exit, Layer, Logger, Metric, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -113,7 +114,8 @@ describe("PhaseProfiler", () => {
     })
   );
 
-  it.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
+  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
+  loggerSubjectIt.layer(capturedAnnotationsLayer(), { timeout: "10 seconds" })(
     "tracks interruption and emits safe Cause annotations",
     (it) =>
       it.effect(

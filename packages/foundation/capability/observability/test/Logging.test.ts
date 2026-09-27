@@ -1,6 +1,7 @@
 import { layerMinimumLogLevel, PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, Logger } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -68,7 +69,8 @@ describe("Logging", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");
   });
 
-  it.layer(capturedLevelsLayer("Info"), { timeout: "10 seconds" })(
+  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
+  loggerSubjectIt.layer(capturedLevelsLayer("Info"), { timeout: "10 seconds" })(
     "filters logs through the independently composable minimum-level layer",
     (it) =>
       it.effect(
@@ -85,14 +87,16 @@ describe("Logging", () => {
       )
   );
 
-  it.layer(capturedLevelsLayer("None"), { timeout: "10 seconds" })("filters every log at the None level", (it) =>
-    it.effect(
-      "captures no records",
-      Effect.fnUntraced(function* () {
-        const levels = yield* CapturedLevels;
-        yield* Effect.logError("hidden");
-        expect(levels).toStrictEqual([]);
-      })
-    )
+  loggerSubjectIt.layer(capturedLevelsLayer("None"), { timeout: "10 seconds" })(
+    "filters every log at the None level",
+    (it) =>
+      it.effect(
+        "captures no records",
+        Effect.fnUntraced(function* () {
+          const levels = yield* CapturedLevels;
+          yield* Effect.logError("hidden");
+          expect(levels).toStrictEqual([]);
+        })
+      )
   );
 });

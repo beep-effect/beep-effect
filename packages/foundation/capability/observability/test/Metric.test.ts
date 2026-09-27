@@ -6,8 +6,9 @@ import {
   TrackDurationOptions,
   trackDuration,
 } from "@beep/observability";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Exit, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

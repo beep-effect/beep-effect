@@ -1,5 +1,6 @@
 import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
 import * as DevToolsSchema from "effect/devtools/DevToolsSchema";

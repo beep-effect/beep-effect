@@ -1,5 +1,6 @@
 import { makeInternalServerError, makeNotFoundError, makeTooManyRequestsError } from "@beep/observability";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { ErrorReporter } from "effect";
 
 describe("HttpError", () => {

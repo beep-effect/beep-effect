@@ -1,6 +1,7 @@
 import { layerLocalLgtmServer, ServerObservabilityConfig, sanitizePrometheusMetrics } from "@beep/observability/server";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Layer } from "effect";
 
 describe("ServerUtilities", () => {

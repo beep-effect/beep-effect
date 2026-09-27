@@ -2507,3 +2507,15 @@ Separately, refreshing the goal PR set reached the GitHub GraphQL rate limit.
 Required hosted readiness remains unverified while quota is unavailable; local
 work continues. Sharing a bounded PR-state read across active monitors would
 reduce redundant quota use without relaxing any merge gate.
+
+## 2026-09-26: Runner lifecycle logs enter logger-subject captures
+
+The observability trace-on pilot failed four exact logger assertions because
+runner start events reached the subject arrays (three instead of two records,
+two instead of one, and an extra Info level). Moving the subject layers inside
+the body passed both trace modes but violated strictEffectProvide. The five
+logger-subject cases therefore retain native harness layer ownership and hook
+budgets as explicit instrumentation exceptions; ordinary cases adopt the runner.
+No capture was filtered/reset, assertion weakened or compiler rule suppressed.
+A separately approved runner facility for isolated logger subjects would remove
+this adoption constraint without changing the tested logging behavior.
