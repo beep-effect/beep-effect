@@ -36,21 +36,15 @@ describe("architecture lab proof app", () => {
     );
   });
 
-  it.effect("round-trips the proof result schema with schema-derived arbitraries", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(ArchitectureLabProofResult),
-        (value) =>
-          Effect.gen(function* () {
-            const encoded = yield* encodeArchitectureLabProofResult(value);
-            const decoded = yield* decodeArchitectureLabProofResult(encoded);
-            expect(Equal.equals(decoded, value)).toBe(true);
-
-            return true;
-          }),
-        fcRuns(20)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+  it.effect.prop(
+    "round-trips the proof result schema with schema-derived arbitraries",
+    { proofResult: Arbitrary.schema(ArchitectureLabProofResult) },
+    ({ proofResult }) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeArchitectureLabProofResult(proofResult);
+        const decoded = yield* decodeArchitectureLabProofResult(encoded);
+        expect(Equal.equals(decoded, proofResult)).toBe(true);
+      }),
+    { arbitrary: fcRuns(20) }
   );
 });

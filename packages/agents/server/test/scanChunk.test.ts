@@ -1,6 +1,7 @@
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 /**
  * Property test: the incremental block extractor must produce exactly the
@@ -10,8 +11,10 @@ import * as S from "effect/Schema";
 
 import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, test } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import type { ScanState } from "@beep/agents-server/AssistantTurn";
+
+const json = S.fromJsonString(S.Unknown);
 
 const scanAll = (text: string, cuts: ReadonlyArray<number>): Array<string> => {
   const out: Array<string> = [];
@@ -41,40 +44,45 @@ const block = Arbitrary.all({
 });
 
 describe("scanChunk", () => {
-  test("any envelope x any chunking yields exactly the elements", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 5 }))).pipe(
-              Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(block, count)))
+  it.effect.prop(
+    "any envelope x any chunking yields exactly the elements",
+    {
+      blocks: Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 5 }))).pipe(
+        Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(block, count)))
+      ),
+      rawCuts: Arbitrary.schema(
+        S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 2000 }))).check(S.isMaxLength(30))
+      ),
+    },
+    ({ blocks, rawCuts }) =>
+      Effect.gen(function* () {
+        const envelope = yield* S.encodeEffect(json)({ blocks });
+        const cuts = [...rawCuts].sort((a, b) => a - b);
+        const slices = scanAll(envelope, cuts);
+        expect(slices.length).toBe(blocks.length);
+        yield* Effect.forEach(
+          slices,
+          (slice, index) =>
+            S.decodeEffect(json)(slice).pipe(
+              Effect.tap((value) =>
+                Effect.sync(() => {
+                  expect(value).toEqual(blocks[index]);
+                })
+              )
             ),
-            Arbitrary.schema(S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 2000 }))).check(S.isMaxLength(30))),
-          ]),
-          ([blocks, rawCuts]) => {
-            const envelope = JSON.stringify({ blocks });
-            const cuts = [...rawCuts].sort((a, b) => a - b);
-            const slices = scanAll(envelope, cuts);
-            expect(slices.length).toBe(blocks.length);
-            slices.forEach((slice, index) => {
-              expect(JSON.parse(slice)).toEqual(blocks[index]);
-            });
+          { concurrency: 1 }
+        );
+      }),
+    { arbitrary: fcRuns(200) }
+  );
 
-            return true;
-          },
-          fcRuns(200)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
-
-  test("single-character chunking", () => {
+  it("single-character chunking", () => {
     const blocks = [{ type: "code", code: 'if (a["}{"]) { return "\\"]}" }' }];
-    const envelope = JSON.stringify({ blocks });
+    const envelope = Result.getOrThrow(S.encodeResult(json)({ blocks }));
     const slices = scanAll(
       envelope,
       Array.from({ length: envelope.length }, (_, i) => i)
     );
-    expect(slices.map((s) => JSON.parse(s))).toEqual(blocks);
+    expect(slices.map((s) => Result.getOrThrow(S.decodeResult(json)(s)))).toEqual(blocks);
   });
 });
