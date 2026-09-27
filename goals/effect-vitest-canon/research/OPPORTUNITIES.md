@@ -3686,3 +3686,12 @@ assertions without a local schema-derived property, despite adjacent RDF
 property coverage and a passing package audit. A native source-derived timestamp
 round-trip property closes the gap. Run the root schema-first gate when adding
 codec regressions; package audit alone does not enforce this file-level policy.
+
+## Detector receipts must follow final formatting
+
+The ontology-use-cases scanner ran before the runner-import formatter settled.
+Formatting moved the retained NodeServices exception from line 19 to line 21;
+the root ratchet then reported one new finding despite the same reviewed native
+loader boundary. A final scan refreshed only that owned exception and preserved
+its history. Wait for formatting and dependency synchronization to finish before
+capturing detector identities for reconciliation.

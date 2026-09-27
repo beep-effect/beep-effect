@@ -5078,14 +5078,14 @@
     "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 4836,
-    "lines": 110
+    "bytes": 5072,
+    "lines": 116
   },
   {
     "file": "packages/ontology/use-cases/test/GraphLayout.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 2881,
+    "bytes": 2872,
     "lines": 66
   },
   {
@@ -5093,42 +5093,42 @@
     "package": "@beep/ontology-use-cases",
     "kind": "test",
     "bytes": 1813,
-    "lines": 54
+    "lines": 53
   },
   {
     "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 6708,
-    "lines": 178
+    "bytes": 7242,
+    "lines": 192
   },
   {
     "file": "packages/ontology/use-cases/test/Session.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 34904,
-    "lines": 924
+    "bytes": 34908,
+    "lines": 911
   },
   {
     "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 17413,
-    "lines": 435
+    "bytes": 16632,
+    "lines": 414
   },
   {
     "file": "packages/ontology/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 8935,
-    "lines": 212
+    "bytes": 9056,
+    "lines": 215
   },
   {
     "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
     "package": "@beep/ontology-use-cases",
     "kind": "test",
-    "bytes": 1294,
-    "lines": 34
+    "bytes": 1384,
+    "lines": 36
   },
   {
     "file": "packages/shared/domain/test/EntityKernel.test.ts",
