@@ -1,5 +1,6 @@
 import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
-import { describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { pipe, Result } from "effect";
 import * as S from "effect/Schema";

@@ -2365,6 +2365,7 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2373,6 +2374,7 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

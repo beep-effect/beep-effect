@@ -25,8 +25,9 @@ import {
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { PosInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
 import { QuoteNode as RuntimeQuoteNode } from "@lexical/rich-text";
