@@ -292,12 +292,14 @@ describe("TSConfig schema", () => {
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
     });
 
-    it("rejects prototype-polluting keys at the strict record boundary", () => {
-      const parsed = Effect.runSync(jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}'));
-      const result = decodeTSConfigExit(parsed);
-      expect(Exit.isFailure(result)).toBe(true);
-      expect(renderSchemaFailure(result)).toContain('["__proto__"]');
-    });
+    it.effect("rejects prototype-polluting keys at the strict record boundary", () =>
+      Effect.gen(function* () {
+        const parsed = yield* jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}');
+        const result = decodeTSConfigExit(parsed);
+        expect(Exit.isFailure(result)).toBe(true);
+        expect(renderSchemaFailure(result)).toContain('["__proto__"]');
+      })
+    );
 
     it("rejects duplicate uniqueItems arrays", () => {
       const exit = decodeTSConfigExit({

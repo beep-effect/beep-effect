@@ -1,18 +1,18 @@
+import { fileURLToPath } from "node:url";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { collectUniqueNpmDependencies } from "@beep/repo-utils/UniqueDeps";
 import { A } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, Layer, Order, Path } from "effect";
+import { Effect, Layer, Order } from "effect";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
-const pathApi = Effect.runSync(Effect.scoped(Layer.build(NodePath.layer).pipe(Effect.map(Context.get(Path.Path)))));
 
-const MOCK_ROOT = pathApi.resolve(__dirname, "fixtures/mock-monorepo");
+const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer)("UniqueDeps", (it) => {
+layer(TestLayer, { timeout: "10 seconds" })("UniqueDeps", (it) => {
   describe("collectUniqueNpmDependencies", () => {
     it.effect(
       "should collect all unique runtime npm dependencies",

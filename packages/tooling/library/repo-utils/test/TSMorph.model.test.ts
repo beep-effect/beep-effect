@@ -54,9 +54,9 @@ import {
   InternalTsMorphSourceFile,
 } from "@beep/repo-utils/TSMorph/TSMorph.model";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Layer, Option as O } from "effect";
+import { Effect, Exit, Option as O } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
@@ -92,11 +92,6 @@ const decodeProjectScopeIdParts = S.decodeUnknownEffect(ProjectScopeIdParts);
 const decodeLineNumber = S.decodeUnknownEffect(LineNumber);
 const decodeColumnNumber = S.decodeUnknownEffect(ColumnNumber);
 const decodeSearchLimit = S.decodeUnknownEffect(TsMorphSearchLimit);
-const platformLayer = Layer.mergeAll(NodeServices.layer);
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 const decodeSymbol = S.decodeUnknownEffect(Symbol);
 const decodeTsMorphProjectScopeRequest = S.decodeUnknownEffect(TsMorphProjectScopeRequest);
 const decodeTsMorphProjectScope = S.decodeUnknownEffect(TsMorphProjectScope);
@@ -298,12 +293,12 @@ describe("TSMorph model taxonomy", () => {
     );
   });
 
-  describe("effectful transformations", () => {
+  it.layer(NodeCrypto.layer, { timeout: "10 seconds" })("effectful transformations", (it) => {
     it.effect("derives content hashes from source text", () =>
       Effect.gen(function* () {
         const hash = yield* decodeContentHashFromSourceText("export const a = 1;\n");
         expect(hash).toMatch(/^[0-9a-f]{64}$/);
-      }).pipe(provideScopedLayer(platformLayer))
+      })
     );
   });
 

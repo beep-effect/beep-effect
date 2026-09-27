@@ -1,10 +1,9 @@
+import { fileURLToPath } from "node:url";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
-import { provideScopedLayer } from "@beep/test-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeServices } from "@effect/platform-node";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer } from "effect";
+import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -71,7 +70,7 @@ const ConcurrentOutputSpawnerLayer = Layer.effect(
         );
     });
   })
-).pipe(Layer.provide(NodeFileSystem.layer));
+);
 
 const EmptyOutputSpawnerLayer = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
@@ -87,40 +86,65 @@ const EmptyOutputSpawnerLayer = Layer.effect(
       return fs.writeFileString(targetPath, "").pipe(Effect.as(processHandle(Stream.empty, Stream.empty)));
     });
   })
-).pipe(Layer.provide(NodeFileSystem.layer));
+);
 
-const ConcurrentOutputTestLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, ConcurrentOutputSpawnerLayer);
-const EmptyOutputTestLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, EmptyOutputSpawnerLayer);
-const provideConcurrentOutputTestLayer = provideScopedLayer(ConcurrentOutputTestLayer);
-const provideEmptyOutputTestLayer = provideScopedLayer(EmptyOutputTestLayer);
+// Seed the renderer's module-relative root lookup in the same isolated volume
+// that the controlled spawner reads and writes.
+const MockFileSystemLayer = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const moduleDir = fileURLToPath(new URL("../../src/schemas", import.meta.url));
+    yield* fs.makeDirectory(moduleDir, { recursive: true });
+    yield* fs.writeFileString(`${moduleDir}/bun.lock`, "");
+  })
+).pipe(Layer.provideMerge(MemoryFileSystem.layer));
+const MockPlatformLayer = Layer.mergeAll(MockFileSystemLayer, Path.layer);
+const ConcurrentOutputTestLayer = ConcurrentOutputSpawnerLayer.pipe(Layer.provideMerge(MockPlatformLayer));
+const EmptyOutputTestLayer = EmptyOutputSpawnerLayer.pipe(Layer.provideMerge(MockPlatformLayer));
 
 describe("renderBiomeJson", () => {
-  it.live(
-    "formats JSON when the requested target is excluded by repository Biome rules",
-    Effect.fnUntraced(function* () {
-      const rendered = yield* renderBiomeJson("scratchpad/docgen.json", { name: "@beep/example" });
+  it.layer(NodeServices.layer, {
+    timeout: "10 seconds",
+    excludeTestServices: true,
+  })((it) => {
+    it.effect(
+      "formats JSON when the requested target is excluded by repository Biome rules",
+      Effect.fnUntraced(function* () {
+        const rendered = yield* renderBiomeJson("scratchpad/docgen.json", {
+          name: "@beep/example",
+        });
 
-      expect(rendered).toBe('{ "name": "@beep/example" }\n');
-    }, provideScopedLayer(NodeServices.layer))
-  );
+        expect(rendered).toBe('{ "name": "@beep/example" }\n');
+      })
+    );
+  });
 
-  it.live(
-    "drains high-volume stdout and stderr concurrently",
-    Effect.fnUntraced(function* () {
-      const rendered = yield* renderBiomeJson("package.json", { name: "@beep/example" }).pipe(
-        Effect.timeout(Duration.seconds(2))
-      );
+  it.layer(ConcurrentOutputTestLayer, {
+    timeout: "10 seconds",
+    excludeTestServices: true,
+  })((it) => {
+    it.effect(
+      "drains high-volume stdout and stderr concurrently",
+      Effect.fnUntraced(function* () {
+        const rendered = yield* renderBiomeJson("package.json", {
+          name: "@beep/example",
+        }).pipe(Effect.timeout(Duration.seconds(2)));
 
-      expect(rendered).toBe('{ "name": "@beep/example" }\n');
-    }, provideConcurrentOutputTestLayer)
-  );
+        expect(rendered).toBe('{ "name": "@beep/example" }\n');
+      })
+    );
+  });
 
-  it.live(
-    "fails closed when Biome leaves an empty rendered file",
-    Effect.fnUntraced(function* () {
-      const error = yield* renderBiomeJson("scratchpad/docgen.json", { name: "@beep/example" }).pipe(Effect.flip);
+  it.layer(EmptyOutputTestLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails closed when Biome leaves an empty rendered file",
+      Effect.fnUntraced(function* () {
+        const error = yield* renderBiomeJson("scratchpad/docgen.json", {
+          name: "@beep/example",
+        }).pipe(Effect.flip);
 
-      expect(error.message).toBe('Biome produced empty output for "scratchpad/docgen.json".');
-    }, provideEmptyOutputTestLayer)
-  );
+        expect(error.message).toBe('Biome produced empty output for "scratchpad/docgen.json".');
+      })
+    );
+  });
 });

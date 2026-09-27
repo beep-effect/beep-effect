@@ -1,20 +1,20 @@
+import { fileURLToPath } from "node:url";
 import { buildRepoDependencyIndex } from "@beep/repo-utils/DependencyIndex";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, HashMap, Layer, Path } from "effect";
+import { Effect, HashMap, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
-const pathApi = Effect.runSync(Effect.scoped(Layer.build(NodePath.layer).pipe(Effect.map(Context.get(Path.Path)))));
 
-const MOCK_ROOT = pathApi.resolve(__dirname, "fixtures/mock-monorepo");
+const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer)("DependencyIndex", (it) => {
+layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
   describe("buildRepoDependencyIndex", () => {
     it.effect(
       "should include root and all workspace packages",
@@ -99,8 +99,9 @@ layer(TestLayer)("DependencyIndex", (it) => {
     it.effect(
       "should fail with DomainError for invalid root package.json",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const rootPackageJsonPath = pathApi.join(tmpDir, "package.json");
 
         yield* fs.writeFileString(rootPackageJsonPath, "not valid json");
@@ -110,16 +111,15 @@ layer(TestLayer)("DependencyIndex", (it) => {
         );
 
         expect(result).toContain(`Failed to parse JSON at "${rootPackageJsonPath}"`);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
     it.effect(
       "should fail with DomainError for invalid child package.json",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageDir = pathApi.join(tmpDir, "packages", "pkg-a");
         const rootPackageJsonPath = pathApi.join(tmpDir, "package.json");
         const childPackageJsonPath = pathApi.join(packageDir, "package.json");
@@ -136,8 +136,6 @@ layer(TestLayer)("DependencyIndex", (it) => {
         );
 
         expect(result).toContain(`Failed to parse JSON at "${childPackageJsonPath}"`);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });

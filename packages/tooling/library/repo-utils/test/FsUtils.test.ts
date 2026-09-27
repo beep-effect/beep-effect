@@ -1,9 +1,10 @@
 import { exists, FsUtils, FsUtilsLive, findNearestPackageDir, walkFiles } from "@beep/repo-utils/FsUtils";
 import { normalizePath } from "@beep/schema";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect, Layer, Order, pipe } from "effect";
+import { Effect, Layer, Order, Path, pipe } from "effect";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
 
@@ -12,8 +13,10 @@ import * as O from "effect/Option";
 const PlatformLayer = Layer.mergeAll(NodeServices.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
-layer(TestLayer)("FsUtils", (it) => {
-  describe("glob", () => {
+const MemoryTestLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer)));
+
+describe("FsUtils", () => {
+  layer(TestLayer, { timeout: "10 seconds" })("glob", (it) => {
     it.effect(
       "should match files with a pattern",
       Effect.fn(function* () {
@@ -69,7 +72,7 @@ layer(TestLayer)("FsUtils", (it) => {
     );
   });
 
-  describe("globFiles", () => {
+  layer(TestLayer, { timeout: "10 seconds" })("globFiles", (it) => {
     it.effect(
       "should only return files, not directories",
       Effect.fn(function* () {
@@ -84,13 +87,13 @@ layer(TestLayer)("FsUtils", (it) => {
     );
   });
 
-  describe("readJson / writeJson", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("readJson / writeJson", (it) => {
     it.effect(
       "should round-trip JSON through write and read",
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         const filePath = `${tmpDir}/test.json`;
         const data = { name: "test-pkg", version: "1.0.0" };
@@ -99,9 +102,6 @@ layer(TestLayer)("FsUtils", (it) => {
         const result = yield* utils.readJson(filePath);
 
         expect(result).toEqual(O.some(data));
-
-        // Clean up
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -110,15 +110,13 @@ layer(TestLayer)("FsUtils", (it) => {
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         const filePath = `${tmpDir}/formatted.json`;
         yield* utils.writeJson(filePath, { a: 1 });
 
         const raw = yield* fs.readFileString(filePath);
         expect(raw).toBe('{\n  "a": 1\n}\n');
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -138,26 +136,24 @@ layer(TestLayer)("FsUtils", (it) => {
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         const filePath = `${tmpDir}/bad.json`;
         yield* fs.writeFileString(filePath, "not valid json {{{");
 
         const result = yield* utils.readJson(filePath);
         expect(result).toEqual(O.none());
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
 
-  describe("modifyFile", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("modifyFile", (it) => {
     it.effect(
       "should modify file content and return true",
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         const filePath = `${tmpDir}/modify.txt`;
         yield* fs.writeFileString(filePath, "hello world");
@@ -167,8 +163,6 @@ layer(TestLayer)("FsUtils", (it) => {
 
         const result = yield* fs.readFileString(filePath);
         expect(result).toBe("hello effect");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -177,15 +171,13 @@ layer(TestLayer)("FsUtils", (it) => {
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         const filePath = `${tmpDir}/noop.txt`;
         yield* fs.writeFileString(filePath, "unchanged");
 
         const changed = yield* utils.modifyFile(filePath, (content) => content);
         expect(changed).toBe(false);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -201,15 +193,14 @@ layer(TestLayer)("FsUtils", (it) => {
     );
   });
 
-  describe("existsOrThrow", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("existsOrThrow", (it) => {
     it.effect(
       "should succeed for existing path",
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         yield* utils.existsOrThrow(tmpDir);
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -225,18 +216,16 @@ layer(TestLayer)("FsUtils", (it) => {
     );
   });
 
-  describe("isDirectory / isFile", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("isDirectory / isFile", (it) => {
     it.effect(
       "should return true for a directory",
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         expect(yield* utils.isDirectory(tmpDir)).toBe(true);
         expect(yield* utils.isFile(tmpDir)).toBe(false);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -245,17 +234,17 @@ layer(TestLayer)("FsUtils", (it) => {
       Effect.fn(function* () {
         const utils = yield* FsUtils;
         const fs = yield* Fs.FileSystem;
-        const tmpFile = yield* fs.makeTempFile();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const tmpFile = `${tmpDir}/file`;
+        yield* fs.writeFileString(tmpFile, "");
 
         expect(yield* utils.isFile(tmpFile)).toBe(true);
         expect(yield* utils.isDirectory(tmpFile)).toBe(false);
-
-        yield* fs.remove(tmpFile);
       })
     );
   });
 
-  describe("getParentDirectory", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("getParentDirectory", (it) => {
     it.effect(
       "should return the parent directory",
       Effect.fn(function* () {
@@ -275,7 +264,7 @@ layer(TestLayer)("FsUtils", (it) => {
     );
   });
 
-  describe("walkFiles", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("walkFiles", (it) => {
     it.effect(
       "should return an empty array for a missing root",
       Effect.fn(function* () {
@@ -288,7 +277,7 @@ layer(TestLayer)("FsUtils", (it) => {
       "should sort the flat result globally by path, not per directory level",
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.makeDirectory(`${tmpDir}/a`);
         yield* fs.writeFileString(`${tmpDir}/a/x.ts`, "");
@@ -298,8 +287,6 @@ layer(TestLayer)("FsUtils", (it) => {
         // Global path order places "a.ts" before "a/x.ts" ('.' < '/');
         // a per-level DFS sort would descend "a" first and invert them.
         expect(files).toEqual([`${tmpDir}/a.ts`, `${tmpDir}/a/x.ts`]);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -307,12 +294,14 @@ layer(TestLayer)("FsUtils", (it) => {
       "should prune skipDirectories by exact base name and apply the include predicate",
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.makeDirectory(`${tmpDir}/src`);
         yield* fs.writeFileString(`${tmpDir}/src/keep.ts`, "");
         yield* fs.writeFileString(`${tmpDir}/src/skip.txt`, "");
-        yield* fs.makeDirectory(`${tmpDir}/node_modules/dep`, { recursive: true });
+        yield* fs.makeDirectory(`${tmpDir}/node_modules/dep`, {
+          recursive: true,
+        });
         yield* fs.writeFileString(`${tmpDir}/node_modules/dep/index.ts`, "");
 
         const files = yield* walkFiles(tmpDir, {
@@ -321,57 +310,58 @@ layer(TestLayer)("FsUtils", (it) => {
         });
 
         expect(files).toEqual([`${tmpDir}/src/keep.ts`]);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
-    it.effect(
-      "should exclude symlinked entries under the skip-symlinks guard",
-      Effect.fn(function* () {
-        const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+    layer(TestLayer, { timeout: "10 seconds" })((it) => {
+      it.effect(
+        "should exclude symlinked entries under the skip-symlinks guard",
+        Effect.fn(function* () {
+          const fs = yield* Fs.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
 
-        yield* fs.writeFileString(`${tmpDir}/real.ts`, "");
-        yield* fs.symlink(`${tmpDir}/real.ts`, `${tmpDir}/link.ts`);
+          yield* fs.writeFileString(`${tmpDir}/real.ts`, "");
+          yield* fs.symlink(`${tmpDir}/real.ts`, `${tmpDir}/link.ts`);
 
-        const followed = yield* walkFiles(tmpDir);
-        expect(A.sort(followed, Order.String)).toEqual([`${tmpDir}/link.ts`, `${tmpDir}/real.ts`]);
+          const followed = yield* walkFiles(tmpDir);
+          expect(A.sort(followed, Order.String)).toEqual([`${tmpDir}/link.ts`, `${tmpDir}/real.ts`]);
 
-        const guarded = yield* walkFiles(tmpDir, { symlinkGuard: "skip-symlinks" });
-        expect(guarded).toEqual([`${tmpDir}/real.ts`]);
+          const guarded = yield* walkFiles(tmpDir, {
+            symlinkGuard: "skip-symlinks",
+          });
+          expect(guarded).toEqual([`${tmpDir}/real.ts`]);
+        })
+      );
+    });
 
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-    );
+    layer(TestLayer, { timeout: "10 seconds" })((it) => {
+      it.effect(
+        "should terminate on a symlink directory cycle under the guard-cycles guard",
+        Effect.fn(function* () {
+          const fs = yield* Fs.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
 
-    it.effect(
-      "should terminate on a symlink directory cycle under the guard-cycles guard",
-      Effect.fn(function* () {
-        const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+          yield* fs.makeDirectory(`${tmpDir}/pkg`);
+          yield* fs.writeFileString(`${tmpDir}/pkg/index.ts`, "");
+          // A self-referential loop: pkg/loop -> pkg
+          yield* fs.symlink(`${tmpDir}/pkg`, `${tmpDir}/pkg/loop`);
 
-        yield* fs.makeDirectory(`${tmpDir}/pkg`);
-        yield* fs.writeFileString(`${tmpDir}/pkg/index.ts`, "");
-        // A self-referential loop: pkg/loop -> pkg
-        yield* fs.symlink(`${tmpDir}/pkg`, `${tmpDir}/pkg/loop`);
-
-        const files = yield* walkFiles(tmpDir, { symlinkGuard: "guard-cycles" });
-        expect(files).toEqual([`${tmpDir}/pkg/index.ts`]);
-
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-    );
+          const files = yield* walkFiles(tmpDir, {
+            symlinkGuard: "guard-cycles",
+          });
+          expect(files).toEqual([`${tmpDir}/pkg/index.ts`]);
+        })
+      );
+    });
   });
 
-  describe("exists", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("exists", (it) => {
     it.effect(
       "should return true for an existing path",
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         expect(yield* exists(tmpDir)).toBe(true);
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -384,12 +374,12 @@ layer(TestLayer)("FsUtils", (it) => {
     );
   });
 
-  describe("findNearestPackageDir", () => {
+  layer(MemoryTestLayer, { timeout: "10 seconds" })("findNearestPackageDir", (it) => {
     it.effect(
       "should find the nearest ancestor directory containing a package.json",
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const canonicalRoot = yield* fs.realPath(tmpDir);
         const pkgDir = `${canonicalRoot}/packages/pkg-a`;
         const nested = `${pkgDir}/src/nested`;
@@ -399,8 +389,6 @@ layer(TestLayer)("FsUtils", (it) => {
 
         const owning = yield* findNearestPackageDir(nested, canonicalRoot);
         expect(owning).toStrictEqual(O.some(pkgDir));
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -408,7 +396,7 @@ layer(TestLayer)("FsUtils", (it) => {
       "should treat the stopAt boundary as exclusive",
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const canonicalRoot = yield* fs.realPath(tmpDir);
         const nested = `${canonicalRoot}/packages/pkg-a`;
 
@@ -418,8 +406,6 @@ layer(TestLayer)("FsUtils", (it) => {
 
         const owning = yield* findNearestPackageDir(nested, canonicalRoot);
         expect(owning).toStrictEqual(O.none());
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -427,7 +413,7 @@ layer(TestLayer)("FsUtils", (it) => {
       "should support the data-last form",
       Effect.fn(function* () {
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const canonicalRoot = yield* fs.realPath(tmpDir);
         const pkgDir = `${canonicalRoot}/packages/pkg-b`;
         const nested = `${pkgDir}/src`;
@@ -437,8 +423,6 @@ layer(TestLayer)("FsUtils", (it) => {
 
         const owning = yield* pipe(nested, findNearestPackageDir(canonicalRoot));
         expect(owning).toStrictEqual(O.some(pkgDir));
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });

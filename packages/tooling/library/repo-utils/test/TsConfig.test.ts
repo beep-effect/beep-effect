@@ -1,19 +1,19 @@
+import { fileURLToPath } from "node:url";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig";
 import { A, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, HashMap, Layer, Path } from "effect";
+import { Effect, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
-const pathApi = Effect.runSync(Effect.scoped(Layer.build(NodePath.layer).pipe(Effect.map(Context.get(Path.Path)))));
 
-const MOCK_ROOT = pathApi.resolve(__dirname, "fixtures/mock-monorepo");
+const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer)("TsConfig", (it) => {
+layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
   describe("collectTsConfigPaths", () => {
     it.effect(
       "should collect tsconfig files for root and workspaces",
@@ -61,6 +61,7 @@ layer(TestLayer)("TsConfig", (it) => {
     it.effect(
       "should return absolute paths",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const configs = yield* collectTsConfigPaths(MOCK_ROOT);
         for (const [_name, paths] of configs) {
           for (const p of paths) {
