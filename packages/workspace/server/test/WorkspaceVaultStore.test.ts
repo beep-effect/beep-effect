@@ -5,9 +5,9 @@ import { Workspace } from "@beep/workspace-use-cases/server";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeWorkspaceSetWorkspaceVaultInput = S.decodeEffect(Workspace.SetWorkspaceVaultInput);
@@ -57,7 +57,7 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
         const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-workspace-vault-" });
 
         const before = yield* store.getVaultConfig(workspaceId);
-        expect(O.isNone(before.vaultRootPath)).toBe(true);
+        assertNone(before.vaultRootPath);
 
         const input = yield* decodeWorkspaceSetWorkspaceVaultInput({
           vaultRootPath,
@@ -66,7 +66,7 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
         const configured = yield* store.setVaultRoot(input);
         const after = yield* store.getVaultConfig(workspaceId);
 
-        expect(O.getOrUndefined(configured.vaultRootPath)).toBe(vaultRootPath);
+        assertSome(configured.vaultRootPath, vaultRootPath);
         expect(after).toStrictEqual(configured);
       })
     );
@@ -90,12 +90,12 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
         const result = yield* Effect.result(store.setVaultRoot(input));
         const after = yield* store.getVaultConfig(workspaceId);
 
-        expect(Result.isFailure(result)).toBe(true);
+        pipe(result, Result.isFailure, assertTrue);
         if (Result.isFailure(result)) {
           expect(result.failure._tag).toBe("WorkspaceVaultRootInvalid");
           expect(result.failure.reason).toContain("does not exist");
         }
-        expect(O.isNone(after.vaultRootPath)).toBe(true);
+        assertNone(after.vaultRootPath);
       })
     );
   });

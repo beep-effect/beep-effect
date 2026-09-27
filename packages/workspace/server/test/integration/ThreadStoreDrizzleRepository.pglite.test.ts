@@ -116,6 +116,7 @@ if (!shouldRunPgliteIntegration) {
             expect(firstItem.role).toBe("user");
           }
           const secondItem = timeline.turns[1]?.items[0];
+          expect(secondItem?.kind).toBe("message");
           if (secondItem?.kind === "message") {
             expect(secondItem.role).toBe("assistant");
           }

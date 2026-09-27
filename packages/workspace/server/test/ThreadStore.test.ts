@@ -8,7 +8,8 @@ import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test";
 import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Clock, DateTime, Effect, Exit, HashMap, Layer } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Clock, DateTime, Effect, Exit, HashMap, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -262,7 +263,7 @@ describe("ThreadStore in-memory", () => {
         Effect.scoped(Layer.build(ThreadStoreInMemoryLayer.pipe(Layer.provide(FailingInitializationCryptoLayer))))
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         expect(Cause.hasFails(exit.cause)).toBe(true);
         expect(Cause.hasDies(exit.cause)).toBe(false);
