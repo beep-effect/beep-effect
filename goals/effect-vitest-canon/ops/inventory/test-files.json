@@ -1585,43 +1585,43 @@
     "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 20033,
-    "lines": 576
+    "bytes": 21620,
+    "lines": 617
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 25540,
-    "lines": 800
+    "bytes": 33191,
+    "lines": 940
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 982,
-    "lines": 19
+    "bytes": 1018,
+    "lines": 20
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.extract-args.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 2451,
-    "lines": 76
+    "bytes": 2540,
+    "lines": 79
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 14527,
-    "lines": 456
+    "bytes": 16478,
+    "lines": 471
   },
   {
     "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 11825,
-    "lines": 351
+    "bytes": 12530,
+    "lines": 363
   },
   {
     "file": "packages/drivers/firecrawl/test/Firecrawl.equivalence.test.ts",
