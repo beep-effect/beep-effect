@@ -2436,3 +2436,11 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: timing hash keys trigger secret scanning heuristics
+
+The observability baseline commit was rejected because file-path-keyed SHA-256
+receipts containing HttpApiTelemetry matched the generic API-key heuristic.
+The flagged values were verified source hashes, not credentials. Store the same
+path/hash facts as explicit `file` and `sha256` records, as in earlier waves,
+so public proof remains complete without weakening the scanner or adding ignores.

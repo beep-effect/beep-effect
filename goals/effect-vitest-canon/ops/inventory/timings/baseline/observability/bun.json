@@ -1,0 +1,1070 @@
+{
+  "numTotalTestSuites": 38,
+  "numPassedTestSuites": 38,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 80,
+  "numPassedTests": 80,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790470863209,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Boundary"],
+          "fullName": "Boundary keeps package exports explicit and removes root node ambient types",
+          "status": "passed",
+          "title": "keeps package exports explicit and removes root node ambient types",
+          "duration": 3.4424229999999625,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Boundary"],
+          "fullName": "Boundary keeps the root and web entrypoints free from server-only imports",
+          "status": "passed",
+          "title": "keeps the root and web entrypoints free from server-only imports",
+          "duration": 0.4302020000000084,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Boundary"],
+          "fullName": "Boundary typechecks browser-safe, server-safe, and experimental-server fixtures",
+          "status": "passed",
+          "title": "typechecks browser-safe, server-safe, and experimental-server fixtures",
+          "duration": 1660.014279,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865364,
+      "endTime": 1790470867028.0142,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/Boundary.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["CauseDiagnostics"],
+          "fullName": "CauseDiagnostics classifies failure, defect, and mixed causes",
+          "status": "passed",
+          "title": "classifies failure, defect, and mixed causes",
+          "duration": 3.195622000000185,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseDiagnostics"],
+          "fullName": "CauseDiagnostics creates stable fingerprints and summaries",
+          "status": "passed",
+          "title": "creates stable fingerprints and summaries",
+          "duration": 1.9310350000000653,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseDiagnostics"],
+          "fullName": "CauseDiagnostics summarizes success and failure exits",
+          "status": "passed",
+          "title": "summarizes success and failure exits",
+          "duration": 0.6209359999998014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865365,
+      "endTime": 1790470865370.6208,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction redacts secret-shaped tokens and home paths",
+          "status": "passed",
+          "title": "redacts secret-shaped tokens and home paths",
+          "duration": 1.8337249999999585,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction caps length with redactString",
+          "status": "passed",
+          "title": "caps length with redactString",
+          "duration": 0.346983999999793,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction redacts an unknown error into a transport-safe summary on the diagnostic channel",
+          "status": "passed",
+          "title": "redacts an unknown error into a transport-safe summary on the diagnostic channel",
+          "duration": 5.614508000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction sanitizes the message-derived fingerprint so secrets never leak through correlation ids",
+          "status": "passed",
+          "title": "sanitizes the message-derived fingerprint so secrets never leak through correlation ids",
+          "duration": 2.0396420000001854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction collapses structurally identical secrets to the same redacted fingerprint",
+          "status": "passed",
+          "title": "collapses structurally identical secrets to the same redacted fingerprint",
+          "duration": 1.7618449999999939,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction drops all internal detail on the client channel",
+          "status": "passed",
+          "title": "drops all internal detail on the client channel",
+          "duration": 0.6142359999998916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction normalizes a bare unknown value into a failure cause",
+          "status": "passed",
+          "title": "normalizes a bare unknown value into a failure cause",
+          "duration": 0.5051280000002407,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction supports data-last redaction with schema-backed options",
+          "status": "passed",
+          "title": "supports data-last redaction with schema-backed options",
+          "duration": 0.5069009999997434,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction exposes a traced Effect-friendly variant",
+          "status": "passed",
+          "title": "exposes a traced Effect-friendly variant",
+          "duration": 6.223797000000104,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "CauseRedaction",
+            "logs only bounded redacted Cause diagnostics"
+          ],
+          "fullName": "CauseRedaction logs only bounded redacted Cause diagnostics captures both log records",
+          "status": "passed",
+          "title": "captures both log records",
+          "duration": 4.916563000000224,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "CauseRedaction",
+            "logs through the curried data-last form with the same redaction"
+          ],
+          "fullName": "CauseRedaction logs through the curried data-last form with the same redaction captures the curried log record",
+          "status": "passed",
+          "title": "captures the curried log record",
+          "duration": 1.0473139999999148,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "CauseRedaction",
+            "observes a boundary failure without changing its Cause"
+          ],
+          "fullName": "CauseRedaction observes a boundary failure without changing its Cause preserves the original cause",
+          "status": "passed",
+          "title": "preserves the original cause",
+          "duration": 1.1056730000000243,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction respects a custom message limit via options",
+          "status": "passed",
+          "title": "respects a custom message limit via options",
+          "duration": 0.5768780000003062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction round-trips schema-derived redaction options",
+          "status": "passed",
+          "title": "round-trips schema-derived redaction options",
+          "duration": 7.446781000000101,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["CauseRedaction"],
+          "fullName": "CauseRedaction honors generated redaction bounds and channel rules",
+          "status": "passed",
+          "title": "honors generated redaction bounds and channel rules",
+          "duration": 28.495824000000084,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865406,
+      "endTime": 1790470865472.4958,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/CauseRedaction.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DevTools"],
+          "fullName": "DevTools models span filters and layer options as executable schemas",
+          "status": "passed",
+          "title": "models span filters and layer options as executable schemas",
+          "duration": 1.5080830000001697,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865460,
+      "endTime": 1790470865461.508,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/DevTools.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DevToolsRelay"],
+          "fullName": "DevToolsRelay ingests spans, events, and metrics snapshots",
+          "status": "passed",
+          "title": "ingests spans, events, and metrics snapshots",
+          "duration": 3.8742879999999786,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865324,
+      "endTime": 1790470865327.8743,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["ErrorReporting"],
+          "fullName": "ErrorReporting keeps reporter option defaults on the schema",
+          "status": "passed",
+          "title": "keeps reporter option defaults on the schema",
+          "duration": 1.4773960000002262,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ErrorReporting"],
+          "fullName": "ErrorReporting round-trips schema-derived reporter options",
+          "status": "passed",
+          "title": "round-trips schema-derived reporter options",
+          "duration": 7.160521000000244,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ErrorReporting"],
+          "fullName": "ErrorReporting round-trips schema-derived reporter layer options",
+          "status": "passed",
+          "title": "round-trips schema-derived reporter layer options",
+          "duration": 1.829928000000109,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865476,
+      "endTime": 1790470865486.8298,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/ErrorReporting.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HttpApiTelemetry"],
+          "fullName": "HttpApiTelemetry preserves the schema package's canonical HTTP status export",
+          "status": "passed",
+          "title": "preserves the schema package's canonical HTTP status export",
+          "duration": 1.111851999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HttpApiTelemetry"],
+          "fullName": "HttpApiTelemetry reads explicit HttpApiSchema statuses",
+          "status": "passed",
+          "title": "reads explicit HttpApiSchema statuses",
+          "duration": 1.118804000000182,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HttpApiTelemetry"],
+          "fullName": "HttpApiTelemetry round-trips schema-derived HTTP status codes",
+          "status": "passed",
+          "title": "round-trips schema-derived HTTP status codes",
+          "duration": 4.242334999999912,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HttpApiTelemetry"],
+          "fullName": "HttpApiTelemetry tracks HTTP API request metrics",
+          "status": "passed",
+          "title": "tracks HTTP API request metrics",
+          "duration": 2.0959600000001046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HttpApiTelemetry"],
+          "fullName": "HttpApiTelemetry observes encoded HttpServerResponse values and schema-derived failure statuses",
+          "status": "passed",
+          "title": "observes encoded HttpServerResponse values and schema-derived failure statuses",
+          "duration": 2.572312000000238,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865471,
+      "endTime": 1790470865482.5723,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HttpError"],
+          "fullName": "HttpError builds a not-found error with reporter metadata",
+          "status": "passed",
+          "title": "builds a not-found error with reporter metadata",
+          "duration": 2.3853039999999055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HttpError"],
+          "fullName": "HttpError builds a rate-limit error with warn severity",
+          "status": "passed",
+          "title": "builds a rate-limit error with warn severity",
+          "duration": 0.374456999999893,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HttpError"],
+          "fullName": "HttpError builds a server error with error severity",
+          "status": "passed",
+          "title": "builds a server error with error severity",
+          "duration": 0.27028699999982564,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865364,
+      "endTime": 1790470865367.2703,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/HttpError.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Logging"],
+          "fullName": "Logging keeps pretty logger constructor defaults on the schema",
+          "status": "passed",
+          "title": "keeps pretty logger constructor defaults on the schema",
+          "duration": 1.8837719999996807,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Logging"],
+          "fullName": "Logging round-trips schema-derived pretty logger configs",
+          "status": "passed",
+          "title": "round-trips schema-derived pretty logger configs",
+          "duration": 6.606987000000117,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Logging"],
+          "fullName": "Logging round-trips schema-derived banner options",
+          "status": "passed",
+          "title": "round-trips schema-derived banner options",
+          "duration": 3.45012399999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Logging"],
+          "fullName": "Logging renders with default pretty config when options omit it",
+          "status": "passed",
+          "title": "renders with default pretty config when options omit it",
+          "duration": 0.2159630000001016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Logging",
+            "filters logs through the independently composable minimum-level layer"
+          ],
+          "fullName": "Logging filters logs through the independently composable minimum-level layer keeps Info and above",
+          "status": "passed",
+          "title": "keeps Info and above",
+          "duration": 0.738358000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Logging", "filters every log at the None level"],
+          "fullName": "Logging filters every log at the None level captures no records",
+          "status": "passed",
+          "title": "captures no records",
+          "duration": 0.24554799999987154,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865405,
+      "endTime": 1790470865421.2456,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/Logging.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric normalizes status codes to their class labels",
+          "status": "passed",
+          "title": "normalizes status codes to their class labels",
+          "duration": 1.3254519999995864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric measures elapsed milliseconds without changing the value",
+          "status": "passed",
+          "title": "measures elapsed milliseconds without changing the value",
+          "duration": 1.5863039999999273,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric round-trips schema-derived track duration options",
+          "status": "passed",
+          "title": "round-trips schema-derived track duration options",
+          "duration": 11.986043000000336,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric tracks workflow counters on success",
+          "status": "passed",
+          "title": "tracks workflow counters on success",
+          "duration": 1.9804810000000543,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric tracks workflow counters on interruption",
+          "status": "passed",
+          "title": "tracks workflow counters on interruption",
+          "duration": 1.0080330000000686,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric tracks duration while preserving a failed effect",
+          "status": "passed",
+          "title": "tracks duration while preserving a failed effect",
+          "duration": 1.416121000000203,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric tracks duration while preserving interruption",
+          "status": "passed",
+          "title": "tracks duration while preserving interruption",
+          "duration": 0.5601030000002538,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Metric"],
+          "fullName": "Metric tracks request counters with success labels",
+          "status": "passed",
+          "title": "tracks request counters with success labels",
+          "duration": 1.0074620000000323,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865404,
+      "endTime": 1790470865425.0076,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/Metric.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["NodeSdk"],
+          "fullName": "NodeSdk resolves local server option defaults through the schema",
+          "status": "passed",
+          "title": "resolves local server option defaults through the schema",
+          "duration": 2.2477920000001177,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NodeSdk"],
+          "fullName": "NodeSdk provides OpenTelemetry spans when processors are configured",
+          "status": "passed",
+          "title": "provides OpenTelemetry spans when processors are configured",
+          "duration": 11.802891999999702,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NodeSdk"],
+          "fullName": "NodeSdk builds trace-only config for Phoenix smoke exports",
+          "status": "passed",
+          "title": "builds trace-only config for Phoenix smoke exports",
+          "duration": 0.3892100000002756,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NodeSdk"],
+          "fullName": "NodeSdk builds trace-only OTLP span export config without metrics or logs",
+          "status": "passed",
+          "title": "builds trace-only OTLP span export config without metrics or logs",
+          "duration": 1.3525130000002719,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["NodeSdk"],
+          "fullName": "NodeSdk provides spans from the trace-only layer",
+          "status": "passed",
+          "title": "provides spans from the trace-only layer",
+          "duration": 2.76466900000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865461,
+      "endTime": 1790470865479.7646,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/NodeSdk.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Observed"],
+          "fullName": "Observed round-trips a failed Cause through the observed schema",
+          "status": "passed",
+          "title": "round-trips a failed Cause through the observed schema",
+          "duration": 6.636681999999837,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Observed"],
+          "fullName": "Observed round-trips a failed Exit through the observed schema",
+          "status": "passed",
+          "title": "round-trips a failed Exit through the observed schema",
+          "duration": 1.4566939999999704,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Observed"],
+          "fullName": "Observed schema-derived arbitrary values are members of ObservedCause",
+          "status": "passed",
+          "title": "schema-derived arbitrary values are members of ObservedCause",
+          "duration": 22.887335999999777,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Observed"],
+          "fullName": "Observed schema-derived arbitrary values are members of ObservedExit",
+          "status": "passed",
+          "title": "schema-derived arbitrary values are members of ObservedExit",
+          "duration": 6.546303999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865409,
+      "endTime": 1790470865446.5464,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/Observed.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["OtlpPacketLab"],
+          "fullName": "OtlpPacketLab captures JSON OTLP packets",
+          "status": "passed",
+          "title": "captures JSON OTLP packets",
+          "duration": 4.614368000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OtlpPacketLab"],
+          "fullName": "OtlpPacketLab captures protobuf OTLP packets",
+          "status": "passed",
+          "title": "captures protobuf OTLP packets",
+          "duration": 0.7901780000001963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865324,
+      "endTime": 1790470865328.7903,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["PhaseProfiler"],
+          "fullName": "PhaseProfiler round-trips schema-derived phase profiles",
+          "status": "passed",
+          "title": "round-trips schema-derived phase profiles",
+          "duration": 12.278663999999935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PhaseProfiler"],
+          "fullName": "PhaseProfiler rejects empty phase labels",
+          "status": "passed",
+          "title": "rejects empty phase labels",
+          "duration": 0.9198670000000675,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PhaseProfiler"],
+          "fullName": "PhaseProfiler tracks phase metrics on success",
+          "status": "passed",
+          "title": "tracks phase metrics on success",
+          "duration": 6.608269000000291,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PhaseProfiler"],
+          "fullName": "PhaseProfiler tracks failures with outcome attributes",
+          "status": "passed",
+          "title": "tracks failures with outcome attributes",
+          "duration": 4.663032999999814,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "PhaseProfiler",
+            "tracks interruption and emits safe Cause annotations"
+          ],
+          "fullName": "PhaseProfiler tracks interruption and emits safe Cause annotations captures the interruption annotation",
+          "status": "passed",
+          "title": "captures the interruption annotation",
+          "duration": 2.0394109999997454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865418,
+      "endTime": 1790470865445.0393,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["ServerUtilities"],
+          "fullName": "ServerUtilities builds the local LGTM layer when optional layer options are omitted",
+          "status": "passed",
+          "title": "builds the local LGTM layer when optional layer options are omitted",
+          "duration": 1.521002999999837,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ServerUtilities"],
+          "fullName": "ServerUtilities removes duplicate Infinity histogram buckets from Prometheus output",
+          "status": "passed",
+          "title": "removes duplicate Infinity histogram buckets from Prometheus output",
+          "duration": 0.3257819999998901,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865464,
+      "endTime": 1790470865465.521,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/ServerUtilities.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares RedactedCauseError by its structured redacted cause",
+          "status": "passed",
+          "title": "compares RedactedCauseError by its structured redacted cause",
+          "duration": 2.045571000000109,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares ClientHttpError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares ClientHttpError by stable fields and ignores cause",
+          "duration": 0.6889419999997699,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares ServerHttpError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares ServerHttpError by stable fields and ignores cause",
+          "duration": 0.3724440000000868,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares BadRequestError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares BadRequestError by stable fields and ignores cause",
+          "duration": 0.28312599999981103,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares UnauthorizedError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares UnauthorizedError by stable fields and ignores cause",
+          "duration": 0.22067999999990207,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares ForbiddenError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares ForbiddenError by stable fields and ignores cause",
+          "duration": 0.25969999999961146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares NotFoundError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares NotFoundError by stable fields and ignores cause",
+          "duration": 0.21033400000032998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares ConflictError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares ConflictError by stable fields and ignores cause",
+          "duration": 0.18266099999982544,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares UnprocessableEntityError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares UnprocessableEntityError by stable fields and ignores cause",
+          "duration": 0.27900899999985995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares TooManyRequestsError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares TooManyRequestsError by stable fields and ignores cause",
+          "duration": 0.34129600000005667,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares InternalServerErrorError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares InternalServerErrorError by stable fields and ignores cause",
+          "duration": 0.21510100000023158,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares BadGatewayError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares BadGatewayError by stable fields and ignores cause",
+          "duration": 0.16961200000014287,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares ServiceUnavailableError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares ServiceUnavailableError by stable fields and ignores cause",
+          "duration": 0.23060499999974127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["observability declared-field equivalence"],
+          "fullName": "observability declared-field equivalence compares GatewayTimeoutError by stable fields and ignores cause",
+          "status": "passed",
+          "title": "compares GatewayTimeoutError by stable fields and ignores cause",
+          "duration": 0.18543599999975413,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790470865364,
+      "endTime": 1790470865370.1855,
+      "status": "passed",
+      "message": "",
+      "name": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts"
+    }
+  ]
+}

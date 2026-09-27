@@ -1,0 +1,417 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=[private evidence directory]/observability-observability-before-node.json"
+  ],
+  "phase": "before",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "f6d5bb03d16693dd569b81cc461111fce5ca96d869668dbda588100ae9076da9"
+    },
+    {
+      "file": "packages/foundation/capability/observability/package.json",
+      "sha256": "c15e8c60f0ea8368dc06ed3619adb491908f7f8f649f67ddc143116058b1b461"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+      "sha256": "ac127be79376f199dc0a695733f06e7c78b35ceb5d49311e5f7c5e7a5f2abffe"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "sha256": "ab15bcb2e07eaf1333be11e31b7e84a82477f83e02e2a83931b3953df7e8b72e"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+      "sha256": "5a668607a832b9ea795c5e679023044bd9832cda4da23d704609ed789f447686"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/HttpError.ts",
+      "sha256": "129404524f9d56e0c06ca30095da9205c558293c6cbb28f155e58b6e28bcc47f"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Logging.ts",
+      "sha256": "d1c081c67b4daeada440a0c157af12947eec619c121125fc542044c1bf740250"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Metric.ts",
+      "sha256": "07c62dba2475ac46f0bad98baf54328abbb7d46cc199084b03ecd1bb4a8c8aee"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Observed.ts",
+      "sha256": "1399aafe4e9cee67604fa93a89506d484a6f719e5361d3d74ed4ff718e984e17"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+      "sha256": "a7e0a4a7a5eb1e372500d3edec9b504f9845e133c2c90313d23b50225ae0a5d5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Version.ts",
+      "sha256": "adba98af0dd625470823db2ba8c04fd8f277f45e53d0c14d80ca0bc711700107"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/index.ts",
+      "sha256": "987f6e96cae1eec22e0215bccb5a52b4592ed1a67f5d0dbf7b3e47dea3ea4da8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/internal/decode.ts",
+      "sha256": "d1fce15d0e5be568cb51a899d5bb75ffec56613cdb6e8c4c3a9b0c95c34fabe7"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Config.ts",
+      "sha256": "bbb3efacc13c75baaac8cfb3d2ca050fb7c792eb11abfa1ff8f3ee44e3d19e3a"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
+      "sha256": "6afafb2de557eca6eb5be364764655e3934a6c319c5d7b190f6ec2480cac7303"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+      "sha256": "b2613c19e5b5c601843f5abbc28831b51dc88354b89e3476c6d327b47d9351bb"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+      "sha256": "f290651ddee654bea7a65d5de4ab9488765c771685ef46fc84838bf8cbf84d5d"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Layer.ts",
+      "sha256": "6adc0de50190201e53b1189affe73341c243a3a222584cd337b8fb21169988a8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+      "sha256": "53bab371bf7eb16663403b7aece1899f516a06e367cd8cd21d825164d6457cd8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Prometheus.ts",
+      "sha256": "053a565b08308366f94d8261a361248746fb6efcba1007b0573a8bc511b263ef"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/TraceContext.ts",
+      "sha256": "c3a6e5f3fc0b4cdeb2e00a6b08c09914b6fb02fbf653158a8fa3bd61abc5e756"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/index.ts",
+      "sha256": "48b36d0c3fce457621fc84929a843bf7f96a9c517a3363ed95df47505e0cc063"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/Config.ts",
+      "sha256": "38569a01c679455ae08d42a9ef10d3ebab5b46dcb548c7613ca4dd58ae950573"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/Layer.ts",
+      "sha256": "e7d635e241a2747c4de88059993bb07b0411beb7f7ff1922b26d32b3eb869a99"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/index.ts",
+      "sha256": "ed2dfc1745bbd4f601176cdb6ac883c021b0a8e47352d9dbaec172484a41f281"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+      "sha256": "91c2f31b6066fff2fe173e758710e947502728069b81dc12671de4425f333831"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+      "sha256": "1c3986883cfe30caa4690d137c61e89fedadd8fd2c1a8b1538184d42d15c2360"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/index.ts",
+      "sha256": "185290f98b345151a7a2d704f5bf63348a929dbdc95f9f43c37baf259ab33767"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "sha256": "b9f487367b8c6a8ec25e8676143bb13f4da3afee2aeea8f5bc6709c02bff4e92"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "sha256": "04b61ada13b521810b7f6e2e88c0ed29aa070f70dec848f01dcb1c9847fa7b58"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "sha256": "030d03be3fee2b4238bc0a583e26fe43f02fc615dd51fde461be3e8fbf57f887"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "sha256": "7e1cf9602476e892c2930d3d7db2e1641f71861ed2a661d539eb2d90f8d75820"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "sha256": "34f19744de23a063bda67933cd914fd132a93326c51c7fb37990103158752846"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "sha256": "6c67018f2c6d1f1aaa6f332ef33abcb2731a2afc583c4a5b595cccf48e99543b"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "sha256": "92c23202ffa4e2f5f74eebe3441f581841e7c14d97913d0e84cb05c9ba3f4656"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "sha256": "f5e35f8468a53df81cea96ed08aa67ce5569b73e2b57fcd6fc56b0a14378959c"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "sha256": "4e0003f8789e0f64b253903af2316d7465848f380b74e9549742be979cf42b0c"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "sha256": "7820c6f718057602980b174bd65a6bde3f8b68eab93b340578bc60952823648c"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "sha256": "be6687728bbdf5b8a86e6d20c6e6929b9dd332dea2f330e9629f654e5b3b9708"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "sha256": "60855691f45745f1a649923ef861514932981e896777a3f387546fbfb99c97cc"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "sha256": "3e0797392ad16f18e022a884263a6f12d6695b01adc4715837350ece2e5a3c55"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "sha256": "a2a1a68495863e585bbb103d6c88af91ea63f503132a02847958a4479d818a88"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "sha256": "e0f3efbea7f2404c835befc7f343c1150fde2aaef2dde6b53b1c3f34053d56d0"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "1aea02b58a0ace581776c8e7a151b27dac6196a5b2623aa93372580eb96d50aa"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "sha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "sha256": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "sha256": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146"
+    }
+  ],
+  "loadBefore": [6.83935546875, 8.54248046875, 8.80078125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.12 avg300=0.24 total=150302054\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.06 avg300=0.02 total=71453642\nfull avg10=0.00 avg60=0.06 avg300=0.02 total=69380036\n",
+    "io": "some avg10=0.00 avg60=1.27 avg300=1.05 total=674853311\nfull avg10=0.00 avg60=1.01 avg300=0.82 total=614906019\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Configured observability suite, real compiler fixtures, in-process SDK and fake DevTools server; no external collector selected",
+  "hostTimeoutSeconds": 900,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 6.426401484000962,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "f6d5bb03d16693dd569b81cc461111fce5ca96d869668dbda588100ae9076da9"
+    },
+    {
+      "file": "packages/foundation/capability/observability/package.json",
+      "sha256": "c15e8c60f0ea8368dc06ed3619adb491908f7f8f649f67ddc143116058b1b461"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+      "sha256": "ac127be79376f199dc0a695733f06e7c78b35ceb5d49311e5f7c5e7a5f2abffe"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "sha256": "ab15bcb2e07eaf1333be11e31b7e84a82477f83e02e2a83931b3953df7e8b72e"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+      "sha256": "5a668607a832b9ea795c5e679023044bd9832cda4da23d704609ed789f447686"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/HttpError.ts",
+      "sha256": "129404524f9d56e0c06ca30095da9205c558293c6cbb28f155e58b6e28bcc47f"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Logging.ts",
+      "sha256": "d1c081c67b4daeada440a0c157af12947eec619c121125fc542044c1bf740250"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Metric.ts",
+      "sha256": "07c62dba2475ac46f0bad98baf54328abbb7d46cc199084b03ecd1bb4a8c8aee"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Observed.ts",
+      "sha256": "1399aafe4e9cee67604fa93a89506d484a6f719e5361d3d74ed4ff718e984e17"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+      "sha256": "a7e0a4a7a5eb1e372500d3edec9b504f9845e133c2c90313d23b50225ae0a5d5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Version.ts",
+      "sha256": "adba98af0dd625470823db2ba8c04fd8f277f45e53d0c14d80ca0bc711700107"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/index.ts",
+      "sha256": "987f6e96cae1eec22e0215bccb5a52b4592ed1a67f5d0dbf7b3e47dea3ea4da8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/internal/decode.ts",
+      "sha256": "d1fce15d0e5be568cb51a899d5bb75ffec56613cdb6e8c4c3a9b0c95c34fabe7"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Config.ts",
+      "sha256": "bbb3efacc13c75baaac8cfb3d2ca050fb7c792eb11abfa1ff8f3ee44e3d19e3a"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
+      "sha256": "6afafb2de557eca6eb5be364764655e3934a6c319c5d7b190f6ec2480cac7303"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+      "sha256": "b2613c19e5b5c601843f5abbc28831b51dc88354b89e3476c6d327b47d9351bb"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+      "sha256": "f290651ddee654bea7a65d5de4ab9488765c771685ef46fc84838bf8cbf84d5d"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Layer.ts",
+      "sha256": "6adc0de50190201e53b1189affe73341c243a3a222584cd337b8fb21169988a8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+      "sha256": "53bab371bf7eb16663403b7aece1899f516a06e367cd8cd21d825164d6457cd8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Prometheus.ts",
+      "sha256": "053a565b08308366f94d8261a361248746fb6efcba1007b0573a8bc511b263ef"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/TraceContext.ts",
+      "sha256": "c3a6e5f3fc0b4cdeb2e00a6b08c09914b6fb02fbf653158a8fa3bd61abc5e756"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/index.ts",
+      "sha256": "48b36d0c3fce457621fc84929a843bf7f96a9c517a3363ed95df47505e0cc063"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/Config.ts",
+      "sha256": "38569a01c679455ae08d42a9ef10d3ebab5b46dcb548c7613ca4dd58ae950573"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/Layer.ts",
+      "sha256": "e7d635e241a2747c4de88059993bb07b0411beb7f7ff1922b26d32b3eb869a99"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/index.ts",
+      "sha256": "ed2dfc1745bbd4f601176cdb6ac883c021b0a8e47352d9dbaec172484a41f281"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+      "sha256": "91c2f31b6066fff2fe173e758710e947502728069b81dc12671de4425f333831"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+      "sha256": "1c3986883cfe30caa4690d137c61e89fedadd8fd2c1a8b1538184d42d15c2360"
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/index.ts",
+      "sha256": "185290f98b345151a7a2d704f5bf63348a929dbdc95f9f43c37baf259ab33767"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "sha256": "b9f487367b8c6a8ec25e8676143bb13f4da3afee2aeea8f5bc6709c02bff4e92"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "sha256": "04b61ada13b521810b7f6e2e88c0ed29aa070f70dec848f01dcb1c9847fa7b58"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "sha256": "030d03be3fee2b4238bc0a583e26fe43f02fc615dd51fde461be3e8fbf57f887"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "sha256": "7e1cf9602476e892c2930d3d7db2e1641f71861ed2a661d539eb2d90f8d75820"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "sha256": "34f19744de23a063bda67933cd914fd132a93326c51c7fb37990103158752846"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "sha256": "6c67018f2c6d1f1aaa6f332ef33abcb2731a2afc583c4a5b595cccf48e99543b"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "sha256": "92c23202ffa4e2f5f74eebe3441f581841e7c14d97913d0e84cb05c9ba3f4656"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "sha256": "f5e35f8468a53df81cea96ed08aa67ce5569b73e2b57fcd6fc56b0a14378959c"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "sha256": "4e0003f8789e0f64b253903af2316d7465848f380b74e9549742be979cf42b0c"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "sha256": "7820c6f718057602980b174bd65a6bde3f8b68eab93b340578bc60952823648c"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "sha256": "be6687728bbdf5b8a86e6d20c6e6929b9dd332dea2f330e9629f654e5b3b9708"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "sha256": "60855691f45745f1a649923ef861514932981e896777a3f387546fbfb99c97cc"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "sha256": "3e0797392ad16f18e022a884263a6f12d6695b01adc4715837350ece2e5a3c55"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "sha256": "a2a1a68495863e585bbb103d6c88af91ea63f503132a02847958a4479d818a88"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "sha256": "e0f3efbea7f2404c835befc7f343c1150fde2aaef2dde6b53b1c3f34053d56d0"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "1aea02b58a0ace581776c8e7a151b27dac6196a5b2623aa93372580eb96d50aa"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "sha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "sha256": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "sha256": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146"
+    }
+  ],
+  "loadAfter": [7.8935546875, 8.73291015625, 8.861328125],
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.11 avg300=0.24 total=150331013\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.06 avg300=0.02 total=71453642\nfull avg10=0.00 avg60=0.06 avg300=0.02 total=69380036\n",
+    "io": "some avg10=0.00 avg60=1.14 avg300=1.03 total=674882475\nfull avg10=0.00 avg60=0.91 avg300=0.81 total=614926131\n"
+  },
+  "sourceStable": true
+}
