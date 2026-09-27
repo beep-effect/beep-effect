@@ -3264,3 +3264,5 @@ order and separate equivalence checks.
 - File Processing platform registration: `quality package-verify @beep/file-processing` rejected a test-only `node:path` separator import with `TS377057 effect(nodeBuiltinImport)`. Use the runtime platform at registration and assert the injected Path separator inside the POSIX body. A documented native-test platform registration example would prevent this detour.
 
 - Doc Text property edit: a private ts-morph CallExpression replacement included a trailing statement semicolon and failed with `children ... expected to have the same count`. No source was saved. Keep replacement text at expression granularity and check the mutation exit before starting validation.
+
+- FFmpeg native prerequisite reporting: full package check caught `TS377114 mapSomeToAsSome` and `TS377117 preferSucceedSomeOrNone`. Replaced the generic Option wrappers with `Effect.asSome` and `Effect.succeedNone`; keep these current RC helper idioms in test examples as well as production guidance. A temporary context-skip probe also needed an absolute cleanup path because its runner used the package cwd; the probe was removed before final validation.

@@ -4,8 +4,9 @@ import {
   ExtractClipRequest,
   ExtractFramesAtRequest,
 } from "@beep/ffmpeg";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";

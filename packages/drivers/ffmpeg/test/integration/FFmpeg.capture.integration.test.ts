@@ -10,24 +10,22 @@ import {
   RenderGifRequest,
   WriteContainerMetadataRequest,
 } from "@beep/ffmpeg";
+import { it } from "@beep/test-runner";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
+import { Effect, FileSystem, Layer, Match, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 
 // Live lane: exercises the real ffmpeg/ffprobe binaries on PATH. Skips
-// cleanly (logInfo, no assertions) on machines without ffmpeg.
+// explicitly when a binary is missing; other prerequisite failures stay failures.
 const NativeCaptureTestLayer = Layer.mergeAll(
   NodeServices.layer,
   FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))
 );
-
-const skipNotice = Effect.logInfo("Skipping the live ffmpeg capture lane because ffmpeg is not runnable on PATH.");
-
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
@@ -49,10 +47,24 @@ const runTool = (command: string, args: ReadonlyArray<string>) =>
     })
   );
 
-const ffmpegAvailable = runTool("ffmpeg", ["-version"]).pipe(
-  Effect.map((result) => result.exitCode === 0),
-  Effect.orElseSucceed(() => false)
-);
+const nativeToolAvailable = Effect.fn("FFmpegIntegration.nativeToolAvailable")(function* (command: string) {
+  const result = yield* runTool(command, ["-version"]).pipe(
+    Effect.asSome,
+    Effect.catchTag("PlatformError", (error) =>
+      Match.value(error.reason).pipe(
+        Match.when({ _tag: "NotFound" }, () => Effect.succeedNone),
+        Match.orElse(() => Effect.fail(error))
+      )
+    )
+  );
+  if (O.isNone(result)) return false;
+  expect(result.value.exitCode, `${command} -version prerequisite must exit successfully`).toBe(0);
+  return true;
+});
+const missingNativeTool = Effect.gen(function* () {
+  if (!(yield* nativeToolAvailable("ffmpeg"))) return O.some("ffmpeg");
+  return (yield* nativeToolAvailable("ffprobe")) ? O.none<string>() : O.some("ffprobe");
+});
 
 const expectToolSuccess = Effect.fnUntraced(function* (command: string, args: ReadonlyArray<string>) {
   const result = yield* runTool(command, args);
@@ -132,10 +144,11 @@ const LUMA_TOLERANCE_SECONDS = 0.05;
 it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg live capture", (it) => {
   it.effect(
     "extracts pts-accurate timestamped frames from the luma-ramp golden clip",
-    () =>
+    (context) =>
       Effect.gen(function* () {
-        if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+        const missing = yield* missingNativeTool;
+        if (O.isSome(missing)) {
+          return yield* Effect.sync(() => context.skip(`Missing native prerequisite: ${missing.value} on PATH`));
         }
 
         yield* withTempDirectory(
@@ -194,10 +207,11 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
 
   it.effect(
     "renders gif and contact sheet artifacts with real byte sizes",
-    () =>
+    (context) =>
       Effect.gen(function* () {
-        if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+        const missing = yield* missingNativeTool;
+        if (O.isSome(missing)) {
+          return yield* Effect.sync(() => context.skip(`Missing native prerequisite: ${missing.value} on PATH`));
         }
 
         yield* withTempDirectory(
@@ -260,10 +274,11 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
 
   it.effect(
     "cuts clips and round-trips BEEP_QA_SESSION_ID container metadata via ffprobe",
-    () =>
+    (context) =>
       Effect.gen(function* () {
-        if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+        const missing = yield* missingNativeTool;
+        if (O.isSome(missing)) {
+          return yield* Effect.sync(() => context.skip(`Missing native prerequisite: ${missing.value} on PATH`));
         }
 
         yield* withTempDirectory(
