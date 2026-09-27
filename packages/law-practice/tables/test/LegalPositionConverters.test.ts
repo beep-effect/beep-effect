@@ -39,7 +39,7 @@ import {
 import { fromPowerExerciseRow, toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
 import { Unknown } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { productEntityFixtureInput } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Order, pipe, Result } from "effect";
@@ -527,59 +527,73 @@ describe("set-valued fields across the storage boundary", () => {
 });
 
 describe("converter round trips over the whole schema", () => {
-  /**
-   * The example-based loops above prove the fields a reader cares about. This
-   * proves the loop closes for values nobody thought to write down, which is
-   * where an asymmetric codec on a rarely-populated field would otherwise hide.
-   * The id is reattached from the entity because the converter drops it for the
-   * table sequence to assign.
-   */
   const assertConverterRoundTrips = <
     Schema extends S.Top & { readonly Type: { readonly id: number } },
     Insert extends object,
   >(
     schema: Schema,
     toInsert: (entity: Schema["Type"]) => Result.Result<Insert, S.SchemaError>,
-    fromRow: (row: unknown) => Result.Result<Schema["Type"], S.SchemaError>
+    fromRow: (row: unknown) => Result.Result<Schema["Type"], S.SchemaError>,
+    entity: Schema["Type"]
   ): void => {
     const equivalent = S.toEquivalence(schema);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(schema),
-          (entity) => {
-            const insert = Result.getOrThrow(toInsert(entity));
-            const returned = Result.getOrThrow(fromRow({ ...insert, id: entity.id }));
-            return equivalent(returned, entity);
-          },
-          { runs: 10 }
-        )
-      )._tag
-    ).toBe("Passed");
+    const insert = Result.getOrThrow(toInsert(entity));
+    const returned = Result.getOrThrow(fromRow({ ...insert, id: entity.id }));
+    expect(equivalent(returned, entity)).toBe(true);
   };
 
-  it("round-trips arbitrary stored relations", () => {
-    assertConverterRoundTrips(LegalPositionRelator, toLegalPositionRelatorInsert, fromLegalPositionRelatorRow);
-  });
+  it.prop(
+    "round-trips arbitrary stored relations",
+    { entity: Arbitrary.schema(LegalPositionRelator) },
+    ({ entity }) => {
+      assertConverterRoundTrips(
+        LegalPositionRelator,
+        toLegalPositionRelatorInsert,
+        fromLegalPositionRelatorRow,
+        entity
+      );
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary recorded frames", () => {
-    assertConverterRoundTrips(ActFrame, toActFrameInsert, fromActFrameRow);
-  });
+  it.prop(
+    "round-trips arbitrary recorded frames",
+    { entity: Arbitrary.schema(ActFrame) },
+    ({ entity }) => {
+      assertConverterRoundTrips(ActFrame, toActFrameInsert, fromActFrameRow, entity);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary attempted exercises", () => {
-    assertConverterRoundTrips(PowerExercise, toPowerExerciseInsert, fromPowerExerciseRow);
-  });
+  it.prop(
+    "round-trips arbitrary attempted exercises",
+    { entity: Arbitrary.schema(PowerExercise) },
+    ({ entity }) => {
+      assertConverterRoundTrips(PowerExercise, toPowerExerciseInsert, fromPowerExerciseRow, entity);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary appended corrections", () => {
-    assertConverterRoundTrips(CorrectionDelta, toCorrectionDeltaInsert, fromCorrectionDeltaRow);
-  });
+  it.prop(
+    "round-trips arbitrary appended corrections",
+    { entity: Arbitrary.schema(CorrectionDelta) },
+    ({ entity }) => {
+      assertConverterRoundTrips(CorrectionDelta, toCorrectionDeltaInsert, fromCorrectionDeltaRow, entity);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary screened candidates", () => {
-    assertConverterRoundTrips(
-      LegalOppositionCandidate,
-      toLegalOppositionCandidateInsert,
-      fromLegalOppositionCandidateRow
-    );
-  });
+  it.prop(
+    "round-trips arbitrary screened candidates",
+    { entity: Arbitrary.schema(LegalOppositionCandidate) },
+    ({ entity }) => {
+      assertConverterRoundTrips(
+        LegalOppositionCandidate,
+        toLegalOppositionCandidateInsert,
+        fromLegalOppositionCandidateRow,
+        entity
+      );
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });
