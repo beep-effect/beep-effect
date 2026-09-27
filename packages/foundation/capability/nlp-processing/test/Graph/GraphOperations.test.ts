@@ -1,7 +1,7 @@
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
 import { NonNegativeInt } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
@@ -207,135 +207,167 @@ describe("ResultStore", () => {
     })
   );
 
-  it.effect(
-    "stores and retrieves a result, incrementing hits",
-    Effect.fnUntraced(function* () {
-      const store = yield* ResultStore.ResultStore;
-      const nodeId = EG.NodeId.make("n1");
-      const key = ResultStore.ResultKey.new("op", nodeId);
-      const result = yield* mkResult;
-      expect(yield* store.has(key)).toBe(false);
-      yield* store.store(key, result);
-      expect(yield* store.has(key)).toBe(true);
-      const got = yield* store.get(key);
-      expect(O.isSome(got)).toBe(true);
-      const stats = yield* store.stats;
-      expect(stats.size).toBe(1);
-      expect(stats.totalHits).toBe(1);
-    }, provideScopedLayer(ResultStore.ResultStoreTest))
-  );
+  it.layer(ResultStore.ResultStoreTest)("stores and retrieves a result, incrementing hits", (it) => {
+    it.effect(
+      "stores and retrieves a result, incrementing hits",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const store = yield* ResultStore.ResultStore;
+        const nodeId = EG.NodeId.make("n1");
+        const key = ResultStore.ResultKey.new("op", nodeId);
+        const result = yield* mkResult;
+        expect(yield* store.has(key)).toBe(false);
+        yield* store.store(key, result);
+        expect(yield* store.has(key)).toBe(true);
+        const got = yield* store.get(key);
+        expect(O.isSome(got)).toBe(true);
+        const stats = yield* store.stats;
+        expect(stats.size).toBe(1);
+        expect(stats.totalHits).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "delete and clear remove entries",
-    Effect.fnUntraced(function* () {
-      const store = yield* ResultStore.ResultStore;
-      const key = ResultStore.ResultKey.new("op", EG.NodeId.make("n2"));
-      yield* store.store(key, yield* mkResult);
-      yield* store.delete(key);
-      expect(yield* store.has(key)).toBe(false);
-      yield* store.store(ResultStore.ResultKey.new("op", EG.NodeId.make("n3")), yield* mkResult);
-      yield* store.clear;
-      expect((yield* store.stats).size).toBe(0);
-    }, provideScopedLayer(ResultStore.ResultStoreTest))
-  );
+  it.layer(ResultStore.ResultStoreTest)("delete and clear remove entries", (it) => {
+    it.effect(
+      "delete and clear remove entries",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const store = yield* ResultStore.ResultStore;
+        const key = ResultStore.ResultKey.new("op", EG.NodeId.make("n2"));
+        yield* store.store(key, yield* mkResult);
+        yield* store.delete(key);
+        expect(yield* store.has(key)).toBe(false);
+        yield* store.store(ResultStore.ResultKey.new("op", EG.NodeId.make("n3")), yield* mkResult);
+        yield* store.clear;
+        expect((yield* store.stats).size).toBe(0);
+      })
+    );
+  });
 });
 
 describe("GraphExecutor", () => {
   const upper = Operation.transform({ name: "upper", description: "", f: (s: string) => s.toUpperCase() });
 
-  it.effect(
-    "applies an operation to leaf nodes, producing new nodes",
-    Effect.fnUntraced(function* () {
-      const graph = yield* EG.singleton("hello");
-      const executor = yield* Executor.GraphExecutor;
-      const result = yield* executor.execute(graph, upper);
-      expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
-      expect(result.errors.length).toBe(0);
-      expect(result.metrics.nodesProcessed).toBe(1);
-      expect(result.metrics.nodesCreated).toBe(1);
-    }, provideScopedLayer(Executor.GraphExecutorTest))
-  );
+  it.layer(Executor.GraphExecutorTest)("applies an operation to leaf nodes, producing new nodes", (it) => {
+    it.effect(
+      "applies an operation to leaf nodes, producing new nodes",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const graph = yield* EG.singleton("hello");
+        const executor = yield* Executor.GraphExecutor;
+        const result = yield* executor.execute(graph, upper);
+        expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+        expect(result.errors.length).toBe(0);
+        expect(result.metrics.nodesProcessed).toBe(1);
+        expect(result.metrics.nodesCreated).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
+  it.layer(Executor.GraphExecutorTest)(
     "clamps an over-large parallel concurrency and still applies the operation",
-    Effect.fnUntraced(function* () {
-      const graph = yield* EG.singleton("hello");
-      const executor = yield* Executor.GraphExecutor;
-      // Far above MAX_PARALLEL_CONCURRENCY, so this exercises the clamp rather
-      // than the sequential default.
-      const result = yield* executor.execute(graph, upper, {
-        strategy: Types.ExecutionStrategy.Parallel(1_000),
-      });
+    (it) => {
+      it.effect(
+        "clamps an over-large parallel concurrency and still applies the operation",
+        Effect.fnUntraced(function* () {
+          expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+          const graph = yield* EG.singleton("hello");
+          const executor = yield* Executor.GraphExecutor;
+          // Far above MAX_PARALLEL_CONCURRENCY, so this exercises the clamp rather
+          // than the sequential default.
+          const result = yield* executor.execute(graph, upper, {
+            strategy: Types.ExecutionStrategy.Parallel(1_000),
+          });
 
-      expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
-      expect(result.errors.length).toBe(0);
-    }, provideScopedLayer(Executor.GraphExecutorTest))
+          expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+          expect(result.errors.length).toBe(0);
+        })
+      );
+    }
   );
 
-  it.effect(
-    "supports pipe-friendly dual service methods",
-    Effect.fnUntraced(function* () {
-      const graph = yield* EG.singleton("hello");
-      const executor = yield* Executor.GraphExecutor;
+  it.layer(Executor.GraphExecutorTest)("supports pipe-friendly dual service methods", (it) => {
+    it.effect(
+      "supports pipe-friendly dual service methods",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const graph = yield* EG.singleton("hello");
+        const executor = yield* Executor.GraphExecutor;
 
-      const result = yield* pipe(graph, executor.execute(upper, { cache: false }));
-      const validation = yield* pipe(graph, executor.validate(upper));
-      const cost = yield* pipe(graph, executor.estimateCost(upper));
+        const result = yield* pipe(graph, executor.execute(upper, { cache: false }));
+        const validation = yield* pipe(graph, executor.validate(upper));
+        const cost = yield* pipe(graph, executor.estimateCost(upper));
 
-      expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
-      expect(validation.valid).toBe(true);
-      expect(cost.complexity).toBe("O(1)");
-    }, provideScopedLayer(Executor.GraphExecutorTest))
-  );
+        expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+        expect(validation.valid).toBe(true);
+        expect(cost.complexity).toBe("O(1)");
+      })
+    );
+  });
 
-  it.effect(
-    "reports a cache miss then a cache hit for the same node",
-    Effect.fnUntraced(function* () {
-      const graph = yield* EG.singleton("hi");
-      const executor = yield* Executor.GraphExecutor;
-      const first = yield* executor.execute(graph, upper);
-      const second = yield* executor.execute(graph, upper);
-      expect(first.metrics.cacheMisses).toBe(1);
-      expect(first.metrics.cacheHits).toBe(0);
-      expect(second.metrics.cacheHits).toBe(1);
-    }, provideScopedLayer(Executor.GraphExecutorTest))
-  );
+  it.layer(Executor.GraphExecutorTest)("reports a cache miss then a cache hit for the same node", (it) => {
+    it.effect(
+      "reports a cache miss then a cache hit for the same node",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const graph = yield* EG.singleton("hi");
+        const executor = yield* Executor.GraphExecutor;
+        const first = yield* executor.execute(graph, upper);
+        const second = yield* executor.execute(graph, upper);
+        expect(first.metrics.cacheMisses).toBe(1);
+        expect(first.metrics.cacheHits).toBe(0);
+        expect(second.metrics.cacheHits).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "validate warns when there are no leaf nodes",
-    Effect.fnUntraced(function* () {
-      const executor = yield* Executor.GraphExecutor;
-      const result = yield* executor.validate(EG.empty<string>(), upper);
-      expect(result.valid).toBe(true);
-      expect(result.warnings.length).toBeGreaterThan(0);
-    }, provideScopedLayer(Executor.GraphExecutorTest))
-  );
+  it.layer(Executor.GraphExecutorTest)("validate warns when there are no leaf nodes", (it) => {
+    it.effect(
+      "validate warns when there are no leaf nodes",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const executor = yield* Executor.GraphExecutor;
+        const result = yield* executor.validate(EG.empty<string>(), upper);
+        expect(result.valid).toBe(true);
+        expect(result.warnings.length).toBeGreaterThan(0);
+      })
+    );
+  });
 
-  it.effect(
-    "estimateCost scales by the number of leaf nodes",
-    Effect.fnUntraced(function* () {
-      const graph = yield* EG.singleton("x");
-      const executor = yield* Executor.GraphExecutor;
-      const cost = yield* executor.estimateCost(graph, upper);
-      expect(cost.complexity).toBe("O(1)");
-    }, provideScopedLayer(Executor.GraphExecutorTest))
-  );
+  it.layer(Executor.GraphExecutorTest)("estimateCost scales by the number of leaf nodes", (it) => {
+    it.effect(
+      "estimateCost scales by the number of leaf nodes",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const graph = yield* EG.singleton("x");
+        const executor = yield* Executor.GraphExecutor;
+        const cost = yield* executor.estimateCost(graph, upper);
+        expect(cost.complexity).toBe("O(1)");
+      })
+    );
+  });
 
-  it.effect(
-    "surfaces a per-node error without failing the run",
-    Effect.fnUntraced(function* () {
-      const boom = Operation.make<string, string, never, Errors.OperationError>({
-        name: "boom",
-        description: "",
-        category: "transformation",
-        apply: (node) =>
-          Effect.fail(Errors.OperationError.make({ cause: new Error("boom"), nodeId: node.id, operationName: "boom" })),
-      });
-      const graph = yield* EG.singleton("x");
-      const executor = yield* Executor.GraphExecutor;
-      const result = yield* executor.execute(graph, boom);
-      expect(result.newNodes.length).toBe(0);
-      expect(result.errors.length).toBe(1);
-    }, provideScopedLayer(Executor.GraphExecutorTest))
-  );
+  it.layer(Executor.GraphExecutorTest)("surfaces a per-node error without failing the run", (it) => {
+    it.effect(
+      "surfaces a per-node error without failing the run",
+      Effect.fnUntraced(function* () {
+        expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
+        const boom = Operation.make<string, string, never, Errors.OperationError>({
+          name: "boom",
+          description: "",
+          category: "transformation",
+          apply: (node) =>
+            Effect.fail(
+              Errors.OperationError.make({ cause: new Error("boom"), nodeId: node.id, operationName: "boom" })
+            ),
+        });
+        const graph = yield* EG.singleton("x");
+        const executor = yield* Executor.GraphExecutor;
+        const result = yield* executor.execute(graph, boom);
+        expect(result.newNodes.length).toBe(0);
+        expect(result.errors.length).toBe(1);
+      })
+    );
+  });
 });
