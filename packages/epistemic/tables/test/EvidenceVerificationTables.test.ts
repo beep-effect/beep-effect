@@ -21,7 +21,6 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { DateTime, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -122,48 +121,41 @@ describe("EvidenceVerificationTable", () => {
     expect(Entities.EvidenceVerification.Table).toBe(EvidenceVerification.Table);
   });
 
-  it("round-trips schema-derived manifestations through the sealed row converters", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(EvidenceVerificationManifestation)]),
-          ([manifestation]) => {
-            const verification = Result.getOrThrow(
-              decodeUnknownEvidenceVerificationModelResult({
-                ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
-                evidenceId: manifestation.evidenceId,
-                manifestationKey: Result.getOrThrow(
-                  manifestationKeyFor(manifestation.evidenceId, manifestation.verifiedAnchor)
-                ),
-                verifiedAnchor: Result.getOrThrow(
-                  encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
-                ),
-              })
-            );
-            const insert = Result.getOrThrow(
-              EvidenceVerification.toEvidenceVerificationInsert(
-                verification,
-                evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
-              )
-            );
-            const decoded = Result.getOrThrow(
-              EvidenceVerification.fromEvidenceVerificationRow({
-                ...insert,
-                id: verification.id,
-              })
-            );
-
-            expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
-              Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
-            );
-
-            return true;
-          },
-          fcRuns(25)
+  it.prop(
+    "round-trips schema-derived manifestations through the sealed row converters",
+    [Arbitrary.schema(EvidenceVerificationManifestation)],
+    ([manifestation]) => {
+      const verification = Result.getOrThrow(
+        decodeUnknownEvidenceVerificationModelResult({
+          ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
+          evidenceId: manifestation.evidenceId,
+          manifestationKey: Result.getOrThrow(
+            manifestationKeyFor(manifestation.evidenceId, manifestation.verifiedAnchor)
+          ),
+          verifiedAnchor: Result.getOrThrow(
+            encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
+          ),
+        })
+      );
+      const insert = Result.getOrThrow(
+        EvidenceVerification.toEvidenceVerificationInsert(
+          verification,
+          evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
         )
-      )._tag
-    ).toBe("Passed");
-  });
+      );
+      const decoded = Result.getOrThrow(
+        EvidenceVerification.fromEvidenceVerificationRow({
+          ...insert,
+          id: verification.id,
+        })
+      );
+
+      expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
+        Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
+      );
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("round-trips rows through schema-derived converters", () => {
     const verification = Result.getOrThrow(decodeUnknownEvidenceVerificationModelResult(input));

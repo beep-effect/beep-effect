@@ -43,8 +43,6 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { DateTime, pipe, Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -260,28 +258,20 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
 };
 
 describe("Contradiction candidate row converters", () => {
-  it("round-trips schema-derived canonical belief pairs used by candidate JSONB rows", () => {
-    const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([CanonicalContradictionBeliefPairArbitrary]),
-          ([arbitraryPair]) => {
-            const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
-              Result.getOrThrow,
-              decodeUnknownCanonicalContradictionBeliefPairResult,
-              Result.getOrThrow
-            );
-            expect(equivalent(decoded, arbitraryPair)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips schema-derived canonical belief pairs used by candidate JSONB rows",
+    [CanonicalContradictionBeliefPairArbitrary],
+    ([arbitraryPair]) => {
+      const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
+      const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
+        Result.getOrThrow,
+        decodeUnknownCanonicalContradictionBeliefPairResult,
+        Result.getOrThrow
+      );
+      expect(equivalent(decoded, arbitraryPair)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("round-trips a candidate only when every persisted seal is valid", () => {
     const insert = Result.getOrThrow(toContradictionCandidateInsert(candidate));

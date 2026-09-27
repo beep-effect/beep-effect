@@ -652,37 +652,29 @@ describe("EpistemicTables", () => {
     })
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived UsageRecords through the row converters",
-    Effect.fnUntraced(function* () {
-      const outcome = yield* Arbitrary.checkEffect(
-        Arbitrary.all([UsageRecordArbitrary]),
-        Effect.fnUntraced(function* ([record]) {
-          const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
-          const decoded = yield* Effect.fromResult(
-            UsageRecord.fromUsageRecordRow({
-              ...insert,
-              id: record.id,
-              activityId: insert.activityId ?? null,
-              costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
-              credentialReference: insert.credentialReference ?? null,
-              inputTokens: insert.inputTokens ?? null,
-              latencyMillis: insert.latencyMillis ?? null,
-              outputTokens: insert.outputTokens ?? null,
-              totalTokens: insert.totalTokens ?? null,
-              unitCount: insert.unitCount ?? null,
-            })
-          );
-
-          expect(UsageRecordEquivalence(decoded, record)).toBe(true);
-
-          return true;
-        }),
-        fcRuns(50)
+    [UsageRecordArbitrary],
+    Effect.fnUntraced(function* ([record]) {
+      const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
+      const decoded = yield* Effect.fromResult(
+        UsageRecord.fromUsageRecordRow({
+          ...insert,
+          id: record.id,
+          activityId: insert.activityId ?? null,
+          costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
+          credentialReference: insert.credentialReference ?? null,
+          inputTokens: insert.inputTokens ?? null,
+          latencyMillis: insert.latencyMillis ?? null,
+          outputTokens: insert.outputTokens ?? null,
+          totalTokens: insert.totalTokens ?? null,
+          unitCount: insert.unitCount ?? null,
+        })
       );
 
-      expect(outcome._tag).toBe("Passed");
-    })
+      expect(UsageRecordEquivalence(decoded, record)).toBe(true);
+    }),
+    { arbitrary: fcRuns(50) }
   );
   it.effect(
     "reports a typed CandidateClaim converter failure on both sides of the boundary",
