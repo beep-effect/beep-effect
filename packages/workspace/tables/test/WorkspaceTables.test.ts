@@ -13,6 +13,7 @@ import * as Thread from "@beep/workspace-tables/entities/Thread";
 import * as Turn from "@beep/workspace-tables/entities/Turn";
 import * as Workspace from "@beep/workspace-tables/entities/Workspace";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
@@ -180,7 +181,7 @@ describe("WorkspaceTables", () => {
         })
       );
       expect(roundTripped.items[0]?.itemType).toBe("message");
-      expect(O.isNone(roundTripped.parentTurnId)).toBe(true);
+      assertNone(roundTripped.parentTurnId);
     })
   );
 

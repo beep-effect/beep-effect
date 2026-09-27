@@ -3115,3 +3115,11 @@ file-path keys as generic API keys. Each value was verified against the local
 source bytes. Encode source hashes as explicit file/sha256 records, preserving
 the values and avoiding ambiguous credential-like field names. No secret-scan
 rule, allowlist or bypass was changed.
+
+## 2026-09-27: Branded Option payload in native assertion migration
+
+Workspace Domain package verification rejected `assertSome(option, 12)` with
+TS2345 because the option carries a branded TurnId. The original oracle used
+the numeric literal 12. Explicitly select the safe numeric supertype with
+`assertSome<number>` to preserve that exact expected value without a cast or
+new decoding operation. Review branded operands before mechanical migrations.

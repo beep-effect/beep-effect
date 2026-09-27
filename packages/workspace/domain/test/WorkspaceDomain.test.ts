@@ -21,10 +21,10 @@ import {
   WorkspaceVaultRootPath,
 } from "@beep/workspace-domain";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
@@ -251,8 +251,8 @@ describe("@beep/workspace-domain", () => {
       expect(message.content).toEqual(
         Document.make({ children: [P.make({ children: [Text.make({ value: "Hello thread" })] })] })
       );
-      expect(rootTurn.parentTurnId).toEqual(O.none());
-      expect(branchTurn.parentTurnId).toEqual(O.some(12));
+      assertNone(rootTurn.parentTurnId);
+      assertSome<number>(branchTurn.parentTurnId, 12);
       expect(rootTurn.items).toEqual([MessageItem.make({ messageId: WorkspaceIdentity.MessageId.make(11) })]);
     })
   );
@@ -270,7 +270,7 @@ describe("@beep/workspace-domain", () => {
       const { parentTurnId: _parentTurnId, ...turnInput } = decoded;
       const constructed = Turn.make(turnInput);
 
-      expect(constructed.parentTurnId).toEqual(O.none());
+      assertNone(constructed.parentTurnId);
       expect(yield* encodeTurn(constructed)).toStrictEqual(turnWire);
       const emptyItemsExit = yield* Effect.exit(decodeUnknownTurnItems([]));
       expect(Exit.isFailure(emptyItemsExit)).toBe(true);
