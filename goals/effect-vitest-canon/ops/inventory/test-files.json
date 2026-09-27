@@ -185,8 +185,8 @@
     "file": "apps/labs/trustgraph-workbench/test/App.test.tsx",
     "package": "@beep/trustgraph-workbench",
     "kind": "test",
-    "bytes": 963,
-    "lines": 25
+    "bytes": 1329,
+    "lines": 40
   },
   {
     "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",

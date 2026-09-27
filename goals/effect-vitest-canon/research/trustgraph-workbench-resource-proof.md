@@ -24,3 +24,15 @@ no cache qualification or production code is changed.
 The property, flake and observability reviews retain their saved no-findings
 judgments. This jsdom ownership proof does not establish browser gesture or
 visual acceptance. React's own hoisted head-resource behavior is preserved.
+
+Both Node and Bun pass the two original cases with zero skips. Whole-command
+observations are Node 4.3211 → 4.2202 seconds and Bun 2.4175 → 1.7665 seconds.
+The public before/after receipts include stable source hashes, workstation load,
+pressure and limits; these observations do not establish a causal speedup.
+Root Oxlint, Sherif, Fallow health/audit and cache policy pass.
+
+The saved resource row is fixed, with no current detector rows for this package.
+The census updates only the owning test file. Reconciliation preserves 684
+unrelated ledger hashes and leaves the root detector inventory unchanged.
+Thirty-five packages and 1,415 saved actionable findings remain; this closes
+only the workbench inventory, not the goal or PR acceptance gates.
