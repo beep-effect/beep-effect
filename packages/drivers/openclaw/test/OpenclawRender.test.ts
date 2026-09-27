@@ -22,9 +22,9 @@ import {
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe, Result } from "effect";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -38,9 +38,6 @@ import {
   goldenIntentCanonicalJson,
   goldenIntentContentHash,
 } from "./fixtures/golden-intent.expected.ts";
-
-const renderConfig = (intent: OpenclawDeploymentIntent) =>
-  Effect.runSync(renderOpenclawConfig(intent).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make)));
 
 const encodeOpenclawSchemaPlaceholderFindingResult = S.encodeResult(OpenclawSchemaPlaceholderFinding);
 const isRenderedOpenclawConfig = S.is(RenderedOpenclawConfig);
@@ -96,152 +93,162 @@ const ollamaProvider = (id: string) =>
     models: [OpenclawModelDeclaration.make({ id: "gemma3:4b", input: ["text"], name: "gemma3:4b" })],
   });
 
-describe("@beep/openclaw render adapter", () => {
-  it("renders the golden intent to byte-identical canonical JSON with the pinned content hash", () => {
-    const rendered = renderConfig(goldenDeploymentIntent);
+it.layer(Layer.succeed(Crypto.Crypto, NodeCrypto.make))("@beep/openclaw render adapter", (it) => {
+  it.effect("renders the golden intent to byte-identical canonical JSON with the pinned content hash", () =>
+    Effect.gen(function* () {
+      const rendered = yield* renderOpenclawConfig(goldenDeploymentIntent);
 
-    expect(rendered.canonicalJson).toBe(goldenIntentCanonicalJson);
-    expect(rendered.contentHash).toBe(goldenIntentContentHash);
-    expect(rendered.targetVersion).toBe("2026.7.1-2");
-    expect(isRenderedOpenclawConfig(rendered)).toBe(true);
-  });
+      expect(rendered.canonicalJson).toBe(goldenIntentCanonicalJson);
+      expect(rendered.contentHash).toBe(goldenIntentContentHash);
+      expect(rendered.targetVersion).toBe("2026.7.1-2");
+      expect(isRenderedOpenclawConfig(rendered)).toBe(true);
+    })
+  );
 
-  it("renders deterministically", () => {
-    const first = renderConfig(goldenDeploymentIntent);
-    const second = renderConfig(goldenDeploymentIntent);
+  it.effect("renders deterministically", () =>
+    Effect.gen(function* () {
+      const first = yield* renderOpenclawConfig(goldenDeploymentIntent);
+      const second = yield* renderOpenclawConfig(goldenDeploymentIntent);
 
-    expect(second.canonicalJson).toBe(first.canonicalJson);
-    expect(second.contentHash).toBe(first.contentHash);
-  });
+      expect(second.canonicalJson).toBe(first.canonicalJson);
+      expect(second.contentHash).toBe(first.contentHash);
+    })
+  );
 
-  it("enforces the 2026.7.1-2 adapter invariants in the rendered document", () => {
-    const rendered = renderConfig(goldenDeploymentIntent);
-    const json = rendered.canonicalJson;
-    const parsed = parseDocument(json);
+  it.effect("enforces the 2026.7.1-2 adapter invariants in the rendered document", () =>
+    Effect.gen(function* () {
+      const rendered = yield* renderOpenclawConfig(goldenDeploymentIntent);
+      const json = rendered.canonicalJson;
+      const parsed = parseDocument(json);
 
-    expect(pipe(json, Str.includes('"configWrites": false'))).toBe(true);
-    expect(pipe(json, Str.includes('"meta"'))).toBe(false);
-    expect(parsed).toMatchObject({
-      agents: { list: [{ id: "spike3", model: { primary: "ollama/gemma3:4b" } }] },
-      channels: {
-        telegram: {
-          botToken: { id: "value", provider: "op_telegram", source: "exec" },
-          configWrites: false,
-          enabled: true,
-        },
-      },
-      gateway: {
-        auth: { mode: "token", token: { id: "value", provider: "op_gateway", source: "exec" } },
-        bind: "loopback",
-        controlUi: {
-          allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
-          enabled: true,
-        },
-        mode: "local",
-        reload: { mode: "off" },
-      },
-    });
-
-    expect(secretReferenceCount(json)).toBe(2);
-    expect(parsed).toMatchObject({
-      secrets: {
-        providers: {
-          op_gateway: { args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/spike3-rotating/password"] },
-          op_telegram: { args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/spike3-telegram/bot-token"] },
-        },
-      },
-    });
-    expect(pipe(withoutSecretsJson(json), Str.includes("op://"))).toBe(false);
-  });
-
-  it("omits channels and the telegram secrets provider for the minimal intent", () => {
-    const rendered = renderConfig(minimalIntent);
-
-    expect(pipe(rendered.canonicalJson, Str.includes("op_telegram"))).toBe(false);
-    expect(parseDocument(rendered.canonicalJson)).toEqual({
-      agents: {
-        list: [
-          {
-            id: "spike",
-            model: { primary: "ollama/gemma3:4b" },
-            name: "P0 Spike 1",
-            workspace: "/var/lib/beep/openclaw/workspace",
-          },
-        ],
-      },
-      gateway: {
-        auth: { mode: "token", token: { id: "value", provider: "op_gateway", source: "exec" } },
-        bind: "loopback",
-        controlUi: {
-          allowedOrigins: ["http://127.0.0.1:19021", "http://localhost:19021"],
-          enabled: true,
-        },
-        mode: "local",
-        port: 19021,
-        reload: { mode: "off" },
-      },
-      logging: { file: "/var/lib/beep/openclaw/state/log/openclaw.log" },
-      secrets: {
-        providers: {
-          op_gateway: {
-            args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/spike3-rotating/password"],
-            command: "/opt/beep/openclaw/op-resolver.sh",
-            jsonOnly: false,
-            passEnv: ["OP_SERVICE_ACCOUNT_TOKEN", "PATH"],
-            source: "exec",
-            trustedDirs: ["/opt/beep/openclaw"],
+      expect(pipe(json, Str.includes('"configWrites": false'))).toBe(true);
+      expect(pipe(json, Str.includes('"meta"'))).toBe(false);
+      expect(parsed).toMatchObject({
+        agents: { list: [{ id: "spike3", model: { primary: "ollama/gemma3:4b" } }] },
+        channels: {
+          telegram: {
+            botToken: { id: "value", provider: "op_telegram", source: "exec" },
+            configWrites: false,
+            enabled: true,
           },
         },
-      },
-      tools: { deny: ["*"] },
-    });
-  });
+        gateway: {
+          auth: { mode: "token", token: { id: "value", provider: "op_gateway", source: "exec" } },
+          bind: "loopback",
+          controlUi: {
+            allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+            enabled: true,
+          },
+          mode: "local",
+          reload: { mode: "off" },
+        },
+      });
 
-  it("renders secret-referenced provider api keys as exec secret references", () => {
-    const rendered = renderConfig(
-      OpenclawDeploymentIntent.make({
-        agent: minimalIntent.agent,
-        controlUi: minimalIntent.controlUi,
-        gateway: minimalIntent.gateway,
-        logging: minimalIntent.logging,
-        openclawVersion: "2026.7.1-2",
-        persona: minimalIntent.persona,
-        providers: [
-          OpenclawModelProviderIntent.make({
-            api: "openai-compat",
-            apiKey: OpenclawProviderApiKeySecretRef.make({
-              _tag: "SecretRef",
-              ref: OpenclawSecretReference.make("op://beep-p0-spike3/corp-llm/api-key"),
+      expect(secretReferenceCount(json)).toBe(2);
+      expect(parsed).toMatchObject({
+        secrets: {
+          providers: {
+            op_gateway: { args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/spike3-rotating/password"] },
+            op_telegram: { args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/spike3-telegram/bot-token"] },
+          },
+        },
+      });
+      expect(pipe(withoutSecretsJson(json), Str.includes("op://"))).toBe(false);
+    })
+  );
+
+  it.effect("omits channels and the telegram secrets provider for the minimal intent", () =>
+    Effect.gen(function* () {
+      const rendered = yield* renderOpenclawConfig(minimalIntent);
+
+      expect(pipe(rendered.canonicalJson, Str.includes("op_telegram"))).toBe(false);
+      expect(parseDocument(rendered.canonicalJson)).toEqual({
+        agents: {
+          list: [
+            {
+              id: "spike",
+              model: { primary: "ollama/gemma3:4b" },
+              name: "P0 Spike 1",
+              workspace: "/var/lib/beep/openclaw/workspace",
+            },
+          ],
+        },
+        gateway: {
+          auth: { mode: "token", token: { id: "value", provider: "op_gateway", source: "exec" } },
+          bind: "loopback",
+          controlUi: {
+            allowedOrigins: ["http://127.0.0.1:19021", "http://localhost:19021"],
+            enabled: true,
+          },
+          mode: "local",
+          port: 19021,
+          reload: { mode: "off" },
+        },
+        logging: { file: "/var/lib/beep/openclaw/state/log/openclaw.log" },
+        secrets: {
+          providers: {
+            op_gateway: {
+              args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/spike3-rotating/password"],
+              command: "/opt/beep/openclaw/op-resolver.sh",
+              jsonOnly: false,
+              passEnv: ["OP_SERVICE_ACCOUNT_TOKEN", "PATH"],
+              source: "exec",
+              trustedDirs: ["/opt/beep/openclaw"],
+            },
+          },
+        },
+        tools: { deny: ["*"] },
+      });
+    })
+  );
+
+  it.effect("renders secret-referenced provider api keys as exec secret references", () =>
+    Effect.gen(function* () {
+      const rendered = yield* renderOpenclawConfig(
+        OpenclawDeploymentIntent.make({
+          agent: minimalIntent.agent,
+          controlUi: minimalIntent.controlUi,
+          gateway: minimalIntent.gateway,
+          logging: minimalIntent.logging,
+          openclawVersion: "2026.7.1-2",
+          persona: minimalIntent.persona,
+          providers: [
+            OpenclawModelProviderIntent.make({
+              api: "openai-compat",
+              apiKey: OpenclawProviderApiKeySecretRef.make({
+                _tag: "SecretRef",
+                ref: OpenclawSecretReference.make("op://beep-p0-spike3/corp-llm/api-key"),
+              }),
+              baseUrl: "https://llm.example.com/v1",
+              id: "corp",
+              models: [OpenclawModelDeclaration.make({ id: "corp-model", input: ["text"], name: "Corp Model" })],
             }),
-            baseUrl: "https://llm.example.com/v1",
-            id: "corp",
-            models: [OpenclawModelDeclaration.make({ id: "corp-model", input: ["text"], name: "Corp Model" })],
-          }),
-        ],
-        secretsResolver: minimalIntent.secretsResolver,
-      })
-    );
-    const parsed = parseDocument(rendered.canonicalJson);
+          ],
+          secretsResolver: minimalIntent.secretsResolver,
+        })
+      );
+      const parsed = parseDocument(rendered.canonicalJson);
 
-    expect(parsed).toMatchObject({
-      models: {
-        providers: {
-          corp: {
-            api: "openai-compat",
-            apiKey: { id: "value", provider: "op_provider_corp", source: "exec" },
-            baseUrl: "https://llm.example.com/v1",
+      expect(parsed).toMatchObject({
+        models: {
+          providers: {
+            corp: {
+              api: "openai-compat",
+              apiKey: { id: "value", provider: "op_provider_corp", source: "exec" },
+              baseUrl: "https://llm.example.com/v1",
+            },
           },
         },
-      },
-      secrets: {
-        providers: {
-          op_provider_corp: { args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/corp-llm/api-key"] },
+        secrets: {
+          providers: {
+            op_provider_corp: { args: ["/opt/beep/openclaw/bin/op", "op://beep-p0-spike3/corp-llm/api-key"] },
+          },
         },
-      },
-    });
-    expect(secretReferenceCount(rendered.canonicalJson)).toBe(2);
-    expect(pipe(withoutSecretsJson(rendered.canonicalJson), Str.includes("op://"))).toBe(false);
-  });
+      });
+      expect(secretReferenceCount(rendered.canonicalJson)).toBe(2);
+      expect(pipe(withoutSecretsJson(rendered.canonicalJson), Str.includes("op://"))).toBe(false);
+    })
+  );
 
   it("declares extension surfaces per intent", () => {
     expect(declaredExtensionSurfaces(goldenDeploymentIntent)).toEqual([
@@ -347,17 +354,18 @@ describe("@beep/openclaw render adapter", () => {
     );
   });
 
-  it.prop(
+  it.effect.prop(
     "renders deterministically for arbitrary intents",
     [IntentArbitrary],
-    ([intent]) => {
-      const first = renderConfig(intent);
-      const second = renderConfig(intent);
+    ([intent]) =>
+      Effect.gen(function* () {
+        const first = yield* renderOpenclawConfig(intent);
+        const second = yield* renderOpenclawConfig(intent);
 
-      expect(second.canonicalJson).toBe(first.canonicalJson);
-      expect(second.contentHash).toBe(first.contentHash);
-      pipe(UnknownFromJsonString.decodeResult(first.canonicalJson), Result.isSuccess, assertTrue);
-    },
+        expect(second.canonicalJson).toBe(first.canonicalJson);
+        expect(second.contentHash).toBe(first.contentHash);
+        pipe(UnknownFromJsonString.decodeResult(first.canonicalJson), Result.isSuccess, assertTrue);
+      }),
     { arbitrary: fcRuns(25) }
   );
 });

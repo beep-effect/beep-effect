@@ -33,7 +33,7 @@ import {
 } from "@beep/openclaw/OpenclawRender";
 import { currentHostArchitecture, currentHostPlatform } from "@beep/utils/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Config, Context, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as FileSystem from "effect/FileSystem";
@@ -321,7 +321,7 @@ const writeRenderedGoldenConfig = Effect.fnUntraced(function* (bench: OpenclawIt
 });
 
 describe("@beep/openclaw pinned-binary acceptance", () => {
-  layer(acceptanceLayer, { timeout: "10 minutes" })((it) => {
+  it.layer(acceptanceLayer, { timeout: "10 minutes", excludeTestServices: true })("native pinned binary", (it) => {
     it.effect(
       "verifies the staged binary --version against the pinned compatibility set",
       Effect.fnUntraced(function* () {
