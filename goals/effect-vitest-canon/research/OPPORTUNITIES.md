@@ -3291,3 +3291,21 @@ native temp directories through its configured cache directory. All nine scoped
 roots were removed correctly; only the harness parent-path assertion failed.
 Preserve that report and use the runtime temp-directory setting when validating
 ownership before cleaning the unscoped control's exact recorded roots.
+
+## QA Capture continuation: fixture and verification harness friction
+
+- While strengthening capture assertions, a private mutation harness traversed
+  stale ts-morph nodes after replacing a parent expression. Evidence: the
+  submitted-sequence control raised `node that was removed or forgotten` before
+  running tests. Selecting registrations before mutation and applying edits in
+  reverse order completed the controls; the harness restored exact source bytes.
+- A preservation harness tokenized whole files containing template literals and
+  falsely reported a missing unchanged assertion. Comparing parsed call-expression
+  tokens instead verified all 117 originals. Use AST-selected fragments for these
+  receipts rather than a bare whole-file scanner without template rescanning.
+- Removed the unused Effect import left by the planner property migration after
+  package verification reported TS6133. The corrected full package proof passed.
+- The hosted Heavy / Lint Policy job for PR #1307 reported eight inline schema
+  compilations across DuckDB, OpenClaw and lint-rules tests. All eight are additions
+  relative to main. Package audits alone did not exercise the root oxlint policy;
+  include the policy check before publishing future test batches.

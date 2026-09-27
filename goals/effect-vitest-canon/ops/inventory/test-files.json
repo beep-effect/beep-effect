@@ -5421,63 +5421,63 @@
     "file": "packages/tooling/library/qa-capture/test/ActionEvent.pointer-cancel.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 1317,
-    "lines": 36
+    "bytes": 1354,
+    "lines": 37
   },
   {
     "file": "packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 8697,
-    "lines": 233
+    "bytes": 12092,
+    "lines": 335
   },
   {
     "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 9858,
-    "lines": 243
+    "bytes": 16205,
+    "lines": 374
   },
   {
     "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 14046,
-    "lines": 393
+    "bytes": 14033,
+    "lines": 380
   },
   {
     "file": "packages/tooling/library/qa-capture/test/QaCapture.equivalence.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 1277,
-    "lines": 39
+    "bytes": 1313,
+    "lines": 40
   },
   {
     "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 3818,
-    "lines": 135
+    "bytes": 7881,
+    "lines": 184
   },
   {
     "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 6805,
-    "lines": 160
+    "bytes": 6743,
+    "lines": 157
   },
   {
     "file": "packages/tooling/library/qa-capture/test/Witness.service.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 1602,
-    "lines": 37
+    "bytes": 3375,
+    "lines": 77
   },
   {
     "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
     "package": "@beep/qa-capture",
     "kind": "test",
-    "bytes": 4678,
+    "bytes": 4702,
     "lines": 132
   },
   {
