@@ -2916,6 +2916,7 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2923,6 +2924,7 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
