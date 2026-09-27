@@ -2,6 +2,7 @@ import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -57,8 +58,8 @@ describe("rule registry", () => {
       expect(["warn", "error"]).toContain(RULES[name].severity);
       expect(RULES[name].summary.length).toBeGreaterThan(0);
     }
-    expect(O.isSome(RULES["no-native-error"].replaces)).toBe(true);
-    expect(O.isNone(RULES["no-bigint-literals"].replaces)).toBe(true);
+    RULES["no-native-error"].replaces.pipe(O.isSome, assertTrue);
+    assertNone(RULES["no-bigint-literals"].replaces);
   });
 
   it.effect(
