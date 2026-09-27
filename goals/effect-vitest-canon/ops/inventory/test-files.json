@@ -2887,64 +2887,64 @@
     "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 4795,
-    "lines": 131
+    "bytes": 4963,
+    "lines": 127
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 5107,
-    "lines": 136
+    "bytes": 5139,
+    "lines": 128
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 6347,
-    "lines": 176
+    "bytes": 6381,
+    "lines": 169
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 4442,
-    "lines": 138
+    "bytes": 4563,
+    "lines": 132
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 12685,
-    "lines": 345
+    "bytes": 15738,
+    "lines": 400
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 788,
-    "lines": 18
+    "bytes": 824,
+    "lines": 19
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Graph/TypeClass.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 6386,
-    "lines": 177
+    "bytes": 6939,
+    "lines": 185
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/TaggedError.equivalence.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 8333,
-    "lines": 194
+    "bytes": 8369,
+    "lines": 195
   },
   {
     "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
     "package": "@beep/nlp-processing",
     "kind": "test",
-    "bytes": 3480,
-    "lines": 90
+    "bytes": 6723,
+    "lines": 138
   },
   {
     "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
