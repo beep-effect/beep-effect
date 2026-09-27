@@ -1200,29 +1200,29 @@
     "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 5693,
-    "lines": 125
+    "bytes": 8056,
+    "lines": 184
   },
   {
     "file": "packages/documents/tables/test/SyncCursorTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 4250,
-    "lines": 107
+    "bytes": 6464,
+    "lines": 164
   },
   {
     "file": "packages/documents/tables/test/SyncItemTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 6424,
-    "lines": 147
+    "bytes": 7780,
+    "lines": 178
   },
   {
     "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
     "package": "@beep/documents-tables",
     "kind": "test",
-    "bytes": 5887,
-    "lines": 129
+    "bytes": 8223,
+    "lines": 187
   },
   {
     "file": "packages/documents/use-cases/test/Document.errors.test.ts",
