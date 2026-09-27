@@ -2562,3 +2562,12 @@ missed this nested callback, so the later property checkpoint preserved its old
 syntax. Replaced it with assertNone on the identical value and retained the
 branch, input domains and run floor. A per-package residual detector review
 before leaving the assertion phase would have caught this missed conversion.
+
+## Observability runner dependency publication parity
+
+PR #1300 Repo Sanity failed because adding the test-runner development dependency
+also requires generated project references and an in-range changeset. The hosted
+`beep tsconfig-sync --check` named two package reference files; changeset-status
+named @beep/observability. This was introduced by the runner integration. Run
+`beep tsconfig-sync` and `beep quality changeset-status --since origin/main`
+before each future runner publication to catch both together.
