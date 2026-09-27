@@ -5211,63 +5211,63 @@
     "file": "packages/tooling/library/ai-metrics/test/FlightRecordGeneration.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 1421,
+    "bytes": 1237,
     "lines": 34
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 10504,
-    "lines": 177
+    "bytes": 10624,
+    "lines": 180
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness-laws.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 3459,
+    "bytes": 3360,
     "lines": 83
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 48269,
-    "lines": 1285
+    "bytes": 49684,
+    "lines": 1316
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 3675,
-    "lines": 74
+    "bytes": 7054,
+    "lines": 154
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/circuit-breaker.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 7095,
-    "lines": 184
+    "bytes": 7087,
+    "lines": 188
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 19015,
-    "lines": 460
+    "bytes": 19925,
+    "lines": 500
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/data-root.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 10049,
-    "lines": 280
+    "bytes": 10377,
+    "lines": 288
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 2971,
+    "bytes": 2772,
     "lines": 68
   },
   {
@@ -5275,126 +5275,126 @@
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
     "bytes": 2409,
-    "lines": 63
+    "lines": 64
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 2893,
-    "lines": 69
+    "bytes": 3015,
+    "lines": 74
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/forwarder.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 2700,
-    "lines": 72
+    "bytes": 2766,
+    "lines": 74
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 57712,
-    "lines": 1316
+    "bytes": 65058,
+    "lines": 1446
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 42831,
-    "lines": 1085
+    "bytes": 53012,
+    "lines": 1313
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 35923,
-    "lines": 833
+    "bytes": 37416,
+    "lines": 893
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 164895,
-    "lines": 3726
+    "bytes": 168056,
+    "lines": 3834
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/install.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 4757,
+    "bytes": 4728,
     "lines": 122
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/mirror.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 3649,
-    "lines": 83
+    "bytes": 3752,
+    "lines": 87
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/otlp.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 2111,
-    "lines": 54
+    "bytes": 2147,
+    "lines": 55
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/privacy.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 1979,
-    "lines": 55
+    "bytes": 1883,
+    "lines": 52
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 8049,
-    "lines": 226
+    "bytes": 8066,
+    "lines": 228
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/scorecard.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 6759,
-    "lines": 149
+    "bytes": 6257,
+    "lines": 141
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 26763,
-    "lines": 690
+    "bytes": 37805,
+    "lines": 956
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 13583,
-    "lines": 336
+    "bytes": 14719,
+    "lines": 366
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/source-discovery.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 1692,
-    "lines": 34
+    "bytes": 1739,
+    "lines": 35
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 11623,
-    "lines": 269
+    "bytes": 11155,
+    "lines": 252
   },
   {
     "file": "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts",
     "package": "@beep/repo-ai-metrics",
     "kind": "test",
-    "bytes": 9901,
-    "lines": 268
+    "bytes": 9809,
+    "lines": 264
   },
   {
     "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
@@ -7859,5 +7859,12 @@
     "kind": "test",
     "bytes": 3709,
     "lines": 94
+  },
+  {
+    "file": "packages/tooling/library/ai-metrics/test/harness-ledger.test.ts",
+    "package": "@beep/repo-ai-metrics",
+    "kind": "test",
+    "bytes": 18113,
+    "lines": 414
   }
 ]
