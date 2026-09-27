@@ -2511,6 +2511,7 @@
           "@beep/identity",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2519,6 +2520,7 @@
           "@beep/identity",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

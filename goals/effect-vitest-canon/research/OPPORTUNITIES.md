@@ -2571,3 +2571,12 @@ also requires generated project references and an in-range changeset. The hosted
 named @beep/observability. This was introduced by the runner integration. Run
 `beep tsconfig-sync` and `beep quality changeset-status --since origin/main`
 before each future runner publication to catch both together.
+
+## Runner dependency generated-boundary follow-up
+
+After TypeScript sync passed on PR #1300, the next Repo Sanity stage found
+`standards/fallow.boundaries.generated.jsonc` stale. The runner development
+dependency adds exactly two allowed-boundary entries for the owning package.
+Regenerated with `bun run fallow:boundaries:write`; no boundary policy or
+unrelated package entry changed. Include this command beside tsconfig-sync
+when admitting the runner dependency in later waves.
