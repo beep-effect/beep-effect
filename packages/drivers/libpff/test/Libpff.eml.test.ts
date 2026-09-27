@@ -5,8 +5,9 @@ import {
   stripMimeStructuralHeaders,
   synthesizeEmlHeaderBlock,
 } from "@beep/libpff";
+import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Base64 from "effect/encoding/Base64";

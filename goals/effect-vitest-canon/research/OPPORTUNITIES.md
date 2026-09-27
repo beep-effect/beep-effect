@@ -3335,3 +3335,18 @@ ownership before cleaning the unscoped control's exact recorded roots.
   word `seed` after the expected assertion failed. Receipts now preserve the
   actual diagnostic and explicit `BEEP_FC_SEED=20260708` replay environment;
   they do not claim the failure text contains a seed when it does not.
+
+### Libpff adapter and control-harness diagnostics
+
+The saved native-layer migration initially passed generator functions directly
+into `it.effect`; package verification rejected them with TS2345. Keeping the
+existing `Effect.fnUntraced` wrapper fixes the adapter shape. A preservation
+check confirms the original assertions and fixtures survive that correction.
+
+The property control harness expected the literal word `counterexample`, while
+this native effect adapter reports `Shrunk input:` and `Replay:`. The skip
+control likewise expected `pending`, while dynamic `context.skip` reports
+`skipped`. Both harness assumptions were corrected against the actual JSON
+reports; failing mutations still fail their intended registrations and the
+original source bytes are restored. A shared diagnostic normalizer covering
+these reporter variants would prevent repeated harness-only failures.

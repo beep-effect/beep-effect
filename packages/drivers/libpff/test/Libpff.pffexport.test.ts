@@ -15,9 +15,10 @@ import {
 } from "@beep/libpff";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
