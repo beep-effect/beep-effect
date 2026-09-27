@@ -119,7 +119,9 @@ beforeEach(() => {
 });
 
 describe("AnthropicTurnKernel", () => {
-  it.layer(AnthropicTurnKernel)("with a deterministic provider stream", (it) => {
+  // This module mock owns one scenario record; deferred provider and repair
+  // reads must finish before the next case resets or mutates that record.
+  it.layer(AnthropicTurnKernel, { concurrent: false })("with a deterministic provider stream", (it) => {
     it.effect(
       "captures finish usage and response metadata, then finalizes after every block",
       Effect.fnUntraced(function* () {
