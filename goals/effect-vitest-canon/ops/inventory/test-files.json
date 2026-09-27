@@ -1074,50 +1074,50 @@
     "file": "packages/documents/domain/test/EntityMaterialization.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 1911,
-    "lines": 42
+    "bytes": 1947,
+    "lines": 43
   },
   {
     "file": "packages/documents/domain/test/SyncConflict.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 4720,
-    "lines": 112
+    "bytes": 5092,
+    "lines": 119
   },
   {
     "file": "packages/documents/domain/test/SyncCursor.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 3781,
-    "lines": 98
+    "bytes": 4020,
+    "lines": 100
   },
   {
     "file": "packages/documents/domain/test/SyncItem.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 4420,
-    "lines": 112
+    "bytes": 4637,
+    "lines": 115
   },
   {
     "file": "packages/documents/domain/test/SyncOperation.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 4701,
-    "lines": 107
+    "bytes": 5074,
+    "lines": 114
   },
   {
     "file": "packages/documents/domain/test/TaggedError.equivalence.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 723,
-    "lines": 15
+    "bytes": 844,
+    "lines": 18
   },
   {
     "file": "packages/documents/domain/test/Taxonomy.test.ts",
     "package": "@beep/documents-domain",
     "kind": "test",
-    "bytes": 3635,
-    "lines": 101
+    "bytes": 3574,
+    "lines": 94
   },
   {
     "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
