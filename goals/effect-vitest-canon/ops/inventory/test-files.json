@@ -2089,8 +2089,8 @@
     "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
     "package": "@beep/rdf-canonize",
     "kind": "test",
-    "bytes": 8131,
-    "lines": 233
+    "bytes": 6734,
+    "lines": 157
   },
   {
     "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
