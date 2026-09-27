@@ -3,8 +3,10 @@ import * as Worker from "@beep/architecture-lab-domain/entities/Worker";
 import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -122,6 +124,7 @@ describe("WorkItem aggregate", () => {
       const archived = yield* WorkItem.archive(makeWorkItem(workItemId));
       const exit = yield* WorkItem.reopen(archived).pipe(Effect.exit);
       expect(exit._tag).toBe("Failure");
+      assertSome(Exit.findErrorOption(exit), WorkItem.WorkItemAlreadyArchived.make({ workItemId }));
     })
   );
 });
