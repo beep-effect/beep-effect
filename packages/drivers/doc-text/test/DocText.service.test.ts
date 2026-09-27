@@ -15,8 +15,9 @@ import {
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
