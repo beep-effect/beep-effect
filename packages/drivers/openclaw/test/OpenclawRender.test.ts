@@ -20,9 +20,10 @@ import {
   renderOpenclawConfig,
 } from "@beep/openclaw/OpenclawRender";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

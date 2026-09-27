@@ -1,7 +1,8 @@
 import { OpenclawCommandExitError, OpenclawOutputParseError } from "@beep/openclaw/Openclaw.errors";
 import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models";
 import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";

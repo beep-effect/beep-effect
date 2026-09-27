@@ -1,8 +1,9 @@
 import { OpenclawCommandTimeoutError } from "@beep/openclaw/Openclaw.errors";
 import { OpenclawInvocationContext } from "@beep/openclaw/Openclaw.models";
 import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
+import { it } from "@beep/test-runner";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as FileSystem from "effect/FileSystem";
