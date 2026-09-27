@@ -2,9 +2,10 @@ import { $NlpMcpId } from "@beep/identity";
 import { StreamingToolkit, StreamingToolkitHandlersLive } from "@beep/nlp-mcp";
 import * as DatasetLoader from "@beep/nlp-mcp/Streaming/DatasetLoader";
 import { StreamingAllowedRoots } from "@beep/nlp-mcp/Streaming/TextStream";
+import { it } from "@beep/test-runner";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -79,7 +80,7 @@ const withTempFixture = <A, E, R>(
   });
 
 describe("StreamingToolkit integration", () => {
-  layer(TestLayer)("file-backed streaming handlers", (it) => {
+  it.layer(TestLayer)("file-backed streaming handlers", (it) => {
     it.effect("stream_read_lines returns lines from a temp file", () =>
       withTempFixture("read.txt", "alpha\nbeta\ngamma\n", (file) =>
         Effect.gen(function* () {
@@ -415,7 +416,7 @@ describe("StreamingToolkit integration", () => {
   });
 });
 
-layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
+it.layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
   it.effect(
     "stream_load_text rejects IPv4-mapped internal URLs",
     Effect.fnUntraced(function* () {

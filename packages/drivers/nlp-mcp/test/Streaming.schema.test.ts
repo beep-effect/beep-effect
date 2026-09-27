@@ -35,8 +35,9 @@ import {
   TextStatsOutput,
   ValidateJsonlOptions,
 } from "@beep/nlp-mcp/StreamingTools";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
