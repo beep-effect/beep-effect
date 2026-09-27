@@ -279,15 +279,15 @@ describe("harness-ledger", () => {
       Effect.gen(function* () {
         const row = yield* makeRow();
         const encoded = yield* asRecord(yield* parseJson(yield* encodeRowJson(row)));
-        const badId = yield* Effect.result(decodeRowJson(yield* stringifyJson({ ...encoded, rowId: "hl-2026-09-25" })));
-        const badResurrect = yield* Effect.result(
+        const badId = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, rowId: "hl-2026-09-25" })));
+        const badResurrect = yield* Effect.flip(
           decodeRowJson(yield* stringifyJson({ ...encoded, resurrectWhen: "model changes" }))
         );
         const tombstone = yield* decodeRowJson(
           yield* stringifyJson({ ...encoded, disposition: "tombstoned", resurrectWhen: "model changes" })
         );
-        expect(badId._tag).toBe("Failure");
-        expect(badResurrect._tag).toBe("Failure");
+        expect(badId._tag).toBe("SchemaError");
+        expect(badResurrect._tag).toBe("SchemaError");
         assertSome(tombstone.resurrectWhen, "model changes");
       })
     );
@@ -307,18 +307,16 @@ describe("harness-ledger", () => {
         assertSome(decoded.targetSurface, target);
         assertSome(decoded.windowSessions, 30);
         const encoded = yield* asRecord(yield* parseJson(json));
-        const badPrevious = yield* Effect.result(
+        const badPrevious = yield* Effect.flip(
           decodeRowJson(yield* stringifyJson({ ...encoded, previousRowId: "row-1" }))
         );
-        const badWindow = yield* Effect.result(decodeRowJson(yield* stringifyJson({ ...encoded, windowSessions: 0 })));
-        expect(badPrevious._tag).toBe("Failure");
-        expect(badWindow._tag).toBe("Failure");
+        const badWindow = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, windowSessions: 0 })));
+        expect(badPrevious._tag).toBe("SchemaError");
+        expect(badWindow._tag).toBe("SchemaError");
         const defaulted = yield* makeRow();
-        expect([
-          O.isNone(defaulted.previousRowId),
-          O.isNone(defaulted.targetSurface),
-          O.isNone(defaulted.windowSessions),
-        ]).toStrictEqual([true, true, true]);
+        assertNone(defaulted.previousRowId);
+        assertNone(defaulted.targetSurface);
+        assertNone(defaulted.windowSessions);
       })
     );
 

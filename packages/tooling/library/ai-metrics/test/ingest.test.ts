@@ -626,7 +626,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(plaintext).toContain("secret-value");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -725,7 +725,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2")), assertFalse);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -797,7 +797,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1076,7 +1076,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             yield* markAiMetricsOtlpTurnsExported([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1189,7 +1189,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(reportMarkdown).toContain("AI Metrics Weekly Config-Impact Report");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1314,7 +1314,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           expect(planJson).not.toContain(tmpDir);
           expect(doctorJson).not.toContain(tmpDir);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -1605,7 +1605,7 @@ volumes:
             expect(json).not.toContain(tmpDir);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -1698,7 +1698,7 @@ volumes:
           expect(json).not.toContain(tmpDir);
           expect(json).not.toContain(sourcePath);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -1814,7 +1814,7 @@ volumes:
             expect(turnRows).toEqual([{ sourceRole: "subagent" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -1852,7 +1852,7 @@ volumes:
             expect(scorecardRows).toEqual([{ completionReady: false, coverageGapsJson: "[]" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -1992,7 +1992,7 @@ volumes:
             expect(migrationRows).toEqual([{ migrationId: "ai-metrics-agent-task-id-v2" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2057,7 +2057,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2164,7 +2164,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2408,7 +2408,7 @@ volumes:
             expect(sessions).toEqual([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2496,7 +2496,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2588,7 +2588,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2676,7 +2676,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2754,7 +2754,7 @@ volumes:
             expect(exported.sessionSpanCount).toBe(1);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2859,7 +2859,7 @@ volumes:
             expect(turnParents).toEqual(sessionSpanIds);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2934,7 +2934,7 @@ volumes:
           expect(changed.diff.modifiedPaths).toEqual([".codex/config.toml"]);
           expect(O.getOrThrow(changed.snapshot.previousSnapshotId)).toBe(result.snapshot.snapshotId);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -2978,7 +2978,7 @@ volumes:
           expect(O.getOrThrow(result.snapshot.previousSnapshotId)).toBe("config-legacy");
           expect(result.diff.modifiedPaths).toEqual(["AGENTS.md"]);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3002,7 +3002,7 @@ volumes:
 
           expect(error.message).toContain("Failed to decode previous AI metrics config snapshot artifact");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3047,7 +3047,7 @@ volumes:
           pipe(yield* fs.exists(path.join(snapshotDir, "latest.json")), assertFalse);
           pipe(A.some(snapshotFiles, Str.endsWith(".json")), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3112,7 +3112,7 @@ volumes:
           expect(json).not.toContain(tmpDir);
           expect(json).not.toContain("super-secret-token");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3154,7 +3154,7 @@ volumes:
           expect(claude.value.includedFileCount).toBe(1);
           expect(claude.value.files[0]?.sourceRole).toBe("primary");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3199,7 +3199,7 @@ volumes:
           pipe(codex.value.limitedByMaxFiles, assertFalse);
           expect(result.discoveredFileCount).toBe(1);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3250,7 +3250,7 @@ volumes:
           expect(codex.value.files[0]?.sizeBytes).toBeLessThanOrEqual(128);
           expect(codex.value.sizeExcludedFileCount).toBe(1);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3292,7 +3292,7 @@ volumes:
           expect(codex.value.files[0]?.sourceRole).toBe("subagent");
           pipe(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none()), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3411,7 +3411,7 @@ volumes:
           expect(statusText).not.toContain(dataRoot);
           expect(statusText).not.toContain("secret-value");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3475,7 +3475,7 @@ volumes:
           pipe(drill.transcriptTextPrinted, assertFalse);
           pipe(yield* fs.exists(drill.derivedDuckDbPath), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3522,7 +3522,7 @@ volumes:
           pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-new")), assertFalse);
           pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3599,7 +3599,7 @@ volumes:
 
           pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3687,7 +3687,7 @@ volumes:
 
           pipe(exit, Exit.isFailure, assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 
@@ -3825,7 +3825,7 @@ volumes:
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
           expect(labelOnlyCounts).toEqual({ agentTasks: 0, labels: 0 });
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      ).pipe(Effect.scoped);
     })
   );
 });

@@ -3557,3 +3557,13 @@ A subsequent lease-payload control initially reused the fixture's existing
 all-f hash, so it changed nothing and the revised test correctly passed. That
 run is not sensitivity evidence. The corrected mutation uses a distinct hash;
 control setup should assert that replacement values differ from the fixture.
+
+## 2026-09-27: Wrapper packet category disagreed with the failed inner lane
+
+The consolidated AI metrics publish packet categorized its cheap-gates failure
+as schema-first policy. The same job's detailed lane log showed schema-first
+passing and `lint:effect-vitest` failing on 78 changed finding identities. A
+focused schema-first rerun was unnecessary attribution work. Operator summaries
+should preserve the actual failed inner lane from the verdict instead of an
+older or broad wrapper category. The remaining AI metrics findings still need
+review and ledger reconciliation; this discrepancy is not a reason to waive them.

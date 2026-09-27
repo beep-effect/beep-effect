@@ -3,7 +3,7 @@ import {
   decryptEncryptedRawArchiveEnvelope,
   writeEncryptedRawArchiveObject,
 } from "@beep/repo-ai-metrics/archive";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -55,55 +55,59 @@ describe("AI metrics encrypted raw archive envelope", () => {
     pipe(decodeArchiveEnvelope(encoded), Result.isFailure, assertTrue);
   });
 
-  it.effect(
-    "writes and decrypts a large raw archive object",
-    Effect.fn(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const rawArchiveDir = yield* fs.makeTempDirectoryScoped({ prefix: "ai-metrics-large-archive-" });
-        const content = Str.repeat(8 * 1024 * 1024)("x");
-        const rawArchiveKey = Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
-        const object = yield* writeEncryptedRawArchiveObject({
-          content,
-          hashSalt: O.some("fixture-salt"),
-          rawArchiveDir,
-          rawArchiveKey,
-          sourceKind: "codex",
-          sourcePath: "large-session.jsonl",
-        });
-        pipe(yield* fs.exists(object.archivePath), assertTrue);
-        const envelope = Result.getOrThrow(decodeArchiveEnvelope(yield* fs.readFileString(object.archivePath)));
-        expect(yield* decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey })).toBe(content);
-      },
-      Effect.scoped,
-      provideScopedLayer(NodeServices.layer)
-    )
-  );
-
-  it.effect(
-    "reports envelope construction failures as typed archive errors",
-    Effect.fn(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const rawArchiveDir = yield* fs.makeTempDirectoryScoped({ prefix: "ai-metrics-invalid-envelope-" });
-        yield* TestClock.setTime(-1);
-        const failure = yield* Effect.flip(
-          writeEncryptedRawArchiveObject({
-            content: "fixture",
+  it.layer(NodeServices.layer)((it) => {
+    it.effect(
+      "writes and decrypts a large raw archive object",
+      Effect.fn(
+        function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const rawArchiveDir = yield* fs.makeTempDirectoryScoped({ prefix: "ai-metrics-large-archive-" });
+          const content = Str.repeat(8 * 1024 * 1024)("x");
+          const rawArchiveKey = Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+          const object = yield* writeEncryptedRawArchiveObject({
+            content,
             hashSalt: O.some("fixture-salt"),
             rawArchiveDir,
-            rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+            rawArchiveKey,
             sourceKind: "codex",
-            sourcePath: "session.jsonl",
-          })
-        );
-        expect(failure._tag).toBe("AiMetricsArchiveError");
-        expect(failure.message).toBe("Failed to validate raw archive envelope.");
-      },
-      Effect.scoped,
-      provideScopedLayer(NodeServices.layer)
-    )
-  );
+            sourcePath: "large-session.jsonl",
+          });
+          pipe(yield* fs.exists(object.archivePath), assertTrue);
+          const envelope = Result.getOrThrow(decodeArchiveEnvelope(yield* fs.readFileString(object.archivePath)));
+          expect(yield* decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey })).toBe(content);
+        },
+        Effect.scoped,
+        Effect.scoped
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect(
+      "reports envelope construction failures as typed archive errors",
+      Effect.fn(
+        function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const rawArchiveDir = yield* fs.makeTempDirectoryScoped({ prefix: "ai-metrics-invalid-envelope-" });
+          yield* TestClock.setTime(-1);
+          const failure = yield* Effect.flip(
+            writeEncryptedRawArchiveObject({
+              content: "fixture",
+              hashSalt: O.some("fixture-salt"),
+              rawArchiveDir,
+              rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+              sourceKind: "codex",
+              sourcePath: "session.jsonl",
+            })
+          );
+          expect(failure._tag).toBe("AiMetricsArchiveError");
+          expect(failure.message).toBe("Failed to validate raw archive envelope.");
+        },
+        Effect.scoped,
+        Effect.scoped
+      )
+    );
+  });
 
   it.prop(
     "round-trips schema-derived envelopes",
