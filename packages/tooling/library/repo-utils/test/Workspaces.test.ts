@@ -122,6 +122,14 @@ layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
             Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`))
           );
           expect(result).toBe("caught: NoSuchFileError");
+
+          const fs = yield* Fs.FileSystem;
+          const present = yield* fs.makeTempDirectoryScoped();
+          yield* fs.writeFileString(`${present}/package.json`, '{ "name": "present-root" }');
+          // No workspaces: the subject returns after decoding this manifest,
+          // before reaching the native glob implementation.
+          const workspaces = yield* resolveWorkspaceDirs(present);
+          expect(HashMap.size(workspaces)).toBe(0);
         })
       );
     });

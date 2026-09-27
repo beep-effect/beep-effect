@@ -141,6 +141,12 @@ describe("FsUtils", () => {
           .readJson("/nonexistent/path/file.json")
           .pipe(Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e.path}`)));
         expect(result).toBe("caught: /nonexistent/path/file.json");
+
+        const fs = yield* Fs.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const present = `${root}/present.json`;
+        yield* fs.writeFileString(present, '{ "available": true }');
+        assertSome(yield* utils.readJson(present), { available: true });
       })
     );
 
@@ -214,6 +220,13 @@ describe("FsUtils", () => {
           .modifyFile("/nonexistent/file.txt", (c) => c)
           .pipe(Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e.path}`)));
         expect(result).toBe("caught: /nonexistent/file.txt");
+
+        const fs = yield* Fs.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const present = `${root}/present.txt`;
+        yield* fs.writeFileString(present, "available");
+        expect(yield* utils.modifyFile(present, () => "updated")).toBe(true);
+        expect(yield* fs.readFileString(present)).toBe("updated");
       })
     );
   });
@@ -237,6 +250,10 @@ describe("FsUtils", () => {
           .existsOrThrow("/nonexistent/path/xyz")
           .pipe(Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e.path}`)));
         expect(result).toBe("caught: /nonexistent/path/xyz");
+
+        const fs = yield* Fs.FileSystem;
+        const present = yield* fs.makeTempDirectoryScoped();
+        expect(yield* utils.existsOrThrow(present)).toBeUndefined();
       })
     );
   });
@@ -295,6 +312,12 @@ describe("FsUtils", () => {
       Effect.fn(function* () {
         const files = yield* walkFiles("/nonexistent/root/xyz");
         expect(files).toEqual([]);
+
+        const fs = yield* Fs.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const present = `${root}/present.ts`;
+        yield* fs.writeFileString(present, "");
+        expect(yield* walkFiles(root)).toEqual([present]);
       })
     );
 
@@ -395,6 +418,10 @@ describe("FsUtils", () => {
       Effect.fn(function* () {
         // No error channel to catch: the success value is total.
         expect(yield* exists("/nonexistent/path/xyz")).toBe(false);
+
+        const fs = yield* Fs.FileSystem;
+        const present = yield* fs.makeTempDirectoryScoped();
+        expect(yield* exists(present)).toBe(true);
       })
     );
   });

@@ -2458,3 +2458,12 @@ Keep the original complete comparisons wherever this boundary applies and record
 exceptions; do not manufacture class expectations or project away prototypes.
 A helper migration checklist that compares equality semantics before replacement
 would prevent this failed proof. No production defect was demonstrated.
+
+## 2026-09-26: focused Vitest selector needs result-count validation
+
+The repo-utils flake-control focused Node command exited zero while selecting no
+tests because its assumed composite names did not match the runner's filter
+semantics. The expected-name/count guard rejected that run; its report remains
+a diagnostic artifact with no passing credit. Select the actual existing test
+titles and validate all six expected full names in the resulting JSON before
+accepting focused proof. Process exit zero alone is insufficient evidence.
