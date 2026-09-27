@@ -40,7 +40,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Context, Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -48,12 +48,6 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 
 const decodeUnknownSafeMetadataKey = S.decodeUnknownEffect(SafeMetadataKey);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const encoder = new TextEncoder();
 const decodeFramesAtManifest = S.decodeUnknownEffect(S.fromJsonString(ExtractFramesAtManifest));
 
@@ -159,6 +153,13 @@ const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) 
     Layer.provide(makeCaptureSpawnerLayer(commands, exitCode)),
     Layer.provide(NodeServices.layer)
   );
+class Commands extends Context.Service<Commands, Array<ChildProcess.StandardCommand>>()(
+  "@beep/ffmpeg/test/FFmpeg.capture.test/Commands"
+) {}
+const makeTestLayer = (exitCode = 0) =>
+  Layer.unwrap(
+    Effect.map(Commands, (commands) => Layer.mergeAll(NodeServices.layer, makeLayer(commands, exitCode)))
+  ).pipe(Layer.provideMerge(Layer.sync(Commands, () => [])));
 
 const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
@@ -449,116 +450,57 @@ describe("@beep/ffmpeg capture", () => {
     ]);
   });
 
-  it.effect("surfaces start time and r_frame_rate from ffprobe", () => {
-    const commands: Array<ChildProcess.StandardCommand> = [];
+  it.layer(makeTestLayer())("surfaces start time and r_frame_rate from ffprobe", (it) => {
+    it.effect("surfaces start time and r_frame_rate from ffprobe", () =>
+      Effect.gen(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-    return withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const videoPath = path.join(tmpDir, "clip.mp4");
-        yield* fs.writeFileString(videoPath, "video");
+        return yield* withTempDirectory(
+          Effect.fnUntraced(function* (tmpDir) {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "clip.mp4");
+            yield* fs.writeFileString(videoPath, "video");
 
-        const ffmpeg = yield* FFmpeg;
-        const probe = yield* ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath }));
+            const ffmpeg = yield* FFmpeg;
+            const probe = yield* ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath }));
 
-        expect(
-          pipe(
-            probe.rFrameRate,
-            O.getOrElse(() => 0)
-          )
-        ).toBe(30);
-        expect(
-          pipe(
-            probe.startTimeSeconds,
-            O.getOrElse(() => -1)
-          )
-        ).toBe(0.023);
+            expect(
+              pipe(
+                probe.rFrameRate,
+                O.getOrElse(() => 0)
+              )
+            ).toBe(30);
+            expect(
+              pipe(
+                probe.startTimeSeconds,
+                O.getOrElse(() => -1)
+              )
+            ).toBe(0.023);
+          })
+        );
       })
-    ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
+    );
   });
 
-  it.effect(
-    "extracts timestamped frames and writes the frames-at manifest",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+  it.layer(makeTestLayer())("extracts timestamped frames and writes the frames-at manifest", (it) => {
+    it.effect(
+      "extracts timestamped frames and writes the frames-at manifest",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outDir = path.join(tmpDir, "frames");
-          yield* fs.writeFileString(videoPath, "video");
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outDir = path.join(tmpDir, "frames");
+            yield* fs.writeFileString(videoPath, "video");
 
-          const ffmpeg = yield* FFmpeg;
-          const result = yield* ffmpeg.extractFramesAt(
-            ExtractFramesAtRequest.make({
-              manifestPath: O.none(),
-              outDir,
-              overwrite: false,
-              prefix: O.none(),
-              timestampsSeconds: [0.25, 1.5],
-              videoPath,
-            })
-          );
-
-          expect(result.frameCount).toBe(2);
-          expect(A.map(result.frames, (frame) => frame.fileName)).toEqual([
-            "sample_at_00000.png",
-            "sample_at_00001.png",
-          ]);
-          expect(A.map(result.frames, (frame) => frame.requestedTimestampSeconds)).toEqual([0.25, 1.5]);
-          expect(A.sort(yield* fs.readDirectory(outDir), Order.String)).toEqual([
-            "extract-frames-at-manifest.json",
-            "sample_at_00000.png",
-            "sample_at_00001.png",
-          ]);
-
-          const manifest = yield* decodeFramesAtManifest(
-            yield* fs.readFileString(path.join(outDir, "extract-frames-at-manifest.json"))
-          );
-          expect(manifest.schemaVersion).toBe("beep.ffmpeg.extract-frames-at.v1");
-          expect(manifest.summary.frameCount).toBe(2);
-          expect(manifest.options.timestampsSeconds).toEqual([0.25, 1.5]);
-
-          expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe", "ffmpeg", "ffmpeg"]);
-          const firstExtract = commands[1];
-          const seekIndex = pipe(
-            O.fromUndefinedOr(firstExtract),
-            O.map((command) => A.findFirstIndex(command.args, (arg) => arg === "-ss")),
-            O.flatten,
-            O.getOrElse(() => -1)
-          );
-          const inputIndex = pipe(
-            O.fromUndefinedOr(firstExtract),
-            O.map((command) => A.findFirstIndex(command.args, (arg) => arg === "-i")),
-            O.flatten,
-            O.getOrElse(() => -1)
-          );
-          expect(seekIndex).toBeGreaterThanOrEqual(0);
-          expect(seekIndex).toBeLessThan(inputIndex);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
-
-  it.effect(
-    "fails extract-frames-at without partial commits",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outDir = path.join(tmpDir, "frames");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(
-            ffmpeg.extractFramesAt(
+            const ffmpeg = yield* FFmpeg;
+            const result = yield* ffmpeg.extractFramesAt(
               ExtractFramesAtRequest.make({
                 manifestPath: O.none(),
                 outDir,
@@ -567,239 +509,327 @@ describe("@beep/ffmpeg capture", () => {
                 timestampsSeconds: [0.25, 1.5],
                 videoPath,
               })
-            )
-          );
+            );
 
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("extractFramesAt");
-          expect(error.message).toContain("could not extract a frame at");
-          expect(yield* fs.readDirectory(outDir)).toEqual([]);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, 7))));
-    })
-  );
+            expect(result.frameCount).toBe(2);
+            expect(A.map(result.frames, (frame) => frame.fileName)).toEqual([
+              "sample_at_00000.png",
+              "sample_at_00001.png",
+            ]);
+            expect(A.map(result.frames, (frame) => frame.requestedTimestampSeconds)).toEqual([0.25, 1.5]);
+            expect(A.sort(yield* fs.readDirectory(outDir), Order.String)).toEqual([
+              "extract-frames-at-manifest.json",
+              "sample_at_00000.png",
+              "sample_at_00001.png",
+            ]);
 
-  it.effect(
-    "extracts a single timestamped frame to the requested path",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+            const manifest = yield* decodeFramesAtManifest(
+              yield* fs.readFileString(path.join(outDir, "extract-frames-at-manifest.json"))
+            );
+            expect(manifest.schemaVersion).toBe("beep.ffmpeg.extract-frames-at.v1");
+            expect(manifest.summary.frameCount).toBe(2);
+            expect(manifest.options.timestampsSeconds).toEqual([0.25, 1.5]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outPath = path.join(tmpDir, "frames", "pointer-down.png");
-          yield* fs.writeFileString(videoPath, "video");
+            expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe", "ffmpeg", "ffmpeg"]);
+            const firstExtract = commands[1];
+            const seekIndex = pipe(
+              O.fromUndefinedOr(firstExtract),
+              O.map((command) => A.findFirstIndex(command.args, (arg) => arg === "-ss")),
+              O.flatten,
+              O.getOrElse(() => -1)
+            );
+            const inputIndex = pipe(
+              O.fromUndefinedOr(firstExtract),
+              O.map((command) => A.findFirstIndex(command.args, (arg) => arg === "-i")),
+              O.flatten,
+              O.getOrElse(() => -1)
+            );
+            expect(seekIndex).toBeGreaterThanOrEqual(0);
+            expect(seekIndex).toBeLessThan(inputIndex);
+          })
+        );
+      })
+    );
+  });
 
-          const ffmpeg = yield* FFmpeg;
-          const frame = yield* ffmpeg.extractFrameAt(
-            ExtractFrameAtRequest.make({
+  it.layer(makeTestLayer(7))("fails extract-frames-at without partial commits", (it) => {
+    it.effect(
+      "fails extract-frames-at without partial commits",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outDir = path.join(tmpDir, "frames");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const error = yield* Effect.flip(
+              ffmpeg.extractFramesAt(
+                ExtractFramesAtRequest.make({
+                  manifestPath: O.none(),
+                  outDir,
+                  overwrite: false,
+                  prefix: O.none(),
+                  timestampsSeconds: [0.25, 1.5],
+                  videoPath,
+                })
+              )
+            );
+
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("extractFramesAt");
+            expect(error.message).toContain("could not extract a frame at");
+            expect(yield* fs.readDirectory(outDir)).toEqual([]);
+          })
+        );
+      })
+    );
+  });
+
+  it.layer(makeTestLayer())("extracts a single timestamped frame to the requested path", (it) => {
+    it.effect(
+      "extracts a single timestamped frame to the requested path",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outPath = path.join(tmpDir, "frames", "pointer-down.png");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const frame = yield* ffmpeg.extractFrameAt(
+              ExtractFrameAtRequest.make({
+                outPath,
+                overwrite: false,
+                timestampSeconds: 1.25,
+                videoPath,
+              })
+            );
+
+            expect(frame.fileName).toBe("pointer-down.png");
+            expect(frame.index).toBe(0);
+            expect(frame.requestedTimestampSeconds).toBe(1.25);
+            expect(yield* fs.readFileString(outPath)).toBe("fake output");
+          })
+        );
+      })
+    );
+  });
+
+  it.layer(makeTestLayer())("renders a gif, surfaces fileSizeBytes, and refuses overwrites", (it) => {
+    it.effect(
+      "renders a gif, surfaces fileSizeBytes, and refuses overwrites",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outPath = path.join(tmpDir, "clips", "drag.gif");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const request = RenderGifRequest.make({
+              dither: "bayer",
+              durationSeconds: 2,
+              fps: 10,
               outPath,
               overwrite: false,
-              timestampSeconds: 1.25,
+              startSeconds: 1.5,
               videoPath,
-            })
-          );
+            });
+            const result = yield* ffmpeg.renderGif(request);
 
-          expect(frame.fileName).toBe("pointer-down.png");
-          expect(frame.index).toBe(0);
-          expect(frame.requestedTimestampSeconds).toBe(1.25);
-          expect(yield* fs.readFileString(outPath)).toBe("fake output");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+            expect(result.fileSizeBytes).toBe("fake output".length);
+            expect(yield* fs.readFileString(outPath)).toBe("fake output");
 
-  it.effect(
-    "renders a gif, surfaces fileSizeBytes, and refuses overwrites",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+            const error = yield* Effect.flip(ffmpeg.renderGif(request));
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("renderGif");
+            expect(error.message).toContain("Refusing to overwrite existing output");
+          })
+        );
+      })
+    );
+  });
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outPath = path.join(tmpDir, "clips", "drag.gif");
-          yield* fs.writeFileString(videoPath, "video");
+  it.layer(makeTestLayer())("extracts a re-encoded clip and reports the staged file size", (it) => {
+    it.effect(
+      "extracts a re-encoded clip and reports the staged file size",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-          const ffmpeg = yield* FFmpeg;
-          const request = RenderGifRequest.make({
-            dither: "bayer",
-            durationSeconds: 2,
-            fps: 10,
-            outPath,
-            overwrite: false,
-            startSeconds: 1.5,
-            videoPath,
-          });
-          const result = yield* ffmpeg.renderGif(request);
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outPath = path.join(tmpDir, "clips", "drag.mp4");
+            yield* fs.writeFileString(videoPath, "video");
 
-          expect(result.fileSizeBytes).toBe("fake output".length);
-          expect(yield* fs.readFileString(outPath)).toBe("fake output");
-
-          const error = yield* Effect.flip(ffmpeg.renderGif(request));
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("renderGif");
-          expect(error.message).toContain("Refusing to overwrite existing output");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
-
-  it.effect(
-    "extracts a re-encoded clip and reports the staged file size",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outPath = path.join(tmpDir, "clips", "drag.mp4");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const request = ExtractClipRequest.make({
-            codec: "h264",
-            durationSeconds: O.some(2),
-            outPath,
-            overwrite: false,
-            startSeconds: 1.5,
-            videoPath,
-          });
-          const result = yield* ffmpeg.extractClip(request);
-
-          expect(result.durationSeconds).toEqual(O.some(2));
-          expect(result.startSeconds).toBe(1.5);
-          expect(result.fileSizeBytes).toBe("fake output".length);
-          expect(yield* fs.readFileString(outPath)).toBe("fake output");
-
-          // The clip is cut without a probe; only the encode command runs.
-          expect(A.map(commands, (command) => command.command)).toEqual(["ffmpeg"]);
-          const clipCommand = commands[0];
-          expect(clipCommand?.args).toContain("libx264");
-
-          const error = yield* Effect.flip(ffmpeg.extractClip(request));
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("extractClip");
-          expect(error.message).toContain("Refusing to overwrite existing output");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
-
-  it.effect(
-    "renders a contact sheet spreading tiles across the probed duration",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outPath = path.join(tmpDir, "sheets", "capture.jpg");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const result = yield* ffmpeg.renderContactSheet(
-            RenderContactSheetRequest.make({
-              columns: 4,
+            const ffmpeg = yield* FFmpeg;
+            const request = ExtractClipRequest.make({
+              codec: "h264",
+              durationSeconds: O.some(2),
               outPath,
               overwrite: false,
-              quality: 5,
-              rows: 4,
-              tileWidth: 320,
+              startSeconds: 1.5,
               videoPath,
-            })
-          );
+            });
+            const result = yield* ffmpeg.extractClip(request);
 
-          expect(result.columns).toBe(4);
-          expect(result.rows).toBe(4);
-          expect(result.fileSizeBytes).toBe("fake output".length);
+            expect(result.durationSeconds).toEqual(O.some(2));
+            expect(result.startSeconds).toBe(1.5);
+            expect(result.fileSizeBytes).toBe("fake output".length);
+            expect(yield* fs.readFileString(outPath)).toBe("fake output");
 
-          // 16 tiles across the fixture's 2s duration = fps=8.
-          const sheetCommand = commands[A.length(commands) - 1];
-          expect(sheetCommand?.args).toContain("fps=8,scale=320:-1,tile=4x4");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+            // The clip is cut without a probe; only the encode command runs.
+            expect(A.map(commands, (command) => command.command)).toEqual(["ffmpeg"]);
+            const clipCommand = commands[0];
+            expect(clipCommand?.args).toContain("libx264");
 
-  it.effect(
-    "routes container metadata movflags by output extension",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+            const error = yield* Effect.flip(ffmpeg.extractClip(request));
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("extractClip");
+            expect(error.message).toContain("Refusing to overwrite existing output");
+          })
+        );
+      })
+    );
+  });
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
+  it.layer(makeTestLayer())("renders a contact sheet spreading tiles across the probed duration", (it) => {
+    it.effect(
+      "renders a contact sheet spreading tiles across the probed duration",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-          const ffmpeg = yield* FFmpeg;
-          const metadata = [MetadataPair.make({ key: "BEEP_QA_SESSION_ID", value: "session-42" })];
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outPath = path.join(tmpDir, "sheets", "capture.jpg");
+            yield* fs.writeFileString(videoPath, "video");
 
-          yield* ffmpeg.writeContainerMetadata(
-            WriteContainerMetadataRequest.make({
-              metadata,
-              outPath: path.join(tmpDir, "tagged.webm"),
-              overwrite: false,
-              videoPath,
-            })
-          );
-          const webmCommand = commands[A.length(commands) - 1];
-          expect(webmCommand?.args).toContain("BEEP_QA_SESSION_ID=session-42");
-          expect(webmCommand?.args).not.toContain("use_metadata_tags");
+            const ffmpeg = yield* FFmpeg;
+            const result = yield* ffmpeg.renderContactSheet(
+              RenderContactSheetRequest.make({
+                columns: 4,
+                outPath,
+                overwrite: false,
+                quality: 5,
+                rows: 4,
+                tileWidth: 320,
+                videoPath,
+              })
+            );
 
-          yield* ffmpeg.writeContainerMetadata(
-            WriteContainerMetadataRequest.make({
-              metadata,
-              outPath: path.join(tmpDir, "tagged.mp4"),
-              overwrite: false,
-              videoPath,
-            })
-          );
-          const mp4Command = commands[A.length(commands) - 1];
-          expect(mp4Command?.args).toContain("use_metadata_tags");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+            expect(result.columns).toBe(4);
+            expect(result.rows).toBe(4);
+            expect(result.fileSizeBytes).toBe("fake output".length);
 
-  it.effect(
-    "parses signalstats samples from the region luminance probe",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+            // 16 tiles across the fixture's 2s duration = fps=8.
+            const sheetCommand = commands[A.length(commands) - 1];
+            expect(sheetCommand?.args).toContain("fps=8,scale=320:-1,tile=4x4");
+          })
+        );
+      })
+    );
+  });
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
+  it.layer(makeTestLayer())("routes container metadata movflags by output extension", (it) => {
+    it.effect(
+      "routes container metadata movflags by output extension",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-          const ffmpeg = yield* FFmpeg;
-          const result = yield* ffmpeg.probeRegionLuminance(
-            ProbeRegionLuminanceRequest.make({
-              height: 128,
-              videoPath,
-              width: 128,
-              x: 0,
-              y: 0,
-            })
-          );
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            yield* fs.writeFileString(videoPath, "video");
 
-          expect(A.length(result.samples)).toBe(3);
-          expect(A.map(result.samples, (sample) => sample.frameIndex)).toEqual([0, 1, 2]);
-          expect(A.map(result.samples, (sample) => sample.meanLuma)).toEqual([16.5, 200.25, 70.8008]);
-          expect(A.map(result.samples, (sample) => sample.ptsTimeSeconds)).toEqual([0, 0.0333333, 0.0666667]);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+            const ffmpeg = yield* FFmpeg;
+            const metadata = [MetadataPair.make({ key: "BEEP_QA_SESSION_ID", value: "session-42" })];
+
+            yield* ffmpeg.writeContainerMetadata(
+              WriteContainerMetadataRequest.make({
+                metadata,
+                outPath: path.join(tmpDir, "tagged.webm"),
+                overwrite: false,
+                videoPath,
+              })
+            );
+            const webmCommand = commands[A.length(commands) - 1];
+            expect(webmCommand?.args).toContain("BEEP_QA_SESSION_ID=session-42");
+            expect(webmCommand?.args).not.toContain("use_metadata_tags");
+
+            yield* ffmpeg.writeContainerMetadata(
+              WriteContainerMetadataRequest.make({
+                metadata,
+                outPath: path.join(tmpDir, "tagged.mp4"),
+                overwrite: false,
+                videoPath,
+              })
+            );
+            const mp4Command = commands[A.length(commands) - 1];
+            expect(mp4Command?.args).toContain("use_metadata_tags");
+          })
+        );
+      })
+    );
+  });
+
+  it.layer(makeTestLayer())("parses signalstats samples from the region luminance probe", (it) => {
+    it.effect(
+      "parses signalstats samples from the region luminance probe",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const result = yield* ffmpeg.probeRegionLuminance(
+              ProbeRegionLuminanceRequest.make({
+                height: 128,
+                videoPath,
+                width: 128,
+                x: 0,
+                y: 0,
+              })
+            );
+
+            expect(A.length(result.samples)).toBe(3);
+            expect(A.map(result.samples, (sample) => sample.frameIndex)).toEqual([0, 1, 2]);
+            expect(A.map(result.samples, (sample) => sample.meanLuma)).toEqual([16.5, 200.25, 70.8008]);
+            expect(A.map(result.samples, (sample) => sample.ptsTimeSeconds)).toEqual([0, 0.0333333, 0.0666667]);
+          })
+        );
+      })
+    );
+  });
 });

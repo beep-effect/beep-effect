@@ -11,14 +11,9 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { Context, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const encoder = new TextEncoder();
 const encodeProbeJson = UnknownFromJsonString.encodeUnknownSync;
@@ -171,6 +166,13 @@ const makeLayer = (commands: Array<ChildProcess.StandardCommand>, overrides: Par
     Layer.provide(makeScriptedSpawnerLayer(commands, overrides)),
     Layer.provide(NodeServices.layer)
   );
+class Commands extends Context.Service<Commands, Array<ChildProcess.StandardCommand>>()(
+  "@beep/ffmpeg/test/FFmpeg.capture.failures.test/Commands"
+) {}
+const makeTestLayer = (overrides: Partial<SpawnScript> = {}) =>
+  Layer.unwrap(
+    Effect.map(Commands, (commands) => Layer.mergeAll(NodeServices.layer, makeLayer(commands, overrides)))
+  ).pipe(Layer.provideMerge(Layer.sync(Commands, () => [])));
 
 const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
@@ -196,381 +198,419 @@ const exitCodeOf = (error: FFmpegError): number =>
   );
 
 describe("@beep/ffmpeg capture failures", () => {
-  it.effect(
-    "normalizes a missing video input into a typed driver failure",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+  it.layer(makeTestLayer())("normalizes a missing video input into a typed driver failure", (it) => {
+    it.effect(
+      "normalizes a missing video input into a typed driver failure",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const ffmpeg = yield* FFmpeg;
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const ffmpeg = yield* FFmpeg;
 
-          const error = yield* Effect.flip(
-            ffmpeg.probeRegionLuminance(
-              ProbeRegionLuminanceRequest.make({
-                height: 128,
-                videoPath: path.join(tmpDir, "absent.webm"),
-                width: 128,
-                x: 0,
-                y: 0,
-              })
-            )
-          );
+            const error = yield* Effect.flip(
+              ffmpeg.probeRegionLuminance(
+                ProbeRegionLuminanceRequest.make({
+                  height: 128,
+                  videoPath: path.join(tmpDir, "absent.webm"),
+                  width: 128,
+                  x: 0,
+                  y: 0,
+                })
+              )
+            );
 
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("probeRegionLuminance");
-          expect(error.message).toContain("Failed to stat video input");
-          // The preflight fails before anything is spawned.
-          expect(A.length(commands)).toBe(0);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("probeRegionLuminance");
+            expect(error.message).toContain("Failed to stat video input");
+            // The preflight fails before anything is spawned.
+            expect(A.length(commands)).toBe(0);
+          })
+        );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects a directory supplied as the video input",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+  it.layer(makeTestLayer())("rejects a directory supplied as the video input", (it) => {
+    it.effect(
+      "rejects a directory supplied as the video input",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const ffmpeg = yield* FFmpeg;
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const ffmpeg = yield* FFmpeg;
 
-          const error = yield* Effect.flip(ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath: tmpDir })));
+            const error = yield* Effect.flip(ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath: tmpDir })));
 
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.message).toContain("Expected video input to be a file");
-          expect(error.operation).toBe("probeVideo");
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.message).toContain("Expected video input to be a file");
+            expect(error.operation).toBe("probeVideo");
+          })
+        );
+      })
+    );
+  });
 
-  it.effect(
+  it.layer(makeTestLayer({ ffprobeExitCode: 3 }))(
     "surfaces a failed ffprobe exit with its captured process context",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+    (it) => {
+      it.effect(
+        "surfaces a failed ffprobe exit with its captured process context",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              yield* fs.writeFileString(videoPath, "video");
 
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath })));
+              const ffmpeg = yield* FFmpeg;
+              const error = yield* Effect.flip(ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath })));
 
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("probeVideo");
-          expect(error.message).toContain("ffprobe could not read video metadata");
-          expect(exitCodeOf(error)).toBe(3);
-          expect(
-            pipe(
-              error.stderr,
-              O.getOrElse(() => "")
-            )
-          ).toBe("ffprobe stderr");
+              expect(error).toBeInstanceOf(FFmpegError);
+              expect(error.operation).toBe("probeVideo");
+              expect(error.message).toContain("ffprobe could not read video metadata");
+              expect(exitCodeOf(error)).toBe(3);
+              expect(
+                pipe(
+                  error.stderr,
+                  O.getOrElse(() => "")
+                )
+              ).toBe("ffprobe stderr");
+            })
+          );
         })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffprobeExitCode: 3 }))));
-    })
+      );
+    }
   );
 
-  it.effect(
+  it.layer(makeTestLayer({ ffprobeStdout: "<not json>" }))(
     "normalizes undecodable ffprobe output into a decode failure",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+    (it) => {
+      it.effect(
+        "normalizes undecodable ffprobe output into a decode failure",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              yield* fs.writeFileString(videoPath, "video");
 
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath })));
+              const ffmpeg = yield* FFmpeg;
+              const error = yield* Effect.flip(ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath })));
 
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("probeVideo");
-          expect(error.message).toContain("Failed to decode ffprobe JSON");
+              expect(error).toBeInstanceOf(FFmpegError);
+              expect(error.operation).toBe("probeVideo");
+              expect(error.message).toContain("Failed to decode ffprobe JSON");
+            })
+          );
         })
-      ).pipe(
-        provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffprobeStdout: "<not json>" })))
       );
-    })
+    }
   );
 
-  it.effect(
+  it.layer(makeTestLayer({ ffprobeStdout: numericProbeJson }))(
     "reads numeric ffprobe fields as readily as string ones",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+    (it) => {
+      it.effect(
+        "reads numeric ffprobe fields as readily as string ones",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              yield* fs.writeFileString(videoPath, "video");
 
-          const ffmpeg = yield* FFmpeg;
-          const probe = yield* ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath }));
+              const ffmpeg = yield* FFmpeg;
+              const probe = yield* ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath }));
 
-          expect(
-            pipe(
-              probe.durationSeconds,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(2);
-          // A bare numeric frame rate carries no "/" to divide through.
-          expect(
-            pipe(
-              probe.fps,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(25);
-          expect(
-            pipe(
-              probe.frameCount,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(50);
-          expect(
-            pipe(
-              probe.startTimeSeconds,
-              O.getOrElse(() => -1)
-            )
-          ).toBe(0.5);
+              expect(
+                pipe(
+                  probe.durationSeconds,
+                  O.getOrElse(() => 0)
+                )
+              ).toBe(2);
+              // A bare numeric frame rate carries no "/" to divide through.
+              expect(
+                pipe(
+                  probe.fps,
+                  O.getOrElse(() => 0)
+                )
+              ).toBe(25);
+              expect(
+                pipe(
+                  probe.frameCount,
+                  O.getOrElse(() => 0)
+                )
+              ).toBe(50);
+              expect(
+                pipe(
+                  probe.startTimeSeconds,
+                  O.getOrElse(() => -1)
+                )
+              ).toBe(0.5);
+            })
+          );
         })
-      ).pipe(
-        provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffprobeStdout: numericProbeJson })))
       );
-    })
+    }
   );
 
-  it.effect(
+  it.layer(makeTestLayer({ ffprobeStdout: durationlessProbeJson }))(
     "extracts frames from a container that reports no duration",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+    (it) => {
+      it.effect(
+        "extracts frames from a container that reports no duration",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outDir = path.join(tmpDir, "frames");
-          yield* fs.writeFileString(videoPath, "video");
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              const outDir = path.join(tmpDir, "frames");
+              yield* fs.writeFileString(videoPath, "video");
 
-          const ffmpeg = yield* FFmpeg;
-          const result = yield* ffmpeg.extractFrames(
-            ExtractFramesRequest.make({
-              fps: 1,
-              manifestPath: O.none(),
-              outDir,
-              overwrite: false,
-              prefix: O.none(),
-              videoPath,
+              const ffmpeg = yield* FFmpeg;
+              const result = yield* ffmpeg.extractFrames(
+                ExtractFramesRequest.make({
+                  fps: 1,
+                  manifestPath: O.none(),
+                  outDir,
+                  overwrite: false,
+                  prefix: O.none(),
+                  videoPath,
+                })
+              );
+
+              // No duration means no expected frame count; the frames ffmpeg
+              // actually produced still commit under the minimum padding.
+              expect(result.frameCount).toBe(2);
+              expect(A.map(result.frames, (frame) => frame.fileName)).toEqual([
+                "sample_frame_00000.png",
+                "sample_frame_00001.png",
+              ]);
             })
           );
-
-          // No duration means no expected frame count; the frames ffmpeg
-          // actually produced still commit under the minimum padding.
-          expect(result.frameCount).toBe(2);
-          expect(A.map(result.frames, (frame) => frame.fileName)).toEqual([
-            "sample_frame_00000.png",
-            "sample_frame_00001.png",
-          ]);
         })
-      ).pipe(
-        provideScopedLayer(
-          Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffprobeStdout: durationlessProbeJson }))
-        )
       );
-    })
+    }
   );
 
-  it.effect(
+  it.layer(makeTestLayer({ ffprobeStdout: durationlessProbeJson }))(
     "refuses to render a contact sheet without a positive duration",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+    (it) => {
+      it.effect(
+        "refuses to render a contact sheet without a positive duration",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
 
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              yield* fs.writeFileString(videoPath, "video");
 
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(
-            ffmpeg.renderContactSheet(
-              RenderContactSheetRequest.make({
-                columns: 4,
-                outPath: path.join(tmpDir, "sheets", "capture.jpg"),
-                overwrite: false,
-                quality: 5,
-                rows: 4,
-                tileWidth: 320,
-                videoPath,
-              })
-            )
-          );
+              const ffmpeg = yield* FFmpeg;
+              const error = yield* Effect.flip(
+                ffmpeg.renderContactSheet(
+                  RenderContactSheetRequest.make({
+                    columns: 4,
+                    outPath: path.join(tmpDir, "sheets", "capture.jpg"),
+                    overwrite: false,
+                    quality: 5,
+                    rows: 4,
+                    tileWidth: 320,
+                    videoPath,
+                  })
+                )
+              );
 
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("renderContactSheet");
-          expect(error.message).toContain("reported no positive duration");
-          // Only the probe ran; the tile grid was never spawned.
-          expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe"]);
-        })
-      ).pipe(
-        provideScopedLayer(
-          Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffprobeStdout: durationlessProbeJson }))
-        )
-      );
-    })
-  );
-
-  it.effect(
-    "surfaces a nonzero ffmpeg exit under the failing operation",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outPath = path.join(tmpDir, "clips", "drag.mp4");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(
-            ffmpeg.extractClip(
-              ExtractClipRequest.make({
-                codec: "vp9",
-                durationSeconds: O.some(2),
-                outPath,
-                overwrite: false,
-                startSeconds: 1.5,
-                videoPath,
-              })
-            )
-          );
-
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("extractClip");
-          expect(error.message).toContain("ffmpeg could not extract a clip from");
-          expect(exitCodeOf(error)).toBe(9);
-          // The staging directory is released, so nothing is left behind.
-          expect(yield* fs.readDirectory(path.dirname(outPath))).toEqual([]);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffmpegExitCode: 9 }))));
-    })
-  );
-
-  it.effect(
-    "fails when ffmpeg exits cleanly without writing the output",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          const outPath = path.join(tmpDir, "clips", "drag.mp4");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(
-            ffmpeg.extractClip(
-              ExtractClipRequest.make({
-                codec: "h264",
-                durationSeconds: O.some(2),
-                outPath,
-                overwrite: false,
-                startSeconds: 0,
-                videoPath,
-              })
-            )
-          );
-
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("extractClip");
-          expect(error.message).toContain("ffmpeg completed without producing output");
-          expect(yield* fs.exists(outPath)).toBe(false);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, { produceOutput: false }))));
-    })
-  );
-
-  it.effect(
-    "surfaces a nonzero exit from the region luminance probe",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const error = yield* Effect.flip(
-            ffmpeg.probeRegionLuminance(
-              ProbeRegionLuminanceRequest.make({
-                height: 64,
-                videoPath,
-                width: 64,
-                x: 8,
-                y: 8,
-              })
-            )
-          );
-
-          expect(error).toBeInstanceOf(FFmpegError);
-          expect(error.operation).toBe("probeRegionLuminance");
-          expect(error.message).toContain("ffmpeg could not sample region luminance");
-          expect(exitCodeOf(error)).toBe(4);
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffmpegExitCode: 4 }))));
-    })
-  );
-
-  it.effect(
-    "skips malformed frame headers, orphan luma lines, and clamps out-of-range luma",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const videoPath = path.join(tmpDir, "sample.webm");
-          yield* fs.writeFileString(videoPath, "video");
-
-          const ffmpeg = yield* FFmpeg;
-          const result = yield* ffmpeg.probeRegionLuminance(
-            ProbeRegionLuminanceRequest.make({
-              height: 128,
-              videoPath,
-              width: 128,
-              x: 0,
-              y: 0,
+              expect(error).toBeInstanceOf(FFmpegError);
+              expect(error.operation).toBe("renderContactSheet");
+              expect(error.message).toContain("reported no positive duration");
+              // Only the probe ran; the tile grid was never spawned.
+              expect(A.map(commands, (command) => command.command)).toEqual(["ffprobe"]);
             })
           );
-
-          expect(A.map(result.samples, (sample) => sample.frameIndex)).toEqual([0, 3]);
-          expect(A.map(result.samples, (sample) => sample.meanLuma)).toEqual([255, 0]);
-          expect(A.map(result.samples, (sample) => sample.ptsTimeSeconds)).toEqual([0, 1]);
         })
-      ).pipe(
-        provideScopedLayer(
-          Layer.mergeAll(NodeServices.layer, makeLayer(commands, { ffmpegStdout: luminanceEdgeStdout }))
-        )
       );
-    })
+    }
+  );
+
+  it.layer(makeTestLayer({ ffmpegExitCode: 9 }))("surfaces a nonzero ffmpeg exit under the failing operation", (it) => {
+    it.effect(
+      "surfaces a nonzero ffmpeg exit under the failing operation",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            const outPath = path.join(tmpDir, "clips", "drag.mp4");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const error = yield* Effect.flip(
+              ffmpeg.extractClip(
+                ExtractClipRequest.make({
+                  codec: "vp9",
+                  durationSeconds: O.some(2),
+                  outPath,
+                  overwrite: false,
+                  startSeconds: 1.5,
+                  videoPath,
+                })
+              )
+            );
+
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("extractClip");
+            expect(error.message).toContain("ffmpeg could not extract a clip from");
+            expect(exitCodeOf(error)).toBe(9);
+            // The staging directory is released, so nothing is left behind.
+            expect(yield* fs.readDirectory(path.dirname(outPath))).toEqual([]);
+          })
+        );
+      })
+    );
+  });
+
+  it.layer(makeTestLayer({ produceOutput: false }))(
+    "fails when ffmpeg exits cleanly without writing the output",
+    (it) => {
+      it.effect(
+        "fails when ffmpeg exits cleanly without writing the output",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
+
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              const outPath = path.join(tmpDir, "clips", "drag.mp4");
+              yield* fs.writeFileString(videoPath, "video");
+
+              const ffmpeg = yield* FFmpeg;
+              const error = yield* Effect.flip(
+                ffmpeg.extractClip(
+                  ExtractClipRequest.make({
+                    codec: "h264",
+                    durationSeconds: O.some(2),
+                    outPath,
+                    overwrite: false,
+                    startSeconds: 0,
+                    videoPath,
+                  })
+                )
+              );
+
+              expect(error).toBeInstanceOf(FFmpegError);
+              expect(error.operation).toBe("extractClip");
+              expect(error.message).toContain("ffmpeg completed without producing output");
+              expect(yield* fs.exists(outPath)).toBe(false);
+            })
+          );
+        })
+      );
+    }
+  );
+
+  it.layer(makeTestLayer({ ffmpegExitCode: 4 }))("surfaces a nonzero exit from the region luminance probe", (it) => {
+    it.effect(
+      "surfaces a nonzero exit from the region luminance probe",
+      Effect.fnUntraced(function* () {
+        const commands = yield* Commands;
+        expect(commands).toEqual([]);
+
+        yield* withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const videoPath = path.join(tmpDir, "sample.webm");
+            yield* fs.writeFileString(videoPath, "video");
+
+            const ffmpeg = yield* FFmpeg;
+            const error = yield* Effect.flip(
+              ffmpeg.probeRegionLuminance(
+                ProbeRegionLuminanceRequest.make({
+                  height: 64,
+                  videoPath,
+                  width: 64,
+                  x: 8,
+                  y: 8,
+                })
+              )
+            );
+
+            expect(error).toBeInstanceOf(FFmpegError);
+            expect(error.operation).toBe("probeRegionLuminance");
+            expect(error.message).toContain("ffmpeg could not sample region luminance");
+            expect(exitCodeOf(error)).toBe(4);
+          })
+        );
+      })
+    );
+  });
+
+  it.layer(makeTestLayer({ ffmpegStdout: luminanceEdgeStdout }))(
+    "skips malformed frame headers, orphan luma lines, and clamps out-of-range luma",
+    (it) => {
+      it.effect(
+        "skips malformed frame headers, orphan luma lines, and clamps out-of-range luma",
+        Effect.fnUntraced(function* () {
+          const commands = yield* Commands;
+          expect(commands).toEqual([]);
+
+          yield* withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const videoPath = path.join(tmpDir, "sample.webm");
+              yield* fs.writeFileString(videoPath, "video");
+
+              const ffmpeg = yield* FFmpeg;
+              const result = yield* ffmpeg.probeRegionLuminance(
+                ProbeRegionLuminanceRequest.make({
+                  height: 128,
+                  videoPath,
+                  width: 128,
+                  x: 0,
+                  y: 0,
+                })
+              );
+
+              expect(A.map(result.samples, (sample) => sample.frameIndex)).toEqual([0, 3]);
+              expect(A.map(result.samples, (sample) => sample.meanLuma)).toEqual([255, 0]);
+              expect(A.map(result.samples, (sample) => sample.ptsTimeSeconds)).toEqual([0, 1]);
+            })
+          );
+        })
+      );
+    }
   );
 });

@@ -12,7 +12,7 @@ import {
 } from "@beep/ffmpeg";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -20,13 +20,9 @@ import * as S from "effect/Schema";
 
 // Live lane: exercises the real ffmpeg/ffprobe binaries on PATH. Skips
 // cleanly (logInfo, no assertions) on machines without ffmpeg.
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const provideLive = provideScopedLayer(
-  Layer.mergeAll(NodeServices.layer, FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer)))
+const NativeCaptureTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))
 );
 
 const skipNotice = Effect.logInfo("Skipping the live ffmpeg capture lane because ffmpeg is not runnable on PATH.");
@@ -132,8 +128,8 @@ const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, 
 const RAMP_FRAME_DURATION_SECONDS = 0.1;
 const LUMA_TOLERANCE_SECONDS = 0.05;
 
-describe("@beep/ffmpeg live capture", () => {
-  it.live(
+it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg live capture", (it) => {
+  it.effect(
     "extracts pts-accurate timestamped frames from the luma-ramp golden clip",
     () =>
       Effect.gen(function* () {
@@ -191,11 +187,11 @@ describe("@beep/ffmpeg live capture", () => {
             }
           })
         );
-      }).pipe(provideLive),
+      }),
     120_000
   );
 
-  it.live(
+  it.effect(
     "renders gif and contact sheet artifacts with real byte sizes",
     () =>
       Effect.gen(function* () {
@@ -257,11 +253,11 @@ describe("@beep/ffmpeg live capture", () => {
             expect(yield* fs.exists(framePath)).toBe(true);
           })
         );
-      }).pipe(provideLive),
+      }),
     120_000
   );
 
-  it.live(
+  it.effect(
     "cuts clips and round-trips BEEP_QA_SESSION_ID container metadata via ffprobe",
     () =>
       Effect.gen(function* () {
@@ -345,7 +341,7 @@ describe("@beep/ffmpeg live capture", () => {
             }
           })
         );
-      }).pipe(provideLive),
+      }),
     120_000
   );
 });
