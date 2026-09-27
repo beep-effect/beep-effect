@@ -5134,43 +5134,43 @@
     "file": "packages/shared/domain/test/EntityKernel.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 18042,
-    "lines": 407
+    "bytes": 17776,
+    "lines": 410
   },
   {
     "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 17309,
+    "bytes": 17296,
     "lines": 493
   },
   {
     "file": "packages/shared/domain/test/LocalDate.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 11905,
-    "lines": 317
+    "bytes": 11685,
+    "lines": 318
   },
   {
     "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 1390,
-    "lines": 36
+    "bytes": 1454,
+    "lines": 38
   },
   {
     "file": "packages/shared/domain/test/Organization.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 7126,
-    "lines": 184
+    "bytes": 7131,
+    "lines": 188
   },
   {
     "file": "packages/shared/domain/test/SchemaParity.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 9174,
-    "lines": 195
+    "bytes": 10389,
+    "lines": 220
   },
   {
     "file": "packages/shared/domain/test/StaticProbes.ts",
@@ -5183,15 +5183,15 @@
     "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 1845,
-    "lines": 52
+    "bytes": 1909,
+    "lines": 54
   },
   {
     "file": "packages/shared/domain/test/UserMembership.test.ts",
     "package": "@beep/shared-domain",
     "kind": "test",
-    "bytes": 2496,
-    "lines": 70
+    "bytes": 2569,
+    "lines": 72
   },
   {
     "file": "packages/shared/tables/test/OrganizationTable.test.ts",

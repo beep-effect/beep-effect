@@ -1,0 +1,54 @@
+{
+  "rows": 77,
+  "statuses": {
+    "fixed": 42,
+    "open": 35
+  },
+  "historicalDetectorIdsRetained": 41,
+  "upstreamAttributedIds": 2,
+  "currentDetectorExceptions": 0,
+  "subjectLoggerExceptions": 0,
+  "admittedFiles": 9,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7764,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 683,
+  "sourceHashes": [
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "sha256": "84c375cee1e41ed2100efce28a171f76d839057f1613a96e0e8fb6b881b0c1ad"
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "sha256": "0cf874dbd989836d84db51ad022750c5036a8258366d878e498d6565be56121f"
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "sha256": "d996dc64941d592ad41593d1c4352e532c9769ebf72d65b1ee242a663c399fdb"
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "sha256": "51aaa52d65210e4997b7fcf256ec9fd1f60ecc67a3692b4ab3733875856d49b9"
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "sha256": "ab6e3307d7633199393c31a7e6be5f78337c24f804230c28f5ab8556ff8115f5"
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "sha256": "b6faa33f1930a3eefa47b469018d0cbc8feb6507426af811bb73912a07c517a9"
+    },
+    {
+      "file": "packages/shared/domain/test/StaticProbes.ts",
+      "sha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da"
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "sha256": "54941f8301e41ef74428071856a56cc96d0333218590bef40b3c7aa828c9e5ad"
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "sha256": "1a340a2ca3bbbb0fb95bf402bcf04a3cc12aa5bceabc3c7d081618de29a5d026"
+    }
+  ]
+}
