@@ -17,6 +17,7 @@ import {
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -118,7 +119,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
       const decoded = yield* JsonProviderUsage.decodeEffect(json);
 
       expect(decoded).toStrictEqual(usage);
-      expect(O.isNone(decoded.stopReason)).toBe(true);
+      assertNone(decoded.stopReason);
     })
   );
 
@@ -163,9 +164,10 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
         const blocks = A.map(A.filter(events, AssistantTurnEvent.guards.block), (event) => event.block);
         expect(A.map(blocks, (indexed) => indexed.index)).toEqual([0, 1, 2, 3]);
         expect(A.map(blocks, (indexed) => indexed.block)).toStrictEqual([...expected]);
-        expect(
-          O.map(A.findFirst(events, AssistantTurnEvent.guards.finalization), (event) => event.usage)
-        ).toStrictEqual(O.some(fixtureProviderUsage));
+        assertSome(
+          O.map(A.findFirst(events, AssistantTurnEvent.guards.finalization), (event) => event.usage),
+          fixtureProviderUsage
+        );
       })
     );
   });

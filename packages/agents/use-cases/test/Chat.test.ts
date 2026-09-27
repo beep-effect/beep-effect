@@ -2,7 +2,9 @@ import { ChatActionError, ChatRpcs, SendMessageRpc } from "@beep/agents-use-case
 import { A, Document, P, RawHtml, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Result } from "effect";
+import { pipe } from "effect/Function";
 import * as RpcSchema from "effect/rpc/RpcSchema";
 import * as S from "effect/Schema";
 
@@ -57,15 +59,15 @@ describe("@beep/agents-use-cases Chat", () => {
     ];
     for (const content of hostileDocuments) {
       const encodedContent = Result.getOrThrow(Document.encodeResult(content));
-      expect(
-        Result.isFailure(
-          decodeSendMessageRpcPayloadSchemaResult({
-            threadId: WorkspaceIdentity.ThreadId.make(1),
-            content: encodedContent,
-            requestId: "hostile-remote-payload",
-          })
-        )
-      ).toBe(true);
+      pipe(
+        decodeSendMessageRpcPayloadSchemaResult({
+          threadId: WorkspaceIdentity.ThreadId.make(1),
+          content: encodedContent,
+          requestId: "hostile-remote-payload",
+        }),
+        Result.isFailure,
+        assertTrue
+      );
     }
   });
 });
