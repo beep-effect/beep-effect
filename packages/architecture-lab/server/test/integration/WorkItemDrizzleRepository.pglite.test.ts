@@ -7,9 +7,10 @@ import { makeDrizzleWorkItemRepository } from "@beep/architecture-lab-server/agg
 import { makeDrizzleWorkerRepository } from "@beep/architecture-lab-server/entities/Worker";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -80,7 +81,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("ArchitectureLab Drizzle repository PgLite integration", () => {});
 } else {
   describe("ArchitectureLab Drizzle repository PgLite integration", { concurrent: false }, () => {
-    layer(WorkItemDrizzleRepositoryLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(WorkItemDrizzleRepositoryLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "persists WorkItem lifecycle changes through Drizzle",
         Effect.fnUntraced(function* () {

@@ -1122,13 +1122,15 @@
           "@beep/architecture-lab-client",
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-use-cases",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-client",
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-use-cases",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ]
       },
       {
@@ -1155,14 +1157,18 @@
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1198,6 +1204,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1211,6 +1218,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1222,6 +1230,7 @@
           "@beep/architecture-lab-tables",
           "@beep/effect-drizzle",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1229,6 +1238,7 @@
           "@beep/architecture-lab-tables",
           "@beep/effect-drizzle",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1241,6 +1251,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1251,6 +1262,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1263,6 +1275,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1272,6 +1285,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

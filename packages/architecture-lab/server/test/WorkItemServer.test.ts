@@ -7,8 +7,9 @@ import {
 } from "@beep/architecture-lab-server/aggregates/WorkItem";
 import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
+import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
 import * as S from "effect/Schema";

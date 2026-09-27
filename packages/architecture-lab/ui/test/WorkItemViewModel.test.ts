@@ -6,8 +6,9 @@ import {
   WorkItemVisibleAction,
 } from "@beep/architecture-lab-ui/aggregates/WorkItem";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

@@ -1,7 +1,8 @@
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { WorkItem } from "@beep/architecture-lab-use-cases/public";
 import * as WorkItemServer from "@beep/architecture-lab-use-cases/server";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";

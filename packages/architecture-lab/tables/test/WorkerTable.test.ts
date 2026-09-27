@@ -1,8 +1,9 @@
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { fromWorkerRow, toWorkerInsert, workerTable } from "@beep/architecture-lab-tables/entities/Worker";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";

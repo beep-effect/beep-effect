@@ -3,7 +3,8 @@ import { WorkerServer } from "@beep/architecture-lab-server/entities/Worker";
 import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test";
 import { Worker as WorkerUseCases } from "@beep/architecture-lab-use-cases/public";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 

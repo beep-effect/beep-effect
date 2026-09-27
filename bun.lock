@@ -582,6 +582,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -612,6 +613,8 @@
       },
       "devDependencies": {
         "@beep/effect-drizzle": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "drizzle-orm": "catalog:",
@@ -634,6 +637,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
@@ -651,6 +655,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -669,6 +674,7 @@
       },
       "devDependencies": {
         "@beep/shared-domain": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -686,6 +692,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
