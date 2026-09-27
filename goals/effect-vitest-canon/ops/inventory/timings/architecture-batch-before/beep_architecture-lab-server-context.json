@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/architecture-lab-server",
+  "sourceHead": "81e611747e4c672ac7d6c05966df05906a1772d4",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.3220834840030875,
+  "bunWholeCommandSeconds": 3.2189319919998525,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [6.7041015625, 5.990234375, 6.60595703125],
+  "loadAfter": [6.66943359375, 6.0068359375, 6.60498046875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.03 avg60=0.10 avg300=0.21 total=665120181\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741425\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160018967\n",
+    "io": "some avg10=0.17 avg60=1.45 avg300=0.60 total=778550185\nfull avg10=0.13 avg60=1.09 avg300=0.45 total=682172224\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.08 avg300=0.21 total=665134385\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741559\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160019088\n",
+    "io": "some avg10=0.09 avg60=1.31 avg300=0.59 total=778559220\nfull avg10=0.07 avg60=0.99 avg300=0.44 total=682178257\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "88a93765e29068285c5dc624909df6d637161704adf2a69b59462fae13950fd1"
+    },
+    {
+      "file": "packages/architecture-lab/server/package.json",
+      "sha256": "4f1a579ed54e655bf1f99f1072741b1b95d1c8c3ffd00a38cdfe19fde3953524"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/Layer.ts",
+      "sha256": "ce98d56527b2942c29009141bf36ccb47f19a7eaa0d6d742aacf235c5daf3350"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
+      "sha256": "7ff5fc65cd772c561d3e302deb246018fea4c08c2cfc534afbb61a21c67a6bd3"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.layer.ts",
+      "sha256": "26c586601ec68729a8a512189bbf317970fc9ed75bf97805d7f640c3fa8d30d2"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.repo.ts",
+      "sha256": "d1aa2d26f9ea05a46e210ea9a76610e7728c7780f08c9bd29bc0b649fc7d85f1"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.rpc.ts",
+      "sha256": "fd30ca1ebb2adf8dc3a3f8afd0e014a866b0798e461e993ab3dc6a77468c8957"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.tools.ts",
+      "sha256": "d380a85c83722f925266d2d616ff3c07b52ec4dc006f790e9887ccd8d8013014"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/aggregates/WorkItem/index.ts",
+      "sha256": "85000893873a03c4b8729bfd62a44469e5403a90c9a8c716bbd2158059e59eff"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/entities/Worker/Worker.layer.ts",
+      "sha256": "443716e452facc046083b70aaf2e25badd2ae9c0b3dfd69e5a1d2cde1139d2db"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/entities/Worker/Worker.repo.ts",
+      "sha256": "a897e9b69a205bfaddb936cfccbd8464bdd54717d6820736ae245aab62514c02"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/entities/Worker/index.ts",
+      "sha256": "90c6fb516fabc8eb25cbef17f3569e8a0cc13198ccc5c4b97e5f81a1a4e13369"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/entities/index.ts",
+      "sha256": "c9f6ed923491984aaee6923dc24874290da48282c9522e1bfc425280e58f14b0"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/index.ts",
+      "sha256": "34cc03f8f019475fe228bf9711150bfe229f474761788b2860f587ee4a4ccb5a"
+    },
+    {
+      "file": "packages/architecture-lab/server/src/test.ts",
+      "sha256": "37bcb05df55900255fea063bf632cb0a6264a204e8ddaad038ee9496502c4a41"
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "sha256": "7bd800e2b12c32d28e55dda9a030775a96e77608d47d9837ff874e89b3db72c4"
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "sha256": "db97993bdb9ceb454fdab41dc71184883d2a085fe7f04cfda6eefd0bff66c75c"
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "sha256": "dee19d791eebf22f4866d7d053575d571a5f34df5679f8aea1f88f52a8ddd589"
+    }
+  ],
+  "environmentMode": "Architecture-lab configured suites; server integration uses actual in-process PGlite, btree_gist and migrations with original deadlines; no external socket or substitute repository.",
+  "bunProof": {
+    "passedTests": 8,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [6.66943359375, 6.0068359375, 6.60498046875],
+    "loadAfter": [6.66943359375, 6.0068359375, 6.60498046875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.01 avg60=0.08 avg300=0.21 total=665134391\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741559\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160019088\n",
+      "io": "some avg10=0.09 avg60=1.31 avg300=0.59 total=778559220\nfull avg10=0.07 avg60=0.99 avg300=0.44 total=682178257\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.01 avg60=0.08 avg300=0.21 total=665139035\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741560\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160019089\n",
+      "io": "some avg10=0.07 avg60=1.27 avg300=0.58 total=778562357\nfull avg10=0.05 avg60=0.96 avg300=0.44 total=682180418\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

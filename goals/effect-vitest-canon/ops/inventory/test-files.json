@@ -962,8 +962,8 @@
     "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
     "package": "@beep/architecture-lab-client",
     "kind": "test",
-    "bytes": 1540,
-    "lines": 40
+    "bytes": 2250,
+    "lines": 50
   },
   {
     "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
@@ -976,99 +976,99 @@
     "file": "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
     "package": "@beep/architecture-lab-domain",
     "kind": "test",
-    "bytes": 1607,
-    "lines": 46
+    "bytes": 1643,
+    "lines": 47
   },
   {
     "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
     "package": "@beep/architecture-lab-domain",
     "kind": "test",
-    "bytes": 4560,
-    "lines": 128
+    "bytes": 4683,
+    "lines": 126
   },
   {
     "file": "packages/architecture-lab/domain/test/WorkPriority.test.ts",
     "package": "@beep/architecture-lab-domain",
     "kind": "test",
-    "bytes": 456,
-    "lines": 10
+    "bytes": 492,
+    "lines": 11
   },
   {
     "file": "packages/architecture-lab/domain/test/Worker.test.ts",
     "package": "@beep/architecture-lab-domain",
     "kind": "test",
-    "bytes": 2133,
-    "lines": 46
+    "bytes": 2223,
+    "lines": 49
   },
   {
     "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
     "package": "@beep/architecture-lab-server",
     "kind": "test",
-    "bytes": 3888,
-    "lines": 96
+    "bytes": 3713,
+    "lines": 95
   },
   {
     "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
     "package": "@beep/architecture-lab-server",
     "kind": "test",
-    "bytes": 1584,
-    "lines": 36
+    "bytes": 1390,
+    "lines": 34
   },
   {
     "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
     "package": "@beep/architecture-lab-server",
     "kind": "test",
-    "bytes": 7329,
-    "lines": 155
+    "bytes": 7144,
+    "lines": 153
   },
   {
     "file": "packages/architecture-lab/tables/test/WorkItemTable.test.ts",
     "package": "@beep/architecture-lab-tables",
     "kind": "test",
-    "bytes": 3388,
-    "lines": 90
+    "bytes": 3251,
+    "lines": 86
   },
   {
     "file": "packages/architecture-lab/tables/test/WorkerTable.test.ts",
     "package": "@beep/architecture-lab-tables",
     "kind": "test",
-    "bytes": 2944,
-    "lines": 73
+    "bytes": 2885,
+    "lines": 71
   },
   {
     "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
     "package": "@beep/architecture-lab-ui",
     "kind": "test",
-    "bytes": 5562,
-    "lines": 166
+    "bytes": 5233,
+    "lines": 148
   },
   {
     "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
     "package": "@beep/architecture-lab-use-cases",
     "kind": "test",
-    "bytes": 6455,
-    "lines": 185
+    "bytes": 6159,
+    "lines": 175
   },
   {
     "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/architecture-lab-use-cases",
     "kind": "test",
-    "bytes": 5298,
-    "lines": 130
+    "bytes": 5334,
+    "lines": 131
   },
   {
     "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
     "package": "@beep/architecture-lab-use-cases",
     "kind": "test",
-    "bytes": 4762,
-    "lines": 136
+    "bytes": 5388,
+    "lines": 150
   },
   {
     "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
     "package": "@beep/architecture-lab-use-cases",
     "kind": "test",
-    "bytes": 2725,
-    "lines": 70
+    "bytes": 2761,
+    "lines": 71
   },
   {
     "file": "packages/documents/domain/test/EntityMaterialization.test.ts",

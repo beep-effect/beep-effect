@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/architecture-lab-client",
+  "sourceHead": "81e611747e4c672ac7d6c05966df05906a1772d4",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.119269700997393,
+  "bunWholeCommandSeconds": 2.0672772220132174,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [6.93994140625, 6.02392578125, 6.6201171875],
+  "loadAfter": [6.7041015625, 5.990234375, 6.60595703125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.06 avg60=0.11 avg300=0.22 total=665104686\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741414\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160018956\n",
+    "io": "some avg10=0.32 avg60=1.61 avg300=0.61 total=778545748\nfull avg10=0.24 avg60=1.21 avg300=0.46 total=682169157\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.04 avg60=0.10 avg300=0.22 total=665110194\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741424\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160018966\n",
+    "io": "some avg10=0.21 avg60=1.50 avg300=0.60 total=778547225\nfull avg10=0.16 avg60=1.13 avg300=0.46 total=682169977\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "88a93765e29068285c5dc624909df6d637161704adf2a69b59462fae13950fd1"
+    },
+    {
+      "file": "packages/architecture-lab/client/package.json",
+      "sha256": "6eae4e81d42ee0f800d679d86b77bc3983cc868d65a8888842f0e21b99332d67"
+    },
+    {
+      "file": "packages/architecture-lab/client/src/aggregates/WorkItem/WorkItem.client.ts",
+      "sha256": "06d33657829a0afcfc130903d676ea7fbd2522c4518a6df2e3f95237a6f90dc0"
+    },
+    {
+      "file": "packages/architecture-lab/client/src/aggregates/WorkItem/index.ts",
+      "sha256": "58227417e6c1b4a7056ba603998c6e4c984231b2f03b398bcea352dc0fb9df13"
+    },
+    {
+      "file": "packages/architecture-lab/client/src/index.ts",
+      "sha256": "2a7cea2700282c6585f7dedb137fce5a773fb9f1b8649f1cf6d2d18bec4cbdc9"
+    },
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "sha256": "198aa11c708e944c179e552342672e3fa29952b20af8fe8666e24b4a071256ff"
+    }
+  ],
+  "environmentMode": "Architecture-lab configured suites; server integration uses actual in-process PGlite, btree_gist and migrations with original deadlines; no external socket or substitute repository.",
+  "bunProof": {
+    "passedTests": 2,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [6.7041015625, 5.990234375, 6.60595703125],
+    "loadAfter": [6.7041015625, 5.990234375, 6.60595703125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.04 avg60=0.10 avg300=0.22 total=665110216\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741424\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160018966\n",
+      "io": "some avg10=0.21 avg60=1.50 avg300=0.60 total=778547233\nfull avg10=0.16 avg60=1.13 avg300=0.46 total=682169982\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.03 avg60=0.10 avg300=0.21 total=665117800\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=167741425\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160018967\n",
+      "io": "some avg10=0.17 avg60=1.45 avg300=0.60 total=778550185\nfull avg10=0.13 avg60=1.09 avg300=0.45 total=682172224\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}
