@@ -1977,15 +1977,15 @@
     "file": "packages/drivers/oxigraph/test/Oxigraph.equivalence.test.ts",
     "package": "@beep/oxigraph",
     "kind": "test",
-    "bytes": 770,
-    "lines": 16
+    "bytes": 891,
+    "lines": 19
   },
   {
     "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
     "package": "@beep/oxigraph",
     "kind": "test",
-    "bytes": 1870,
-    "lines": 46
+    "bytes": 3278,
+    "lines": 85
   },
   {
     "file": "packages/drivers/pacer/test/Pacer.equivalence.test.ts",
