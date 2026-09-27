@@ -19,7 +19,7 @@ import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -120,6 +120,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "retains unreconciled per-thread replies across view unmounts",
     Effect.fnUntraced(function* () {
       const atom = unreconciledTurnAtoms(threadId);
+      const removable = Atom.make(false);
       const registry = yield* Effect.acquireRelease(
         Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 1, timeoutResolution: 1 })),
         (registry) => Effect.sync(() => registry.dispose())
@@ -128,11 +129,16 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* Effect.scoped(
         Effect.gen(function* () {
           yield* AtomRegistry.mount(registry, atom);
+          yield* AtomRegistry.mount(registry, removable);
+          registry.set(removable, true);
+          assertTrue(registry.get(removable));
           registry.set(atom, [fallback]);
         })
       );
 
       yield* Effect.sleep(Duration.millis(20));
+      // The same registry must have swept an ordinary atom during this interval.
+      assertFalse(registry.get(removable));
       expect(registry.get(atom)).toStrictEqual([fallback]);
     })
   );

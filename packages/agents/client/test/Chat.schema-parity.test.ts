@@ -15,7 +15,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -111,29 +110,24 @@ describe("@beep/agents-client schema parity", () => {
     });
   });
 
-  it("round-trips touched schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [
-      CreateThreadAtomInput,
-      StreamingTurn,
-      EditTarget,
-      SendTurnRequest,
-      EditTurnRequest,
-      TurnRequest,
-    ];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  it.prop(
+    "round-trips touched schemas with schema-derived arbitraries",
+    [
+      Arbitrary.schema(CreateThreadAtomInput),
+      Arbitrary.schema(StreamingTurn),
+      Arbitrary.schema(EditTarget),
+      Arbitrary.schema(SendTurnRequest),
+      Arbitrary.schema(EditTurnRequest),
+      Arbitrary.schema(TurnRequest),
+    ],
+    ([createThreadAtomInput, streamingTurn, editTarget, sendTurnRequest, editTurnRequest, turnRequest]) => {
+      roundTrip(CreateThreadAtomInput, createThreadAtomInput);
+      roundTrip(StreamingTurn, streamingTurn);
+      roundTrip(EditTarget, editTarget);
+      roundTrip(SendTurnRequest, sendTurnRequest);
+      roundTrip(EditTurnRequest, editTurnRequest);
+      roundTrip(TurnRequest, turnRequest);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

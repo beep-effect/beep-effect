@@ -1,11 +1,11 @@
 import { selectedThreadAtom } from "@beep/agents-client/Chat.atoms";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { describe, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import { Atom, AtomRegistry } from "effect/reactivity";
 
 // The desktop registry disposes any atom with no listeners and no dependents once
 // its idle TTL elapses. A tiny TTL reproduces in milliseconds what took the real
@@ -29,9 +29,13 @@ describe("selected thread lifetime", () => {
         (registry) => Effect.sync(() => registry.dispose())
       );
 
+      const removable = Atom.make(false);
       yield* Effect.scoped(
         Effect.gen(function* () {
           yield* AtomRegistry.mount(registry, selectedThreadAtom);
+          yield* AtomRegistry.mount(registry, removable);
+          registry.set(removable, true);
+          assertTrue(registry.get(removable));
           registry.set(selectedThreadAtom, O.some(olderThread));
         })
       );
@@ -40,6 +44,8 @@ describe("selected thread lifetime", () => {
       // ...and browses elsewhere for longer than the idle TTL.
       yield* Effect.sleep(Duration.millis(IDLE_TTL_MS * 5));
 
+      // The same registry must have swept an ordinary atom during this interval.
+      assertFalse(registry.get(removable));
       assertSome(registry.get(selectedThreadAtom), olderThread);
     })
   );
