@@ -11,7 +11,8 @@ import {
 } from "@beep/tika";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Context, Effect, Layer, Option as O, Result } from "effect";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { ConfigProvider, Context, Effect, Layer, Option as O, pipe, Result } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -115,7 +116,7 @@ describe("TikaServerEngineConfig", () => {
 
     expect(config.baseUrl).toBe(TIKA_SERVER_URL);
     expect(config.timeoutMillis).toBe(PosInt.make(120_000));
-    expect(O.isNone(config.maxOutputBytes)).toBe(true);
+    assertNone(config.maxOutputBytes);
     expect(encode(TikaServerEngineConfig, config)).toEqual({
       baseUrl: TIKA_SERVER_URL,
       timeoutMillis: 120_000,
@@ -157,9 +158,9 @@ describe("TikaServerEngineConfig", () => {
     const withQuery = decodeTikaServerEngineConfigResult({ baseUrl: "http://localhost:9998/?token=x" });
     const withFragment = decodeTikaServerEngineConfigResult({ baseUrl: "http://localhost:9998/#frag" });
 
-    expect(Result.isFailure(withQuery)).toBe(true);
-    expect(Result.isFailure(withFragment)).toBe(true);
-    expect(Result.isSuccess(decodeTikaServerEngineConfigResult({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
+    pipe(withQuery, Result.isFailure, assertTrue);
+    pipe(withFragment, Result.isFailure, assertTrue);
+    pipe(decodeTikaServerEngineConfigResult({ baseUrl: TIKA_SERVER_URL }), Result.isSuccess, assertTrue);
   });
 
   it("accepts http and https base URLs", () => {
@@ -187,7 +188,7 @@ describe("TikaServerEngineConfig", () => {
     // "A:/" is the counterexample the round-trip property surfaced: stripping
     // its trailing slash changed the URL's identity because it is opaque.
     for (const baseUrl of ["ftp://tika.internal", "file:///tmp/tika", "A:/"]) {
-      expect(Result.isFailure(decodeTikaServerEngineConfigResult({ baseUrl }))).toBe(true);
+      pipe(decodeTikaServerEngineConfigResult({ baseUrl }), Result.isFailure, assertTrue);
     }
   });
 });

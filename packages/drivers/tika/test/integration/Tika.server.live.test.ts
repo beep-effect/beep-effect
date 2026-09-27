@@ -142,6 +142,7 @@ it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestSe
 
         expect(result.metadata["Content-Type"]).toContain("pdf");
         expect(Str.isNonEmpty(result.text ?? "")).toBe(true);
+        expect(result.text).toContain(liveMarker);
       })
     );
 
