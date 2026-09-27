@@ -16,7 +16,7 @@ import {
 } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -41,8 +41,6 @@ const encodeLibpffError = S.encodeEffect(LibpffError);
 const decodeLibpffError = S.decodeUnknownEffect(LibpffError);
 const encodePffexportMessageRecord = S.encodeEffect(PffexportMessageRecord);
 const decodePffexportMessageRecord = S.decodeUnknownEffect(PffexportMessageRecord);
-const providePlatform = provideScopedLayer(NodeServices.layer);
-
 const fixtureIds = Effect.all({
   artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
   digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
@@ -157,32 +155,36 @@ describe("@beep/libpff", () => {
     });
   });
 
-  it.effect(
-    "maps unavailable libpff runtime to an operation-level deferral",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
+  it.layer(NodeServices.layer)("maps unavailable libpff runtime to an operation-level deferral", (it) => {
+    it.effect(
+      "maps unavailable libpff runtime to an operation-level deferral",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
 
-      return yield* Effect.sync(() => {
-        expect(error._tag).toBe("FileProcessingOperationError");
-        expect(error.reason).toBe("engine-unavailable");
-      });
-    }, providePlatform)
-  );
+        return yield* Effect.sync(() => {
+          expect(error._tag).toBe("FileProcessingOperationError");
+          expect(error.reason).toBe("engine-unavailable");
+        });
+      })
+    );
+  });
 
-  it.effect(
-    "can emit synthetic child artifacts for proof fixtures",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const result = yield* makeLibpffFileProcessingEngine({ syntheticExport: true }).exportArchive(
-        yield* operation(ids)
-      );
+  it.layer(NodeServices.layer)("can emit synthetic child artifacts for proof fixtures", (it) => {
+    it.effect(
+      "can emit synthetic child artifacts for proof fixtures",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const result = yield* makeLibpffFileProcessingEngine({ syntheticExport: true }).exportArchive(
+          yield* operation(ids)
+        );
 
-      return yield* Effect.sync(() => {
-        expect(result.children).toHaveLength(1);
-        expect(result.children[0]?.id).not.toBe(ids.artifactId);
-        expect(result.engine).toBe("libpff");
-      });
-    }, providePlatform)
-  );
+        return yield* Effect.sync(() => {
+          expect(result.children).toHaveLength(1);
+          expect(result.children[0]?.id).not.toBe(ids.artifactId);
+          expect(result.engine).toBe("libpff");
+        });
+      })
+    );
+  });
 });
