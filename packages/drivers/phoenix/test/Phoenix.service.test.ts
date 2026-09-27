@@ -25,7 +25,7 @@ import {
 } from "@beep/phoenix";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -71,11 +71,6 @@ const publicSchemaRoundTripCases: ReadonlyArray<
   ["PhoenixPromptSelector", PhoenixPromptSelector],
   ["PhoenixPromptWriteResult", PhoenixPromptWriteResult],
 ];
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const okSdk: PhoenixSdkShape = {
   addAnnotation: (input) =>
@@ -190,10 +185,10 @@ describe("@beep/phoenix", () => {
     }
   });
 
-  it.effect(
-    "delegates dataset, prompt, and doctor operations through the Effect service",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(Phoenix.makeLayerWithSdk(okSdk), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "delegates dataset, prompt, and doctor operations through the Effect service",
+      Effect.fnUntraced(function* () {
         const phoenix = yield* Phoenix;
 
         const doctor = yield* phoenix.doctor;
@@ -215,15 +210,14 @@ describe("@beep/phoenix", () => {
         expect(doctor.version).toBe("1.2.3");
         expect(dataset.datasetId).toBe("dataset:agent-loop-health-v1:1");
         expect(prompt.promptVersionId).toBe("prompt-version-id:OPENAI");
-      },
-      provideScopedLayer(Phoenix.makeLayerWithSdk(okSdk))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "writes annotations through the injected SDK adapter",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(Phoenix.makeLayerWithSdk(okSdk), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "writes annotations through the injected SDK adapter",
+      Effect.fnUntraced(function* () {
         const phoenix = yield* Phoenix;
         const result = yield* phoenix.addAnnotation(
           PhoenixAnnotationInput.make({
@@ -236,15 +230,14 @@ describe("@beep/phoenix", () => {
 
         expect(result.annotationId).toBe("annotation-id");
         expect(result.targetKind).toBe("trace");
-      },
-      provideScopedLayer(Phoenix.makeLayerWithSdk(okSdk))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "maps SDK promise failures into PhoenixError",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(Phoenix.makeLayerWithSdk(failingSdk), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "maps SDK promise failures into PhoenixError",
+      Effect.fnUntraced(function* () {
         const phoenix = yield* Phoenix;
         const error = yield* pipe(phoenix.doctor, Effect.flip);
 
@@ -252,15 +245,14 @@ describe("@beep/phoenix", () => {
         expect(error.operation).toBe("doctor");
         expect(error.reason).toBe("transport");
         expect(error.cause).toBe("offline");
-      },
-      provideScopedLayer(Phoenix.makeLayerWithSdk(failingSdk))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "reads back dataset, prompt, and experiment summaries",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(Phoenix.makeLayerWithSdk(okSdk), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reads back dataset, prompt, and experiment summaries",
+      Effect.fnUntraced(function* () {
         const phoenix = yield* Phoenix;
         const selector = PhoenixDatasetSelector.make({ kind: "dataset-name", value: "agent-outcomes-v1" });
         const promptSelector = PhoenixPromptSelector.make({ name: "agent-effectiveness-review-evaluator-v1" });
@@ -275,23 +267,21 @@ describe("@beep/phoenix", () => {
         expect(examples.versionId).toBe("version-id");
         expect(prompt.exists).toBe(true);
         expect(experiment.experimentId).toBe("experiment-id");
-      },
-      provideScopedLayer(Phoenix.makeLayerWithSdk(okSdk))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects empty prompt selectors before calling the SDK",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(Phoenix.makeLayerWithSdk(okSdk), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects empty prompt selectors before calling the SDK",
+      Effect.fnUntraced(function* () {
         const phoenix = yield* Phoenix;
         const error = yield* pipe(phoenix.getPrompt(PhoenixPromptSelector.make({})), Effect.flip);
 
         expect(error).toBeInstanceOf(PhoenixError);
         expect(error.operation).toBe("getPrompt");
         expect(error.reason).toBe("config");
-      },
-      provideScopedLayer(Phoenix.makeLayerWithSdk(okSdk))
-    )
-  );
+      })
+    );
+  });
 });
