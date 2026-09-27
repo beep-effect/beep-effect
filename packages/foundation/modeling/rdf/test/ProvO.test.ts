@@ -23,9 +23,11 @@ import {
   Usage,
 } from "@beep/rdf/Prov";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -55,6 +57,7 @@ const decodeSoftwareAgent = decodeUnknown(SoftwareAgent);
 const decodeStart = decodeUnknown(Start);
 const decodeUsage = decodeUnknown(Usage);
 const isProvDateTime = S.is(ProvDateTime);
+const equivalentProvDateTime = S.toEquivalence(ProvDateTime);
 const encodeProvDateTimeResult = S.encodeResult(ProvDateTime);
 const decodeProvDateTimeResult = S.decodeResult(ProvDateTime);
 
@@ -247,3 +250,14 @@ it("applies PROV timestamp boundaries after timezone normalization", () => {
     pipe(decodeProvDateTimeResult(input), Result.isFailure, assertTrue);
   }
 });
+
+it.prop(
+  "round-trips source-derived PROV timestamps through the canonical wire format",
+  [Arbitrary.schema(ProvDateTime)],
+  ([instant]) => {
+    const encoded = Result.getOrThrow(encodeProvDateTimeResult(instant));
+    const decoded = Result.getOrThrow(decodeProvDateTimeResult(encoded));
+    pipe(equivalentProvDateTime(decoded, instant), assertTrue);
+  },
+  { arbitrary: fcRuns(100) }
+);
