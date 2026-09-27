@@ -2408,6 +2408,7 @@
           "@beep/m365-mcp",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2416,6 +2417,7 @@
           "@beep/m365-mcp",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2611,6 +2613,7 @@
           "@beep/onepassword-cli",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2619,6 +2622,7 @@
           "@beep/onepassword-cli",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3531,12 +3535,14 @@
           "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/shared-tables",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/shared-tables",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },

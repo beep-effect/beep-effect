@@ -3099,3 +3099,11 @@ exposed TS377050 missedPipeableOpportunity during package test typechecking.
 Use pipe(first, O.isSome, assertTrue), retaining the original Boolean observation
 and subsequent payload branch. The focused package audit catches this policy
 diagnostic even when runtime assertions are equivalent.
+
+## Consolidation lockfile protocol normalization
+
+Adding the next three runner dependencies caused Bun to normalize the existing
+MCP-kit lock entry from workspace:* to workspace:^. Its manifest already used
+workspace:^, and no version or resolved package changed. Preserve the manifest
+policy in the generated lockfile and check lock entries after workspace protocol
+repairs; a frozen install had not exposed this metadata discrepancy.

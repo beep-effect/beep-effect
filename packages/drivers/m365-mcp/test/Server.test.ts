@@ -35,8 +35,9 @@ import {
   withRequestMetadata,
 } from "@beep/mcp-kit/client";
 import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import { assertExitFailure, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
 import { Match, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -157,11 +158,14 @@ const continueStdioConversation = Effect.fn("continueStdioConversation")(functio
 
   if (currentStage === 0 && Str.includes(`"id":1`)(output)) {
     yield* Ref.set(stage, 1);
+    yield* Effect.log("M365 MCP completed server/discover requestId=1; awaiting tools/list requestId=2");
     yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(listRequest)));
   } else if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
     yield* Ref.set(stage, 2);
+    yield* Effect.log("M365 MCP completed tools/list requestId=2; awaiting tools/call requestId=3");
     yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(callRequest)));
   } else if (Str.includes(DriveId)(output)) {
+    yield* Effect.log("M365 MCP completed tools/call requestId=3");
     yield* Deferred.succeed(ready, void 0);
   }
 });
@@ -261,7 +265,7 @@ describe("M365 MCP server", () => {
     ]);
   });
 
-  layer(M365ToolkitHandlersLive.pipe(Layer.provide(MockM365Layer)))("via the mounted toolkit", (it) => {
+  it.layer(M365ToolkitHandlersLive.pipe(Layer.provide(MockM365Layer)))("via the mounted toolkit", (it) => {
     it.effect(
       "returns driver results through toolkit handlers",
       Effect.fnUntraced(function* () {
@@ -293,6 +297,7 @@ describe("M365 MCP server", () => {
       ).pipe(Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)), Layer.provide(MockM365Layer));
 
       yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
+      yield* Effect.log("M365 MCP awaiting server/discover requestId=1");
       const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkChild({ startImmediately: true }));
 
       yield* Effect.yieldNow;
@@ -321,6 +326,7 @@ describe("M365 MCP server", () => {
       );
       const parent = yield* Effect.gen(function* () {
         yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
+        yield* Effect.log("M365 MCP awaiting server/discover requestId=1");
         yield* serverLayer.pipe(
           Layer.launch,
           Effect.ensuring(Ref.update(released, (count) => count + 1)),

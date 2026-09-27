@@ -11,8 +11,9 @@ import {
 } from "@beep/onepassword-cli";
 import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -219,7 +220,7 @@ describe("@beep/onepassword-cli", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(OnePasswordCli.makeLayerFromRunner(successRunner))((it) => {
+  it.layer(OnePasswordCli.makeLayerFromRunner(successRunner))((it) => {
     it.effect(
       "probes signed-in state and reference metadata without exposing the secret",
       Effect.fnUntraced(function* () {
@@ -239,7 +240,7 @@ describe("@beep/onepassword-cli", () => {
     );
   });
 
-  layer(OnePasswordCli.makeLayerFromRunner(missingRunner))((it) => {
+  it.layer(OnePasswordCli.makeLayerFromRunner(missingRunner))((it) => {
     it.effect(
       "returns typed driver errors for unresolved references",
       Effect.fnUntraced(function* () {
@@ -253,7 +254,7 @@ describe("@beep/onepassword-cli", () => {
     );
   });
 
-  layer(
+  it.layer(
     OnePasswordCli.makeLayerFromRunner((_command, args) =>
       Effect.succeed(
         OnePasswordCliProcessResult.make({

@@ -1,8 +1,9 @@
 import { Membership, User } from "@beep/shared-tables/entities";
 import * as Organization from "@beep/shared-tables/entities/Organization";
 import { DbSchema } from "@beep/shared-tables/Schema";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
