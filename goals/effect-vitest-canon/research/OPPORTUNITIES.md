@@ -2496,3 +2496,14 @@ independently supplied original payload. No original assertion was removed and
 no annotation was stripped. The untraced HTTP witness retains complete Cause
 comparison. A testing guide example distinguishing semantic payload preservation
 from runtime Cause annotation identity would prevent this mismatched oracle.
+
+## 2026-09-26: Codec composition and hosted API quota
+
+The Observed codec pilot passed its full generated domains and pinned cases,
+but package verification rejected two nested toCodecJson/fromJsonString calls
+with TS377050. Equivalent schema.pipe(...) composition preserves the same
+codec and passed the next validation. Use pipe when hoisting composed codecs.
+Separately, refreshing the goal PR set reached the GitHub GraphQL rate limit.
+Required hosted readiness remains unverified while quota is unavailable; local
+work continues. Sharing a bounded PR-state read across active monitors would
+reduce redundant quota use without relaxing any merge gate.
