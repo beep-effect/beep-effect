@@ -20,8 +20,8 @@ import {
   verifySkillArtifact,
 } from "@beep/skill-contract";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { assertTrue, describe, expect, it } from "@effect/vitest";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -161,7 +161,7 @@ describe("@beep/skill-contract SkillProjection", () => {
           denied: ({ reasons }) => reasons,
         })
       ).toEqual(["rerender-mismatch", "frontmatter-missing"]);
-      expect(Result.isFailure(unterminated)).toBe(true);
+      pipe(unterminated, Result.isFailure, assertTrue);
       expect(Result.isFailure(unterminated) ? unterminated.failure.reasons : []).toEqual(["frontmatter-missing"]);
     })
   );

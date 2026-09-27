@@ -39,8 +39,8 @@ import {
   toSkillCompletionReceipt,
 } from "@beep/skill-contract";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { assertTrue, describe, expect, it } from "@effect/vitest";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -205,7 +205,7 @@ describe("@beep/skill-contract SkillCompletion", () => {
       });
 
       expect(evaluation.verdict).toBe("allowed");
-      expect(O.isSome(receipt)).toBe(true);
+      pipe(receipt, O.isSome, assertTrue);
       if (O.isNone(receipt)) {
         return;
       }
