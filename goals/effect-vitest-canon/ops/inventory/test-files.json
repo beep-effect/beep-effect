@@ -5484,120 +5484,120 @@
     "file": "packages/tooling/library/repo-utils/test/Dependencies.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 4667,
-    "lines": 136
+    "bytes": 7234,
+    "lines": 212
   },
   {
     "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 5811,
+    "bytes": 5832,
     "lines": 144
   },
   {
     "file": "packages/tooling/library/repo-utils/test/FsUtils.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 15129,
-    "lines": 445
+    "bytes": 17720,
+    "lines": 481
   },
   {
     "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 9438,
-    "lines": 333
+    "bytes": 9855,
+    "lines": 343
   },
   {
     "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 4077,
-    "lines": 124
+    "bytes": 3679,
+    "lines": 108
   },
   {
     "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 3268,
-    "lines": 79
+    "bytes": 3572,
+    "lines": 88
   },
   {
     "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 3035,
-    "lines": 92
+    "bytes": 3332,
+    "lines": 95
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 20155,
-    "lines": 490
+    "bytes": 21172,
+    "lines": 509
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 1627,
-    "lines": 40
+    "bytes": 1663,
+    "lines": 41
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 24405,
-    "lines": 660
+    "bytes": 24723,
+    "lines": 659
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 844,
-    "lines": 29
+    "bytes": 880,
+    "lines": 30
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TSMorph.test-support.ts",
     "package": "@beep/repo-utils",
     "kind": "support",
-    "bytes": 636,
-    "lines": 14
+    "bytes": 577,
+    "lines": 13
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 5765,
-    "lines": 121
+    "bytes": 5875,
+    "lines": 123
   },
   {
     "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 3213,
-    "lines": 82
+    "bytes": 3294,
+    "lines": 85
   },
   {
     "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 4642,
-    "lines": 108
+    "bytes": 5376,
+    "lines": 121
   },
   {
     "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 11283,
-    "lines": 295
+    "bytes": 11724,
+    "lines": 298
   },
   {
     "file": "packages/tooling/library/repo-utils/test/errors/errors.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 3511,
-    "lines": 103
+    "bytes": 3547,
+    "lines": 104
   },
   {
     "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-a/src/index.ts",
@@ -5666,36 +5666,36 @@
     "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 6274,
-    "lines": 143
+    "bytes": 6310,
+    "lines": 144
   },
   {
     "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 4874,
-    "lines": 126
+    "bytes": 6058,
+    "lines": 158
   },
   {
     "file": "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 3135,
-    "lines": 110
+    "bytes": 3171,
+    "lines": 111
   },
   {
     "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 29010,
-    "lines": 1003
+    "bytes": 28426,
+    "lines": 986
   },
   {
     "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
     "package": "@beep/repo-utils",
     "kind": "test",
-    "bytes": 15889,
-    "lines": 465
+    "bytes": 15685,
+    "lines": 469
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/codec.ts",

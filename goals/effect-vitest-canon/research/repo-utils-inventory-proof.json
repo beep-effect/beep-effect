@@ -1,0 +1,74 @@
+{
+  "package": "@beep/repo-utils",
+  "admittedFiles": 31,
+  "rows": 383,
+  "statuses": {
+    "fixed": 201,
+    "exception": 76,
+    "open": 106
+  },
+  "families": {
+    "detector": 254,
+    "resource": 34,
+    "property": 33,
+    "flake": 31,
+    "observability": 31
+  },
+  "strict": {
+    "valid": true,
+    "complete": true,
+    "mode": "strict",
+    "files": 31,
+    "rows": 383,
+    "missingCoverage": [],
+    "errors": []
+  },
+  "preservation": {
+    "unrelatedRootRawBlocksPreserved": true,
+    "unrelatedCensusRawBlocksPreserved": true,
+    "deferredShaRawPreserved": true
+  },
+  "unrelatedLedgerCount": 683,
+  "lineCountConvention": "len(text.splitlines())",
+  "sourceHashes": {
+    "packages/tooling/library/repo-utils/test/Dependencies.test.ts": "a3b4e9ab743f997fa69994c3496276cfc30bf6f917e0baca5ca9e740dee823df",
+    "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts": "db56873bee352299fa98f4f94cfe033ab2b90ebdb0bfcbe3a97323a5e4b72600",
+    "packages/tooling/library/repo-utils/test/FsUtils.test.ts": "7055a4123802bc9bb0cd09d90b7a42daa9eb10f996626ba21cb22f70b522c7ad",
+    "packages/tooling/library/repo-utils/test/Graph.test.ts": "adad65a63577ad1fa6fdf95cabff85281c679725ffc479517554617f29ce49ec",
+    "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts": "16efc2bdc1e60b7234a67be9875514eee6e79295b091a1ba71b0157f705ce23f",
+    "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts": "ba988400d5ced2ea8f81fc4de1afe9e7f16837fe4a2aa9e38807e058503d2d3b",
+    "packages/tooling/library/repo-utils/test/Root.test.ts": "b6b764448b2a65eddb6c2ea2bf5978e3ea8ce5766b47400259d0bc8e024a5505",
+    "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts": "6418d006c2a9b5561326c919fc21dd586d6856367ff7a640ad4dbfe5f9aaa456",
+    "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts": "2666b8743440b75db1d96fd2c434f0e98cdc362ded674b47bd5449dc10a28039",
+    "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts": "9f18c6894c7cd772db8bc44c27a1698d23a011bec95df58798ded44e551519f4",
+    "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts": "22a5016e075183dbfc184030b0ef070a3f065fe4fe0bdf2aff179b33f92fa6e9",
+    "packages/tooling/library/repo-utils/test/TSMorph.test-support.ts": "7d9dd41e93f329f088fdbc74ea300a64d88828536399e90784c301f6b837e9cb",
+    "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts": "d960e4ac7bf341787ae0d9c4200dd594f1824020d7cb9a7e39e8fe856e5d7f05",
+    "packages/tooling/library/repo-utils/test/TsConfig.test.ts": "90fbfeb25540feb334a43b66261c6537fa9ce74e18aa3bda9aa0f45448b0f0c6",
+    "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts": "a9e488b158ecb39189ed84a01ff45c9aeaac5f2dd346b606f3dfbefb9a125245",
+    "packages/tooling/library/repo-utils/test/Workspaces.test.ts": "58e183f6153ea828bcfe3ec10d9c89ec9bf742e5988429f6c638436777d25c99",
+    "packages/tooling/library/repo-utils/test/errors/errors.test.ts": "37bc51bedfc30a2e3aa027be2988254ac49bc7ec0d111c52a2ae7ea6e5fe4c5e",
+    "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-a/src/index.ts": "037ecd1db38c230c248787e60fd7bfc0cb0101b187b59535b6e7483be762d350",
+    "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-b/src/index.ts": "b5d546753d33709dff508a6f2c2e547f432267fbb05b68d3da74fa5f7bda9f7a",
+    "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-c/src/index.ts": "224d0f45e2a5937f9f55158df79d093ae4779d40669cc2a4ca22b1908c9c193d",
+    "packages/tooling/library/repo-utils/test/fixtures/tsmorph-declaration/ambient.d.ts": "5034a2efae2e2ebceebe1064612d4f3ba9c010ab4241f3d6322b7ba4ad1fbc74",
+    "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/src/broken.ts": "4d40d699ed01cc3819fd4d7639a547a8b72e413100eb5c6e47d8cd525d791d91",
+    "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/src/clean.ts": "a2098bd92b10bf8b816d24b7556b1ce8c49a879d130489065ef1051c17e042f6",
+    "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/extra.ts": "26d799d90f7ce9afa09c7491df60f38cf471ff81eabe52d176eacd61201be813",
+    "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/included.ts": "a880909ea87fd1670ebd4842d719db457a5d01d6f513d7fc54f458a0b884281f",
+    "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts": "d1028593ebace6de4ce09c29b1ddc99de5496ebaa9b9cd2fa0cfcc863bb15688",
+    "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts": "4b9a9f38f6636b4aba2a3d8cde0705c5e5222645e67751b41ac8d0acf7589da1",
+    "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts": "bfab96345cfed0f139a2b946343b9c5ff8516cfbdd5a9c0d3302adca40b15bc9",
+    "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts": "6f709c76240cef40379ad94d810a1f1bfd3c418aa85d76c5438d5aedd8e5ecd6",
+    "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts": "96250139bef9e80045b22b5441e5a814220202f51463d4da56de9c45a5e8f971",
+    "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts": "9bde6d205d1ad91df37cbb48ad5af22c6dd4ea432532a4d4edfc426b4a194354"
+  },
+  "ratchet": {
+    "command": "bun run beep lint effect-vitest",
+    "exitCode": 0,
+    "files": 1181,
+    "findings": 7783,
+    "introduced": 0,
+    "resolved": 0
+  }
+}

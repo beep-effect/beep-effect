@@ -2478,3 +2478,22 @@ registrations on an unshadowed root runner alias, preserving independent memo
 maps and all original fixture/assertion semantics. No production defect was
 demonstrated. A runner migration checklist should distinguish lexical nesting
 from inherited layer composition before changing the registration receiver.
+
+## 2026-09-26: a second hosted runner communication loss
+
+PR #1285 coverage job 108491590575 failed with the GitHub annotation “The
+self-hosted runner lost communication with the server.” No workflow step reports
+failure, so this does not establish a coverage regression. Preserve other jobs
+and allow one job-specific retry after the parent run finishes. Together with
+PR #1287's earlier runner loss, this reinforces the need for retained runner
+health/resource telemetry; the available annotations do not identify the cause.
+
+## 2026-09-26: historical and current detector identity collision
+
+Repo-utils reconciliation found a repaired browser-map assertion and a retained
+bugs-object assertion sharing one line-based EV006 ID after source movement.
+Their occurrence hashes differ. Unique-ID validation caught this before tracked
+application. The current detector ID remains canonical; the historical occurrence
+and fix SHA are retained in `repo-utils-inventory-lineage.json`. A reconciliation
+preflight should check ID collisions across historical and current generations
+before assigning fixed credit or replacing current exceptions.
