@@ -31,50 +31,6 @@ const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
   Result.getOrThrow(S.decodeUnknownResult(schema)(value));
 
-// The stable codec law: decoding an encoded value and re-encoding it must
-// reproduce the original encoding byte-for-byte. This holds for every schema,
-// including class schemas whose decoded side is an Error subclass.
-const assertEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(encode(schema, decode(schema, encode(schema, value)))).toEqual(encode(schema, value));
-
-          return true;
-        },
-        fcRuns(10)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
-
-// Decoded-side equivalence additionally pins that the decoded instance equals
-// the generated one. It holds for `S.TaggedError` classes too: Effect derives a
-// Schema class's equivalence from its declared field struct by construction
-// (effect@4.0.0-rc.113), so the `Error` runtime metadata never takes part.
-// Measured on this schema set at 60 seeds x 400 runs on rc.113: DocTextError,
-// DocTextErrorReason and DocTextErrorOptions all 0/24000 unequal (the rc.109
-// run that motivated a class-level hook was 682/24000 on DocTextError; see
-// goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md).
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
-  assertEncodedRoundTrip(schema);
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(S.toEquivalence(schema)(decode(schema, encode(schema, value)), value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(10)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
-
 const fixtureIds = Effect.all({
   artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
   digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
@@ -144,11 +100,55 @@ const makeDocx = (text: string): Promise<Buffer> =>
   );
 
 describe("@beep/doc-text", () => {
-  it("round-trips document text driver schemas", () => {
-    assertSchemaRoundTrip(DocTextErrorReason);
-    assertSchemaRoundTrip(DocTextErrorOptions);
-    assertSchemaRoundTrip(DocTextError);
-  });
+  // The stable codec law: decoding an encoded value and re-encoding it must
+  // reproduce the original encoding byte-for-byte. This holds for every schema,
+  // including class schemas whose decoded side is an Error subclass.
+  // Decoded-side equivalence additionally pins that the decoded instance equals
+  // the generated one. It holds for `S.TaggedError` classes too: Effect derives a
+  // Schema class's equivalence from its declared field struct by construction
+  // (effect@4.0.0-rc.113), so the `Error` runtime metadata never takes part.
+  // Measured on this schema set at 60 seeds x 400 runs on rc.113: DocTextError,
+  // DocTextErrorReason and DocTextErrorOptions all 0/24000 unequal (the rc.109
+  // run that motivated a class-level hook was 682/24000 on DocTextError; see
+  // goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md).
+  it.prop(
+    "round-trips document text driver schemas",
+    {
+      encodedReason: Arbitrary.schema(DocTextErrorReason),
+      equivalentReason: Arbitrary.schema(DocTextErrorReason),
+      encodedOptions: Arbitrary.schema(DocTextErrorOptions),
+      equivalentOptions: Arbitrary.schema(DocTextErrorOptions),
+      encodedError: Arbitrary.schema(DocTextError),
+      equivalentError: Arbitrary.schema(DocTextError),
+    },
+    ({ encodedReason, equivalentReason, encodedOptions, equivalentOptions, encodedError, equivalentError }) => {
+      expect(encode(DocTextErrorReason, decode(DocTextErrorReason, encode(DocTextErrorReason, encodedReason)))).toEqual(
+        encode(DocTextErrorReason, encodedReason)
+      );
+      expect(
+        S.toEquivalence(DocTextErrorReason)(
+          decode(DocTextErrorReason, encode(DocTextErrorReason, equivalentReason)),
+          equivalentReason
+        )
+      ).toBe(true);
+      expect(
+        encode(DocTextErrorOptions, decode(DocTextErrorOptions, encode(DocTextErrorOptions, encodedOptions)))
+      ).toEqual(encode(DocTextErrorOptions, encodedOptions));
+      expect(
+        S.toEquivalence(DocTextErrorOptions)(
+          decode(DocTextErrorOptions, encode(DocTextErrorOptions, equivalentOptions)),
+          equivalentOptions
+        )
+      ).toBe(true);
+      expect(encode(DocTextError, decode(DocTextError, encode(DocTextError, encodedError)))).toEqual(
+        encode(DocTextError, encodedError)
+      );
+      expect(
+        S.toEquivalence(DocTextError)(decode(DocTextError, encode(DocTextError, equivalentError)), equivalentError)
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
   it.effect(
     "extracts text from a generated PDF text layer",

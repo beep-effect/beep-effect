@@ -3262,3 +3262,5 @@ array/envelope encode-parse steps in the parent generator, preserving their
 order and separate equivalence checks.
 
 - File Processing platform registration: `quality package-verify @beep/file-processing` rejected a test-only `node:path` separator import with `TS377057 effect(nodeBuiltinImport)`. Use the runtime platform at registration and assert the injected Path separator inside the POSIX body. A documented native-test platform registration example would prevent this detour.
+
+- Doc Text property edit: a private ts-morph CallExpression replacement included a trailing statement semicolon and failed with `children ... expected to have the same count`. No source was saved. Keep replacement text at expression granularity and check the mutation exit before starting validation.
