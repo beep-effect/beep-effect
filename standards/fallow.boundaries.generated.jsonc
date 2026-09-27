@@ -3581,6 +3581,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3589,6 +3590,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
