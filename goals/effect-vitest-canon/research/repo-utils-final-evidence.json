@@ -1,0 +1,85 @@
+{
+  "package": "@beep/repo-utils",
+  "admittedFiles": 31,
+  "instrumentedRegisteredSuites": 21,
+  "configuredSuites": 22,
+  "configuredCases": 232,
+  "deferredSuite": "test/Sha256Hex.test.ts",
+  "timings": {
+    "node": {
+      "passed": 232,
+      "failed": 0,
+      "skipped": 0,
+      "files": 22,
+      "seconds": 5.223978797002928,
+      "sourceStable": true
+    },
+    "bun": {
+      "passed": 232,
+      "failed": 0,
+      "skipped": 0,
+      "files": 22,
+      "seconds": 2.417965667998942,
+      "sourceStable": true
+    }
+  },
+  "traceControls": [
+    {
+      "case": "biome-empty",
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "sourceSha256": "bfab96345cfed0f139a2b946343b9c5ff8516cfbdd5a9c0d3302adca40b15bc9",
+      "results": {
+        "positive": 0,
+        "negative": 1
+      },
+      "positiveCounts": {
+        "numPassedTests": 1,
+        "numFailedTests": 0,
+        "numPendingTests": 2
+      },
+      "negativeCounts": {
+        "numPassedTests": 0,
+        "numFailedTests": 1,
+        "numPendingTests": 2
+      },
+      "sourceRestored": true
+    },
+    {
+      "case": "tsmorph",
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "sourceSha256": "9f18c6894c7cd772db8bc44c27a1698d23a011bec95df58798ded44e551519f4",
+      "results": {
+        "positive": 0,
+        "negative": 1
+      },
+      "positiveCounts": {
+        "numPassedTests": 1,
+        "numFailedTests": 0,
+        "numPendingTests": 15
+      },
+      "negativeCounts": {
+        "numPassedTests": 0,
+        "numFailedTests": 1,
+        "numPendingTests": 15
+      },
+      "sourceRestored": true
+    }
+  ],
+  "properties": {
+    "registrations": 15,
+    "runs": 400,
+    "seed": 20260708,
+    "passed": 15
+  },
+  "packageVerification": {
+    "exit": 0,
+    "auditSeconds": 9.3,
+    "docgenSeconds": 5.9
+  },
+  "cacheReview": {
+    "ownedNodes": 13,
+    "dependencyArraysUpdated": 8,
+    "blockingFindings": 0,
+    "qualificationPromoted": false
+  }
+}

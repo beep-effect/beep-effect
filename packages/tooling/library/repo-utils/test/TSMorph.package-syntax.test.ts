@@ -1,5 +1,6 @@
 import { TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 

@@ -2816,6 +2816,77 @@ even though this wave changes tests and their development dependency. Add a real
 package patch changeset, then rerun the gate. Check release-policy classification
 before publication instead of inferring exemption from a private package flag.
 
+## 2026-09-26: hosted lint runner communication loss
+
+While continuing the existing repo-utils inventory, PR #1287 job 108491528753
+(Heavy / Lint Policy) failed with the annotation “The self-hosted runner lost
+communication with the server.” No workflow step reported failure and the job
+log was unavailable while its parent run continued. This is an environment
+failure, not evidence of a lint defect. Preserve sibling running jobs and retry
+only the failed job once the parent run completes. Durable runner health and
+resource telemetry would make this attribution quicker and more precise.
+
+## 2026-09-26: assertion helper prototype semantics
+
+The repo-utils assertion phase exposed a test-helper compatibility boundary:
+`assertSome` uses Node deepStrictEqual, while existing Vitest toEqual checks
+compare decoded Schema.Class values to independent plain-object expectations.
+Package verification caught prototype-only mismatches for PersonObject,
+WorkspacesObject, BeepDriverMetadata, RepositoryObject and TSConfigReference.
+Keep the original complete comparisons wherever this boundary applies and record
+exceptions; do not manufacture class expectations or project away prototypes.
+A helper migration checklist that compares equality semantics before replacement
+would prevent this failed proof. No production defect was demonstrated.
+
+## 2026-09-26: focused Vitest selector needs result-count validation
+
+The repo-utils flake-control focused Node command exited zero while selecting no
+tests because its assumed composite names did not match the runner's filter
+semantics. The expected-name/count guard rejected that run; its report remains
+a diagnostic artifact with no passing credit. Select the actual existing test
+titles and validate all six expected full names in the resulting JSON before
+accepting focused proof. Process exit zero alone is insufficient evidence.
+
+## 2026-09-26: independent nested layers must retain independent memoization
+
+Repo-utils runner adoption changed a formerly standalone nested layer call into
+a callback-local it.layer call. The new Workspaces positive control caught reuse
+of its outer native FsUtils service against an inner memory fixture: the package
+proof had 231 passing cases and one introduced failure. Keep formerly standalone
+registrations on an unshadowed root runner alias, preserving independent memo
+maps and all original fixture/assertion semantics. No production defect was
+demonstrated. A runner migration checklist should distinguish lexical nesting
+from inherited layer composition before changing the registration receiver.
+
+## 2026-09-26: a second hosted runner communication loss
+
+PR #1285 coverage job 108491590575 failed with the GitHub annotation “The
+self-hosted runner lost communication with the server.” No workflow step reports
+failure, so this does not establish a coverage regression. Preserve other jobs
+and allow one job-specific retry after the parent run finishes. Together with
+PR #1287's earlier runner loss, this reinforces the need for retained runner
+health/resource telemetry; the available annotations do not identify the cause.
+
+## 2026-09-26: historical and current detector identity collision
+
+Repo-utils reconciliation found a repaired browser-map assertion and a retained
+bugs-object assertion sharing one line-based EV006 ID after source movement.
+Their occurrence hashes differ. Unique-ID validation caught this before tracked
+application. The current detector ID remains canonical; the historical occurrence
+and fix SHA are retained in `repo-utils-inventory-lineage.json`. A reconciliation
+preflight should check ID collisions across historical and current generations
+before assigning fixed credit or replacing current exceptions.
+
+## 2026-09-26: schema inventory line drift after runner imports
+
+The repo-utils cheap gates rejected a stale golden-test exception at line 14
+after the public runner import moved its anchor to line 15. Regeneration found
+the new anchor but demoted the reviewed exception to an advisory because identity
+includes the line. Preserve the existing golden-test rationale and all unrelated
+entries; carry only the generator-confirmed line change. The focused schema-first
+check then passed. A post-import inventory preflight should detect moved anchors
+and retain reviewed dispositions rather than resetting them on line drift.
+
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
 PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed

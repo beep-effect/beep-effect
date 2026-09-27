@@ -3,7 +3,8 @@ import {
   CanonicalDocgenExamplesCompilerOptions,
   mergeManagedDocgenConfig,
 } from "@beep/repo-utils/schemas/DocgenConfig";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 const canonical = CanonicalDocgenConfig.make({
   $schema: "../../packages/tooling/tool/docgen/schema.json",

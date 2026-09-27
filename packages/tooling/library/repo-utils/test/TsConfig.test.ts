@@ -1,19 +1,21 @@
+import { fileURLToPath } from "node:url";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig";
+import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, HashMap, Layer, Path } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
-const pathApi = Effect.runSync(Effect.scoped(Layer.build(NodePath.layer).pipe(Effect.map(Context.get(Path.Path)))));
 
-const MOCK_ROOT = pathApi.resolve(__dirname, "fixtures/mock-monorepo");
+const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer)("TsConfig", (it) => {
+it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
   describe("collectTsConfigPaths", () => {
     it.effect(
       "should collect tsconfig files for root and workspaces",
@@ -21,7 +23,7 @@ layer(TestLayer)("TsConfig", (it) => {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT);
         // Root should have tsconfig.json and tsconfig.build.json
         const rootConfigs = HashMap.get(configs, "@beep/root");
-        expect(O.isSome(rootConfigs)).toBe(true);
+        rootConfigs.pipe(O.isSome, assertTrue);
         if (O.isSome(rootConfigs)) {
           expect(rootConfigs.value.length).toBe(2);
           expect(A.some(rootConfigs.value, Str.endsWith("tsconfig.json"))).toBe(true);
@@ -36,7 +38,7 @@ layer(TestLayer)("TsConfig", (it) => {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT);
         // pkg-a has tsconfig.json and tsconfig.test.json
         const pkgAConfigs = HashMap.get(configs, "@mock/pkg-a");
-        expect(O.isSome(pkgAConfigs)).toBe(true);
+        pkgAConfigs.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgAConfigs)) {
           expect(pkgAConfigs.value.length).toBe(2);
           expect(A.some(pkgAConfigs.value, Str.endsWith("tsconfig.json"))).toBe(true);
@@ -51,7 +53,7 @@ layer(TestLayer)("TsConfig", (it) => {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT);
         // pkg-b and pkg-c each have only tsconfig.json
         const pkgBConfigs = HashMap.get(configs, "@mock/pkg-b");
-        expect(O.isSome(pkgBConfigs)).toBe(true);
+        pkgBConfigs.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgBConfigs)) {
           expect(pkgBConfigs.value.length).toBe(1);
         }
@@ -61,6 +63,7 @@ layer(TestLayer)("TsConfig", (it) => {
     it.effect(
       "should return absolute paths",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const configs = yield* collectTsConfigPaths(MOCK_ROOT);
         for (const [_name, paths] of configs) {
           for (const p of paths) {

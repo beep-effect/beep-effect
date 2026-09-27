@@ -236,3 +236,14 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/repo-configs#package-test-typecheck`
 - `@beep/repo-configs#test`
 - `@beep/repo-configs#test:property`
+
+## Incoming 6ad006114beb6e0fa00adcc71636e8b233b50806
+
+- `@beep/repo-utils#audit`
+- `@beep/repo-utils#build`
+- `@beep/repo-utils#check`
+- `@beep/repo-utils#coverage`
+- `@beep/repo-utils#lint:deprecated-apis`
+- `@beep/repo-utils#package-test-typecheck`
+- `@beep/repo-utils#test`
+- `@beep/repo-utils#test:property`
