@@ -65,76 +65,84 @@ const readBodies = (rows: DrizzleRows) =>
 if (!shouldRunPgliteIntegration) {
   describe.skip("Drizzle PgLite integration", () => {});
 } else {
-  describe.concurrent("Drizzle PgLite integration", () => {
-    it.layer(DrizzlePgliteLayer, { timeout: "2 minutes" })((it) => {
-      it.effect(
-        "runs execute and transaction flows against a PgLite-backed adapter",
-        Effect.fnUntraced(function* () {
-          const drizzle = yield* Drizzle;
+  // The external PGlite server shares session state across connections. Each
+  // fixture must finish and release its schema before the next fixture starts.
+  describe("Drizzle PgLite integration", { concurrent: false }, () => {
+    it.layer(DrizzlePgliteLayer, { timeout: "2 minutes", concurrent: false })(
+      "execute and transaction fixture",
+      (it) => {
+        it.effect(
+          "runs execute and transaction flows against a PgLite-backed adapter",
+          Effect.fnUntraced(function* () {
+            const drizzle = yield* Drizzle;
 
-          yield* drizzle.execute("INSERT INTO neutral_notes (body) VALUES ($1), ($2)", ["alpha", "beta"]);
-          const committed = yield* drizzle.withTransaction(
-            Effect.fnUntraced(function* (tx) {
-              yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["gamma"]);
-              const rows = yield* tx.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
-              return yield* readBodies(rows);
-            })
-          );
-          const rollback = DrizzleError.fromUnknown("withTransaction", "rollback");
-          const rollbackFailure = yield* drizzle
-            .withTransaction(
+            yield* drizzle.execute("INSERT INTO neutral_notes (body) VALUES ($1), ($2)", ["alpha", "beta"]);
+            const committed = yield* drizzle.withTransaction(
               Effect.fnUntraced(function* (tx) {
-                yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["rolled back"]);
-                return yield* rollback;
+                yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["gamma"]);
+                const rows = yield* tx.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
+                return yield* readBodies(rows);
               })
-            )
-            .pipe(Effect.flip);
-          const afterRollback = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
-          const afterRollbackBodies = yield* readBodies(afterRollback);
+            );
+            const rollback = DrizzleError.fromUnknown("withTransaction", "rollback");
+            const rollbackFailure = yield* drizzle
+              .withTransaction(
+                Effect.fnUntraced(function* (tx) {
+                  yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["rolled back"]);
+                  return yield* rollback;
+                })
+              )
+              .pipe(Effect.flip);
+            const afterRollback = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
+            const afterRollbackBodies = yield* readBodies(afterRollback);
 
-          expect(committed).toEqual(["alpha", "beta", "gamma"]);
-          expect(afterRollbackBodies).toEqual(["alpha", "beta", "gamma"]);
-          expect(rollbackFailure).toBeInstanceOf(DrizzleError);
-          expect(rollbackFailure.operation).toBe("withTransaction");
-        }),
-        120_000
-      );
-    });
-    it.layer(Layer.fresh(DrizzlePgliteLayer), { timeout: "2 minutes" })((it) => {
-      it.effect(
-        "rolls back an interrupted transaction and remains usable",
-        Effect.fnUntraced(function* () {
-          const drizzle = yield* Drizzle;
-          const inserted = yield* Deferred.make<void>();
-          const transaction = yield* drizzle
-            .withTransaction(
+            expect(committed).toEqual(["alpha", "beta", "gamma"]);
+            expect(afterRollbackBodies).toEqual(["alpha", "beta", "gamma"]);
+            expect(rollbackFailure).toBeInstanceOf(DrizzleError);
+            expect(rollbackFailure.operation).toBe("withTransaction");
+          }),
+          120_000
+        );
+      }
+    );
+    it.layer(Layer.fresh(DrizzlePgliteLayer), { timeout: "2 minutes", concurrent: false })(
+      "interruption fixture",
+      (it) => {
+        it.effect(
+          "rolls back an interrupted transaction and remains usable",
+          Effect.fnUntraced(function* () {
+            const drizzle = yield* Drizzle;
+            const inserted = yield* Deferred.make<void>();
+            const transaction = yield* drizzle
+              .withTransaction(
+                Effect.fnUntraced(function* (tx) {
+                  yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["interrupted"]);
+                  yield* Deferred.succeed(inserted, undefined);
+                  return yield* Effect.never;
+                })
+              )
+              .pipe(Effect.forkChild({ startImmediately: true }));
+
+            yield* Deferred.await(inserted);
+            yield* Fiber.interrupt(transaction);
+            const exit = yield* Fiber.await(transaction);
+            expect(Exit.hasInterrupts(exit)).toBe(true);
+            const afterInterruption = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
+            expect(yield* readBodies(afterInterruption)).toEqual([]);
+
+            const committed = yield* drizzle.withTransaction(
               Effect.fnUntraced(function* (tx) {
-                yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["interrupted"]);
-                yield* Deferred.succeed(inserted, undefined);
-                return yield* Effect.never;
+                yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["after interruption"]);
+                return "committed";
               })
-            )
-            .pipe(Effect.forkChild({ startImmediately: true }));
-
-          yield* Deferred.await(inserted);
-          yield* Fiber.interrupt(transaction);
-          const exit = yield* Fiber.await(transaction);
-          expect(Exit.hasInterrupts(exit)).toBe(true);
-          const afterInterruption = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
-          expect(yield* readBodies(afterInterruption)).toEqual([]);
-
-          const committed = yield* drizzle.withTransaction(
-            Effect.fnUntraced(function* (tx) {
-              yield* tx.execute("INSERT INTO neutral_notes (body) VALUES ($1)", ["after interruption"]);
-              return "committed";
-            })
-          );
-          expect(committed).toBe("committed");
-          const afterCommit = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
-          expect(yield* readBodies(afterCommit)).toEqual(["after interruption"]);
-        }),
-        120_000
-      );
-    });
+            );
+            expect(committed).toBe("committed");
+            const afterCommit = yield* drizzle.execute("SELECT body FROM neutral_notes ORDER BY id ASC", []);
+            expect(yield* readBodies(afterCommit)).toEqual(["after interruption"]);
+          }),
+          120_000
+        );
+      }
+    );
   });
 }
