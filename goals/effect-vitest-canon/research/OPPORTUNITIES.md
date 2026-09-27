@@ -3532,3 +3532,13 @@ use had been a manual disposal tail. Preserve their `yield* mount(true)` calls
 and remove only the unused bindings. The next full package proof passes.
 A resource rewrite should inspect references when removing disposal tails,
 including multi-graph tests that need an intermediate scope boundary.
+
+## Dock React minimum contract drift in a saved test title
+
+The saved property proposal and existing title describe a 32 px floor, but
+`FloatingPane.tsx` uses 240 px width and 160 px height. Preserve the legitimate
+proposal to test below-minimum shrink, verify the current production contract,
+and update the stale title without changing production minima. Independent
+width/height clamp-removal controls fail the new witness and pass the old test.
+Binding inventory prose to the implementation constants would make this drift
+visible before remediation.

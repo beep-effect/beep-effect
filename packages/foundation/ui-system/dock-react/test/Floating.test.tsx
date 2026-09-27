@@ -170,7 +170,7 @@ describe("floating dock adapter", { concurrent: false }, () => {
     })
   );
 
-  it.effect("resizes a floating member with a 32px minimum extent", () =>
+  it.effect("resizes a floating member with a 240-by-160 minimum extent", () =>
     Effect.gen(function* () {
       const graph = yield* mount();
       const handle = query(`[data-floating-resize='${floating2Id}']`);
@@ -179,6 +179,11 @@ describe("floating dock adapter", { concurrent: false }, () => {
       pointer(handle, "pointerUp", 600, 280);
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).floating.at(-1)?.anchoredBox).toEqual(anchored(320, 80, 280, 200));
+      pointer(handle, "pointerDown", 600, 280);
+      pointer(handle, "pointerMove", 340, 96);
+      pointer(handle, "pointerUp", 340, 96);
+      yield* graph.awaitIdle;
+      expect(graph.registry.get(graph.workspaceAtom).floating.at(-1)?.anchoredBox).toEqual(anchored(320, 80, 240, 160));
     })
   );
 
