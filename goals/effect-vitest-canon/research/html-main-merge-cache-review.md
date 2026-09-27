@@ -6,29 +6,20 @@ changed computation nodes are disjoint or identical. Every other projection
 field is equal across the merge base and both sides. No qualification state
 or cache configuration is changed.
 
-Branch review: `goals/effect-vitest-canon/research/media-drivers-cache-review.md`.
+Branch review: `goals/effect-vitest-canon/research/nlp-main-cache-review.md`.
 Main review: `goals/effect-vitest-canon/research/html-main-cache-review.md`.
 
 Retained branch nodes:
 
-- `@beep/exiftool#audit`
-- `@beep/exiftool#build`
-- `@beep/exiftool#check`
-- `@beep/exiftool#coverage`
-- `@beep/exiftool#lint:deprecated-apis`
-- `@beep/exiftool#package-test-typecheck`
-- `@beep/exiftool#test`
-- `@beep/exiftool#test:integration`
-- `@beep/exiftool#test:integration:parallel`
-- `@beep/face-detection#audit`
-- `@beep/face-detection#build`
-- `@beep/face-detection#check`
-- `@beep/face-detection#coverage`
-- `@beep/face-detection#lint:deprecated-apis`
-- `@beep/face-detection#package-test-typecheck`
-- `@beep/face-detection#test`
-- `@beep/face-detection#test:integration`
-- `@beep/face-detection#test:property`
+- `@beep/nlp#audit`
+- `@beep/nlp#build`
+- `@beep/nlp#check`
+- `@beep/nlp#coverage`
+- `@beep/nlp#doctest`
+- `@beep/nlp#lint:deprecated-apis`
+- `@beep/nlp#package-test-typecheck`
+- `@beep/nlp#test`
+- `@beep/nlp#test:property`
 
 Retained main nodes:
 
