@@ -1592,8 +1592,8 @@
     "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
     "package": "@beep/ffmpeg",
     "kind": "test",
-    "bytes": 33191,
-    "lines": 940
+    "bytes": 33281,
+    "lines": 939
   },
   {
     "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
