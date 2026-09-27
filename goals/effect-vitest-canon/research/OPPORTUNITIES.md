@@ -3173,3 +3173,19 @@ Keep only vi imported directly from vitest; beforeEach/describe/expect stay on
 @effect/vitest and registration stays on the instrumented runner. No globals
 configuration change. Ledger the proven import-boundary exception; do not count
 the partial 21-test timing as a successful baseline or after result.
+
+
+### Domain inventory drift and precise runner migration (2026-09-27)
+
+Scoped reconciliation in LawPracticeDomain found four current Result.succeed
+assertions absent from the older saved package detector rows. Preserve the
+existing active-client/founder/patent-application/pre-filing expected literals
+with assertSuccess, then merge the original root rows into the package ledger.
+Do not equate exhausting an old per-package list with exhausting its current
+owned-file findings. The initial property formatter also reported one unused
+Arbitrary import in Contradiction after replacing its direct runner; remove it
+before claiming package proof. Both were caught before publication.
+
+Installing the two runner dependencies normalized the already configured
+@beep/provenance runner workspace range from * to ^ in the lockfile; its manifest
+already uses ^. No provenance source or qualification change is included.

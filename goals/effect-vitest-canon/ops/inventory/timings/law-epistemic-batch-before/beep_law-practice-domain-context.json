@@ -1,0 +1,979 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/law-practice-domain",
+  "sourceHead": "b679c58cf10b38a22028177d8d8165fa6f5a25f3",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.472988843001076,
+  "bunWholeCommandSeconds": 3.2191085730009945,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.353515625, 3.92041015625, 4.78564453125],
+  "loadAfter": [3.3251953125, 3.90478515625, 4.77587890625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.04 avg300=0.13 total=677697927\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.06 total=175560005\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=167717706\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.04 total=784217205\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=686606555\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.03 avg300=0.13 total=677706817\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.06 total=175560006\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=167717707\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.04 total=784218087\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=686607207\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "a19c9bd1b115e12ca152267e565d9bc8db39ee704d89af419b2d715722083984"
+    },
+    {
+      "file": "packages/law-practice/domain/package.json",
+      "sha256": "6841e06d480f103cd365582319a8b6f4a186ba02bd13a5f9ea3e8bad1ee14a2c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.model.ts",
+      "sha256": "f623311b340ae435abcd6f639ebfcae698cd160877b424de0268f69d83994761"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
+      "sha256": "17ef24b40e57d81c53fd9729053839a7f8360b652a94c690dd17cf3b664c35b6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/ActFrame/index.ts",
+      "sha256": "4b0febe561f29b2c07917d0424fa32aae6ba01c5e4ad0a4cb77711a5357db4a3"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/CandorDisposition/CandorDisposition.model.ts",
+      "sha256": "1d30630b2b3e1ca673ec1f0d8d2eeadbe5ef36a4595ab0ae8a4f590b2b3ec631"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/CandorDisposition/CandorDisposition.values.ts",
+      "sha256": "8d734f569261330a1ee29b5bd1c618a967c3a6086b4c19c8ed71e2a4ec6ebc39"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/CandorDisposition/index.ts",
+      "sha256": "f757ed0452de6c2e4bd603d95c7c62a24bf5f65ab1876e184e7ad703380f0dcb"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Claim/Claim.model.ts",
+      "sha256": "9bbbc73659ba506d80cfcc16a1b6cca03baac94a1e932bd0d9de2365c15f369f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Claim/index.ts",
+      "sha256": "2e8df5273b0bf6c21b63374bae3f3a42a5b0973db95deedd8ae53df157c8f035"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/CorrectionDelta/CorrectionDelta.model.ts",
+      "sha256": "10658f143a276ca7ddae8895c88cf2d1215c977b96cfd54f97812f1c7c433bc2"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/CorrectionDelta/CorrectionDelta.values.ts",
+      "sha256": "94fc00296fe5fa35e385f9e2b8f41975baa9f1153878a8dced890938bcb5553f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/CorrectionDelta/index.ts",
+      "sha256": "056491194de2a47f77ffae0e24fd13d69004afc7c02e9ca8bcb35cddb1e977dd"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Distinction/Distinction.model.ts",
+      "sha256": "83dabf8888e277cdebd851ff4c38971974aa9d84e9ae6b54cdfea605448837cd"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Distinction/Distinction.values.ts",
+      "sha256": "4a91d80636b7c834b01e4d0112fa1970426faed5e24153705d9cc5c882a5ed78"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Distinction/index.ts",
+      "sha256": "481e2c74f325782c19a65479a774859470c83aeaf84beec731bae738cc96fb8d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/IdsSubmissionFact/IdsSubmissionFact.model.ts",
+      "sha256": "e728dcc20e3dc9f6435275a916e1758f3e8b790350de9d54188758bf399a1daf"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/IdsSubmissionFact/IdsSubmissionFact.values.ts",
+      "sha256": "c3931cbc00d0a42aca3c0aeed1ba74185d3f9f06cf0b36a872e6bce507696863"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/IdsSubmissionFact/index.ts",
+      "sha256": "a4d7b7b7addbb35720fc900555a27d0bf8ca2c95f331d3450b18195ebe167615"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LawPracticeEntity.fields.ts",
+      "sha256": "e1f89891c4c3fff9973afa68a8ba49b9ab7055cbf1e1b465e66884ae66b18ba7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.model.ts",
+      "sha256": "943e9a26c1a26739cdf8f950701300c34a781fca1df041f919fb8ac32eda9964"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.values.ts",
+      "sha256": "da4487943634edda68fb6b79780081d48750bbfa2ae297423c15f9c2ddcc8abf"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalClient/index.ts",
+      "sha256": "b074be7e2e74cc1607dac711e91ab5fd1adee0ad982747c01fc18aeaa9419cec"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalContact/LegalContact.model.ts",
+      "sha256": "878a5899ebecfc3cb74ba307765383c999de55353fdc700c7542db6e54de748f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalContact/LegalContact.values.ts",
+      "sha256": "6d802087302115182e274f26c0a9e9e381a285a360f591bb18b26dac15a57b0e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalContact/index.ts",
+      "sha256": "187092357a75e43ec1be60ff3b207402b41773c37b4ce9fb95338eac7cd2428b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalOppositionCandidate/LegalOppositionCandidate.model.ts",
+      "sha256": "978e13da38b88952086bdf0d6b18208752363279c1b1704e4fdafe767d82a8ac"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalOppositionCandidate/LegalOppositionCandidate.values.ts",
+      "sha256": "a11edf8dfbf0430e6a4debb482a7338ef4190431f46c653e13fa720c02685a82"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalOppositionCandidate/index.ts",
+      "sha256": "0008c62fbff1ff1670643fab9468aface45eb99c4723ffe481ee8886163a971b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalPositionRelator/LegalPositionRelator.model.ts",
+      "sha256": "6ae58899eea73d882532d5fc6c52dc6b290f9211b0f95f3d1944059787e562b7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalPositionRelator/LegalPositionRelator.values.ts",
+      "sha256": "9bde76fb378816b10dffc6f5f06cfa5828c4828ea65fdf1f34b656aa6dc16150"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/LegalPositionRelator/index.ts",
+      "sha256": "f371dc10c605afab8a25995302f94fc4ddb9e3055b1cba8c30024c047376311f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Matter/Matter.model.ts",
+      "sha256": "9b2113ee1f01c6ae089f032ff5bef8dd668aebc9d5a7ecc4390b46b05d16b6ab"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Matter/Matter.values.ts",
+      "sha256": "70a664f08f8cae5571798f8d53ef5ea4e7e461c86e93989de018d01394fe1b19"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Matter/index.ts",
+      "sha256": "53bbb82aa22ddb637ab7e141500d55ec6430367dfe7e69ac08e6a4acc83fae6c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/OfficeAction/OfficeAction.model.ts",
+      "sha256": "ec3025c9fd5b22b37e0cd549d9a32af1fb75500eee19e3d070b18380cd128e35"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/OfficeAction/index.ts",
+      "sha256": "8b0043014d9235ddde19af459e1d8ee572801f6de437a76c85ef1a85483125a6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Party/Party.model.ts",
+      "sha256": "f67930fc7edcb9345519da11048a11cdac8932d070f2265f629e5c2ad473f493"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Party/Party.values.ts",
+      "sha256": "01ab4db7cb37e71cda9344cc490e3b5702fcedc66862bd1a25ff6efeb3eca7f2"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Party/index.ts",
+      "sha256": "bab69960d0232965650676577cfbeaf9551402ebfb20fb7c824834081e0febed"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PatentAsset/PatentAsset.model.ts",
+      "sha256": "74fc93e74f15dd0417b63214781057b221271a44361c48b5087315f9c249c449"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PatentAsset/PatentAsset.values.ts",
+      "sha256": "34b400986d0221c5b44bbff16bdbd9dfb848e3be82a3d01eca73b4c13166a4ae"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PatentAsset/index.ts",
+      "sha256": "46503773397afefde3921dfd79e0f69d0ea17dda800af8a042028939dbdd7c0b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PatentCitationEvent/PatentCitationEvent.model.ts",
+      "sha256": "c44e79df45040d40415853fff5a9214fb31d4c7c1ac88197d1d53db96999bce4"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PatentCitationEvent/PatentCitationEvent.values.ts",
+      "sha256": "a4b447ca1dadb88df61796b39c5e1200effd4667dcfcfe9bdcb9a18182b6f50e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PatentCitationEvent/index.ts",
+      "sha256": "b6498cf6c2ecd58b02a749713a4bbef5298c279aa271226389553fd55c13ffbe"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PowerExercise/PowerExercise.model.ts",
+      "sha256": "d31644d794d1445888e34be21276b7c7552a90567dac6aa13f94c4be1b140a7b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PowerExercise/PowerExercise.values.ts",
+      "sha256": "b4b842cd1a29ca3fc3d4128fd92bd5db57e4e99cb61e808be4358900a5fe42e9"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PowerExercise/index.ts",
+      "sha256": "495701b45e7655ee0b47d3c5b8b126ebba5fa7ff1208a23f8f13557c4b1eeba3"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PriorArtReference/PriorArtReference.model.ts",
+      "sha256": "02642bf9641b06c91773d86ec5eb0057d13055993f91464c5ebb856d3ca81235"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/PriorArtReference/index.ts",
+      "sha256": "b81b4acea747f3bdd7ab94e12b9c44363a012a7de628dc4c566587609690603f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Rejection/Rejection.model.ts",
+      "sha256": "84d6ba4af837aa42cf6e8d3f1c2ea372c50bdffb3780b5f63c0b363208b9de63"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Rejection/Rejection.values.ts",
+      "sha256": "880214522aa8eb69199eb381538cd8397c3be378163ac4cb49464bc5bb596ff9"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/Rejection/index.ts",
+      "sha256": "814387570e8b44b8864820705e3e82357d6ce831e46b8c2c1698e463bcf94418"
+    },
+    {
+      "file": "packages/law-practice/domain/src/entities/index.ts",
+      "sha256": "a87398e21b154602cb8556a5cbda5e606eab6678db08a3ebabfc478108ab510d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/index.ts",
+      "sha256": "872bfc0852da9303cb94348c2a958558c4a0798963ea78d05092acc0155ee082"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/case-name-abbreviations.ts",
+      "sha256": "49ded68a477cd03a78a6c48f05e8572ed860bd1d1bf9389adde6071f804c945c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/courts-vocabulary.ts",
+      "sha256": "b6b8c12e052ec9036fcdc709ca2e78273da9f47deb0811d97d95db8f7d0fd9b3"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/courts.ts",
+      "sha256": "dca4cf75d1d80b582c0c01d1bfcfff6e1c336f9306d51e5d1f0f7415fd45dab3"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/journals.ts",
+      "sha256": "572bfd5373500bb15513c03c97dc39c0edf090692c32e2e19c84572ad3f3bc43"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/laws.ts",
+      "sha256": "f9739f70e4bd382ecedc84adaf4d8d8faf724886bddeb720b8a1d92ad5e6ca6f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/regexes.ts",
+      "sha256": "b685f205cd427308fd8c7592863ce22bb73e322c1cae89ad898d9362c75bb9f5"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/reporters-vocabulary.ts",
+      "sha256": "b53c592c5f91ad34ec74539975271c17bddab9b1e4e36da431ffc413b6b2adef"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/reporters.ts",
+      "sha256": "3538457074c7ab0e756c5e048e29a620c67a10c9f0a2e59e49cba6e075b8c991"
+    },
+    {
+      "file": "packages/law-practice/domain/src/internal/generated/free-law-project/state-abbreviations.ts",
+      "sha256": "929bac7b3b475f02c3c5f367e0d4531cc1aa73373e64005bd50e38f515565daf"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ActFrameElementRef/ActFrameElementRef.model.ts",
+      "sha256": "ab2863073a91baf21fe0894c92a2b3c33719cbf9da1665660df0b65b7dbd3b6f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ActFrameElementRef/index.ts",
+      "sha256": "99238ea8ed5becd9665a483e7353c510927d469157f149ed020f4d9b94d62735"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/AnnotationCitation/AnnotationCitation.model.ts",
+      "sha256": "0d4ea8f7c193becb00079c80128e90122979da5f19436822c63cdd382d6d2af0"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/AnnotationCitation/index.ts",
+      "sha256": "922b9543fca368d847cfef6f5955fa1f384f591c1c3b0c1f2b213d03e25330c8"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ApplicationNumber/ApplicationNumber.model.ts",
+      "sha256": "7009a9e097f16fdf649a24c698620da3c629a780792f6bfa564f3ea30040d498"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ApplicationNumber/index.ts",
+      "sha256": "910069e2926431e248af575fd70ab1c8d1e9cf0469e22243bd5a88913b03889b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CanonCitation/CanonCitation.model.ts",
+      "sha256": "75ab47f6eacd7498b1c0e608afb13ebbaae82a56109a2b5047d258a4d5944f85"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CanonCitation/index.ts",
+      "sha256": "d621f7902732fe3d3689e1c17e66d14369acf898f7c1418727816dcdf2debedc"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CaseGroup/CaseGroup.model.ts",
+      "sha256": "88704b5d66de71bb615c89f217ac75b9c330534abbd5f5380052a47775b27605"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CaseGroup/index.ts",
+      "sha256": "e21c2fb392b5832356b10908e0ba9af3f49c26a9f530e527fbac5491f5b4d9b9"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "sha256": "2340f0a39f198015de6ee023df62bb3774f4cd97341001d74bdd8707e016742c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/index.ts",
+      "sha256": "8955498eca7d2966b6c0a93a308044562a75d70cdc643dc788ef53c500ad10d1"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "sha256": "3b9077514cae683d5df5c6e60b6ca6f5fd3c89913750141e58a40126c333a175"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationBase/index.ts",
+      "sha256": "598f421cd5c481f9c4bd5bd44d766ba84256237eaec84b2ce4d1ee028ffc6e5a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationId/CitationId.model.ts",
+      "sha256": "0d7b44e07365d123c19e0369becf7e64325aee8d3725c4a3c5286f8479e1a09c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationId/index.ts",
+      "sha256": "5895b273ffb32ece60d9c46c35f5059b8904b04ba2bc27dcb5b7c32e562094b6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationSignal/CitationSignal.model.ts",
+      "sha256": "f0ea6cbb00e6d062420c20c9486958d69ccfa9691ecda1be2646fcb704bb6a8d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationSignal/index.ts",
+      "sha256": "abe5c76bb33f478b02e48d491f3ea31fc218e5fdf0531b97890d8d80502a9a04"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationType/CitationType.model.ts",
+      "sha256": "45a566090e467d02992f2ce388b60654c733419cb325507ed7fa31162c20474e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationType/index.ts",
+      "sha256": "218edb097ec79160d6474c7be4bbbfd4d48f92ba9eb2cc7335a45faad9ca7811"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationWarning/CitationWarning.models.ts",
+      "sha256": "74b2ff247273759562455fb6879d78c9c97a5c87379d1ea66b874b67dc7e2ef0"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationWarning/index.ts",
+      "sha256": "220a3df23c0d562ba40a39470dbd6a9671a970af88584f75aedcc900e6db972a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitingApplicationIdentity/CitingApplicationIdentity.model.ts",
+      "sha256": "c52da628c64ca13d9756999ca1bd9d47f4b6b49aabbf0d1e226d28cee6fc5095"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitingApplicationIdentity/index.ts",
+      "sha256": "a9e1bf13ec281915fe0e73ee1fa490f4fb678d70f2a0a6902b4b094aab8d0685"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "sha256": "6ca8f7cc7b439f03db88d8c0f2f40b14f297eee09ec18b8edf6b55470ad27a20"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/index.ts",
+      "sha256": "0391b9d0c13d9533c762685caed709a0d1cd9eee504d8b440927bcdd27ffb8c3"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionOutcome/ConstitutionOutcome.model.ts",
+      "sha256": "70b23e05641f0cd6bb6b4d52532fb2702f0fdb04e9136aa043744495f8b4f4a4"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionOutcome/index.ts",
+      "sha256": "3795ddbc1c616cea87dfbefe4a6d1b2f7b6a281dfeb8e578f6b9be4bcd45b453"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "sha256": "beea4ea820621b19b03a48e1ea8ba25e4fb67b907a6fb87cf381d45b661843d7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/index.ts",
+      "sha256": "f45613c11e75ee48b0c768365e19e1b4e903b2b3314c868b9b366a687f1212f8"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ContextOptions/ContextOptions.model.ts",
+      "sha256": "aa69c062ca500c6e821364dc1209d74a55de6ba68e6c481afa5596a531eca84f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ContextOptions/index.ts",
+      "sha256": "55ee028072b06a01471d26c9da37ecbe031044e4f2748de04f1f326249cf215c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtInference/CourtInference.model.ts",
+      "sha256": "335b1a9e9c67d77641cccd34f988923577609b55569b6c1318cfbeafdff87f7b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtInference/index.ts",
+      "sha256": "f4b4631c5c7ebd32da6a6a7604e12b8297d0a1b78c8fac1b3a82508d624f7052"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts",
+      "sha256": "2399afe12a11cb1fd70baf84e8949cd911f53513004f42f1b883a008254becc9"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.data.ts",
+      "sha256": "efd95453dcf57f81e09e9983f720bf9ff618215afa5aef5ab33b136c0da40a70"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
+      "sha256": "df8ff05d6634e8117a4c6ceec7fbb2aedcfc31127bbe2394347f61465a383017"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/index.ts",
+      "sha256": "ba71b5c3086668481c27922689f10b89a1c79d36b74d2a40d610b19315050b86"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "sha256": "e6b48ab37cbeb16b3aaabdd0b54beee76bfd36dd428a70eda1aeff41c8922fb0"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DocketCitation/index.ts",
+      "sha256": "fbac88309f353d1509091068ca4dac5d22f4eb44d2abd5942d194f6752ff4c8b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocator/DurableLocator.model.ts",
+      "sha256": "0918f1d3fbba37702f9c2192178d504a66c9610faf26111b7761b1352cc96c1e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocator/index.ts",
+      "sha256": "3d62ffbd14c7e08856cb1b575e12366111411c4f900d1037e3b8aca578f4d171"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocatorOptions/DurableLocatorOptions.model.ts",
+      "sha256": "471c88fed03dbf00843a8e14d49b1c655934ebe8d092a5dd8b1d17998e3799b4"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocatorOptions/index.ts",
+      "sha256": "419fe54a539d234b228b09521a7b4c5787bccba3ca9c0b2d7660a5e3379e1fab"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FederalRegisterCitation/FederalRegisterCitation.model.ts",
+      "sha256": "eec1f3bbf9e22b41fd2b7857610aed617889afb854542ba5fdb5ac838805d615"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FederalRegisterCitation/index.ts",
+      "sha256": "45a8550fc9e6b81a0f379b17a5a83eab9557670fdc5bf1135aedfd48a852a794"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FederalRuleCitation/FederalRuleCitation.model.ts",
+      "sha256": "deeb8423ae07b40da7d10bf7329e9361776a2fc09a1ac671ece3655db93442f7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FederalRuleCitation/index.ts",
+      "sha256": "392abc220319a5131e5d8d6e8a41b88f9dfcc6d2256decd36c0b40c422ae584c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Footnote/Footnote.model.ts",
+      "sha256": "b8b986827ae599ad0a5fed60420e45a34887c3c8f77752bc7235ca9ec8f2a191"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Footnote/index.ts",
+      "sha256": "fb0f577cc55622a6fbb9f1b87af7cdb0199aeddc66687facaeb1eebdaa930289"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FullCitationType/FullCitationType.model.ts",
+      "sha256": "f00f90e77bc49bb55793b33d57ee6fc766b689f2c8415aa62b15ba5c0b23c455"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FullCitationType/index.ts",
+      "sha256": "386ae0f6921eb48da196e2d298eaef628d7e8fdd8772505eb94dd4630ce56e63"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistoryChain/HistoryChain.model.ts",
+      "sha256": "5c673017a1849884273b211db58dc2ca207726d38638de0cda05c9617d9e9723"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistoryChain/index.ts",
+      "sha256": "48cd71364fc43fc21a0df9ec065fe979b6ad24283af5fd7546d1bc2b260dc204"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistoryLink/HistoryLink.model.ts",
+      "sha256": "a3cedcb4e45bfdef185cbddcf403584307cea5273c06501bdad601ea64e4c2fd"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistoryLink/index.ts",
+      "sha256": "71d29e8bf63347d29f669168794470e8b14587dd9b5e296a97d02642ba16e510"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistorySignal/HistorySignal.model.ts",
+      "sha256": "4657cc59855ace2f863342b0bdceabb6144b6beca5cc668ec130e7ce788d65e6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistorySignal/index.ts",
+      "sha256": "3511ab1f25a6f2c2aefd1d5fb148d109369e1810cf162a1470471bf904142106"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HohfeldPosition/HohfeldPosition.model.ts",
+      "sha256": "bf1c6686a328ba657bb5f5ca3ca8fda975e88e41bf238a26c20f74b1e9457872"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HohfeldPosition/index.ts",
+      "sha256": "66a75134444a3851d82a08454c53a6176a13abda491cc592812bf8e0cc1486c6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HohfeldPositionKind/HohfeldPositionKind.model.ts",
+      "sha256": "99b3a77337eabd2cf9bd245c66c6f58bd6b14d7ac1fa03ff298475157570aa24"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HohfeldPositionKind/index.ts",
+      "sha256": "72c34792a2bbe66bc4e42b447db96f1da31ad37232c065e5569e48d6d15ee124"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/JournalCitation/JournalCitation.model.ts",
+      "sha256": "b440db280c641b22200dd88fdd9e7e302554cca24cda75f18168423554a53977"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/JournalCitation/index.ts",
+      "sha256": "cf057a14e2416085bcb5442c56c12db5078e6d6197f1b98bef0ef2b76fe81320"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/KgEdgePredicate/KgEdgePredicate.model.ts",
+      "sha256": "6fbcc5c4737abc250e5f0ae5cd98907dec378ffaf0108578db9d81c2b4cd1751"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/KgEdgePredicate/index.ts",
+      "sha256": "fee3b49bd85612f29fd298f11edfb032530c0d309a144c1b228fb69f60860893"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/KgNodeKind/KgNodeKind.model.ts",
+      "sha256": "611cdba4cce726968ce448d5984a9a390bfe59fc490c068a359d278e4b6fd904"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/KgNodeKind/index.ts",
+      "sha256": "299a0e1a9a71fb39b84bb47436745b39a1ef88c4da2586f11bbedefda67dc4a2"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/KindCode/KindCode.model.ts",
+      "sha256": "318250eeb44927d233159f59675e09a5d706bdbdfd0b6b75fa47fd33df2978f1"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/KindCode/index.ts",
+      "sha256": "193e4e6018b42b1c9ac5bdc204da0d5a016a60c7876b3246a25401177ca1facb"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalActContent/LegalActContent.model.ts",
+      "sha256": "351e8bed7c4068af87a8dbaf45472ac1f985716340e26d419ba5143ad2e2f709"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalActContent/index.ts",
+      "sha256": "769b3b8378b74037fc3275c7f411bd840eaacbe9b24bd8da86cbe6fa70742068"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalOppositionCandidateInput/LegalOppositionCandidateInput.model.ts",
+      "sha256": "d0217bb5c04792f10673d6a5f6638b0e7f555ca9bdeaba6a9a88829e0668441e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalOppositionCandidateInput/index.ts",
+      "sha256": "7b262bcdc29e9525a58cf7e4faacbbb242090d77498415cb4a91b065c7574f55"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalRole/LegalRole.model.ts",
+      "sha256": "f45288a0a1d2d6428142a6ddc499c0194e29080d741d9acbb2f2555717cc9ad1"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalRole/index.ts",
+      "sha256": "6cf134166d42a51df853a5720cba4c33215f9f07082595099dae2573a61957ac"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalScopeContext/LegalScopeContext.model.ts",
+      "sha256": "3e5407b907d2acd0403833d43efb9565bdd1d17584b7998e9591aa14a88b8283"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalScopeContext/index.ts",
+      "sha256": "622f2aaaf41e2f4df168384c5244555ff9d224033cfb3b7ef29a973fd96b322b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalVerdictFamily/LegalVerdictFamily.model.ts",
+      "sha256": "c35317aca62d308ed315e60ca04491301aa4fdb34c67352498b863410b01cbea"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegalVerdictFamily/index.ts",
+      "sha256": "2694e58d29e76b0a4530eaec57f0673b77ec1627d1c0a35cf403a47db7485d7e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/LegislativeMaterialCitation.model.ts",
+      "sha256": "eff65cfe174a20237258d9739dcb1312d3984a44d52f6ce76f1797ccbef5c8cf"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/index.ts",
+      "sha256": "e156d2e93cc2e6d1dbffbb214da10651cb9bb70bc76bf87d39b1cbd92badc0f7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/LocalOrdinanceCitation.model.ts",
+      "sha256": "705a46bd0e81d8923b8dbe20a980821e3aa4268f79f396dcd10d2f3c339ead8c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/index.ts",
+      "sha256": "6bfaa04828ce054546f86bd7808c4a3fad4033c4e73b345aa80a42ce464b23b8"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "sha256": "29c6697e12ff006ce9752adfae2fef4516a84d9bbb1f7398e9b73deaae09b83b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NeutralCitation/index.ts",
+      "sha256": "7c04bfad3c73482161d2a191d1c46f92d4947f8f62d3fc46643651272edd670d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NormSourceReference/NormSourceReference.model.ts",
+      "sha256": "9f0301858a583b47a63a4bfbc871c2fde5b908b7e0d138b1f30d7eb39ad09db5"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NormSourceReference/index.ts",
+      "sha256": "544adcb5dd9924bdd3cfdd2d9a75d7851b37f45bac833b7550a683e466b5a22e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ObservationVersionRef/ObservationVersionRef.model.ts",
+      "sha256": "5d3436a9ab8130ca81428c7d2d9d415cd9f2e9b04635607857dbffd86108f445"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ObservationVersionRef/index.ts",
+      "sha256": "860b76beb4cb6cf52b861ecbe2fd85f6bd24c0f839edabbad428c12ff559c89c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/OfficeCode/OfficeCode.model.ts",
+      "sha256": "de87ab6d81dd18a881965d68af38068af855ebec320fa6cb9f4979a27ca38c0a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/OfficeCode/index.ts",
+      "sha256": "4f50230c3a717627a03bab1e225fc4f16be68892a44c2ce3a887d66474437571"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ParallelGroup/ParallelGroup.model.ts",
+      "sha256": "5b179e8149ee3ba939212067dbd843600ce95ec113d96499afc1c2aee1124d8a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ParallelGroup/index.ts",
+      "sha256": "89215d3e6aed98a617675f07e309425666341b0805e643a5f2aa231db1988610"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ParentheticalType/ParentheticalType.model.ts",
+      "sha256": "5f69e26709c14a4bde0666665b7d274b6cd2f53cae85928adae7d31a65930e83"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ParentheticalType/index.ts",
+      "sha256": "2fe284cf52541f4c345bd89672c830a279d978799bb11a1cbab50fbbb61861eb"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PartyKind/PartyKind.model.ts",
+      "sha256": "4acb5156fb5ede13ef1c465a105ad9ab9857e20e4ea5c2a4b6e47fc3c37be147"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PartyKind/index.ts",
+      "sha256": "10436432b74877f9df526bc4e7bc4acf1b491f492fbc42d93c3e62cdb1765677"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
+      "sha256": "8c302f225604b49a836b00f63609cd23c9eb1feb8f0ee5598ff0e274c304c644"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
+      "sha256": "4de772b98daa217ef1f820bcabdc17def7ba433f4cf8050f97318cb20007d571"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentDocument/index.ts",
+      "sha256": "ad5c289e16918878e550b93a09d583761be75f2e3560146dc757d3631e169938"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentDocumentTriplet/PatentDocumentTriplet.model.ts",
+      "sha256": "77fa8397598814c932be87bac66833ea03c9d96099790045244b212d7d5706a1"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentDocumentTriplet/index.ts",
+      "sha256": "96b3dbc6de5637440e0fbf47a3a9df5a24375026408fe890297478edd88c0bf6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentMetadata/PatentMetadata.model.ts",
+      "sha256": "473a4de973613941948180b2a32257f98b87fe9c47cdf871f750b405feec4518"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentMetadata/index.ts",
+      "sha256": "d12bda271b748ff049c799708f280a063a73cfdc41c1f4ac47be16db4bd446fc"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentNumber/PatentNumber.model.ts",
+      "sha256": "1d724c48d010212711bd138ad0915f09f998dc3fe57d2cfae78ed897eb24e39f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentNumber/index.ts",
+      "sha256": "49cc4bd3840ccdd9e5ecec6deef167270b4261a23da317d647a5df6b9c3630af"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentOffice/PatentOffice.model.ts",
+      "sha256": "604cd179117ade1e401e9440cef63e631851ba12c1e752d2a6c7327c9681876e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PatentOffice/index.ts",
+      "sha256": "a43e13025ff648f9626a23bebaa474fc03a446420ee71352aec32635b3aa2c7c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PermissionStatus/PermissionStatus.model.ts",
+      "sha256": "7d0dd166051c48b26bd92896091eb3d35d515f5b9b6847358dbcaa9eb616b331"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PermissionStatus/index.ts",
+      "sha256": "9b7bfaf87787dd37cac94f95dbe06a19302874df79389956c490f6327b982a73"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
+      "sha256": "86bbd86a854a8af5d51b8aa40b86ae08a6de0975108e10f84f7c5b1beede06cb"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PinciteInfo/index.ts",
+      "sha256": "965e156e341c943f63550fdc84e406604cf08a6c0b945996cad233f0805b5acf"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PracticeKgEpistemicStatus/PracticeKgEpistemicStatus.model.ts",
+      "sha256": "053770b756d4a50c0a9fe3d2b38f7eae97fdcfa7f0d1d98adabdf70689804446"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PracticeKgEpistemicStatus/index.ts",
+      "sha256": "c4535c11a733cb8f80414db9c1e1154564f0d2dfe36a9f936919fb5a73d9006e"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PracticeKgProvenanceKind/PracticeKgProvenanceKind.model.ts",
+      "sha256": "e813241ea07e51f47a3eb0aa9d1a15d38478929bbafa3cb4490f339fbe7dcf72"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PracticeKgProvenanceKind/index.ts",
+      "sha256": "e53baf4e58dd7cc4942b8e2fa881d1a02590514fd099cb4d4310acda4578d01a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PriorityBasis/PriorityBasis.model.ts",
+      "sha256": "ad922be26ec4f66bdf31808ad336e819de2cb881f797b0f5f19ae7ff85bf5d0a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PriorityBasis/index.ts",
+      "sha256": "bb4f61003bcde0bdd7ee029844f2df85db43db7509ccf28a3b521974fa6ee49f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PublicLawCitation/PublicLawCitation.model.ts",
+      "sha256": "09d1e8b632f1a523ff259d6295897e92a38938bda9fba98b094c7c8a5a35ed17"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PublicLawCitation/index.ts",
+      "sha256": "539f27a5b38e5ca2f9bd6c496e2398863014e1360e100b8d336bcfdec0b6f434"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "sha256": "3a69f24e698c37b1ffff429998460a1d22360b87191ae020102e46852668f301"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RegulationCitation/index.ts",
+      "sha256": "6d19c38d16e9ea82b08541ab558bf0763cf001b599517acef184570e79d65b98"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ResolutionResult/ResolutionResult.model.ts",
+      "sha256": "5125a1994bd3c3c8c1fe4ba3648fdc2503375c038b5cbe90209c38844811b2bc"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ResolutionResult/index.ts",
+      "sha256": "e134c804ad8010e403c230108265fd7483c356c3c9b0d0074c73db05e808a84d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RestatementCitation/RestatementCitation.model.ts",
+      "sha256": "fa2b3e6c68d1642e4a59437a9e6d4449992bd471f32412a7026dbfcc00e61c54"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RestatementCitation/index.ts",
+      "sha256": "43339251642931dea2eb0745a5fe45a4530e5c658ede69f3c4fdad8f5772277a"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Segment/Segment.model.ts",
+      "sha256": "7cc6b49e004aff6dabb4091a5e341b86b891e6321486d31a9a7e2c1a6e2201c2"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Segment/index.ts",
+      "sha256": "abdb5e6ee8e7bbb589cfdd8e47bb0bd5642a1a1c21729c0028523dca7afd0f4f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SegmentMap/SegmentMap.model.ts",
+      "sha256": "b2b2e3ab546660b2fbaedc85297965f5f21b74cd608acfa8958561a83b80eff4"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SegmentMap/index.ts",
+      "sha256": "6b03bcf8ea4ce03359d8e0b80429f1173fd47b52bb571ab305732cff90180e19"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SeniorityTier/SeniorityTier.model.ts",
+      "sha256": "54756ac5cf5470cddeb27f66a054ed894bd6ce20233c44360f66257b8bc7792b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SeniorityTier/index.ts",
+      "sha256": "166bc3b6f682459221fba648873fec057e322fc6c689e25c68300a982be14e86"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SessionLawCitation/SessionLawCitation.model.ts",
+      "sha256": "cdf7d8e1106334a10ad32ee0328377bf422f21ee421b59d28424c651ca44178f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SessionLawCitation/index.ts",
+      "sha256": "0dc1ffa70c8825e96ed6f105f8c59e1ed1ab071f92b3a8a493d3c1501ff52fc2"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ShortFormCitationType/ShortFormCitationType.model.ts",
+      "sha256": "79811cb20b51d9382114a349bf5086dd51cb6f01efbccb90cc1d0f10413bc6ea"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ShortFormCitationType/index.ts",
+      "sha256": "58d5d49c32dc8ae39b33056d9450fd7d86e901c5596a167b7b921952b6fd6c1c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SourceNormRef/SourceNormRef.model.ts",
+      "sha256": "22ef2af2630bf02bb71482fe830e278a14bc0c675dda298c27d820a50c6c452d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SourceNormRef/index.ts",
+      "sha256": "0510ca7404cee2d2120a41dae13b9f1711df3ac8a3cf8780d67d5a055b7ada0b"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "sha256": "c526c8d38fecc13f00bb13288bb7ad1f768ee12a75dab90fc35a32faad63b920"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Span/index.ts",
+      "sha256": "837c70b89f3cb1198466e7b5dbc8c3d308f511544b072404ae57e526e2a1dd76"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StateRuleCitation/StateRuleCitation.model.ts",
+      "sha256": "f89797b93931e4a859b0a7b9a6c614cc3727565398b98460270abe24f684f091"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StateRuleCitation/index.ts",
+      "sha256": "3d28c46c036b4a8a3540890c3740632cd39a921e03cbf8c4aba265fdd08924e1"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "sha256": "8a6409f7854eff8f41768db41e8d35bf6c88e8187fc701b99a754f010e5ba329"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatuteCitation/index.ts",
+      "sha256": "c04f7426cb5401ef93f84e63bf5098c90d30737c106aa79e4c84dfd3a8f462a6"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/StatutesAtLargeCitation.model.ts",
+      "sha256": "c16507c8b6ea8559e0ed6215918823af6f348daa9cfec3a72477b02c06c69e31"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/index.ts",
+      "sha256": "87d937da6ca0520e0b8ea01783632a2b83fc96a7d53fe7a21df9e3d62f4e2f6f"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StringCitationGroup/StringCitationGroup.model.ts",
+      "sha256": "a2d0d36d5d9f274865803f134901656fd246be4642ee0764d9c20791ca0f2fe4"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StringCitationGroup/index.ts",
+      "sha256": "052084de24689989a6066cedc8f8ed09d260f4ee9ebb983c576f4908de84c456"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StructuredDate/StructuredDate.model.ts",
+      "sha256": "dd21364333219461321eb75facc64bd8918663b24897c6c9a4d6d5454d6e7cb7"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StructuredDate/index.ts",
+      "sha256": "86dca01c68aeec2c524f3a294a1ecbf4a46cb657c61dccad8e4607a1aa99bdc3"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/SubsequentHistoryEntry.model.ts",
+      "sha256": "bc6c63430bca9ca29b1a4a735240b13d495d8bbe0342dcc2d9d682e966bcccbc"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/index.ts",
+      "sha256": "6b9a86a61933f280acb89d9afc2a94524b11811ff84626ce81cc6c2ea4474015"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SurroundingContext/SurroundingContext.model.ts",
+      "sha256": "881db167cbe935a391b53b15ce8bdda870d1a7d416e2c0f920607fd4abf60601"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SurroundingContext/index.ts",
+      "sha256": "68fcd548f7e552838fdac3ff02a382a57a17c24ec0459b70aa121fbf601817ef"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/TreatiseCitation/TreatiseCitation.model.ts",
+      "sha256": "af36317e76ca3ea5730862cf26ede00bc9d673d4c88f17a3c9eb15514952e8d9"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/TreatiseCitation/index.ts",
+      "sha256": "8aeeeea4dac72dcc9222298de6de52fa80340ee450bd97a52f5f7f0609c4c4ef"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/TreatyCitation/TreatyCitation.model.ts",
+      "sha256": "6fc8b23440d8f397d79a55f89a7d3845f98e3ce16619ed5a4cc9d1e70dad9a28"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/TreatyCitation/index.ts",
+      "sha256": "8c86d2e0da07634f22a5ff9ee69b87670dac8b19db8be71f4caf0c86ab33d96d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/index.ts",
+      "sha256": "89babdc4117152d6c4e7975510d4559f77e221d95c0d39bcaccfce824294af37"
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "sha256": "11e52d5e3dd8207bd80c78a04b60996dc43ffe42d87234a019eb66770dffd7ab"
+    },
+    {
+      "file": "packages/law-practice/domain/test/Footnote.test.ts",
+      "sha256": "5c6a27379fafc148ab9cedb1fc9c20317b5c4af3aad62fb0882c94e5962241a5"
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "sha256": "907b44e71c1e0ec3540b1d757548ca3672f4ae305fe24788531ceff79c4454e0"
+    },
+    {
+      "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
+      "sha256": "b1b76c3f92268ffd2005fc9f23f356a28ed57105cd7fa6f54a6a50e1233ef00a"
+    },
+    {
+      "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
+      "sha256": "ac2f8e7fcb16cabda79c852babf41404b9d2197d840c6baeb0cee640a2543ac0"
+    }
+  ],
+  "environmentMode": "Pure domain schemas and deterministic legal/evidence contracts; no live provider, database, filesystem fixture or credential lookup.",
+  "bunProof": {
+    "passedTests": 69,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.3251953125, 3.90478515625, 4.77587890625],
+    "loadAfter": [3.3251953125, 3.90478515625, 4.77587890625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.03 avg300=0.13 total=677706839\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.01 avg300=0.06 total=175560006\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=167717707\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.04 total=784218087\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=686607207\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.03 avg300=0.13 total=677711497\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.01 avg300=0.05 total=175560007\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=167717708\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.04 total=784219593\nfull avg10=0.00 avg60=0.01 avg300=0.01 total=686608162\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

@@ -2474,50 +2474,50 @@
     "file": "packages/epistemic/domain/test/Contradiction.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 21895,
-    "lines": 537
+    "bytes": 21591,
+    "lines": 541
   },
   {
     "file": "packages/epistemic/domain/test/EntityMaterialization.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 1328,
-    "lines": 32
+    "bytes": 1364,
+    "lines": 33
   },
   {
     "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 11081,
-    "lines": 320
+    "bytes": 12087,
+    "lines": 324
   },
   {
     "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 6784,
-    "lines": 169
+    "bytes": 6681,
+    "lines": 165
   },
   {
     "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 20253,
-    "lines": 513
+    "bytes": 21515,
+    "lines": 532
   },
   {
     "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 4812,
-    "lines": 124
+    "bytes": 5830,
+    "lines": 157
   },
   {
     "file": "packages/epistemic/domain/test/TaggedError.equivalence.test.ts",
     "package": "@beep/epistemic-domain",
     "kind": "test",
-    "bytes": 1290,
-    "lines": 28
+    "bytes": 1326,
+    "lines": 29
   },
   {
     "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
@@ -4784,36 +4784,36 @@
     "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 19580,
-    "lines": 476
+    "bytes": 22157,
+    "lines": 553
   },
   {
     "file": "packages/law-practice/domain/test/Footnote.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 2013,
-    "lines": 60
+    "bytes": 2406,
+    "lines": 71
   },
   {
     "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 31462,
-    "lines": 798
+    "bytes": 38213,
+    "lines": 918
   },
   {
     "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 11980,
-    "lines": 312
+    "bytes": 12894,
+    "lines": 320
   },
   {
     "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
     "package": "@beep/law-practice-domain",
     "kind": "test",
-    "bytes": 13468,
-    "lines": 342
+    "bytes": 13583,
+    "lines": 346
   },
   {
     "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
