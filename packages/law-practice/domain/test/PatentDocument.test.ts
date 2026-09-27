@@ -11,7 +11,8 @@ import {
 import { Md } from "@beep/md";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Result } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -182,8 +183,8 @@ describe("PatentDocument", () => {
     const rejectedOrder = decodePatentApplicationSectionsResult([background, title]);
     const rejectedDuplicate = decodePatentApplicationSectionsResult([title, title]);
 
-    expect(Result.isFailure(rejectedOrder)).toBe(true);
-    expect(Result.isFailure(rejectedDuplicate)).toBe(true);
+    pipe(rejectedOrder, Result.isFailure, assertTrue);
+    pipe(rejectedDuplicate, Result.isFailure, assertTrue);
   });
 
   it("reports missing, forward, self, and cyclic dependency defects", () => {
@@ -224,24 +225,24 @@ describe("PatentDocument", () => {
     });
     const claim = independentClaim(1);
 
-    expect(
-      Result.isFailure(
-        decodePatentApplicationDocumentResult({
-          claims: [claim],
-          sections: [title],
-          sourceText: claim.claimText,
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodePatentApplicationDocumentResult({
-          claims: [claim],
-          sections: [claims],
-          sourceText: "CLAIMS\n1. A different system comprising a detector.",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodePatentApplicationDocumentResult({
+        claims: [claim],
+        sections: [title],
+        sourceText: claim.claimText,
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodePatentApplicationDocumentResult({
+        claims: [claim],
+        sections: [claims],
+        sourceText: "CLAIMS\n1. A different system comprising a detector.",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it.effect(
@@ -340,8 +341,8 @@ describe("PatentDocument", () => {
       const unknownExit = yield* Effect.exit(normalizePatentApplicationDocument(unknownHeading));
       const malformedExit = yield* Effect.exit(normalizePatentApplicationDocument(malformedClaim));
 
-      expect(Exit.isFailure(unknownExit)).toBe(true);
-      expect(Exit.isFailure(malformedExit)).toBe(true);
+      pipe(unknownExit, Exit.isFailure, assertTrue);
+      pipe(malformedExit, Exit.isFailure, assertTrue);
     })
   );
 });

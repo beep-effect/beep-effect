@@ -21,7 +21,8 @@ import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -99,16 +100,16 @@ describe("@beep/epistemic-domain", () => {
   });
 
   it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
-    expect(
-      Result.isFailure(
-        decodeEvidenceSpanResult({
-          confidence: 0.92,
-          endChar: 13,
-          quote: "a claimed fact",
-          startChar: 12,
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeEvidenceSpanResult({
+        confidence: 0.92,
+        endChar: 13,
+        quote: "a claimed fact",
+        startChar: 12,
+      }),
+      Result.isFailure,
+      assertTrue
+    );
 
     expect(
       Effect.runSync(
@@ -128,26 +129,26 @@ describe("@beep/epistemic-domain", () => {
     const maximumQuote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH)("a");
     const overLimitQuote = `${maximumQuote}a`;
 
-    expect(
-      Result.isSuccess(
-        decodeEvidenceSpanResult({
-          confidence: 0.92,
-          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
-          quote: maximumQuote,
-          startChar: 0,
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeEvidenceSpanResult({
-          confidence: 0.92,
-          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
-          quote: overLimitQuote,
-          startChar: 0,
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeEvidenceSpanResult({
+        confidence: 0.92,
+        endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
+        quote: maximumQuote,
+        startChar: 0,
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeEvidenceSpanResult({
+        confidence: 0.92,
+        endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
+        quote: overLimitQuote,
+        startChar: 0,
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("matches an evidence span only to its exact provenance anchor", () => {

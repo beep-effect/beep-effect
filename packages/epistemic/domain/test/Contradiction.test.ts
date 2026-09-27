@@ -31,7 +31,8 @@ import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Result } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { DateTime, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -133,16 +134,16 @@ const supersededDecisionInput = (reason: string) => ({
 describe("Contradiction domain invariants", () => {
   it("rejects duplicate evidence ids on either side of a match basis", () => {
     const duplicate = Epistemic.EvidenceId.make(10);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: [duplicate, duplicate] })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: [duplicate, duplicate] })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: [duplicate, duplicate] }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: [duplicate, duplicate] }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("bounds each evidence set retained by one match basis", () => {
@@ -150,22 +151,26 @@ describe("Contradiction domain invariants", () => {
       Epistemic.EvidenceId.make(index + 1_000)
     );
     const boundedEvidenceIds = A.take(evidenceIds, CONTRADICTION_EVIDENCE_SET_MAX_COUNT);
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: boundedEvidenceIds })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: evidenceIds }))
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: boundedEvidenceIds })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: evidenceIds }))
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: boundedEvidenceIds }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, leftEvidenceIds: evidenceIds }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: boundedEvidenceIds }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, rightEvidenceIds: evidenceIds }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("normalizes and bounds detector identities before candidate-key construction", () => {
@@ -177,49 +182,55 @@ describe("Contradiction domain invariants", () => {
 
     expect(decodedPadded.detector).toBe("fixture-detector");
     expect(contradictionCandidateKey(pair, decodedPadded)).toBe(contradictionCandidateKey(pair, matchBasis));
-    expect(Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: " \n\t " }))).toBe(
-      true
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: " \n\t " }),
+      Result.isFailure,
+      assertTrue
     );
-    expect(
-      Result.isSuccess(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: maximumDetector }))
-    ).toBe(true);
-    expect(
-      Result.isFailure(decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: oversizedDetector }))
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: maximumDetector }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({ ...matchBasis, detector: oversizedDetector }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("requires independent evidence sets to be disjoint", () => {
     const shared = Epistemic.EvidenceId.make(10);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionMatchBasisResult({
-          ...matchBasis,
-          leftEvidenceIds: [shared],
-          rightEvidenceIds: [shared],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionMatchBasisResult({
-          ...matchBasis,
-          kind: "same-source-overlap",
-          leftEvidenceIds: [shared],
-          rightEvidenceIds: [shared],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({
+        ...matchBasis,
+        leftEvidenceIds: [shared],
+        rightEvidenceIds: [shared],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionMatchBasisResult({
+        ...matchBasis,
+        kind: "same-source-overlap",
+        leftEvidenceIds: [shared],
+        rightEvidenceIds: [shared],
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
   });
 
   it("rejects duplicate proposal ids within one assessment", () => {
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionAssessmentResult({
-          confidence: 0.95,
-          proposals: [proposal, proposal],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionAssessmentResult({
+        confidence: 0.95,
+        proposals: [proposal, proposal],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("bounds the number of proposals retained by one assessment", () => {
@@ -236,36 +247,38 @@ describe("Contradiction domain invariants", () => {
     const encodedProposals = A.map(proposals, (value) =>
       Result.getOrThrow(encodeUnknownContradictionResolutionProposalResult(value))
     );
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionAssessmentResult({
-          confidence: 0.95,
-          proposals: A.take(encodedProposals, CONTRADICTION_PROPOSAL_MAX_COUNT),
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(decodeUnknownContradictionAssessmentResult({ confidence: 0.95, proposals: encodedProposals }))
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionAssessmentResult({
+        confidence: 0.95,
+        proposals: A.take(encodedProposals, CONTRADICTION_PROPOSAL_MAX_COUNT),
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionAssessmentResult({ confidence: 0.95, proposals: encodedProposals }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("rejects empty or reversed proposal validity intervals", () => {
     const encoded = Result.getOrThrow(encodeUnknownContradictionResolutionProposalResult(proposal));
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_000, validTo: 1_000 })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_001, validTo: 1_000 })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_000, validTo: 1_001 })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_000, validTo: 1_000 }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_001, validTo: 1_000 }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionResolutionProposalResult({ ...encoded, validFrom: 1_000, validTo: 1_001 }),
+      Result.isSuccess,
+      assertTrue
+    );
   });
 
   it("normalizes and bounds detector rationales in proposal content and attached proposals", () => {
@@ -285,36 +298,36 @@ describe("Contradiction domain invariants", () => {
         decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: paddedRationale })
       ).rationale
     ).toBe("The signed amendment controls.");
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: whitespaceOnlyRationale })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: whitespaceOnlyRationale })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: maximumRationale })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: oversizedRationale })
-      )
-    ).toBe(true);
-    expect(
-      Result.isSuccess(
-        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: maximumRationale })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: oversizedRationale })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: whitespaceOnlyRationale }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: whitespaceOnlyRationale }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: maximumRationale }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionProposalContentResult({ ...encodedContent, rationale: oversizedRationale }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: maximumRationale }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, rationale: oversizedRationale }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("separates unordered submissions from canonical persisted pairs", () => {
@@ -326,8 +339,8 @@ describe("Contradiction domain invariants", () => {
     });
     const canonical = canonicalizeContradiction(reversed, reversedBasis);
 
-    expect(Result.isFailure(decodeCanonicalContradictionBeliefPairResult(reversed))).toBe(true);
-    expect(Result.isSuccess(decodeCanonicalContradictionBeliefPairResult(canonical.pair))).toBe(true);
+    pipe(decodeCanonicalContradictionBeliefPairResult(reversed), Result.isFailure, assertTrue);
+    pipe(decodeCanonicalContradictionBeliefPairResult(canonical.pair), Result.isSuccess, assertTrue);
     expect(canonical.pair.left).toStrictEqual(left);
     expect(canonical.pair.right).toStrictEqual(right);
     expect(canonical.matchBasis.leftEvidenceIds).toStrictEqual(leftEvidenceIds);
@@ -337,8 +350,8 @@ describe("Contradiction domain invariants", () => {
   it("rejects self-contradictions at submission and canonical persistence boundaries", () => {
     const selfPair = { left, right: left };
 
-    expect(Result.isFailure(decodeContradictionBeliefPairResult(selfPair))).toBe(true);
-    expect(Result.isFailure(decodeCanonicalContradictionBeliefPairResult(selfPair))).toBe(true);
+    pipe(decodeContradictionBeliefPairResult(selfPair), Result.isFailure, assertTrue);
+    pipe(decodeCanonicalContradictionBeliefPairResult(selfPair), Result.isFailure, assertTrue);
   });
 
   it("keys detector identities and versions independently", () => {
@@ -393,24 +406,24 @@ describe("Contradiction domain invariants", () => {
   });
 
   it("rejects proposal facts outside canonical JSON", () => {
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionProposalContentResult({ ...proposalContent, fact: { amount: Number.NaN } })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionProposalContentResult({
-          ...proposalContent,
-          fact: { amount: Number.POSITIVE_INFINITY },
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownContradictionProposalContentResult({ ...proposalContent, fact: { amount: undefined } })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContradictionProposalContentResult({ ...proposalContent, fact: { amount: Number.NaN } }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionProposalContentResult({
+        ...proposalContent,
+        fact: { amount: Number.POSITIVE_INFINITY },
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContradictionProposalContentResult({ ...proposalContent, fact: { amount: undefined } }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("bounds proposal fact bytes, node count, and nesting before digesting", () => {
@@ -426,14 +439,15 @@ describe("Contradiction domain invariants", () => {
       { values: A.makeBy(4_096, () => null) },
       deeplyNestedFact,
     ];
-    expect(
+    pipe(
       A.every(
         rejectedFacts,
         (fact) =>
           Result.isFailure(decodeUnknownContradictionProposalContentResult({ ...encodedContent, fact })) &&
           Result.isFailure(decodeUnknownContradictionResolutionProposalResult({ ...encodedProposal, fact }))
-      )
-    ).toBe(true);
+      ),
+      assertTrue
+    );
   });
 
   it("derives only constructive unique collections and canonical pairs", () => {
@@ -529,9 +543,9 @@ describe("Contradiction domain invariants", () => {
 
     expect(rejected.reason).toBe("The passages address different issues.");
     expect(superseded.reason).toBe("The signed amendment controls.");
-    expect(Result.isFailure(decodeDispositionDecision({ reason: " \n\t ", status: "rejected" }))).toBe(true);
-    expect(Result.isFailure(decodeDispositionDecision(supersededDecisionInput(" \n\t ")))).toBe(true);
-    expect(Result.isFailure(decodeDispositionDecision({ reason: overLimitReason, status: "rejected" }))).toBe(true);
-    expect(Result.isFailure(decodeDispositionDecision(supersededDecisionInput(overLimitReason)))).toBe(true);
+    pipe(decodeDispositionDecision({ reason: " \n\t ", status: "rejected" }), Result.isFailure, assertTrue);
+    pipe(decodeDispositionDecision(supersededDecisionInput(" \n\t ")), Result.isFailure, assertTrue);
+    pipe(decodeDispositionDecision({ reason: overLimitReason, status: "rejected" }), Result.isFailure, assertTrue);
+    pipe(decodeDispositionDecision(supersededDecisionInput(overLimitReason)), Result.isFailure, assertTrue);
   });
 });

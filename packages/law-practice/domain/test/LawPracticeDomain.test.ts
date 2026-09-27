@@ -60,6 +60,8 @@ import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -177,7 +179,7 @@ describe("@beep/law-practice-domain", () => {
     expect(getStatusFromKindCode()).toBe("unknown");
     expect(getStatusFromKindCode({ country: "WO" })).toBe("international");
     expect(getStatusFromKindCode({ country: "US", kindCode: O.some("B2") })).toBe("granted");
-    expect(O.isNone(getKindCodeExplanation())).toBe(true);
+    assertNone(getKindCodeExplanation());
     expect(O.getOrThrow(getKindCodeExplanation({ country: "EP", kindCode: "A1" }))).toContain("European");
 
     const display = getPatentDisplay({
@@ -251,32 +253,28 @@ describe("@beep/law-practice-domain", () => {
     expect(WipoSt13OfficeCode.is.EP("EP")).toBe(true);
     expect("US" in WipoSt13OfficeCode.is).toBe(false);
     expect("XX" in WipoSt13OfficeCode.is).toBe(false);
-    expect(
-      O.isSome(
-        decodeCitingApplicationIdentityOption({
-          applicationNumber: "102014000345678",
-          kind: "WipoSt13",
-          officeCode: "EP",
-        })
-      )
-    ).toBe(true);
-    expect(
-      O.isNone(
-        decodeUnknownCitingApplicationIdentityOption({
-          applicationNumber: "102018000138242",
-          kind: "WipoSt13",
-          officeCode: "US",
-        })
-      )
-    ).toBe(true);
-    expect(
-      O.isNone(
-        decodeUnknownCitingApplicationIdentityOption({
-          applicationNumber: "102014000345678",
-          kind: "WipoSt13",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeCitingApplicationIdentityOption({
+        applicationNumber: "102014000345678",
+        kind: "WipoSt13",
+        officeCode: "EP",
+      }),
+      O.isSome,
+      assertTrue
+    );
+    assertNone(
+      decodeUnknownCitingApplicationIdentityOption({
+        applicationNumber: "102018000138242",
+        kind: "WipoSt13",
+        officeCode: "US",
+      })
+    );
+    assertNone(
+      decodeUnknownCitingApplicationIdentityOption({
+        applicationNumber: "102014000345678",
+        kind: "WipoSt13",
+      })
+    );
 
     expect(KindCode.is.A("A")).toBe(true);
     expect(KindCode.is.A1("A1")).toBe(true);
@@ -560,7 +558,7 @@ describe("@beep/law-practice-domain", () => {
     expect(pincite.additionalPincites).toStrictEqual([]);
     expect(resolution.warnings).toStrictEqual([]);
     expect(context.type).toBe("sentence");
-    expect(O.isNone(context.maxLength)).toBe(true);
+    assertNone(context.maxLength);
     expect(locator.space).toBe("original");
     expect(locator.fullSpan).toBe(false);
     expect(locator.contextLength).toBe(32);
@@ -740,7 +738,7 @@ describe("@beep/law-practice-domain", () => {
     expect(pincite.additionalPincites).toStrictEqual([extraPincite]);
     expect(resolution.warnings).toStrictEqual(["Multiple antecedents"]);
     expect(context.type).toBe("paragraph");
-    expect(context.maxLength).toStrictEqual(O.some(NonNegativeInt.make(1000)));
+    assertSome(context.maxLength, NonNegativeInt.make(1000));
     expect(locator.space).toBe("clean");
     expect(locator.fullSpan).toBe(true);
     expect(locator.contextLength).toBe(64);

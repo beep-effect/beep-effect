@@ -40,7 +40,8 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Result } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { DateTime, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -267,7 +268,7 @@ describe("ExecutionAuthority", () => {
     it("addGrant rejects a grant issued under a different policy revision", () => {
       const failed = addGrant(emptyDraftGrantSet(otherRevision), grant);
 
-      expect(Result.isFailure(failed)).toBe(true);
+      pipe(failed, Result.isFailure, assertTrue);
       if (Result.isFailure(failed)) {
         expect(failed.failure._tag).toBe("GrantRevisionMismatch");
         expect(failed.failure.setRevision).toBe(otherRevision);
