@@ -3475,3 +3475,15 @@ cleared the rule. The earlier timing capture had already completed, so its
 receipts were retained and final measurements were captured under a new phase
 name after the fix. Await every root-check result before committing and timing
 final source; package audit alone does not prove root custom rules.
+
+### Cleanup probes must distinguish test mounts from internal Atom lifetimes
+
+The Agents Client lifecycle probe initially treated every intercepted registry
+mount as test-owned and required zero immediately before disposal. Actual Atom
+runtime mounts can survive until registry disposal, so that oracle overreached.
+The corrected probe checks zero active mounts and disposed registry after scope
+completion, retaining pre-disposal counts as diagnostics. The assertion-failure
+control distinguishes the repaired scope from the original cleanup-after-asserts
+path. File receipts were needed because this test environment suppresses console
+output; AST probes should insert after declaration spans rather than comment-
+sensitive statement indices. All temporary source instrumentation is restored.

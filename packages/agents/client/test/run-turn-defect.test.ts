@@ -22,10 +22,18 @@ const content = decodeSafeDocumentUnsafe(
 );
 const emptyTimeline = ThreadTimeline.make({ threadId, turns: [] });
 
-const registryWithClient = (client: ChatClient["Service"]) =>
-  AtomRegistry.make({
-    initialValues: [[ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)]],
-  });
+const registryWithClient = Effect.fnUntraced(function* (client: ChatClient["Service"]) {
+  return yield* Effect.acquireRelease(
+    Effect.sync(() =>
+      AtomRegistry.make({
+        initialValues: [
+          [ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)],
+        ],
+      })
+    ),
+    (registry) => Effect.sync(() => registry.dispose())
+  );
+});
 
 describe("assistant turn defects", { concurrent: false }, () => {
   it.effect(
@@ -44,14 +52,14 @@ describe("assistant turn defects", { concurrent: false }, () => {
           if (tag === "SendMessage") return Stream.die("stream transport crashed");
           return Effect.die(`unexpected chat RPC: ${tag}`);
         }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
+        const registry = yield* registryWithClient(client);
         const draftAtom = draftAtoms(threadId);
         const draftRevisionAtom = draftRevisionAtoms(threadId);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountDraftRevision = registry.mount(draftRevisionAtom);
-        const unmountStreaming = registry.mount(streamingTurnAtom);
-        const unmountError = registry.mount(turnErrorAtom);
+        yield* AtomRegistry.mount(registry, runTurnAtom);
+        yield* AtomRegistry.mount(registry, draftAtom);
+        yield* AtomRegistry.mount(registry, draftRevisionAtom);
+        yield* AtomRegistry.mount(registry, streamingTurnAtom);
+        yield* AtomRegistry.mount(registry, turnErrorAtom);
 
         expect(registry.get(draftAtom)).toStrictEqual(O.none());
         expect(registry.get(draftRevisionAtom)).toBe(0);
@@ -69,14 +77,7 @@ describe("assistant turn defects", { concurrent: false }, () => {
         );
         expect(registry.get(draftAtom)).toStrictEqual(status === "not_persisted" ? O.some(content) : O.none());
         expect(registry.get(draftRevisionAtom)).toBe(status === "not_persisted" ? 1 : 0);
-
-        unmountError();
-        unmountStreaming();
-        unmountDraftRevision();
-        unmountDraft();
-        unmountTurn();
-        registry.dispose();
-      });
+      }, Effect.scoped);
 
       // the not_persisted case writes the restored draft into localStorage, so
       // the durable case must run first to see an empty draft baseline

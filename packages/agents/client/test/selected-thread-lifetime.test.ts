@@ -23,13 +23,19 @@ describe("selected thread lifetime", () => {
       // which the chat surface reads as "follow the list", so the user came back to
       // the most-recently-updated thread instead of the one they had open, and
       // whatever they typed next went to the wrong conversation.
-      const registry = AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
-      const unmount = registry.mount(selectedThreadAtom);
-      registry.set(selectedThreadAtom, O.some(olderThread));
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          yield* AtomRegistry.mount(registry, selectedThreadAtom);
+          registry.set(selectedThreadAtom, O.some(olderThread));
+        })
+      );
 
       // The user switches surface; the chat subtree unmounts...
-      unmount();
       // ...and browses elsewhere for longer than the idle TTL.
       yield* Effect.sleep(Duration.millis(IDLE_TTL_MS * 5));
 
