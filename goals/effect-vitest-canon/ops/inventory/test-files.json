@@ -4581,134 +4581,134 @@
     "file": "packages/foundation/ui-system/editor/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 3444,
-    "lines": 74
+    "bytes": 3557,
+    "lines": 77
   },
   {
     "file": "packages/foundation/ui-system/editor/test/Version.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 221,
-    "lines": 8
+    "bytes": 257,
+    "lines": 9
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-catalog.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 10808,
-    "lines": 281
+    "bytes": 10844,
+    "lines": 282
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-errors.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 2824,
-    "lines": 70
+    "bytes": 3677,
+    "lines": 82
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-projection.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 1877,
-    "lines": 44
+    "bytes": 2700,
+    "lines": 71
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-resolver.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 7135,
-    "lines": 192
+    "bytes": 7242,
+    "lines": 196
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-review-fixes.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 2634,
-    "lines": 71
+    "bytes": 2697,
+    "lines": 72
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-runtime.test.tsx",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 6799,
-    "lines": 166
+    "bytes": 8146,
+    "lines": 195
   },
   {
     "file": "packages/foundation/ui-system/editor/test/capability-schemas.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 6425,
-    "lines": 174
+    "bytes": 6677,
+    "lines": 178
   },
   {
     "file": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 6490,
-    "lines": 184
+    "bytes": 6419,
+    "lines": 172
   },
   {
     "file": "packages/foundation/ui-system/editor/test/code-fence.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 5581,
-    "lines": 164
+    "bytes": 5979,
+    "lines": 176
   },
   {
     "file": "packages/foundation/ui-system/editor/test/decorator-node-contracts.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 3131,
-    "lines": 81
+    "bytes": 3258,
+    "lines": 84
   },
   {
     "file": "packages/foundation/ui-system/editor/test/editor-nodes.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 12737,
-    "lines": 363
+    "bytes": 12952,
+    "lines": 370
   },
   {
     "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 35112,
-    "lines": 849
+    "bytes": 37965,
+    "lines": 920
   },
   {
     "file": "packages/foundation/ui-system/editor/test/runtime.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 3807,
-    "lines": 108
+    "bytes": 3946,
+    "lines": 111
   },
   {
     "file": "packages/foundation/ui-system/editor/test/style-node-matrix.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 6915,
-    "lines": 164
+    "bytes": 7078,
+    "lines": 168
   },
   {
     "file": "packages/foundation/ui-system/editor/test/table-toolbar-selection.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 3403,
-    "lines": 100
+    "bytes": 3447,
+    "lines": 101
   },
   {
     "file": "packages/foundation/ui-system/editor/test/typeahead-ids.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 1641,
-    "lines": 43
+    "bytes": 2608,
+    "lines": 70
   },
   {
     "file": "packages/foundation/ui-system/editor/test/typeahead-position.test.ts",
     "package": "@beep/editor",
     "kind": "test",
-    "bytes": 1632,
-    "lines": 48
+    "bytes": 1768,
+    "lines": 51
   },
   {
     "file": "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts",
