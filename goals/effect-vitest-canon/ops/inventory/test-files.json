@@ -3,8 +3,8 @@
     "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
     "package": "@beep/architecture-lab-proof",
     "kind": "test",
-    "bytes": 2325,
-    "lines": 61
+    "bytes": 2063,
+    "lines": 51
   },
   {
     "file": "apps/labs/api-docs/test/Catalog.test.ts",
@@ -878,43 +878,43 @@
     "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 2850,
-    "lines": 71
+    "bytes": 3363,
+    "lines": 88
   },
   {
     "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 9853,
-    "lines": 255
+    "bytes": 10047,
+    "lines": 257
   },
   {
     "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 2646,
-    "lines": 91
+    "bytes": 3022,
+    "lines": 88
   },
   {
     "file": "packages/agents/server/test/BlockRepair.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 4594,
-    "lines": 129
+    "bytes": 6524,
+    "lines": 181
   },
   {
     "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 13194,
-    "lines": 310
+    "bytes": 13514,
+    "lines": 312
   },
   {
     "file": "packages/agents/server/test/scanChunk.test.ts",
     "package": "@beep/agents-server",
     "kind": "test",
-    "bytes": 2980,
-    "lines": 80
+    "bytes": 3234,
+    "lines": 89
   },
   {
     "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
@@ -1501,8 +1501,8 @@
     "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
     "package": "@beep/drizzle",
     "kind": "test",
-    "bytes": 5743,
-    "lines": 140
+    "bytes": 6174,
+    "lines": 148
   },
   {
     "file": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts",

@@ -3144,3 +3144,32 @@ Architecture use-case verification rejected a recording create callback with
 TS377047 (effectFnOpportunity). Name both recording create/get effects with
 Effect.fn and explicit schema-derived argument types. Run service-shaped test
 fixtures through the same Effect rules as production methods.
+
+
+### Server property boundary and hosted SQL isolation (2026-09-27)
+
+Migrating scanChunk into an Effect property exposed TS377026 at JSON.stringify.
+The diagnostic recommends a removed UnknownFromJsonString export; installed rc.117
+instead provides fromJsonString(Unknown). Use that codec without narrowing generated block
+shapes or changing exact slice/order equality. Package verification caught the
+boundary diagnostic before publication; migration review should check raw JSON
+calls entering Effect callbacks.
+
+PR #1307 head aa7c7a1447, Heavy / Test Integration job 108590652002 failed both
+Drizzle integration cases with neutral_notes missing/already existing. The
+consolidated change adds a second fresh layer under a concurrent suite. The
+external PostgreSQL lane must be reproduced; fresh Effect layers alone do not
+prove physical session/schema isolation. Preserve both transaction tests and
+repair ownership after attribution. Local in-process success did not exercise
+this external backend. A baseline/fix proof on that backend would have caught it.
+
+
+### Vitest mock hoisting import boundary (2026-09-27)
+
+Agents Server runner verification and Node timing failed before collecting all
+six kernel tests: "problems in resolving the mocks API". Re-exporting vi from
+@effect/vitest prevents the installed Vitest hoist transform from resolving it.
+Keep only vi imported directly from vitest; beforeEach/describe/expect stay on
+@effect/vitest and registration stays on the instrumented runner. No globals
+configuration change. Ledger the proven import-boundary exception; do not count
+the partial 21-test timing as a successful baseline or after result.

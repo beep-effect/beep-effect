@@ -114,3 +114,15 @@ Mechanical candidates remain open and separate. Human resource coverage comes fr
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
 
 Root accepted these P1 rows after source, artifact and combined strict-schema validation. Full P1 completeness, Grok review and Benjamin’s acknowledgement remain required before P2.
+
+
+## Consolidated P2 closeout (2026-09-27)
+
+The original inventory above is historical. This package's actionable saved
+findings are now fixed or explicitly excepted, with commit-specific evidence in
+history/2026-09-27-server-proof-reconciliation.md. Native properties preserve
+all schema/scanner domains, existing comparator laws and run floors. The runner
+owns scoped services. Node/Bun package tests, package audit and docgen pass;
+400-run seed 20260708 property proof and restored negative controls pass.
+Timing/context artifacts record workstation load without claiming causal speedup.
+Full consolidated PR readiness and hosted confirmation remain outstanding.

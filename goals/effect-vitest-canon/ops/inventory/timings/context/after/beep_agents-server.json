@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/agents-server",
+  "sourceHead": "3a1385d9e4274d9e89586c0bd4a9bf77ab9538de",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.521539989989833,
+  "bunWholeCommandSeconds": 2.518155696001486,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.33544921875, 6.15283203125, 5.70166015625],
+  "loadAfter": [5.46875, 6.1669921875, 5.708984375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.94 avg60=0.49 avg300=0.33 total=676788008\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.02 avg60=0.10 avg300=0.06 total=175121619\nfull avg10=0.02 avg60=0.10 avg300=0.06 total=167279834\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=783796408\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=686284885\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.63 avg60=0.46 avg300=0.32 total=676794849\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.94 avg60=0.29 avg300=0.10 total=175238039\nfull avg10=0.94 avg60=0.29 avg300=0.10 total=167396141\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=783797446\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=686285578\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "a19c9bd1b115e12ca152267e565d9bc8db39ee704d89af419b2d715722083984"
+    },
+    {
+      "file": "packages/agents/server/package.json",
+      "sha256": "906c5181b7b3d27d044a7ba38c752fe8d0a2c15150e75be5fd45da74d31e7925"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts",
+      "sha256": "f1d2bb7553f196ab9adb126c8d4dcd385cd32c6634602972a9c28aa0c411579f"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts",
+      "sha256": "2c928bc2b424349d19111f93c17a570b2690c5bb6238247fd7496e53714bc917"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
+      "sha256": "b7dbabd46335ef2e0e188ed8dd72774801287130381af411459e8f673cc75191"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/ScanState.ts",
+      "sha256": "118359ee9a25b419860a111511a62d2721ed78928acdbb7c41679e21cf07aa5a"
+    },
+    {
+      "file": "packages/agents/server/src/AssistantTurn/index.ts",
+      "sha256": "31ca19ed5b1c0fc9448f0e6c0dde8d03d41ca9df2d5af32fd8ca65d30a945bb5"
+    },
+    {
+      "file": "packages/agents/server/src/ProviderInstance/ProviderInstance.layer.ts",
+      "sha256": "a4e447aa4eebb04d261878abed4037095a5705ed48e8228a148412d323aefb29"
+    },
+    {
+      "file": "packages/agents/server/src/ProviderInstance/ProviderInstance.probe.ts",
+      "sha256": "9e91bc7ef3fb02c80e428cdf2f8cd1741da94a6b4c2ecdb36ab0e61a4d965e2b"
+    },
+    {
+      "file": "packages/agents/server/src/ProviderInstance/ProviderInstance.repo.ts",
+      "sha256": "8d03d605d6f25b02c9971bde1fe0a042c52d87869a906a905ea5078830955980"
+    },
+    {
+      "file": "packages/agents/server/src/ProviderInstance/index.ts",
+      "sha256": "3fbb15208e67d0c6799e6f6fa17627a634762c9dea225da78fd4af2118e2cca6"
+    },
+    {
+      "file": "packages/agents/server/src/index.ts",
+      "sha256": "4264af2f4a1d3ffc56bdff1c674c1914a2604e792484184e3eaedf95e837b226"
+    },
+    {
+      "file": "packages/agents/server/src/test.ts",
+      "sha256": "ecd398e7840866b3686cc0d0dbf60a1edafb64d9c5f402b777888a7c9df30a1c"
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
+      "sha256": "78345dc7310f2098470b71775ff132ed3644ce60fcc04795085105daca83f776"
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "sha256": "ce4172edd21892d001bbb96bdc195c00f817cfce35e46c33624fc615d96afa48"
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "sha256": "fdb14191799bdda5f8472d1d7b0621c172ac5bf499a4e90a0918b701d1656228"
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "sha256": "cb08f59b7a3bb823ffaa5a8fa8f20d69bd26048947c6b49bd918fcfe87b08c4a"
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "sha256": "4e3dd782d24bb75d691b1ef76794690121a79a440eb6df500e3e7a40a7ec84d2"
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "sha256": "01c2a2de1e3163898f691e991788add9cf3ee4bf0bd36484d3e304b8c7f88dca"
+    }
+  ],
+  "environmentMode": "Scripted provider with real stream/repair logic and real in-process PGlite tenant isolation; architecture proof composes actual in-memory services and projections. No live provider or credential lookup.",
+  "bunProof": {
+    "passedTests": 27,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [5.46875, 6.1669921875, 5.708984375],
+    "loadAfter": [5.912109375, 6.24755859375, 5.73779296875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.63 avg60=0.46 avg300=0.32 total=676794876\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.94 avg60=0.29 avg300=0.10 total=175238039\nfull avg10=0.94 avg60=0.29 avg300=0.10 total=167396141\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=783797495\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=686285625\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.51 avg60=0.44 avg300=0.32 total=676810645\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.77 avg60=0.28 avg300=0.10 total=175238044\nfull avg10=0.77 avg60=0.28 avg300=0.10 total=167396147\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=783797521\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=686285649\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}
