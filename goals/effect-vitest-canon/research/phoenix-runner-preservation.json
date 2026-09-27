@@ -1,0 +1,86 @@
+{
+  "beforeSha": "68d9b1d126",
+  "files": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "1ec86ed74903b085db33d70b08cfb4310aecb74aea6b35ee1706a91e9a2ff274",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "9f660cbaed9ebd7a5f2b9f5762b7905e3a3bb7b4ac94a333b1fb35442f647297",
+      "instrumented": true
+    }
+  ],
+  "packageAuditSeconds": 8.7,
+  "docgenSeconds": 3.1,
+  "proofs": [
+    {
+      "runtime": "node",
+      "trace": "runner-off",
+      "passedCases": 30,
+      "failedCases": 0,
+      "wholeCommandSeconds": 4.522052767999412,
+      "sourceStable": true,
+      "loadBefore": [12.9345703125, 11.08203125, 9.07421875],
+      "loadAfter": [12.93994140625, 11.1142578125, 9.095703125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.48 avg60=0.55 avg300=0.46 total=239840268\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.28 avg60=0.87 avg300=0.35 total=90333373\nfull avg10=1.27 avg60=0.83 avg300=0.33 total=87679886\n",
+        "io": "some avg10=1.00 avg60=0.34 avg300=0.49 total=701706307\nfull avg10=0.89 avg60=0.28 avg300=0.37 total=634560533\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.50 avg60=0.55 avg300=0.46 total=239871275\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.70 avg60=0.98 avg300=0.38 total=90463758\nfull avg10=1.69 avg60=0.94 avg300=0.36 total=87810160\n",
+        "io": "some avg10=0.67 avg60=0.32 avg300=0.48 total=701710767\nfull avg10=0.59 avg60=0.26 avg300=0.36 total=634564223\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "trace": "runner-off",
+      "passedCases": 30,
+      "failedCases": 0,
+      "wholeCommandSeconds": 1.6162721650034655,
+      "sourceStable": true,
+      "loadBefore": [12.93994140625, 11.1142578125, 9.095703125],
+      "loadAfter": [12.93994140625, 11.1142578125, 9.095703125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.50 avg60=0.55 avg300=0.46 total=239871278\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.70 avg60=0.98 avg300=0.38 total=90466663\nfull avg10=1.69 avg60=0.94 avg300=0.36 total=87813065\n",
+        "io": "some avg10=0.67 avg60=0.32 avg300=0.48 total=701710767\nfull avg10=0.59 avg60=0.26 avg300=0.36 total=634564223\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.41 avg60=0.53 avg300=0.46 total=239882844\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.93 avg60=1.05 avg300=0.40 total=90506040\nfull avg10=1.93 avg60=1.01 avg300=0.38 total=87852367\n",
+        "io": "some avg10=0.54 avg60=0.31 avg300=0.48 total=701711083\nfull avg10=0.49 avg60=0.25 avg300=0.36 total=634564440\n"
+      }
+    },
+    {
+      "runtime": "node",
+      "trace": "runner-on",
+      "passedCases": 30,
+      "failedCases": 0,
+      "wholeCommandSeconds": 3.5714735009969445,
+      "sourceStable": true,
+      "loadBefore": [12.93994140625, 11.1142578125, 9.095703125],
+      "loadAfter": [13.26513671875, 11.21240234375, 9.13818359375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.41 avg60=0.53 avg300=0.46 total=239882919\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.93 avg60=1.05 avg300=0.40 total=90508121\nfull avg10=1.93 avg60=1.01 avg300=0.38 total=87854446\n",
+        "io": "some avg10=0.54 avg60=0.31 avg300=0.48 total=701711099\nfull avg10=0.49 avg60=0.25 avg300=0.36 total=634564452\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.51 avg60=0.55 avg300=0.46 total=239909506\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.94 avg60=1.08 avg300=0.41 total=90557714\nfull avg10=1.94 avg60=1.04 avg300=0.39 total=87903944\n",
+        "io": "some avg10=0.44 avg60=0.30 avg300=0.48 total=701712770\nfull avg10=0.40 avg60=0.25 avg300=0.35 total=634565878\n"
+      }
+    }
+  ],
+  "controlledFailureProbe": {
+    "traceOffQuiet": true,
+    "traceOnStartFailureEndNameDuration": true,
+    "temporaryFileRemoved": true
+  }
+}

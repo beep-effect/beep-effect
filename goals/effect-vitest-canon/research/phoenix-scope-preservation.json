@@ -1,0 +1,49 @@
+{
+  "beforeSha": "6b5e57ceec",
+  "layerRegistrations": 5,
+  "onlyReviewedScopeReplacements": true,
+  "equivalenceFileUnchanged": true,
+  "afterSha256": "95ce5fb8dc58fd6652f93cca32d8bee566b123fd3016aac7af5853d2c9343451",
+  "packageAuditSeconds": 6.5,
+  "docgenSeconds": 2.9,
+  "proofs": [
+    {
+      "runtime": "node",
+      "passedCases": 9,
+      "failedCases": 0,
+      "wholeCommandSeconds": 3.369500050001079,
+      "sourceStable": true,
+      "loadBefore": [7.04296875, 7.3583984375, 7.10498046875],
+      "loadAfter": [6.71875, 7.28564453125, 7.08251953125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.31 avg60=0.52 avg300=0.43 total=236134186\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88222299\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620980\n",
+        "io": "some avg10=0.18 avg60=0.11 avg300=0.10 total=697300217\nfull avg10=0.00 avg60=0.05 avg300=0.06 total=631184595\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.21 avg60=0.48 avg300=0.42 total=236144304\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88222300\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620981\n",
+        "io": "some avg10=0.12 avg60=0.10 avg300=0.10 total=697300775\nfull avg10=0.00 avg60=0.05 avg300=0.06 total=631185076\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "passedCases": 9,
+      "failedCases": 0,
+      "wholeCommandSeconds": 1.4162010569998529,
+      "sourceStable": true,
+      "loadBefore": [6.71875, 7.28564453125, 7.08251953125],
+      "loadAfter": [6.71875, 7.28564453125, 7.08251953125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.21 avg60=0.48 avg300=0.42 total=236144381\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88222300\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620981\n",
+        "io": "some avg10=0.12 avg60=0.10 avg300=0.10 total=697300775\nfull avg10=0.00 avg60=0.05 avg300=0.06 total=631185076\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.21 avg60=0.48 avg300=0.42 total=236147581\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88222301\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620982\n",
+        "io": "some avg10=0.12 avg60=0.10 avg300=0.10 total=697300875\nfull avg10=0.00 avg60=0.05 avg300=0.06 total=631185152\n"
+      }
+    }
+  ]
+}

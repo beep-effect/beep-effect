@@ -259,3 +259,15 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/observability#package-test-typecheck`
 - `@beep/observability#test`
 - `@beep/observability#test:property`
+
+## Incoming 441bfec4e5acf966cf893ee5ab4b40aacef96b8f
+
+- `@beep/phoenix#audit`
+- `@beep/phoenix#build`
+- `@beep/phoenix#check`
+- `@beep/phoenix#coverage`
+- `@beep/phoenix#lint:deprecated-apis`
+- `@beep/phoenix#package-test-typecheck`
+- `@beep/phoenix#test`
+- `@beep/phoenix#test:integration`
+- `@beep/phoenix#test:property`
