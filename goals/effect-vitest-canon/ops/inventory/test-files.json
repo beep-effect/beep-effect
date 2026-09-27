@@ -4483,22 +4483,22 @@
     "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 9146,
-    "lines": 224
+    "bytes": 9257,
+    "lines": 230
   },
   {
     "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 25502,
-    "lines": 632
+    "bytes": 25484,
+    "lines": 629
   },
   {
     "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 7451,
-    "lines": 215
+    "bytes": 7478,
+    "lines": 216
   },
   {
     "file": "packages/foundation/ui-system/dock/test/Fixtures.ts",
@@ -4511,64 +4511,64 @@
     "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 20847,
-    "lines": 574
+    "bytes": 20784,
+    "lines": 572
   },
   {
     "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 15051,
-    "lines": 361
+    "bytes": 15483,
+    "lines": 373
   },
   {
     "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 17829,
+    "bytes": 17869,
     "lines": 489
   },
   {
     "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 10399,
-    "lines": 218
+    "bytes": 10418,
+    "lines": 220
   },
   {
     "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 7127,
-    "lines": 197
+    "bytes": 8970,
+    "lines": 235
   },
   {
     "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 12501,
+    "bytes": 12528,
     "lines": 334
   },
   {
     "file": "packages/foundation/ui-system/dock/test/Recency.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 3095,
-    "lines": 90
+    "bytes": 3304,
+    "lines": 97
   },
   {
     "file": "packages/foundation/ui-system/dock/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 3167,
-    "lines": 75
+    "bytes": 3203,
+    "lines": 76
   },
   {
     "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
     "package": "@beep/dock",
     "kind": "test",
-    "bytes": 1356,
-    "lines": 28
+    "bytes": 1392,
+    "lines": 29
   },
   {
     "file": "packages/foundation/ui-system/dock/test/fixtures/pre-m1-snapshot.ts",

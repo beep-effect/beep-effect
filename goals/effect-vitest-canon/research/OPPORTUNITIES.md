@@ -3466,3 +3466,12 @@ against its runtime type schema and assert its operation/message instead. This
 retains failure-completion evidence while avoiding incidental stack metadata.
 For timeout controls, pair the JSON reporter with the default reporter: the
 JSON-only failure contained a generic Error stack but omitted the timeout text.
+
+### Root lint must settle before final timing capture
+
+Dock package verification passed, but root Oxlint rejected the inline runtime
+error decoder with `no-inline-schema-compile`. Hoisting it preserved behavior and
+cleared the rule. The earlier timing capture had already completed, so its
+receipts were retained and final measurements were captured under a new phase
+name after the fix. Await every root-check result before committing and timing
+final source; package audit alone does not prove root custom rules.
