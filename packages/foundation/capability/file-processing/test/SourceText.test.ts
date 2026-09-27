@@ -124,25 +124,19 @@ describe("@beep/file-processing SourceText", () => {
     pipe(decodeUnknownSourceTextPageResult({ ...validPage, hasNextPage: false }), Result.isFailure, assertTrue);
   });
 
-  it("derives only relationally valid source-text pages", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SourceTextPage)]),
-          ([page]) => {
-            expect(page.pageIndex).toBeLessThan(page.pageCount);
-            expect(page.startOffset).toBeLessThanOrEqual(page.endOffset);
-            expect(page.endOffset).toBeLessThanOrEqual(page.totalCodeUnits);
-            expect(page.endOffset - page.startOffset).toBe(Str.length(page.text));
-            expect(page.hasPreviousPage).toBe(page.pageIndex > 0);
-            expect(page.hasNextPage).toBe(page.pageIndex + 1 < page.pageCount);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "derives only relationally valid source-text pages",
+    { page: Arbitrary.schema(SourceTextPage) },
+    ({ page }) => {
+      expect(page.pageIndex).toBeLessThan(page.pageCount);
+      expect(page.startOffset).toBeLessThanOrEqual(page.endOffset);
+      expect(page.endOffset).toBeLessThanOrEqual(page.totalCodeUnits);
+      expect(page.endOffset - page.startOffset).toBe(Str.length(page.text));
+      expect(page.hasPreviousPage).toBe(page.pageIndex > 0);
+      expect(page.hasNextPage).toBe(page.pageIndex + 1 < page.pageCount);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.
@@ -160,24 +154,19 @@ const sourceTextPageLinkCodec = (() => {
 const encodeSourceTextPageLink = S.encodeEffect(sourceTextPageLinkCodec);
 const encodeSourceTextIdentity = S.encodeEffect(SourceTextIdentity);
 
-it.effect("encodes SourceTextPage through its generation link", () =>
-  Effect.gen(function* () {
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(SourceTextPage),
-      (page) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeSourceTextPageLink(page);
-          expect(encoded).toEqual({
-            identity: yield* encodeSourceTextIdentity(page.identity),
-            pageCount: page.pageCount,
-            pageIndex: page.pageIndex,
-            startOffset: page.startOffset,
-            text: page.text,
-          });
-          return true;
-        }),
-      fcRuns(50)
-    );
-    expect(result._tag).toBe("Passed");
-  })
+it.effect.prop(
+  "encodes SourceTextPage through its generation link",
+  { page: Arbitrary.schema(SourceTextPage) },
+  ({ page }) =>
+    Effect.gen(function* () {
+      const encoded = yield* encodeSourceTextPageLink(page);
+      expect(encoded).toEqual({
+        identity: yield* encodeSourceTextIdentity(page.identity),
+        pageCount: page.pageCount,
+        pageIndex: page.pageIndex,
+        startOffset: page.startOffset,
+        text: page.text,
+      });
+    }),
+  { arbitrary: fcRuns(50) }
 );
