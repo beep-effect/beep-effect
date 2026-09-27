@@ -5701,29 +5701,29 @@
     "file": "packages/tooling/policy-pack/lint-rules/test/codec.ts",
     "package": "@beep/lint-rules",
     "kind": "support",
-    "bytes": 2300,
-    "lines": 45
+    "bytes": 4752,
+    "lines": 134
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
     "package": "@beep/lint-rules",
     "kind": "support",
-    "bytes": 5175,
-    "lines": 132
+    "bytes": 4542,
+    "lines": 121
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
     "package": "@beep/lint-rules",
     "kind": "support",
-    "bytes": 9650,
+    "bytes": 9682,
     "lines": 262
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 4775,
-    "lines": 124
+    "bytes": 5337,
+    "lines": 134
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
@@ -5736,22 +5736,22 @@
     "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 5126,
-    "lines": 133
+    "bytes": 5432,
+    "lines": 136
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 1475,
-    "lines": 37
+    "bytes": 4480,
+    "lines": 130
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
     "package": "@beep/lint-rules",
     "kind": "test",
-    "bytes": 3343,
-    "lines": 95
+    "bytes": 4142,
+    "lines": 107
   },
   {
     "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",

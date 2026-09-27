@@ -12399,67 +12399,92 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:12:runPromise@2#1",
+      "id": "EV003:packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts:148:withOxlintFixture@71#1",
       "lens": "detector",
-      "ruleId": "EV001",
+      "ruleId": "EV003",
+      "package": "@beep/lint-rules",
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+      "line": 148,
+      "endLine": 162,
+      "symbol": "withOxlintFixture",
+      "occurrence": "v2:56419630269ac5b256ffedc035bdbcdea10cb035dbc812bbccc18d61da435a67",
+      "class": "resource-wrapper",
+      "evidence": "function* <Success, Error, Requirements>( prefix: string, rule: OxlintRule, source: string, filename: string, supportingFiles: ReadonlyArray<readonly [path: string, source: string]>, use: (fixture: Ox",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
+    },
+    {
+      "id": "EV010:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
       "package": "@beep/lint-rules",
       "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "runPromise",
-      "occurrence": "v2:79c4c0231f38d49b6538632b7e2a7fe5a535a8caea307e1bd3e1be764a199b47",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)))",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
       "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
     },
     {
-      "id": "EV001:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:12:runPromise@2#1",
-      "lens": "detector",
-      "ruleId": "EV001",
+      "id": "EV010:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:5:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
       "package": "@beep/lint-rules",
       "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "runPromise",
-      "occurrence": "v2:863b2204576023531c7288dea33074ff6028892ddebb815594c3b999ae101c2b",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)))",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
       "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
     },
     {
-      "id": "EV001:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:9:runPromise@2#1",
-      "lens": "detector",
-      "ruleId": "EV001",
+      "id": "EV010:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
       "package": "@beep/lint-rules",
       "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
-      "line": 9,
-      "endLine": 9,
-      "symbol": "runPromise",
-      "occurrence": "v2:863b2204576023531c7288dea33074ff6028892ddebb815594c3b999ae101c2b",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)))",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
       "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
     },
     {
       "id": "EV001:packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts:137:runSync@6#1",
@@ -69332,48 +69357,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/policy-pack/lint-rules/test/harness.ts:31:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
-      "line": 31,
-      "endLine": 33,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:a02e390fed6e27d7d5120e17120085d81a25d81d1ceca3440d1534651bbdcb89",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts:150:withOxlintFixture@71#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
-      "line": 150,
-      "endLine": 164,
-      "symbol": "withOxlintFixture",
-      "occurrence": "v2:56419630269ac5b256ffedc035bdbcdea10cb035dbc812bbccc18d61da435a67",
-      "class": "resource-wrapper",
-      "evidence": "function* <Success, Error, Requirements>( prefix: string, rule: OxlintRule, source: string, filename: string, supportingFiles: ReadonlyArray<readonly [path: string, source: string]>, use: (fixture: Ox",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:231:withTempDirectory@4#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -112096,48 +112079,6 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:62:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
-      "line": 62,
-      "endLine": 62,
-      "symbol": "expect",
-      "occurrence": "v2:2ab539ea92cdc74283d8dfedb7a2f9c0c369f9a39f002b3cd2c480de72dd7bbe",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isSome(RULES[\"no-native-error\"].replaces)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Option.isSome Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:63:expect@4#1",
-      "lens": "detector",
-      "ruleId": "EV006",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
-      "line": 63,
-      "endLine": 63,
-      "symbol": "expect",
-      "occurrence": "v2:948bf22007111f89a81788134bea32bc1eefa23352576638acc8e5fcfdb0cd8d",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isNone(RULES[\"no-bigint-literals\"].replaces)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV006:packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts:90:expect@6#1",
       "lens": "resource",
       "ruleId": "EV006",
@@ -148184,69 +148125,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:2:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
-      "line": 2,
-      "endLine": 2,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:3:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
-      "line": 3,
-      "endLine": 3,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:2:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
-      "line": 2,
-      "endLine": 2,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts:6:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -154187,48 +154065,6 @@
       "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
       "class": "plain-vitest-with-effect",
       "evidence": "import { vi } from \"vitest\";",
-      "replacement": {
-        "primitive": "module.@effect/vitest",
-        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV011:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:6:vitest-import@0#1",
-      "lens": "detector",
-      "ruleId": "EV011",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
-      "line": 6,
-      "endLine": 6,
-      "symbol": "vitest-import",
-      "occurrence": "v2:b49800ccbc7ef0c9d5608ff7458a4b7316c0e842381a99a0128aa2d06540b7e6",
-      "class": "plain-vitest-with-effect",
-      "evidence": "import { describe, expect, it } from \"vitest\";",
-      "replacement": {
-        "primitive": "module.@effect/vitest",
-        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV011:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:4:vitest-import@0#1",
-      "lens": "detector",
-      "ruleId": "EV011",
-      "package": "@beep/lint-rules",
-      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
-      "line": 4,
-      "endLine": 4,
-      "symbol": "vitest-import",
-      "occurrence": "v2:b49800ccbc7ef0c9d5608ff7458a4b7316c0e842381a99a0128aa2d06540b7e6",
-      "class": "plain-vitest-with-effect",
-      "evidence": "import { describe, expect, it } from \"vitest\";",
       "replacement": {
         "primitive": "module.@effect/vitest",
         "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
