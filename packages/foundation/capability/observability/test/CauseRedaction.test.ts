@@ -175,50 +175,40 @@ describe("CauseRedaction", () => {
     assertTrue(safe.truncated);
   });
 
-  it("round-trips schema-derived redaction options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RedactCauseOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(encodeRedactCauseOptionsOption(options), decodeUnknownRedactCauseOptionsOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived redaction options",
+    [Arbitrary.schema(RedactCauseOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(encodeRedactCauseOptionsOption(options), decodeUnknownRedactCauseOptionsOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("honors generated redaction bounds and channel rules", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RedactCauseOptions), Arbitrary.schema(S.String)]),
-          ([options, rawMessage]) => {
-            const cause = Cause.fail(new Error(rawMessage));
-            const summary = summarizeCause(cause);
-            const safe = redactCause(cause, options);
-            const messageTruncated = sanitizeSensitiveText(summary.primaryMessage).length > options.messageLimit;
-            const detailTruncated =
-              options.channel === "diagnostic" && sanitizeSensitiveText(summary.pretty).length > options.detailLimit;
+  it.prop(
+    "honors generated redaction bounds and channel rules",
+    [Arbitrary.schema(RedactCauseOptions), Arbitrary.schema(S.String)],
+    ([options, rawMessage]) => {
+      const cause = Cause.fail(new Error(rawMessage));
+      const summary = summarizeCause(cause);
+      const safe = redactCause(cause, options);
+      const messageTruncated = sanitizeSensitiveText(summary.primaryMessage).length > options.messageLimit;
+      const detailTruncated =
+        options.channel === "diagnostic" && sanitizeSensitiveText(summary.pretty).length > options.detailLimit;
 
-            expect(safe.message.length).toBeLessThanOrEqual(options.messageLimit + 3);
-            expect(safe.truncated).toBe(messageTruncated || detailTruncated);
+      expect(safe.message.length).toBeLessThanOrEqual(options.messageLimit + 3);
+      expect(safe.truncated).toBe(messageTruncated || detailTruncated);
 
-            if (options.channel === "client") {
-              expect(O.isNone(safe.detail)).toBe(true);
-            } else {
-              expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
-            }
+      if (options.channel === "client") {
+        expect(O.isNone(safe.detail)).toBe(true);
+      } else {
+        expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
+      }
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

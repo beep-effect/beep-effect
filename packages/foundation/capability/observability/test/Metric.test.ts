@@ -32,25 +32,17 @@ describe("Metric", () => {
     })
   );
 
-  it("round-trips schema-derived track duration options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(TrackDurationOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(
-              encodeTrackDurationOptionsOption(options),
-              decodeUnknownTrackDurationOptionsOption
-            );
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived track duration options",
+    [Arbitrary.schema(TrackDurationOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(encodeTrackDurationOptionsOption(options), decodeUnknownTrackDurationOptionsOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect("tracks workflow counters on success", () =>
     Effect.gen(function* () {

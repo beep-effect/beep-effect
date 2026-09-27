@@ -40,42 +40,29 @@ describe("Logging", () => {
     });
   });
 
-  it("round-trips schema-derived pretty logger configs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(PrettyLoggerConfig)]),
-          ([pretty]) => {
-            const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
+  it.prop(
+    "round-trips schema-derived pretty logger configs",
+    [Arbitrary.schema(PrettyLoggerConfig)],
+    ([pretty]) => {
+      const decoded = O.flatMap(encodePrettyLoggerConfigOption(pretty), decodeUnknownPrettyLoggerConfigOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips schema-derived banner options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RenderLogBannerOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(
-              encodeRenderLogBannerOptionsOption(options),
-              decodeUnknownRenderLogBannerOptionsOption
-            );
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived banner options",
+    [Arbitrary.schema(RenderLogBannerOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(encodeRenderLogBannerOptionsOption(options), decodeUnknownRenderLogBannerOptionsOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("renders with default pretty config when options omit it", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");

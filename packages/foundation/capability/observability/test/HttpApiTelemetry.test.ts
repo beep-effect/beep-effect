@@ -34,22 +34,17 @@ describe("HttpApiTelemetry", () => {
     expect(() => httpApiSuccessStatus(S.String.pipe(HttpApiSchema.status(99)))).toThrow();
   });
 
-  it("round-trips schema-derived HTTP status codes", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(HttpStatusCode)]),
-          ([status]) => {
-            const decoded = O.flatMap(encodeHttpStatusCodeOption(status), decodeUnknownHttpStatusCodeOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
+  it.prop(
+    "round-trips schema-derived HTTP status codes",
+    [Arbitrary.schema(HttpStatusCode)],
+    ([status]) => {
+      const decoded = O.flatMap(encodeHttpStatusCodeOption(status), decodeUnknownHttpStatusCodeOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect("tracks HTTP API request metrics", () =>
     Effect.gen(function* () {

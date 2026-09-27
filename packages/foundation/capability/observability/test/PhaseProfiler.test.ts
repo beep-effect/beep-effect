@@ -29,22 +29,17 @@ class TestPhaseError extends S.TaggedError<TestPhaseError>()("TestPhaseError", {
 }) {}
 
 describe("PhaseProfiler", () => {
-  it("round-trips schema-derived phase profiles", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(PhaseProfile)]),
-          ([profile]) => {
-            const decoded = O.flatMap(encodePhaseProfileOption(profile), decodeUnknownPhaseProfileOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
+  it.prop(
+    "round-trips schema-derived phase profiles",
+    [Arbitrary.schema(PhaseProfile)],
+    ([profile]) => {
+      const decoded = O.flatMap(encodePhaseProfileOption(profile), decodeUnknownPhaseProfileOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("rejects empty phase labels", () => {
     assertNone(

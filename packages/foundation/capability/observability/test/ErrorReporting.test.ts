@@ -1,7 +1,7 @@
 import { ConsoleErrorReporterOptions, ErrorReporterLayerOptions } from "@beep/observability/server";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal } from "effect";
+import { Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -18,43 +18,33 @@ describe("ErrorReporting", () => {
     expect(ErrorReporterLayerOptions.make({}).mergeWithExisting).toBe(true);
   });
 
-  it("round-trips schema-derived reporter options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ConsoleErrorReporterOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(
-              encodeConsoleErrorReporterOptionsOption(options),
-              decodeUnknownConsoleErrorReporterOptionsOption
-            );
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived reporter options",
+    [Arbitrary.schema(ConsoleErrorReporterOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(
+        encodeConsoleErrorReporterOptionsOption(options),
+        decodeUnknownConsoleErrorReporterOptionsOption
+      );
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips schema-derived reporter layer options", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ErrorReporterLayerOptions)]),
-          ([options]) => {
-            const decoded = O.flatMap(
-              encodeErrorReporterLayerOptionsOption(options),
-              decodeUnknownErrorReporterLayerOptionsOption
-            );
-            expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+  it.prop(
+    "round-trips schema-derived reporter layer options",
+    [Arbitrary.schema(ErrorReporterLayerOptions)],
+    ([options]) => {
+      const decoded = O.flatMap(
+        encodeErrorReporterLayerOptionsOption(options),
+        decodeUnknownErrorReporterLayerOptionsOption
+      );
+      expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
