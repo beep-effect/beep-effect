@@ -12,10 +12,11 @@ import {
   KeyChord,
   ProfileId,
 } from "@beep/editor/capability/schemas";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, pipe, Result } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 
 const ctrlB = KeyChord.make({ modifiers: ["control"], key: "b" });
 
@@ -43,11 +44,11 @@ describe("review fixes", () => {
         resolved.guardedChords,
         (binding) => Equal.equals(binding.platform, "windows-linux") && Equal.equals(binding.chord, ctrlB)
       );
-      expect(guardsCtrlB).toBe(true);
+      pipe(guardsCtrlB, assertTrue);
       const activeCtrlB = A.some(resolved.commands, (command) =>
         A.some(command.keybindings, (binding) => Equal.equals(binding.chord, ctrlB))
       );
-      expect(activeCtrlB).toBe(false);
+      pipe(activeCtrlB, assertFalse);
       yield* Effect.void;
     })
   );
@@ -62,7 +63,7 @@ describe("review fixes", () => {
         altKey: true,
         modifierAltGraph: true,
       });
-      expect(O.isNone(chordFromKeyboardEvent(altGr, "windows-linux"))).toBe(true);
+      assertNone(chordFromKeyboardEvent(altGr, "windows-linux"));
       expect(ariaKeyShortcuts(KeyChord.make({ modifiers: ["control", "alt"], key: "1" }))).toBe("Control+Alt+1");
       expect(ariaKeyShortcuts(KeyChord.make({ modifiers: ["meta", "shift"], key: "z" }))).toBe("Meta+Shift+Z");
       yield* Effect.void;

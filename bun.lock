@@ -2385,6 +2385,8 @@
       },
       "devDependencies": {
         "@beep/md": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@lexical/headless": "catalog:",
         "@lexical/html": "catalog:",

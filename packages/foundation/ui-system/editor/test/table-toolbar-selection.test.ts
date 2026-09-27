@@ -1,12 +1,13 @@
 import { $selectionBlockType } from "@beep/editor/chat/toolbar";
 import { editorNodes } from "@beep/editor/nodes";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { $createCodeNode } from "@lexical/code";
 import { createHeadlessEditor } from "@lexical/headless";
 import { $createListItemNode, $createListNode } from "@lexical/list";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
 import { $createTableCellNode, $createTableNode, $createTableRowNode, TableCellHeaderStates } from "@lexical/table";
 import { $createParagraphNode, $createTextNode, $getRoot } from "lexical";
-import { describe, expect, it } from "vitest";
 import type { BlockType } from "@beep/editor/chat/toolbar";
 import type { ElementNode, LexicalEditor, TextNode } from "lexical";
 

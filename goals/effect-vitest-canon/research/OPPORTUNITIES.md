@@ -3634,3 +3634,10 @@ before package verification; no generated SDK source was edited.
   each native test's spy through the public Fetch reference prevents cross-test
   reuse. A full-file run alongside filtered mutation controls would surface this
   interaction earlier; the failed audit remains a diagnostic receipt.
+
+- Editor projection strengthening initially used the pre-RC Option contract for
+  Array.filterMap and the wrong slash surface token. Full package checks exposed
+  both; replace with explicit filter/map over the declared slash-menu surface.
+  Parse every focused JSON outcome before reporting it green, and establish the
+  positive oracle before crediting mutation controls. A separate private disposal
+  probe also required preserving its method receiver with call(registry).
