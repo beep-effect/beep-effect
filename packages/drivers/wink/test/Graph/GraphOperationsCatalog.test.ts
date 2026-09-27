@@ -9,9 +9,10 @@ import * as O from "effect/Option";
 
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Catalog } from "@beep/nlp-processing/Graph/GraphOperations";
+import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 

@@ -1,6 +1,7 @@
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
+import { it } from "@beep/test-runner";
 import { WinkNlpToolkitLive } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Stream } from "effect";
 
 describe("Adjunct-parity NLP tools", () => {

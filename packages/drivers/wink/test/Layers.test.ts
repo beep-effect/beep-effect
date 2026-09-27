@@ -1,6 +1,7 @@
 import { tokenCount } from "@beep/nlp-processing/Core/Tokenization";
+import { it } from "@beep/test-runner";
 import { WinkEngine, WinkLayerAllLive } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 
 describe("Layers", () => {

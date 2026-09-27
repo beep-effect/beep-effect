@@ -1,6 +1,7 @@
 import { sentences, tokenCount, tokenize, tokenizeToDocument } from "@beep/nlp-processing/Core/Tokenization";
+import { it } from "@beep/test-runner";
 import { WinkTokenizationLive } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";

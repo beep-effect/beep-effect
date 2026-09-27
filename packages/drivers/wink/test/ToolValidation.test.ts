@@ -6,6 +6,7 @@ import { ExtractKeywords } from "@beep/nlp-processing/Tools/ExtractKeywords";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { TextSimilarity } from "@beep/nlp-processing/Tools/TextSimilarity";
 import { TverskySimilarity } from "@beep/nlp-processing/Tools/TverskySimilarity";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
   CorpusManagerError,
@@ -22,9 +23,9 @@ import {
   WinkError,
   WinkNlpToolkitLive,
 } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Exit, Schema, Stream } from "effect";
+import { Cause, Effect, Equal, Exit, pipe, Schema, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 
@@ -50,7 +51,7 @@ const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <
 });
 
 const assertDecodeFailure = Effect.fn("assertDecodeFailure")(function* <A, E>(decode: Effect.Effect<A, E>) {
-  assertTrue(Exit.isFailure(yield* Effect.exit(decode)));
+  pipe(yield* Effect.exit(decode), Exit.isFailure, assertTrue);
 });
 
 describe("Tool validation", () => {
@@ -215,7 +216,7 @@ describe("Tool validation", () => {
           onSuccess: () => "",
         });
 
-        assertTrue(Exit.isFailure(result));
+        pipe(result, Exit.isFailure, assertTrue);
         expect(rendered).toContain("learnCustomEntities");
         expect(rendered).toContain('incorrect token "not_a_tag"');
       })

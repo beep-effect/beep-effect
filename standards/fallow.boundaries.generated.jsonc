@@ -3856,6 +3856,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
@@ -3866,6 +3867,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"

@@ -8,9 +8,10 @@
 
 import { TextNode } from "@beep/nlp/Graph/Schema";
 import * as TG from "@beep/nlp-processing/Graph/TextGraph";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { WinkTokenizationLive } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Graph from "effect/Graph";
 

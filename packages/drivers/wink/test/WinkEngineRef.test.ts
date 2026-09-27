@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import {
   CustomEntityExample,
@@ -8,7 +9,7 @@ import {
   WinkEngineRef,
   WinkEngineRefLive,
 } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
