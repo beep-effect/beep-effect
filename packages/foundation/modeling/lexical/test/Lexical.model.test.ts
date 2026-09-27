@@ -27,8 +27,10 @@ import { PosInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
 import { QuoteNode as RuntimeQuoteNode } from "@lexical/rich-text";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -275,9 +277,9 @@ describe("Lexical.model", { concurrent: false }, () => {
   it("decodes the fixture editor state and captures nullish wire values as Options", () => {
     const state = decoded(decodeUnknownSerializedEditorStateResult(fixture));
 
-    expect(O.isSome(SerializedEditorState.decodeOption(fixture))).toBe(true);
-    expect(state.root.direction).toEqual(O.none());
-    expect(state.root.textFormat).toEqual(O.none());
+    pipe(SerializedEditorState.decodeOption(fixture), O.isSome, assertTrue);
+    assertNone(state.root.direction);
+    assertNone(state.root.textFormat);
     expect(state.root.children.map((node) => node.type)).toEqual([
       "heading",
       "paragraph",
@@ -296,7 +298,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     if (table?.type !== "table") {
       expect.fail("Expected decoded table node");
     }
-    expect(table.rowStriping).toEqual(O.none());
+    assertNone(table.rowStriping);
     const header = table.children[0];
     expect(header?.type).toBe("tablerow");
     if (header?.type !== "tablerow") {
@@ -362,7 +364,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           ([state]) => {
             const encodedState = decoded(encodeSerializedEditorStateResult(state));
             expect(decoded(decodeUnknownSerializedEditorStateResult(encodedState))).toEqual(state);
-            expect(SerializedEditorState.decodeOption(encodedState)).toEqual(O.some(state));
+            assertSome(SerializedEditorState.decodeOption(encodedState), state);
 
             return true;
           },
@@ -449,7 +451,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     const compatibility = Effect.runSync(analyzeEditorStateCompatibility(future));
     expect(compatibility.wire).toEqual(future);
     expect(compatibility.isCompatible).toBe(false);
-    expect(O.isNone(compatibility.state)).toBe(true);
+    assertNone(compatibility.state);
     expect(compatibility.issues).toHaveLength(1);
     expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
   });
@@ -469,9 +471,14 @@ describe("Lexical.model", { concurrent: false }, () => {
 
     const decoded = Result.getOrThrow(decodeUnknownSerializedEditorStateResult(valid));
     expect(Result.getOrThrow(encodeSerializedEditorStateResult(decoded))).toEqual(valid);
-    expect(
-      Result.isSuccess(decodeEditorStateFromJsonResult(Result.getOrThrow(encodeEditorStateFromJsonResult(decoded))))
-    ).toBe(true);
+    pipe(
+      decoded,
+      encodeEditorStateFromJsonResult,
+      Result.getOrThrow,
+      decodeEditorStateFromJsonResult,
+      Result.isSuccess,
+      assertTrue
+    );
 
     const nonJsonValues: ReadonlyArray<unknown> = [
       () => true,
@@ -525,12 +532,12 @@ describe("Lexical.model", { concurrent: false }, () => {
     ] as const;
 
     expect(decodeLexicalNodeResult(nodeWithExtension)._tag).toBe("Failure");
-    expect(O.isNone(LexicalNode.decodeUnknownOption(nodeWithExtension))).toBe(true);
+    assertNone(LexicalNode.decodeUnknownOption(nodeWithExtension));
     expect(decodeLexicalNodeResult(rootWithNestedExtension)._tag).toBe("Failure");
-    expect(O.isNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension))).toBe(true);
+    assertNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension));
     A.forEach(cases, ([stateWithExtension, jsonWithExtension]) => {
       expect(decodeSerializedEditorStateResult(stateWithExtension)._tag).toBe("Failure");
-      expect(O.isNone(SerializedEditorState.decodeOption(stateWithExtension))).toBe(true);
+      assertNone(SerializedEditorState.decodeOption(stateWithExtension));
       expect(decodeEditorStateFromJsonResult(jsonWithExtension)._tag).toBe("Failure");
       expect(Effect.runSyncExit(decodeEditorStateStrict(stateWithExtension))._tag).toBe("Failure");
       expect(Effect.runSync(decodeEditorStateLossless(stateWithExtension))).toEqual(stateWithExtension);
@@ -645,13 +652,13 @@ describe("Lexical.model", { concurrent: false }, () => {
       expect(decodeUnknownListNodeResult(node)._tag).toBe("Failure");
       expect(decodeUnknownLexicalNodeResult(node)._tag).toBe("Failure");
       expect(decodeUnknownSerializedEditorStateResult(state)._tag).toBe("Failure");
-      expect(O.isNone(SerializedEditorState.decodeOption(state))).toBe(true);
+      assertNone(SerializedEditorState.decodeOption(state));
       expect(decodeEditorStateFromJsonResult(source)._tag).toBe("Failure");
       expect(Effect.runSyncExit(decodeEditorStateStrict(state))._tag).toBe("Failure");
 
       const compatibility = Effect.runSync(analyzeEditorStateCompatibility(state));
       expect(compatibility.isCompatible).toBe(false);
-      expect(O.isNone(compatibility.state)).toBe(true);
+      assertNone(compatibility.state);
       expect(compatibility.wire).toEqual(state);
       expect(compatibility.issues).toHaveLength(1);
 
@@ -762,7 +769,7 @@ describe("Lexical.model", { concurrent: false }, () => {
 
     const misplacedRoot = decoded(decodeUnknownRootNodeResult(misplacedText.root));
     expect(() => SerializedEditorState.make({ root: misplacedRoot })).toThrow();
-    expect(Result.isFailure(decodeUnknownSerializedEditorStateResult(misplacedText))).toBe(true);
+    pipe(decodeUnknownSerializedEditorStateResult(misplacedText), Result.isFailure, assertTrue);
     expect(Effect.runSync(decodeEditorStateLossless(misplacedText))).toEqual(misplacedText);
     expect(Effect.runSyncExit(decodeEditorStateStrict(misplacedText))._tag).toBe("Failure");
   });
@@ -785,7 +792,7 @@ describe("Lexical.model", { concurrent: false }, () => {
 
     A.forEach([text("standalone leaf"), paragraph, list, table, root], (input) => {
       const result = decodeUnknownLexicalNodeResult(input);
-      expect(Result.isSuccess(result)).toBe(true);
+      pipe(result, Result.isSuccess, assertTrue);
       if (Result.isSuccess(result)) {
         expect(matchedNodeType(result.success)).toBe(input.type);
       }
@@ -800,7 +807,7 @@ describe("Lexical.model", { concurrent: false }, () => {
         { ...tableRow, children: [paragraph] },
         { ...tableCell, children: [text("misplaced cell text")] },
       ],
-      (input) => expect(Result.isFailure(decodeUnknownLexicalNodeResult(input))).toBe(true)
+      (input) => pipe(decodeUnknownLexicalNodeResult(input), Result.isFailure, assertTrue)
     );
   });
 
@@ -818,7 +825,7 @@ describe("Lexical.model", { concurrent: false }, () => {
 
     const compatibility = Effect.runSync(analyzeEditorStateCompatibility(empty));
     expect(compatibility.wire).toEqual(empty);
-    expect(O.isNone(compatibility.state)).toBe(true);
+    assertNone(compatibility.state);
     expect(compatibility.issues).toHaveLength(1);
   });
 
@@ -827,30 +834,30 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(hasTextFormat(boldUnderline, TextFormatBits.bold)).toBe(true);
     expect(hasTextFormat(boldUnderline, TextFormatBits.underline)).toBe(true);
 
-    expect(Result.isFailure(decodeLexicalNodeResult({ ...text("bad format"), format: 1 << 11 }))).toBe(true);
-    expect(Result.isFailure(decodeLexicalNodeResult({ ...text("bad detail"), detail: 1 << 2 }))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeLexicalNodeResult({
-          ...element,
-          type: "list",
-          listType: "number",
-          start: -1,
-          tag: "ol",
-          children: [],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeUnknownLexicalNodeResult({
-          ...element,
-          type: "tablecell",
-          headerState: 4,
-          children: [],
-        })
-      )
-    ).toBe(true);
+    pipe(decodeLexicalNodeResult({ ...text("bad format"), format: 1 << 11 }), Result.isFailure, assertTrue);
+    pipe(decodeLexicalNodeResult({ ...text("bad detail"), detail: 1 << 2 }), Result.isFailure, assertTrue);
+    pipe(
+      decodeLexicalNodeResult({
+        ...element,
+        type: "list",
+        listType: "number",
+        start: -1,
+        tag: "ol",
+        children: [],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownLexicalNodeResult({
+        ...element,
+        type: "tablecell",
+        headerState: 4,
+        children: [],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("normalizes legacy serialized list starts and rejects corrupt item zeros", () => {
@@ -881,31 +888,31 @@ describe("Lexical.model", { concurrent: false }, () => {
       children: [{ value: 1 }],
     });
 
-    expect(
-      Result.isFailure(
-        decodeLexicalNodeResult({
-          ...element,
-          type: "list",
-          listType: "number",
-          start: 1,
-          tag: "ol",
-          children: [
-            {
-              ...element,
-              type: "listitem",
-              value: 0,
-              children: [text("corrupt zero")],
-            },
-            {
-              ...element,
-              type: "listitem",
-              value: 0,
-              children: [text("duplicate corrupt zero")],
-            },
-          ],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeLexicalNodeResult({
+        ...element,
+        type: "list",
+        listType: "number",
+        start: 1,
+        tag: "ol",
+        children: [
+          {
+            ...element,
+            type: "listitem",
+            value: 0,
+            children: [text("corrupt zero")],
+          },
+          {
+            ...element,
+            type: "listitem",
+            value: 0,
+            children: [text("duplicate corrupt zero")],
+          },
+        ],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("normalizes compatible legacy decorator and code metadata", () => {
@@ -933,25 +940,29 @@ describe("Lexical.model", { concurrent: false }, () => {
       )
     ).toMatchObject({ language: O.none() });
 
-    expect(
-      Result.isFailure(
-        decodeLexicalNodeResult({
-          type: "youtube",
-          version: 1,
-          videoID: "https://youtu.be/not-valid",
-          format: "",
-        })
-      )
-    ).toBe(true);
-    expect(Result.isFailure(decodeLexicalNodeResult({ type: "artifact-ref", version: 1, artifactId: "bad id" }))).toBe(
-      true
+    pipe(
+      decodeLexicalNodeResult({
+        type: "youtube",
+        version: 1,
+        videoID: "https://youtu.be/not-valid",
+        format: "",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeLexicalNodeResult({ type: "artifact-ref", version: 1, artifactId: "bad id" }),
+      Result.isFailure,
+      assertTrue
     );
   });
 
   it("rejects nodes outside the v1 union", () => {
-    expect(
-      Result.isFailure(decodeUnknownLexicalNodeResult({ type: "mermaid", version: 1, source: "flowchart TD" }))
-    ).toBe(true);
+    pipe(
+      decodeUnknownLexicalNodeResult({ type: "mermaid", version: 1, source: "flowchart TD" }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("projects plain text", () => {

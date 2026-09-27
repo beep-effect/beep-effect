@@ -19,6 +19,8 @@ import { refineSafeDocument } from "@beep/md/Md.safe";
 import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -256,7 +258,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
       ],
     });
 
-    expect(Result.isSuccess(refineSafeDocument(document))).toBe(true);
+    pipe(refineSafeDocument(document), Result.isSuccess, assertTrue);
     expect(roundTrip(document)).toEqual(converged);
     expect(roundTrip(converged)).toEqual(converged);
   });
@@ -332,12 +334,13 @@ describe("Lexical.codec", { concurrent: false }, () => {
     expect(labeledNode.type).toBe("artifact-ref");
     if (labeledNode.type === "artifact-ref") {
       expect(labeledNode.artifactId).toBe("artifact-123");
-      expect(labeledNode.label).toEqual(O.some("Quarterly report"));
+      assertSome(labeledNode.label, "Quarterly report");
     }
 
     const unlabeledNode = Effect.runSync(blockToLexical(unlabeled));
+    expect(unlabeledNode.type).toBe("artifact-ref");
     if (unlabeledNode.type === "artifact-ref") {
-      expect(unlabeledNode.label).toEqual(O.none());
+      assertNone(unlabeledNode.label);
     }
 
     const document = MdModel.Document.make({ children: [labeled, unlabeled] });
@@ -408,19 +411,20 @@ describe("Lexical.codec", { concurrent: false }, () => {
         language: "ts bad",
       })
     );
-    expect(invalidLanguage.language).toEqual(O.none());
+    assertNone(invalidLanguage.language);
 
     const validLanguage = MdModel.Pre.make({ value: "console.log('beep')", language: O.some("ts") });
 
     const invalidNode = Effect.runSync(blockToLexical(invalidLanguage));
     expect(invalidNode.type).toBe("code");
     if (invalidNode.type === "code") {
-      expect(invalidNode.language).toEqual(O.none());
+      assertNone(invalidNode.language);
     }
 
     const validNode = Effect.runSync(blockToLexical(validLanguage));
+    expect(validNode.type).toBe("code");
     if (validNode.type === "code") {
-      expect(validNode.language).toEqual(O.some("ts"));
+      assertSome(validNode.language, "ts");
     }
 
     expect(roundTrip(MdModel.Document.make({ children: [invalidLanguage] }))).toEqual(
@@ -603,17 +607,19 @@ describe("Lexical.codec", { concurrent: false }, () => {
         })
       )
     );
+    expect(image.type).toBe("paragraph");
     if (image.type === "paragraph") {
       const link = image.children[0];
       expect(link?.type).toBe("link");
       if (link?.type === "link") {
-        expect(link.title).toEqual(O.some("Image title"));
+        assertSome(link.title, "Image title");
       }
     }
 
     const raw = Effect.runSync(
       blockToLexical(MdModel.P.make({ children: [MdModel.RawMarkdown.make({ value: "**trusted**" })] }))
     );
+    expect(raw.type).toBe("paragraph");
     if (raw.type === "paragraph") {
       expect(raw.children[0]?.type).toBe("text");
     }
