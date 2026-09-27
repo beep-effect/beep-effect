@@ -1,0 +1,179 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 11,
+  "numPassedTests": 9,
+  "numFailedTests": 0,
+  "numPendingTests": 2,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790412336007,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Runpod declared-field equivalence"],
+          "fullName": "Runpod declared-field equivalence treats field-equal errors as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal errors as equivalent and field-different ones as distinct",
+          "duration": 1.4028299999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Runpod declared-field equivalence"],
+          "fullName": "Runpod declared-field equivalence treats defect-only differences as equivalent",
+          "status": "passed",
+          "title": "treats defect-only differences as equivalent",
+          "duration": 1.2030230000000302,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790412339932,
+      "endTime": 1790412339933.4028,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/runpod/test/Runpod.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod keeps the generated operation surface complete",
+          "status": "passed",
+          "title": "keeps the generated operation surface complete",
+          "duration": 17.81814200000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod sends typed operations with expected auth, query, path, and JSON body encoding",
+          "status": "passed",
+          "title": "sends typed operations with expected auth, query, path, and JSON body encoding",
+          "duration": 17.689634999999726,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
+          "status": "passed",
+          "title": "enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
+          "duration": 17.60822999999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod maps status and transport failures into typed errors",
+          "status": "passed",
+          "title": "maps status and transport failures into typed errors",
+          "duration": 17.599846999999954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod supports raw requests for ahead-of-spec endpoints",
+          "status": "passed",
+          "title": "supports raw requests for ahead-of-spec endpoints",
+          "duration": 17.59962600000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod parses and fetches the Runpod llms.txt documentation index",
+          "status": "passed",
+          "title": "parses and fetches the Runpod llms.txt documentation index",
+          "duration": 38.28222000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod"],
+          "fullName": "@beep/runpod round-trips schema-derived config, error, raw, and docs models",
+          "status": "passed",
+          "title": "round-trips schema-derived config, error, raw, and docs models",
+          "duration": 38.22516299999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790412339985,
+      "endTime": 1790412340041.2822,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/runpod/test/Runpod.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/runpod live"],
+          "fullName": "@beep/runpod live lists pods when RUNPOD_API_KEY is configured",
+          "status": "skipped",
+          "title": "lists pods when RUNPOD_API_KEY is configured",
+          "duration": 9.302586999999676,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/runpod live"],
+          "fullName": "@beep/runpod live fetches the unauthenticated OpenAPI document",
+          "status": "skipped",
+          "title": "fetches the unauthenticated OpenAPI document",
+          "duration": 9.079694000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790412336007,
+      "endTime": 1790412336007,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/runpod/test/integration/Runpod.live.test.ts"
+    }
+  ]
+}

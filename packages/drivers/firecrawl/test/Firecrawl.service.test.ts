@@ -1,6 +1,9 @@
 import * as F from "@beep/firecrawl";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { thunkTrue } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -178,23 +181,12 @@ const makeFakeClient = (overrides: Partial<F.FirecrawlSdkClient> = {}): F.Firecr
 };
 
 const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <SchemaT extends S.Codec<unknown, unknown>>(
-  schema: SchemaT
+  schema: SchemaT,
+  value: SchemaT["Type"]
 ) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(equivalent(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("@beep/firecrawl", () => {
@@ -204,7 +196,7 @@ describe("@beep/firecrawl", () => {
       const payload = yield* decodeFFirecrawlScrapePayload({ url: "https://example.com" });
 
       expect(payload.url).toBe("https://example.com");
-      expect(O.isNone(payload.options)).toBe(true);
+      assertNone(payload.options);
     })
   );
 
@@ -221,9 +213,9 @@ describe("@beep/firecrawl", () => {
       const encoded = yield* encodeFFirecrawlConfigInput(config);
 
       expect(config.apiUrl).toBe("https://api.firecrawl.dev");
-      expect(config.backoffFactor).toEqual(O.some(2));
-      expect(config.maxRetries).toEqual(O.some(3));
-      expect(config.timeoutMs).toEqual(O.some(1_000));
+      assertSome(config.backoffFactor, 2);
+      assertSome(config.maxRetries, 3);
+      assertSome(config.timeoutMs, 1_000);
       expect(encoded).toEqual({
         apiKey: "fc-test-key",
         apiUrl: "https://api.firecrawl.dev",
@@ -244,37 +236,73 @@ describe("@beep/firecrawl", () => {
       });
       const encoded = yield* encodeFFirecrawlApiFailure(failure);
 
-      expect(failure.status).toEqual(O.some(429));
+      assertSome(failure.status, 429);
       expect(encoded).toEqual({
         error: "Unauthorized",
         status: 429,
         success: false,
       });
-      expect(F.FirecrawlError.fromReason("transport", { status: -1 }).status).toEqual(O.none());
-      expect(O.isSome(decodeWatcherEventOption({ error: "watcher error", type: "error" }))).toBe(true);
+      assertNone(F.FirecrawlError.fromReason("transport", { status: -1 }).status);
+      assertSome(O.map(decodeWatcherEventOption({ error: "watcher error", type: "error" }), thunkTrue), true);
     })
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips crispened schema invariants through derived arbitraries",
-    Effect.fnUntraced(function* () {
-      yield* assertRoundTrip(F.FirecrawlApiUrl);
-      yield* assertRoundTrip(F.FirecrawlConfigInput);
-      yield* assertRoundTrip(F.FirecrawlMethodName);
-      yield* assertRoundTrip(F.FirecrawlErrorReason);
-      yield* assertRoundTrip(F.FirecrawlCodecErrorReason);
-      yield* assertRoundTrip(F.FirecrawlApiFailure);
-      yield* assertRoundTrip(F.FirecrawlErrorOptions);
-      yield* assertRoundTrip(F.FirecrawlError);
-      yield* assertRoundTrip(F.FirecrawlFormatType);
-      yield* assertRoundTrip(F.FirecrawlScrapeActionType);
-      yield* assertRoundTrip(F.FirecrawlSearchSourceType);
-      yield* assertRoundTrip(F.FirecrawlJobStatus);
-      yield* assertRoundTrip(F.FirecrawlAgentStatus);
-      yield* assertRoundTrip(F.FirecrawlBrowserLanguage);
-      yield* assertRoundTrip(F.FirecrawlWatcherKind);
-      yield* assertRoundTrip(F.FirecrawlWatcherEventType);
-    })
+    [
+      Arbitrary.schema(F.FirecrawlApiUrl),
+      Arbitrary.schema(F.FirecrawlConfigInput),
+      Arbitrary.schema(F.FirecrawlMethodName),
+      Arbitrary.schema(F.FirecrawlErrorReason),
+      Arbitrary.schema(F.FirecrawlCodecErrorReason),
+      Arbitrary.schema(F.FirecrawlApiFailure),
+      Arbitrary.schema(F.FirecrawlErrorOptions),
+      Arbitrary.schema(F.FirecrawlError),
+      Arbitrary.schema(F.FirecrawlFormatType),
+      Arbitrary.schema(F.FirecrawlScrapeActionType),
+      Arbitrary.schema(F.FirecrawlSearchSourceType),
+      Arbitrary.schema(F.FirecrawlJobStatus),
+      Arbitrary.schema(F.FirecrawlAgentStatus),
+      Arbitrary.schema(F.FirecrawlBrowserLanguage),
+      Arbitrary.schema(F.FirecrawlWatcherKind),
+      Arbitrary.schema(F.FirecrawlWatcherEventType),
+    ],
+    Effect.fnUntraced(function* ([
+      apiUrl,
+      config,
+      method,
+      reason,
+      codecReason,
+      failure,
+      errorOptions,
+      error,
+      format,
+      action,
+      searchSource,
+      jobStatus,
+      agentStatus,
+      language,
+      watcherKind,
+      eventType,
+    ]) {
+      yield* assertRoundTrip(F.FirecrawlApiUrl, apiUrl);
+      yield* assertRoundTrip(F.FirecrawlConfigInput, config);
+      yield* assertRoundTrip(F.FirecrawlMethodName, method);
+      yield* assertRoundTrip(F.FirecrawlErrorReason, reason);
+      yield* assertRoundTrip(F.FirecrawlCodecErrorReason, codecReason);
+      yield* assertRoundTrip(F.FirecrawlApiFailure, failure);
+      yield* assertRoundTrip(F.FirecrawlErrorOptions, errorOptions);
+      yield* assertRoundTrip(F.FirecrawlError, error);
+      yield* assertRoundTrip(F.FirecrawlFormatType, format);
+      yield* assertRoundTrip(F.FirecrawlScrapeActionType, action);
+      yield* assertRoundTrip(F.FirecrawlSearchSourceType, searchSource);
+      yield* assertRoundTrip(F.FirecrawlJobStatus, jobStatus);
+      yield* assertRoundTrip(F.FirecrawlAgentStatus, agentStatus);
+      yield* assertRoundTrip(F.FirecrawlBrowserLanguage, language);
+      yield* assertRoundTrip(F.FirecrawlWatcherKind, watcherKind);
+      yield* assertRoundTrip(F.FirecrawlWatcherEventType, eventType);
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect(
@@ -301,16 +329,16 @@ describe("@beep/firecrawl", () => {
           { futureField: { enabled: true }, markdown: "document" },
         ],
       });
-      expect(O.isNone(decodeUnknownFFirecrawlScrapeOptionsOption(42))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlScrapeOptionsOption([]))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlDocumentOption({ markdown: 42 }))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlSearchDataOption({ web: [{ url: 42 }] }))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlMonitorListDataOption([42]))).toBe(true);
-      expect(O.isNone(decodeUnknownFFirecrawlScrapeSuccessOption({ data: 42 }))).toBe(true);
+      assertNone(decodeUnknownFFirecrawlScrapeOptionsOption(42));
+      assertNone(decodeUnknownFFirecrawlScrapeOptionsOption([]));
+      assertNone(decodeUnknownFFirecrawlDocumentOption({ markdown: 42 }));
+      assertNone(decodeUnknownFFirecrawlSearchDataOption({ web: [{ url: 42 }] }));
+      assertNone(decodeUnknownFFirecrawlMonitorListDataOption([42]));
+      assertNone(decodeUnknownFFirecrawlScrapeSuccessOption({ data: 42 }));
     })
   );
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()))((it) => {
+  it.layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()), { timeout: "5 seconds" })((it) => {
     it.effect(
       "wraps SDK scrape output in a decoded success class",
       Effect.fnUntraced(function* () {
@@ -429,12 +457,13 @@ describe("@beep/firecrawl", () => {
     );
   });
 
-  layer(
+  it.layer(
     F.Firecrawl.makeLayerFromClient(
       makeFakeClient({
         scrape: () => Promise.reject({ name: "SdkError", statusCode: 429 }),
       })
-    )
+    ),
+    { timeout: "5 seconds" }
   )((it) => {
     it.effect(
       "translates SDK throws into sanitized FirecrawlError values",
@@ -444,21 +473,20 @@ describe("@beep/firecrawl", () => {
           firecrawl.scrape(F.FirecrawlScrapePayload.make({ url: "https://example.com" }))
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(F.FirecrawlError);
-            expect(error.value.reason).toBe("sdk thrown");
-            expect(error.value.status).toEqual(O.some(429));
-          }
-        }
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, F.FirecrawlError);
+            assertSome(error.status, 429);
+            return error.reason;
+          }),
+          "sdk thrown"
+        );
       })
     );
   });
 
-  layer(
+  it.layer(
     F.Firecrawl.makeLayerFromClient(
       makeFakeClient({
         getQueueStatus: () =>
@@ -467,7 +495,8 @@ describe("@beep/firecrawl", () => {
             maxConcurrency: Number.POSITIVE_INFINITY,
           }),
       })
-    )
+    ),
+    { timeout: "5 seconds" }
   )((it) => {
     it.effect(
       "maps malformed SDK responses to response-decoding errors",
@@ -475,16 +504,15 @@ describe("@beep/firecrawl", () => {
         const firecrawl = yield* F.Firecrawl;
         const exit = yield* Effect.exit(firecrawl.getQueueStatus(F.FirecrawlGetQueueStatusPayload.make({})));
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(F.FirecrawlError);
-            expect(error.value.method).toEqual(O.some("getQueueStatus"));
-            expect(error.value.reason).toBe("response decoding");
-          }
-        }
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, F.FirecrawlError);
+            assertSome(error.method, "getQueueStatus");
+            return error.reason;
+          }),
+          "response decoding"
+        );
       })
     );
   });
@@ -503,26 +531,30 @@ describe("@beep/firecrawl", () => {
     },
   ]);
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => watcher })))((it) => {
-    it.effect(
-      "streams watcher events and closes the SDK watcher after done",
-      Effect.fnUntraced(function* () {
-        const firecrawl = yield* F.Firecrawl;
-        const events = yield* firecrawl
-          .watcher(F.FirecrawlWatcherPayload.make({ jobId: "crawl-id" }))
-          .pipe(Stream.runCollect);
-        const values = A.fromIterable(events);
+  it.layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => watcher })), { timeout: "5 seconds" })(
+    (it) => {
+      it.effect(
+        "streams watcher events and closes the SDK watcher after done",
+        Effect.fnUntraced(function* () {
+          const firecrawl = yield* F.Firecrawl;
+          const events = yield* firecrawl
+            .watcher(F.FirecrawlWatcherPayload.make({ jobId: "crawl-id" }))
+            .pipe(Stream.runCollect);
+          const values = A.fromIterable(events);
 
-        expect(watcher.started).toBe(true);
-        expect(watcher.closed).toBe(true);
-        expect(A.map(values, (event) => event.type)).toEqual(["document", "done"]);
-      })
-    );
-  });
+          expect(watcher.started).toBe(true);
+          expect(watcher.closed).toBe(true);
+          expect(A.map(values, (event) => event.type)).toEqual(["document", "done"]);
+        })
+      );
+    }
+  );
 
   const invalidDoneWatcher = new FakeFirecrawlWatcher([{ eventName: "done", payload: { data: { markdown: "bad" } } }]);
 
-  layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => invalidDoneWatcher })))((it) => {
+  it.layer(F.Firecrawl.makeLayerFromClient(makeFakeClient({ watcher: () => invalidDoneWatcher })), {
+    timeout: "5 seconds",
+  })((it) => {
     it.effect(
       "fails watcher streams when terminal event payloads cannot decode",
       Effect.fnUntraced(function* () {
@@ -531,16 +563,15 @@ describe("@beep/firecrawl", () => {
           firecrawl.watcher(F.FirecrawlWatcherPayload.make({ jobId: "crawl-id" })).pipe(Stream.runCollect)
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        const error = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
         expect(invalidDoneWatcher.closed).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
-          if (O.isSome(error)) {
-            expect(error.value).toBeInstanceOf(F.FirecrawlError);
-            expect(error.value.reason).toBe("response decoding");
-          }
-        }
+        assertSome(
+          O.map(error, (error) => {
+            assertInstanceOf(error, F.FirecrawlError);
+            return error.reason;
+          }),
+          "response decoding"
+        );
       })
     );
   });

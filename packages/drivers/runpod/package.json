@@ -80,6 +80,7 @@
   },
   "devDependencies": {
     "@beep/codegen-kit": "workspace:^",
+    "@beep/test-runner": "workspace:^",
     "@effect/openapi-generator": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
