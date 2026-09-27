@@ -111,14 +111,32 @@ import {
 } from "@beep/rdf/Vocab/Skos";
 import { XSD_ANY_URI, XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const LanguageTagEncodeEffect = S.encodeEffect(LanguageTag);
+const LanguageTagDecodeEffect = S.decodeEffect(LanguageTag);
+const PrefixMapDecodeEffect = S.decodeEffect(PrefixMap);
+const LiteralDecodeEffect = S.decodeEffect(Literal);
+const TermEncodeEffect = S.encodeEffect(Term);
+const TermDecodeEffect = S.decodeEffect(Term);
+const SubjectEncodeEffect = S.encodeEffect(Subject);
+const SubjectDecodeEffect = S.decodeEffect(Subject);
+const ObjectTermEncodeEffect = S.encodeEffect(ObjectTerm);
+const ObjectTermDecodeEffect = S.decodeEffect(ObjectTerm);
+const GraphTermEncodeEffect = S.encodeEffect(GraphTerm);
+const GraphTermDecodeEffect = S.decodeEffect(GraphTerm);
+const JsonLdDocumentDecodeEffect = S.decodeEffect(JsonLdDocument);
+const EvidenceAnchorDecodeEffect = S.decodeEffect(EvidenceAnchor);
+const WebAnnotationFromEvidenceAnchorDecodeEffect = S.decodeEffect(WebAnnotationFromEvidenceAnchor);
+const SemanticSchemaMetadataDecodeEffect = S.decodeEffect(SemanticSchemaMetadata);
 const decodeBlankNode = S.decodeUnknownEffect(BlankNode);
 const decodeCurie = S.decodeUnknownEffect(Curie);
 const decodeJsonLdContext = S.decodeUnknownEffect(JsonLdContext);
@@ -162,46 +180,6 @@ const decodeRelativeUriReference = RelativeURIReference.decodeUnknownSync;
 const decodePrefixLabel = PrefixLabel.decodeUnknownSync;
 const decodePrefixMap = PrefixMap.decodeUnknownSync;
 const encodePrefixMap = S.encodeEffect(PrefixMap);
-
-const assertRoundTrips = Effect.fn("assertRoundTrips")(function* <
-  Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>,
->(schema: Schema, runs = 25) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    { runs }
-  );
-
-  expect(result._tag).toBe("Passed");
-});
-
-const assertDecodeEncodeDecodeStable = Effect.fn("assertDecodeEncodeDecodeStable")(function* <
-  Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>,
->(schema: Schema, runs = 25) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([input]) =>
-      Effect.gen(function* () {
-        const firstEncoded = yield* S.encodeEffect(schema)(input);
-        const decoded = yield* S.decodeUnknownEffect(schema)(firstEncoded);
-        const encoded = yield* S.encodeEffect(schema)(decoded);
-        const decodedAgain = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(Equal.equals(decodedAgain, decoded)).toBe(true);
-
-        return true;
-      }),
-    { runs }
-  );
-
-  expect(result._tag).toBe("Passed");
-});
 
 const canParseWithNativeUrl = (value: string): boolean => {
   try {
@@ -360,44 +338,44 @@ describe("@beep/rdf IRI schemas", () => {
     }
   });
 
-  it("separates absolute, full, and relative IRI references", () => {
-    const relativeCases = [
-      "",
-      "#片段",
-      "?κλειδί=値",
-      "../résumé/δοκιμή?x=値#片段",
-      "//例え.テスト/path",
-      "///path",
-      "abc",
-      "/absolute/path",
-      "/segment/%C3%A9",
-      "folder/child:leaf",
-      "folder/%F0%90%8C%80",
-      ".",
-    ] as const;
+  it.effect("separates absolute, full, and relative IRI references", () =>
+    Effect.gen(function* () {
+      const relativeCases = [
+        "",
+        "#片段",
+        "?κλειδί=値",
+        "../résumé/δοκιμή?x=値#片段",
+        "//例え.テスト/path",
+        "///path",
+        "abc",
+        "/absolute/path",
+        "/segment/%C3%A9",
+        "folder/child:leaf",
+        "folder/%F0%90%8C%80",
+        ".",
+      ] as const;
 
-    expect(decodeAbsoluteIri("https://example.com/δοκιμή?x=1")).toBe("https://example.com/δοκιμή?x=1");
-    expect(decodeAbsoluteIri("mailto:用户@example.org")).toBe("mailto:用户@example.org");
-    expect(() => decodeAbsoluteIri("https://example.com/δοκιμή#frag")).toThrow(
-      "Expected a valid RFC 3987 absolute IRI"
-    );
-    expect(() => decodeAbsoluteIri("")).toThrow("Absolute IRI values must not be empty");
+      expect(decodeAbsoluteIri("https://example.com/δοκιμή?x=1")).toBe("https://example.com/δοκιμή?x=1");
+      expect(decodeAbsoluteIri("mailto:用户@example.org")).toBe("mailto:用户@example.org");
+      expect(() => decodeAbsoluteIri("https://example.com/δοκιμή#frag")).toThrow(
+        "Expected a valid RFC 3987 absolute IRI"
+      );
+      expect(() => decodeAbsoluteIri("")).toThrow("Absolute IRI values must not be empty");
 
-    for (const value of relativeCases) {
-      expect(decodeIriReference(value)).toBe(value);
-      expect(decodeRelativeIriReference(value)).toBe(value);
-    }
+      for (const value of relativeCases) {
+        expect(decodeIriReference(value)).toBe(value);
+        expect(decodeRelativeIriReference(value)).toBe(value);
+      }
 
-    expect(Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(RelativeIRIReference), { count: 1 }))).toHaveLength(
-      1
-    );
+      expect(yield* Arbitrary.sampleEffect(Arbitrary.schema(RelativeIRIReference), { count: 1 })).toHaveLength(1);
 
-    expect(decodeIriReference("folder:child/leaf")).toBe("folder:child/leaf");
-    expect(decodeRelativeIriReference("folder/child:leaf")).toBe("folder/child:leaf");
-    expect(() => decodeRelativeIriReference("folder:child/leaf")).toThrow(
-      "Expected a valid RFC 3987 relative IRI reference"
-    );
-  });
+      expect(decodeIriReference("folder:child/leaf")).toBe("folder:child/leaf");
+      expect(decodeRelativeIriReference("folder/child:leaf")).toBe("folder/child:leaf");
+      expect(() => decodeRelativeIriReference("folder:child/leaf")).toThrow(
+        "Expected a valid RFC 3987 relative IRI reference"
+      );
+    })
+  );
 
   it("rejects malformed relative references", () => {
     const cases = [
@@ -423,17 +401,20 @@ describe("@beep/rdf IRI schemas", () => {
   it("keeps native URL parsing separate from RFC 3987 validation", () => {
     const nativeUrlFriendlyButSpecInvalid = "https://example.com/\uE000";
 
-    expect(isIRI(nativeUrlFriendlyButSpecInvalid)).toBe(false);
-    expect(canParseWithNativeUrl(nativeUrlFriendlyButSpecInvalid)).toBe(true);
+    pipe(isIRI(nativeUrlFriendlyButSpecInvalid), assertFalse);
+    pipe(canParseWithNativeUrl(nativeUrlFriendlyButSpecInvalid), assertTrue);
   });
 });
 
 describe("@beep/rdf URI schemas and helpers", () => {
-  it("publishes a canonical arbitrary for URI values", () => {
-    expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed })).every(URI.is)
-    ).toBe(true);
-  });
+  it.effect("publishes a canonical arbitrary for URI values", () =>
+    Effect.gen(function* () {
+      pipe(
+        (yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed })).every(URI.is),
+        assertTrue
+      );
+    })
+  );
 
   it("accepts representative absolute and relative URI forms", () => {
     expect(decodeUri("https://example.com/path?q=1#frag")).toBe("https://example.com/path?q=1#frag");
@@ -461,9 +442,9 @@ describe("@beep/rdf URI schemas and helpers", () => {
 
     expect(resolveUriReference(base, "../next?id=1")).toBe("https://example.com/root/next?id=1");
     expect(resolveUriReference("../next?id=1")(base)).toBe("https://example.com/root/next?id=1");
-    expect(areUrisEquivalent("https://example.com:443/%7Ealice", "https://example.com/~alice")).toBe(true);
-    expect(areUrisEquivalent("https://example.com/~alice")("https://example.com:443/%7Ealice")).toBe(true);
-    expect(areUrisEquivalent("https://example.com/a", "https://example.com/b")).toBe(false);
+    pipe(areUrisEquivalent("https://example.com:443/%7Ealice", "https://example.com/~alice"), assertTrue);
+    pipe(areUrisEquivalent("https://example.com/~alice")("https://example.com:443/%7Ealice"), assertTrue);
+    pipe(areUrisEquivalent("https://example.com/a", "https://example.com/b"), assertFalse);
   });
 
   it("rejects malformed URI values", () => {
@@ -499,19 +480,19 @@ describe("@beep/rdf RDF term and dataset models", () => {
         "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
       );
       const invalidCurie = yield* Effect.exit(decodeCurie("missing-colon"));
-      expect(Exit.isFailure(invalidCurie)).toBe(true);
+      pipe(invalidCurie, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalidCurie)) {
         expect(Cause.pretty(invalidCurie.cause)).toContain("CURIE values must be of the form");
       }
       expect(() => LanguageTag.decodeUnknownSync("en_US")).toThrow("Language tags must use alphanumeric subtags");
       expect(() => makeBlankNode("")).toThrow("Blank node labels must not be empty");
       const emptyBlank = yield* Effect.exit(decodeBlankNode({ termType: "BlankNode", value: "" }));
-      expect(Exit.isFailure(emptyBlank)).toBe(true);
+      pipe(emptyBlank, Exit.isFailure, assertTrue);
       if (Exit.isFailure(emptyBlank)) {
         expect(Cause.pretty(emptyBlank.cause)).toContain("Blank node labels must not be empty");
       }
       const whitespaceBlank = yield* Effect.exit(decodeBlankNode({ termType: "BlankNode", value: " b0" }));
-      expect(Exit.isFailure(whitespaceBlank)).toBe(true);
+      pipe(whitespaceBlank, Exit.isFailure, assertTrue);
       if (Exit.isFailure(whitespaceBlank)) {
         expect(Cause.pretty(whitespaceBlank.cause)).toContain(
           "Blank node labels must not contain leading or trailing whitespace"
@@ -540,22 +521,22 @@ describe("@beep/rdf RDF term and dataset models", () => {
     expect(decodedNamedNode).toEqual(alice);
     expect(decodedLiteral).toEqual(typed);
     expect(blank).toEqual(BlankNode.make({ termType: "BlankNode", value: "b0" }));
-    expect(label.language).toEqual(O.some("EN"));
-    expect(typed.language).toEqual(O.none());
+    assertSome<string>(label.language, "EN");
+    assertNone(typed.language);
     expect(quad.graph).toEqual(graph);
-    expect(Term.is(alice)).toBe(true);
-    expect(Term.is(blank)).toBe(true);
-    expect(Term.is(label)).toBe(true);
-    expect(Term.is(defaultGraph)).toBe(true);
-    expect(Subject.is(alice)).toBe(true);
-    expect(Subject.is(blank)).toBe(true);
-    expect(ObjectTerm.is(person)).toBe(true);
-    expect(ObjectTerm.is(blank)).toBe(true);
-    expect(ObjectTerm.is(label)).toBe(true);
-    expect(GraphTerm.is(graph)).toBe(true);
-    expect(GraphTerm.is(blank)).toBe(true);
-    expect(GraphTerm.is(defaultGraph)).toBe(true);
-    expect(isQuad(quad)).toBe(true);
+    pipe(Term.is(alice), assertTrue);
+    pipe(Term.is(blank), assertTrue);
+    pipe(Term.is(label), assertTrue);
+    pipe(Term.is(defaultGraph), assertTrue);
+    pipe(Subject.is(alice), assertTrue);
+    pipe(Subject.is(blank), assertTrue);
+    pipe(ObjectTerm.is(person), assertTrue);
+    pipe(ObjectTerm.is(blank), assertTrue);
+    pipe(ObjectTerm.is(label), assertTrue);
+    pipe(GraphTerm.is(graph), assertTrue);
+    pipe(GraphTerm.is(blank), assertTrue);
+    pipe(GraphTerm.is(defaultGraph), assertTrue);
+    pipe(isQuad(quad), assertTrue);
   });
 
   it("supports direct and curried literal, quad, and dataset helpers", () => {
@@ -567,8 +548,8 @@ describe("@beep/rdf RDF term and dataset models", () => {
     const directDataset = makeDataset([curriedQuad, defaultGraphQuad]);
     const reorderedDataset = makeDataset([defaultGraphQuad, curriedQuad]);
 
-    expect(languageLiteral.language).toEqual(O.some("EN"));
-    expect(directLanguageLiteral.language).toEqual(O.some("EN"));
+    assertSome<string>(languageLiteral.language, "EN");
+    assertSome<string>(directLanguageLiteral.language, "EN");
     expect(serializeTerm(alice)).toBe("<https://example.com/people/alice>");
     expect(serializeTerm(blank)).toBe("_:b0");
     expect(serializeTerm(languageLiteral)).toBe('"Alice"@en');
@@ -581,9 +562,9 @@ describe("@beep/rdf RDF term and dataset models", () => {
     expect(A.map(sortDatasetQuads(directDataset), serializeQuad)).toEqual(
       A.map(sortDatasetQuads(reorderedDataset), serializeQuad)
     );
-    expect(areDatasetsEquivalent(directDataset, reorderedDataset)).toBe(true);
-    expect(areDatasetsEquivalent(reorderedDataset)(directDataset)).toBe(true);
-    expect(areDatasetsEquivalent(directDataset, makeDataset([makeQuad(bob, RDF_TYPE, person)]))).toBe(false);
+    pipe(areDatasetsEquivalent(directDataset, reorderedDataset), assertTrue);
+    pipe(areDatasetsEquivalent(reorderedDataset)(directDataset), assertTrue);
+    pipe(areDatasetsEquivalent(directDataset, makeDataset([makeQuad(bob, RDF_TYPE, person)])), assertFalse);
   });
 
   it.effect("decodes namespace bindings and prefix maps", () =>
@@ -633,16 +614,16 @@ describe("@beep/rdf JSON-LD models", () => {
         includeProperties: ["https://schema.org/name"],
       });
 
-      expect(isJsonLdKeyword("@context")).toBe(true);
-      expect(isJsonLdKeyword("@invalid")).toBe(false);
-      expect(context["@base"]).toEqual(O.some(decodeAbsoluteIri("https://example.com/")));
-      expect((yield* decodeJsonLdTermDefinition({ "@id": "https://schema.org/name" }))["@type"]).toEqual(O.none());
+      pipe(isJsonLdKeyword("@context"), assertTrue);
+      pipe(isJsonLdKeyword("@invalid"), assertFalse);
+      assertSome(context["@base"], decodeAbsoluteIri("https://example.com/"));
+      assertNone((yield* decodeJsonLdTermDefinition({ "@id": "https://schema.org/name" }))["@type"]);
       expect(JsonLdBlankNodeIdentifier.decodeUnknownSync("_:alice")).toBe("_:alice");
       expect(JsonLdNodeIdentifier.decodeUnknownSync("_:alice")).toBe("_:alice");
       expect((yield* decodeJsonLdReferenceValue({ "@id": "https://example.com/alice" }))["@id"]).toBe(
         "https://example.com/alice"
       );
-      expect((yield* decodeJsonLdLiteralValue({ "@value": true }))["@value"]).toBe(true);
+      pipe((yield* decodeJsonLdLiteralValue({ "@value": true }))["@value"], assertTrue);
       expect(JsonLdPropertyValue.decodeUnknownSync({ "@id": "_:bob" })).toEqual(
         yield* decodeJsonLdReferenceValue({ "@id": "_:bob" })
       );
@@ -650,7 +631,7 @@ describe("@beep/rdf JSON-LD models", () => {
         yield* decodeJsonLdLiteralValue({ "@value": 1 })
       );
       expect(document["@graph"]).toEqual([node]);
-      expect(frame.includeProperties).toEqual(O.some(["https://schema.org/name"]));
+      assertSome(frame.includeProperties, ["https://schema.org/name"]);
     })
   );
 
@@ -681,11 +662,11 @@ describe("@beep/rdf semantic metadata", () => {
     const metadata = makeSemanticSchemaMetadata(semanticMetadataInput);
     const decodedMetadata = pipe(SemanticSchemaMetadata.decodeUnknownResult(semanticMetadataInput), Result.getOrThrow);
 
-    expect(isSemanticSchemaMetadataKind("identifier")).toBe(true);
-    expect(isSemanticSchemaStatus("stable")).toBe(true);
-    expect(isSemanticSchemaSpecificationDisposition("informative")).toBe(true);
-    expect(isSemanticRepresentationKind("JSON-LD")).toBe(true);
-    expect(isSemanticSchemaMetadata(metadata)).toBe(true);
+    pipe(isSemanticSchemaMetadataKind("identifier"), assertTrue);
+    pipe(isSemanticSchemaStatus("stable"), assertTrue);
+    pipe(isSemanticSchemaSpecificationDisposition("informative"), assertTrue);
+    pipe(isSemanticRepresentationKind("JSON-LD"), assertTrue);
+    pipe(isSemanticSchemaMetadata(metadata), assertTrue);
     expect(decodedMetadata).toEqual(metadata);
     expect(metadata.canonicalName).toBe("ExampleIdentifier");
   });
@@ -698,7 +679,7 @@ describe("@beep/rdf semantic metadata", () => {
           kind: "unknown",
         })
       );
-      expect(Exit.isFailure(invalid)).toBe(true);
+      pipe(invalid, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalid)) {
         expect(Cause.pretty(invalid.cause)).toContain("SemanticSchemaMetadataKind");
       }
@@ -713,29 +694,28 @@ describe("@beep/rdf semantic metadata", () => {
     })(S.Finite);
     const wrapped = S.Array(curried);
 
-    expect(O.map(getSemanticSchemaMetadata(direct), (m) => m.canonicalName)).toEqual(O.some("ExampleIdentifier"));
-    expect(O.map(getSemanticSchemaMetadata(wrapped), (m) => m.canonicalName)).toEqual(O.some("NestedIdentifier"));
-    expect(O.isNone(getSemanticSchemaMetadata(S.Array(S.String)))).toBe(true);
-    expect(O.isNone(getSemanticSchemaMetadata(S.Boolean))).toBe(true);
+    assertSome(
+      O.map(getSemanticSchemaMetadata(direct), (m) => m.canonicalName),
+      "ExampleIdentifier"
+    );
+    assertSome(
+      O.map(getSemanticSchemaMetadata(wrapped), (m) => m.canonicalName),
+      "NestedIdentifier"
+    );
+    pipe(S.String, S.Array, getSemanticSchemaMetadata, assertNone);
+    pipe(S.Boolean, getSemanticSchemaMetadata, assertNone);
   });
 
-  it.effect("round-trips decode/encode for metadata derived from the source schema", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(SemanticSchemaMetadata)]),
-        ([metadata]) =>
-          Effect.gen(function* () {
-            expect(yield* decodeSemanticSchemaMetadata(yield* encodeSemanticSchemaMetadata(metadata))).toEqual(
-              metadata
-            );
+  it.effect.prop(
+    "round-trips decode/encode for metadata derived from the source schema",
+    [Arbitrary.schema(SemanticSchemaMetadata)],
+    ([metadata]) =>
+      Effect.gen(function* () {
+        expect(yield* decodeSemanticSchemaMetadata(yield* encodeSemanticSchemaMetadata(metadata))).toEqual(metadata);
 
-            return true;
-          }),
-        fcRuns(50)
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+        return true;
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });
 
@@ -762,11 +742,11 @@ describe("@beep/rdf crispening parity", () => {
       const frame = JsonLdFrame.make({});
       const bundle = ProvBundle.make({ records: [] });
 
-      expect(literal.language).toEqual(O.none());
-      expect(quoteSelector.prefix).toEqual(O.none());
-      expect(quoteSelector.suffix).toEqual(O.none());
-      expect(fragmentSelector.conformsTo).toEqual(O.none());
-      expect(anchor.note).toEqual(O.none());
+      assertNone(literal.language);
+      assertNone(quoteSelector.prefix);
+      assertNone(quoteSelector.suffix);
+      assertNone(fragmentSelector.conformsTo);
+      assertNone(anchor.note);
 
       expect(yield* encodeLiteral(literal)).toEqual({
         termType: "Literal",
@@ -833,21 +813,155 @@ describe("@beep/rdf crispening parity", () => {
     })
   );
 
-  it.effect("round-trips schema-derived arbitrary values through crispened schemas", () =>
-    Effect.gen(function* () {
-      yield* assertDecodeEncodeDecodeStable(LanguageTag);
-      yield* assertRoundTrips(PrefixMap);
-      yield* assertDecodeEncodeDecodeStable(Literal);
-      yield* assertRoundTrips(Term);
-      yield* assertRoundTrips(Subject);
-      yield* assertRoundTrips(ObjectTerm);
-      yield* assertRoundTrips(GraphTerm);
-      yield* assertRoundTrips(JsonLdDocument);
-      yield* assertRoundTrips(EvidenceAnchor);
-      yield* assertRoundTrips(WebAnnotationFromEvidenceAnchor);
-      yield* assertRoundTrips(SemanticSchemaMetadata);
-    })
-  );
+  describe("round-trips schema-derived arbitrary values through crispened schemas", () => {
+    it.effect.prop(
+      "LanguageTag",
+      [Arbitrary.schema(LanguageTag)],
+      ([input]) =>
+        Effect.gen(function* () {
+          const firstEncoded = yield* LanguageTagEncodeEffect(input);
+          const decoded = yield* LanguageTagDecodeEffect(firstEncoded);
+          const encoded = yield* LanguageTagEncodeEffect(decoded);
+          const decodedAgain = yield* LanguageTagDecodeEffect(encoded);
+          pipe(Equal.equals(decodedAgain, decoded), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "PrefixMap",
+      [Arbitrary.schema(PrefixMap)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodePrefixMap(value);
+          const decoded = yield* PrefixMapDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "Literal",
+      [Arbitrary.schema(Literal)],
+      ([input]) =>
+        Effect.gen(function* () {
+          const firstEncoded = yield* encodeLiteral(input);
+          const decoded = yield* LiteralDecodeEffect(firstEncoded);
+          const encoded = yield* encodeLiteral(decoded);
+          const decodedAgain = yield* LiteralDecodeEffect(encoded);
+          pipe(Equal.equals(decodedAgain, decoded), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "Term",
+      [Arbitrary.schema(Term)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* TermEncodeEffect(value);
+          const decoded = yield* TermDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "Subject",
+      [Arbitrary.schema(Subject)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* SubjectEncodeEffect(value);
+          const decoded = yield* SubjectDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "ObjectTerm",
+      [Arbitrary.schema(ObjectTerm)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* ObjectTermEncodeEffect(value);
+          const decoded = yield* ObjectTermDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "GraphTerm",
+      [Arbitrary.schema(GraphTerm)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* GraphTermEncodeEffect(value);
+          const decoded = yield* GraphTermDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "JsonLdDocument",
+      [Arbitrary.schema(JsonLdDocument)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeJsonLdDocument(value);
+          const decoded = yield* JsonLdDocumentDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "EvidenceAnchor",
+      [Arbitrary.schema(EvidenceAnchor)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeEvidenceAnchor(value);
+          const decoded = yield* EvidenceAnchorDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "WebAnnotationFromEvidenceAnchor",
+      [Arbitrary.schema(WebAnnotationFromEvidenceAnchor)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeWebAnnotationFromEvidenceAnchor(value);
+          const decoded = yield* WebAnnotationFromEvidenceAnchorDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect.prop(
+      "SemanticSchemaMetadata",
+      [Arbitrary.schema(SemanticSchemaMetadata)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeSemanticSchemaMetadata(value);
+          const decoded = yield* SemanticSchemaMetadataDecodeEffect(encoded);
+          pipe(Equal.equals(decoded, value), assertTrue);
+
+          return true;
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+  });
 });
 
 describe("@beep/rdf package and vocabulary exports", () => {

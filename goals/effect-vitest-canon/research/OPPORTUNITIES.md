@@ -3641,3 +3641,12 @@ before package verification; no generated SDK source was edited.
   Parse every focused JSON outcome before reporting it green, and establish the
   positive oracle before crediting mutation controls. A separate private disposal
   probe also required preserving its method receiver with call(registry).
+
+## RDF focused property configuration omitted example boundaries
+
+While validating the PROV timestamp schema repair, a focused Vitest JSON report
+returned success with zero tests. The shared config selects only property-bearing
+files when BEEP_FC_NUM_RUNS is set, so the example-only ProvO file was excluded.
+Running it without the deep-sweep variable executed all eight cases successfully.
+The generated core law was separately verified with the 400-run floor. A focused
+proof wrapper that rejects zero executed tests would prevent accidental credit.

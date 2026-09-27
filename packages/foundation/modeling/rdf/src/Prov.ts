@@ -36,6 +36,22 @@ const provObjectRefChecks = S.makeFilterGroup(
   }
 );
 
+const provDateTimeCanonicalYearCheck = S.makeIsBetween<DateTime.Utc>({
+  order: DateTime.Order,
+  formatter: DateTime.formatIso,
+})(
+  {
+    minimum: DateTime.makeUnsafe("0000-01-01T00:00:00.000Z"),
+    maximum: DateTime.makeUnsafe("9999-12-31T23:59:59.999Z"),
+  },
+  {
+    identifier: $I`ProvDateTimeCanonicalYearCheck`,
+    title: "PROV Canonical Timestamp Year",
+    description: "A UTC instant whose canonical encoding fits the existing four-digit PROV timestamp wire format.",
+    message: "Expected a UTC instant with a canonical year from 0000 through 9999",
+  }
+);
+
 const provDateTimeChecks = S.makeFilterGroup(
   [
     S.isPattern(dateTimeRegExp, {
@@ -160,6 +176,13 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
 /**
  * PROV timestamp decoded to `DateTime.Utc`.
  *
+ * **Details**
+ *
+ * Decoded UTC instants must canonicalize to years 0000 through 9999, matching
+ * this codec's existing four-digit encoded format. Offset normalization is
+ * checked against the same bounds. This is the package wire contract, not a
+ * restriction on the complete PROV-O timestamp vocabulary.
+ *
  * **Example** (Decode to DateTime.Utc)
  *
  * ```ts
@@ -174,7 +197,7 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
  * @since 0.0.0
  */
 export const ProvDateTime = ProvDateTimeEncoded.pipe(
-  S.decodeTo(S.DateTimeUtcFromString),
+  S.decodeTo(S.DateTimeUtcFromString.check(provDateTimeCanonicalYearCheck)),
   SchemaUtils.withCodecStatics(["decodeResult"]),
   $I.annoteSchema("ProvDateTime", {
     description: "PROV timestamp decoded to DateTime.Utc.",
