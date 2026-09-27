@@ -1228,57 +1228,57 @@
     "file": "packages/documents/use-cases/test/Document.errors.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 461,
-    "lines": 11
+    "bytes": 497,
+    "lines": 12
   },
   {
     "file": "packages/documents/use-cases/test/FilingDecision.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 1715,
-    "lines": 44
+    "bytes": 1500,
+    "lines": 35
   },
   {
     "file": "packages/documents/use-cases/test/Sync.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 10132,
-    "lines": 270
+    "bytes": 12602,
+    "lines": 344
   },
   {
     "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 6516,
+    "bytes": 6761,
     "lines": 167
   },
   {
     "file": "packages/documents/use-cases/test/SyncCursor.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 4982,
-    "lines": 137
+    "bytes": 5700,
+    "lines": 153
   },
   {
     "file": "packages/documents/use-cases/test/SyncItem.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 7803,
-    "lines": 210
+    "bytes": 8183,
+    "lines": 219
   },
   {
     "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 9132,
-    "lines": 227
+    "bytes": 11104,
+    "lines": 262
   },
   {
     "file": "packages/documents/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/documents-use-cases",
     "kind": "test",
-    "bytes": 6908,
-    "lines": 154
+    "bytes": 7029,
+    "lines": 157
   },
   {
     "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
