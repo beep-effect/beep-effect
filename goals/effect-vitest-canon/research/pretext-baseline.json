@@ -1,0 +1,117 @@
+{
+  "package": "@beep/pretext",
+  "admittedFiles": [
+    "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+    "packages/drivers/pretext/test/Pretext.models.test.ts",
+    "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+    "packages/drivers/pretext/test/browser.test.ts"
+  ],
+  "sourceHead": "68f1396c9c236c4d5cd0c1c5fbfaa1e6dc7f0038",
+  "frozenCensusHead": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "upstreamDrift": "Pretext.models uses O.getOrThrow(R.get(...)) for three existing word-width accesses; every operand and expected line range is retained. The other three admitted files match the frozen bytes.",
+  "runtimes": [
+    {
+      "runtime": "node",
+      "wholeCommandSeconds": 4.221075098001165,
+      "registeredCases": 25,
+      "passed": 24,
+      "existingSkipped": 1,
+      "representedFiles": 4,
+      "sourceStable": true,
+      "versions": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [13.81982421875, 16.52099609375, 15.33349609375],
+      "loadAfter": [13.673828125, 16.44580078125, 15.3154296875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.43 avg60=0.75 avg300=0.78 total=263614914\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.75 avg60=0.42 avg300=0.14 total=96088478\nfull avg10=1.75 avg60=0.42 avg300=0.13 total=93282350\n",
+        "io": "some avg10=3.21 avg60=3.10 avg300=1.14 total=712519456\nfull avg10=2.67 avg60=2.50 avg300=0.90 total=642518180\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.29 avg60=0.70 avg300=0.77 total=263637667\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.17 avg60=0.39 avg300=0.13 total=96115485\nfull avg10=1.17 avg60=0.39 avg300=0.13 total=93308916\n",
+        "io": "some avg10=2.96 avg60=3.06 avg300=1.16 total=712620125\nfull avg10=2.45 avg60=2.47 avg300=0.91 total=642605098\n"
+      },
+      "reporterSha256": "c9366a41b1d31176616ae19a8ca196e52545e765fc47a8f2db493b5bdd0cde1b"
+    },
+    {
+      "runtime": "bun",
+      "wholeCommandSeconds": 2.9690213889989536,
+      "registeredCases": 25,
+      "passed": 24,
+      "existingSkipped": 1,
+      "representedFiles": 4,
+      "sourceStable": true,
+      "versions": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [12.10888671875, 15.96533203125, 15.17578125],
+      "loadAfter": [12.9013671875, 16.06591796875, 15.212890625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.05 avg60=0.53 avg300=0.72 total=263729300\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=2.77 avg60=0.99 avg300=0.28 total=96665743\nfull avg10=2.77 avg60=0.99 avg300=0.28 total=93849048\n",
+        "io": "some avg10=2.16 avg60=2.79 avg300=1.20 total=712983471\nfull avg10=1.84 avg60=2.27 avg300=0.95 total=642921675\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.04 avg60=0.51 avg300=0.72 total=263751391\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=2.63 avg60=1.02 avg300=0.29 total=96718237\nfull avg10=2.63 avg60=1.02 avg300=0.29 total=93900450\n",
+        "io": "some avg10=2.13 avg60=2.76 avg300=1.20 total=713075893\nfull avg10=1.87 avg60=2.26 avg300=0.96 total=642998744\n"
+      },
+      "reporterSha256": "957ffaeccb5c34a5fd1e3736b31e4fc2afae041c3875ecfc2cf05cd8397ea02e"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "96918c3bf8ad968a993d24d8c97ea69508d740732e21cc8c9a76bd1967d54c63"
+    },
+    {
+      "file": "packages/drivers/pretext/package.json",
+      "sha256": "b8dcea3d756742173991aa7601e75a88c9ee9692a5c7e9e4265207fd8c389b1d"
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "sha256": "401a7aaa35fd77edc6879d8177c3873822838c268ec1421106e98352af8c6d55"
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "sha256": "9a0bec88800fe309d3f790976203b85d73191b66d2500d905570c5d4395b59be"
+    },
+    {
+      "file": "packages/drivers/pretext/src/PretextCapture.service.ts",
+      "sha256": "03502fd429ff320c95725cd0f9878aacf898e597dbb5b18bbbe8f0147e147786"
+    },
+    {
+      "file": "packages/drivers/pretext/src/PretextCapture.test-layer.ts",
+      "sha256": "108c86256c3a063a9a6b83bda706e219614510ff1dd61f8d56975c2093dc6aa5"
+    },
+    {
+      "file": "packages/drivers/pretext/src/browser.ts",
+      "sha256": "4948a0e12d38ba9eac882fa4c832ae99abd6b156f0ed41450a1f27b63e601e4f"
+    },
+    {
+      "file": "packages/drivers/pretext/src/index.ts",
+      "sha256": "802f8ec6e40772f1004c20a156ba6fd2c2417e021437916236619b4a9db479d5"
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+      "sha256": "a5a7595981ac899de5b2c9a895c1c883e8fa0339cf006ca0a1c4a5465707921e"
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "sha256": "ea25c34f9b1f964157a22967400983c8f5ba7016675520ce506bb26b8b38ba5b"
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "sha256": "eac94514a22599ed5511c13abc31464c1df871e665e0906d2202c0d795f5bf4e"
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "sha256": "0e389b2ab26255f99a88235b92be74dc09b8621d5cf4d261715ef2d25938d02a"
+    }
+  ],
+  "interpretation": "Single observed baseline per runtime. No load adjustment or speed claim. Existing native DOM capture skip remains unexecuted coverage."
+}

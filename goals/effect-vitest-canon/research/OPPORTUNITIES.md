@@ -2490,3 +2490,15 @@ after test-runner devDependencies were added. Package audit and docgen had passe
 but they did not establish generated project-reference parity. Run tsconfig-sync
 and its check after adding runner dependencies, before early publication. The
 service-driver wave applied the generator to its six affected configs as well.
+
+## 2026-09-27: fleet readiness polling exhausted GraphQL quota
+
+Refreshing the active canonical Vitest PR fleet encountered `API rate limit
+already exceeded` during review and readiness queries. The GraphQL rateLimit
+query confirmed zero remaining requests; the REST rate-limit endpoint reported
+a different available bucket. Local proof and early pushes remained intact.
+Several detached monitors had also reached their lifetime or registration
+limits and required explicit resubmission. Preserve terminal receipts, avoid
+restarting live handles, and gate fresh review/merge decisions on recovered
+GraphQL evidence. A fleet-aware polling budget and a directly exposed next-poll
+control would prevent parallel monitors from exhausting shared account quota.
