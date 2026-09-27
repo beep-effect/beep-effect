@@ -1,0 +1,86 @@
+{
+  "package": "@beep/tika",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T12:36:47.611000+00:00",
+  "totalMs": 4088.63818359375,
+  "testCount": 70,
+  "files": [
+    {
+      "file": "packages/drivers/tika/test/Tika.errors.test.ts",
+      "ms": 8.687744140625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "ms": 115.63818359375,
+      "tests": 40
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "ms": 38.05029296875,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
+      "ms": 37.031494140625,
+      "tests": 9
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "ms": 7.584228515625,
+      "tests": 11
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig generates valid Tika Server configs for the nightly regression seed",
+      "ms": 114.63820799999985
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika keeps Tika error encoded shapes byte-identical",
+      "ms": 38.050173000000086
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika round-trips schema-derived extraction operation data through file-processing schemas",
+      "ms": 37.85879799999975
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika extracts text for a P1 text fixture",
+      "ms": 37.84304299999985
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika defers DOCX extraction behind an operation-level error",
+      "ms": 37.83243799999991
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "makeTikaServerFileProcessingEngine error boundary maps a slow Tika Server to operation-timed-out",
+      "ms": 35.64787299999989
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
+      "testName": "makeTikaAppFileProcessingEngine extracts trimmed text and stringified metadata via tika-app",
+      "ms": 34.80341200000021
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig applies Tika Server schema defaults and keeps encoded shapes stable",
+      "ms": 33.8269379999997
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig round-trips schema-derived Tika Server config through encoded form",
+      "ms": 33.62467699999979
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig strips trailing slashes from the base URL",
+      "ms": 33.58916199999976
+    }
+  ]
+}

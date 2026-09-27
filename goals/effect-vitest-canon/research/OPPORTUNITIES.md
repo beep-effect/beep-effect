@@ -3275,3 +3275,11 @@ new first-frame exit witness added branches to an existing dispatch callback.
 Use an Option match for the optional output target, keeping output writes and
 the successful-exit Deferred together. Run both root Fallow gates for this
 fixture repair; do not weaken the complexity policy or the staging witness.
+
+### Tika timing export must distinguish skips (2026-09-27)
+
+The private timing exporter initially accepted `pending` but Vitest5 emits
+`skipped` for dynamic context skips while counting them in `numPendingTests`.
+The exporter stopped before publishing the after summary. Accept the explicit
+status, omit skipped cases from slowest-executed rankings, and retain separate
+passed/skipped counts and the historical no-op caveat in timing context.

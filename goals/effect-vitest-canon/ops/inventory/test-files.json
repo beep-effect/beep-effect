@@ -2166,29 +2166,29 @@
     "file": "packages/drivers/tika/test/Tika.errors.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 4902,
-    "lines": 133
+    "bytes": 4938,
+    "lines": 134
   },
   {
     "file": "packages/drivers/tika/test/Tika.server.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 21412,
-    "lines": 582
+    "bytes": 24134,
+    "lines": 602
   },
   {
     "file": "packages/drivers/tika/test/Tika.service.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 6196,
-    "lines": 165
+    "bytes": 6262,
+    "lines": 166
   },
   {
     "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 10492,
-    "lines": 278
+    "bytes": 9857,
+    "lines": 247
   },
   {
     "file": "packages/drivers/tika/test/fixtures.ts",
@@ -2201,8 +2201,8 @@
     "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
     "package": "@beep/tika",
     "kind": "test",
-    "bytes": 6982,
-    "lines": 204
+    "bytes": 6941,
+    "lines": 184
   },
   {
     "file": "packages/drivers/tika/test/integration/live-fixtures.ts",
