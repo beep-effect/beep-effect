@@ -1,6 +1,8 @@
 import * as Core from "@beep/repo-docgen/Core";
+import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, FileSystem, Path, Stream } from "effect";
+import * as ChildProcess from "effect/process/ChildProcess";
 
 const fixturePath = new URL("./fixtures/section-example/", import.meta.url).pathname;
 const docgenBinPath = new URL("../src/bin.ts", import.meta.url).pathname;
@@ -85,44 +87,72 @@ describe("Core", () =>
         ["Code block does not have a matching closing fence:\na\n\n~~~ts\nconst a = 1"]
       ));
 
-    it.effect(
-      "typechecks an Example section harvested from the description",
-      Effect.fnUntraced(function* () {
-        const outDir = `${fixturePath}.tmp-docgen`;
-        const markerPath = `${outDir}/tsc-ran`;
-        const exampleFilesPath = `${outDir}/example-files`;
-        const removeMarker = Bun.spawn(["rm", "-f", markerPath, exampleFilesPath], {
-          stderr: "pipe",
-          stdout: "pipe",
-        });
-        yield* Effect.promise(() => removeMarker.exited);
-        const prepare = Bun.spawn(["mkdir", "-p", outDir], { stderr: "pipe", stdout: "pipe" });
-        yield* Effect.promise(() => prepare.exited);
-        yield* Effect.forEach(
-          ["seed.ts.md", "seed.tsx.md", "seed.mts.md", "seed.cts.md"],
-          (file) => Effect.promise(() => Bun.write(`${outDir}/${file}`, "")),
-          { concurrency: "unbounded" }
-        );
-        const child = Bun.spawn(["bun", docgenBinPath], {
-          cwd: fixturePath,
-          stderr: "pipe",
-          stdout: "pipe",
-        });
-        const [exitCode, stdout, stderr] = yield* Effect.all(
-          [
-            Effect.promise(() => child.exited),
-            Effect.promise(() => new Response(child.stdout).text()),
-            Effect.promise(() => new Response(child.stderr).text()),
-          ],
-          { concurrency: "unbounded" }
-        );
-        yield* Effect.promise(() => Bun.file(markerPath).text());
-        const exampleFiles = yield* Effect.promise(() => Bun.file(exampleFilesPath).text());
-        const result = { exampleFiles, exitCode, stderr, stdout, tscRan: true };
+    it.layer(BunServices.layer)("native compiler", (it) => {
+      it.effect(
+        "typechecks an Example section harvested from the description",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const completed = yield* Effect.scoped(
+            Effect.gen(function* () {
+              const fixture = yield* fs.makeTempDirectoryScoped({
+                directory: path.resolve(fixturePath, ".."),
+                prefix: ".section-example-",
+              });
+              yield* Effect.forEach(
+                ["src", "package.json", "docgen.json", "tsc-wrapper.sh"],
+                (entry) => fs.copy(path.join(fixturePath, entry), path.join(fixture, entry)),
+                { concurrency: "unbounded" }
+              );
+              const outDir = path.join(fixture, ".tmp-docgen");
+              const markerPath = path.join(outDir, "tsc-ran");
+              const exampleFilesPath = path.join(outDir, "example-files");
+              yield* fs.makeDirectory(outDir, { recursive: true });
+              yield* Effect.forEach(
+                ["seed.ts.md", "seed.tsx.md", "seed.mts.md", "seed.cts.md"],
+                (file) => fs.writeFileString(path.join(outDir, file), ""),
+                { concurrency: "unbounded" }
+              );
+              const child = yield* ChildProcess.make("bun", [docgenBinPath], {
+                cwd: fixture,
+                stdin: "ignore",
+                stderr: "pipe",
+                stdout: "pipe",
+              });
+              const [exitCode, stdout, stderr] = yield* Effect.all(
+                [
+                  child.exitCode,
+                  child.stdout.pipe(
+                    Stream.decodeText(),
+                    Stream.runFold(
+                      () => "",
+                      (text, chunk) => text + chunk
+                    )
+                  ),
+                  child.stderr.pipe(
+                    Stream.decodeText(),
+                    Stream.runFold(
+                      () => "",
+                      (text, chunk) => text + chunk
+                    )
+                  ),
+                ],
+                { concurrency: "unbounded" }
+              );
+              expect(exitCode, stderr).toBe(0);
+              yield* fs.readFileString(markerPath);
+              const exampleFiles = yield* fs.readFileString(exampleFilesPath);
+              const result = { exampleFiles, exitCode, stderr, stdout, tscRan: true };
 
-        expect(result.exitCode, result.stderr).toBe(0);
-        expect(result.exampleFiles).toContain("SectionExampleOwner-property-answer");
-        expect(result.tscRan).toBe(true);
-      })
-    );
+              expect(result.exitCode, result.stderr).toBe(0);
+              expect(result.exampleFiles).toContain("SectionExampleOwner-property-answer");
+              expect(result.tscRan).toBe(true);
+              return { fixture, child };
+            })
+          );
+          expect(yield* fs.exists(completed.fixture)).toBe(false);
+          expect(yield* completed.child.isRunning).toBe(false);
+        })
+      );
+    });
   }));

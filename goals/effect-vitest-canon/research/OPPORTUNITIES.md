@@ -3208,3 +3208,12 @@ Rerunning with BEEP_FC_NUM_RUNS=400 and BEEP_FC_SEED=20260708 passes all
 Law Practice (50), Epistemic (64), Agents Server (4) and architecture proof (2)
 selected properties also pass fresh commands with the explicit correct variable.
 Record exact environment maps with proof receipts to prevent ambiguous claims.
+
+
+### Native fixture timing snapshot overlap (2026-09-27)
+
+Repo-docgen timing overlapped its package audit. The tests passed, but the
+source hash snapshot included the audit's temporary copied fixture source,
+which correctly disappeared before the second snapshot. Exclude that timing
+observation and rerun after the audit. Exact-source timing should serialize
+against tests that create temporary sources under the audited tree.
