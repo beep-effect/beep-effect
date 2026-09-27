@@ -2,23 +2,16 @@ import { FFmpeg } from "@beep/ffmpeg";
 import { BeaconEvent, ClockCorrelator, CorrelateClockRequest } from "@beep/qa-capture";
 import { A, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 // Live lane: exercises the real ffmpeg binary on PATH. Skips cleanly
 // (logInfo, no assertions) on machines without ffmpeg.
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const provideLive = provideScopedLayer(
-  Layer.mergeAll(
-    NodeServices.layer,
-    ClockCorrelator.layer.pipe(Layer.provide(FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))))
-  )
+const NativeCorrelatorTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  ClockCorrelator.layer.pipe(Layer.provide(FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))))
 );
 
 const skipNotice = Effect.logInfo("Skipping the live clock correlator lane because ffmpeg is not runnable on PATH.");
@@ -91,8 +84,8 @@ const makeFlips = (): ReadonlyArray<BeaconEvent> =>
     })
   );
 
-describe("@beep/qa-capture live clock correlator", () => {
-  it.live(
+it.layer(NativeCorrelatorTestLayer, { excludeTestServices: true })("@beep/qa-capture live clock correlator", (it) => {
+  it.effect(
     "recovers the wall-clock offset from a synthesized beacon video",
     () =>
       Effect.gen(function* () {
@@ -102,7 +95,7 @@ describe("@beep/qa-capture live clock correlator", () => {
 
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const videoPath = path.join(tmpDir, "beacon.mp4");
         yield* makeBeaconClip(videoPath);
 
@@ -124,9 +117,7 @@ describe("@beep/qa-capture live clock correlator", () => {
         expect(Math.abs(sync.offsetMs + T0)).toBeLessThan(80);
         expect(sync.residualRmsMs).toBeLessThan(80);
         expect(sync.confidence === "high" || sync.confidence === "medium").toBe(true);
-
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
-      }).pipe(provideLive),
+      }),
     120000
   );
 });

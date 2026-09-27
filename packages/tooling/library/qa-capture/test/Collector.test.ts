@@ -15,7 +15,7 @@ import {
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert, expect, layer } from "@effect/vitest";
+import { assert, expect, it } from "@effect/vitest";
 import { Effect, Fiber, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient } from "effect/http";
 import * as S from "effect/Schema";
@@ -32,14 +32,14 @@ const TestLayer = Layer.mergeAll(
 const decodeEventsAccepted = S.decodeUnknownEffect(S.fromJsonString(EventsAccepted));
 const decodeMarkAccepted = S.decodeUnknownEffect(S.fromJsonString(MarkAccepted));
 
-layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) => {
+it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) => {
   it.effect(
     "collects NDJSON events end to end and cleans up on scope close",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const eventsPath = path.join(tmpDir, "round-1", "events.ndjson");
         const handlePath = path.join(tmpDir, "current.json");
 
@@ -133,8 +133,6 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
         expect(A.map(decoded, (event) => event.kind)).toEqual(["pointer-down", "marker", "marker"]);
         // On-disk seqs are the canonical rewrite: strictly monotone from 1.
         expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
-
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
       }),
     15000
   );
@@ -145,7 +143,7 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
         // The test runner's parent process is guaranteed alive and foreign.
@@ -182,8 +180,6 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
         // The live owner's handle survives the refused takeover.
         const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
         expect(remaining.sessionId).toBe("qa-live-foreign");
-
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
       }),
     15000
   );
@@ -194,7 +190,7 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
         // A finished child process yields a pid that is provably dead.
@@ -247,8 +243,6 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
         // Teardown of the reclaimer must not delete the successor's handle.
         const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
         expect(remaining.sessionId).toBe("qa-successor");
-
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
       }),
     15000
   );

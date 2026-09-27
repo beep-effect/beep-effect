@@ -12,11 +12,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import type { ExtractClipRequest, FFmpegShape, ProbeRegionLuminanceRequest } from "@beep/ffmpeg";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const T0 = 1753838000000;
 const FLIP_INTERVAL_MS = 150;
 const FIRST_FLIP_OFFSET_MS = 500;
@@ -157,77 +152,97 @@ describe("@beep/qa-capture clock correlator", () => {
     expect(O.isNone(fitBeaconClockSync(edges, flips))).toBe(true);
   });
 
-  it.effect("correlates via the beacon when flips and video agree", () =>
-    Effect.gen(function* () {
-      const correlator = yield* ClockCorrelator;
-      const sync = yield* correlator.correlate(
-        CorrelateClockRequest.make({
-          assumedStartEpochMs: T0,
-          beaconEvents: makeFlips(),
-          recordStartEpochMs: O.none(),
-          videoPath: "/round/video/capture.webm",
-          workDir: "/round/clips",
+  it.layer(ClockCorrelator.layer.pipe(Layer.provide(beaconCapableFfmpeg)))(
+    "correlates via the beacon when flips and video agree",
+    (it) => {
+      it.effect("correlates via the beacon when flips and video agree", () =>
+        Effect.gen(function* () {
+          const correlator = yield* ClockCorrelator;
+          const sync = yield* correlator.correlate(
+            CorrelateClockRequest.make({
+              assumedStartEpochMs: T0,
+              beaconEvents: makeFlips(),
+              recordStartEpochMs: O.none(),
+              videoPath: "/round/video/capture.webm",
+              workDir: "/round/clips",
+            })
+          );
+          expect(sync.method).toBe("beacon");
+          expect(sync.confidence).toBe("high");
+          // Frame quantization delays each detected edge by up to one frame
+          // (33.3 ms at 30 fps); the mean shift survives in the offset.
+          expect(Math.abs(sync.offsetMs + T0)).toBeLessThan(40);
+          expect(sync.residualRmsMs).toBeLessThanOrEqual(25);
         })
       );
-      expect(sync.method).toBe("beacon");
-      expect(sync.confidence).toBe("high");
-      // Frame quantization delays each detected edge by up to one frame
-      // (33.3 ms at 30 fps); the mean shift survives in the offset.
-      expect(Math.abs(sync.offsetMs + T0)).toBeLessThan(40);
-      expect(sync.residualRmsMs).toBeLessThanOrEqual(25);
-    }).pipe(provideScopedLayer(ClockCorrelator.layer.pipe(Layer.provide(beaconCapableFfmpeg))))
+    }
   );
 
-  it.effect("degrades to the OBS record-state anchor without beacon flips", () =>
-    Effect.gen(function* () {
-      const correlator = yield* ClockCorrelator;
-      const sync = yield* correlator.correlate(
-        CorrelateClockRequest.make({
-          assumedStartEpochMs: T0,
-          beaconEvents: [],
-          recordStartEpochMs: O.some(T0 + 120),
-          videoPath: "/round/video/capture.mkv",
-          workDir: "/round/clips",
+  it.layer(ClockCorrelator.layer.pipe(Layer.provide(stubFfmpeg({}))))(
+    "degrades to the OBS record-state anchor without beacon flips",
+    (it) => {
+      it.effect("degrades to the OBS record-state anchor without beacon flips", () =>
+        Effect.gen(function* () {
+          const correlator = yield* ClockCorrelator;
+          const sync = yield* correlator.correlate(
+            CorrelateClockRequest.make({
+              assumedStartEpochMs: T0,
+              beaconEvents: [],
+              recordStartEpochMs: O.some(T0 + 120),
+              videoPath: "/round/video/capture.mkv",
+              workDir: "/round/clips",
+            })
+          );
+          expect(sync.method).toBe("obs-record-state");
+          expect(sync.confidence).toBe("medium");
+          expect(sync.offsetMs).toBe(-(T0 + 120));
         })
       );
-      expect(sync.method).toBe("obs-record-state");
-      expect(sync.confidence).toBe("medium");
-      expect(sync.offsetMs).toBe(-(T0 + 120));
-    }).pipe(provideScopedLayer(ClockCorrelator.layer.pipe(Layer.provide(stubFfmpeg({})))))
+    }
   );
 
-  it.effect("always produces an assumed-start sync as the last resort", () =>
-    Effect.gen(function* () {
-      const correlator = yield* ClockCorrelator;
-      const sync = yield* correlator.correlate(
-        CorrelateClockRequest.make({
-          assumedStartEpochMs: T0,
-          beaconEvents: [],
-          recordStartEpochMs: O.none(),
-          videoPath: "/round/video/capture.webm",
-          workDir: "/round/clips",
+  it.layer(ClockCorrelator.layer.pipe(Layer.provide(stubFfmpeg({}))))(
+    "always produces an assumed-start sync as the last resort",
+    (it) => {
+      it.effect("always produces an assumed-start sync as the last resort", () =>
+        Effect.gen(function* () {
+          const correlator = yield* ClockCorrelator;
+          const sync = yield* correlator.correlate(
+            CorrelateClockRequest.make({
+              assumedStartEpochMs: T0,
+              beaconEvents: [],
+              recordStartEpochMs: O.none(),
+              videoPath: "/round/video/capture.webm",
+              workDir: "/round/clips",
+            })
+          );
+          expect(sync.method).toBe("assumed-start");
+          expect(sync.confidence).toBe("low");
+          expect(sync.offsetMs).toBe(-T0);
         })
       );
-      expect(sync.method).toBe("assumed-start");
-      expect(sync.confidence).toBe("low");
-      expect(sync.offsetMs).toBe(-T0);
-    }).pipe(provideScopedLayer(ClockCorrelator.layer.pipe(Layer.provide(stubFfmpeg({})))))
+    }
   );
 
-  it.effect("degrades instead of failing when ffmpeg errors during the beacon fit", () =>
-    Effect.gen(function* () {
-      const correlator = yield* ClockCorrelator;
-      const sync = yield* correlator.correlate(
-        CorrelateClockRequest.make({
-          assumedStartEpochMs: T0,
-          beaconEvents: makeFlips(),
-          recordStartEpochMs: O.none(),
-          videoPath: "/round/video/capture.webm",
-          workDir: "/round/clips",
+  it.layer(ClockCorrelator.layer.pipe(Layer.provide(failingClipFfmpeg)))(
+    "degrades instead of failing when ffmpeg errors during the beacon fit",
+    (it) => {
+      it.effect("degrades instead of failing when ffmpeg errors during the beacon fit", () =>
+        Effect.gen(function* () {
+          const correlator = yield* ClockCorrelator;
+          const sync = yield* correlator.correlate(
+            CorrelateClockRequest.make({
+              assumedStartEpochMs: T0,
+              beaconEvents: makeFlips(),
+              recordStartEpochMs: O.none(),
+              videoPath: "/round/video/capture.webm",
+              workDir: "/round/clips",
+            })
+          );
+          expect(sync.method).toBe("assumed-start");
+          expect(sync.confidence).toBe("low");
         })
       );
-      expect(sync.method).toBe("assumed-start");
-      expect(sync.confidence).toBe("low");
-    }).pipe(provideScopedLayer(ClockCorrelator.layer.pipe(Layer.provide(failingClipFfmpeg))))
+    }
   );
 });

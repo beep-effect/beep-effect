@@ -3283,3 +3283,11 @@ The private timing exporter initially accepted `pending` but Vitest5 emits
 The exporter stopped before publishing the after summary. Accept the explicit
 status, omit skipped cases from slowest-executed rankings, and retain separate
 passed/skipped counts and the historical no-op caveat in timing context.
+
+### QA Capture cleanup-control temp root (2026-09-27)
+
+The private failure-control harness assumed `/tmp`, but the workstation routes
+native temp directories through its configured cache directory. All nine scoped
+roots were removed correctly; only the harness parent-path assertion failed.
+Preserve that report and use the runtime temp-directory setting when validating
+ownership before cleaning the unscoped control's exact recorded roots.
