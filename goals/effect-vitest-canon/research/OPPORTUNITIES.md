@@ -3599,3 +3599,15 @@ before package verification; no generated SDK source was edited.
 - Prevention: model canonical timezone identity in generated assertions and
   run Node plus Bun before crediting a property batch. The five input zones and
   instant checks remain; no domain was filtered to silence the counterexample.
+
+### Workbench cleanup observation ordering
+
+- Work: add a private negative control proving test-owned DOM cleanup after an
+  injected assertion failure.
+- Evidence: a trailing DOM-empty assertion raced concurrent tests under the
+  shared runner configuration; the attempted `describe.sequential` convenience
+  API is absent in installed Vitest 5.0.1.
+- Prevention: inspect the installed CLI contract and use the supported
+  `--sequence.concurrent=false` only for the ordered private cleanup experiment.
+  The shipped tests and normal package verification retain shared concurrency.
+  Neither failed experiment counts as a successful cleanup proof.

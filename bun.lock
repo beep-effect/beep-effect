@@ -197,6 +197,8 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",
         "@types/node": "catalog:",

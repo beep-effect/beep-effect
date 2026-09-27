@@ -3748,11 +3748,13 @@
         "from": "@beep/trustgraph-workbench",
         "allow": [
           "@beep/brand",
+          "@beep/test-runner",
           "@beep/trustgraph-workbench",
           "@beep/ui"
         ],
         "allowTypeOnly": [
           "@beep/brand",
+          "@beep/test-runner",
           "@beep/trustgraph-workbench",
           "@beep/ui"
         ]

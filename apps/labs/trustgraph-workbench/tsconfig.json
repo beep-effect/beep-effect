@@ -33,6 +33,9 @@
     },
     {
       "path": "../../../packages/foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/tooling/test-kit/test-runner/tsconfig.json"
     }
   ]
 }
