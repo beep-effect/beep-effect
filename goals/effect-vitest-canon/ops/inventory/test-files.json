@@ -2789,50 +2789,50 @@
     "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 19212,
-    "lines": 532
+    "bytes": 19142,
+    "lines": 527
   },
   {
     "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 8280,
-    "lines": 230
+    "bytes": 8020,
+    "lines": 220
   },
   {
     "file": "packages/foundation/capability/langextract/test/Handoff.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 2843,
-    "lines": 71
+    "bytes": 2942,
+    "lines": 79
   },
   {
     "file": "packages/foundation/capability/langextract/test/Service.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 8329,
-    "lines": 230
+    "bytes": 9699,
+    "lines": 265
   },
   {
     "file": "packages/foundation/capability/langextract/test/TaggedError.equivalence.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 1277,
-    "lines": 33
+    "bytes": 1313,
+    "lines": 34
   },
   {
     "file": "packages/foundation/capability/langextract/test/VerifiedSpanHistory.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 27536,
-    "lines": 691
+    "bytes": 27515,
+    "lines": 687
   },
   {
     "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
     "package": "@beep/langextract",
     "kind": "test",
-    "bytes": 17170,
-    "lines": 443
+    "bytes": 17021,
+    "lines": 438
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
