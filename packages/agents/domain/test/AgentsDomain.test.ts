@@ -20,9 +20,11 @@ import {
 } from "@beep/agents-domain/values/AssistantContent";
 import * as Md from "@beep/md/Md.model";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
@@ -154,11 +156,11 @@ describe("@beep/agents-domain", () => {
       license: null,
       metadata: null,
     };
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "Review Skill" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "-review" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review_skill" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review.skill" }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownSkillResult({ ...base, name: "review--skill" }))).toBe(true);
+    decodeUnknownSkillResult({ ...base, name: "Review Skill" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "-review" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "review_skill" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "review.skill" }).pipe(Result.isFailure, assertTrue);
+    decodeUnknownSkillResult({ ...base, name: "review--skill" }).pipe(Result.isFailure, assertTrue);
   });
 
   it.effect("decodes Agent Skills frontmatter through the derived codec", () =>
@@ -181,24 +183,18 @@ describe("@beep/agents-domain", () => {
     })
   );
 
-  it.effect("round-trips schema-derived agent modes", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([AgentModeArbitrary]),
-        ([mode]) =>
-          Effect.gen(function* () {
-            const decoded = yield* decodeAgentMode(mode);
-            const encoded = yield* encodeAgentMode(decoded);
+  it.effect.prop(
+    "round-trips schema-derived agent modes",
+    [AgentModeArbitrary],
+    ([mode]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeAgentMode(mode);
+        const encoded = yield* encodeAgentMode(decoded);
 
-            expect(encoded).toBe(mode);
-            expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
-
-            return true;
-          }),
-        fcRuns(25)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+        expect(encoded).toBe(mode);
+        expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("preserves assistant content exports from the canonical value-object path", () =>
@@ -266,75 +262,77 @@ describe("@beep/agents-domain", () => {
     expect(Result.getOrThrow(encodeAssistantContentResult(decoded))).toStrictEqual(encoded);
     const decodedBlock = decodeUnknownAssistantBlockResult(encoded.blocks[0]);
     const decodedInline = decodeInlineNodeResult({ type: "text", text: "Install" });
-    expect(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success)).toBe(true);
-    expect(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success)).toBe(true);
+    assertTrue(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success));
+    assertTrue(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success));
   });
 
-  it("round-trips crispened schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [Agent, Skill, AssistantContent, AssistantBlock, InlineNode];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
-
-  it.effect(
-    "keeps agents source code off removed turn subpath imports",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-
-      const repoRelativePath = (absolutePath: string): string =>
-        path.relative(repoRoot, absolutePath).split(path.sep).join("/");
-
-      const collectAgentsSourceFiles = (
-        directory: string
-      ): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError> =>
-        Effect.gen(function* () {
-          const sourceFiles: Array<string> = [];
-
-          for (const entry of yield* fs.readDirectory(directory)) {
-            if (isIgnoredAgentsDirEntry(entry)) {
-              continue;
-            }
-
-            const entryPath = path.join(directory, entry);
-            const info = yield* fs.stat(entryPath);
-            if (info.type === "Directory") {
-              sourceFiles.push(...(yield* collectAgentsSourceFiles(entryPath)));
-            } else if (isAgentsSourceFile(entryPath, path.sep)) {
-              sourceFiles.push(entryPath);
-            }
-          }
-
-          return sourceFiles.sort();
-        });
-
-      const sourceFiles = yield* collectAgentsSourceFiles(path.join(repoRoot, "packages/agents"));
-      const violations: Array<{ readonly importDeclaration: string; readonly sourcePath: string }> = [];
-
-      for (const sourcePath of sourceFiles) {
-        const sourceText = yield* fs.readFileString(sourcePath);
-        for (const match of sourceText.matchAll(legacyTurnImportPattern)) {
-          const importDeclaration = match[0];
-          violations.push({ importDeclaration, sourcePath: repoRelativePath(sourcePath) });
-        }
-      }
-
-      expect(violations).toEqual([]);
-    }, provideScopedLayer(NodeServices.layer))
+  it.prop(
+    "round-trips crispened schemas with schema-derived arbitraries",
+    {
+      Agent: Arbitrary.schema(Agent),
+      Skill: Arbitrary.schema(Skill),
+      AssistantContent: Arbitrary.schema(AssistantContent),
+      AssistantBlock: Arbitrary.schema(AssistantBlock),
+      InlineNode: Arbitrary.schema(InlineNode),
+    },
+    (values) => {
+      roundTrip(Agent, values.Agent);
+      roundTrip(Skill, values.Skill);
+      roundTrip(AssistantContent, values.AssistantContent);
+      roundTrip(AssistantBlock, values.AssistantBlock);
+      roundTrip(InlineNode, values.InlineNode);
+    },
+    { arbitrary: fcRuns(10) }
   );
+
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "keeps agents source code off removed turn subpath imports",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+
+        const repoRelativePath = (absolutePath: string): string =>
+          path.relative(repoRoot, absolutePath).split(path.sep).join("/");
+
+        const collectAgentsSourceFiles = (
+          directory: string
+        ): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError> =>
+          Effect.gen(function* () {
+            const sourceFiles: Array<string> = [];
+
+            for (const entry of yield* fs.readDirectory(directory)) {
+              if (isIgnoredAgentsDirEntry(entry)) {
+                continue;
+              }
+
+              const entryPath = path.join(directory, entry);
+              const info = yield* fs.stat(entryPath);
+              if (info.type === "Directory") {
+                sourceFiles.push(...(yield* collectAgentsSourceFiles(entryPath)));
+              } else if (isAgentsSourceFile(entryPath, path.sep)) {
+                sourceFiles.push(entryPath);
+              }
+            }
+
+            return sourceFiles.sort();
+          });
+
+        const sourceFiles = yield* collectAgentsSourceFiles(path.join(repoRoot, "packages/agents"));
+        const violations: Array<{ readonly importDeclaration: string; readonly sourcePath: string }> = [];
+
+        for (const sourcePath of sourceFiles) {
+          const sourceText = yield* fs.readFileString(sourcePath);
+          for (const match of sourceText.matchAll(legacyTurnImportPattern)) {
+            const importDeclaration = match[0];
+            violations.push({ importDeclaration, sourcePath: repoRelativePath(sourcePath) });
+          }
+        }
+
+        expect(violations).toEqual([]);
+      })
+    );
+  });
 
   it("lifts rich assistant blocks into canonical Md nodes", () => {
     const document = assistantContentToDocument([
@@ -388,7 +386,7 @@ describe("@beep/agents-domain", () => {
         },
       ],
     });
-    expect(Result.isFailure(table)).toBe(true);
+    table.pipe(Result.isFailure, assertTrue);
     if (Result.isFailure(table)) {
       expect(String(table.failure)).toMatch(/Tables must contain/);
     }
@@ -397,7 +395,7 @@ describe("@beep/agents-domain", () => {
       type: "youtube",
       videoId: "https://youtu.be/dQw4w9WgXcQ",
     });
-    expect(Result.isFailure(youtube)).toBe(true);
+    youtube.pipe(Result.isFailure, assertTrue);
     if (Result.isFailure(youtube)) {
       expect(String(youtube.failure)).toMatch(/YouTube blocks/);
     }

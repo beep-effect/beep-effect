@@ -864,15 +864,15 @@
     "file": "packages/agents/domain/test/AgentsDomain.test.ts",
     "package": "@beep/agents-domain",
     "kind": "test",
-    "bytes": 15498,
-    "lines": 388
+    "bytes": 16470,
+    "lines": 403
   },
   {
     "file": "packages/agents/domain/test/ProviderInstance.test.ts",
     "package": "@beep/agents-domain",
     "kind": "test",
-    "bytes": 8961,
-    "lines": 228
+    "bytes": 9213,
+    "lines": 232
   },
   {
     "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
@@ -920,8 +920,8 @@
     "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
     "package": "@beep/agents-tables",
     "kind": "test",
-    "bytes": 5420,
-    "lines": 143
+    "bytes": 7457,
+    "lines": 192
   },
   {
     "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",

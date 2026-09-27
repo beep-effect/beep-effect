@@ -6,8 +6,10 @@ import {
   providerInstanceTable,
   toProviderInstanceInsert,
 } from "@beep/agents-tables/entities/ProviderInstance";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as A from "effect/Array";
@@ -143,7 +145,7 @@ describe("ProviderInstance table", () => {
     [S.toType(DomainProviderInstance.ProviderInstance)],
     ([providerInstance]) => {
       const insert = toProviderInstanceInsert(providerInstance);
-      expect(Result.isSuccess(insert)).toBe(true);
+      insert.pipe(Result.isSuccess, assertTrue);
       if (!Result.isSuccess(insert)) {
         return;
       }
@@ -153,7 +155,7 @@ describe("ProviderInstance table", () => {
         homePath: insert.success.homePath ?? null,
         lastProbe: insert.success.lastProbe ?? null,
       });
-      expect(Result.isSuccess(decoded)).toBe(true);
+      decoded.pipe(Result.isSuccess, assertTrue);
       if (!Result.isSuccess(decoded)) {
         return;
       }

@@ -282,3 +282,22 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/pretext#package-test-typecheck`
 - `@beep/pretext#test`
 - `@beep/pretext#test:integration`
+
+## Incoming 3194e465b6c74077ef53af50ec25c6cb172163d7
+
+- `@beep/agents-domain#audit`
+- `@beep/agents-domain#build`
+- `@beep/agents-domain#check`
+- `@beep/agents-domain#coverage`
+- `@beep/agents-domain#lint:deprecated-apis`
+- `@beep/agents-domain#package-test-typecheck`
+- `@beep/agents-domain#test`
+- `@beep/agents-domain#test:property`
+- `@beep/agents-tables#audit`
+- `@beep/agents-tables#build`
+- `@beep/agents-tables#check`
+- `@beep/agents-tables#coverage`
+- `@beep/agents-tables#lint:deprecated-apis`
+- `@beep/agents-tables#package-test-typecheck`
+- `@beep/agents-tables#test`
+- `@beep/agents-tables#test:integration`

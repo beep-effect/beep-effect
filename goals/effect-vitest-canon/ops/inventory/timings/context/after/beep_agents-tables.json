@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/agents-tables",
+  "sourceHead": "cbf8b62cf17f3a6316b44bb39b908d6e6a1363c3",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.221189842995955,
+  "bunWholeCommandSeconds": 2.267428712002584,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [10.4228515625, 12.818359375, 17.115234375],
+  "loadAfter": [10.1484375, 12.7216796875, 17.060546875],
+  "pressureBefore": {
+    "cpu": "some avg10=1.03 avg60=0.42 avg300=0.74 total=422301690\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=136113550\nfull avg10=0.00 avg60=0.00 avg300=0.08 total=130745187\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=744551140\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=663522813\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.69 avg60=0.39 avg300=0.73 total=422309655\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=136113555\nfull avg10=0.00 avg60=0.00 avg300=0.08 total=130745192\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=744551327\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=663522976\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "c2acf66b42448efea67739fd63cb9c38eb305be7b2d78fd360fe3ea989fb79dc"
+    },
+    {
+      "file": "packages/agents/tables/package.json",
+      "sha256": "9f019b97f152db5ce0cedab083226d966cb6c43727a47fb2edbe4c8cf9f0dab2"
+    },
+    {
+      "file": "packages/agents/tables/src/index.ts",
+      "sha256": "66a023dc102589b07da6d86820a4390a7b32212b312b10190f659f534334a3a6"
+    },
+    {
+      "file": "packages/agents/tables/src/tables.ts",
+      "sha256": "dd61d920430e5a41c9a68681343ca7bae5456fdd5315136526a3afade24bd08d"
+    },
+    {
+      "file": "packages/agents/tables/src/entities/index.ts",
+      "sha256": "d1870c4adea24a5ab83c6182a4ee46173061552cf4aae54616be8035b3a347f5"
+    },
+    {
+      "file": "packages/agents/tables/src/entities/ProviderInstance/ProviderInstance.converters.ts",
+      "sha256": "0409e627d0cb7652c1c504c6fab108f4712c24093c7b48a99150fe9980938dc1"
+    },
+    {
+      "file": "packages/agents/tables/src/entities/ProviderInstance/ProviderInstance.errors.ts",
+      "sha256": "9f4994b502dc885e5af4637958adc377a4faa84eff4e536450d1728efb9993fd"
+    },
+    {
+      "file": "packages/agents/tables/src/entities/ProviderInstance/ProviderInstance.table.ts",
+      "sha256": "5bba3eef86ee24cd5a79c89af18e48d7754439c4a3610357a00194fdfbd5ca2e"
+    },
+    {
+      "file": "packages/agents/tables/src/entities/ProviderInstance/index.ts",
+      "sha256": "192e7df22246103fc1b73f00d748e0c9b93c904ce952fdd58a178adff659d0da"
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "sha256": "ef62ce777f8544e8de4d38c910ec07685794b7bd8536b4be3868388a47553ca1"
+    }
+  ],
+  "rawReporterSha256": "6c9f9bacdfc2e86bdc711d68c49b59173cdccf30227a4489715a39d0b9848819",
+  "rawLogSha256": "4c9bcb4459e792940bf6bc1c29e1fe63c3254cd341b61e52e347ffb9483dcfbc",
+  "acceptance": "One configured Node and Bun final-source observation each: 6 passed,1 suite. Load and pressure are retained without normalization or best-of selection; no causal speedup claim. These source hashes were verified unchanged after the main merge."
+}

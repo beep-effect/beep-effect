@@ -1,0 +1,254 @@
+[
+  {
+    "id": "EV001:packages/agents/domain/test/AgentsDomain.test.ts:278:runSync@8#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 269
+  },
+  {
+    "id": "EV001:packages/agents/domain/test/ProviderInstance.test.ts:221:runSync@8#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 218
+  },
+  {
+    "id": "EV002:packages/agents/domain/test/AgentsDomain.test.ts:336:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "1cd80acf74f37c04a1d52b2089801bba63b6a6db",
+    "currentLine": 288
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:157:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 159
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:158:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 160
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:159:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 161
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:160:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 162
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:161:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 163
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:269:expect@4#1",
+    "phase": "runnerAndCompoundAssertions",
+    "fixSha": "b64ae1bc368843dfde73038cb007e92574dfd6eb",
+    "currentLine": 265
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:270:expect@4#1",
+    "phase": "runnerAndCompoundAssertions",
+    "fixSha": "b64ae1bc368843dfde73038cb007e92574dfd6eb",
+    "currentLine": 266
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:391:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 389
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:400:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 398
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:147:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 149
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:148:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 150
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:168:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 170
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:169:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 171
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:185:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 187
+  },
+  {
+    "id": "EV007:packages/agents/domain/test/AgentsDomain.test.ts:186:checkEffect@28#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 186
+  },
+  {
+    "id": "EV007:packages/agents/domain/test/AgentsDomain.test.ts:279:checkEffect@10#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 269
+  },
+  {
+    "id": "EV007:packages/agents/domain/test/ProviderInstance.test.ts:222:checkEffect@10#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 218
+  },
+  {
+    "id": "EV010:packages/agents/domain/test/AgentsDomain.test.ts:24:@effect/platform-node@0#1",
+    "phase": "runnerAndCompoundAssertions",
+    "fixSha": "b64ae1bc368843dfde73038cb007e92574dfd6eb",
+    "currentLine": 25
+  },
+  {
+    "id": "EV001:packages/agents/domain/test/AgentsDomain.test.ts:178:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 186
+  },
+  {
+    "id": "EV001:packages/agents/domain/test/AgentsDomain.test.ts:265:runSync@8#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 269
+  },
+  {
+    "id": "EV001:packages/agents/domain/test/ProviderInstance.test.ts:215:runSync@8#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 218
+  },
+  {
+    "id": "EV002:packages/agents/domain/test/AgentsDomain.test.ts:323:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "1cd80acf74f37c04a1d52b2089801bba63b6a6db",
+    "currentLine": 288
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:151:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 159
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:152:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 160
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:153:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 161
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:154:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 162
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/AgentsDomain.test.ts:155:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 163
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:144:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 149
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:145:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 150
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:163:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 170
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:164:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 171
+  },
+  {
+    "id": "EV006:packages/agents/domain/test/ProviderInstance.test.ts:179:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 187
+  },
+  {
+    "id": "EV007:packages/agents/domain/test/AgentsDomain.test.ts:179:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 186
+  },
+  {
+    "id": "EV007:packages/agents/domain/test/AgentsDomain.test.ts:266:checkEffect@10#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 269
+  },
+  {
+    "id": "EV007:packages/agents/domain/test/ProviderInstance.test.ts:216:checkEffect@10#1",
+    "phase": "properties",
+    "fixSha": "a06233316edffd687fcf5d6a250d69ca9aed6317",
+    "currentLine": 218
+  },
+  {
+    "id": "EV006:packages/agents/tables/test/ProviderInstanceTable.test.ts:146:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 148
+  },
+  {
+    "id": "EV006:packages/agents/tables/test/ProviderInstanceTable.test.ts:156:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "41ecf509f09cbd22ed90e0c759f986ddbb469191",
+    "currentLine": 158
+  },
+  {
+    "id": "EV001:packages/agents/tables/test/ProviderInstanceTable.test.ts:123:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 143
+  },
+  {
+    "id": "EV007:packages/agents/tables/test/ProviderInstanceTable.test.ts:124:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 143
+  }
+]

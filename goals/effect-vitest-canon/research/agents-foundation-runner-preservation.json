@@ -1,0 +1,66 @@
+{
+  "files": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "onlyRunnerImportsAndReviewedCompoundAssertionsChanged": true,
+      "sourceSha256": "99f197124bb9a20bf8bbdc9fc9692b7a731c979925753ed2be4b3351a6595f3c",
+      "instrumented": true
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "onlyRunnerImportsAndReviewedCompoundAssertionsChanged": true,
+      "sourceSha256": "bbb2a60ed7ddee85ec5f7e73e6c73e150837cd0f9d0c4bf77131b64ff660f2d5",
+      "instrumented": true
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "onlyRunnerImportsAndReviewedCompoundAssertionsChanged": true,
+      "sourceSha256": "ef62ce777f8544e8de4d38c910ec07685794b7bd8536b4be3868388a47553ca1",
+      "instrumented": true
+    }
+  ],
+  "diagnostics": {
+    "domain": [
+      {
+        "trace": "0",
+        "exit": 0,
+        "start": false,
+        "failureEndAndDuration": false,
+        "caseName": false
+      },
+      {
+        "trace": "1",
+        "exit": 0,
+        "start": true,
+        "failureEndAndDuration": true,
+        "caseName": true
+      }
+    ],
+    "tables": [
+      {
+        "trace": "0",
+        "exit": 0,
+        "start": false,
+        "failureEndAndDuration": false,
+        "caseName": false
+      },
+      {
+        "trace": "1",
+        "exit": 0,
+        "start": true,
+        "failureEndAndDuration": true,
+        "caseName": true
+      }
+    ]
+  },
+  "compoundAssertionFollowup": [
+    {
+      "before": "expect(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success)).toBe(true)",
+      "after": "assertTrue(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success))"
+    },
+    {
+      "before": "expect(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success)).toBe(true)",
+      "after": "assertTrue(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success))"
+    }
+  ]
+}

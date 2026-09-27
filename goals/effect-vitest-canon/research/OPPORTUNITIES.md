@@ -3050,3 +3050,23 @@ discovery in the private probe exited 1 with zero cases, so it earned no browser
 proof credit. Configured Node/Bun package proof and a controlled Chromium
 user-agent counterexample pass. A qualified browser unit-test harness would avoid
 this setup detour without changing the package's native canvas subject.
+
+## Early publication retry after GraphQL exhaustion (2026-09-27)
+
+Pretext's early publisher pushed its reviewed head, then `gh pr create` failed
+with `API rate limit already exceeded`. After quota recovery, retrying the same
+canonical early-publish command refused because no local commit remained ahead
+of the publish remote. No full proof had started. A subsequent required merge
+from main supplied a meaningful new commit and publication created PR #1303.
+A retry path that recognizes an already-pushed reviewed head with no PR would
+avoid coupling PR-creation recovery to another branch change. Preserve the
+normal proof and provenance gates; this receipt does not authorize bypassing them.
+
+## 2026-09-27 — unused helper dependency after runner migration
+
+Pretext PR #1303 hosted Knip job 108563381090 rejected the manifest because
+`@beep/test-utils` became unused after the test migration. Package audit/docgen
+did not flag this repo-level dependency condition. The repair removes the unused
+dev dependency, regenerates lockfile and TypeScript references, and reviews only
+the removed cache dependency edges. A runner-phase check for dependencies made
+unused by removed helper imports would have prevented the delayed CI feedback.
