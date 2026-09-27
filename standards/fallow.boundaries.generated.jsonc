@@ -1518,6 +1518,7 @@
         "from": "@beep/dock",
         "allow": [
           "@beep/dock",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
@@ -1525,6 +1526,7 @@
         ],
         "allowTypeOnly": [
           "@beep/dock",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",

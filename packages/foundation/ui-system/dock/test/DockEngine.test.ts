@@ -26,6 +26,7 @@ import {
   TabsNode,
   TopLeftAnchoredBox,
 } from "@beep/dock";
+import { fcRuns } from "@beep/fc-runs";
 import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
@@ -578,6 +579,7 @@ describe("DockEngine", () => {
         const engine = yield* DockEngine;
         const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
         const before = opened.state;
+        const beforeEncoded = yield* encodeDockWorkspaceJson(before);
         const duplicate = envelope(
           "command-duplicate",
           OpenPanelCommand.make({
@@ -594,6 +596,7 @@ describe("DockEngine", () => {
         const failure = yield* Effect.flip(engine.transition(before, duplicate));
         expect(failure._tag).toBe("DockCommandRejected");
         expect(workspaceEquals(before, opened.state)).toBe(true);
+        expect(yield* encodeDockWorkspaceJson(before)).toBe(beforeEncoded);
       })
     );
 
@@ -613,22 +616,13 @@ describe("DockEngine", () => {
 });
 
 describe("dock snapshot codec properties", () => {
-  it.effect("round-trips arbitrary snapshots through the JSON codec", () =>
-    Effect.sync(() =>
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(DockSnapshot)]),
-            ([snapshot]) => {
-              const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
-              expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
-
-              return true;
-            },
-            { runs: 24 }
-          )
-        )._tag
-      ).toBe("Passed")
-    )
+  it.prop(
+    "round-trips arbitrary snapshots through the JSON codec",
+    [Arbitrary.schema(DockSnapshot)],
+    ([snapshot]) => {
+      const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
+      expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
+    },
+    { arbitrary: fcRuns(24) }
   );
 });
