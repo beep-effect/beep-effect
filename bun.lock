@@ -1246,6 +1246,7 @@
         "n3": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/n3": "catalog:",
         "@types/node": "catalog:",

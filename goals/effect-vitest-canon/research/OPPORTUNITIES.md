@@ -3650,3 +3650,12 @@ files when BEEP_FC_NUM_RUNS is set, so the example-only ProvO file was excluded.
 Running it without the deep-sweep variable executed all eight cases successfully.
 The generated core law was separately verified with the 400-run floor. A focused
 proof wrapper that rejects zero executed tests would prevent accidental credit.
+
+## N3 cleanup probe needed a suite-level witness
+
+While checking spy cleanup after an injected early failure, the first probe used
+an afterEach assertion attached to an expected-failure test. Both implementations
+passed, so that probe was excluded from acceptance. Moving the restoration check
+to afterAll distinguished the original leak (suite exit 1) from scoped cleanup
+(exit 0). Cleanup probes should put their witness outside expected-failure
+inversion and inspect suite-level errors as well as individual test counts.

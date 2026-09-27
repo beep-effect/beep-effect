@@ -2,21 +2,16 @@ import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3Turtle
 import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, PrefixMap } from "@beep/rdf/Rdf";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { expect, vi } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Writer } from "n3";
-import { vi } from "vitest";
 import type * as N3 from "n3";
 
 const decodePrefixMap = S.decodeEffect(PrefixMap);
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-describe("N3TurtleCodec", () => {
+it.layer(N3TurtleCodecLive)("N3TurtleCodec", (it) => {
   it.effect(
     "parses and serializes Turtle over @beep/rdf values",
     Effect.fnUntraced(function* () {
@@ -35,7 +30,7 @@ describe("N3TurtleCodec", () => {
       expect(serialized.source).toContain("@prefix ex:");
       expect(serialized.source).toContain("ex:alice");
       expect(serialized.source).toContain("Alice");
-    }, provideScopedLayer(N3TurtleCodecLive))
+    })
   );
 
   it.effect(
@@ -54,7 +49,7 @@ describe("N3TurtleCodec", () => {
       expect(parsed.prefixes).toEqual({ "": "https://example.test/" });
       expect(serialized.source).toContain("@prefix :");
       expect(serialized.source).toContain(":alice");
-    }, provideScopedLayer(N3TurtleCodecLive))
+    })
   );
 
   it.effect(
@@ -79,7 +74,7 @@ describe("N3TurtleCodec", () => {
       expect(serialized.source).toContain("rdf:Statement");
       expect(serialized.source).toContain("rdf:subject");
       expect(serialized.source).toContain("0.8");
-    }, provideScopedLayer(N3TurtleCodecLive))
+    })
   );
 
   it.effect(
@@ -97,27 +92,31 @@ describe("N3TurtleCodec", () => {
       expect(error).toMatchObject({
         reason: "unsupportedGraph",
       });
-    }, provideScopedLayer(N3TurtleCodecLive))
+    })
   );
 
   it.effect(
     "propagates writer callback errors",
     Effect.fnUntraced(function* () {
       const writerFailure = new Error("writer callback failed");
-      const endSpy = vi.spyOn(Writer.prototype, "end").mockImplementation((done?: N3.ErrorCallback): void => {
-        if (done !== undefined) {
-          done(writerFailure, "");
-        }
-      });
+      yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Writer.prototype, "end").mockImplementation((done?: N3.ErrorCallback): void => {
+            if (done !== undefined) done(writerFailure, "");
+          })
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
       const codec = yield* N3TurtleCodec;
       const error = yield* codec
         .serialize(N3SerializeTurtleRequest.make({ dataset: makeDataset([]) }))
-        .pipe(Effect.flip, Effect.ensuring(Effect.sync(() => endSpy.mockRestore())));
+        .pipe(Effect.flip);
 
       expect(error).toMatchObject({
         message: "writer callback failed",
         reason: "serializeFailed",
       });
-    }, provideScopedLayer(N3TurtleCodecLive))
+    }),
+    { concurrent: false }
   );
 });

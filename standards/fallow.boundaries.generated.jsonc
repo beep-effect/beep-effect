@@ -2522,6 +2522,7 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2529,6 +2530,7 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
