@@ -13,12 +13,13 @@ import {
   ciRunnersWorkerSecurityGroupName,
   makeCiRunnersStackArgsFromConfigValues,
 } from "@beep/infra";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
+import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 const decodeCiRunnersNetworkConfig = S.decodeEffect(CiRunnersNetworkConfig);
@@ -152,11 +153,44 @@ describe("@beep/infra CiRunners", () => {
     pipe(equivalent(decoded, network), assertTrue);
   });
 
-  it("round-trips CI runner config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(CiRunnersPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(CiRunnersPulumiConfigValues);
-    expectSchemaRoundTrip(CiRunnersImageConfig);
-    expectSchemaRoundTrip(CiRunnersWorkerConfig);
-    expectSchemaRoundTrip(CiRunnersReaperConfig);
-  });
+  it.effect.prop(
+    "round-trips CI runner config schemas through encoded wire values",
+    [Arbitrary.schema(CiRunnersPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* S.decodeEffect(CiRunnersPulumiConfigValues)(value);
+        assertTrue(
+          S.is(CiRunnersPulumiConfigValues)(value) && S.toEquivalence(CiRunnersPulumiConfigValues)(decoded, value)
+        );
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersImageConfig through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersImageConfig)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersImageConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersWorkerConfig through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersWorkerConfig)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersWorkerConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersReaperConfig through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersReaperConfig)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersReaperConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

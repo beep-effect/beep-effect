@@ -30,7 +30,7 @@ import {
 } from "@beep/infra";
 import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
@@ -52,6 +52,7 @@ const isOpenClawBackupShipScriptInput = S.is(OpenClawBackupShipScriptInput);
 const isOpenClawGenerationIdentityScriptInput = S.is(OpenClawGenerationIdentityScriptInput);
 
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import {
   openClawLegalSoulMarkdown,
   openClawProofSkillMarkdown,
@@ -383,15 +384,60 @@ describe("@beep/infra OpenClaw", () => {
     });
   });
 
-  it("round-trips OpenClaw config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(OpenClawPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(OpenClawPulumiConfigValues);
-    expectSchemaRoundTrip(OpenClawExpectedIdentity);
-    expectSchemaRoundTrip(OpenClawWorkstationPaths);
-    expectSchemaRoundTrip(OpenClawDeploymentConfig);
-    expectSchemaRoundTrip(OpenClawBackupConfig);
-    expectSchemaRoundTrip(OpenClawBundleHashInput);
-  });
+  it.effect.prop(
+    "round-trips OpenClaw config schemas through encoded wire values",
+    [Arbitrary.schema(OpenClawPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* S.decodeEffect(OpenClawPulumiConfigValues)(value);
+        assertTrue(
+          S.is(OpenClawPulumiConfigValues)(value) && S.toEquivalence(OpenClawPulumiConfigValues)(decoded, value)
+        );
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(OpenClawPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(OpenClawPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawExpectedIdentity through its encoded wire codec",
+    [Arbitrary.schema(OpenClawExpectedIdentity)],
+    ([value]) => expectSchemaRoundTrip(OpenClawExpectedIdentity, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawWorkstationPaths through its encoded wire codec",
+    [Arbitrary.schema(OpenClawWorkstationPaths)],
+    ([value]) => expectSchemaRoundTrip(OpenClawWorkstationPaths, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawDeploymentConfig through its encoded wire codec",
+    [Arbitrary.schema(OpenClawDeploymentConfig)],
+    ([value]) => expectSchemaRoundTrip(OpenClawDeploymentConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawBackupConfig through its encoded wire codec",
+    [Arbitrary.schema(OpenClawBackupConfig)],
+    ([value]) => expectSchemaRoundTrip(OpenClawBackupConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawBundleHashInput through its encoded wire codec",
+    [Arbitrary.schema(OpenClawBundleHashInput)],
+    ([value]) => expectSchemaRoundTrip(OpenClawBundleHashInput, value),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("models renderer input contracts as schemas", () => {
     const backup = OpenClawBackupConfig.make({

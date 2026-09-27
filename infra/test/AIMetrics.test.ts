@@ -6,12 +6,13 @@ import {
   makeAIMetricsStackArgsFromConfigValues,
 } from "@beep/infra";
 import { AiMetricsDeployTarget, AiMetricsInstallInput, makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { assertNone } from "@effect/vitest/utils";
+import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 const encodeUnknownAIMetricsRemoteDeploymentConfig = S.encodeUnknownEffect(AIMetricsRemoteDeploymentConfig);
@@ -176,12 +177,37 @@ describe("@beep/infra AIMetrics", () => {
     });
   });
 
-  it("round-trips AI metrics config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(AIMetricsPulumiConfigValues, {
-      runs: 25,
-    });
-    expectSchemaRoundTrip(AIMetricsPulumiConfigValues);
-    expectSchemaRoundTrip(AIMetricsRemoteSshConfig);
-    expectSchemaRoundTrip(AIMetricsRemoteDeploymentConfig);
-  });
+  it.effect.prop(
+    "round-trips AI metrics config schemas through encoded wire values",
+    [Arbitrary.schema(AIMetricsPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* S.decodeEffect(AIMetricsPulumiConfigValues)(value);
+        assertTrue(
+          S.is(AIMetricsPulumiConfigValues)(value) && S.toEquivalence(AIMetricsPulumiConfigValues)(decoded, value)
+        );
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AIMetricsPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(AIMetricsPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(AIMetricsPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AIMetricsRemoteSshConfig through its encoded wire codec",
+    [Arbitrary.schema(AIMetricsRemoteSshConfig)],
+    ([value]) => expectSchemaRoundTrip(AIMetricsRemoteSshConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips AIMetricsRemoteDeploymentConfig through its encoded wire codec",
+    [Arbitrary.schema(AIMetricsRemoteDeploymentConfig)],
+    ([value]) => expectSchemaRoundTrip(AIMetricsRemoteDeploymentConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

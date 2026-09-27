@@ -6,12 +6,13 @@ import {
   OipWebPulumiConfigValues,
   OipWebStackArgs,
 } from "@beep/infra";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
+import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 const encodeUnknownOipDnsConfig = S.encodeUnknownEffect(OipDnsConfig);
@@ -167,10 +168,35 @@ describe("@beep/infra OipWeb", () => {
     });
   });
 
-  it("round-trips OIP config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(OipWebPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(OipWebPulumiConfigValues);
-    expectSchemaRoundTrip(OipDnsConfig);
-    expectSchemaRoundTrip(OipVercelProjectConfig);
-  });
+  it.effect.prop(
+    "round-trips OIP config schemas through encoded wire values",
+    [Arbitrary.schema(OipWebPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* S.decodeEffect(OipWebPulumiConfigValues)(value);
+        assertTrue(S.is(OipWebPulumiConfigValues)(value) && S.toEquivalence(OipWebPulumiConfigValues)(decoded, value));
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OipWebPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(OipWebPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(OipWebPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OipDnsConfig through its encoded wire codec",
+    [Arbitrary.schema(OipDnsConfig)],
+    ([value]) => expectSchemaRoundTrip(OipDnsConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OipVercelProjectConfig through its encoded wire codec",
+    [Arbitrary.schema(OipVercelProjectConfig)],
+    ([value]) => expectSchemaRoundTrip(OipVercelProjectConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

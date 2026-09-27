@@ -5,12 +5,13 @@ import {
   StorybookVercelAuthenticationDeploymentType,
   StorybookVercelProjectConfig,
 } from "@beep/infra";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { assertNone } from "@effect/vitest/utils";
+import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 const encodeUnknownStorybookVercelProjectConfig = S.encodeUnknownEffect(StorybookVercelProjectConfig);
@@ -114,10 +115,37 @@ describe("@beep/infra Storybook", () => {
     });
   });
 
-  it("round-trips Storybook config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(StorybookPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(StorybookVercelAuthenticationDeploymentType);
-    expectSchemaRoundTrip(StorybookPulumiConfigValues);
-    expectSchemaRoundTrip(StorybookVercelProjectConfig);
-  });
+  it.effect.prop(
+    "round-trips Storybook config schemas through encoded wire values",
+    [Arbitrary.schema(StorybookPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* S.decodeEffect(StorybookPulumiConfigValues)(value);
+        assertTrue(
+          S.is(StorybookPulumiConfigValues)(value) && S.toEquivalence(StorybookPulumiConfigValues)(decoded, value)
+        );
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips StorybookVercelAuthenticationDeploymentType through its encoded wire codec",
+    [Arbitrary.schema(StorybookVercelAuthenticationDeploymentType)],
+    ([value]) => expectSchemaRoundTrip(StorybookVercelAuthenticationDeploymentType, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips StorybookPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(StorybookPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(StorybookPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips StorybookVercelProjectConfig through its encoded wire codec",
+    [Arbitrary.schema(StorybookVercelProjectConfig)],
+    ([value]) => expectSchemaRoundTrip(StorybookVercelProjectConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });
