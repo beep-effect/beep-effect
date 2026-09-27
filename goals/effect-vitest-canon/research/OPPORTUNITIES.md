@@ -3659,3 +3659,11 @@ passed, so that probe was excluded from acceptance. Moving the restoration check
 to afterAll distinguished the original leak (suite exit 1) from scoped cleanup
 (exit 0). Cleanup probes should put their witness outside expected-failure
 inversion and inspect suite-level errors as well as individual test counts.
+
+## Range changeset checks require committed package changes
+
+The Oxigraph pre-commit range check passed, but the next package's check reported
+Oxigraph missing an in-range changeset. An uncommitted new changeset did not
+satisfy the range check either. A committed changeset now names both Oxigraph and
+SHACL. Run the range-based gate after committing each source batch and its
+changeset; a dirty-worktree preflight alone does not prove committed coverage.
