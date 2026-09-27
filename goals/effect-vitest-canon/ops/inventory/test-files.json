@@ -1473,15 +1473,15 @@
     "file": "packages/drivers/doc-text/test/DocText.equivalence.test.ts",
     "package": "@beep/doc-text",
     "kind": "test",
-    "bytes": 626,
-    "lines": 16
+    "bytes": 662,
+    "lines": 17
   },
   {
     "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
     "package": "@beep/doc-text",
     "kind": "test",
-    "bytes": 8689,
-    "lines": 246
+    "bytes": 9279,
+    "lines": 247
   },
   {
     "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/doc-text",
+  "sourceHead": "2236f17ff9d294ec6413e97ff278523aa77919e9",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.1203615039994475,
+  "bunWholeCommandSeconds": 2.2173179469973547,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.44287109375, 2.68115234375, 2.697265625],
+  "loadAfter": [3.64794921875, 2.736328125, 2.71533203125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.03 avg300=0.06 total=701399557\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186086248\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178013525\n",
+    "io": "some avg10=0.00 avg60=0.14 avg300=0.15 total=795494764\nfull avg10=0.00 avg60=0.12 avg300=0.13 total=696067045\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.02 avg300=0.06 total=701403315\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186086248\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178013525\n",
+    "io": "some avg10=0.00 avg60=0.13 avg300=0.15 total=795496904\nfull avg10=0.00 avg60=0.12 avg300=0.13 total=696069006\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "8d07c4b617e3cc70dbc9b084918da01e99643c6e5010037a966b85000057dc54"
+    },
+    {
+      "file": "packages/drivers/doc-text/package.json",
+      "sha256": "96a37186075237a8af44d75d6a35cbe9b430ecf2a96930468a843b9f85d1628c"
+    },
+    {
+      "file": "packages/drivers/doc-text/src/DocText.errors.ts",
+      "sha256": "e42d609574e9cce54b8239e3e3e8bc49a18defd9d25c281a2d4a09f2d8938c09"
+    },
+    {
+      "file": "packages/drivers/doc-text/src/DocText.service.ts",
+      "sha256": "f5acd7de5912ae66baed2c85b582d57b5e6ebdb98e4a664c44be9479fabcd66d"
+    },
+    {
+      "file": "packages/drivers/doc-text/src/index.ts",
+      "sha256": "5ac9333ce85b523b1050c002fa28eefe0201c9e5e192aa05c6de6f77920f3118"
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.equivalence.test.ts",
+      "sha256": "359d7e8b87872da0cc19d8bc78e7d2eb60cc017fb75813caf93c37699328f2df"
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "sha256": "81e9f82f9e45b5eb98e6b8ed3cfcfdf294c7df4c5afaefeb61366b79a2ff6470"
+    }
+  ],
+  "environmentMode": "Actual in-memory PDF and DOCX generation and unpdf/mammoth parsing; independent caller-byte preservation witness, corrupt/over-cap/empty inputs, pure error schema laws. No filesystem, Java/Tika, live provider or credential lookup.",
+  "bunProof": {
+    "passedTests": 9,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.64794921875, 2.736328125, 2.71533203125],
+    "loadAfter": [3.64794921875, 2.736328125, 2.71533203125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.02 avg300=0.06 total=701403363\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186086248\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178013525\n",
+      "io": "some avg10=0.00 avg60=0.13 avg300=0.15 total=795496904\nfull avg10=0.00 avg60=0.12 avg300=0.13 total=696069006\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.02 avg300=0.05 total=701411876\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186086248\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178013525\n",
+      "io": "some avg10=0.00 avg60=0.12 avg300=0.15 total=795499463\nfull avg10=0.00 avg60=0.11 avg300=0.13 total=696070792\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}
