@@ -14,14 +14,16 @@ import {
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { NonNegativeInt, PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { ISOStr } from "@beep/schema/Timestamp";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertEquals, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer, pipe, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -654,7 +656,7 @@ describe("verified-span persistence and re-anchor history", () => {
         ],
       };
 
-      const tamperedHistories = [
+      const tamperedHistories = {
         tamperedLink,
         contradictoryNegative,
         reanchorWithoutDrift,
@@ -675,12 +677,11 @@ describe("verified-span persistence and re-anchor history", () => {
         changedReceiptSource,
         wrongAnchorCount,
         supportedNormalizationFailure,
-      ];
+      };
 
-      pipe(
-        A.every(tamperedHistories, (history) => Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(history))),
-        assertTrue
-      );
+      for (const [invariant, history] of R.toEntries(tamperedHistories)) {
+        assertEquals(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(history)), true, invariant);
+      }
     }, provideTestCrypto)
   );
 });

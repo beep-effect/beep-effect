@@ -2174,6 +2174,7 @@
           "@beep/nlp",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2183,6 +2184,7 @@
           "@beep/nlp",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

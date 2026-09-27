@@ -11,8 +11,9 @@ import {
 import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Context, Duration, Effect, Fiber, Layer, Ref, Stream } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
@@ -101,7 +102,7 @@ describe("ensureRemoteExtractionAllowed", () => {
 });
 
 describe("LangExtractService", () => {
-  layer(
+  it.layer(
     LangExtractLayer.pipe(
       Layer.provide(
         Layer.mergeAll(
@@ -153,7 +154,7 @@ describe("LangExtractService", () => {
     );
   });
 
-  layer(
+  it.layer(
     LangExtractLayer.pipe(
       Layer.provide(Layer.mergeAll(allowRemoteExtractionPolicyLayer, makeLanguageModelLayerFromEffect(Effect.never)))
     )
@@ -181,7 +182,7 @@ describe("LangExtractService", () => {
     );
   });
 
-  layer(
+  it.layer(
     LangExtractLayer.pipe(
       Layer.provide(
         Layer.mergeAll(
@@ -217,7 +218,7 @@ describe("LangExtractService", () => {
     );
   });
 
-  layer(LangExtractLayer.pipe(Layer.provideMerge(RecordedLanguageModelTest)))(
+  it.layer(LangExtractLayer.pipe(Layer.provideMerge(RecordedLanguageModelTest)))(
     "without an explicit remote policy",
     (it) => {
       it.effect(
@@ -241,7 +242,7 @@ describe("LangExtractService", () => {
   );
 });
 
-layer(
+it.layer(
   LangExtractLayer.pipe(Layer.provideMerge(Layer.mergeAll(allowRemoteExtractionPolicyLayer, RecordedLanguageModelTest)))
 )("with an allowed recorded provider", (it) => {
   it.effect(
