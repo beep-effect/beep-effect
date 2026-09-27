@@ -42,6 +42,7 @@ import type { DockNode, DockWorkspace } from "@beep/dock";
 
 const snapshot = pipe(chromeLinuxArial16Encoded, S.decodeResult(FontMetricsSnapshotV1), Result.getOrThrow);
 const metrics = snapshot.metrics;
+const decodeMeasurementError = S.decodeUnknownEffect(S.toType(PretextMeasurementError));
 
 const groupOne = GroupId.make("minima-group-one");
 const groupTwo = GroupId.make("minima-group-two");
@@ -182,12 +183,7 @@ describe("reactive title minima", () => {
       });
 
       const [minima, exit] = yield* settledAtomValue(minimaAtom, capture.completed);
-      const failure = yield* pipe(
-        exit,
-        Exit.findErrorOption,
-        O.getOrThrow,
-        S.decodeUnknownEffect(S.toType(PretextMeasurementError))
-      );
+      const failure = yield* pipe(exit, Exit.findErrorOption, O.getOrThrow, decodeMeasurementError);
       expect(failure.operation).toBe("fixtureCapture");
       expect(failure.message).toBe("Fixture does not carry widths for: wyvern.");
       expect(minima).toEqual({});
