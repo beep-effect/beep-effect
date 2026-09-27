@@ -325,7 +325,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           { type: "paragraph", children: [{ type: "text", text: "(stopped)" }] },
         ]);
         expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
-      });
+      }, Effect.scoped);
 
       yield* verifyUncertainStatus("accepted");
       yield* verifyUncertainStatus("protocol_unknown");
@@ -373,7 +373,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         expect(statusReads).toBe(3);
         expect(registry.get(draftAtom)).toStrictEqual(recoveredStatus === "not_persisted" ? O.some(content) : O.none());
         expect(registry.get(draftRevisionAtom)).toBe(recoveredStatus === "not_persisted" ? 1 : 0);
-      });
+      }, Effect.scoped);
 
       yield* verifyRecoveredStatus("persisted");
       yield* verifyRecoveredStatus("not_persisted");
@@ -417,7 +417,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
         expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
         expect(timelineReads).toBeGreaterThan(1);
-      });
+      }, Effect.scoped);
 
       yield* verifyStatus("persisted");
       yield* verifyStatus("user_persisted");
@@ -456,7 +456,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         const [fallback] = registry.get(unreconciledTurnAtoms(threadId));
         expect(fallback?.userContent).toStrictEqual(content);
         expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(failed)" }] }]);
-      });
+      }, Effect.scoped);
 
       yield* verifyStatus("persisted");
       yield* verifyStatus("user_persisted");

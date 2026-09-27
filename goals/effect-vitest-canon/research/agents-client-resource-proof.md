@@ -6,7 +6,7 @@ chat-client registries register disposal through acquire/release in the native
 Effect test scope. Public scoped AtomRegistry mounts register releases at
 acquisition, replacing cleanup statements that assertions could bypass.
 
-The defect and uncertain-receipt helpers each retain an explicit shorter scope;
+All six scenario helpers retain an explicit shorter scope;
 resources end when each helper invocation ends. The two idle-retention cases
 close their mount scope before the original native sleep and keep the owning
 registry alive through the retained-value assertion. Registry disposal follows
@@ -15,7 +15,7 @@ that assertion. Receipt attempts, intervals and test deadlines are unchanged.
 AST conservation preserves all 69 assertion expressions and 19 registrations
 in the four touched files. Client implementations, RPC test handlers and clients,
 initialValues, sleep durations and timeout inputs remain unchanged. Full package
-verification passes audit (11.9 s) and docgen (6.2 s).
+verification passes audit (10.4 s) and docgen (6.3 s).
 
 Temporary probes observe 25 actual registry acquisitions across the normal
 19-test run. Every registry is disposed and every observed mount is released
@@ -36,3 +36,11 @@ comment-sensitive statement indexing in its temporary instrumentation.
 Draft-storage isolation, assertion migration, positive idle-eviction controls,
 completion witnesses and runner instrumentation remain pending. This resource
 phase does not claim the Agents Client batch is complete.
+
+A return-boundary probe also checks registry disposal after every scenario helper
+returns. The initial migration covered two helpers; a follow-up scope audit
+identified four more nested helpers. All six now close independently. The
+return-boundary probes pass in the final normal run, while the intermediate
+version with four flattened helper scopes fails the corresponding tests despite
+eventual outer-test disposal. This distinguishes the intended helper lifetime
+from merely having no resources left after the whole suite.

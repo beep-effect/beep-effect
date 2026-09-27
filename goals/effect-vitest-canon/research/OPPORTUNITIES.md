@@ -3487,3 +3487,12 @@ control distinguishes the repaired scope from the original cleanup-after-asserts
 path. File receipts were needed because this test environment suppresses console
 output; AST probes should insert after declaration spans rather than comment-
 sensitive statement indices. All temporary source instrumentation is restored.
+
+### Audit every nested scenario boundary during scoped resource migration
+
+The first Agents Client pass scoped two named helpers but missed four nested
+scenario helpers whose registries previously ended before return. Ordinary tests
+and post-suite cleanup probes passed because the outer test eventually disposed
+them. An AST ownership audit found all six helpers; return-boundary probes now
+pass and reject the intermediate version in four tests. Preserve and test the
+shortest original resource lifetime, not just eventual suite cleanup.
