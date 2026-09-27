@@ -146,3 +146,24 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/architecture-lab-config#test`
 - `@beep/architecture-lab-config#test:integration`
 - `@beep/architecture-lab-config#test:property`
+
+## Incoming 80e01f276dbd9420cc6d19573ebd67fa4e3cf56b
+
+- `@beep/exiftool#audit`
+- `@beep/exiftool#build`
+- `@beep/exiftool#check`
+- `@beep/exiftool#coverage`
+- `@beep/exiftool#lint:deprecated-apis`
+- `@beep/exiftool#package-test-typecheck`
+- `@beep/exiftool#test`
+- `@beep/exiftool#test:integration`
+- `@beep/exiftool#test:integration:parallel`
+- `@beep/face-detection#audit`
+- `@beep/face-detection#build`
+- `@beep/face-detection#check`
+- `@beep/face-detection#coverage`
+- `@beep/face-detection#lint:deprecated-apis`
+- `@beep/face-detection#package-test-typecheck`
+- `@beep/face-detection#test`
+- `@beep/face-detection#test:integration`
+- `@beep/face-detection#test:property`

@@ -2662,6 +2662,20 @@ attempt used the deep-property environment floor, which excludes this
 non-property file; its zero-test exit was rejected as proof and the real
 13-test snapshot suite was run without that filter.
 
+### 2026-09-26 — Media ledger evidence length and detector runtime
+
+The seven-file media wave's first strict ledger validation rejected several
+`evidence` fields longer than the schema's 200-character limit. The findings
+and source dispositions were retained; concise evidence belongs in that field,
+with fuller explanations in `reason` and `replacement.sketch`. Checking the
+field length during report-to-row conversion would prevent this repair pass.
+
+The normal Effect/Vitest ratchet passed with `introduced=0 resolved=0`, but
+reported `scanMs=24656.5` across 1181 files. This does not satisfy the goal's
+under-ten-second detector target. Concurrent workstation load is recorded in
+this wave's timing receipts; no performance improvement or target waiver is
+claimed from a passing ratchet.
+
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
 PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed
