@@ -145,20 +145,19 @@ const makeCaptureSpawnerLayer = (
               return makeHandle(luminanceStdout, "ffmpeg stderr", commandExitCode);
             }
 
-            const target = A.last(command.args);
-            if (O.isSome(target) && commandExitCode === 0) {
-              yield* fs.writeFileString(target.value, "fake output");
-            }
-
-            if (failAfterFirstSuccess && encodeNumber === 1 && O.isSome(target)) {
-              return makeHandle(
-                "",
-                "ffmpeg stderr",
-                commandExitCode,
-                Deferred.succeed(firstSucceeded, target.value).pipe(Effect.asVoid)
-              );
-            }
-            return makeHandle("", "ffmpeg stderr", commandExitCode);
+            return yield* O.match(A.last(command.args), {
+              onNone: () => Effect.succeed(makeHandle("", "ffmpeg stderr", commandExitCode)),
+              onSome: Effect.fnUntraced(function* (target) {
+                if (commandExitCode === 0) {
+                  yield* fs.writeFileString(target, "fake output");
+                }
+                const onExit =
+                  failAfterFirstSuccess && encodeNumber === 1
+                    ? Deferred.succeed(firstSucceeded, target).pipe(Effect.asVoid)
+                    : Effect.void;
+                return makeHandle("", "ffmpeg stderr", commandExitCode, onExit);
+              }),
+            });
           })
         )
       );

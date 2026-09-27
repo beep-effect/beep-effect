@@ -3266,3 +3266,12 @@ order and separate equivalence checks.
 - Doc Text property edit: a private ts-morph CallExpression replacement included a trailing statement semicolon and failed with `children ... expected to have the same count`. No source was saved. Keep replacement text at expression granularity and check the mutation exit before starting validation.
 
 - FFmpeg native prerequisite reporting: full package check caught `TS377114 mapSomeToAsSome` and `TS377117 preferSucceedSomeOrNone`. Replaced the generic Option wrappers with `Effect.asSome` and `Effect.succeedNone`; keep these current RC helper idioms in test examples as well as production guidance. A temporary context-skip probe also needed an absolute cleanup path because its runner used the package cwd; the probe was removed before final validation.
+
+### FFmpeg fixture complexity caught only by full proof (2026-09-27)
+
+The package audit passed, but the full publish at `9cea1eee92` failed both
+Fallow health and audit on the scripted capture spawner (cognitive 11). The
+new first-frame exit witness added branches to an existing dispatch callback.
+Use an Option match for the optional output target, keeping output writes and
+the successful-exit Deferred together. Run both root Fallow gates for this
+fixture repair; do not weaken the complexity policy or the staging witness.
