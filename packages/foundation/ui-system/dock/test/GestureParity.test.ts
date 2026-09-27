@@ -21,6 +21,7 @@ import {
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -402,14 +403,12 @@ describe("dock gesture command parity", () => {
         const after = O.getOrThrow(DockWorkspace.findTabs(moved.state, groupTwo));
         expect(yield* encodeTabsNodeJson(after)).toBe(beforeEncoded);
         expect(DockWorkspace.groupCount(moved.state)).toBe(3);
-        expect(
-          O.isNone(
-            DockWorkspace.match(moved.state, {
-              empty: O.none,
-              populated: (workspace) => DockNode.findSplit(workspace.root, splitOne),
-            })
-          )
-        ).toBe(true);
+        assertNone(
+          DockWorkspace.match(moved.state, {
+            empty: O.none,
+            populated: (workspace) => DockNode.findSplit(workspace.root, splitOne),
+          })
+        );
         const movedRoot = yield* DockWorkspace.match(moved.state, {
           empty: () => Effect.die("expected populated"),
           populated: (workspace) => Effect.succeed(workspace.root),

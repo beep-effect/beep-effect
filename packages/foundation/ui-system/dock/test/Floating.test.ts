@@ -35,6 +35,7 @@ import {
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
@@ -80,7 +81,7 @@ describe("floating dock topology", () => {
           )
         );
         expect(floated.events).toContainEqual(expect.objectContaining({ kind: "groupFloated", groupId: groupOne }));
-        expect(DockWorkspace.findTabs(floated.state, groupOne)).toEqual(O.some(tabsOne));
+        assertSome(DockWorkspace.findTabs(floated.state, groupOne), tabsOne);
         expect(floated.state.floating).toHaveLength(1);
         const last = changed(
           yield* engine.transition(

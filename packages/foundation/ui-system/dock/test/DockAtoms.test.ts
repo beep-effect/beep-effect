@@ -1,6 +1,7 @@
 import { DockCommandEnvelope, DockWorkspace, makeDockAtoms } from "@beep/dock";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, AtomRegistry } from "effect/reactivity";
@@ -36,8 +37,8 @@ describe("DockAtoms", () => {
 
         expect(openedResult.kind).toBe("mutationCompleted");
         expect(graph.registry.get(graph.groupCountAtom)).toBe(1);
-        expect(graph.registry.get(graph.panelAtom(panelOne.id))).toEqual(O.some(panelOne));
-        expect(graph.registry.get(graph.activePanelAtom(groupOne))).toEqual(O.some(panelOne));
+        assertSome(graph.registry.get(graph.panelAtom(panelOne.id)), panelOne);
+        assertSome(graph.registry.get(graph.activePanelAtom(groupOne)), panelOne);
 
         graph.registry.set(graph.operationAtom, saveSnapshot);
         const saved = yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, {
@@ -46,7 +47,11 @@ describe("DockAtoms", () => {
         const persisted = graph.registry.get(graph.persistedSnapshotAtom);
         expect(saved.kind).toBe("snapshotSaved");
         expect(AsyncResult.isSuccess(persisted)).toBe(true);
-        expect(O.isSome(AsyncResult.getOrElse(persisted, () => O.none()))).toBe(true);
+        pipe(
+          AsyncResult.getOrElse(persisted, () => O.none()),
+          O.isSome,
+          assertTrue
+        );
 
         graph.registry.set(graph.operationAtom, dispatch(clearWorkspace));
         yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, { suspendOnWaiting: true });

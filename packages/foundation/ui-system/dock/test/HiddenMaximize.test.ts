@@ -24,6 +24,7 @@ import {
   UpdateGroupCommand,
 } from "@beep/dock";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -69,7 +70,7 @@ describe("hidden groups and maximize", () => {
         });
         expect(oneHidden.groups).toEqual([{ groupId: groupTwo, box }]);
         expect(oneHidden.sashes).toEqual([]);
-        expect(O.isNone(DockGeometry.forGroup(oneHidden, groupOne))).toBe(true);
+        assertNone(DockGeometry.forGroup(oneHidden, groupOne));
         const allHidden = yield* requireChanged(
           yield* engine.transition(hidden.state, updateVisibility(groupTwo, false))
         );
@@ -127,7 +128,7 @@ describe("hidden groups and maximize", () => {
             yield* engine.transition(maximized.state, envelope(`structural-${index}`, command))
           );
           expect(result.events.at(-1)).toMatchObject({ kind: "groupRestored", groupId: groupOne });
-          expect(O.isNone((yield* requirePopulated(result.state)).maximized)).toBe(true);
+          assertNone((yield* requirePopulated(result.state)).maximized);
         }
       })
     );
@@ -169,7 +170,7 @@ describe("hidden groups and maximize", () => {
         const hidden = yield* requireChanged(
           yield* engine.transition(maximized.state, updateVisibility(groupOne, false))
         );
-        expect(O.isNone((yield* requirePopulated(hidden.state)).maximized)).toBe(true);
+        assertNone((yield* requirePopulated(hidden.state)).maximized);
         expect(A.map(hidden.events, (event) => event.kind)).toEqual(["groupUpdated", "groupRestored"]);
         const closed = yield* requireChanged(
           yield* engine.transition(
@@ -193,7 +194,7 @@ describe("hidden groups and maximize", () => {
           maximized: O.some(groupOne),
         });
         const decoded = yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(snapshotState));
-        expect((yield* requirePopulated(decoded)).maximized).toEqual(O.some(groupOne));
+        assertSome((yield* requirePopulated(decoded)).maximized, groupOne);
         expect(O.getOrThrow(DockWorkspace.findTabs(decoded, groupTwo)).metadata.visible).toBe(false);
       })
     );
@@ -211,7 +212,7 @@ describe("hidden groups and maximize", () => {
         );
         const restoreEvents = A.filter(result.events, (event) => event.kind === "groupRestored");
         expect(restoreEvents).toEqual([expect.objectContaining({ kind: "groupRestored", groupId: groupOne })]);
-        expect(O.isNone((yield* requirePopulated(result.state)).maximized)).toBe(true);
+        assertNone((yield* requirePopulated(result.state)).maximized);
       })
     );
   });

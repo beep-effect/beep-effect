@@ -20,6 +20,7 @@ import {
 } from "@beep/dock";
 import { chromeLinuxArial16, makePretextCaptureFixture, naturalWidth, PretextCaptureFixture } from "@beep/pretext";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Layer from "effect/Layer";
@@ -95,7 +96,7 @@ describe("title minima projections", () => {
       )
     );
 
-    expect(R.get(titleMinima(metrics, workspace, chrome), groupOne)).toEqual(O.some(expected));
+    assertSome(R.get(titleMinima(metrics, workspace, chrome), groupOne), expected);
   });
 
   it("keeps measured siblings while unmeasured titles contribute zero", () => {
@@ -103,7 +104,7 @@ describe("title minima projections", () => {
     const chrome = TabChrome.make({ perTab: 5, strip: 3 });
     const expected = N.sum(3, N.sum(O.getOrThrow(naturalWidth(metrics, "dragon")), 5));
 
-    expect(R.get(titleMinima(metrics, workspace, chrome), groupOne)).toEqual(O.some(expected));
+    assertSome(R.get(titleMinima(metrics, workspace, chrome), groupOne), expected);
   });
 
   it("omits groups with no measurable titles", () => {

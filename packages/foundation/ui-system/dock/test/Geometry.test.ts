@@ -21,6 +21,7 @@ import {
 } from "@beep/dock";
 import { rows } from "@beep/dock/internal/Geometry.projection";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -156,7 +157,7 @@ describe("dock geometry projection", () => {
         expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(10);
         registry.set(containerAtom, DockBox.make({ left: 0, top: 0, width: 30, height: 40 }));
         expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(30);
-        expect(O.isNone(registry.get(atoms.groupBoxAtom(groupTwo)))).toBe(true);
+        assertNone(registry.get(atoms.groupBoxAtom(groupTwo)));
       })
     );
   });
