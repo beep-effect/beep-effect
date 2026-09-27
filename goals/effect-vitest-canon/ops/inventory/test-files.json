@@ -4224,57 +4224,57 @@
     "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 4685,
-    "lines": 113
+    "bytes": 5536,
+    "lines": 118
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 4503,
-    "lines": 103
+    "bytes": 4396,
+    "lines": 99
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 7716,
-    "lines": 183
+    "bytes": 7609,
+    "lines": 179
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 6390,
-    "lines": 148
+    "bytes": 6283,
+    "lines": 144
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 11529,
-    "lines": 246
+    "bytes": 12189,
+    "lines": 255
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 16761,
-    "lines": 394
+    "bytes": 17595,
+    "lines": 406
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 3530,
-    "lines": 91
+    "bytes": 3423,
+    "lines": 87
   },
   {
     "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
     "package": "@beep/skill-contract",
     "kind": "test",
-    "bytes": 8496,
-    "lines": 220
+    "bytes": 8436,
+    "lines": 217
   },
   {
     "file": "packages/foundation/modeling/utils/test/Array.test.ts",
