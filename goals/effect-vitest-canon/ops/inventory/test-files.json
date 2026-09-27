@@ -1914,50 +1914,50 @@
     "file": "packages/drivers/openclaw/test/Openclaw.equivalence.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 2062,
-    "lines": 60
+    "bytes": 2098,
+    "lines": 61
   },
   {
     "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 20000,
-    "lines": 452
+    "bytes": 19983,
+    "lines": 454
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 23162,
-    "lines": 603
+    "bytes": 26776,
+    "lines": 663
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 10979,
-    "lines": 301
+    "bytes": 11024,
+    "lines": 303
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawProbe.service.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 3754,
-    "lines": 120
+    "bytes": 6149,
+    "lines": 186
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 12682,
-    "lines": 356
+    "bytes": 13530,
+    "lines": 372
   },
   {
     "file": "packages/drivers/openclaw/test/OpenclawSystemd.service.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 7047,
-    "lines": 178
+    "bytes": 8456,
+    "lines": 206
   },
   {
     "file": "packages/drivers/openclaw/test/fixtures/golden-intent.expected.ts",
@@ -1970,8 +1970,8 @@
     "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
     "package": "@beep/openclaw",
     "kind": "test",
-    "bytes": 15864,
-    "lines": 387
+    "bytes": 17224,
+    "lines": 404
   },
   {
     "file": "packages/drivers/oxigraph/test/Oxigraph.equivalence.test.ts",
@@ -7852,5 +7852,12 @@
     "kind": "test",
     "bytes": 10333,
     "lines": 261
+  },
+  {
+    "file": "packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts",
+    "package": "@beep/openclaw",
+    "kind": "test",
+    "bytes": 3639,
+    "lines": 92
   }
 ]
