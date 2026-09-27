@@ -289,12 +289,12 @@ describe("M365 MCP server", () => {
       ).pipe(Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)), Layer.provide(MockM365Layer));
 
       yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
-      const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkDetach({ startImmediately: true }));
+      const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkChild({ startImmediately: true }));
 
       yield* Effect.yieldNow;
       yield* Deferred.await(ready);
       const output = yield* Ref.get(stdout);
-      yield* Fiber.interrupt(fiber).pipe(Effect.forkDetach({ startImmediately: true }), Effect.ignore);
+      yield* Fiber.interrupt(fiber);
 
       assert.isTrue(Str.includes(`"id":1`)(output), output);
       assert.isTrue(Str.includes(`"id":2`)(output), output);
