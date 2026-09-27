@@ -7808,29 +7808,29 @@
     "file": "packages/workspace/server/test/ThreadStore.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 16490,
-    "lines": 437
+    "bytes": 17192,
+    "lines": 440
   },
   {
     "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 18175,
-    "lines": 447
+    "bytes": 19123,
+    "lines": 468
   },
   {
     "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 4011,
-    "lines": 98
+    "bytes": 4178,
+    "lines": 97
   },
   {
     "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
     "package": "@beep/workspace-server",
     "kind": "test",
-    "bytes": 9267,
-    "lines": 204
+    "bytes": 9426,
+    "lines": 207
   },
   {
     "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
