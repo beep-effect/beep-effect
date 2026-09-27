@@ -26,8 +26,9 @@ import {
   fromPatentCitationEventRow,
   toPatentCitationEventInsert,
 } from "@beep/law-practice-tables/entities/PatentCitationEvent";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";

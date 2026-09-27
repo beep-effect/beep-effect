@@ -5,7 +5,8 @@ import { KG_BUILD_TABLE_NAME, kgBuildTable } from "@beep/law-practice-tables/ent
 import { KG_EDGE_TABLE_NAME, kgEdgeTable } from "@beep/law-practice-tables/entities/KgEdge";
 import { KG_NODE_TABLE_NAME, kgNodeTable } from "@beep/law-practice-tables/entities/KgNode";
 import * as PatentCitationEvent from "@beep/law-practice-tables/entities/PatentCitationEvent";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";

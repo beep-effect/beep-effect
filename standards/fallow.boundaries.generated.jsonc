@@ -2276,6 +2276,7 @@
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2283,6 +2284,7 @@
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
