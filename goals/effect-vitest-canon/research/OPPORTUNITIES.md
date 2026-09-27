@@ -3255,3 +3255,8 @@ that broad matchers accepted. Use the existing Array.head/Option.getOrThrow
 path to require the candidate, and NonNegativeInt.make(0) for the same expected
 number. Include the required imports in the same edit; missing imports caused
 an avoidable second typecheck failure. All original cardinality checks remain.
+
+Langextract native property conversion exposed nested Effect.gen yields
+(TS377083) where old runSync calls had hidden runtime boundaries. Inline the
+array/envelope encode-parse steps in the parent generator, preserving their
+order and separate equivalence checks.

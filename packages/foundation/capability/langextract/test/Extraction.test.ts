@@ -65,34 +65,21 @@ describe("parseModelOutput", () => {
     })
   );
 
-  it("round-trips schema-derived candidates from both accepted wire shapes", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ExtractionCandidatesArbitrary]),
-          ([candidates]) => {
-            const fromArray = Effect.runSync(
-              Effect.gen(function* () {
-                const text = yield* encodeCandidateArrayJson(candidates);
-                return yield* parseModelOutput(text);
-              })
-            );
-            const fromEnvelope = Effect.runSync(
-              Effect.gen(function* () {
-                const text = yield* encodeCandidateEnvelopeJson({ extractions: candidates });
-                return yield* parseModelOutput(text);
-              })
-            );
+  it.effect.prop(
+    "round-trips schema-derived candidates from both accepted wire shapes",
+    { candidates: ExtractionCandidatesArbitrary },
+    ({ candidates }) =>
+      Effect.gen(function* () {
+        const arrayJson = yield* encodeCandidateArrayJson(candidates);
+        const fromArray = yield* parseModelOutput(arrayJson);
+        const envelopeJson = yield* encodeCandidateEnvelopeJson({ extractions: candidates });
+        const fromEnvelope = yield* parseModelOutput(envelopeJson);
 
-            expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
-            expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
+        expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect(
     "keeps grounded-case encoded optional-key shape unchanged",

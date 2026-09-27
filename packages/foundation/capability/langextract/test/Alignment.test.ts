@@ -324,60 +324,50 @@ describe("alignCandidate", () => {
     expect(GroundedExtraction.guards.unaligned(extraction)).toBe(true);
   });
 
-  it("keeps schema-derived aligned spans inside the source text", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ExtractionCandidateArbitrary, Arbitrary.schema(S.String), Arbitrary.schema(S.String)]),
-          ([candidate, prefix, suffix]) => {
-            const sourceText = `${prefix}${candidate.text}${suffix}`;
-            const extraction = alignCandidate(candidate, sourceOf(sourceText));
+  it.prop(
+    "keeps schema-derived aligned spans inside the source text",
+    { candidate: ExtractionCandidateArbitrary, prefix: Arbitrary.schema(S.String), suffix: Arbitrary.schema(S.String) },
+    ({ candidate, prefix, suffix }) => {
+      const sourceText = `${prefix}${candidate.text}${suffix}`;
+      const extraction = alignCandidate(candidate, sourceOf(sourceText));
 
-            if (
-              GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"])(
-                extraction
-              )
-            ) {
-              expect(extraction.span.start).toBeGreaterThanOrEqual(0);
-              expect(extraction.span.end).toBeLessThanOrEqual(Str.length(sourceText));
-              expect(extraction.matchedText).toBe(Str.slice(extraction.span.start, extraction.span.end)(sourceText));
-            }
+      if (
+        GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"])(extraction)
+      ) {
+        expect(extraction.span.start).toBeGreaterThanOrEqual(0);
+        expect(extraction.span.end).toBeLessThanOrEqual(Str.length(sourceText));
+        expect(extraction.matchedText).toBe(Str.slice(extraction.span.start, extraction.span.end)(sourceText));
+      }
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "honors maxExtractions for schema-derived candidates",
+    {
+      candidates: Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 32 }))).pipe(
+        Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(ExtractionCandidateArbitrary, count)))
+      ),
+      maxExtractions: Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(32))),
+    },
+    ({ candidates, maxExtractions }) => {
+      const aligned = alignCandidates(
+        candidates,
+        AlignmentSource.make({
+          maxExtractions: NonNegativeInt.make(maxExtractions),
+          sourceText: "",
+        })
+      );
 
-  it("honors maxExtractions for schema-derived candidates", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 32 }))).pipe(
-              Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(ExtractionCandidateArbitrary, count)))
-            ),
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(32))),
-          ]),
-          ([candidates, maxExtractions]) => {
-            const aligned = alignCandidates(
-              candidates,
-              AlignmentSource.make({
-                maxExtractions: NonNegativeInt.make(maxExtractions),
-                sourceText: "",
-              })
-            );
-
-            expect(A.length(aligned)).toBeLessThanOrEqual(maxExtractions);
-            expect(A.length(aligned)).toBeLessThanOrEqual(A.length(candidates));
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(A.length(aligned)).toBeLessThanOrEqual(maxExtractions);
+      expect(A.length(aligned)).toBeLessThanOrEqual(A.length(candidates));
+      expect(A.length(aligned)).toBe(Num.min(A.length(candidates), maxExtractions));
+      expect(
+        A.map(aligned, ({ attributes, confidence, label, text }) => ({ attributes, confidence, label, text }))
+      ).toEqual(A.take(candidates, maxExtractions));
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("returns an empty batch when the resolved extraction cap is zero", () => {
     const aligned = alignCandidates(

@@ -13,9 +13,10 @@ import { DocumentId } from "@beep/nlp/Core";
 import { NonNegativeInt } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Duration, Effect, Fiber, Layer, Stream } from "effect";
+import { Context, Duration, Effect, Fiber, Layer, Ref, Stream } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
+import * as Num from "effect/Number";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 
@@ -41,6 +42,16 @@ const makeLanguageModelLayerFromEffect = (
 
 const makeLanguageModelLayer = (text: string): Layer.Layer<LanguageModel.LanguageModel> =>
   makeLanguageModelLayerFromEffect(Effect.succeed({ text }));
+
+class GenerationCalls extends Context.Service<GenerationCalls, Ref.Ref<number>>()(
+  "@beep/langextract/test/Service.test/GenerationCalls"
+) {}
+
+const RecordedLanguageModelTest = Layer.unwrap(
+  Effect.map(GenerationCalls, (calls) =>
+    makeLanguageModelLayerFromEffect(Ref.update(calls, Num.increment).pipe(Effect.as({ text: `{"extractions":[]}` })))
+  )
+).pipe(Layer.provideMerge(Layer.effect(GenerationCalls, Ref.make(0))));
 
 describe("buildPrompt", () => {
   it.effect(
@@ -206,7 +217,7 @@ describe("LangExtractService", () => {
     );
   });
 
-  layer(LangExtractLayer.pipe(Layer.provide(makeLanguageModelLayer(`{"extractions":[]}`))))(
+  layer(LangExtractLayer.pipe(Layer.provideMerge(RecordedLanguageModelTest)))(
     "without an explicit remote policy",
     (it) => {
       it.effect(
@@ -223,8 +234,31 @@ describe("LangExtractService", () => {
 
           expect(error).toBeInstanceOf(LangExtractError);
           expect(error.reason).toBe("remote-policy-denied");
+          expect(yield* Ref.get(yield* GenerationCalls)).toBe(0);
         })
       );
     }
+  );
+});
+
+layer(
+  LangExtractLayer.pipe(Layer.provideMerge(Layer.mergeAll(allowRemoteExtractionPolicyLayer, RecordedLanguageModelTest)))
+)("with an allowed recorded provider", (it) => {
+  it.effect(
+    "records model generation when remote policy permits the request",
+    Effect.fnUntraced(function* () {
+      const calls = yield* GenerationCalls;
+      expect(yield* Ref.get(calls)).toBe(0);
+      const service = yield* LangExtractService;
+      const result = yield* service.extract(
+        LangExtractRequest.make({
+          documentId: DocumentId.make("doc-1"),
+          targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
+          text: "Alice founded Acme.",
+        })
+      );
+      expect(result.extractions).toEqual([]);
+      expect(yield* Ref.get(calls)).toBe(1);
+    })
   );
 });

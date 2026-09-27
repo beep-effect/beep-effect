@@ -134,23 +134,17 @@ const persistAndReload = Effect.fnUntraced(function* (history: VerifiedSpanHisto
 });
 
 describe("verified-span persistence and re-anchor history", () => {
-  it("round-trips schema-derived persisted failures", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(VerifiedSpanAttemptFailure)]),
-          ([failure]) => {
-            const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
-            const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
+  it.prop(
+    "round-trips schema-derived persisted failures",
+    { failure: Arbitrary.schema(VerifiedSpanAttemptFailure) },
+    ({ failure }) => {
+      const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
+      const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
 
-            expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "persists exact raw anchors, raw candidates, source identity, and pinned versions across restart",
