@@ -16,3 +16,14 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/mcp-kit#test`
 - `@beep/mcp-kit#test:integration`
 - `@beep/mcp-kit#test:property`
+
+## Incoming a97ca9c183b2cf7cdacb4a5c78bfcb5b949bbaae
+
+- `@beep/shared-domain#audit`
+- `@beep/shared-domain#build`
+- `@beep/shared-domain#check`
+- `@beep/shared-domain#coverage`
+- `@beep/shared-domain#lint:deprecated-apis`
+- `@beep/shared-domain#package-test-typecheck`
+- `@beep/shared-domain#test`
+- `@beep/shared-domain#test:property`

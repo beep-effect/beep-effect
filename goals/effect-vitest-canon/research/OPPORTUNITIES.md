@@ -2553,6 +2553,31 @@ the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
 
+## 2026-09-26: Existing UI precision counterexample still reproduces
+
+While selecting the next existing inventory wave, the admitted UI property row
+was checked against current main. SpinParams.make({ precision: 101, step: 1 })
+accepts the value; both numberToString(1, 101) and the number-input blur helper
+throw RangeError: "toFixed() argument must be between 0 and 100". No production
+change or narrowed generator was made. The schema/runtime precision contract
+needs a separately authorized repair before this finding can close. Aligning
+public schema bounds with the formatting API would prevent this mismatch.
+
+PR #1300 also exposed transient GitHub discovery failure: GraphQL reported a rate
+limit while the REST endpoint confirmed the open PR and matching head. The
+readiness monitor terminated with "requires an open pull request". Its result
+was acknowledged; the publisher remains live. Preserve the original API error
+in discovery diagnostics to distinguish quota failure from a missing PR.
+
+## Runner dependency generated-boundary follow-up
+
+After TypeScript sync passed on PR #1300, the next Repo Sanity stage found
+`standards/fallow.boundaries.generated.jsonc` stale. The runner development
+dependency adds exactly two allowed-boundary entries for the owning package.
+Regenerated with `bun run fallow:boundaries:write`; no boundary policy or
+unrelated package entry changed. Include this command beside tsconfig-sync
+when admitting the runner dependency in later waves.
+
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
 PR #1291 passed TypeScript reference synchronization but Repo Sanity then failed

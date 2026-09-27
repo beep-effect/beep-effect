@@ -1,0 +1,248 @@
+[
+  {
+    "id": "EV001:packages/shared/domain/test/EntityKernel.test.ts:214:runSync@21#1",
+    "phase": "scope",
+    "fixSha": "12851319b74e44ce7745e9cd6b9191efa4e1f145",
+    "currentLine": 216
+  },
+  {
+    "id": "EV001:packages/shared/domain/test/IdentityNamespaces.test.ts:438:runSync@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 440
+  },
+  {
+    "id": "EV001:packages/shared/domain/test/SchemaParity.test.ts:48:runSync@4#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 58
+  },
+  {
+    "id": "EV002:packages/shared/domain/test/EntityKernel.test.ts:180:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "12851319b74e44ce7745e9cd6b9191efa4e1f145",
+    "currentLine": 171
+  },
+  {
+    "id": "EV003:packages/shared/domain/test/EntityKernel.test.ts:62:provideScopedLayer@2#1",
+    "phase": "scope",
+    "fixSha": "12851319b74e44ce7745e9cd6b9191efa4e1f145",
+    "currentLine": 171
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:112:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 110
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:113:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 111
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:326:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 327
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:354:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 355
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:390:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 393
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:391:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 394
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:392:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 395
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/LocalDate.test.ts:129:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 130
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/LocalDate.test.ts:130:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 131
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/LocalDate.test.ts:131:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 132
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/Organization.test.ts:105:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 109
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/Organization.test.ts:106:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 110
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/Organization.test.ts:145:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 149
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:147:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 169
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:192:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 217
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:69:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 87
+  },
+  {
+    "id": "EV007:packages/shared/domain/test/IdentityNamespaces.test.ts:439:checkEffect@10#1",
+    "phase": "properties",
+    "fixSha": "402cbd8e1d188ae47b0d4e225b253a52e6d949b6",
+    "currentLine": 440
+  },
+  {
+    "id": "EV007:packages/shared/domain/test/SchemaParity.test.ts:49:checkEffect@6#1",
+    "phase": "properties",
+    "fixSha": "402cbd8e1d188ae47b0d4e225b253a52e6d949b6",
+    "currentLine": 58
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:393:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 394
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/EntityKernel.test.ts:394:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 395
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/LocalDate.test.ts:128:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 130
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/Organization.test.ts:107:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 109
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/Organization.test.ts:108:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 110
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/Organization.test.ts:147:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 149
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:158:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 168
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:159:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 169
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:161:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 171
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:163:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 173
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:165:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 175
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:167:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 177
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:169:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 179
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:171:expect@4#1",
+    "phase": "residual",
+    "fixSha": "783e3e5886f203e3c2501580916d266a52e4df01",
+    "currentLine": 181
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:208:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 217
+  },
+  {
+    "id": "EV006:packages/shared/domain/test/SchemaParity.test.ts:77:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "c464b24aaf334d62dce3110741d2efb2e14881d2",
+    "currentLine": 87
+  },
+  {
+    "id": "EV007:packages/shared/domain/test/IdentityNamespaces.test.ts:441:checkEffect@30#1",
+    "phase": "properties",
+    "fixSha": "402cbd8e1d188ae47b0d4e225b253a52e6d949b6",
+    "currentLine": 440
+  },
+  {
+    "id": "EV007:packages/shared/domain/test/SchemaParity.test.ts:50:checkEffect@24#1",
+    "phase": "properties",
+    "fixSha": "402cbd8e1d188ae47b0d4e225b253a52e6d949b6",
+    "currentLine": 58
+  }
+]

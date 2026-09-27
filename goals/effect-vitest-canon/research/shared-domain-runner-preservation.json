@@ -1,0 +1,129 @@
+{
+  "beforeSha": "49ffe1a829",
+  "preservation": [
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "84c375cee1e41ed2100efce28a171f76d839057f1613a96e0e8fb6b881b0c1ad",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "0cf874dbd989836d84db51ad022750c5036a8258366d878e498d6565be56121f",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "d996dc64941d592ad41593d1c4352e532c9769ebf72d65b1ee242a663c399fdb",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "51aaa52d65210e4997b7fcf256ec9fd1f60ecc67a3692b4ab3733875856d49b9",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "ab6e3307d7633199393c31a7e6be5f78337c24f804230c28f5ab8556ff8115f5",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "12a356d78d78c8d5730a5ee97dfb83959064b0bdf14aa753128e63ff2c7f8cc6",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/StaticProbes.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da",
+      "instrumented": false
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "54941f8301e41ef74428071856a56cc96d0333218590bef40b3c7aa828c9e5ad",
+      "instrumented": true
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "1a340a2ca3bbbb0fb95bf402bcf04a3cc12aa5bceabc3c7d081618de29a5d026",
+      "instrumented": true
+    }
+  ],
+  "packageAuditSeconds": 8.0,
+  "docgenSeconds": 3.8,
+  "proofs": [
+    {
+      "runtime": "node",
+      "trace": "off",
+      "passedTests": 116,
+      "failedTests": 0,
+      "wholeCommandSeconds": 4.521804299998621,
+      "sourceStable": true,
+      "loadBefore": [8.4072265625, 6.96533203125, 6.24755859375],
+      "loadAfter": [8.21435546875, 6.94921875, 6.24609375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.16 avg60=0.47 avg300=0.31 total=229403725\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.01 avg60=0.02 avg300=0.00 total=88010962\nfull avg10=0.01 avg60=0.02 avg300=0.00 total=85413466\n",
+        "io": "some avg10=0.18 avg60=0.32 avg300=0.10 total=695702894\nfull avg10=0.08 avg60=0.15 avg300=0.04 total=629974157\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.08 avg60=0.42 avg300=0.31 total=229413274\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=88010963\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=85413467\n",
+        "io": "some avg10=0.10 avg60=0.29 avg300=0.09 total=695703042\nfull avg10=0.04 avg60=0.14 avg300=0.04 total=629974290\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "trace": "off",
+      "passedTests": 116,
+      "failedTests": 0,
+      "wholeCommandSeconds": 1.616583384005935,
+      "sourceStable": true,
+      "loadBefore": [8.21435546875, 6.94921875, 6.24609375],
+      "loadAfter": [8.21435546875, 6.94921875, 6.24609375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.08 avg60=0.42 avg300=0.31 total=229413285\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=88010963\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=85413467\n",
+        "io": "some avg10=0.10 avg60=0.29 avg300=0.09 total=695703042\nfull avg10=0.04 avg60=0.14 avg300=0.04 total=629974290\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.08 avg60=0.42 avg300=0.31 total=229418843\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=88010963\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=85413467\n",
+        "io": "some avg10=0.10 avg60=0.29 avg300=0.09 total=695703865\nfull avg10=0.04 avg60=0.14 avg300=0.04 total=629974942\n"
+      }
+    },
+    {
+      "runtime": "node",
+      "trace": "on",
+      "passedTests": 116,
+      "failedTests": 0,
+      "wholeCommandSeconds": 3.6705516660003923,
+      "sourceStable": true,
+      "loadBefore": [8.21435546875, 6.94921875, 6.24609375],
+      "loadAfter": [8.357421875, 7.0, 6.2666015625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.08 avg60=0.42 avg300=0.31 total=229419171\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=88010963\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=85413467\n",
+        "io": "some avg10=0.10 avg60=0.29 avg300=0.09 total=695704050\nfull avg10=0.04 avg60=0.14 avg300=0.04 total=629975079\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.05 avg60=0.39 avg300=0.30 total=229425517\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=88010963\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=85413467\n",
+        "io": "some avg10=0.06 avg60=0.27 avg300=0.09 total=695712073\nfull avg10=0.03 avg60=0.13 avg300=0.04 total=629981616\n"
+      }
+    }
+  ],
+  "diagnosticProbe": {
+    "temporaryFileRemoved": true,
+    "traceOffNoLifecycle": true,
+    "traceOnStartFailureEndNameDuration": true,
+    "controlledFailure": "independent unequal string assertion via it.effect.fails; TestConsole logLines captured after completion"
+  }
+}

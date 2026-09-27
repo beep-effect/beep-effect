@@ -1,5 +1,7 @@
 import { isOnePasswordReference, OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 
@@ -7,7 +9,7 @@ const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
 
 const expectDecodeFailure = Effect.fn("OnePasswordReferenceTest.expectDecodeFailure")(function* (input: unknown) {
   const exit = yield* Effect.exit(decodeOnePasswordReference(input));
-  assert.strictEqual(Exit.isFailure(exit), true);
+  assertTrue(Exit.isFailure(exit));
 });
 
 describe("OnePasswordReference", () => {
@@ -30,7 +32,7 @@ describe("OnePasswordReference", () => {
   );
 
   it("exposes a schema-derived guard", () => {
-    expect(isOnePasswordReference("op://Private/Discord Bot/token")).toBe(true);
-    expect(isOnePasswordReference("not-a-reference")).toBe(false);
+    assertTrue(isOnePasswordReference("op://Private/Discord Bot/token"));
+    assertFalse(isOnePasswordReference("not-a-reference"));
   });
 });

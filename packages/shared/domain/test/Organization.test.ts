@@ -1,7 +1,9 @@
 import * as Organization from "@beep/shared-domain/entities/Organization";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -16,7 +18,7 @@ const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  assert.strictEqual(Exit.isFailure(exit), true);
+  assertTrue(Exit.isFailure(exit));
 });
 
 const systemPrincipal = {
@@ -58,8 +60,8 @@ describe("Organization", () => {
       expect(Shared.OrganizationId.tableName).toBe("shared_organization");
       expect(Shared.OrganizationId.entityType).toBe("SharedOrganization");
       expect(Shared.OrganizationId.resource).toBe("shared.organization");
-      expect(Shared.OrganizationId.equivalence(id1, id1Again)).toBe(true);
-      expect(Shared.OrganizationId.equivalence(id1, id2)).toBe(false);
+      assertTrue(Shared.OrganizationId.equivalence(id1, id1Again));
+      assertFalse(Shared.OrganizationId.equivalence(id1, id2));
       expect(id1).toBe(1);
     })
   );
@@ -67,9 +69,9 @@ describe("Organization", () => {
   it.effect(
     "defines license-tier literals and settings decoding",
     Effect.fnUntraced(function* () {
-      expect(Organization.LicenseTier.is.solo("solo")).toBe(true);
-      expect(Organization.LicenseTier.is.team("team")).toBe(true);
-      expect(Organization.LicenseTier.is.enterprise("enterprise")).toBe(true);
+      assertTrue(Organization.LicenseTier.is.solo("solo"));
+      assertTrue(Organization.LicenseTier.is.team("team"));
+      assertTrue(Organization.LicenseTier.is.enterprise("enterprise"));
       expect(
         (yield* decodeUnknownOrganizationSettings({ allowAgentActions: false, defaultRetentionDays: 30 }))
           .defaultRetentionDays
@@ -87,11 +89,11 @@ describe("Organization", () => {
       const decodedSettings = yield* decodeOrganizationSettings(encodedSettings);
 
       expect(decodedTier).toBe(licenseTier);
-      expect(
+      assertTrue(
         Organization.LicenseTier.is.solo(decodedTier) ||
           Organization.LicenseTier.is.team(decodedTier) ||
           Organization.LicenseTier.is.enterprise(decodedTier)
-      ).toBe(true);
+      );
       assert.instanceOf(decodedSettings, Organization.Settings);
       assert.strictEqual(decodedSettings.allowAgentActions, settings.allowAgentActions);
       assert.strictEqual(decodedSettings.defaultRetentionDays, settings.defaultRetentionDays);
@@ -104,8 +106,8 @@ describe("Organization", () => {
   it.effect(
     "decodes nullable parent organization ids to Option values",
     Effect.fnUntraced(function* () {
-      expect(O.isNone((yield* decodeOrganization(organizationInput)).parentOrgId)).toBe(true);
-      expect(O.isNone((yield* decodeOrganization({ ...organizationInput, parentOrgId: null })).parentOrgId)).toBe(true);
+      assertNone((yield* decodeOrganization(organizationInput)).parentOrgId);
+      assertNone((yield* decodeOrganization({ ...organizationInput, parentOrgId: null })).parentOrgId);
       expect(O.getOrThrow((yield* decodeOrganization({ ...organizationInput, parentOrgId: 1 })).parentOrgId)).toBe(1);
       yield* expectFailure(decodeOrganization({ ...organizationInput, parentOrgId: 0 }));
     })
@@ -144,7 +146,7 @@ describe("Organization", () => {
 
       expect(Organization.Model.fields.slug).toBeDefined();
       expect(organization.name).toBe("Acme");
-      expect(O.isNone(organization.parentOrgId)).toBe(true);
+      assertNone(organization.parentOrgId);
     })
   );
 
@@ -161,26 +163,26 @@ describe("Organization", () => {
         slug: "child-acme",
       });
 
-      expect(Organization.isTenantRoot({ id: rootId, orgId: rootId })).toBe(true);
-      expect(Organization.isTenantRoot({ id: rootId, orgId: parentId })).toBe(false);
-      expect(Organization.hasParentOrganization({ parentOrgId: O.none() })).toBe(false);
-      expect(Organization.hasParentOrganization(child)).toBe(true);
-      expect(Organization.hasValidTenantPlacement({ id: rootId, orgId: rootId, parentOrgId: O.none() })).toBe(true);
-      expect(Organization.hasValidTenantPlacement(child)).toBe(true);
-      expect(
+      assertTrue(Organization.isTenantRoot({ id: rootId, orgId: rootId }));
+      assertFalse(Organization.isTenantRoot({ id: rootId, orgId: parentId }));
+      assertFalse(Organization.hasParentOrganization({ parentOrgId: O.none() }));
+      assertTrue(Organization.hasParentOrganization(child));
+      assertTrue(Organization.hasValidTenantPlacement({ id: rootId, orgId: rootId, parentOrgId: O.none() }));
+      assertTrue(Organization.hasValidTenantPlacement(child));
+      assertFalse(
         Organization.hasValidTenantPlacement({
           id: rootId,
           orgId: rootId,
           parentOrgId: O.some(parentId),
         })
-      ).toBe(false);
-      expect(
+      );
+      assertFalse(
         Organization.hasValidTenantPlacement({
           id: rootId,
           orgId: parentId,
           parentOrgId: O.none(),
         })
-      ).toBe(false);
+      );
     })
   );
 });
