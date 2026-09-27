@@ -22,9 +22,10 @@ import {
   planWindows,
   videoSecondsToEpochMs,
 } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

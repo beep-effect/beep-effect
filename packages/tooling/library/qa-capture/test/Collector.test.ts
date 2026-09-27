@@ -13,9 +13,10 @@ import {
   QaCaptureError,
   Witness,
 } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert, expect, it } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import { Effect, Fiber, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient } from "effect/http";
 import * as S from "effect/Schema";

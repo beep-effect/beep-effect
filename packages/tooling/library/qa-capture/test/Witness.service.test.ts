@@ -1,5 +1,6 @@
 import { Witness } from "@beep/qa-capture";
-import { describe, expect, it, vi } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect } from "effect";
 
 describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {

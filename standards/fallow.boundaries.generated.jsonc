@@ -3152,6 +3152,7 @@
           "@beep/identity",
           "@beep/qa-capture",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3160,6 +3161,7 @@
           "@beep/identity",
           "@beep/qa-capture",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

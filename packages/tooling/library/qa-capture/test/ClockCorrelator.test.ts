@@ -15,8 +15,9 @@ import {
   detectBeaconEdges,
   fitBeaconClockSync,
 } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Layer, pipe } from "effect";
 import type { FFmpegShape } from "@beep/ffmpeg";

@@ -1,7 +1,8 @@
 import { CaptureSession, CollectorHandle, SessionManifest, SessionStore, Viewport } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, FileSystem, Layer, pipe } from "effect";
 

@@ -1,20 +1,19 @@
 import { FFmpeg } from "@beep/ffmpeg";
 import { BeaconEvent, ClockCorrelator, CorrelateClockRequest } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { A, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Stream } from "effect";
+import { expect } from "@effect/vitest";
+import { Effect, FileSystem, Layer, Match, Path, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-// Live lane: exercises the real ffmpeg binary on PATH. Skips cleanly
-// (logInfo, no assertions) on machines without ffmpeg.
+// Live lane: exercises the real ffmpeg binary on PATH. A missing binary is an
+// explicit skip; failed prerequisites and native execution remain failures.
 const NativeCorrelatorTestLayer = Layer.mergeAll(
   NodeServices.layer,
   ClockCorrelator.layer.pipe(Layer.provide(FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))))
 );
-
-const skipNotice = Effect.logInfo("Skipping the live clock correlator lane because ffmpeg is not runnable on PATH.");
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
@@ -36,10 +35,20 @@ const runTool = (command: string, args: ReadonlyArray<string>) =>
     })
   );
 
-const ffmpegAvailable = runTool("ffmpeg", ["-version"]).pipe(
-  Effect.map((result) => result.exitCode === 0),
-  Effect.orElseSucceed(() => false)
-);
+const ffmpegAvailable = Effect.gen(function* () {
+  const result = yield* runTool("ffmpeg", ["-version"]).pipe(
+    Effect.asSome,
+    Effect.catchTag("PlatformError", (error) =>
+      Match.value(error.reason).pipe(
+        Match.when({ _tag: "NotFound" }, () => Effect.succeedNone),
+        Match.orElse(() => Effect.fail(error))
+      )
+    )
+  );
+  if (O.isNone(result)) return false;
+  expect(result.value.exitCode, "ffmpeg -version prerequisite must exit successfully").toBe(0);
+  return true;
+});
 
 const T0 = 1753838000000;
 const FIRST_FLIP_OFFSET_MS = 500;
@@ -87,10 +96,10 @@ const makeFlips = (): ReadonlyArray<BeaconEvent> =>
 it.layer(NativeCorrelatorTestLayer, { excludeTestServices: true })("@beep/qa-capture live clock correlator", (it) => {
   it.effect(
     "recovers the wall-clock offset from a synthesized beacon video",
-    () =>
+    (context) =>
       Effect.gen(function* () {
         if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+          return yield* Effect.sync(() => context.skip("ffmpeg binary is absent from PATH"));
         }
 
         const fs = yield* FileSystem.FileSystem;
