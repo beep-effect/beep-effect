@@ -94,7 +94,9 @@ describe("AdapterEffectDateTime", () => {
         const value = DateTime.makeUnsafe(epochMilliseconds);
         const zoned = adapter.setTimezone(value, timezone);
         expect(zoned.epochMilliseconds).toBe(epochMilliseconds);
-        expect(adapter.getTimezone(zoned)).toBe(timezone);
+        expect(adapter.getTimezone(zoned)).toBe(
+          new Intl.DateTimeFormat("en-US", { timeZone: timezone }).resolvedOptions().timeZone
+        );
         expect(adapter.setTimezone(zoned, "UTC").epochMilliseconds).toBe(epochMilliseconds);
       }
     },

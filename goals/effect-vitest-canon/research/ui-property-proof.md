@@ -8,7 +8,7 @@ named registrations across ten files; parameterized cases remain unchanged.
 Twenty-six Boolean/Option assertions use public Effect Vitest utilities.
 
 Additional generated laws cover UTC instants from 2020 through 2030 across UTC,
-London, New York, Kolkata and Sydney, asserting the intended token and unchanged
+London, New York, Kolkata and Sydney, asserting the runtime-canonical token and unchanged
 instant through zone conversion and back. The existing winter London example,
 getters/setters, inclusive year range, invalid values and meridiem cases remain.
 
@@ -38,3 +38,10 @@ The package audit and docgen passed after the property migration with a 400-case
 floor and seed 20260708. Seven independent inverted codec predicates and the two
 new interval/instant predicates all fail with native replay and shrunk inputs.
 Control receipts are retained privately with exact restoration hashes.
+
+The first Node after-run caught an invalid new assertion: its ICU resolves
+Asia/Kolkata to Asia/Calcutta, while Bun retains Asia/Kolkata. The corrected
+property retains all five inputs and compares the independent Intl canonical
+token, matching the upstream Effect named-zone contract. Instant preservation
+checks are unchanged. The failed Node receipt is retained privately and is not
+a successful timing observation.

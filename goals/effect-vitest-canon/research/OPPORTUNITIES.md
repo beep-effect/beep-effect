@@ -3589,3 +3589,13 @@ TypeScript and reported TS1295/TS1205. Running the existing
 `infra:prepare-gha-runners` command after installation restores the intended SDK
 entrypoint. Dependency-changing proof recipes should include this preparation
 before package verification; no generated SDK source was edited.
+
+### UI timezone oracle portability
+
+- Work: verify the new UI timezone property under both configured runtimes.
+- Evidence: the first Node after-run failed with `Asia/Calcutta` versus
+  `Asia/Kolkata`; Bun passed. Upstream Effect canonicalizes named zones through
+  Intl resolvedOptions.
+- Prevention: model canonical timezone identity in generated assertions and
+  run Node plus Bun before crediting a property batch. The five input zones and
+  instant checks remain; no domain was filtered to silence the counterexample.
