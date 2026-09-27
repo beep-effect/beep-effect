@@ -3083,29 +3083,29 @@
     "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
     "package": "@beep/semantic-web",
     "kind": "test",
-    "bytes": 13126,
-    "lines": 339
+    "bytes": 12659,
+    "lines": 328
   },
   {
     "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts",
     "package": "@beep/semantic-web",
     "kind": "test",
-    "bytes": 7398,
-    "lines": 213
+    "bytes": 7274,
+    "lines": 212
   },
   {
     "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
     "package": "@beep/semantic-web",
     "kind": "test",
-    "bytes": 14558,
+    "bytes": 14472,
     "lines": 356
   },
   {
     "file": "packages/foundation/capability/semantic-web/test/TaggedError.equivalence.test.ts",
     "package": "@beep/semantic-web",
     "kind": "test",
-    "bytes": 1852,
-    "lines": 40
+    "bytes": 1973,
+    "lines": 43
   },
   {
     "file": "packages/foundation/modeling/html/test/ConformanceLedger.test.ts",
