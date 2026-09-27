@@ -689,64 +689,64 @@
     "file": "infra/test/AIMetrics.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 7220,
-    "lines": 186
+    "bytes": 8908,
+    "lines": 228
   },
   {
     "file": "infra/test/AccountCostControls.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 7772,
-    "lines": 167
+    "bytes": 7837,
+    "lines": 168
   },
   {
     "file": "infra/test/CiFleetController.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 29018,
-    "lines": 586
+    "bytes": 30407,
+    "lines": 610
   },
   {
     "file": "infra/test/CiRunners.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 6992,
-    "lines": 161
+    "bytes": 8508,
+    "lines": 206
   },
   {
     "file": "infra/test/CiTurboCache.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 6320,
-    "lines": 147
+    "bytes": 6362,
+    "lines": 149
   },
   {
     "file": "infra/test/OipWeb.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 7631,
-    "lines": 175
+    "bytes": 8912,
+    "lines": 207
   },
   {
     "file": "infra/test/OpenClaw.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 39268,
-    "lines": 835
+    "bytes": 41938,
+    "lines": 906
   },
   {
     "file": "infra/test/Storybook.test.ts",
     "package": "@beep/infra",
     "kind": "test",
-    "bytes": 5289,
-    "lines": 122
+    "bytes": 6672,
+    "lines": 158
   },
   {
     "file": "infra/test/schemaParity.ts",
     "package": "@beep/infra",
     "kind": "support",
-    "bytes": 759,
-    "lines": 25
+    "bytes": 429,
+    "lines": 9
   },
   {
     "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",

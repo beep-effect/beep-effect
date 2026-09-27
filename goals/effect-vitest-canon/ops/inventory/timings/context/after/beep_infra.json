@@ -1,0 +1,380 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/infra",
+  "sourceHead": "af3f76eafedc3f72a7f71d3db00702a3b11fa2f9",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.423098311992362,
+  "bunWholeCommandSeconds": 2.1675442539999494,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [4.08056640625, 5.1943359375, 4.10888671875],
+  "loadAfter": [4.474609375, 5.2578125, 4.13525390625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.03 avg60=0.17 avg300=0.19 total=761627396\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186212738\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178136822\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=832751326\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=728509233\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.15 avg300=0.18 total=761642861\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186212738\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178136823\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=832764317\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=728518412\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "db27a9f56763a26104d8d53d145799320c976032f02d4e347aebf8767c34f35c"
+    },
+    {
+      "file": "infra/CHANGELOG.md",
+      "sha256": "e531b07a93e115585c0f469af6e156a985c3f6b16c1b920582ba833c683222a1"
+    },
+    {
+      "file": "infra/Pulumi.beep-ai-metrics-dankserver.yaml",
+      "sha256": "07719d4d33c084dac7b7ff70ca7b60476c6148664350b172081449355227c3f7"
+    },
+    {
+      "file": "infra/Pulumi.yaml",
+      "sha256": "9c09688cce82da028555e4659d69a5515db89a6fd5276573b5267ad2bdb169a6"
+    },
+    {
+      "file": "infra/ci-runners/Pulumi.production.yaml",
+      "sha256": "572816ced734909aceef009906acefe48bdd520bf62107403c9bc60d8d1c7928"
+    },
+    {
+      "file": "infra/ci-runners/Pulumi.yaml",
+      "sha256": "db3e3c591f6869e7bab2bfd9a19da5556c50b633a0022e03f8c088e4122dd6cb"
+    },
+    {
+      "file": "infra/ci-runners/runner-image.json",
+      "sha256": "307b161269b470196dcd64da964913fd8fc972da9dddb49fb1640fe19fe90819"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/.gitattributes",
+      "sha256": "09af704fa665145f67f694847a0eba01be38071987fa559c68a5647014e3e81a"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/.gitignore",
+      "sha256": "c6f387cdf6c18195a3922e7cba2fc8909b6166b497fbd8d31f2493740cdc7ad3"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/README.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/index.ts",
+      "sha256": "989a4ea24b525c1e87575cfb367709cf7434c6c24d2c984e2d06d0a278f9a751"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/module.ts",
+      "sha256": "e2e97cb5f818bcb7f3260016d652c4ce4d87fb0f19c5427000ec259d6217dec5"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/package.json",
+      "sha256": "244a01fb4a148ff6c0aa91d963b639eca66f94caac13052d51c66f8a17324218"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/provider.ts",
+      "sha256": "bfd74b03fdffd43df53ce872a504fb0c5992489d8e35ec2062f0966c6e020c5e"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/scripts/build.js",
+      "sha256": "65d73d8541b311ea3a9c4db4907d0174c4453347db3b15aedfd3bd1399020a9c"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+      "sha256": "4aae47bc3899ee8074f6c7f8d4808ee81fad090e697141f31b80b22d32dc67ab"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/tsconfig.json",
+      "sha256": "c6ccb30c6d2ee5c05ab959637702c5bf717b6f99174e16783cb1e92927e2049a"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/types/index.ts",
+      "sha256": "f2a0d47a998b6887ddeffe8098058c8492d72857598ff75ed89361be091e3342"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/types/input.ts",
+      "sha256": "7da1b8b431218e0893cfde45bee57005f7654e15ca1281800f2f02d61527018a"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/types/output.ts",
+      "sha256": "861c852210b1537117d02e4a7d9f24dcea82010852de7105f0d9f364243c7374"
+    },
+    {
+      "file": "infra/ci-runners/sdks/ghaRunners/utilities.ts",
+      "sha256": "2b1386ae6ce8efde698e35e60e3a7401046635377600e770af2661b9176fbfac"
+    },
+    {
+      "file": "infra/docgen.json",
+      "sha256": "0a5b44e30cde8749c6df292e7a6cf461e61d982b94a60112fbfe8283bc2960c1"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/.gitignore",
+      "sha256": "628bf8c52200406a1406a3d1a77f4999e948e883c6f2f82acfad6bda6bcff16a"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/README.md",
+      "sha256": "a6f0321cb2b48adaad9be654d0fc189a10e35a763aae150331fb00b86f13c039"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/build.sh",
+      "sha256": "d29e8dbfd1a9bd812eaafc5668e7d03b89e4ef424a9830a2a5f9e0a62dc7a87e"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/bun.lock",
+      "sha256": "93d39556c7310c0ba951da72c99167af49debd98ac2038c6eb8583e07385796a"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/package-zip.sh",
+      "sha256": "60a9974e6fa3ae5e45df28c769d16fd620690292a5d5a23de37b9dcf7d0f3aad"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/package.json",
+      "sha256": "544137e5776bbaf66cf322f9ed7bdd4537056a87a158da4e09f3250b9c788e62"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/authorizer.ts",
+      "sha256": "13df234b42681aec5fee0955d724ea9f256860853028817f4bbbe446cc4d8499"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/event.ts",
+      "sha256": "aeeac14f0924f2e77564994d1abcc0ecc234281c0d1680d9e4886b3440a64451"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/hmac.ts",
+      "sha256": "4df88a1ff4b06f4e22d6116e189a8eff4b3696e153a968cb617ade7400cdadad"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/index.ts",
+      "sha256": "aa4677965879130516dfb40d7274abc9b5e6a9b38fc3616af930408d8f03fbed"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/shim.d.ts",
+      "sha256": "948ffebc849994ac196233cf492d06c88cc0ed3bdb5c5a203d7c4f6586ee4f3e"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/ssm.ts",
+      "sha256": "360d9a9e503b9dba9efacc9fbcaa765d2a1a34ad9b3de2b8dfb3e64b0e3eacc9"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/src/writer.ts",
+      "sha256": "18d3d29dad6ce36e8b6fbbf52244cd8fdeb04626e93566968cbad986ae882f91"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/test/authorizer.test.ts",
+      "sha256": "110e9b96dc1cf77f288fce59a9f7a88b522c868f0f2247c05553c1fdab1a6c25"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/test/bundle-smoke.cjs",
+      "sha256": "fedcd0360cc5031acb41624a713c2e14280ec2eba4d706323769fec7b6eeb9d0"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/test/helpers.ts",
+      "sha256": "36f809e1e2fbf418ad69830e8c23bc4aa0ece4052ebfe91b1c69ab9f1e2ba6f8"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/test/hmac.test.ts",
+      "sha256": "a705741883921538c2220244590cd6165b2c060c2ef6bcf9fad3dfe242fa88d3"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/test/writer.test.ts",
+      "sha256": "b65e40db941a5923f1658611db4a63754aac65418aa0d3b22fc985a1a6f84e39"
+    },
+    {
+      "file": "infra/lambda/turbo-cache/tsconfig.json",
+      "sha256": "cd6e9960f6bea967d115112553c0235b3547cce78f0e20b8d583d9e0e1b17ed9"
+    },
+    {
+      "file": "infra/oip-web/Pulumi.production.yaml",
+      "sha256": "f482c42f5332b0d1e54848afe27ca508f2b5909e5b0f4bb860550a641c03367e"
+    },
+    {
+      "file": "infra/oip-web/Pulumi.staging.yaml",
+      "sha256": "7a5195a83a9b17cdf5cff8e6f407173affc472fe7e42879f0c4658ddfebc85e3"
+    },
+    {
+      "file": "infra/oip-web/Pulumi.yaml",
+      "sha256": "7a5fbc645a83048487262943a0faee74aa3672ca00b4162847176a821ff603ed"
+    },
+    {
+      "file": "infra/openclaw/Pulumi.yaml",
+      "sha256": "37fb3fefe6fc1039a8302239432d8f72bc62e59ed7e09715b3bdf5aeac585034"
+    },
+    {
+      "file": "infra/package.json",
+      "sha256": "8483f1f3581ad5e627ac2111e2e48e61545af66ac60da8e6b0aa1b0ac386e267"
+    },
+    {
+      "file": "infra/src/AIMetrics.ts",
+      "sha256": "c193e2007701e17be8385486a4e95eaa804b131e31f1502e2bd96fc28a811c0e"
+    },
+    {
+      "file": "infra/src/AccountCostControls.ts",
+      "sha256": "b122cc6401756b721370d4a8a995aace56f915343f93155eda7b3ac7270c5b86"
+    },
+    {
+      "file": "infra/src/CiFleetController.ts",
+      "sha256": "9b4efb92028be7ef2f7df307bed729e3461f7dd7be925afce7108b2ef3fc9ef1"
+    },
+    {
+      "file": "infra/src/CiRunners.ts",
+      "sha256": "ab4e0a1568c84a524842a1f980ed3a8a3e2f926abc2767d3f4de5fc90839e328"
+    },
+    {
+      "file": "infra/src/CiTurboCache.ts",
+      "sha256": "5f68e213e667e0a043adfd9a5c9026007895937d3a1aea0cb5c51ad5c318c391"
+    },
+    {
+      "file": "infra/src/OipWeb.ts",
+      "sha256": "f44c5a1acb547b4dd9941b69a33a01f3dc0f8057b05855e953a6c8fb7218b653"
+    },
+    {
+      "file": "infra/src/OpenClaw.ts",
+      "sha256": "712854b6f7601b74d4ddc7273b5da15449e1bcd358e735f19dc40a1468166ce3"
+    },
+    {
+      "file": "infra/src/OpenClawArtifacts.ts",
+      "sha256": "8df048d172c0dead33aa54c42d20b1cd18707f5e54bdb59c6e694b82e7a32321"
+    },
+    {
+      "file": "infra/src/Storybook.ts",
+      "sha256": "a07b46577f62b62c744f3e4c9354e7dfe38f6c30cf9ad275309722913880a471"
+    },
+    {
+      "file": "infra/src/Vercel.ts",
+      "sha256": "13f717645d600a84fa682afef4152ca3be4c59e32766c1749a902808c83078d5"
+    },
+    {
+      "file": "infra/src/index.ts",
+      "sha256": "8a29c7d04166fd0ece582d8f4b19218d02f0efcb1ad92e458dfabb6a1eb26ea7"
+    },
+    {
+      "file": "infra/src/internal/PulumiConfigSchema.ts",
+      "sha256": "a1863cb31be90c38c216be905b61664767d0f6edf3a1fab2e5f5d5e5395759fd"
+    },
+    {
+      "file": "infra/src/internal/ai-metrics-entry.ts",
+      "sha256": "b02bda3bb840d749e1a73a9a15c356b1a2b131320a2006879e1940126b043eec"
+    },
+    {
+      "file": "infra/src/internal/ci-runners-entry.ts",
+      "sha256": "4dc0f884a34708028b053aa61e3fab81b785107647cf074da17e6b311c7741e7"
+    },
+    {
+      "file": "infra/src/internal/oip-web-entry.ts",
+      "sha256": "ac81a0cd1e1fd88a8831230e746eeb91ffaaecdb8212960a4700caf66f393ad5"
+    },
+    {
+      "file": "infra/src/internal/openclaw-entry.ts",
+      "sha256": "201d18646f1da81e46e6e438a75e88f9d557dda8f5d2058b8a1f96bba8b90496"
+    },
+    {
+      "file": "infra/src/internal/storybook-entry.ts",
+      "sha256": "dc4b6f540db96cd4132d0ee085fae829fd9e64a751db165ee205b9c0dcb3d5e9"
+    },
+    {
+      "file": "infra/storybook/Pulumi.production.yaml",
+      "sha256": "6b860d34ba23a93864364239aca10796fbce7e8539d2850a4ba5e6635589394a"
+    },
+    {
+      "file": "infra/storybook/Pulumi.yaml",
+      "sha256": "381f1e6b481099a9dd26f36bbf5a1ff36085be850979d39e4e49f12d91aafa47"
+    },
+    {
+      "file": "infra/test/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "sha256": "0ccfb0fbb0b4c89ae6af1e8d3cc33994fcd94487ebf10a223cabe41f38c822b9"
+    },
+    {
+      "file": "infra/test/AccountCostControls.test.ts",
+      "sha256": "9317ac161e0181cc7a39110c044f0a0d754b76a325c9c84fb9bae5e825c8c1b5"
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "sha256": "006ddf115898dba2e5d27ddde332386bab2bbf6baefa9c1be09d8b2a03e41166"
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "sha256": "4ccd333898ad7f73db3d94a7db8783be937bb41fd4a7f7bbb1bf5073f119e454"
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "sha256": "5ef642cd67bca5f2d199ecdcf5cd50add8109eb97987fabaa0cb59d8ae138810"
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "sha256": "789377c613ec899c2ee2a25eec13bc51cc3372569e90c89992cd15f7116c4105"
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "sha256": "7379489732a9208a902c24f199b12edb2b53cf2d58a828560fa37efdcb3fa989"
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "sha256": "75afcaf36b7181d3552453fd2ae30ba834f52bce52b6b8585b6ba7ec9d082921"
+    },
+    {
+      "file": "infra/test/schemaParity.ts",
+      "sha256": "d775ee28eefd7c905ff4014b891f2dda051c1012634914141444e051f1b790d8"
+    },
+    {
+      "file": "infra/test/tsconfig.json",
+      "sha256": "8492a48e36c1712e39fb6d614c3da9b3773a638222e24e47430b1580958912d0"
+    },
+    {
+      "file": "infra/tsconfig.json",
+      "sha256": "17c3e1b1a1a492b4f8389adc0ba261ce36d45033e51f2ddac30699114805acf9"
+    },
+    {
+      "file": "infra/turbo.json",
+      "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340"
+    },
+    {
+      "file": "infra/vitest.config.ts",
+      "sha256": "bb06b8c3feae127a2418c37dafaf787311c066351ccaef4a0204755652425890"
+    }
+  ],
+  "environmentMode": "Infra configured Vitest cases, native Crypto and rendered Bash missing-mode usage path only; no provider, deployment, systemd or secret resolution. Nested Lambda Bun tests and SDK node:test are separate contracts. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 112,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.72314453125, 4.92333984375, 4.09814453125],
+    "loadAfter": [3.72314453125, 4.92333984375, 4.09814453125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.02 avg60=0.20 avg300=0.20 total=761969147\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186213095\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178137168\n",
+      "io": "some avg10=0.00 avg60=0.12 avg300=0.05 total=833017184\nfull avg10=0.00 avg60=0.09 avg300=0.04 total=728694585\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.01 avg60=0.19 avg300=0.20 total=761976384\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186213096\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178137168\n",
+      "io": "some avg10=0.00 avg60=0.12 avg300=0.05 total=833017185\nfull avg10=0.00 avg60=0.08 avg300=0.04 total=728694586\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 112,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Configured Vitest passes93 cases before and112 after, without skips;19 codec laws now report independently while the five original grouped names retain decode-to-self laws. Node before is the recovered cached baseline after SDK preparation and targeted stale-transform refresh; two earlier failed baseline receipts are retained privately. Bun before uses the same prepared SDK. Separate SDK node:test3 and Lambda Bun31 proofs are not included in these Vitest timings. After measurements overlap the early publisher."
+}
