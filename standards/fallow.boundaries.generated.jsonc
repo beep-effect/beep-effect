@@ -1051,12 +1051,14 @@
           "@beep/anthropic",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2748,12 +2750,14 @@
           "@beep/identity",
           "@beep/openai",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2763,6 +2767,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2770,6 +2775,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3721,6 +3727,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
@@ -3729,6 +3736,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
@@ -3857,6 +3865,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
@@ -3865,6 +3874,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"

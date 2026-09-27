@@ -1,5 +1,6 @@
 import { inspect } from "node:util";
 import { encodeJsonString } from "@beep/schema/Json";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import {
@@ -26,9 +27,11 @@ import {
   XAiWebSocketBaseUrl,
   XAiWebSocketEvent,
 } from "@beep/xai";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import { constTrue } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -377,11 +380,11 @@ describe("@beep/xai", () => {
     expect(encode(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions)).toEqual({
       model: "grok-3",
     });
-    expect(Result.isFailure(decodeXAiHttpBaseUrlResult("not a url"))).toBe(true);
-    expect(Result.isFailure(decodeXAiWebSocketBaseUrlResult("https://api.x.ai"))).toBe(true);
-    expect(Result.isFailure(decodeXAiHttpStatusCodeResult(99))).toBe(true);
-    expect(Result.isFailure(decodeXAiWebSocketEventResult({ code: 999, kind: "close" }))).toBe(true);
-    expect(Result.isFailure(decodeXAiLanguageModelXAiModelNameResult(""))).toBe(true);
+    assertFailure(decodeXAiHttpBaseUrlResult("not a url").pipe(Result.mapError(constTrue)), true);
+    assertFailure(decodeXAiWebSocketBaseUrlResult("https://api.x.ai").pipe(Result.mapError(constTrue)), true);
+    assertFailure(decodeXAiHttpStatusCodeResult(99).pipe(Result.mapError(constTrue)), true);
+    assertFailure(decodeXAiWebSocketEventResult({ code: 999, kind: "close" }).pipe(Result.mapError(constTrue)), true);
+    assertFailure(decodeXAiLanguageModelXAiModelNameResult("").pipe(Result.mapError(constTrue)), true);
   });
 
   it.prop(
@@ -436,7 +439,7 @@ describe("@beep/xai", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "keeps endpoint manifest and service surface aligned",
       Effect.fnUntraced(function* () {
@@ -466,7 +469,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "sends every HTTP endpoint with the expected method, path, auth, query, and body mode",
       Effect.fnUntraced(function* () {
@@ -509,7 +512,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps status, malformed JSON, multipart, and SSE failures",
       Effect.fnUntraced(function* () {
@@ -559,7 +562,7 @@ describe("@beep/xai", () => {
 
         expect(statusError).toBeInstanceOf(XAiError);
         expect(statusError.reason).toBe("response status");
-        expect(O.getOrUndefined(statusError.status)).toBe(429);
+        assertSome(statusError.status, 429);
         expect(malformedError.reason).toBe("response decoding");
         expect(multipartError.reason).toBe("multipart encoding");
         expect(sseError.reason).toBe("sse decoding");
@@ -569,7 +572,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "redacts xAI transport and WebSocket failure causes before rendering",
       Effect.fnUntraced(function* () {
@@ -625,13 +628,13 @@ describe("@beep/xai", () => {
         );
 
         expect(transportError.reason).toBe("transport");
-        expect(O.getOrUndefined(transportError.cause)).toBe("HttpClientError:TransportError");
+        assertSome(transportError.cause, "HttpClientError:TransportError");
         expect(websocketError.reason).toBe("websocket");
-        expect(O.getOrUndefined(websocketError.cause)).toBe("Error");
+        assertSome(websocketError.cause, "Error");
         expect(hostileProxyError.reason).toBe("websocket");
-        expect(O.isNone(hostileProxyError.cause)).toBe(true);
+        assertNone(hostileProxyError.cause);
         expect(throwingNameError.reason).toBe("websocket");
-        expect(O.isNone(throwingNameError.cause)).toBe(true);
+        assertNone(throwingNameError.cause);
         expect(rendered).not.toContain("Bearer");
         expect(rendered).not.toContain("api-test-key");
         expect(rendered).not.toContain("websocket-secret");
@@ -639,7 +642,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps language-model transport failures to retryable network errors",
       Effect.fnUntraced(function* () {
@@ -670,7 +673,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "rejects non-JSON chat completion responses in the language model adapter",
       Effect.fnUntraced(function* () {
@@ -696,7 +699,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "rejects request payloads that do not match the endpoint body mode",
       Effect.fnUntraced(function* () {
@@ -721,7 +724,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeInvalidWebSocketUrlLayer())((it) =>
+  it.layer(makeInvalidWebSocketUrlLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "maps invalid WebSocket URL configuration into a typed driver error",
       Effect.fnUntraced(function* () {
@@ -734,7 +737,7 @@ describe("@beep/xai", () => {
     )
   );
 
-  layer(makeXAiUnitLayer())((it) =>
+  it.layer(makeXAiUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
       "parses SSE streams for chat, responses, and legacy-compatible endpoints",
       Effect.fnUntraced(function* () {
@@ -762,10 +765,19 @@ describe("@beep/xai", () => {
           .streamAnthropicMessage(XAiRequestOptions.make({ body: { max_tokens: 8, messages: [], model: "grok-4" } }))
           .pipe(Stream.runCollect);
 
+        const expectedEvents = [
+          XAiServerSentEvent.make({ data: { delta: "hello" }, done: false, index: 0 }),
+          XAiServerSentEvent.make({ done: true, index: 1 }),
+        ];
+
         expect(A.fromIterable(chatEvents)).toHaveLength(2);
+        expect(A.fromIterable(chatEvents)).toEqual(expectedEvents);
         expect(A.fromIterable(responseEvents)).toHaveLength(2);
+        expect(A.fromIterable(responseEvents)).toEqual(expectedEvents);
         expect(A.fromIterable(legacyEvents)).toHaveLength(2);
+        expect(A.fromIterable(legacyEvents)).toEqual(expectedEvents);
         expect(A.fromIterable(anthropicEvents)).toHaveLength(2);
+        expect(A.fromIterable(anthropicEvents)).toEqual(expectedEvents);
       })
     )
   );

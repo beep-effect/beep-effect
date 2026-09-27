@@ -1,0 +1,110 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-report>"
+  ],
+  "phase": "after-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5ab88dbd9b8b7ac597c9b2d243c7ad83e578459a5642dcfe9fac01753283457b"
+    },
+    {
+      "file": "packages/drivers/openai/package.json",
+      "sha256": "6b608be9f0659ef45cb7eadc50e22416f662f0e13b9c9925df5f7cafdef13855"
+    },
+    {
+      "file": "packages/drivers/openai/src/OpenAi.config.ts",
+      "sha256": "2a5d05a376d0959a4500fc1c76fdfb76c0f652bf428f2ed8f1b69af1f6f0735d"
+    },
+    {
+      "file": "packages/drivers/openai/src/OpenAi.errors.ts",
+      "sha256": "b848d6fee454606f28b97c40352332948a8866d50bd1ecf570067a4c388970ed"
+    },
+    {
+      "file": "packages/drivers/openai/src/OpenAi.service.ts",
+      "sha256": "9d64952d462bc787f5dc6f49e59a5a4b8de65f6a33d9b87fb76144db4579214d"
+    },
+    {
+      "file": "packages/drivers/openai/src/index.ts",
+      "sha256": "8c1ee17a048f92e4191bd856cc9548ac2cb1f1f2886801181ae5f1d4f89de51d"
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.equivalence.test.ts",
+      "sha256": "81e47d6094f1cd724b580be9fccbde8cad18ad0313880c5a92a5abf4b3c40eef"
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "sha256": "a96b677221f2fe41d26cda9c553418212e91bf644ffa04373d3828da4d60906b"
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "sha256": "cea57dfcc0be1d5a7dbafd2adde2221559898decdab6a386761afdb79dc479f2"
+    }
+  ],
+  "loadBefore": [32.16796875, 34.61279296875, 37.43701171875],
+  "pressureBefore": {
+    "cpu": "some avg10=1.01 avg60=2.11 avg300=3.91 total=2353419988\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.06 avg300=0.07 total=200592532\nfull avg10=0.00 avg60=0.05 avg300=0.05 total=173938111\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.19 total=956765165\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=652477302\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 4.70150659698993,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5ab88dbd9b8b7ac597c9b2d243c7ad83e578459a5642dcfe9fac01753283457b"
+    },
+    {
+      "file": "packages/drivers/openai/package.json",
+      "sha256": "6b608be9f0659ef45cb7eadc50e22416f662f0e13b9c9925df5f7cafdef13855"
+    },
+    {
+      "file": "packages/drivers/openai/src/OpenAi.config.ts",
+      "sha256": "2a5d05a376d0959a4500fc1c76fdfb76c0f652bf428f2ed8f1b69af1f6f0735d"
+    },
+    {
+      "file": "packages/drivers/openai/src/OpenAi.errors.ts",
+      "sha256": "b848d6fee454606f28b97c40352332948a8866d50bd1ecf570067a4c388970ed"
+    },
+    {
+      "file": "packages/drivers/openai/src/OpenAi.service.ts",
+      "sha256": "9d64952d462bc787f5dc6f49e59a5a4b8de65f6a33d9b87fb76144db4579214d"
+    },
+    {
+      "file": "packages/drivers/openai/src/index.ts",
+      "sha256": "8c1ee17a048f92e4191bd856cc9548ac2cb1f1f2886801181ae5f1d4f89de51d"
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.equivalence.test.ts",
+      "sha256": "81e47d6094f1cd724b580be9fccbde8cad18ad0313880c5a92a5abf4b3c40eef"
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "sha256": "a96b677221f2fe41d26cda9c553418212e91bf644ffa04373d3828da4d60906b"
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "sha256": "cea57dfcc0be1d5a7dbafd2adde2221559898decdab6a386761afdb79dc479f2"
+    }
+  ],
+  "loadAfter": [31.193359375, 34.3701171875, 37.34326171875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.82 avg60=2.01 avg300=3.86 total=2353453436\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.06 avg300=0.06 total=200592562\nfull avg10=0.00 avg60=0.04 avg300=0.05 total=173938141\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.19 total=956766201\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=652478160\n"
+  },
+  "sourceStable": true
+}
