@@ -1,5 +1,6 @@
 import { EgressDenied } from "@beep/api-transport";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 describe("@beep/api-transport tagged-error declared equivalence", () => {
