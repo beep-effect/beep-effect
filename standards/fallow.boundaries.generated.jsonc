@@ -2964,14 +2964,14 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },

@@ -271,3 +271,14 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/phoenix#test`
 - `@beep/phoenix#test:integration`
 - `@beep/phoenix#test:property`
+
+## Incoming 91a23ba8a3c697c32c3c59f30bcf3d9c4c07f043
+
+- `@beep/pretext#audit`
+- `@beep/pretext#build`
+- `@beep/pretext#check`
+- `@beep/pretext#coverage`
+- `@beep/pretext#lint:deprecated-apis`
+- `@beep/pretext#package-test-typecheck`
+- `@beep/pretext#test`
+- `@beep/pretext#test:integration`

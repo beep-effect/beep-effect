@@ -3018,3 +3018,35 @@ after test-runner devDependencies were added. Package audit and docgen had passe
 but they did not establish generated project-reference parity. Run tsconfig-sync
 and its check after adding runner dependencies, before early publication. The
 service-driver wave applied the generator to its six affected configs as well.
+
+## 2026-09-27: fleet readiness polling exhausted GraphQL quota
+
+Refreshing the active canonical Vitest PR fleet encountered `API rate limit
+already exceeded` during review and readiness queries. The GraphQL rateLimit
+query confirmed zero remaining requests; the REST rate-limit endpoint reported
+a different available bucket. Local proof and early pushes remained intact.
+Several detached monitors had also reached their lifetime or registration
+limits and required explicit resubmission. Preserve terminal receipts, avoid
+restarting live handles, and gate fresh review/merge decisions on recovered
+GraphQL evidence. A fleet-aware polling budget and a directly exposed next-poll
+control would prevent parallel monitors from exhausting shared account quota.
+
+## 2026-09-27: Option helper exposed prototype-sensitive expected fixtures
+
+The Pretext assertion phase replaced an Option-wrapped loose equality matcher
+with `assertSome`. Both Node and Bun rejected the line-range expectation because
+the subject returns `LineRange` instances while the original independent expected
+values were plain objects. Package audit also identified two introduced nested
+call diagnostics. Preserve every numeric expected operand, construct matching
+expected values through the existing public model, and use the pipeable predicate
+form. A matcher-semantics review must include schema-class prototypes, not only
+payload fields, before counting a constructor-shaped assertion as migrated.
+
+## Pretext native browser proof friction (2026-09-27)
+
+A scoped Vitest Chromium probe for the runtime profile fence failed during Vite
+dependency optimization: `Cannot destructure property exportsData`. Disabling
+discovery in the private probe exited 1 with zero cases, so it earned no browser
+proof credit. Configured Node/Bun package proof and a controlled Chromium
+user-agent counterexample pass. A qualified browser unit-test harness would avoid
+this setup detour without changing the package's native canvas subject.

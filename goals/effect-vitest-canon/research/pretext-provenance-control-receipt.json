@@ -1,0 +1,7 @@
+{
+  "expectedFailureObserved": true,
+  "failedTest": "PretextCaptureFixture answers with the fixture's own capture provenance",
+  "mutation": "Returned capturedAt only; independent canned expected provenance and sentence presence unchanged.",
+  "originalSourceSha256": "ac5a5338b3b1b3b73583a1caa192e22138608bd39c6cc7ee31d01f66794ddfb6",
+  "sourceRestoredExactly": true
+}
