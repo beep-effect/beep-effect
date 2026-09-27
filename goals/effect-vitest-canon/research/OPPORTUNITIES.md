@@ -3436,3 +3436,14 @@ sequential reproduces the unwanted shared state and fails the original
 post-failure absence assertion. Production tests remain independently layered;
 all control edits were restored. Future isolation controls should define the
 prior state explicitly instead of relying on registration order.
+
+### Saved assertion counts lagged the owned live file
+
+The Epistemic Tables migration guard expected 31 saved assertion candidates but
+found 33 equivalent shapes in the current files. Two newer typed-converter
+failure checks had appeared in EpistemicTables.test.ts. Reconstructing receipts
+from the saved source head confirmed both operands were conserved, along with
+all 272 original assertion expressions and labeled tampering diagnostics. The
+batch now records both the saved count and the live count. A count preflight
+before applying a mechanical transform would have avoided the guard failure;
+this does not require restarting the whole-repository human inventory.

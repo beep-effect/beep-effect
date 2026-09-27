@@ -10,8 +10,9 @@ import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposit
 import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion";
 import * as Evidence from "@beep/epistemic-tables/entities/Evidence";
 import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";

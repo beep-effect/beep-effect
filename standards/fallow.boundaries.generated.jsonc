@@ -1846,6 +1846,7 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1853,6 +1854,7 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
