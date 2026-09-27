@@ -7731,43 +7731,43 @@
     "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 8409,
-    "lines": 319
+    "bytes": 8441,
+    "lines": 320
   },
   {
     "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 6492,
-    "lines": 191
+    "bytes": 6530,
+    "lines": 192
   },
   {
     "file": "packages/tooling/tool/docgen/test/Core.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 5811,
-    "lines": 128
+    "bytes": 7167,
+    "lines": 159
   },
   {
     "file": "packages/tooling/tool/docgen/test/Domain.equivalence.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 694,
-    "lines": 16
+    "bytes": 730,
+    "lines": 17
   },
   {
     "file": "packages/tooling/tool/docgen/test/Parser.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 38221,
-    "lines": 1821
+    "bytes": 39287,
+    "lines": 1816
   },
   {
     "file": "packages/tooling/tool/docgen/test/SchemaParity.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 3789,
-    "lines": 103
+    "bytes": 4392,
+    "lines": 108
   },
   {
     "file": "packages/tooling/tool/docgen/test/fixtures/section-example/src/index.ts",
@@ -7787,8 +7787,8 @@
     "file": "packages/tooling/tool/docgen/test/version.test.ts",
     "package": "@beep/repo-docgen",
     "kind": "test",
-    "bytes": 813,
-    "lines": 19
+    "bytes": 849,
+    "lines": 20
   },
   {
     "file": "packages/workspace/domain/test/EntityMaterialization.test.ts",
