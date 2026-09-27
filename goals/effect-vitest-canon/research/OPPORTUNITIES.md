@@ -2436,3 +2436,25 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: hosted lint runner communication loss
+
+While continuing the existing repo-utils inventory, PR #1287 job 108491528753
+(Heavy / Lint Policy) failed with the annotation “The self-hosted runner lost
+communication with the server.” No workflow step reported failure and the job
+log was unavailable while its parent run continued. This is an environment
+failure, not evidence of a lint defect. Preserve sibling running jobs and retry
+only the failed job once the parent run completes. Durable runner health and
+resource telemetry would make this attribution quicker and more precise.
+
+## 2026-09-26: assertion helper prototype semantics
+
+The repo-utils assertion phase exposed a test-helper compatibility boundary:
+`assertSome` uses Node deepStrictEqual, while existing Vitest toEqual checks
+compare decoded Schema.Class values to independent plain-object expectations.
+Package verification caught prototype-only mismatches for PersonObject,
+WorkspacesObject, BeepDriverMetadata, RepositoryObject and TSConfigReference.
+Keep the original complete comparisons wherever this boundary applies and record
+exceptions; do not manufacture class expectations or project away prototypes.
+A helper migration checklist that compares equality semantics before replacement
+would prevent this failed proof. No production defect was demonstrated.

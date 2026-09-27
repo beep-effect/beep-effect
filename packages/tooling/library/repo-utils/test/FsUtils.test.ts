@@ -4,9 +4,9 @@ import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Order, Path, pipe } from "effect";
 import * as Fs from "effect/FileSystem";
-import * as O from "effect/Option";
 
 // Build a TestLayer that provides FsUtils AND also passes through FileSystem/Path
 // so tests can use them directly (e.g. for makeTempDirectory)
@@ -101,7 +101,7 @@ describe("FsUtils", () => {
         yield* utils.writeJson(filePath, data);
         const result = yield* utils.readJson(filePath);
 
-        expect(result).toEqual(O.some(data));
+        assertSome(result, data);
       })
     );
 
@@ -142,7 +142,7 @@ describe("FsUtils", () => {
         yield* fs.writeFileString(filePath, "not valid json {{{");
 
         const result = yield* utils.readJson(filePath);
-        expect(result).toEqual(O.none());
+        assertNone(result);
       })
     );
   });
@@ -388,7 +388,7 @@ describe("FsUtils", () => {
         yield* fs.writeFileString(`${pkgDir}/package.json`, '{ "name": "@mock/pkg-a" }');
 
         const owning = yield* findNearestPackageDir(nested, canonicalRoot);
-        expect(owning).toStrictEqual(O.some(pkgDir));
+        assertSome(owning, pkgDir);
       })
     );
 
@@ -405,7 +405,7 @@ describe("FsUtils", () => {
         yield* fs.writeFileString(`${canonicalRoot}/package.json`, '{ "name": "@mock/root" }');
 
         const owning = yield* findNearestPackageDir(nested, canonicalRoot);
-        expect(owning).toStrictEqual(O.none());
+        assertNone(owning);
       })
     );
 
@@ -422,7 +422,7 @@ describe("FsUtils", () => {
         yield* fs.writeFileString(`${pkgDir}/package.json`, '{ "name": "@mock/pkg-b" }');
 
         const owning = yield* pipe(nested, findNearestPackageDir(canonicalRoot));
-        expect(owning).toStrictEqual(O.some(pkgDir));
+        assertSome(owning, pkgDir);
       })
     );
   });

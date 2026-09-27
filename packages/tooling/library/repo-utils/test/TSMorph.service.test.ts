@@ -18,6 +18,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -347,7 +348,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           A.findFirst((symbol) => symbol.name === "TsMorphProjectScope" && symbol.kind === "ClassDeclaration")
         );
 
-        expect(O.isSome(targetSymbol)).toBe(true);
+        targetSymbol.pipe(O.isSome, assertTrue);
         if (O.isNone(targetSymbol)) {
           return;
         }
@@ -402,7 +403,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           O.map((symbol) => symbol.filePath)
         );
 
-        expect(O.isSome(filePath)).toBe(true);
+        filePath.pipe(O.isSome, assertTrue);
         if (O.isNone(filePath)) {
           return;
         }
@@ -540,7 +541,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         expect(initialSearch.total).toBeGreaterThan(0);
         expect(A.some(initialSearch.symbols, (symbol) => symbol.filePath === LATE_FILE_INCLUDED_FILE_PATH)).toBe(true);
         expect(outline.filePath).toBe(LATE_FILE_EXTRA_FILE_PATH);
-        expect(O.isSome(targetSymbol)).toBe(true);
+        targetSymbol.pipe(O.isSome, assertTrue);
         if (O.isNone(targetSymbol)) {
           return;
         }
@@ -593,7 +594,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
 
         expect(diagnostics.filePath).toBe(FIXTURE_BROKEN_FILE_PATH);
         expect(diagnostics.diagnostics.length).toBeGreaterThan(0);
-        expect(O.isSome(firstDiagnostic)).toBe(true);
+        firstDiagnostic.pipe(O.isSome, assertTrue);
         if (O.isNone(firstDiagnostic)) {
           return;
         }

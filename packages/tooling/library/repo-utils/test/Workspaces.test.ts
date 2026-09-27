@@ -10,6 +10,7 @@ import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, HashMap, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -38,7 +39,7 @@ layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
         const pathApi = yield* Path.Path;
         const workspaces = yield* resolveWorkspaceDirs(MOCK_ROOT);
         const dirA = HashMap.get(workspaces, "@mock/pkg-a");
-        expect(O.isSome(dirA)).toBe(true);
+        dirA.pipe(O.isSome, assertTrue);
         if (O.isSome(dirA)) {
           expect(dirA.value).toContain("packages/pkg-a");
           expect(pathApi.isAbsolute(dirA.value)).toBe(true);
@@ -235,7 +236,7 @@ layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
       "should find an existing workspace by name",
       Effect.fn(function* () {
         const dir = yield* getWorkspaceDir(MOCK_ROOT, "@mock/pkg-b");
-        expect(O.isSome(dir)).toBe(true);
+        dir.pipe(O.isSome, assertTrue);
         if (O.isSome(dir)) {
           expect(dir.value).toContain("packages/pkg-b");
         }
@@ -246,7 +247,7 @@ layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
       "should return None for a non-existent workspace",
       Effect.fn(function* () {
         const dir = yield* getWorkspaceDir(MOCK_ROOT, "@mock/nonexistent");
-        expect(O.isNone(dir)).toBe(true);
+        assertNone(dir);
       })
     );
   });
@@ -259,7 +260,7 @@ layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
         expect(HashMap.size(packages)).toBe(3);
 
         const pkgA = HashMap.get(packages, "@mock/pkg-a");
-        expect(O.isSome(pkgA)).toBe(true);
+        pkgA.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgA)) {
           expect(pkgA.value.dir).toContain("packages/pkg-a");
           expect(pkgA.value.manifest.name).toBe("@mock/pkg-a");

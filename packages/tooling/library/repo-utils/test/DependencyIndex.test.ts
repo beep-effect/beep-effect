@@ -4,6 +4,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, HashMap, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -34,7 +35,7 @@ layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
       Effect.fn(function* () {
         const index = yield* buildRepoDependencyIndex(MOCK_ROOT);
         const pkgADeps = HashMap.get(index, "@mock/pkg-a");
-        expect(O.isSome(pkgADeps)).toBe(true);
+        pkgADeps.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgADeps)) {
           const deps = pkgADeps.value;
           // @mock/pkg-b is a workspace dep
@@ -50,7 +51,7 @@ layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
       Effect.fn(function* () {
         const index = yield* buildRepoDependencyIndex(MOCK_ROOT);
         const pkgBDeps = HashMap.get(index, "@mock/pkg-b");
-        expect(O.isSome(pkgBDeps)).toBe(true);
+        pkgBDeps.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgBDeps)) {
           const deps = pkgBDeps.value;
           // @mock/pkg-c is a workspace devDep
@@ -66,7 +67,7 @@ layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
       Effect.fn(function* () {
         const index = yield* buildRepoDependencyIndex(MOCK_ROOT);
         const pkgCDeps = HashMap.get(index, "@mock/pkg-c");
-        expect(O.isSome(pkgCDeps)).toBe(true);
+        pkgCDeps.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgCDeps)) {
           const deps = pkgCDeps.value;
           // No workspace deps
@@ -85,7 +86,7 @@ layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
       Effect.fn(function* () {
         const index = yield* buildRepoDependencyIndex(MOCK_ROOT);
         const rootDeps = HashMap.get(index, "@beep/root");
-        expect(O.isSome(rootDeps)).toBe(true);
+        rootDeps.pipe(O.isSome, assertTrue);
         if (O.isSome(rootDeps)) {
           const deps = rootDeps.value;
           expect(deps.packageName).toBe("@beep/root");

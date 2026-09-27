@@ -15,14 +15,15 @@ import {
 } from "@beep/repo-utils";
 import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionError";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(schema: S.Schema<A>, a: A, b: A, different: A): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(a, b)).toBe(true);
-  expect(same(a, different)).toBe(false);
+  assertTrue(same(a, b));
+  assertFalse(same(a, different));
 };
 
 const scopeId = ProjectScopeId.fromString("tsconfig.json::syntax#workspaceOnly");

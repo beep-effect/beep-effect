@@ -13,6 +13,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Order, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -199,19 +200,15 @@ describe("PackageJson schema", () => {
       expect(result.name).toBe("@beep/repo-utils");
       expect(result.author).toEqual(O.some({ name: "Beep Maintainer", email: "maintainer@example.com" }));
       expect(result.bugs).toEqual(O.some({ email: "bugs@example.com" }));
-      expect(result.browser).toEqual(
-        O.some({
-          "./src/server.ts": "./src/browser.ts",
-          fs: false,
-        })
-      );
-      expect(result.peerDependenciesMeta).toEqual(
-        O.some({
-          typescript: {
-            optional: true,
-          },
-        })
-      );
+      assertSome(result.browser, {
+        "./src/server.ts": "./src/browser.ts",
+        fs: false,
+      });
+      assertSome(result.peerDependenciesMeta, {
+        typescript: {
+          optional: true,
+        },
+      });
       expect(result.funding).toEqual(
         O.some(["https://github.com/sponsors/beep", { type: "github", url: "https://github.com/sponsors/beep-effect" }])
       );
@@ -245,32 +242,28 @@ describe("PackageJson schema", () => {
       };
 
       const result = decodePackageJson(input);
-      expect(result.exports).toEqual(
-        O.some({
+      assertSome(result.exports, {
+        "./package.json": "./package.json",
+        ".": {
+          types: "./dist/index.d.ts",
+          import: "./dist/index.js",
+          require: "./dist/index.cjs",
+        },
+        "./internal/*": null,
+        "./*": ["./dist/*.js", "./dist/*.cjs"],
+      });
+      assertSome(result.publishConfig, {
+        access: "public",
+        provenance: true,
+        bin: {
+          "pkg-cli": "./dist/bin.js",
+        },
+        exports: {
           "./package.json": "./package.json",
-          ".": {
-            types: "./dist/index.d.ts",
-            import: "./dist/index.js",
-            require: "./dist/index.cjs",
-          },
+          ".": "./dist/index.js",
           "./internal/*": null,
-          "./*": ["./dist/*.js", "./dist/*.cjs"],
-        })
-      );
-      expect(result.publishConfig).toEqual(
-        O.some({
-          access: "public",
-          provenance: true,
-          bin: {
-            "pkg-cli": "./dist/bin.js",
-          },
-          exports: {
-            "./package.json": "./package.json",
-            ".": "./dist/index.js",
-            "./internal/*": null,
-          },
-        })
-      );
+        },
+      });
     });
 
     it("decodes imports mappings", () => {
@@ -285,15 +278,13 @@ describe("PackageJson schema", () => {
         },
       });
 
-      expect(result.imports).toEqual(
-        O.some({
-          "#internal": "./src/internal.ts",
-          "#runtime/*": {
-            types: "./src/runtime/*.d.ts",
-            default: "./src/runtime/*.ts",
-          },
-        })
-      );
+      assertSome(result.imports, {
+        "#internal": "./src/internal.ts",
+        "#runtime/*": {
+          types: "./src/runtime/*.d.ts",
+          default: "./src/runtime/*.ts",
+        },
+      });
     });
 
     it("decodes workspaces as an array", () => {
@@ -302,7 +293,7 @@ describe("PackageJson schema", () => {
         workspaces: ["packages/*", "packages/tooling/*/*"],
       });
 
-      expect(result.workspaces).toEqual(O.some(["packages/*", "packages/tooling/*/*"]));
+      assertSome(result.workspaces, ["packages/*", "packages/tooling/*/*"]);
     });
 
     it("decodes workspaces as an object", () => {
@@ -332,8 +323,8 @@ describe("PackageJson schema", () => {
         sideEffects: ["**/*.css"],
       });
 
-      expect(booleanResult.sideEffects).toEqual(O.some(false));
-      expect(arrayResult.sideEffects).toEqual(O.some(["**/*.css"]));
+      assertSome(booleanResult.sideEffects, false);
+      assertSome(arrayResult.sideEffects, ["**/*.css"]);
     });
 
     it("decodes repo-local top-level fields", () => {
@@ -356,18 +347,14 @@ describe("PackageJson schema", () => {
         },
       });
 
-      expect(result.packageManager).toEqual(O.some("bun@1.3.10"));
-      expect(result.catalog).toEqual(
-        O.some({
-          effect: "^4.0.0-beta.27",
-          typescript: "^5.9.3",
-        })
-      );
-      expect(result["resolutions#"]).toEqual(
-        O.some({
-          "@beep/*": "Needed to force PNPM to install local packages",
-        })
-      );
+      assertSome(result.packageManager, "bun@1.3.10");
+      assertSome(result.catalog, {
+        effect: "^4.0.0-beta.27",
+        typescript: "^5.9.3",
+      });
+      assertSome(result["resolutions#"], {
+        "@beep/*": "Needed to force PNPM to install local packages",
+      });
     });
 
     it("decodes repo-local mixed-case workspace package names", () => {
@@ -379,11 +366,9 @@ describe("PackageJson schema", () => {
       });
 
       expect(result.name).toBe("@beep/MixedCase");
-      expect(result.dependencies).toEqual(
-        O.some({
-          "@beep/mixed-case-helper": "workspace:^",
-        })
-      );
+      assertSome(result.dependencies, {
+        "@beep/mixed-case-helper": "workspace:^",
+      });
     });
 
     it("decodes Bun trusted dependencies", () => {
@@ -392,7 +377,7 @@ describe("PackageJson schema", () => {
         trustedDependencies: ["@pulumi/ghaRunners"],
       });
 
-      expect(result.trustedDependencies).toEqual(O.some(["@pulumi/ghaRunners"]));
+      assertSome(result.trustedDependencies, ["@pulumi/ghaRunners"]);
     });
 
     it("decodes repo-local beep package metadata", () => {
@@ -443,7 +428,7 @@ describe("PackageJson schema", () => {
         { onExcessProperty: "error" }
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
 
       const beepExit = decodeUnknownNpmPackageJsonExit(
         {
@@ -455,36 +440,36 @@ describe("PackageJson schema", () => {
         { onExcessProperty: "error" }
       );
 
-      expect(Exit.isFailure(beepExit)).toBe(true);
+      assertTrue(Exit.isFailure(beepExit));
     });
   });
 
   describe("malformed structures", () => {
     it("rejects missing name field", () => {
-      expect(Exit.isFailure(decodePackageJsonExit({ version: "1.0.0" }))).toBe(true);
+      assertTrue(Exit.isFailure(decodePackageJsonExit({ version: "1.0.0" })));
     });
 
     it("rejects empty string names", () => {
-      expect(Exit.isFailure(decodePackageJsonExit({ name: "" }))).toBe(true);
+      assertTrue(Exit.isFailure(decodePackageJsonExit({ name: "" })));
     });
 
     it("rejects invalid package names", () => {
-      expect(Exit.isFailure(decodePackageJsonExit({ name: "Invalid Name" }))).toBe(true);
+      assertTrue(Exit.isFailure(decodePackageJsonExit({ name: "Invalid Name" })));
     });
 
     it("rejects invalid package type values", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
             type: "esm",
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects repository objects without required type", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -493,11 +478,11 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects funding objects without a url", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -506,11 +491,11 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects exports objects with invalid keys", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -519,11 +504,11 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects imports objects with invalid keys", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -532,44 +517,44 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects workspaces as a string", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
             workspaces: "packages/*",
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects unexpected top-level keys", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
             unexpected: true,
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects private as a string", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
             private: "true",
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects dependency records with invalid keys or empty values", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -578,9 +563,9 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
 
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -590,9 +575,9 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
 
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -601,11 +586,11 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects invalid repo-local beep package metadata", () => {
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -614,9 +599,9 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
 
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -626,9 +611,9 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
 
-      expect(
+      assertTrue(
         Exit.isFailure(
           decodePackageJsonExit({
             name: "pkg",
@@ -637,15 +622,15 @@ describe("PackageJson schema", () => {
             },
           })
         )
-      ).toBe(true);
+      );
     });
 
     it("rejects non-object input", () => {
-      expect(Exit.isFailure(decodePackageJsonExit("not-an-object"))).toBe(true);
-      expect(Exit.isFailure(decodePackageJsonExit(42))).toBe(true);
-      expect(Exit.isFailure(decodePackageJsonExit(null))).toBe(true);
-      expect(Exit.isFailure(decodePackageJsonExit(undefined))).toBe(true);
-      expect(Exit.isFailure(decodePackageJsonExit([]))).toBe(true);
+      assertTrue(Exit.isFailure(decodePackageJsonExit("not-an-object")));
+      assertTrue(Exit.isFailure(decodePackageJsonExit(42)));
+      assertTrue(Exit.isFailure(decodePackageJsonExit(null)));
+      assertTrue(Exit.isFailure(decodePackageJsonExit(undefined)));
+      assertTrue(Exit.isFailure(decodePackageJsonExit([])));
     });
   });
 
@@ -658,9 +643,9 @@ describe("PackageJson schema", () => {
         workspaces: [],
       });
 
-      expect(result.keywords).toEqual(O.some([]));
-      expect(result.files).toEqual(O.some([]));
-      expect(result.workspaces).toEqual(O.some([]));
+      assertSome(result.keywords, []);
+      assertSome(result.files, []);
+      assertSome(result.workspaces, []);
     });
 
     it("handles scoped package names", () => {
@@ -679,7 +664,7 @@ describe("PackageJson schema", () => {
         { onExcessProperty: "error" }
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     });
 
     it("decodes a real-world workspace package shape from this repo", () => {
@@ -904,12 +889,10 @@ describe("PackageJson schema", () => {
           patch
         );
 
-        expect(patched.dependencies).toEqual(
-          O.some({
-            "@beep/schema": "catalog:",
-          })
-        );
-        expect(patched.private).toEqual(O.some(true));
+        assertSome(patched.dependencies, {
+          "@beep/schema": "catalog:",
+        });
+        assertSome(patched.private, true);
       })
     );
   });
