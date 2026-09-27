@@ -8,7 +8,8 @@ import {
 } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Metric } from "effect";
+import { assertDefined, assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Equal, Exit, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -74,7 +75,7 @@ describe("Metric", () => {
     Effect.gen(function* () {
       const interrupted = Metric.counter("test_workflow_interrupted_total");
 
-      yield* Effect.exit(
+      const exit = yield* Effect.exit(
         observeWorkflow(
           {
             name: "test-workflow",
@@ -86,6 +87,8 @@ describe("Metric", () => {
 
       const interruptedState = yield* Metric.value(interrupted);
 
+      assertTrue(Exit.isFailure(exit));
+      assertTrue(Cause.hasInterruptsOnly(exit.cause));
       expect(interruptedState.count).toBe(1);
     })
   );
@@ -97,6 +100,12 @@ describe("Metric", () => {
       const state = yield* Metric.value(duration);
 
       expect(exit._tag).toBe("Failure");
+      assertTrue(Exit.isFailure(exit));
+      expect(exit.cause.reasons).toHaveLength(1);
+      const reason = exit.cause.reasons[0];
+      assertDefined(reason);
+      assertTrue(Cause.isFailReason(reason));
+      expect(reason.error).toBe("boom");
       expect(state.count).toBe(1);
     })
   );
@@ -108,6 +117,8 @@ describe("Metric", () => {
       const state = yield* Metric.value(duration);
 
       expect(exit._tag).toBe("Failure");
+      assertTrue(Exit.isFailure(exit));
+      assertTrue(Cause.hasInterruptsOnly(exit.cause));
       expect(state.count).toBe(1);
     })
   );

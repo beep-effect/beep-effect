@@ -2,8 +2,8 @@ import { PhaseProfile, profilePhase } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
-import { Context, Effect, Equal, Layer, Logger, Metric, References } from "effect";
+import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
+import { Cause, Context, Effect, Equal, Exit, Layer, Logger, Metric, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -87,14 +87,15 @@ describe("PhaseProfiler", () => {
     Effect.fnUntraced(function* () {
       const failed = Metric.counter("test_phase_failed_outcomes_total");
 
-      yield* Effect.exit(
+      const expectedError = TestPhaseError.make({ message: "boom" });
+      const exit = yield* Effect.exit(
         profilePhase(
           {
             phase: "indexing",
             attributes: { run_kind: "index" },
             failed,
           },
-          Effect.fail(TestPhaseError.make({ message: "boom" }))
+          Effect.fail(expectedError)
         )
       );
 
@@ -102,6 +103,12 @@ describe("PhaseProfiler", () => {
         Metric.withAttributes(failed, { phase: "indexing", run_kind: "index", outcome: "failed" })
       );
 
+      assertTrue(Exit.isFailure(exit));
+      expect(exit.cause.reasons).toHaveLength(1);
+      const reason = exit.cause.reasons[0];
+      assertDefined(reason);
+      assertTrue(Cause.isFailReason(reason));
+      expect(reason.error).toBe(expectedError);
       expect(failedState.count).toBe(1);
     })
   );
@@ -115,7 +122,7 @@ describe("PhaseProfiler", () => {
           const interrupted = Metric.counter("test_phase_interrupted_outcomes_total");
           const annotations = yield* CapturedAnnotations;
 
-          yield* Effect.exit(
+          const exit = yield* Effect.exit(
             profilePhase(
               {
                 phase: "stream",
@@ -129,6 +136,8 @@ describe("PhaseProfiler", () => {
             Metric.withAttributes(interrupted, { phase: "stream", outcome: "interrupted" })
           );
 
+          assertTrue(Exit.isFailure(exit));
+          assertTrue(Cause.hasInterruptsOnly(exit.cause));
           expect(interruptedState.count).toBe(1);
           expect(annotations).toHaveLength(1);
           expect(annotations[0]?.cause_classification).toBe("interrupted");

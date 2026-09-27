@@ -14,6 +14,8 @@ describe("OtlpPacketLab", () => {
 
         const packets = yield* lab.snapshot;
 
+        expect(packets).toHaveLength(1);
+
         expect(packets[0]?.kind).toBe("logs");
         expect(packets[0]?.encoding).toBe("json");
         expect(packets[0]?.contentType).toContain("application/json");
@@ -30,6 +32,8 @@ describe("OtlpPacketLab", () => {
         serialization.traces({ resourceSpans: [] });
 
         const packets = yield* lab.snapshot;
+
+        expect(packets).toHaveLength(1);
 
         expect(packets[0]?.kind).toBe("traces");
         expect(packets[0]?.encoding).toBe("protobuf");

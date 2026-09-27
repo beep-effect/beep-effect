@@ -2485,3 +2485,14 @@ construct the same literal 503 with NonNegativeInt.make and use equivalent
 pipe composition for the three Option predicates. No expected value, domain or
 production behavior changes. Including the package test compiler in the
 assertion conversion checklist would expose these constraints earlier.
+
+## 2026-09-26: Traced Cause annotations affect strict Exit assertions
+
+The observability witness checkpoint initially used assertExitFailure with a
+fresh unannotated Cause for trackDuration and profilePhase. Both failed only
+on installed Effect stack annotations; the original error payloads were intact.
+The new witness now requires a Failure Exit, exactly one Fail reason and the
+independently supplied original payload. No original assertion was removed and
+no annotation was stripped. The untraced HTTP witness retains complete Cause
+comparison. A testing guide example distinguishing semantic payload preservation
+from runtime Cause annotation identity would prevent this mismatched oracle.

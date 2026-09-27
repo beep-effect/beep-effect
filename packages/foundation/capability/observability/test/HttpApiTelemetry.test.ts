@@ -11,8 +11,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
-import { Effect, Equal, Metric } from "effect";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
+import { Cause, Effect, Equal, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
@@ -130,6 +130,7 @@ describe("HttpApiTelemetry", () => {
       );
 
       expect(failureExit._tag).toBe("Failure");
+      assertExitFailure(failureExit, Cause.fail({ message: "backend unavailable" }));
 
       const failureState = yield* Metric.value(
         Metric.withAttributes(requestsTotal, {

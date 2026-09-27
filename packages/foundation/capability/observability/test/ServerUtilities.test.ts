@@ -26,6 +26,7 @@ describe("ServerUtilities", () => {
 
     const sanitized = sanitizePrometheusMetrics(input);
 
+    expect(sanitized).toContain('demo_bucket{le="10"} 1');
     expect(sanitized).not.toContain('le="Infinity"');
     expect(sanitized).toContain('le="+Inf"');
   });

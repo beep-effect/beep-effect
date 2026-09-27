@@ -1,6 +1,8 @@
 import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
+import * as DevToolsSchema from "effect/devtools/DevToolsSchema";
 import * as NetAddress from "effect/net/NetAddress";
 import * as O from "effect/Option";
 import * as SocketServer from "effect/socket/SocketServer";
@@ -56,6 +58,24 @@ describe("DevToolsRelay", () => {
         expect(snapshot.spanCount).toBe(1);
         expect(snapshot.spanEventCount).toBe(1);
         expect(snapshot.metricCount).toBe(0);
+
+        const metrics = DevToolsSchema.MetricsSnapshot.make({
+          metrics: [
+            DevToolsSchema.Counter.make({
+              id: "test-relay-requests",
+              description: undefined,
+              attributes: { route: "/health" },
+              state: { count: 7, incremental: true },
+            }),
+          ],
+        });
+        yield* relay.ingest(metrics);
+        const latestMetrics = yield* relay.latestMetrics;
+        const populated = yield* relay.snapshot;
+        assertSome(latestMetrics, metrics);
+        expect(populated.metricCount).toBe(1);
+        expect(populated.spanCount).toBe(1);
+        expect(populated.spanEventCount).toBe(1);
       })
     );
   });
