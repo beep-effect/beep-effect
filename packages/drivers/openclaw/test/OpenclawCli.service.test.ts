@@ -637,28 +637,26 @@ describe("@beep/openclaw OpenclawCli service", () => {
     }
   );
 
-  it("round-trips the schema-derived CLI result unions asserted above", () => {
-    const validationEquivalence = S.toEquivalence(OpenclawConfigValidation);
-    const reloadEquivalence = S.toEquivalence(OpenclawSecretsReload);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(OpenclawConfigValidation), Arbitrary.schema(OpenclawSecretsReload)]),
-          ([validation, reload]) => {
-            const validationWire = Result.getOrThrow(encodeOpenclawConfigValidationResult(validation));
-            const reloadWire = Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload));
-            expect(
-              validationEquivalence(Result.getOrThrow(decodeOpenclawConfigValidationResult(validationWire)), validation)
-            ).toBe(true);
-            expect(reloadEquivalence(Result.getOrThrow(decodeOpenclawSecretsReloadResult(reloadWire)), reload)).toBe(
-              true
-            );
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+  it.prop(
+    "round-trips the schema-derived CLI result unions asserted above",
+    {
+      validation: Arbitrary.schema(OpenclawConfigValidation),
+      reload: Arbitrary.schema(OpenclawSecretsReload),
+    },
+    ({ validation, reload }) => {
+      const validationEquivalence = S.toEquivalence(OpenclawConfigValidation);
+      const reloadEquivalence = S.toEquivalence(OpenclawSecretsReload);
+      const validationWire = Result.getOrThrow(encodeOpenclawConfigValidationResult(validation));
+      const reloadWire = Result.getOrThrow(encodeOpenclawSecretsReloadResult(reload));
+      expect(
+        validationEquivalence(Result.getOrThrow(decodeOpenclawConfigValidationResult(validationWire)), validation),
+        "OpenclawConfigValidation"
+      ).toBe(true);
+      expect(
+        reloadEquivalence(Result.getOrThrow(decodeOpenclawSecretsReloadResult(reloadWire)), reload),
+        "OpenclawSecretsReload"
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

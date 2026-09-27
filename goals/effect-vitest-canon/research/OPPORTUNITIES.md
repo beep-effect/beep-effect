@@ -3242,3 +3242,8 @@ The first recorder isolation package check rejected two new test service keys
 with TS377049. The compiler supplies the exact deterministic file-qualified
 keys; using those keys repairs this introduced test-only error. Following the
 existing integration fixture key pattern would have prevented this iteration.
+
+OpenClaw property preparation also caught a stale Option.fromNullable API
+reference (TS2339). The fixture already needs a head Option, so Array.head
+provides the exact operation directly. Using the live helper rather than a
+remembered nullable conversion avoids the unnecessary intermediate value.
