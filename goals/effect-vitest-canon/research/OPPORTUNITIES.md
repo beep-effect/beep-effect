@@ -3389,3 +3389,21 @@ expression before matching assertion syntax corrects the original count from
 107 to 106. Historical before/after source comparisons still preserve every
 assertion. Future receipts should identify matcher calls structurally instead
 of treating expression-text matches alone as distinct assertions.
+
+### NLP MCP recording-client proof needs construction-time injection
+
+While strengthening the saved SSRF test, inspection of StreamingHandlers showed
+that handlers capture their HTTP client when their layer is built. A client
+provided only around an already constructed handler call would miss the subject.
+A native recording-client fixture now constructs the actual handler layer with
+that dependency. Its public-host positive control traverses the toolkit and
+increments the counter without opening a socket.
+
+The initial test-local Layer provision failed the repository's
+strictEffectProvide diagnostic. Moving construction to native layer registration
+preserves the service boundary. The direct loader can also return PlatformError;
+its failure must be narrowed before encoding DatasetLoadError. Decode the type
+side with S.toType here: applying the wire decoder to an already-decoded error
+misinterprets its Option-valued cause and fails with "Expected JSON value".
+A test-repair checklist distinguishing captured service contexts and decoded
+values from wire inputs would have prevented these audit round trips.

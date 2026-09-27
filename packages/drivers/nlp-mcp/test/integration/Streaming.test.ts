@@ -1,15 +1,53 @@
+import { $NlpMcpId } from "@beep/identity";
 import { StreamingToolkit, StreamingToolkitHandlersLive } from "@beep/nlp-mcp";
+import * as DatasetLoader from "@beep/nlp-mcp/Streaming/DatasetLoader";
 import { StreamingAllowedRoots } from "@beep/nlp-mcp/Streaming/TextStream";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, layer } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { FetchHttpClient } from "effect/http";
+import { FetchHttpClient, HttpClient, HttpClientError } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import type { PlatformError } from "effect/PlatformError";
+
+const $I = $NlpMcpId.create("test/integration/Streaming.test");
+
+class HttpRequestCount extends Context.Service<HttpRequestCount, Ref.Ref<number>>()($I`HttpRequestCount`) {}
+
+const RecordingHttpClientLive = Layer.effect(
+  HttpClient.HttpClient,
+  Effect.gen(function* () {
+    const requests = yield* HttpRequestCount;
+    return HttpClient.make((request) =>
+      Ref.update(requests, (count) => count + 1).pipe(
+        Effect.andThen(
+          Effect.fail(
+            new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({ request, description: "controlled transport failure" }),
+            })
+          )
+        )
+      )
+    );
+  })
+);
+
+const RecordingTestLayer = StreamingToolkitHandlersLive.pipe(
+  Layer.provideMerge(NodeFileSystem.layer),
+  Layer.provideMerge(NodePath.layer),
+  Layer.provideMerge(RecordingHttpClientLive),
+  Layer.provideMerge(Layer.effect(HttpRequestCount, Ref.make(0)))
+);
+const decodeDatasetLoadError = S.decodeUnknownEffect(S.toType(DatasetLoader.DatasetLoadError));
+
+const encodeDatasetLoadError = S.encodeEffect(DatasetLoader.DatasetLoadError);
 
 const TestLayer = StreamingToolkitHandlersLive.pipe(
   Layer.provideMerge(NodeFileSystem.layer),
@@ -175,23 +213,6 @@ describe("StreamingToolkit integration", () => {
       )
     );
 
-    it.effect(
-      "stream_load_text rejects IPv4-mapped internal URLs",
-      Effect.fnUntraced(function* () {
-        const tk = yield* StreamingToolkit;
-        const assertBlocked = Effect.fn("assertBlocked")(function* (location: string) {
-          const stream = yield* tk.handle("stream_load_text", { location });
-          const results = yield* Stream.runCollect(stream);
-          const first = results[0];
-          assert.isDefined(first);
-          assert.strictEqual(first.isFailure, true);
-        });
-
-        yield* assertBlocked("http://[::ffff:127.0.0.1]/data.txt");
-        yield* assertBlocked("http://[::ffff:169.254.169.254]/latest/meta-data");
-      })
-    );
-
     it.effect("stream_file_info reports existence and line count", () =>
       withTempFixture("info.txt", "a\nbb\nccc\n", (file) =>
         Effect.gen(function* () {
@@ -220,6 +241,13 @@ describe("StreamingToolkit integration", () => {
           const output = first.encodedResult as { count: number; lines: ReadonlyArray<string> };
           assert.strictEqual(output.count, 3);
           assert.strictEqual(output.lines.length, 3);
+          const sourceLines = ["l1", "l2", "l3", "l4", "l5"];
+          assert.isTrue(A.every(output.lines, (line) => A.contains(sourceLines, line)));
+          assert.strictEqual(A.dedupe(output.lines).length, 3);
+          assert.deepStrictEqual(
+            output.lines,
+            A.filter(sourceLines, (line) => A.contains(output.lines, line))
+          );
         })
       )
     );
@@ -385,4 +413,47 @@ describe("StreamingToolkit integration", () => {
       )
     );
   });
+});
+
+layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
+  it.effect(
+    "stream_load_text rejects IPv4-mapped internal URLs",
+    Effect.fnUntraced(function* () {
+      const requests = yield* HttpRequestCount;
+      const tk = yield* StreamingToolkit;
+      // Exercise the injected client through the actual captured handler context.
+      const probeStream = yield* tk.handle("stream_load_text", { location: "https://example.test/recording-probe" });
+      const probeResults = yield* Stream.runCollect(probeStream);
+      assert.isDefined(probeResults[0]);
+      assert.strictEqual(probeResults[0].isFailure, true);
+      assert.strictEqual(yield* Ref.get(requests), 1);
+      yield* Ref.set(requests, 0);
+      const assertBlocked = Effect.fn("assertBlocked")(function* (location: string, hostname: string) {
+        const message = `Refusing to load from a loopback, link-local, or private host: ${hostname}`;
+        const stream = yield* tk.handle("stream_load_text", { location });
+        const results = yield* Stream.runCollect(stream);
+        const first = results[0];
+        assert.isDefined(first);
+        assert.strictEqual(first.isFailure, true);
+        assert.deepInclude(first.encodedResult, {
+          message,
+          operation: "load_text",
+          reason: "DatasetLoadError",
+          retryable: false,
+          toolName: "stream_load_text",
+        });
+        const failure = yield* Effect.flip(DatasetLoader.loadText(location));
+        const refusal = yield* decodeDatasetLoadError(failure);
+        assert.deepStrictEqual(yield* encodeDatasetLoadError(refusal), {
+          _tag: "DatasetLoadError",
+          location,
+          message,
+        });
+        assert.strictEqual(yield* Ref.get(requests), 0);
+      });
+
+      yield* assertBlocked("http://[::ffff:127.0.0.1]/data.txt", "[::ffff:7f00:1]");
+      yield* assertBlocked("http://[::ffff:169.254.169.254]/latest/meta-data", "[::ffff:a9fe:a9fe]");
+    })
+  );
 });
