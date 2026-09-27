@@ -825,7 +825,9 @@ describe("@beep/infra OpenClaw", () => {
         expect(script).toContain("export OPENCLAW_CONFIG_PATH='/etc/beep/openclaw/current/openclaw.json'");
         expect(script).toContain("export OPENCLAW_STATE_DIR='/var/lib/beep/openclaw'");
         pipe(script.trimEnd().endsWith("exit 0"), assertFalse);
-        const [stderr, exitCode] = yield* runCaptured(ChildProcess.make("/bin/bash", ["-lc", script]));
+        const [stderr, exitCode] = yield* runCaptured(
+          ChildProcess.make("/bin/bash", ["--noprofile", "--norc", "-p", "-c", script])
+        );
         expect(exitCode).toBe(1);
         expect(stderr).toContain("usage: live-acceptance degraded|restored");
       })
