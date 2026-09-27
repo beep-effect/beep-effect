@@ -2455,3 +2455,33 @@ process service for the same commands and fixtures, with its shorter child scope
 Preserve command ordering, exit assertions and deadlines. Documenting the shim's
 minimal contract alongside scope-migration guidance would prevent this mismatch;
 no shared shim or production change is required for this test ownership repair.
+
+## 2026-09-27: publisher retained proof capacity while watching hosted checks
+
+PR #1287's publisher completed all 33 reported local proof lanes successfully,
+then entered its GitHub check watch while other publishers still reported that
+process as the merged-preview reservation holder. A dedicated until-ready monitor
+was started and confirmed live before stopping the completed publisher's watch.
+The saved proof remains intact; no failing job was bypassed. Release proof
+reservations before remote-only monitoring so finished local work does not keep
+other exact-head proofs waiting.
+
+## 2026-09-27: Effect test adapter overload differs from plain Vitest
+
+The observability scope conversion initially retained Vitest's options-before-body
+argument order. The installed Effect adapter accepts the body second and options
+third; typecheck caught all three Boundary registrations. Moving the same timeout
+objects preserves the two 60-second and one 600-second budgets. Removing obsolete
+provider wrappers also exposed three nested generators to nestedEffectGenYield;
+flattening them preserved every assertion and capture order. Check adapter
+overloads and generator adjacency during mechanical registration migrations.
+
+## 2026-09-26: Assertion helpers expose branded payload and composition requirements
+
+The observability assertion-only checkpoint passed its configured Node and Bun
+suites, but package verification caught a branded expected status mismatch
+(TS2345) and three nested-call composition diagnostics (TS377050). The repairs
+construct the same literal 503 with NonNegativeInt.make and use equivalent
+pipe composition for the three Option predicates. No expected value, domain or
+production behavior changes. Including the package test compiler in the
+assertion conversion checklist would expose these constraints earlier.

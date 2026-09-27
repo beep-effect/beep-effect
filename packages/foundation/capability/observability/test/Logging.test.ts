@@ -1,6 +1,7 @@
 import { layerMinimumLogLevel, PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, Logger } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -33,12 +34,10 @@ describe("Logging", () => {
 
     expect(pretty.theme).toBe("ocean");
     expect(pretty.bannerMode).toBe("off");
-    expect(encodePrettyLoggerConfigOption(pretty)).toStrictEqual(
-      O.some({
-        theme: "ocean",
-        bannerMode: "off",
-      })
-    );
+    assertSome(encodePrettyLoggerConfigOption(pretty), {
+      theme: "ocean",
+      bannerMode: "off",
+    });
   });
 
   it("round-trips schema-derived pretty logger configs", () => {

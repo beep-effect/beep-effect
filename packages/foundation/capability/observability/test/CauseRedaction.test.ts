@@ -13,6 +13,7 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Equal, Layer, Logger, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -44,7 +45,7 @@ describe("CauseRedaction", () => {
   it("caps length with redactString", () => {
     const out = redactString("token=sk-EXAMPLEKEY00 and a long tail of more text here", 16);
     expect(out.length).toBeLessThanOrEqual(16 + 3);
-    expect(out.endsWith("...")).toBe(true);
+    assertTrue(out.endsWith("..."));
   });
 
   it("redacts an unknown error into a transport-safe summary on the diagnostic channel", () => {
@@ -54,7 +55,7 @@ describe("CauseRedaction", () => {
     expect(safe.message).toContain("[REDACTED]");
     expect(safe.message).not.toContain("sk-EXAMPLEKEY00");
     expect(safe.message).not.toContain("/home/ada");
-    expect(O.isSome(safe.detail)).toBe(true);
+    safe.detail.pipe(O.isSome, assertTrue);
     expect(safe.fingerprint.length).toBeGreaterThan(0);
   });
 
@@ -76,7 +77,7 @@ describe("CauseRedaction", () => {
   it("drops all internal detail on the client channel", () => {
     const safe = redactCauseForClient(Cause.die("internal invariant /home/ada broke"));
     expect(safe.tag).toBe("defect");
-    expect(O.isNone(safe.detail)).toBe(true);
+    assertNone(safe.detail);
     expect(safe.message).not.toContain("/home/ada");
   });
 
@@ -90,7 +91,7 @@ describe("CauseRedaction", () => {
     const redactForClient = redactCause(RedactCauseOptions.make({ channel: "client" }));
     const safe = redactForClient(Cause.fail(new Error("token=sk-EXAMPLEKEY00")));
 
-    expect(O.isNone(safe.detail)).toBe(true);
+    assertNone(safe.detail);
     expect(safe.message).not.toContain("sk-EXAMPLEKEY00");
   });
 
@@ -160,7 +161,7 @@ describe("CauseRedaction", () => {
           );
 
           expect(exit._tag).toBe("Failure");
-          expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
+          assertTrue(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false);
         })
       )
   );
@@ -171,7 +172,7 @@ describe("CauseRedaction", () => {
       RedactCauseOptions.make({ messageLimit: NonNegativeInt.make(32) })
     );
     expect(safe.message.length).toBeLessThanOrEqual(32 + 3);
-    expect(safe.truncated).toBe(true);
+    assertTrue(safe.truncated);
   });
 
   it("round-trips schema-derived redaction options", () => {

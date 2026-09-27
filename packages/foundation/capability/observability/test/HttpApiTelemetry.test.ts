@@ -7,9 +7,11 @@ import {
   observeHttpApiEffect,
   observeHttpApiHandler,
 } from "@beep/observability/server";
+import { NonNegativeInt } from "@beep/schema";
 import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Equal, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
@@ -114,7 +116,7 @@ describe("HttpApiTelemetry", () => {
       );
 
       expect(successState.count).toBe(1);
-      expect(httpApiFailureStatus(endpoint, { message: "backend unavailable" })).toStrictEqual(O.some(503));
+      assertSome(httpApiFailureStatus(endpoint, { message: "backend unavailable" }), NonNegativeInt.make(503));
 
       const failureExit = yield* Effect.exit(
         observeHttpApiEffect(

@@ -1,5 +1,7 @@
 import { DevToolsSpanFilter, LayerFilteredDevToolsOptions } from "@beep/observability/server";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -14,9 +16,9 @@ describe("DevTools", () => {
       url: "ws://localhost:34437",
     };
 
-    expect(shouldPublish("Http.server")).toBe(true);
-    expect(shouldPublish("Sql.query")).toBe(false);
-    expect(O.isSome(decodeDevToolsSpanFilterOption(shouldPublish))).toBe(true);
-    expect(O.isSome(decodeLayerFilteredDevToolsOptionsOption(options))).toBe(true);
+    assertTrue(shouldPublish("Http.server"));
+    assertFalse(shouldPublish("Sql.query"));
+    pipe(decodeDevToolsSpanFilterOption(shouldPublish), O.isSome, assertTrue);
+    pipe(decodeLayerFilteredDevToolsOptionsOption(options), O.isSome, assertTrue);
   });
 });

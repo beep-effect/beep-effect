@@ -2,6 +2,7 @@ import { PhaseProfile, profilePhase } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, Logger, Metric, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -46,16 +47,14 @@ describe("PhaseProfiler", () => {
   });
 
   it("rejects empty phase labels", () => {
-    expect(
-      O.isNone(
-        decodePhaseProfileOption({
-          phase: "",
-          outcome: "completed",
-          durationMs: NonNegativeInt.make(1),
-          attributes: {},
-        })
-      )
-    ).toBe(true);
+    assertNone(
+      decodePhaseProfileOption({
+        phase: "",
+        outcome: "completed",
+        durationMs: NonNegativeInt.make(1),
+        attributes: {},
+      })
+    );
   });
 
   it.effect(

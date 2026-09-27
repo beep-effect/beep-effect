@@ -15,16 +15,17 @@ import {
   UnauthorizedError,
   UnprocessableEntityError,
 } from "@beep/observability";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(schema: S.Schema<A>, a: A, b: A, different: A, differentCause: A): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(a, b)).toBe(true);
-  expect(same(a, different)).toBe(false);
-  expect(same(a, differentCause)).toBe(true);
+  assertTrue(same(a, b));
+  assertFalse(same(a, different));
+  assertTrue(same(a, differentCause));
 };
 
 describe("observability declared-field equivalence", () => {
@@ -48,8 +49,8 @@ describe("observability declared-field equivalence", () => {
     const different = RedactedCauseError.make({ redacted: differentRedacted });
     const same = S.toEquivalence(RedactedCauseError);
 
-    expect(same(a, b)).toBe(true);
-    expect(same(a, different)).toBe(false);
+    assertTrue(same(a, b));
+    assertFalse(same(a, different));
   });
 
   it("compares ClientHttpError by stable fields and ignores cause", () => {
