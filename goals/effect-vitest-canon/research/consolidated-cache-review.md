@@ -125,3 +125,24 @@ metadata and qualification fields must remain identical to the merge base.
 - `@beep/uspto#test`
 - `@beep/uspto#test:integration`
 - `@beep/uspto#test:property`
+
+## Incoming abb9ab2cea6b289dfb1e89de2b1495d1bda87216
+
+- `@beep/ai-provider-cli#audit`
+- `@beep/ai-provider-cli#build`
+- `@beep/ai-provider-cli#check`
+- `@beep/ai-provider-cli#coverage`
+- `@beep/ai-provider-cli#lint:deprecated-apis`
+- `@beep/ai-provider-cli#package-test-typecheck`
+- `@beep/ai-provider-cli#test`
+- `@beep/ai-provider-cli#test:integration`
+- `@beep/ai-provider-cli#test:property`
+- `@beep/architecture-lab-config#audit`
+- `@beep/architecture-lab-config#build`
+- `@beep/architecture-lab-config#check`
+- `@beep/architecture-lab-config#coverage`
+- `@beep/architecture-lab-config#lint:deprecated-apis`
+- `@beep/architecture-lab-config#package-test-typecheck`
+- `@beep/architecture-lab-config#test`
+- `@beep/architecture-lab-config#test:integration`
+- `@beep/architecture-lab-config#test:property`
