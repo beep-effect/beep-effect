@@ -173,154 +173,151 @@ describe("Pandoc.mapping", () => {
     );
   });
 
-  it("exhaustively distinguishes inline and display Pandoc math projections", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = Pandoc.PandocDocument.make({
-          blocks: [
-            Pandoc.Para.make({
-              children: [
-                Pandoc.Math.make({ mathType: "InlineMath", text: "x" }),
-                Pandoc.Math.make({ mathType: "DisplayMath", text: "y" }),
-              ],
-            }),
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
-        const paragraph = result.document.children[0];
+  it.effect("exhaustively distinguishes inline and display Pandoc math projections", () =>
+    Effect.gen(function* () {
+      const pandoc = Pandoc.PandocDocument.make({
+        blocks: [
+          Pandoc.Para.make({
+            children: [
+              Pandoc.Math.make({ mathType: "InlineMath", text: "x" }),
+              Pandoc.Math.make({ mathType: "DisplayMath", text: "y" }),
+            ],
+          }),
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+      const paragraph = result.document.children[0];
 
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
-          ["Math", "lossy", "/blocks/0/children/1"],
+      expect(result.report.profile).toBe("gap");
+      expect(A.map(result.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+        ["Math", "lossy", "/blocks/0/children/1"],
+      ]);
+      expect(paragraph?._tag).toBe("p");
+      if (paragraph?._tag === "p") {
+        expect(paragraph.children).toEqual([
+          expect.objectContaining({ _tag: "inlineMath", value: "x" }),
+          expect.objectContaining({ _tag: "inlineMath", value: "y" }),
         ]);
-        expect(paragraph?._tag).toBe("p");
-        if (paragraph?._tag === "p") {
-          expect(paragraph.children).toEqual([
-            expect.objectContaining({ _tag: "inlineMath", value: "x" }),
-            expect.objectContaining({ _tag: "inlineMath", value: "y" }),
-          ]);
-        }
-      })
-    ));
+      }
+    })
+  );
 
-  it("projects current inline and block constructors through definition-list plaintext", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const attr = ["", [], []];
-        const str = (value: string) => ({ c: value, t: "Str" });
-        const plain = (value: string) => ({ c: [str(value)], t: "Plain" });
-        const paragraph = (value: string) => ({ c: [str(value)], t: "Para" });
-        const richTerm = [
-          str("text"),
-          { t: "Space" },
-          { t: "SoftBreak" },
-          { t: "LineBreak" },
-          { c: [str("emphasis")], t: "Emph" },
-          { c: [str("underline")], t: "Underline" },
-          { c: [str("strong")], t: "Strong" },
-          { c: [str("strikeout")], t: "Strikeout" },
-          { c: [str("superscript")], t: "Superscript" },
-          { c: [str("subscript")], t: "Subscript" },
-          { c: [str("small-caps")], t: "SmallCaps" },
-          { c: [{ t: "SingleQuote" }, [str("quoted")]], t: "Quoted" },
-          { c: [[], [str("cited")]], t: "Cite" },
-          { c: [attr, "code"], t: "Code" },
-          { c: [attr, [str("link")], ["https://example.com", ""]], t: "Link" },
-          { c: [attr, [str("image")], ["image.png", ""]], t: "Image" },
-          { c: [attr, [str("span")]], t: "Span" },
-          { c: [paragraph("note")], t: "Note" },
-          { c: [{ t: "InlineMath" }, "math"], t: "Math" },
-          { c: ["html", "raw-inline"], t: "RawInline" },
-          { c: { retained: true }, t: "FutureInline" },
-        ];
-        const table = {
-          c: [
-            attr,
-            [null, [paragraph("table caption")]],
-            [[{ t: "AlignDefault" }, { t: "ColWidthDefault" }]],
-            [attr, []],
-            [[attr, 0, [], [[attr, [[attr, { t: "AlignDefault" }, 1, 1, [paragraph("cell")]]]]]]],
-            [attr, []],
-          ],
-          t: "Table",
-        };
-        const definitions = [
-          [plain("plain")],
-          [paragraph("paragraph")],
-          [{ c: [[str("first")], [str("second")]], t: "LineBlock" }],
-          [{ c: [2, attr, [str("heading")]], t: "Header" }],
-          [{ c: [paragraph("quote")], t: "BlockQuote" }],
-          [{ c: [attr, "code-block"], t: "CodeBlock" }],
-          [{ c: ["html", "raw-block"], t: "RawBlock" }],
-          [{ c: [[plain("bullet")]], t: "BulletList" }],
-          [
-            {
-              c: [[1, { t: "DefaultStyle" }, { t: "DefaultDelim" }], [[plain("ordered")]]],
-              t: "OrderedList",
-            },
-          ],
-          [{ c: [[[str("nested term")], [[paragraph("nested definition")]]]], t: "DefinitionList" }],
-          [{ t: "HorizontalRule" }],
-          [{ c: [attr, [paragraph("div")]], t: "Div" }],
-          [table],
-          [{ c: [attr, [null, [paragraph("figure caption")]], [paragraph("figure body")]], t: "Figure" }],
-          [{ c: { retained: true }, t: "FutureBlock" }],
-        ];
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [{ c: [[richTerm, definitions]], t: "DefinitionList" }],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
-        const block = result.document.children[0];
+  it.effect("projects current inline and block constructors through definition-list plaintext", () =>
+    Effect.gen(function* () {
+      const attr = ["", [], []];
+      const str = (value: string) => ({ c: value, t: "Str" });
+      const plain = (value: string) => ({ c: [str(value)], t: "Plain" });
+      const paragraph = (value: string) => ({ c: [str(value)], t: "Para" });
+      const richTerm = [
+        str("text"),
+        { t: "Space" },
+        { t: "SoftBreak" },
+        { t: "LineBreak" },
+        { c: [str("emphasis")], t: "Emph" },
+        { c: [str("underline")], t: "Underline" },
+        { c: [str("strong")], t: "Strong" },
+        { c: [str("strikeout")], t: "Strikeout" },
+        { c: [str("superscript")], t: "Superscript" },
+        { c: [str("subscript")], t: "Subscript" },
+        { c: [str("small-caps")], t: "SmallCaps" },
+        { c: [{ t: "SingleQuote" }, [str("quoted")]], t: "Quoted" },
+        { c: [[], [str("cited")]], t: "Cite" },
+        { c: [attr, "code"], t: "Code" },
+        { c: [attr, [str("link")], ["https://example.com", ""]], t: "Link" },
+        { c: [attr, [str("image")], ["image.png", ""]], t: "Image" },
+        { c: [attr, [str("span")]], t: "Span" },
+        { c: [paragraph("note")], t: "Note" },
+        { c: [{ t: "InlineMath" }, "math"], t: "Math" },
+        { c: ["html", "raw-inline"], t: "RawInline" },
+        { c: { retained: true }, t: "FutureInline" },
+      ];
+      const table = {
+        c: [
+          attr,
+          [null, [paragraph("table caption")]],
+          [[{ t: "AlignDefault" }, { t: "ColWidthDefault" }]],
+          [attr, []],
+          [[attr, 0, [], [[attr, [[attr, { t: "AlignDefault" }, 1, 1, [paragraph("cell")]]]]]]],
+          [attr, []],
+        ],
+        t: "Table",
+      };
+      const definitions = [
+        [plain("plain")],
+        [paragraph("paragraph")],
+        [{ c: [[str("first")], [str("second")]], t: "LineBlock" }],
+        [{ c: [2, attr, [str("heading")]], t: "Header" }],
+        [{ c: [paragraph("quote")], t: "BlockQuote" }],
+        [{ c: [attr, "code-block"], t: "CodeBlock" }],
+        [{ c: ["html", "raw-block"], t: "RawBlock" }],
+        [{ c: [[plain("bullet")]], t: "BulletList" }],
+        [
+          {
+            c: [[1, { t: "DefaultStyle" }, { t: "DefaultDelim" }], [[plain("ordered")]]],
+            t: "OrderedList",
+          },
+        ],
+        [{ c: [[[str("nested term")], [[paragraph("nested definition")]]]], t: "DefinitionList" }],
+        [{ t: "HorizontalRule" }],
+        [{ c: [attr, [paragraph("div")]], t: "Div" }],
+        [table],
+        [{ c: [attr, [null, [paragraph("figure caption")]], [paragraph("figure body")]], t: "Figure" }],
+        [{ c: { retained: true }, t: "FutureBlock" }],
+      ];
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [{ c: [[richTerm, definitions]], t: "DefinitionList" }],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+      const block = result.document.children[0];
 
-        expect(block?._tag).toBe("p");
-        if (block?._tag !== "p" || block.children[0]?._tag !== "text") {
-          throw new Error("expected a flattened definition-list paragraph");
-        }
+      expect(block?._tag).toBe("p");
+      if (block?._tag !== "p" || block.children[0]?._tag !== "text") {
+        throw new Error("expected a flattened definition-list paragraph");
+      }
 
-        expect(block.children[0].value).toContain("underlinestrongstrikeoutsuperscriptsubscriptsmall-capsquotedcited");
-        expect(block.children[0].value).toContain("first\nsecond");
-        expect(block.children[0].value).toContain("raw-block");
-        expect(block.children[0].value).toContain("figure body");
-        expect(block.children[0].value).toContain("table caption");
-        expect(A.map(result.report.issues, ({ construct }) => construct)).toEqual(
-          expect.arrayContaining([
-            "Underline",
-            "Superscript",
-            "Subscript",
-            "SmallCaps",
-            "Quoted",
-            "Cite",
-            "Note",
-            "RawInline",
-            "LineBlock",
-            "RawBlock",
-            "DefinitionList",
-            "Table",
-            "Figure",
-            "FutureInline",
-            "FutureBlock",
-          ])
-        );
-      })
-    ));
+      expect(block.children[0].value).toContain("underlinestrongstrikeoutsuperscriptsubscriptsmall-capsquotedcited");
+      expect(block.children[0].value).toContain("first\nsecond");
+      expect(block.children[0].value).toContain("raw-block");
+      expect(block.children[0].value).toContain("figure body");
+      expect(block.children[0].value).toContain("table caption");
+      expect(A.map(result.report.issues, ({ construct }) => construct)).toEqual(
+        expect.arrayContaining([
+          "Underline",
+          "Superscript",
+          "Subscript",
+          "SmallCaps",
+          "Quoted",
+          "Cite",
+          "Note",
+          "RawInline",
+          "LineBlock",
+          "RawBlock",
+          "DefinitionList",
+          "Table",
+          "Figure",
+          "FutureInline",
+          "FutureBlock",
+        ])
+      );
+    })
+  );
 
-  it("round-trips an Md math block through a Pandoc display-math paragraph", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const source = Md.Document.make({
-          children: [Md.MathBlock.make({ value: "a^2 + b^2 = c^2" })],
-        });
-        const encoded = yield* documentToPandoc(source);
-        const decoded = yield* pandocToDocument(encoded.pandoc);
+  it.effect("round-trips an Md math block through a Pandoc display-math paragraph", () =>
+    Effect.gen(function* () {
+      const source = Md.Document.make({
+        children: [Md.MathBlock.make({ value: "a^2 + b^2 = c^2" })],
+      });
+      const encoded = yield* documentToPandoc(source);
+      const decoded = yield* pandocToDocument(encoded.pandoc);
 
-        expect(encoded.report.issues).toEqual([]);
-        expect(decoded.report.issues).toEqual([]);
-        expect(decoded.document).toEqual(source);
-      })
-    ));
+      expect(encoded.report.issues).toEqual([]);
+      expect(decoded.report.issues).toEqual([]);
+      expect(decoded.document).toEqual(source);
+    })
+  );
 
   it.layer(BunFileSystem.layer)("records DOCX-origin compatibility gaps while producing partial Md output", (it) => {
     it.effect("records DOCX-origin compatibility gaps while producing partial Md output", () =>
@@ -347,770 +344,737 @@ describe("Pandoc.mapping", () => {
     );
   });
 
-  it("maps @beep/md documents to Pandoc with explicit lossiness for raw content and task lists", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const document = Md.Document.make({
-          children: [
-            Md.Heading.make({ level: 2, children: [text("Round trip")] }),
-            Md.P.make({
-              children: [
-                text("before "),
-                Md.RawMarkdown.make({ value: "**trusted**" }),
-                Md.Br.make({}),
-                Md.A.make({ children: [text("docs")], href: "https://example.com" }),
-              ],
-            }),
-            Md.TaskList.make({
-              children: [Md.TaskItem.make({ checked: true, children: [text("done")] })],
-            }),
-          ],
-        });
-
-        const result = yield* documentToPandoc(document);
-
-        expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["header", "para", "bulletlist"]);
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
-          expect.arrayContaining(["rawMarkdown", "TaskList"])
-        );
-      })
-    ));
-
-  it.effect("derives JSON pointer and default severity behavior from report schemas", () =>
+  it.effect("maps @beep/md documents to Pandoc with explicit lossiness for raw content and task lists", () =>
     Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([JsonPathArbitrary]),
-        ([path]) =>
-          Effect.gen(function* () {
-            const issue = PandocMappingIssue.fromPath({
-              construct: "Generated",
-              direction: "pandoc-to-md",
-              message: "Generated issue.",
-              path,
-            });
-
-            expect(issue.pointer).toBe(JsonPath.toPointer(path));
-            expect(issue.pointer).toBe(jsonPointerFromPath(path));
-            expect(issue.severity).toBe("unsupported");
-            expect(yield* encodePandocMappingIssue(issue)).not.toHaveProperty("pointer");
-
-            const report = PandocCompatibilityReport.fromIssues([issue]);
-            expect(report.profile).toBe("gap");
-            expect(yield* encodePandocCompatibilityReport(report)).not.toHaveProperty("profile");
-
-            return true;
+      const document = Md.Document.make({
+        children: [
+          Md.Heading.make({ level: 2, children: [text("Round trip")] }),
+          Md.P.make({
+            children: [
+              text("before "),
+              Md.RawMarkdown.make({ value: "**trusted**" }),
+              Md.Br.make({}),
+              Md.A.make({ children: [text("docs")], href: "https://example.com" }),
+            ],
           }),
-        fcRuns(50)
+          Md.TaskList.make({
+            children: [Md.TaskItem.make({ checked: true, children: [text("done")] })],
+          }),
+        ],
+      });
+
+      const result = yield* documentToPandoc(document);
+
+      expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["header", "para", "bulletlist"]);
+      expect(result.report.profile).toBe("gap");
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
+        expect.arrayContaining(["rawMarkdown", "TaskList"])
       );
-      expect(result._tag).toBe("Passed");
     })
   );
 
-  it("generates only non-negative numeric JSON path segments", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([JsonPathSegmentArbitrary]),
-          ([segment]) => {
-            if (typeof segment === "number") {
-              expect(Number.isInteger(segment)).toBe(true);
-              expect(segment).toBeGreaterThanOrEqual(0);
-            }
+  it.effect.prop(
+    "derives JSON pointer and default severity behavior from report schemas",
+    { path: JsonPathArbitrary },
+    Effect.fnUntraced(function* ({ path }) {
+      const issue = PandocMappingIssue.fromPath({
+        construct: "Generated",
+        direction: "pandoc-to-md",
+        message: "Generated issue.",
+        path,
+      });
+      expect(issue.pointer).toBe(JsonPath.toPointer(path));
+      expect(issue.pointer).toBe(jsonPointerFromPath(path));
+      expect(issue.severity).toBe("unsupported");
+      expect(yield* encodePandocMappingIssue(issue)).not.toHaveProperty("pointer");
+      const report = PandocCompatibilityReport.fromIssues([issue]);
+      expect(report.profile).toBe("gap");
+      expect(yield* encodePandocCompatibilityReport(report)).not.toHaveProperty("profile");
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "generates only non-negative numeric JSON path segments",
+    { segment: JsonPathSegmentArbitrary },
+    ({ segment }) => {
+      if (typeof segment === "number") {
+        expect(Number.isInteger(segment)).toBe(true);
+        expect(segment).toBeGreaterThanOrEqual(0);
+      }
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("preserves mapping report invariants for schema-derived documents", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([PandocDocumentArbitrary, MdDocumentArbitrary]),
-          ([pandoc, document]) => {
-            expectReportInvariants(Effect.runSync(pandocToDocument(pandoc)).report);
-            expectReportInvariants(Effect.runSync(documentToPandoc(document)).report);
+  it.effect.prop(
+    "preserves mapping report invariants for schema-derived documents",
+    { pandoc: PandocDocumentArbitrary, document: MdDocumentArbitrary },
+    Effect.fnUntraced(function* ({ pandoc, document }) {
+      expectReportInvariants((yield* pandocToDocument(pandoc)).report);
+      expectReportInvariants((yield* documentToPandoc(document)).report);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it("degrades @beep/md tables and YouTube embeds to Pandoc with recorded lossiness", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const document = Md.Document.make({
-          children: [
-            Md.Table.make({
-              headerRow: true,
-              children: [
-                Md.TableRow.make({
-                  children: [
-                    Md.TableCell.make({ children: [text("Name")] }),
-                    Md.TableCell.make({ children: [text("Value")] }),
-                  ],
-                }),
-                Md.TableRow.make({
-                  children: [
-                    Md.TableCell.make({ children: [text("Rich")] }),
-                    Md.TableCell.make({ children: [text("Ready")] }),
-                  ],
-                }),
-              ],
-            }),
-            Md.YouTube.make({ videoId: "M7lc1UVf-VE" }),
-          ],
-        });
-
-        const result = yield* documentToPandoc(document);
-
-        expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "para"]);
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
-          expect.arrayContaining(["Table", "YouTube"])
-        );
-
-        const tableText = expectStr(expectPara(result.pandoc.blocks[0]).children[0]);
-        expect(tableText.text).toBe("Name | Value\nRich | Ready");
-
-        const youtubeLink = expectLink(expectPara(result.pandoc.blocks[1]).children[0]);
-        expect(youtubeLink.target.url).toBe("https://www.youtube.com/watch?v=M7lc1UVf-VE");
-      })
-    ));
-
-  it("preserves @beep/md titles, ordered starts, and math in Pandoc projection", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const document = Md.Document.make({
-          children: [
-            Md.P.make({
-              children: [
-                Md.A.make({
-                  children: [text("docs")],
-                  href: "https://example.com",
-                  title: O.some("Docs title"),
-                }),
-                Md.Img.make({
-                  alt: "Diagram",
-                  src: "diagram.png",
-                  title: O.some("Diagram title"),
-                }),
-                Md.InlineMath.make({ value: "x + y" }),
-              ],
-            }),
-            Md.Ol.make({
-              children: [Md.Li.make({ children: [text("zero")] })],
-              start: Md.OrderedListStart.make(0),
-            }),
-            Md.MathBlock.make({ value: "a^2 + b^2 = c^2" }),
-          ],
-        });
-
-        const result = yield* documentToPandoc(document);
-
-        expect(result.report.issues).toEqual([]);
-        expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "orderedlist", "para"]);
-
-        const paragraph = expectPara(result.pandoc.blocks[0]);
-        const link = expectLink(paragraph.children[0]);
-        expect(link.target.title).toBe("Docs title");
-
-        const image = paragraph.children[1];
-        expect(image?._tag).toBe("image");
-        if (image?._tag === "image") {
-          expect(image.target.title).toBe("Diagram title");
-        }
-
-        const inlineMath = paragraph.children[2];
-        expect(inlineMath?._tag).toBe("math");
-        if (inlineMath?._tag === "math") {
-          expect(inlineMath.mathType).toBe("InlineMath");
-        }
-
-        const list = result.pandoc.blocks[1];
-        expect(list?._tag).toBe("orderedlist");
-        if (list?._tag === "orderedlist") {
-          expect(list.start).toBe(0);
-        }
-
-        const displayMath = expectPara(result.pandoc.blocks[2]).children[0];
-        expect(displayMath?._tag).toBe("math");
-        if (displayMath?._tag === "math") {
-          expect(displayMath.mathType).toBe("DisplayMath");
-        }
-
-        const roundTrip = yield* pandocToDocument(result.pandoc);
-        const orderedList = roundTrip.document.children[1];
-
-        expect(roundTrip.report.issues).toEqual([]);
-        expect(orderedList?._tag).toBe("ol");
-        if (orderedList?._tag === "ol") {
-          expect(orderedList.start).toBe(0);
-        }
-      })
-    ));
-
-  it("emits a safe YouTube watch URL and placeholders empty tables", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        // `videoId` is constrained to the bare 11-character YouTube id at the
-        // `@beep/md` model boundary (CSF-026), so a mapped id can never contain
-        // reserved characters and the emitted watch URL is always well-formed.
-        const document = Md.Document.make({
-          children: [Md.Table.make({ headerRow: false, children: [] }), Md.YouTube.make({ videoId: "ab-CD_12xyz" })],
-        });
-
-        const result = yield* documentToPandoc(document);
-
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
-          expect.arrayContaining(["Table", "YouTube"])
-        );
-        expect(expectStr(expectPara(result.pandoc.blocks[0]).children[0]).text).toBe("[table]");
-        expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
-          "https://www.youtube.com/watch?v=ab-CD_12xyz"
-        );
-      })
-    ));
-
-  it("retains structured table-caption text in the explicit gap projection", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                ["", [], []],
-                [null, [{ c: [{ c: [{ c: "Evidence", t: "Str" }], t: "Emph" }], t: "Plain" }]],
-                [],
-                [["", [], []], []],
-                [],
-                [["", [], []], []],
-              ],
-              t: "Table",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
-
-        expect(result.report.profile).toBe("gap");
-        expectParagraphText(result.document.children[0], "Evidence");
-      })
-    ));
-
-  it("rejects malformed YouTube video ids at the model boundary so the mapping cannot crash", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        // CSF-026 guard: a hostile lone-surrogate id (which would make
-        // `encodeURIComponent` throw a `URIError`) and reserved characters are
-        // refused at the `@beep/md` schema boundary through the typed
-        // `SchemaError` channel, so they can never reach `documentToPandoc`.
-        for (const hostileVideoId of ["\ud800", "a b&c", "../../etc/passwd", "tooShort"]) {
-          const exit = yield* Effect.exit(decodeUnknownMdYouTube({ _tag: "youtube", videoId: hostileVideoId }));
-          pipe(exit, Exit.isFailure, assertTrue);
-        }
-
-        // The bare 11-character form still decodes successfully.
-        const safe = yield* decodeUnknownMdYouTube({ _tag: "youtube", videoId: "M7lc1UVf-VE" });
-        expect(safe.videoId).toBe("M7lc1UVf-VE");
-      })
-    ));
-
-  it("returns typed mapping failures for forged runtime inputs", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const invalidPandoc = {
-          _tag: "pandocDocument",
-          apiVersion: [1, 23, 1],
-          blocks: [{ _tag: "para", children: [{ _tag: "str", text: 42 }] }],
-          meta: {},
-        } as unknown as Pandoc.PandocDocument;
-        const invalidMd = {
-          _tag: "document",
-          children: [{ _tag: "p", children: [{ _tag: "text", value: 42 }] }],
-        } as unknown as Md.Document;
-
-        const pandocError = yield* Effect.flip(pandocToDocument(invalidPandoc));
-        const mdError = yield* Effect.flip(documentToPandoc(invalidMd));
-
-        expect(pandocError).toBeInstanceOf(PandocMappingError);
-        expect(pandocError._tag).toBe("PandocMappingError");
-        expect(mdError).toBeInstanceOf(PandocMappingError);
-        expect(mdError._tag).toBe("PandocMappingError");
-      })
-    ));
-
-  it("preserves inline structure inside list items in both mapping directions", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson(inlineListPandocJson());
-        const mappedMd = yield* pandocToDocument(pandoc);
-        const list = expectUl(mappedMd.document.children[0]);
-
-        expect(mappedMd.report.issues).toEqual([]);
-        expect(A.map(list.children[0]?.children ?? [], (inline) => inline._tag)).toEqual([
-          "text",
-          "text",
-          "em",
-          "text",
-          "a",
-        ]);
-
-        const document = inlineListDocument();
-        const mappedPandoc = yield* documentToPandoc(document);
-        const block = expectBulletList(mappedPandoc.pandoc.blocks[0]);
-
-        expect(mappedPandoc.report.issues).toEqual([]);
-        const firstItemBlock = expectPlain(block.items[0]?.[0]);
-
-        expect(A.map(firstItemBlock.children, (inline) => inline._tag)).toEqual(["str", "emph", "str", "link"]);
-      })
-    ));
-
-  it("reports sole Para list-item normalization while keeping sole Plain supported", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const plainPandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [[{ c: [{ c: "tight", t: "Str" }], t: "Plain" }]],
-              t: "BulletList",
-            },
-          ],
-          meta: {},
-        });
-        const paraPandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [[{ c: [{ c: "loose", t: "Str" }], t: "Para" }]],
-              t: "BulletList",
-            },
-          ],
-          meta: {},
-        });
-
-        const plainResult = yield* pandocToDocument(plainPandoc);
-        const paraResult = yield* pandocToDocument(paraPandoc);
-
-        expect(plainResult.report.profile).toBe("supported");
-        expect(plainResult.report.issues).toEqual([]);
-        expect(paraResult.report.profile).toBe("gap");
-        expect(paraResult.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
-          ["Para", "lossy", "/blocks/0/items/0/blocks/0"],
-        ]);
-
-        const plainRoundTrip = yield* documentToPandoc(plainResult.document);
-        const paraRoundTrip = yield* documentToPandoc(paraResult.document);
-
-        expect(expectBulletList(plainRoundTrip.pandoc.blocks[0]).items[0]?.[0]?._tag).toBe("plain");
-        expect(expectBulletList(paraRoundTrip.pandoc.blocks[0]).items[0]?.[0]?._tag).toBe("plain");
-      })
-    ));
-
-  it("preserves Pandoc list item block structure", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                [
-                  { c: [{ c: "first", t: "Str" }], t: "Plain" },
-                  { c: [{ c: "second", t: "Str" }], t: "Para" },
+  it.effect("degrades @beep/md tables and YouTube embeds to Pandoc with recorded lossiness", () =>
+    Effect.gen(function* () {
+      const document = Md.Document.make({
+        children: [
+          Md.Table.make({
+            headerRow: true,
+            children: [
+              Md.TableRow.make({
+                children: [
+                  Md.TableCell.make({ children: [text("Name")] }),
+                  Md.TableCell.make({ children: [text("Value")] }),
                 ],
-              ],
-              t: "BulletList",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
-        const list = expectUl(result.document.children[0]);
-        const item = list.children[0];
+              }),
+              Md.TableRow.make({
+                children: [
+                  Md.TableCell.make({ children: [text("Rich")] }),
+                  Md.TableCell.make({ children: [text("Ready")] }),
+                ],
+              }),
+            ],
+          }),
+          Md.YouTube.make({ videoId: "M7lc1UVf-VE" }),
+        ],
+      });
 
-        expect(result.report.profile).toBe("supported");
-        expect(result.report.issues).toEqual([]);
-        expect(A.map(item?.children ?? [], (child) => child._tag)).toEqual(["p", "p"]);
-      })
-    ));
+      const result = yield* documentToPandoc(document);
 
-  it("records unstyled Pandoc div wrappers instead of silently blockquoting them", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [["", [], []], [{ c: [{ c: "wrapped", t: "Str" }], t: "Para" }]],
-              t: "Div",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+      expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "para"]);
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
+        expect.arrayContaining(["Table", "YouTube"])
+      );
 
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("Div");
-        expect(A.map(result.document.children, (block) => block._tag)).toEqual(["blockquote"]);
-      })
-    ));
+      const tableText = expectStr(expectPara(result.pandoc.blocks[0]).children[0]);
+      expect(tableText.text).toBe("Name | Value\nRich | Ready");
 
-  it("reports out-of-range Pandoc header levels as lossy heading clamping", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [7, ["", [], []], [{ c: "deep", t: "Str" }]],
-              t: "Header",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+      const youtubeLink = expectLink(expectPara(result.pandoc.blocks[1]).children[0]);
+      expect(youtubeLink.target.url).toBe("https://www.youtube.com/watch?v=M7lc1UVf-VE");
+    })
+  );
 
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("Header");
-        const heading = result.document.children[0];
-        expect(heading?._tag).toBe("heading");
-        if (heading?._tag !== "heading") {
-          throw new Error("expected heading block");
-        }
-        expect(heading.level).toBe(6);
-      })
-    ));
+  it.effect("preserves @beep/md titles, ordered starts, and math in Pandoc projection", () =>
+    Effect.gen(function* () {
+      const document = Md.Document.make({
+        children: [
+          Md.P.make({
+            children: [
+              Md.A.make({
+                children: [text("docs")],
+                href: "https://example.com",
+                title: O.some("Docs title"),
+              }),
+              Md.Img.make({
+                alt: "Diagram",
+                src: "diagram.png",
+                title: O.some("Diagram title"),
+              }),
+              Md.InlineMath.make({ value: "x + y" }),
+            ],
+          }),
+          Md.Ol.make({
+            children: [Md.Li.make({ children: [text("zero")] })],
+            start: Md.OrderedListStart.make(0),
+          }),
+          Md.MathBlock.make({ value: "a^2 + b^2 = c^2" }),
+        ],
+      });
 
-  it("keeps a single-Str image description in the supported profile", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                {
-                  c: [["", [], []], [{ c: "plain description", t: "Str" }], ["diagram.png", ""]],
-                  t: "Image",
-                },
-              ],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
-        const paragraph = result.document.children[0];
+      const result = yield* documentToPandoc(document);
 
-        expect(result.report.profile).toBe("supported");
-        expect(result.report.issues).toEqual([]);
-        expect(paragraph?._tag).toBe("p");
-        if (paragraph?._tag !== "p") {
-          return;
-        }
-        expect(paragraph.children[0]?._tag).toBe("img");
-        if (paragraph.children[0]?._tag === "img") {
-          expect(paragraph.children[0].alt).toBe("plain description");
-        }
+      expect(result.report.issues).toEqual([]);
+      expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "orderedlist", "para"]);
 
-        const roundTrip = yield* documentToPandoc(result.document);
-        const image = expectPara(roundTrip.pandoc.blocks[0]).children[0];
-        expect(image?._tag).toBe("image");
-        if (image?._tag === "image") {
-          expect(A.map(image.children, (inline) => inline._tag)).toEqual(["str"]);
-          expect(expectStr(image.children[0]).text).toBe("plain description");
-        }
-      })
-    ));
+      const paragraph = expectPara(result.pandoc.blocks[0]);
+      const link = expectLink(paragraph.children[0]);
+      expect(link.target.title).toBe("Docs title");
 
-  it("reports segmented and empty image descriptions at their first affected paths", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                {
-                  c: [
-                    ["", [], []],
-                    [{ c: "plain", t: "Str" }, { t: "Space" }, { c: "description", t: "Str" }],
-                    ["segmented.png", ""],
-                  ],
-                  t: "Image",
-                },
-                {
-                  c: [["", [], []], [], ["empty.png", ""]],
-                  t: "Image",
-                },
-              ],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+      const image = paragraph.children[1];
+      expect(image?._tag).toBe("image");
+      if (image?._tag === "image") {
+        expect(image.target.title).toBe("Diagram title");
+      }
 
-        expect(result.report.profile).toBe("gap");
-        expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
-          ["Image", "lossy", "/blocks/0/children/0/children/1"],
-          ["Image", "lossy", "/blocks/0/children/1/children"],
-        ]);
+      const inlineMath = paragraph.children[2];
+      expect(inlineMath?._tag).toBe("math");
+      if (inlineMath?._tag === "math") {
+        expect(inlineMath.mathType).toBe("InlineMath");
+      }
 
-        const roundTrip = yield* documentToPandoc(result.document);
-        const paragraph = expectPara(roundTrip.pandoc.blocks[0]);
-        const segmentedImage = paragraph.children[0];
-        const emptyImage = paragraph.children[1];
+      const list = result.pandoc.blocks[1];
+      expect(list?._tag).toBe("orderedlist");
+      if (list?._tag === "orderedlist") {
+        expect(list.start).toBe(0);
+      }
 
-        expect(segmentedImage?._tag).toBe("image");
-        expect(emptyImage?._tag).toBe("image");
-        if (segmentedImage?._tag === "image" && emptyImage?._tag === "image") {
-          expect(A.map(segmentedImage.children, (inline) => inline._tag)).toEqual(["str"]);
-          expect(A.map(emptyImage.children, (inline) => inline._tag)).toEqual(["str"]);
-          expect(expectStr(segmentedImage.children[0]).text).toBe("plain description");
-          expect(expectStr(emptyImage.children[0]).text).toBe("");
-        }
-      })
-    ));
+      const displayMath = expectPara(result.pandoc.blocks[2]).children[0];
+      expect(displayMath?._tag).toBe("math");
+      if (displayMath?._tag === "math") {
+        expect(displayMath.mathType).toBe("DisplayMath");
+      }
 
-  it("reports structured image descriptions at the degraded child and proves the flattened round trip", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                {
-                  c: [["", [], []], [{ c: [{ t: "InlineMath" }, "x"], t: "Math" }], ["math.png", ""]],
-                  t: "Image",
-                },
-                {
-                  c: [["", [], []], [{ c: [{ c: "styled", t: "Str" }], t: "Emph" }], ["emph.png", ""]],
-                  t: "Image",
-                },
-              ],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+      const roundTrip = yield* pandocToDocument(result.pandoc);
+      const orderedList = roundTrip.document.children[1];
 
-        expect(result.report.profile).toBe("gap");
-        expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
-          ["Image", "lossy", "/blocks/0/children/0/children/0"],
-          ["Image", "lossy", "/blocks/0/children/1/children/0"],
-        ]);
+      expect(roundTrip.report.issues).toEqual([]);
+      expect(orderedList?._tag).toBe("ol");
+      if (orderedList?._tag === "ol") {
+        expect(orderedList.start).toBe(0);
+      }
+    })
+  );
 
-        const roundTrip = yield* documentToPandoc(result.document);
-        const paragraph = expectPara(roundTrip.pandoc.blocks[0]);
-        const mathImage = paragraph.children[0];
-        const emphImage = paragraph.children[1];
+  it.effect("emits a safe YouTube watch URL and placeholders empty tables", () =>
+    Effect.gen(function* () {
+      // `videoId` is constrained to the bare 11-character YouTube id at the
+      // `@beep/md` model boundary (CSF-026), so a mapped id can never contain
+      // reserved characters and the emitted watch URL is always well-formed.
+      const document = Md.Document.make({
+        children: [Md.Table.make({ headerRow: false, children: [] }), Md.YouTube.make({ videoId: "ab-CD_12xyz" })],
+      });
 
-        expect(roundTrip.report.issues).toEqual([]);
-        expect(mathImage?._tag).toBe("image");
-        expect(emphImage?._tag).toBe("image");
-        if (mathImage?._tag === "image" && emphImage?._tag === "image") {
-          expect(A.map(mathImage.children, (inline) => inline._tag)).toEqual(["str"]);
-          expect(A.map(emphImage.children, (inline) => inline._tag)).toEqual(["str"]);
-          expect(expectStr(mathImage.children[0]).text).toBe("x");
-          expect(expectStr(emphImage.children[0]).text).toBe("styled");
-        }
-      })
-    ));
+      const result = yield* documentToPandoc(document);
 
-  it("reports Pandoc block metadata dropped by Md-core mappings", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [2, ["heading-id", ["unnumbered"], []], [{ c: "heading", t: "Str" }]],
-              t: "Header",
-            },
-            {
-              c: [["code-id", ["ts", "extra"], [["custom-style", "Code"]]], "const value = 1"],
-              t: "CodeBlock",
-            },
-            {
-              c: [[3, { t: "LowerRoman" }, { t: "OneParen" }], [[{ c: [{ c: "item", t: "Str" }], t: "Plain" }]]],
-              t: "OrderedList",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
+        expect.arrayContaining(["Table", "YouTube"])
+      );
+      expect(expectStr(expectPara(result.pandoc.blocks[0]).children[0]).text).toBe("[table]");
+      expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
+        "https://www.youtube.com/watch?v=ab-CD_12xyz"
+      );
+    })
+  );
 
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
-          expect.arrayContaining(["Header", "CodeBlock", "OrderedList"])
-        );
-      })
-    ));
-
-  it("reports document metadata and invalid sole code languages at their exact pointers", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [["", ["ts bad"], []], "const value = 1"],
-              t: "CodeBlock",
-            },
-          ],
-          meta: {
-            title: { c: "Document", t: "MetaString" },
+  it.effect("retains structured table-caption text in the explicit gap projection", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              ["", [], []],
+              [null, [{ c: [{ c: [{ c: "Evidence", t: "Str" }], t: "Emph" }], t: "Plain" }]],
+              [],
+              [["", [], []], []],
+              [],
+              [["", [], []], []],
+            ],
+            t: "Table",
           },
-        });
-        const result = yield* pandocToDocument(pandoc);
-        const code = result.document.children[0];
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
 
-        expect(result.report.issues.map((entry) => [entry.construct, entry.pointer])).toEqual([
-          ["CodeBlock", "/blocks/0"],
-          ["Meta", "/meta"],
-        ]);
-        expect(code?._tag).toBe("pre");
-        if (code?._tag === "pre") {
-          assertNone(code.language);
-        }
-      })
-    ));
+      expect(result.report.profile).toBe("gap");
+      expectParagraphText(result.document.children[0], "Evidence");
+    })
+  );
 
-  it("reports nested inline compatibility issues at child-specific pointers", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                {
-                  c: [{ c: [["code-id", [], []], "marked"], t: "Code" }],
-                  t: "Emph",
-                },
+  it.effect("rejects malformed YouTube video ids at the model boundary so the mapping cannot crash", () =>
+    Effect.gen(function* () {
+      // CSF-026 guard: a hostile lone-surrogate id (which would make
+      // `encodeURIComponent` throw a `URIError`) and reserved characters are
+      // refused at the `@beep/md` schema boundary through the typed
+      // `SchemaError` channel, so they can never reach `documentToPandoc`.
+      for (const hostileVideoId of ["\ud800", "a b&c", "../../etc/passwd", "tooShort"]) {
+        const exit = yield* Effect.exit(decodeUnknownMdYouTube({ _tag: "youtube", videoId: hostileVideoId }));
+        pipe(exit, Exit.isFailure, assertTrue);
+      }
+
+      // The bare 11-character form still decodes successfully.
+      const safe = yield* decodeUnknownMdYouTube({ _tag: "youtube", videoId: "M7lc1UVf-VE" });
+      expect(safe.videoId).toBe("M7lc1UVf-VE");
+    })
+  );
+
+  it.effect("returns typed mapping failures for forged runtime inputs", () =>
+    Effect.gen(function* () {
+      const invalidPandoc = {
+        _tag: "pandocDocument",
+        apiVersion: [1, 23, 1],
+        blocks: [{ _tag: "para", children: [{ _tag: "str", text: 42 }] }],
+        meta: {},
+      } as unknown as Pandoc.PandocDocument;
+      const invalidMd = {
+        _tag: "document",
+        children: [{ _tag: "p", children: [{ _tag: "text", value: 42 }] }],
+      } as unknown as Md.Document;
+
+      const pandocError = yield* Effect.flip(pandocToDocument(invalidPandoc));
+      const mdError = yield* Effect.flip(documentToPandoc(invalidMd));
+
+      expect(pandocError).toBeInstanceOf(PandocMappingError);
+      expect(pandocError._tag).toBe("PandocMappingError");
+      expect(mdError).toBeInstanceOf(PandocMappingError);
+      expect(mdError._tag).toBe("PandocMappingError");
+    })
+  );
+
+  it.effect("preserves inline structure inside list items in both mapping directions", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson(inlineListPandocJson());
+      const mappedMd = yield* pandocToDocument(pandoc);
+      const list = expectUl(mappedMd.document.children[0]);
+
+      expect(mappedMd.report.issues).toEqual([]);
+      expect(A.map(list.children[0]?.children ?? [], (inline) => inline._tag)).toEqual([
+        "text",
+        "text",
+        "em",
+        "text",
+        "a",
+      ]);
+
+      const document = inlineListDocument();
+      const mappedPandoc = yield* documentToPandoc(document);
+      const block = expectBulletList(mappedPandoc.pandoc.blocks[0]);
+
+      expect(mappedPandoc.report.issues).toEqual([]);
+      const firstItemBlock = expectPlain(block.items[0]?.[0]);
+
+      expect(A.map(firstItemBlock.children, (inline) => inline._tag)).toEqual(["str", "emph", "str", "link"]);
+    })
+  );
+
+  it.effect("reports sole Para list-item normalization while keeping sole Plain supported", () =>
+    Effect.gen(function* () {
+      const plainPandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [[{ c: [{ c: "tight", t: "Str" }], t: "Plain" }]],
+            t: "BulletList",
+          },
+        ],
+        meta: {},
+      });
+      const paraPandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [[{ c: [{ c: "loose", t: "Str" }], t: "Para" }]],
+            t: "BulletList",
+          },
+        ],
+        meta: {},
+      });
+
+      const plainResult = yield* pandocToDocument(plainPandoc);
+      const paraResult = yield* pandocToDocument(paraPandoc);
+
+      expect(plainResult.report.profile).toBe("supported");
+      expect(plainResult.report.issues).toEqual([]);
+      expect(paraResult.report.profile).toBe("gap");
+      expect(paraResult.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+        ["Para", "lossy", "/blocks/0/items/0/blocks/0"],
+      ]);
+
+      const plainRoundTrip = yield* documentToPandoc(plainResult.document);
+      const paraRoundTrip = yield* documentToPandoc(paraResult.document);
+
+      expect(expectBulletList(plainRoundTrip.pandoc.blocks[0]).items[0]?.[0]?._tag).toBe("plain");
+      expect(expectBulletList(paraRoundTrip.pandoc.blocks[0]).items[0]?.[0]?._tag).toBe("plain");
+    })
+  );
+
+  it.effect("preserves Pandoc list item block structure", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              [
+                { c: [{ c: "first", t: "Str" }], t: "Plain" },
+                { c: [{ c: "second", t: "Str" }], t: "Para" },
               ],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+            ],
+            t: "BulletList",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+      const list = expectUl(result.document.children[0]);
+      const item = list.children[0];
 
-        expect(result.report.profile).toBe("gap");
-        expect(result.report.issues[0]?.construct).toBe("Code");
-        expect(result.report.issues[0]?.pointer).toBe("/blocks/0/children/0/children/0");
-      })
-    ));
+      expect(result.report.profile).toBe("supported");
+      expect(result.report.issues).toEqual([]);
+      expect(A.map(item?.children ?? [], (child) => child._tag)).toEqual(["p", "p"]);
+    })
+  );
 
-  it("rejects malformed inline constructor shapes before mapping", () =>
-    expect(
-      Effect.runPromise(
-        decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: ["not-inline-constructor"],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        })
-      )
-    ).rejects.toThrow());
+  it.effect("records unstyled Pandoc div wrappers instead of silently blockquoting them", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [["", [], []], [{ c: [{ c: "wrapped", t: "Str" }], t: "Para" }]],
+            t: "Div",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
 
-  it("rejects malformed supported inline payloads before mapping", () =>
-    expect(
-      Effect.runPromise(
-        decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [{ c: ["not-a-string"], t: "Str" }],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        })
-      )
-    ).rejects.toThrow());
+      expect(result.report.profile).toBe("gap");
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("Div");
+      expect(A.map(result.document.children, (block) => block._tag)).toEqual(["blockquote"]);
+    })
+  );
 
-  it("maps Pandoc soft breaks as spaces while preserving hard line breaks", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                { c: "soft", t: "Str" },
-                { t: "SoftBreak" },
-                { c: "wrap", t: "Str" },
-                { t: "LineBreak" },
-                { c: "hard", t: "Str" },
-              ],
-              t: "Para",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
-        const paragraph = result.document.children[0];
+  it.effect("reports out-of-range Pandoc header levels as lossy heading clamping", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [7, ["", [], []], [{ c: "deep", t: "Str" }]],
+            t: "Header",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
 
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("SoftBreak");
-        expect(paragraph?._tag).toBe("p");
-        if (paragraph?._tag !== "p") {
-          return;
-        }
-        expect(A.map(paragraph.children, (inline) => inline._tag)).toEqual(["text", "text", "text", "br", "text"]);
-        expect(paragraph.children[1]?._tag === "text" ? paragraph.children[1].value : "").toBe(" ");
-      })
-    ));
+      expect(result.report.profile).toBe("gap");
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("Header");
+      const heading = result.document.children[0];
+      expect(heading?._tag).toBe("heading");
+      if (heading?._tag !== "heading") {
+        throw new Error("expected heading block");
+      }
+      expect(heading.level).toBe(6);
+    })
+  );
 
-  it("normalizes soft breaks to spaces in fallback Pandoc text extraction", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const pandoc = yield* decodePandocJson({
-          "pandoc-api-version": [1, 23, 1],
-          blocks: [
-            {
-              c: [
-                {
-                  c: [{ c: [{ c: "foot", t: "Str" }, { t: "SoftBreak" }, { c: "note", t: "Str" }], t: "Plain" }],
-                  t: "Note",
-                },
-              ],
-              t: "Para",
-            },
-            {
-              c: [
-                ["", [], []],
-                [null, [{ c: [{ c: "wide", t: "Str" }, { t: "SoftBreak" }, { c: "caption", t: "Str" }], t: "Plain" }]],
-                [],
-                [["", [], []], []],
-                [],
-                [["", [], []], []],
-              ],
-              t: "Table",
-            },
-          ],
-          meta: {},
-        });
-        const result = yield* pandocToDocument(pandoc);
+  it.effect("keeps a single-Str image description in the supported profile", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              {
+                c: [["", [], []], [{ c: "plain description", t: "Str" }], ["diagram.png", ""]],
+                t: "Image",
+              },
+            ],
+            t: "Para",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+      const paragraph = result.document.children[0];
 
-        expectParagraphText(result.document.children[0], "foot note");
-        expectParagraphText(result.document.children[1], "wide caption");
-      })
-    ));
+      expect(result.report.profile).toBe("supported");
+      expect(result.report.issues).toEqual([]);
+      expect(paragraph?._tag).toBe("p");
+      if (paragraph?._tag !== "p") {
+        return;
+      }
+      expect(paragraph.children[0]?._tag).toBe("img");
+      if (paragraph.children[0]?._tag === "img") {
+        expect(paragraph.children[0].alt).toBe("plain description");
+      }
+
+      const roundTrip = yield* documentToPandoc(result.document);
+      const image = expectPara(roundTrip.pandoc.blocks[0]).children[0];
+      expect(image?._tag).toBe("image");
+      if (image?._tag === "image") {
+        expect(A.map(image.children, (inline) => inline._tag)).toEqual(["str"]);
+        expect(expectStr(image.children[0]).text).toBe("plain description");
+      }
+    })
+  );
+
+  it.effect("reports segmented and empty image descriptions at their first affected paths", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              {
+                c: [
+                  ["", [], []],
+                  [{ c: "plain", t: "Str" }, { t: "Space" }, { c: "description", t: "Str" }],
+                  ["segmented.png", ""],
+                ],
+                t: "Image",
+              },
+              {
+                c: [["", [], []], [], ["empty.png", ""]],
+                t: "Image",
+              },
+            ],
+            t: "Para",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+
+      expect(result.report.profile).toBe("gap");
+      expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+        ["Image", "lossy", "/blocks/0/children/0/children/1"],
+        ["Image", "lossy", "/blocks/0/children/1/children"],
+      ]);
+
+      const roundTrip = yield* documentToPandoc(result.document);
+      const paragraph = expectPara(roundTrip.pandoc.blocks[0]);
+      const segmentedImage = paragraph.children[0];
+      const emptyImage = paragraph.children[1];
+
+      expect(segmentedImage?._tag).toBe("image");
+      expect(emptyImage?._tag).toBe("image");
+      if (segmentedImage?._tag === "image" && emptyImage?._tag === "image") {
+        expect(A.map(segmentedImage.children, (inline) => inline._tag)).toEqual(["str"]);
+        expect(A.map(emptyImage.children, (inline) => inline._tag)).toEqual(["str"]);
+        expect(expectStr(segmentedImage.children[0]).text).toBe("plain description");
+        expect(expectStr(emptyImage.children[0]).text).toBe("");
+      }
+    })
+  );
+
+  it.effect("reports structured image descriptions at the degraded child and proves the flattened round trip", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              {
+                c: [["", [], []], [{ c: [{ t: "InlineMath" }, "x"], t: "Math" }], ["math.png", ""]],
+                t: "Image",
+              },
+              {
+                c: [["", [], []], [{ c: [{ c: "styled", t: "Str" }], t: "Emph" }], ["emph.png", ""]],
+                t: "Image",
+              },
+            ],
+            t: "Para",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+
+      expect(result.report.profile).toBe("gap");
+      expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+        ["Image", "lossy", "/blocks/0/children/0/children/0"],
+        ["Image", "lossy", "/blocks/0/children/1/children/0"],
+      ]);
+
+      const roundTrip = yield* documentToPandoc(result.document);
+      const paragraph = expectPara(roundTrip.pandoc.blocks[0]);
+      const mathImage = paragraph.children[0];
+      const emphImage = paragraph.children[1];
+
+      expect(roundTrip.report.issues).toEqual([]);
+      expect(mathImage?._tag).toBe("image");
+      expect(emphImage?._tag).toBe("image");
+      if (mathImage?._tag === "image" && emphImage?._tag === "image") {
+        expect(A.map(mathImage.children, (inline) => inline._tag)).toEqual(["str"]);
+        expect(A.map(emphImage.children, (inline) => inline._tag)).toEqual(["str"]);
+        expect(expectStr(mathImage.children[0]).text).toBe("x");
+        expect(expectStr(emphImage.children[0]).text).toBe("styled");
+      }
+    })
+  );
+
+  it.effect("reports Pandoc block metadata dropped by Md-core mappings", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [2, ["heading-id", ["unnumbered"], []], [{ c: "heading", t: "Str" }]],
+            t: "Header",
+          },
+          {
+            c: [["code-id", ["ts", "extra"], [["custom-style", "Code"]]], "const value = 1"],
+            t: "CodeBlock",
+          },
+          {
+            c: [[3, { t: "LowerRoman" }, { t: "OneParen" }], [[{ c: [{ c: "item", t: "Str" }], t: "Plain" }]]],
+            t: "OrderedList",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+
+      expect(result.report.profile).toBe("gap");
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
+        expect.arrayContaining(["Header", "CodeBlock", "OrderedList"])
+      );
+    })
+  );
+
+  it.effect("reports document metadata and invalid sole code languages at their exact pointers", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [["", ["ts bad"], []], "const value = 1"],
+            t: "CodeBlock",
+          },
+        ],
+        meta: {
+          title: { c: "Document", t: "MetaString" },
+        },
+      });
+      const result = yield* pandocToDocument(pandoc);
+      const code = result.document.children[0];
+
+      expect(result.report.issues.map((entry) => [entry.construct, entry.pointer])).toEqual([
+        ["CodeBlock", "/blocks/0"],
+        ["Meta", "/meta"],
+      ]);
+      expect(code?._tag).toBe("pre");
+      if (code?._tag === "pre") {
+        assertNone(code.language);
+      }
+    })
+  );
+
+  it.effect("reports nested inline compatibility issues at child-specific pointers", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              {
+                c: [{ c: [["code-id", [], []], "marked"], t: "Code" }],
+                t: "Emph",
+              },
+            ],
+            t: "Para",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+
+      expect(result.report.profile).toBe("gap");
+      expect(result.report.issues[0]?.construct).toBe("Code");
+      expect(result.report.issues[0]?.pointer).toBe("/blocks/0/children/0/children/0");
+    })
+  );
+
+  it.effect(
+    "rejects malformed inline constructor shapes before mapping",
+    Effect.fnUntraced(function* () {
+      expect(
+        (yield* Effect.exit(
+          decodePandocJson({
+            "pandoc-api-version": [1, 23, 1],
+            blocks: [
+              {
+                c: ["not-inline-constructor"],
+                t: "Para",
+              },
+            ],
+            meta: {},
+          })
+        ))._tag
+      ).toBe("Failure");
+    })
+  );
+
+  it.effect(
+    "rejects malformed supported inline payloads before mapping",
+    Effect.fnUntraced(function* () {
+      expect(
+        (yield* Effect.exit(
+          decodePandocJson({
+            "pandoc-api-version": [1, 23, 1],
+            blocks: [
+              {
+                c: [{ c: ["not-a-string"], t: "Str" }],
+                t: "Para",
+              },
+            ],
+            meta: {},
+          })
+        ))._tag
+      ).toBe("Failure");
+    })
+  );
+
+  it.effect("maps Pandoc soft breaks as spaces while preserving hard line breaks", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              { c: "soft", t: "Str" },
+              { t: "SoftBreak" },
+              { c: "wrap", t: "Str" },
+              { t: "LineBreak" },
+              { c: "hard", t: "Str" },
+            ],
+            t: "Para",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+      const paragraph = result.document.children[0];
+
+      expect(result.report.profile).toBe("gap");
+      expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("SoftBreak");
+      expect(paragraph?._tag).toBe("p");
+      if (paragraph?._tag !== "p") {
+        return;
+      }
+      expect(A.map(paragraph.children, (inline) => inline._tag)).toEqual(["text", "text", "text", "br", "text"]);
+      expect(paragraph.children[1]?._tag === "text" ? paragraph.children[1].value : "").toBe(" ");
+    })
+  );
+
+  it.effect("normalizes soft breaks to spaces in fallback Pandoc text extraction", () =>
+    Effect.gen(function* () {
+      const pandoc = yield* decodePandocJson({
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [
+          {
+            c: [
+              {
+                c: [{ c: [{ c: "foot", t: "Str" }, { t: "SoftBreak" }, { c: "note", t: "Str" }], t: "Plain" }],
+                t: "Note",
+              },
+            ],
+            t: "Para",
+          },
+          {
+            c: [
+              ["", [], []],
+              [null, [{ c: [{ c: "wide", t: "Str" }, { t: "SoftBreak" }, { c: "caption", t: "Str" }], t: "Plain" }]],
+              [],
+              [["", [], []], []],
+              [],
+              [["", [], []], []],
+            ],
+            t: "Table",
+          },
+        ],
+        meta: {},
+      });
+      const result = yield* pandocToDocument(pandoc);
+
+      expectParagraphText(result.document.children[0], "foot note");
+      expectParagraphText(result.document.children[1], "wide caption");
+    })
+  );
 });

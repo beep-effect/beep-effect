@@ -18,19 +18,22 @@ vi.mock("@beep/pandoc-ast/Pandoc.codec", (importOriginal) =>
 );
 
 describe("Pandoc conformance strict projection failure", () => {
-  it("retains a losslessly valid wire when its strict projection fails", () => {
-    const wire = {
-      "pandoc-api-version": [1, 23, 1],
-      blocks: [],
-      meta: {},
-    };
-    const result = Effect.runSync(inspectPandocConformance(wire));
+  it.effect(
+    "retains a losslessly valid wire when its strict projection fails",
+    Effect.fnUntraced(function* () {
+      const wire = {
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [],
+        meta: {},
+      };
+      const result = yield* inspectPandocConformance(wire);
 
-    expect(result._tag).toBe("invalid");
-    if (result._tag === "invalid") {
-      expect(result.message).toBe("forced strict projection failure");
-      expect(result.issues).toEqual([]);
-      assertSome(result.wire, wire);
-    }
-  });
+      expect(result._tag).toBe("invalid");
+      if (result._tag === "invalid") {
+        expect(result.message).toBe("forced strict projection failure");
+        expect(result.issues).toEqual([]);
+        assertSome(result.wire, wire);
+      }
+    })
+  );
 });
