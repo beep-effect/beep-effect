@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/nlp-mcp",
+  "sourceHead": "0200db6bf9ded5954b5988415937fbf6629a62cd",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.52120361100242,
+  "bunWholeCommandSeconds": 2.567904419003753,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.26513671875, 2.4599609375, 2.2109375],
+  "loadAfter": [3.564453125, 2.53564453125, 2.23681640625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.04 avg300=0.06 total=727036286\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199184\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125307\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.01 total=808904435\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707929440\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.03 avg300=0.06 total=727048054\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199184\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125307\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.01 total=808904700\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707929573\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "3f1edcd36c6e41d1e2796d20f6a9bf4930061efa4dbf7692c8950707a7e9da6f"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/AGENTS.md",
+      "sha256": "c38e4d28cf1f3da2635d076768d9631e980c047a9a92e30b9391da4fc13f9621"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/CLAUDE.md",
+      "sha256": "c38e4d28cf1f3da2635d076768d9631e980c047a9a92e30b9391da4fc13f9621"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/README.md",
+      "sha256": "6173bceb14060d255bb45ea704d512737384765d52d5b70f7378191eb62378d9"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/docgen.json",
+      "sha256": "b78f89d1b86dde0ba6b21391d0691cff03f35d99b329c7b61d9336b31da8b1cd"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/package.json",
+      "sha256": "b11b3eb1e6d677757501bcd034800cd62c5e9b8ef23cdc6fdfb47b7d282ce8b6"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Server.ts",
+      "sha256": "c5f42edfdd593d75f098a5671c9497eee153f281482d71bfaf819fd2ed497628"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sha256": "a529c1e0d8942b50d4b7eafc39d0cded91c7adfeda5e7d4018f5217201d2c7eb"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+      "sha256": "c761d62805d4c5faaedd73c9867b4793082f5dc2859b6b26840a8d74bc98fc67"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "sha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
+      "sha256": "368620262e39f9604bb866dff757f24751b8cf1cf77709e51875d3adf26ba037"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "sha256": "0ccece0676d86c34af82165cb6dfeba1f2b242ceae4fc3a78146f7936a529523"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/bin.ts",
+      "sha256": "1929067d37ee3f54f1bc972246b851a54687c60595046582d4abd143c7e3032a"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/index.ts",
+      "sha256": "989148213ff9e20df7034bd981d7abb7fac5db2077d772b50949cffd3f2cacb3"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
+      "sha256": "30a62951d208582cd7dca3fb4bd6d1f542afbe604be2da8fb621762742e94e35"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/SanitizedSpan.test.ts",
+      "sha256": "ace55ce87739c3506fcc69612e9c631a9231680f301e4c9bc771064c456fce11"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
+      "sha256": "ea801cb4790eeb5128e19f1db71a8b7373f82149d0880fba4f68a43d45566647"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.functions.test.ts",
+      "sha256": "0562d95aa45e72a74810c4115b20e38ec31dc26388974bae0422a5397b841401"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "sha256": "865e110c335e200540b5b263ebf7edaa8a398c03d369d25a1b34ce7db9b2f5f0"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "sha256": "4ae993321317e3c7c0aee6891602e2250603f2902594bebf4904dcc6a3364a6a"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/tsconfig.check.json",
+      "sha256": "9e29ca082d2514a9d9be2d47dead7b4476de8bc2a2d158d3742d5e8ba09b7e0f"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/tsconfig.json",
+      "sha256": "f73ef7d7a6a890d88cfa7e6f769e8ad361f500cdc1cc5a7b98426fbd6bc1bdcb"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual installed Wink NLP model plus native filesystem streaming and path-safety subjects. No MemoryFileSystem substitution. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 37,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.564453125, 2.53564453125, 2.23681640625],
+    "loadAfter": [3.564453125, 2.53564453125, 2.23681640625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.03 avg300=0.06 total=727048099\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199184\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125307\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.01 total=808904700\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707929573\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.03 avg300=0.06 total=727053237\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199184\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125307\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=808904881\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707929685\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 37,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 37 registrations before and after with zero skips. Stronger sampling and SSRF assertions add work; three native properties preserve all 37 schema domains and their floors. Timing differences are not causal speedup evidence."
+}

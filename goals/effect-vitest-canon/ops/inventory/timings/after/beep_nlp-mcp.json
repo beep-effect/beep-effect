@@ -1,0 +1,91 @@
+{
+  "package": "@beep/nlp-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T15:48:57.648000+00:00",
+  "totalMs": 4304.0693359375,
+  "testCount": 37,
+  "files": [
+    {
+      "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
+      "ms": 1.1533203125,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/SanitizedSpan.test.ts",
+      "ms": 10.0693359375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
+      "ms": 155.80029296875,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.functions.test.ts",
+      "ms": 9.541259765625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "ms": 31.49072265625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "ms": 36.94921875,
+      "tests": 20
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
+      "testName": "nlp-mcp tool surface mounts the full @beep/nlp NlpToolkit",
+      "ms": 145.92405699999927
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
+      "testName": "nlp-mcp tool surface exposes a combined 42-tool surface across both mounted toolkits",
+      "ms": 145.69846899999993
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "testName": "streaming schema laws round-trips defaulted option schemas",
+      "ms": 30.71653699999979
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "testName": "streaming schema laws round-trips integer-refined result schemas",
+      "ms": 30.49062799999956
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "testName": "streaming schema laws round-trips tool-parameter option schemas extracted from inline S.Struct (RC-SF)",
+      "ms": 30.466441999999915
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "testName": "streaming schema laws keeps optional error cause wire shape byte-identical",
+      "ms": 30.45956999999953
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "testName": "streaming schema laws keeps optional metadata wire shape byte-identical",
+      "ms": 30.4396799999995
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "testName": "StreamingToolkit integration file-backed streaming handlers stream_text_stats reports aggregate statistics",
+      "ms": 19.831653000000188
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "testName": "StreamingToolkit integration file-backed streaming handlers stream_read_jsonl skips an invalid line when skipInvalid is set",
+      "ms": 19.496437000000697
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "testName": "StreamingToolkit integration file-backed streaming handlers stream_count_lines counts lines in a temp file",
+      "ms": 19.135401000000456
+    }
+  ]
+}

@@ -1802,43 +1802,43 @@
     "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 1243,
-    "lines": 32
+    "bytes": 1279,
+    "lines": 33
   },
   {
     "file": "packages/drivers/nlp-mcp/test/SanitizedSpan.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 3294,
-    "lines": 88
+    "bytes": 3312,
+    "lines": 89
   },
   {
     "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 3838,
-    "lines": 94
+    "bytes": 3870,
+    "lines": 95
   },
   {
     "file": "packages/drivers/nlp-mcp/test/Streaming.functions.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 2366,
-    "lines": 54
+    "bytes": 2402,
+    "lines": 55
   },
   {
     "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 6230,
-    "lines": 183
+    "bytes": 10197,
+    "lines": 270
   },
   {
     "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
     "package": "@beep/nlp-mcp",
     "kind": "test",
-    "bytes": 17215,
-    "lines": 388
+    "bytes": 20323,
+    "lines": 460
   },
   {
     "file": "packages/drivers/obs/test/Obs.equivalence.test.ts",
