@@ -633,8 +633,8 @@
     "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1935,
-    "lines": 46
+    "bytes": 2796,
+    "lines": 61
   },
   {
     "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",

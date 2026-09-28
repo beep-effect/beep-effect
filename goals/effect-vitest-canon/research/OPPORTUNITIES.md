@@ -4496,3 +4496,22 @@ merge commit before normal publication avoids an override. The guard should
 recognize a fully resolved merge of the current base, while still rejecting stale
 or unresolved merges. Inventory conflicts were reconciled as a three-way semantic
 delta so main's location updates did not restore this branch's removed findings.
+
+## Aggregate serialization counts permit a redundant subject encode
+
+The viewer test allowed the total stringify count on rerenders to be less than
+the initial total. A single repeat encode passed that bound (one is less than
+two) even though the cache contract requires zero repeats. The test now counts
+only schema-equivalent encodes of the actual fixture, proves the initial count is
+positive, and requires no increase. A full cache bypass failed both old and new
+tests; a narrower one-repeat control demonstrated the previously missed defect.
+
+## Package verification encounters the known no-location TS2589 signature
+
+During viewer-test verification, `quality package-verify @beep/professional-desktop`
+stopped at the unchanged upstream `@beep/ui` build with `error TS2589` and no
+source location. A single focused unchanged build passed, followed by the full
+package verification (audit and docgen). The repository already recognizes this
+signature in its quality flake quarantine. Package verification should expose the
+same bounded diagnostic/retry policy so this failure does not require manual
+attribution; a repeated or located diagnostic must remain a hard failure.
