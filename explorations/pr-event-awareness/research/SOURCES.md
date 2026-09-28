@@ -328,3 +328,10 @@ re-read. Full tables with roles are in
   (`makeWaitForFile`, the only in-repo file watcher), and
   `test/yeet-status-triage.test.ts:861-869` (the legacy status snapshot the
   widened check schema must keep decoding).
+
+## W7 probe record (2026-09-28)
+
+[`2026-09-28-W7-socket-probe.md`](./2026-09-28-W7-socket-probe.md) — the
+socket wire contract as measured, the seven-sender delivery matrix into a
+bypass session, the accepted frame, the refusal, and the slice-2 verdict (cut;
+W8 not built). Decision D39 in `../DECISIONS.md`.

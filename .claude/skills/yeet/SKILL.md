@@ -538,6 +538,19 @@ Vocabulary:
   session's harness and id for `bun run beep yeet resume <pr>`. The woken
   owner dispatches any fix itself; Yeet launches nothing.
 
+Dead-owner escalation (W9): a detached `--until-ready` job reads the pull
+request's session registry on each new wave. When no recorded owner is live
+(no row, a stale Claude session, or unknown, which counts as dead), it spawns
+`.claude/hooks/yeet-pr-wave-notifier.sh` once per wave (descriptor under
+`.beep/yeet/pr-wave-notifier/waves/`). The notifier sends a persistent
+notify-send (critical for P0, normal for P1) whose local body carries a
+one-line summary and `bun run beep yeet resume <pr>`, plus a generic ntfy post
+with no pull request content, and stops when the wave's rows are acked or a
+push supersedes them. A live owner gets nothing extra: the inbox hook carries
+the wave. The live probe reads Claude sessions only, so every Codex-attributed
+owner escalates until the resume-footer Codex live guard ships. Attached runs
+never escalate; their caller receives the wave itself.
+
 `--until-ready`, attached or detached, converges the status snapshot into rows
 on every poll; `--watch` does the same for checks, threads, and drift.
 `--until-merged` writes no wave rows.
