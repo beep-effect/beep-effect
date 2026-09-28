@@ -324,10 +324,12 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
         const failed = yield* attempt(failing);
         expect(failed.outcome).toBe("spawn-failed");
         expect(yield* fs.exists(`${root}/.beep/yeet/pr-wave-notifier/waves/${failed.waveKey}.json`)).toBe(false);
-        const retried = yield* attempt(recordingSpawner(launched));
+        const retrySpawner = recordingSpawner(launched);
+        const retried = yield* attempt(retrySpawner);
         expect(retried.outcome).toBe("spawned");
         expect(retried.waveKey).toBe(failed.waveKey);
-        expect(A.length(yield* Ref.get(launched))).toBe(1);
+        const launches = yield* Ref.get(launched);
+        expect(A.length(launches)).toBe(1);
       })
     )
   );
